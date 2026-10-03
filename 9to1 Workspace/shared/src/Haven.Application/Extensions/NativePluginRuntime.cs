@@ -71,6 +71,9 @@ public sealed class NativePluginRuntime(
             var package = installed.FirstOrDefault(item => item.Manifest.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase));
             var skill = package?.Manifest.Skills.FirstOrDefault(item => item.Id.Equals(skillKey, StringComparison.OrdinalIgnoreCase));
             if (package is null || skill is null) return new(false, [], [], "SKILL_NOT_FOUND", "A selected Skill is not installed.");
+            // Capture the exact selected source/content/manifest/scope/grant observation before
+            // package I/O. Consumers may compare provenance, but this string is never authority.
+            var originalPackageFingerprint = JsonSerializer.Serialize(package);
             var packageScopes = package.EnabledScopes ?? (package.IsEnabled ? [package.EnablementScope] : []);
             if (!package.IsEnabled || !packageScopes.Contains(scope, StringComparer.OrdinalIgnoreCase))
                 return new(false, [], [], "SKILL_DISABLED", "A selected Skill's package is not enabled for this scope.");
@@ -104,7 +107,7 @@ public sealed class NativePluginRuntime(
             }
             resolved.Add(new ResolvedSkill(identity, package.Manifest.PackageId, package.Manifest.Version,
                 skill.DisplayName, instructions, skill.WorkflowJson, skill.ContextRulesJson, resources,
-                (skill.RequiredCapabilityIds ?? []).ToArray()));
+                (skill.RequiredCapabilityIds ?? []).ToArray(), originalPackageFingerprint));
         }
         var ordered = resolved.OrderBy(item => item.PackageId, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.SkillId, StringComparer.Ordinal).ToArray();
         var provenance = ordered.Select(item => $"{item.PackageId}@{item.PackageVersion}/{item.SkillId[(item.PackageId.Length + 1)..]}").ToArray();

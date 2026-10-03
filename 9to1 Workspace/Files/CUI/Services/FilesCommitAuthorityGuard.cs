@@ -13,6 +13,15 @@ public sealed class FilesCommitAuthorityGuard
         ActorId = actorId;
         _isCurrent = isCurrentAsync ?? throw new ArgumentNullException(nameof(isCurrentAsync));
     }
+    /// <summary>Narrows an existing original guard. The extra registered issuer check must never reenter Files.</summary>
+    public FilesCommitAuthorityGuard WithAdditionalCurrentCheck(Func<CancellationToken, ValueTask<bool>> originalAdmissionCurrent)
+    {
+        ArgumentNullException.ThrowIfNull(originalAdmissionCurrent);
+        return new(ActorId, async token => await _isCurrent(token).ConfigureAwait(false)
+            && await originalAdmissionCurrent(token).ConfigureAwait(false)
+            && await _isCurrent(token).ConfigureAwait(false));
+    }
+
     internal async ValueTask ValidateAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

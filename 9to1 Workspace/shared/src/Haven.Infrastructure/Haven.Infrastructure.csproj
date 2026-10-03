@@ -28,6 +28,7 @@
     <PackageReference Include="System.Speech" VersionOverride="10.0.0" />
   </ItemGroup>
   <ItemGroup><ProjectReference Include="../../../Home/HavenOS.Home.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../../../9to1 Models/Dulche Alpha/Dulche.Agents.csproj" /></ItemGroup>
   <PropertyGroup>
     <TerminalNativeHost Condition="$([MSBuild]::IsOSPlatform('Linux')) and ('$(RuntimeIdentifier)' == '' or '$(RuntimeIdentifier)' == 'linux-x64')">linux</TerminalNativeHost>
     <TerminalNativeHost Condition="$([MSBuild]::IsOSPlatform('OSX')) and ('$(RuntimeIdentifier)' == '' or '$(RuntimeIdentifier)' == 'osx-x64' or '$(RuntimeIdentifier)' == 'osx-arm64')">osx</TerminalNativeHost>

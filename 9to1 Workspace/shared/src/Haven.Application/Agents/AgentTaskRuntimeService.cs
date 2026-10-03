@@ -8,14 +8,15 @@ namespace Haven.Application;
 /// Executes saved Agents through Haven's existing Chat/tool loop. Agent configuration can
 /// narrow discoverable capabilities, but never creates a second tool executor or approval path.
 /// </summary>
-public sealed class AgentTaskRuntimeService(
+public sealed partial class AgentTaskRuntimeService(
     ICatalogRepository catalog,
     IAgentRunRepository runs,
     IOllamaClient models,
     CapabilityRegistryService capabilityRegistry,
     ChatSessionService chat,
     IPermissionDecisionEngine permissionEngine,
-    FloatingActivityStateStore? activityStore = null) : IRecordedAgentInvocationSource
+    FloatingActivityStateStore? activityStore = null,
+    IChatExecutionAdmission? canonicalAdmissions = null) : IRecordedAgentInvocationSource
 {
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _activeRuns = new();
     private readonly ConcurrentDictionary<Guid, (AgentRun Expected, AgentActivityObservation Observation)> _recordedObservations = new();

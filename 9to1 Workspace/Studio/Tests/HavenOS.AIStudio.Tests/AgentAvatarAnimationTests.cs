@@ -52,20 +52,45 @@ public sealed class AgentAvatarAnimationTests
         var preview = fixture.Editor.Preview!;
         var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         preview.Changed += (_, _) => { if (!preview.IsAnimating && preview.Frame is not null) ended.TrySetResult(); };
-        await using var native = HeadlessUnitTestSession.StartNew(typeof(StudioTestApplication));
-        await native.Dispatch(async () =>
+        var native = HeadlessUnitTestSession.StartNew(typeof(StudioTestApplication));
+        Task<bool>? originalDispatch = null;
+        Exception? primary = null; List<Exception> cleanup = [];
+        try
         {
-            using var control = new AgentAvatarPreviewControl(preview);
-            var window = new Window { Content = control };
-            window.Show();
-            try
+            originalDispatch = native.Dispatch<bool>(async () =>
             {
-                await ended.Task.WaitAsync(TimeSpan.FromSeconds(5));
-                AssertBlue(preview); Assert.False(preview.IsAnimating); Assert.NotNull(control.Source);
+                var control = new AgentAvatarPreviewControl(preview);
+                Window? window = null;
+                Exception? actionPrimary = null; List<Exception> actionCleanup = [];
+                try
+                {
+                    window = new Window { Content = control };
+                    window.Show();
+                    await ended.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                    AssertBlue(preview); Assert.False(preview.IsAnimating); Assert.NotNull(control.Source);
+                }
+                catch (Exception error) { actionPrimary = error; }
+                finally
+                {
+                    try { window?.Close(); } catch (Exception error) { Add(actionCleanup, error); }
+                    try { await control.CloseAndDrainAsync(); } catch (Exception error) { Add(actionCleanup, error); }
+                }
+                List<Exception> actionFailures = [];
+                if (actionPrimary is not null) Add(actionFailures, actionPrimary);
+                foreach (var error in actionCleanup) Add(actionFailures, error);
+                Throw(actionFailures);
                 return true;
-            }
-            finally { window.Close(); }
-        }, default);
+            }, CancellationToken.None);
+            await originalDispatch;
+        }
+        catch (Exception error) { primary = error; }
+        if (originalDispatch is not null)
+            try { await originalDispatch; } catch (Exception error) { Add(cleanup, error); }
+        try { await native.DisposeAsync(); } catch (Exception error) { Add(cleanup, error); }
+        List<Exception> failures = [];
+        if (primary is not null) Add(failures, primary);
+        foreach (var error in cleanup) Add(failures, error);
+        Throw(failures);
         Assert.Null(preview.Frame);
     }
 
@@ -83,6 +108,14 @@ public sealed class AgentAvatarAnimationTests
         AssertRed(preview); Assert.True(preview.IsAnimating);
         await Task.WhenAll(preview.DisposeAsync().AsTask(), preview.DisposeAsync().AsTask());
         Assert.Null(preview.Frame); Assert.False(preview.IsAnimating);
+    }
+
+    private static void Add(List<Exception> errors, Exception error)
+    { if (!errors.Any(previous => ReferenceEquals(previous, error))) errors.Add(error); }
+    private static void Throw(List<Exception> errors)
+    {
+        if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        if (errors.Count > 1) throw new AggregateException(errors);
     }
 
     private static void AssertRed(AgentAvatarPreview preview) => AssertPixel(preview, [0, 0, 255, 255]);

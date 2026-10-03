@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "25322884df601237ee46a57ab20f51a95010aebd",
-  "programTree": "51af83596f5201e9e4c51385e815296c5f11e6d1",
+  "baselineCommit": "9006e522f1dd49a348214200508fb35ede2f7409",
+  "programTree": "66e6a85cf52afd05badb9b44af210460a70951d9",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -111,6 +111,41 @@
       "sha256": "2fd9467cfa71be3f88ce960f4dae13dd61fc7d13bb936c25f41dda31c1161277"
     },
     {
+      "path": ".github/scripts/astra-joint-native-sdk01-owning.py",
+      "mode": "100644",
+      "object": "8f186d93f0e77078c166c2db6eda133e50605d81",
+      "bytes": 41306,
+      "sha256": "1474b60ead85bb03e89611aa90cc4219cadc0d783024e29db84ba8d37cf621fd"
+    },
+    {
+      "path": ".github/scripts/astra-joint-sdk-ephemeral-profile.py",
+      "mode": "100644",
+      "object": "7e569b56e48660a0d8bd2a9d1f12d712f93e3569",
+      "bytes": 8631,
+      "sha256": "64ff4aca1aba22f20941fecdb4867c4e07c69abe9c362d52d8ec9ecfa87447c7"
+    },
+    {
+      "path": ".github/scripts/astra-joint-sdk-original-session-drain.py",
+      "mode": "100644",
+      "object": "144755d8f4ab0b794a42da2356f2947b6df388ac",
+      "bytes": 3791,
+      "sha256": "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be"
+    },
+    {
+      "path": ".github/scripts/astra-joint-sdk-restore-evidence.py",
+      "mode": "100644",
+      "object": "10e9e76729428f11ca21351f160a41951721cb35",
+      "bytes": 10043,
+      "sha256": "d3681c1578ba683a40f200028bd567fd7d21b47643053adccb08cbdac5624ee3"
+    },
+    {
+      "path": ".github/scripts/astra-joint-sdk-test-inventory.py",
+      "mode": "100644",
+      "object": "e4d8e6a8ece9571c9f7aed3b4af869610f28c7ad",
+      "bytes": 2783,
+      "sha256": "04d301b990202b2101a0042074b5d515cf4721f303f56693ae8fdf3ab643cb09"
+    },
+    {
       "path": ".github/scripts/astra-mail-local-crl-server.py",
       "mode": "100644",
       "object": "ec676582d95f24567f9d9a5c7482b6c2976b1454",
@@ -137,6 +172,13 @@
       "object": "e1a15c4e95152eb2a396ac8784df6984440faa27",
       "bytes": 3556,
       "sha256": "2ca73bef21b47af09eba8138b8f89c212e7928976ce0a666be8844588a6b98ce"
+    },
+    {
+      "path": ".github/scripts/astra_joint_sdk_profile_caller.py",
+      "mode": "100644",
+      "object": "e2eea6bb0f0d5fd65c4b9ac3e01e6f5eb9ada26e",
+      "bytes": 7900,
+      "sha256": "4cd2e8c2a0f7d7db215eb8c0fb1ec15817aa39711deecc6b724039f1db432c18"
     },
     {
       "path": ".github/scripts/astra_mail_original_caller_session.py",
@@ -193,6 +235,13 @@
       "object": "9254781dc901f366e2669446c4586efcfdf101bc",
       "bytes": 44010,
       "sha256": "85c24284b8f28af728bafd0c4375cad223f6dff2623aba23c62072a659a78a57"
+    },
+    {
+      "path": ".github/validation/astra-joint-native-sdk01-sources.json",
+      "mode": "100644",
+      "object": "0d0f7a352a330900e78934f22876ee1c1a4f7339",
+      "bytes": 81094,
+      "sha256": "d1536f65a3e3dfc338f8dad7097e1d386d2fe1a7dbc57743c1de466d27d08085"
     },
     {
       "path": ".github/validation/astra-mail-expected-case-methods.json",
@@ -344,9 +393,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "7d8d5b52c05605692cfef8d6051b70320f12ecb8",
-      "bytes": 10126,
-      "sha256": "7ff4f078c8f7f6a3683580336b5949f1a4a4935c0e4f823de546bd017fecdc1a"
+      "object": "7725883cc0b1bfa3b98995c4f0ee39d7a86bb58a",
+      "bytes": 18602,
+      "sha256": "c6212457040ee98e0772bd5560ebe1b15d86f8d1e905390c64453ece401b72ab"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -1182,6 +1231,41 @@
       "sha256": "c09d7437ac046add1d0aa6af31b292ad424b6b28e5a403a9bcdffeda393c7e27"
     },
     {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentChatExecutionAdapter.cs",
+      "mode": "100644",
+      "object": "a7249c19c3fa85b83e21b0d515b09d3f664a4d26",
+      "bytes": 23050,
+      "sha256": "e9751b013daf0736e474d69403600c92e7a00eef9f4651d376232f9559e48d15"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentExecutionSessionFactory.cs",
+      "mode": "100644",
+      "object": "a5dac040d9aae86c1c197573e076eec62265d952",
+      "bytes": 17463,
+      "sha256": "ff8ac9c20d66ab3eff6e36e61100b1f42622e56e976ec333b573a1c8573c9131"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentExecutionStateStore.cs",
+      "mode": "100644",
+      "object": "43f54261e01773f5f0c613aa92ea4470c77d0cbd",
+      "bytes": 14954,
+      "sha256": "9ceb80ba6d377e8bde41615b1cd48c4ee74f35215c97c99e3a48d75ff335c143"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentRuntimeValidator.cs",
+      "mode": "100644",
+      "object": "f2346719d5cfdd6f451172dd18260f4ab3aed313",
+      "bytes": 11730,
+      "sha256": "fbbbd7a4ddbc2411927e1f4947f9a5afd7ebb0c13b4ea89625bd8b2a403ed548"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenPersistentAgentCatalog.cs",
+      "mode": "100644",
+      "object": "3d381d77482e8054f1d563442260f53a52cb656d",
+      "bytes": 16391,
+      "sha256": "c66aa22ce4244eb4cafd166d1957dd001e59146a61869b5275b16a0b50a01bc6"
+    },
+    {
       "path": "9to1 Models/Dulche Alpha/Agents/AgentBudgetLedger.cs",
       "mode": "100644",
       "object": "444214fe59a68c430cfcf58e354518c56dcc360e",
@@ -1198,16 +1282,44 @@
     {
       "path": "9to1 Models/Dulche Alpha/Agents/AgentExecutionPorts.cs",
       "mode": "100644",
-      "object": "2dc9a043abf49e5ed95354c136a062abb8b0f4ef",
-      "bytes": 18411,
-      "sha256": "b949233de85d8382f277f3900f5a4584e539f4911c5e3304852d5a51dc8c2aa4"
+      "object": "ebb64286b6ec096a75b4e1edff14c1b6cc145d36",
+      "bytes": 21218,
+      "sha256": "c299d92b14d0de5b5a382fa2adc91a7948611aaf32e4fa444c34cfe59f37440a"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Agents/AgentExecutionService.cs",
       "mode": "100644",
-      "object": "7c5210072f51fb07442152731d9b978c2e8eb4b4",
-      "bytes": 24380,
-      "sha256": "2da904bb9665ba98834a82fcee17953aef6202d3a45efc1547c8b0834184396d"
+      "object": "47350f4847eac5c0856b303228088b02a2698a68",
+      "bytes": 31458,
+      "sha256": "d9f29bc0a8e06adce5c9eab7b16768145769b0450a9613aaa0c35e2b5af024f7"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/AgentSavedPolicyValidation.cs",
+      "mode": "100644",
+      "object": "318467c76afc1789640791631398f50e842c1ba0",
+      "bytes": 1878,
+      "sha256": "ae10d19a37c5fe9a2030bd84e556b2a4f46f0e8b93eceb7999f7354f62683e97"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/DenAgentCurrentRuntimeContext.cs",
+      "mode": "100644",
+      "object": "a1689adbfe7a317196bcfac09e922eb74dac83b5",
+      "bytes": 1838,
+      "sha256": "43c720cd0f870154c7200e14f80b73b1932da42d72cd2533986f663ee4764cae"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/DenAgentReference.cs",
+      "mode": "100644",
+      "object": "dddac50eb96c3d795a43e3f42df5140b3e18668a",
+      "bytes": 359,
+      "sha256": "133f37839af0e120383ea5bb7efd05beafd2c42b5b95e9efdad3902e3bb2adaa"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/IDenAgentExecutionSessionFactory.cs",
+      "mode": "100644",
+      "object": "cffa24fc820b8294036c93c390d5e64456eb532a",
+      "bytes": 2213,
+      "sha256": "7f5def22c10ff427fa7918637aea13c6b5548d34de2ef2887ed2fe9fce4cc447"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Catalogue/LocalModelRegistry.cs",
@@ -1231,6 +1343,13 @@
       "sha256": "65b775f22ea951c66b762fc14c5cb752b2aaf0760da059c121dad2208ec12afa"
     },
     {
+      "path": "9to1 Models/Dulche Alpha/Domain/AgentAuthoringDefinition.cs",
+      "mode": "100644",
+      "object": "cb6ea13c57195a15772a1ea356ac5526e545ceeb",
+      "bytes": 3037,
+      "sha256": "0b187d6b2eb19d117be51b198241c6ccdca1980dbd7730d359e10f4d496d56d0"
+    },
+    {
       "path": "9to1 Models/Dulche Alpha/Domain/AgentPresentation.cs",
       "mode": "100644",
       "object": "a825b0bb1485d59bb74d6d9d64136d16e18b994c",
@@ -1238,11 +1357,25 @@
       "sha256": "59ebd05337da4c5f7cb2f26f5c1c480f82589058dd5fe0a1c18f2f6df400501a"
     },
     {
+      "path": "9to1 Models/Dulche Alpha/Domain/AgentPresentationActivity.cs",
+      "mode": "100644",
+      "object": "2bd8af078442076b81ce6215a8550db124fda512",
+      "bytes": 2239,
+      "sha256": "b62a1d81e0c8594d0b800bb830efd46d00f836cbb859eb6148787c2443ca88ee"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Domain/DenAgentAuthoringFields.cs",
+      "mode": "100644",
+      "object": "4d1705aa33f01ce4ac7cf50f467822c284bebe9b",
+      "bytes": 11482,
+      "sha256": "05b4d130995b27234d7dda87589ff1cb2d073ceee46c0829bde4af5d92dbdb7a"
+    },
+    {
       "path": "9to1 Models/Dulche Alpha/Domain/DenRecords.cs",
       "mode": "100644",
-      "object": "c9d4d0f79742d87a9b3909ba0f33935c298d5cee",
-      "bytes": 21136,
-      "sha256": "f0df3229244576c20da2aab7b97a2a8ad9ae20fb46440b34c3dcaf5999bf32bf"
+      "object": "1c0f490f6f93a35ce7b79b090af1e677911a0b1f",
+      "bytes": 22007,
+      "sha256": "1385f1396274bdfb5e4e220c5341b8b983a7577e0f452d1a2e2b1172d1cd41c7"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Dulche.Agents.csproj",
@@ -1294,11 +1427,18 @@
       "sha256": "350768f6867593fd6ef2ab0c85d5cfc40fb7d8b61465ead8e4d965e99398c241"
     },
     {
+      "path": "9to1 Models/Dulche Alpha/Services/AgentPresentationPlayback.cs",
+      "mode": "100644",
+      "object": "6bb9dbc39fb1d365429efa4e0bc685621985b86b",
+      "bytes": 5250,
+      "sha256": "21de6e08a3a4b078c2b13c693fe7dac934c943f9113bd217b3cf57bba29e78f9"
+    },
+    {
       "path": "9to1 Models/Dulche Alpha/Services/AgentPresentationService.cs",
       "mode": "100644",
-      "object": "c40f3a58546003dfaf1eeae438a6827a8b68faf3",
-      "bytes": 4677,
-      "sha256": "5b605a89d2727091b44363ec47f3beadc07e6b73a827263b1c5fe9f45efd04ae"
+      "object": "a593b0c6edf90ad5e5f057f7eda30a80fefcb714",
+      "bytes": 5990,
+      "sha256": "0a710c6f0cf20d37690b70e21018ee5a49d3e2b48cc992bb54d6c9cb604d9a25"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Services/DenAgentPresentationAssets.cs",
@@ -1327,6 +1467,41 @@
       "object": "d3ff9bed8a831aeab8414ac509e8c8f83902e7a9",
       "bytes": 5568,
       "sha256": "3551f9cbc2df95a7ce55e74987738eff44a6cf696110cda724b8e47776c9c2af"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/AgentOriginalContextBindingTests.cs",
+      "mode": "100644",
+      "object": "74acf7109a294332f19da83715f7cc5de4f927bc",
+      "bytes": 13043,
+      "sha256": "d52b72ed84c504f0cd34763c5ba79c0f481a1d14ae29edde2bf19f5c31429929"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentChatExecutionAdapterTests.cs",
+      "mode": "100644",
+      "object": "d3e43ec5b8673aa2c2ac4d7760222e90ec4fa3fc",
+      "bytes": 51914,
+      "sha256": "d4a9379a3afb93884c3a6ae481232640dadacc3d165b241d9f3c67825fdaf141"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentExecutionStateStoreTests.cs",
+      "mode": "100644",
+      "object": "2004ac06fa3d68a6abc42eb5fef8681f89cf4d7d",
+      "bytes": 13975,
+      "sha256": "47fe2b6ab02a21bd3ee887934b9cca5163c74fa4ba4a983f0e66e8e753a0b8fd"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentRuntimeValidatorTests.cs",
+      "mode": "100644",
+      "object": "ee826ec34d06e1a599cdb8bab4527baefb2b68f6",
+      "bytes": 11666,
+      "sha256": "278173c6658d5d44980c3d941c6a624c0c6943d566e824951b1690a945cd78e3"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenPersistentAgentCatalogTests.cs",
+      "mode": "100644",
+      "object": "144dee11ffeccd246765e76f85de30940c4a07ab",
+      "bytes": 16049,
+      "sha256": "135af8fb0efb4af9cde4f1d31bf661b70a382706650d82c07a66bc1300eb05c0"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
@@ -5893,18 +6068,25 @@
       "sha256": "9515d0623ddd14d7326ecd3c29d6048f61eabcb7bff528551d7bfdf2d6862b0b"
     },
     {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.OriginalStructuralReceipts.cs",
+      "mode": "100644",
+      "object": "7065b3a09f5772b9dbaf8fe0ebe9b5829cde33a9",
+      "bytes": 2618,
+      "sha256": "eadaf3d2471ccc96a002eb37771f7e951a8ce45e7bad91f6c783b781ee15aa00"
+    },
+    {
       "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.cs",
       "mode": "100644",
-      "object": "43469d0861f212b57cd1fbfabffd6e1b77455f4a",
-      "bytes": 13061,
-      "sha256": "174f3dff88be82b616e3d284d83c1a507eeb412f951fe29ee70d1bd2387d6756"
+      "object": "bd90c3e96900d7e0f20b203229733927f0577eef",
+      "bytes": 15052,
+      "sha256": "e4bf664776fb62ac77980943b66cece3eebc21a94b31a4fa2b23a06b13d6d5c4"
     },
     {
       "path": "9to1 Workspace/Files/CUI/Services/FilesCommitAuthorityGuard.cs",
       "mode": "100644",
-      "object": "217b241bc68d9fb6cb4eceea0db51b8b51a5ac65",
-      "bytes": 1313,
-      "sha256": "961066152c206761a34e5721a78e85fff3298377551427326f86c756833fa832"
+      "object": "b5ca98aa6852131522c8122140361211d6af69d5",
+      "bytes": 1876,
+      "sha256": "f489bf53d1c5618d7e23ddcf255b0bd0bdbf63f726d3f91545082a61116f58c8"
     },
     {
       "path": "9to1 Workspace/Files/CUI/Services/FilesFolderPresentationStore.cs",
@@ -5970,6 +6152,13 @@
       "sha256": "5736e28865831da0033f106ed2041e7429ab81dfb6fe9b185a1065be305254d6"
     },
     {
+      "path": "9to1 Workspace/Files/NativeHost/FilesAgentOriginalToolDispatcher.cs",
+      "mode": "100644",
+      "object": "20e20945bfce15160e811cedb58c338465f39e03",
+      "bytes": 18804,
+      "sha256": "6bf67826305882b3296e240832749881f7690ae4c92a40f47e63b265610e8724"
+    },
+    {
       "path": "9to1 Workspace/Files/NativeHost/FilesArtifactResourceResolver.Mail.cs",
       "mode": "100644",
       "object": "79100b90c8555ad8e22582f6c22b3bbadd8ceef3",
@@ -5979,9 +6168,9 @@
     {
       "path": "9to1 Workspace/Files/NativeHost/FilesArtifactResourceResolver.cs",
       "mode": "100644",
-      "object": "d8e635986e355800cbce5191fecc3f7041804d3f",
-      "bytes": 19100,
-      "sha256": "d1dd9aa3fd1730af5f68895b69c7d955c301f5788eeecfbbd76a796bdfce3b45"
+      "object": "e99f0984c39f9425aa5fc1a733f75d2417ec0b19",
+      "bytes": 19337,
+      "sha256": "b65db3c51a602766491d4d594880f938d65d655d34f074d82bce35dd22ba2be9"
     },
     {
       "path": "9to1 Workspace/Files/NativeHost/FilesCompatibilityPackageContentSource.cs",
@@ -6038,6 +6227,13 @@
       "object": "105cbc2bce49bdb7fe721e99b803992f44bcd08f",
       "bytes": 2450,
       "sha256": "8b813d46e56eb85da7162199c418585c326c107d9baea9263458874c978424b1"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesOriginalAgentToolComposition.cs",
+      "mode": "100644",
+      "object": "f079cbfb43d8703e7754fb5b40d544e6646f39e2",
+      "bytes": 1794,
+      "sha256": "bb2ba162abe4a422650b9bf29c14b9887490f0e8c694d4b3fee613cf3d3bdbe4"
     },
     {
       "path": "9to1 Workspace/Files/NativeHost/FilesOriginalChildFolderReadSource.cs",
@@ -22870,9 +23066,9 @@
     {
       "path": "9to1 Workspace/Home/NativeUI/Controls/HomeApprovalCuiSurface.cs",
       "mode": "100644",
-      "object": "72aa7ffc5185a3696f9be158801510be3013d65b",
-      "bytes": 20140,
-      "sha256": "34365a294d7381f4ba176ea8a70cb422b8294c840b682346f92ba2fe92d794a8"
+      "object": "9fe1a0883a128370d0d1d797141d39569c2de51a",
+      "bytes": 20587,
+      "sha256": "3b25c9ca4a8ec86b66f4cb0c7189c869a64388c04ae86457e8f76b534aa83300"
     },
     {
       "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerBindings.cs",
@@ -23365,6 +23561,34 @@
       "sha256": "53902496be938b904511e8725b0f7197981f4f85348ab6d62de7195474762264"
     },
     {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionAdmissions.cs",
+      "mode": "100644",
+      "object": "9fe402dc3a473b020f4c1c2f27bccae1b2abf101",
+      "bytes": 72524,
+      "sha256": "4e5c30c02f0d2d34896f1b07da734fe7db03fd499f115a3f1fd5a124730d5d15"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionHost.cs",
+      "mode": "100644",
+      "object": "35e416f3026fd383776e5bc6a02f4402fa62ed58",
+      "bytes": 13726,
+      "sha256": "f095bae4467d6aab1cc9ea68710a07fc01c3cb5f0b4be9d242138b7e116ea666"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionHostContracts.cs",
+      "mode": "100644",
+      "object": "06946de6585569ccf5cb3aba2c8062ef5b30655b",
+      "bytes": 2877,
+      "sha256": "b3647cbc1eb07e27ff263694e5af77350cefe3cc60e3afc6dcebdcaf2849a684"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentOriginalWork.cs",
+      "mode": "100644",
+      "object": "e93793304079b64bffcb570606a976c1e31a6ab9",
+      "bytes": 4776,
+      "sha256": "28d21447f3bac62779753a676654ccef50dcbf869ac623fbd18cae573d6e9771"
+    },
+    {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeAppAiServices.cs",
       "mode": "100644",
       "object": "0b5602f16d2a2dea072bca54e40cf16e45d44c4a",
@@ -23426,6 +23650,13 @@
       "object": "e2e3205a7f69fcd6ebf7d203b5f709d7b50b89a1",
       "bytes": 21849,
       "sha256": "fd3cf639b5b92bea5cda526610e0bf0f40b7c018e08ac4e943fcf26820f22444"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreServiceReadActionPolicies.cs",
+      "mode": "100644",
+      "object": "d1cda0c190174134e2eaeda520d3ba17d19c472b",
+      "bytes": 885,
+      "sha256": "d1c834f038ef6772ac60842407303a8f2e2080564e7890fb1787af5fbff684c5"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreStateService.cs",
@@ -23552,6 +23783,27 @@
       "object": "d9b2c83f0da5c07c92f3671a0f7de87a79895b63",
       "bytes": 4289,
       "sha256": "9745568c8ee0fe7249a043e8d3a6522ce93d383bf7bcb9b15772f19f13c63a97"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreAgentConnection.cs",
+      "mode": "100644",
+      "object": "5e05f4628ab60baf98adf5a660daada7b3b13197",
+      "bytes": 4660,
+      "sha256": "23cff91037dd7bbf642e3d769ff54bf09fa0ad7daf8c25a313c88d2e691bde50"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.ReplyCurrentness.cs",
+      "mode": "100644",
+      "object": "fc10a565e1c220640b11a654e95adb1447751dc9",
+      "bytes": 2490,
+      "sha256": "6f45711457d42cd5bfc494a583b87ac454fc9d5357d77ea819a2f54fccb361cc"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.cs",
+      "mode": "100644",
+      "object": "3c4d192d514ef7bdea49235a0a7ab7c049eea15d",
+      "bytes": 28065,
+      "sha256": "945e578d2c771e7719ffd06025016f7c9e62c095c920235445452696ab6362c8"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeDiscoverySession.cs",
@@ -23708,6 +23960,27 @@
       "sha256": "993afb5dd6289e670eb417caca2cce38ac61e3454557f2c4c914f6120c193909"
     },
     {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreClient.cs",
+      "mode": "100644",
+      "object": "d3a5c9cdcb344909d861d6138f279812a2b32c98",
+      "bytes": 9568,
+      "sha256": "5b4d0372103b78a3b80cbcce3929fbeadda5615c22003e7fd518c3aa5c4256aa"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreProtocol.cs",
+      "mode": "100644",
+      "object": "8b8214b616bb11380f655fa27b4a80c92427d040",
+      "bytes": 5400,
+      "sha256": "ba41142c984d991354c365e63c5947c1ffd26f41645fcc5dfc88c0d7216989db"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreTransport.cs",
+      "mode": "100644",
+      "object": "c1e398d59b378e68d74d2083174a32a573b3819b",
+      "bytes": 11041,
+      "sha256": "67bf91e74749292cca24851e9372dfd2890b3f7054a3517130189a15e0e1229b"
+    },
+    {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixDiscoveryClient.cs",
       "mode": "100644",
       "object": "e2405589c3ae24139afbb8658189c7e3fc334aeb",
@@ -23717,9 +23990,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixDiscoveryTransport.cs",
       "mode": "100644",
-      "object": "c2736db21a049dc59b9e3aab5a37394364bc47b8",
-      "bytes": 3420,
-      "sha256": "b9cf113f3efa4c745b445683e8a4ede4f46f741203993f75bb8deb3c8f9eb7ed"
+      "object": "7d234aa3e4badd5883936efb12bf93274e287d6e",
+      "bytes": 4110,
+      "sha256": "1a4a73c5eec8a7d32f14acd15589308aa7bcf322c051262afe899c9d23513892"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeVectorShapeObjects.cs",
@@ -23808,9 +24081,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
       "mode": "100644",
-      "object": "57cf63d45dd854debe167b057f0b08fd35e524f0",
-      "bytes": 47962,
-      "sha256": "1f0942a5ca5ecfbd400bebd59c23b9046c746bf1820353ea271bfba297cae4a4"
+      "object": "bbc80d8953a97d793ae59a1bab18d92815091f85",
+      "bytes": 46308,
+      "sha256": "ada51273b49a766885edb9477df6dc29ade1ba3a5e33b28114132a64007694f4"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelCatalogueEntry.cs",
@@ -23899,9 +24172,9 @@
     {
       "path": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
       "mode": "100644",
-      "object": "87e76a5dda1e9dafb3fed050e24b990e56710e52",
-      "bytes": 742,
-      "sha256": "02189a1318d272dbd621dff89bc42dc0397a164b39dc3e3d90f1962dcd74df2a"
+      "object": "857d5fb0033c54a94594f3da1e44bbf760fc702c",
+      "bytes": 832,
+      "sha256": "d8f49a96efd101159e30823bd07c7fd06200222fcb5270d43c1ef7f4cea8410a"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
@@ -23909,6 +24182,27 @@
       "object": "39fb7caf032ffd3d1eb570e691de5ed8caa51b6e",
       "bytes": 3903,
       "sha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentExecutionAdmissionsTests.cs",
+      "mode": "100644",
+      "object": "34e14dc0367faa96357d4f8e6962c50b26f6626d",
+      "bytes": 63993,
+      "sha256": "d30d4d5feaa37723d7d48d3826c55d52f5017cc28ab9df260c48f0d6f559448c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentOriginalConnectionDrainTests.cs",
+      "mode": "100644",
+      "object": "60cbb5af2e1553d9e202b8b97836dfd72d41656a",
+      "bytes": 12168,
+      "sha256": "952cff4fe63c224e3da16c7f390c430294d2e67d6361289547d83b59bc7ab5fe"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentOriginalWorkTests.cs",
+      "mode": "100644",
+      "object": "3c936468c4186392bf4585af2528752eee50efd2",
+      "bytes": 6071,
+      "sha256": "81125083e8fa5f5201df90f4eeaa83269df498bd3fe74cfc3b9a49fc6dc7e69f"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs",
@@ -24086,6 +24380,13 @@
       "sha256": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12"
     },
     {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeCoreApiSessionTests.cs",
+      "mode": "100644",
+      "object": "b74152433bb4916e9e32077ac8319ae58123cac7",
+      "bytes": 29836,
+      "sha256": "98e4f7c1569f6d6333be58c84a1151e6ce9f475f3cb0e5d31fa82466a9d26138"
+    },
+    {
       "path": "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs",
       "mode": "100644",
       "object": "4116eab395d2d5d945acb30128c575ddf7566d98",
@@ -24140,6 +24441,13 @@
       "object": "414aee8b2f2cdb2605f9e2758d3fba907ebe45c1",
       "bytes": 5641,
       "sha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeOriginalReplyPublicationTests.cs",
+      "mode": "100644",
+      "object": "4c49cf98898609e30bde98a891b632ee5eac6445",
+      "bytes": 9364,
+      "sha256": "538935381b042aa3455112d8484dff2f960a71c6e488e361a3f23ddd25a405e3"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
@@ -24266,6 +24574,13 @@
       "object": "dbea7986d7a1c9dcf95484448a5301b8d945c85f",
       "bytes": 7616,
       "sha256": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeUnixCoreTransportTests.cs",
+      "mode": "100644",
+      "object": "d3c37999b0318a6971d52748fe7e55c11f348433",
+      "bytes": 35918,
+      "sha256": "ccf732fa1b5c66083377db85ec8009ee064165b74114cc677a356ee64d0df13d"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
@@ -25978,16 +26293,16 @@
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AgentAvatarBuilder.cs",
       "mode": "100644",
-      "object": "ca97f56b2255a282a7c63b558d902252de08906d",
-      "bytes": 3792,
-      "sha256": "7bad01e4dc1ded5c10fa1d0fc4891ae689b460e05dcdf4613b5c74a40bebd8f6"
+      "object": "c6472bb340efb3c8f54ed9da912cd97de04ddfa5",
+      "bytes": 4810,
+      "sha256": "e2c9d87de2019ddb4587b218b2bd324b1f11bd894f134f2255f5dc5e23c84320"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AgentAvatarEditor.cs",
       "mode": "100644",
-      "object": "0914d6b7d9ca90fe26db712c6892f20a15893f91",
-      "bytes": 7875,
-      "sha256": "12f14d94b49ef1677cd14043d253631ff8eecbaf6e3818ffe7e750b17ffdca4b"
+      "object": "de5dfa8ec918ee984a39a407abfddf9f5bfbf409",
+      "bytes": 9893,
+      "sha256": "8fc5c42875c5ba4d7ad6c3417165fe4002090573af962edc0950a8710bfd22f0"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AgentAvatarPreview.cs",
@@ -25999,9 +26314,23 @@
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AgentAvatarPreviewControl.cs",
       "mode": "100644",
-      "object": "7263e1eee132effae981ee6cb9c939910bce8cd8",
-      "bytes": 3334,
-      "sha256": "853f6387fe333b03aeb787e4157330aa0caa4b0eeb7ee2c10c422b9ad721b896"
+      "object": "87f909fd99bec5afb5b03a1f045848aa281a3382",
+      "bytes": 11343,
+      "sha256": "8f0a7b05a9107714b6518da669211f54a536d0b6c4df6d9970cc73d2fd306ee1"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/DenCanonicalAgentBuilderAdapter.cs",
+      "mode": "100644",
+      "object": "e407be3589671ef28aabc406f1a1ee33b4953aa9",
+      "bytes": 21107,
+      "sha256": "7992f6fd798694ac91865431b412c87fdb1afd05e6473b7ecd3db76ceafc56cd"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioAuthoredTextObservation.cs",
+      "mode": "100644",
+      "object": "5515b5c75d8bed0eb2efad95b14e0acd5d74e644",
+      "bytes": 2384,
+      "sha256": "54d4b020dd9b89c5b859c997c008551ca48481c60efea744e68459c97e003d53"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioContracts.cs",
@@ -26009,6 +26338,13 @@
       "object": "4ab358bace52425bd733c0327de8dba88a263727",
       "bytes": 12977,
       "sha256": "c69fb389fef6ad4d54a1647a7287ca47e367cc181e7a209a768c6d4f3cc67b33"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioOriginalTaskDrain.cs",
+      "mode": "100644",
+      "object": "e4e78c8aceb2702e95247bda5ae2efe336efc88a",
+      "bytes": 7647,
+      "sha256": "4f1fa71ef3c05fb7cb2ae008b65aab9844a7d801ed75798f316e488972326072"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioProjectStore.cs",
@@ -26023,6 +26359,13 @@
       "object": "0b2cff4ceed721cd385b0d914aee9eb6e6b85f8b",
       "bytes": 6441,
       "sha256": "303516e4e640f4caa6829be9cc86a963657091e4dc08506110c0dfc9f994a214"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioSessionBoundaries.cs",
+      "mode": "100644",
+      "object": "ca48cd18696ba076de5ca597d45d583d923a53ee",
+      "bytes": 3037,
+      "sha256": "0e3fa9026e0a38c7556f50236c7aa54dfcc1e18a7d66ae17e4a23a8e24918108"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioTemplates.cs",
@@ -26069,58 +26412,58 @@
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/Program.cs",
       "mode": "100644",
-      "object": "35f5f8019fb5efd155b1404bd1dc43eed128f7b3",
-      "bytes": 313,
-      "sha256": "909f62c83a32a79e9dfa054ec7d39ec90499459da470c70bd88b16cf342cfb3b"
+      "object": "80af2b823fa2e560f585291af1cffe555d9e0193",
+      "bytes": 1021,
+      "sha256": "e7dc48c67575ea696c3258511c1a766bb46f2f25d7fb40aecd8f32b23a1375f0"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioDenLifetime.cs",
       "mode": "100644",
-      "object": "520fb00561e3533aa9940f4497da93d30100a01b",
-      "bytes": 7273,
-      "sha256": "d2cb84c3ced526394586ed3864a427e8322602ab48034257d41fd9c451ac247b"
+      "object": "0f44adb98bd5f7220b0beb8f79d9ec33055297b4",
+      "bytes": 8186,
+      "sha256": "308bde6193f447378bbc3e8253fec4f3628e615fb4af2417cc9ab599a92e17ec"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeApplication.cs",
       "mode": "100644",
-      "object": "65e130e8d37c449bf62bc653c38eaa8692dfce5e",
-      "bytes": 1846,
-      "sha256": "38afbdc85e51394738e65a6e88b22c9acaf0bcd741382d606e87cd998139c665"
+      "object": "34afdb1a9afc76506c08e78192011ef40d559b7c",
+      "bytes": 5063,
+      "sha256": "eee265fcc626050b4b1ffa3e109a093a83c6a98065b022737efc619590a9c358"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeScene.cs",
       "mode": "100644",
-      "object": "0af476fcb7688d185c23a9bd5cad15ccd1641f00",
-      "bytes": 1839,
-      "sha256": "72fdcf26b5e434c36959345ccee2a553b0ac0131aca3ba27f8484a0db42d451e"
+      "object": "1020795c2d8792c9748f4f1e2e887f0e6f785c5c",
+      "bytes": 1939,
+      "sha256": "2d0f62459ebce5c76bdc6d48b2ad26772e3a6cc1610fd82112d88fde7e9c97bf"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeWindow.cs",
       "mode": "100644",
-      "object": "4a9b4b5347dddf3ff880b830e7e8ca97f47bb4ef",
-      "bytes": 15142,
-      "sha256": "dd832f6a21680219e4af08c5217382592828ebdd9220a3b3671352af31ba541f"
+      "object": "2541bf9337e055c520e27d9e2fb0d9ce93acc95c",
+      "bytes": 40825,
+      "sha256": "1c6090cd4f1ad329529e7d943c8975c1e751a258557a895aa8243fdb0173f526"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/UI/Studio.cui",
       "mode": "100644",
-      "object": "849a9c231a3163510878a99fccecad559c1c2bea",
-      "bytes": 5074,
-      "sha256": "a4e4b8d68145383cfb0e6650dd36c46a576770afafec3017b9868b897f55fc1f"
+      "object": "07cc36db8d0e0dc41b765224a9bcbaf0f4102f1a",
+      "bytes": 6111,
+      "sha256": "fee79a2eff7fc41ebd33010a55b9c0fc42023b802f70961bef502716fe8de894"
     },
     {
       "path": "9to1 Workspace/Studio/HavenOS.Studio/UI/StudioHost.cui",
       "mode": "100644",
-      "object": "fc10275da59da286300187bbe8a807a3e433f015",
-      "bytes": 1183,
-      "sha256": "8d6742fdd0dfe0c4e62153ac4f5ba585ac07e0e41dba89b41f4f41c403bae16a"
+      "object": "d0eb2accfa753779495da1f522ee294aed51f56c",
+      "bytes": 8080,
+      "sha256": "619db352f2948229ab4a74c10aa4a03bacaea8088cedf814a7c6ba65ded17c32"
     },
     {
       "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentAvatarAnimationTests.cs",
       "mode": "100644",
-      "object": "7f84abd06fdbde27c984a6bc877caa52a5fe0117",
-      "bytes": 7297,
-      "sha256": "9d9d2b366a1d76299db9f5dd8b820ffeba6429729bcebe369c2aba27c7235d60"
+      "object": "c3b585046ab6b720bfcfa71d8eca6214422c402a",
+      "bytes": 9097,
+      "sha256": "2356f6389efac15d25dfc65a258073424c1f7e121647f014c2e1239a1286686f"
     },
     {
       "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentAvatarAssetAuthorityTests.cs",
@@ -26135,6 +26478,34 @@
       "object": "adedfb85f07096aa8ff6c72b26855227702a5509",
       "bytes": 11574,
       "sha256": "e3679c7eab8e6358472f8d8c370e309a6a63b8aef79c5ac8b676dd855425542b"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentAvatarOriginalCallbackTests.cs",
+      "mode": "100644",
+      "object": "d5b03ab00a9c3d74593bedf1df1af37a0dcce49d",
+      "bytes": 16035,
+      "sha256": "0983ba9466351cf99c815a6b64540aa99dde8f9770756bb04a441c2bbc5d498a"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentPresentationPlaybackTests.cs",
+      "mode": "100644",
+      "object": "366cf04bf46128cbb210d84ceffa3dfa5a937232",
+      "bytes": 14204,
+      "sha256": "78d3c0cd0aaa5b97eb03e985f4b2bf0ced26013a50f5779b409464574888961c"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/DenAgentBuilderAuthoringDeclarationsTests.cs",
+      "mode": "100644",
+      "object": "be101240270d1c82426b5f3e9fb2ed6b8cef6b18",
+      "bytes": 14121,
+      "sha256": "f64eb0a2f3d22e34fe037c36b0c87d2e7ae9087d995939a2c2eca40c382f278e"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/DenCanonicalAgentBuilderTests.cs",
+      "mode": "100644",
+      "object": "fe6b06751bee7615ebc8f6f192c6b68e6e9c209e",
+      "bytes": 18067,
+      "sha256": "3b82822121b376af711ab3dd273cb3b4fc1603b3111ac8685f70c62076a4623f"
     },
     {
       "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
@@ -26153,16 +26524,30 @@
     {
       "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioDenLifetimeTests.cs",
       "mode": "100644",
-      "object": "ed29a98f4740a3a9e725a812121be8d877cd3c96",
-      "bytes": 8890,
-      "sha256": "5139ed33266ace4d221a0d3dd570b3eb1225b52e25c69d0bf46dc9aff46ba3ff"
+      "object": "4d9ab580a0d7179a66b3f6bf2b531d8e8d51f4ed",
+      "bytes": 14845,
+      "sha256": "99a8eae9d8dd684a0b04448e27cfb2408c89bedabfda4400cb2ec06b9fb5c735"
     },
     {
       "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs",
       "mode": "100644",
-      "object": "eec6342f44bab7c6e2f884d14ff7e0e110543e3b",
-      "bytes": 10329,
-      "sha256": "4121d6213bd0c4260698fcfba1b091c0f7b3524b0fda655d38b65dd08b132e9a"
+      "object": "15f85d20bcaff350caee375c13166b71d6751b77",
+      "bytes": 35433,
+      "sha256": "23b0bab59d4a6c5b442724ef0215c6e19d6bfaa317c039d18384f4f0f42a7364"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeShutdownTests.cs",
+      "mode": "100644",
+      "object": "6cde33ba1707db3e2fe64bda32b6eaad42be696e",
+      "bytes": 9225,
+      "sha256": "78cf1b6e0f6008029e3493446bf7dbfe8df924b162c8cad0ffca2dd389489a83"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioOriginalTaskDrainTests.cs",
+      "mode": "100644",
+      "object": "233d64d49b33bbdbfe2b096667b2d9a74c7c89cb",
+      "bytes": 12437,
+      "sha256": "2c2bc369c4dc50cf6127735ea090e51c98ee6d99c1ebc13db30e9ab2c110472e"
     },
     {
       "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioProjectApiTests.cs",
@@ -27950,11 +28335,25 @@
       "sha256": "33a20309f0063e37748270c85d6e53da9d0313d746b6934fc7be7132cc9d1381"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentDependencyCatalogService.cs",
+      "mode": "100644",
+      "object": "ce1150ba2c1eec8c6b249b5b5d80cbf85e24008d",
+      "bytes": 14171,
+      "sha256": "c9404d73dd82e75b97d90d07e202cd4fd4c5084c2cbf5fa67bb35e1e20eaf031"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentTaskRuntimeService.CanonicalDenStep.cs",
+      "mode": "100644",
+      "object": "f8e3ed206906cd3e31fd16c825df45ec02f5118f",
+      "bytes": 8047,
+      "sha256": "4eb7e18f002fc554dfddddbf83aec8c3071c14a6725d3f9be118123dd060b7f7"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentTaskRuntimeService.cs",
       "mode": "100644",
-      "object": "5dc96e114571b7354103744bac9b0a0e6b0e5ddf",
-      "bytes": 17221,
-      "sha256": "69442ce3cc97dd2e9e4804c0728e087576692f098864e7b96bb463426403ae1b"
+      "object": "69c96bf54d021f6c34221511213c1871f0c895f6",
+      "bytes": 17286,
+      "sha256": "70eaa8d16f410e20081f26aa80993b75d54ce066b25c8a10d6a04b4a4846a052"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/ApkLaunchAbstractions.cs",
@@ -28433,11 +28832,18 @@
       "sha256": "aed9844ae072865a1e8c040ff628bc8151bbcba89775d82e09b59386b8350fdf"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Capabilities/CapabilityHostPlatform.cs",
+      "mode": "100644",
+      "object": "3aa60d5e2fb5a84cabea5939ca108691853eefb9",
+      "bytes": 708,
+      "sha256": "bfab363452d271e4be7ecdc1b97436f41818a43f951a6d308a3f4872168554e3"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Capabilities/CapabilityRegistryService.cs",
       "mode": "100644",
-      "object": "98699e325646e0d78bfc76da907f6cf7a3b77f04",
-      "bytes": 1593,
-      "sha256": "6b99935e16eaf1efc7550d5f4843f22a33cbfe2f55f4be083e96b265458fd5f6"
+      "object": "c48c813c85f2997b561c8df206781a8efaa3f8de",
+      "bytes": 1700,
+      "sha256": "b2049692ada069c26b8d7e5882f833e6f4052b30d57d890444a126811d8cd551"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatCapabilitySelector.cs",
@@ -28456,9 +28862,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatExecutionTracker.cs",
       "mode": "100644",
-      "object": "f57fd88d7273963edf4914339c5297285beddf38",
-      "bytes": 8686,
-      "sha256": "bd9cadfde3548ad926ec9b250f444f5e2b2fae2491e657024258fed1e33f6fc1"
+      "object": "0b158150008adcabca350df1bebf081cacb5fda6",
+      "bytes": 10287,
+      "sha256": "b44769bf78e69d8ae08f5f0d361011aa57bc3c6d9868ed9caaf3a11a8bb65e3b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatModelInventoryCache.cs",
@@ -28477,9 +28883,16 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatSessionService.cs",
       "mode": "100644",
-      "object": "d1ff75fe497c6dad7221e250f14297098fa035f5",
-      "bytes": 74270,
-      "sha256": "c55ebcb294bd948f76aac98a70440b47028cb92eb099214998c4df6b68b3c041"
+      "object": "7810f45711c9d8d2ecc619a2ffaf6ca487c3b9e5",
+      "bytes": 82309,
+      "sha256": "ea55504530955a0b4180d162f8226651498facf4f96e765f2a0c719a1a9886b5"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Chat/IChatExecutionAdmission.cs",
+      "mode": "100644",
+      "object": "9d2e59975ea30710f71e79877e94f5947c416aa8",
+      "bytes": 7923,
+      "sha256": "7452899f5df0f45699178e5ac0240a8a3561e86e3aba55c2cb4ce651d767cc5d"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ResponseProgress.cs",
@@ -28827,9 +29240,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/NativePluginRuntime.cs",
       "mode": "100644",
-      "object": "56e0a7f0c94cc04f9f4eb01e3b59116a8615f18b",
-      "bytes": 18676,
-      "sha256": "092eb33b9ac514df2433ad23b5018b7f2e96bcaa44e408e2073224df05ade7f0"
+      "object": "73cd0d825f01a14437a89c81bc9fe5260b4a229b",
+      "bytes": 18979,
+      "sha256": "440caeae7ae6f0cdb8e73f7329552be9f16a55294cca7eb4d0809b13564c3a50"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/PluginToolRuntime.cs",
@@ -29541,9 +29954,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/ModelGovernance/ModelGovernance.cs",
       "mode": "100644",
-      "object": "c6532c3a22cea91b52bd3eb1aeab7114dc9cf91d",
-      "bytes": 12099,
-      "sha256": "64d72aa4db5cedb96a3a8398cbffb7fd4930882c301547543626e261a5538d91"
+      "object": "b36936d3c4fb0815a381eb155bc02b86fc55ce8b",
+      "bytes": 12117,
+      "sha256": "b965a4e9cc1db8cd842372e28eb3b11fe11ff971ca3ef6e3e6da811a267a48f3"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/ModelProviderAbstractions.cs",
@@ -30197,18 +30610,25 @@
       "sha256": "30e44602dc975775cebb51ef76d9e139b8435e522960f79ffcce962feac8cb4a"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Tools/IWorkspaceOriginalToolDispatcher.cs",
+      "mode": "100644",
+      "object": "38962484db48b1e5ae8a25935a0584816c21695a",
+      "bytes": 1522,
+      "sha256": "fc51a6371de07f13d442c8f8bd280a1393881c995eab63393a18064698a4d1cc"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Tools/ToolAvailability.cs",
       "mode": "100644",
-      "object": "c61ef683be2f7e668ef825b5c458ea08e337f011",
-      "bytes": 21764,
-      "sha256": "bec69f015400f5421ac26ef283677f51c0473de5409f9a5ea4e5fffffddbd3d6"
+      "object": "c41a971c64c2f5ac42449a792baddf1dbcd0371a",
+      "bytes": 22792,
+      "sha256": "3b5879ce30ffb95a9fb608caf1544070b945c4a7e81f4912c243691b0f27280f"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Tools/WorkspaceToolRuntime.cs",
       "mode": "100644",
-      "object": "a1fd87a468b6114c861ab391557c4ef4a12b0cea",
-      "bytes": 26796,
-      "sha256": "7aa5eaacbf27c301f1f4dd57eb1e95251052c466561c22f82bc923827a08ffc7"
+      "object": "6e4aeb16c8624aefcb6528e7fd730e10ebcf1021",
+      "bytes": 28565,
+      "sha256": "e0b82974538eaa92e4e16e65338dcfb1aec0c7e9eac680bed46e48bd437dda99"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Updates/IUpdateProvider.cs",
@@ -30696,9 +31116,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/Entities/CapabilityEntities.cs",
       "mode": "100644",
-      "object": "e9cb14cc66a318e921b3e024106a998bde2187ef",
-      "bytes": 1118,
-      "sha256": "cba19b035f64a28842d4517862869b95da3f604544bf832604036ad221b49246"
+      "object": "cd711d076812ef746935cedc52b83998eb21434c",
+      "bytes": 1296,
+      "sha256": "01c33dba971d5c3bd03057881c53cfcfada37a4719330eba87ae28db671b3e7a"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/Entities/CatalogEntities.cs",
@@ -30864,9 +31284,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/Extensions/ExtensionModels.cs",
       "mode": "100644",
-      "object": "8f14bfe211b8801f909e8bb0b2a364f8063d4b62",
-      "bytes": 5951,
-      "sha256": "66b2ba952d74ead274d8c922f206afcb947f25c24c73aebf1cad5c5aac030c9b"
+      "object": "35d9825f43a44bf6db6d023510dfab03bcef5e08",
+      "bytes": 6194,
+      "sha256": "10b1a6aedc92954408ed33e345e8e1a8193a9afe889f666ac87890e06c910108"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/Extensions/ExtensionSidebarContribution.cs",
@@ -31361,9 +31781,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
       "mode": "100644",
-      "object": "fbb3f79b2cb04d1d57ac82759c7fae9e9e9e2323",
-      "bytes": 24477,
-      "sha256": "7ccc1b7c9a1d7a53a42e3a899861a8b3c202e9e5be602ca487a69a3d5567cb0c"
+      "object": "afa19e2a07ddb8e96327a56765b92c40e162b1c5",
+      "bytes": 24566,
+      "sha256": "05dacff1780c360ba362b3c8a4a4d77300862137110c162b67a4ee0a6629bf6a"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/Montserrat-Italic-VariableFont_wght.ttf",
@@ -36777,6 +37197,13 @@
       "sha256": "7d8d37345354d9af1181473b3917463db47cec1cb75b3ef43f338b781d807d90"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/HomeOriginalAgentServiceCollectionExtensions.cs",
+      "mode": "100644",
+      "object": "e90ee4cb59221a1fb3805055c59dd267942c37da",
+      "bytes": 6956,
+      "sha256": "b3e81fb64a9ef0bdc8526aa42c1b89bb63f243e2a7ec6d9e69160cd178366992"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/HomeOwnedLibraryFenceServiceCollectionExtensions.cs",
       "mode": "100644",
       "object": "101d04dadc8886a250e88fcc3eefa5d83d67eff9",
@@ -36786,9 +37213,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs",
       "mode": "100644",
-      "object": "d7250391d39dbe59b3b257575288eff5e8dcaff6",
-      "bytes": 32623,
-      "sha256": "f9dc3d51a7d584a7390aa44187354a394ff53feb9749eb996079bc8683c44fd1"
+      "object": "3786e5da83c832537adb5e023e84d08547e026a4",
+      "bytes": 33463,
+      "sha256": "a9d89a7261548a595fd83f814d54ff0b24f68e0abb23edb224a0f3795d90dcfc"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ShelfMapsOwnerServiceCollectionExtensions.cs",
@@ -37108,9 +37535,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
       "mode": "100644",
-      "object": "68197752ba4a9e05584ee9518bcdf278423dd5da",
-      "bytes": 3619,
-      "sha256": "d36cc80e5f6319f8505867d271f77ccfc371fb5b0ee23e0b6cc606d3bdd462fe"
+      "object": "1693bb86c53f411f2f4bb9c1a4229833d7d4e065",
+      "bytes": 3733,
+      "sha256": "e8831199f64ba0d07e6142772597480364a9c514c73e52b1a49645f7054efb36"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/HomeOwnedLibraryCommitFenceSource.cs",
@@ -38541,6 +38968,20 @@
       "sha256": "cfab9d0622ce31c6a3b188de5e249bdb146e8f89b0a504db4ef21f6a31193e11"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/AgentDependencyCatalogServiceTests.cs",
+      "mode": "100644",
+      "object": "652a1e79a1c2b99fb5e929703f9ca7a462dd96c9",
+      "bytes": 17407,
+      "sha256": "274ce24cbe58a1c03b127e80bd93f04a6524d23c0a4f7a221a52084e554b15fb"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/CapabilityConcretePlatformTests.cs",
+      "mode": "100644",
+      "object": "a4ab7ef34b95d9f9ff3581179699566a3bd3972b",
+      "bytes": 4110,
+      "sha256": "c9d8f8afff33a58756edb4d808b4ef079e75e7dd15bd1730225714f4cdb95e8f"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj",
       "mode": "100644",
       "object": "d97b8d1ed55b6bdca97376bdaaab9cc996dbe5ca",
@@ -38744,6 +39185,27 @@
       "sha256": "f5586c0a68250fbf923cc8e6f8260ab1e3a2eec0b2395e695552623a0f419e90"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalEtaDrainTests.cs",
+      "mode": "100644",
+      "object": "2e9ebeb96b38826af036c60b8a099e1d2601d11c",
+      "bytes": 3357,
+      "sha256": "18d48436b138198ca9ae1d912eda405e27b1e9324cad04024979dc9a30f59f86"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalExecutionAdmissionTests.cs",
+      "mode": "100644",
+      "object": "2a099f934c263f2392a5f38e336a14f3f1f9e680",
+      "bytes": 40817,
+      "sha256": "1354ddb72227f7a598c7f6d4718ddd20fe2c4f2c6b528d78fbacd7913f773843"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalWorkspaceEvidenceTests.cs",
+      "mode": "100644",
+      "object": "e0b41929ac970863cf350f77426a7e2aaa0ece7e",
+      "bytes": 14545,
+      "sha256": "67d1e2e896d61087b4b8e14b088c176479dabb4f353af3ee358ca62f6e2f6f33"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatSessionToolLoopTests.cs",
       "mode": "100644",
       "object": "cffa332eea720984deedb9e3905d5b5dc7d86b80",
@@ -38931,6 +39393,13 @@
       "object": "f8b98e74430c9bf8d12a0361538c99cd131c6ae6",
       "bytes": 18466,
       "sha256": "f68068283d880779ca9a0d3271ac8303721ce72d5b96cc271f6132a5ff4eadc2"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FilesOriginalModelPermissionTests.cs",
+      "mode": "100644",
+      "object": "987aa56f2cd8444453f3b9ff8084d5d2f77b3e7a",
+      "bytes": 2815,
+      "sha256": "9af0eb42ffb7df66997745ca0e91dc6ea11e87806cb4ed0242f289c7d2bfb7df"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/Fixtures/CanvasSchema1Native13.9to1c",
@@ -40037,6 +40506,13 @@
       "object": "8668117acc8f5af62688d45692ef4e272f385e21",
       "bytes": 5689,
       "sha256": "c482f6c160b8ca00f38ed8c3eedeb0fc50c922769830a7472820bdffe81b36fd"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalAgentRenameTests.cs",
+      "mode": "100644",
+      "object": "735fc10608d922030838ffb559570cc8e1ec808d",
+      "bytes": 22114,
+      "sha256": "db64e0f47dcb9fe535d5bbe9e784b669fb6e7285b22ce3a55b0f8a6ab5c7acf1"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalOwnerCompositionTests.cs",
@@ -41873,6 +42349,13 @@
       "sha256": "5aed650b2a2afe5822a5978ec3f34f1e081a674ffc543164a92a7540f811ee0e"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeOriginalAgentDiTests.cs",
+      "mode": "100644",
+      "object": "71aca76c393459f9f70580b6897908e790a4a14b",
+      "bytes": 2562,
+      "sha256": "0f28b021d40c6b89b06c60b2d0cc456afc85d15d0b1eb26bcd3b8bc322349fbc"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeProductivityRegistrationTests.cs",
       "mode": "100644",
       "object": "fdb6533c20d8abe7b11f1f03d55560a703cb1208",
@@ -43238,6 +43721,13 @@
       "sha256": "991d71304ee98623a1ce2b334a75024808dfcf84fce729728601fcab8da40815"
     },
     {
+      "path": "framework/CUI/Runtime.Tests/CuiSceneActionCompletionObservationTests.cs",
+      "mode": "100644",
+      "object": "d82a737b9d73f79c0a97c74fdcda999bd1b9b7a1",
+      "bytes": 7720,
+      "sha256": "e9ba23e0dc9dec3b5693a8bf7537d0d99caafc0b4f1e897b8d8ea43fd1a4b749"
+    },
+    {
       "path": "framework/CUI/Runtime.Tests/CuiSceneAppearanceTests.cs",
       "mode": "100644",
       "object": "12ba2445e7af7393edcd491a6c5bbfccc749ffef",
@@ -43366,9 +43856,9 @@
     {
       "path": "framework/CUI/Runtime/CuiSceneHost.cs",
       "mode": "100644",
-      "object": "f79d77bd8f8b5db080fa1ab9a07aabecf0588389",
-      "bytes": 7786,
-      "sha256": "965c0b1246f40e07d7c38155ba499d62021f9d9b166678ef4d8799c492dc57de"
+      "object": "b74848e6f974ff2d3660d333273a75cb00c37e9c",
+      "bytes": 8532,
+      "sha256": "9ae0005b0cf037c1b2b7fd3167f4c8bfa2cd7fbb215b027d15e23fd5aa16e647"
     },
     {
       "path": "framework/CUI/Runtime/CuiSceneVisualResources.cs",
@@ -66370,504 +66860,161 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "No production MailKit certificate callback, revocation disable, credentials/provider or permission change. No case/assertion removal. No certificate private key or fixture password in public artifacts.",
-    "Bounded local OpenSSL HTTP download, complete signed chain CRL, missing CRL rejection, revoked certificate rejection and original helper drain verified; no .NET, MailKit, Java or OS trust acceptance inferred.",
-    "Full owning native launch/inner true seal remains required; no cleanup exemption. Exact failed actual6d and all-three original closure must be reviewed before root launch.",
-    "HTTP GET counts record observed loopback deliveries and are not attributed to a particular .NET PID.",
-    "Every observed inner evidence/caller and outer caller/Java/CRL/trust/private cleanup failure preserved alongside original owning failure in BaseExceptionGroup; no first-failure suppression. Every original drain attempted, no cleanup if disappearance unproven.",
-    "This new Home-owned ref is seeded by root from the successful Mail11 parent; it does not represent a prior Home failure. Root must first close every original Mail11 artifact and obtain complete package peers. No constructor/ref/dispatch performed by Worker1.",
-    "Full original178 owning/36 resource/12 regression cases plus current accepted18 owning/8 resource and four Home classes are mandatory. No old tuple, unfiltered Home/AI/runtime suite, native/TLS/PDB/restore/session/profile/drain guard is removed.",
-    "Actual compiled Home PE/PDB identity and complete reviewed source documents are mandatory; visible Home CUI resource/display and normal no-window DI refusal have original real fixture methods. Classic MainWindow activation and trusted CoreApi capability issuance remain unverified; display acknowledgement never grants authority or begins execution.",
-    "Historical predecessor-only local/failed-Mail qualifications remain preserved above. They are superseded for the Mail11 baseline by complete original737-member, 1736-pass zero-skip acceptance and independent root471/W4 replay, now pinned as inputs. The new Home successor remains uncompiled/unrun.",
-    "Normal27 exact29 accepted Mail products are byte-identical to this c6cb55 baseline and need no overlay. All accepted36 normal24 Shelf/Forms sources, current Writer26 workflow and current ledger are preserved. Every complete200 owning/44 resource/12 regression cohort and original native/TLS/source/PDB/task/restore/drain guard remains mandatory.",
-    "Root alone may seed this distinct Home-owned corrective ref to exact c6cb55, execute the unchanged constructor and dispatch after complete package peers. No prior Home failure, new runtime proof or classic native activation is inferred from this metadata successor.",
-    "Joined unaccepted exact Home prompt02/API01/host200 predecessor plus every canonical Sites8/preview1/consumer1 class=>210 owning,44 resource,12 regression. No old source/action/assertion/method/native/TLS/drain/restore/task/PDB guard removed.",
-    "Sites.Tests unfiltered independent restore/build/compiled target closure and PE/PDB exact full Sites producer/test documents required; actual mounted native consumer emits14 real CUI/canonical/Home cases. Recording HTML adapter verifies issued canonical output; actual native browser DOM/visible human prompt/classic lifecycle remain unverified.",
-    "Retained preview and component draft/error state are bound to full original actor/authentication/folder/project/source/page and current read permission. No cache grant, no model/free/local/access/pricing policy change, no shared credential/Worker authority edit or deployment.",
-    "Root seeds a dedicated corrective branch from the successful Mail11 c6 candidate, then alone reviews/constructs/pushes/dispatches. This package is source-only; existing full Mail acceptance does not imply joined Home/Sites runtime acceptance.",
-    "Actual full Sites210 three-family failure reviewed: missing canonical IActivatablePage namespace in NativeSitesPage; all available originals retained and same full210/44/12 acceptance required.",
-    "Minimal corrective03 imports only that namespace and selects independently reviewed Home/Sites physical Haven.dll/Haven.pdb producer lookup; logical source identity/all full PE/PDB/source/copy guards remain. Every other product/source/class/method/runtime/TLS/native/Java/CRL/task/restore/drain/workflow byte comes from exact actual eabc failure.",
-    "This is an unexecuted full corrective candidate. Native browser DOM/classic visible lifecycle and full joined Home/Sites acceptance remain unproven until the actual whole cohorts pass.",
-    "This distinct corrective branch is seeded by root to exact actual Sites210 eabc. All original210/44/12 tuples/classes/source/task/native/TLS/Java/CRL/policy/profile drains remain mandatory; original successful Mail11 does not imply this joined/native milestone acceptance.",
-    "Native Home observation uses actual separately restored/built original Haven.Desktop.csproj net10.0/linux-x64/Release under Xvfb; StartupObject/symbol scoped only to Desktop, seven canonical netstandard tools retain own framework, original source-built host task required.",
-    "Conditional validation probes observe the actual Configure<App>/classic MainWindow/shared presenter/local OS actor/visible exact pending CUI without grant/decision/trust/execution. Same original App callback Task must already settle after classic loop; caught primary and actual finally/task faults both refuse and survive. Program.Main bootstrap and unrelated detached callbacks remain outside this bounded milestone.",
-    "The actual native producer requires real direct-child/session/group/birth/maps/managed/Skia bytes and current original root/data/config/cache/haven/witness fds through actual session drain. Fresh profile retained on both success and refusal. Marker/process exit never grants native/callback/profile cleanup or original session drain success.",
-    "Every original independent post-launch restore/output/source-built task/native/source guard is attempted even on primary launch/drain failure and all failures retained. Partial original session initialization and independent launcher fd failures retain original drain attempts.",
-    "Only NativeSitesPage canonical namespace, App exact same-task shutdown factor and HomePage exact original linked cancellation provenance enter semantic product delta from actual failed Sites base; conditional probe/profile/shutdown source and all new native caller/targets/restore/compiled helpers remain validation-only. No production/cloud/auth/account/billing/provider activity.",
-    "HomePage normalizes only exact original linked-lifetime OCE when both original linked and actual supplied review tokens are requested, retaining original as InnerException. Observer waives only requested exact supplied-token cancellation. Unrelated/default token and deactivation-only cancellation remain original failures; every independent original cleanup still runs. Actual closest12 is managed provenance evidence only; native original210/44/12/profile/session/callback acceptance remains mandatory.",
-    "Exact actual Sites03 presenter CS0234 corrected solely with Avalonia.Application.Current. Two same namespace Home macro-on references proactively qualified; these are preventive/unreached and not observed native errors. Entire original presenter/probe bodies invert exactly, all App/profile/shutdown/permission/approval/cancellation/finally/drain actions unchanged. Corrected distinct-unrequested token tiny12 proof source08/W5 is pinned. Actual full3 Sites originals owned by Worker4, actual wholeHome native acceptance still mandatory.",
-    "Current28 accepted IMAP four products are exact original d657/normal28 bytes overlaid onto the unchanged actual eabc corrective seed; entire owning210 class rows and all old method/TRX entries retained plus actual Inbox class/two required Passed methods (211/44/12). Resource/regression and all caller/helper/native/TLS/CRL/Java/task/restore/profile/session/shutdown/drain bodies unchanged. Current28 runtime ledger is selected exactly as validation-only; historical semantic-base ledger remains disclosed. Sites Reachable visibility is the exact one-modifier pure traversal correction for two observed CS0117 errors, with no mutation/permission body change. No constructor/ref/build/run or native acceptance inferred.",
-    "Actual Home07 owning original remains unreviewed; two complete failed regression/resource families independently closed. This corrective retains every original caller/native/PDB/restore/task/TLS/profile/session/shutdown/drain body and every old class/method/TRX mapping. Only observed two Desktop fixtures change; accepted Math23/Android30/ledger source inherited exactly, four math classes appended to owning215/resource48 with all15 methods/22 actual Passed-case minima. No evolving CoreApi, new Agent, forwarding or Sites observer source selected. No compiler/native/full-cohort acceptance inferred.",
-    "This successor changes only the exact observed Sites fixture predicate assertion and its owning-class SHA. Complete admitted Home09 regression125 demonstrates xUnit2029; resource/owning originals remain held and no native/full cohort acceptance is inferred. All existing215/12/48 classes,22 Math minima, original method/TRX/caller/source/PDB/task/restore/TLS/CRL/Java/profile/shutdown/session/drain guards remain unchanged.",
-    "Actual Home11 regression151 now compiles and demonstrates a finish-audit test composed without a prompt presenter. The test-only presenter acknowledges the exact request and waits for the SAME explicit manual broker Accept; production unavailable-display HOME_PERMISSION_REQUIRED remains unchanged. Every prior assertion/method and full215/12/48/Math22/native/TLS/source/PDB/task/restore/profile/shutdown/drain guard remains required. Test display acknowledgement is synthetic; no real mounted prompt, grant, owner execution replay or native acceptance is inferred. Owning/resource originals remain held.",
-    "Actual Home13 available owning part04 proves718 Passed/one Sites first Assert.Null failure. Sole canonical fixture correction captures/awaits SAME Dispatcher.InvokeAsync(page.Deactivate) before original review. Wrong-thread error itself was not recorded; all14 original Sites outcomes/review5/assertions and full215/12/48/native/TLS/PDB/task/restore/drains remain mandatory. Complete sibling owning evidence and whole native acceptance are unreviewed."
+    "Root seeds only ratified isolated corrective ref to exact Home14 after complete package/source peers, then unchanged54ac constructor; no owner Git, source copy, build or runtime.",
+    "Whole original215 owning/12 regression/48 resource class tables/callers/method/native/TLS/CRL/Java/task/compiled/PDB/restores/profile/shutdown/drains remain byte exact; Home14 actual native failed/unaccepted. Fresh complete actual source cut is mandatory.",
+    "Additive SDK job runs independent evaluated Debug/Release graphs:22entry restores,18full test runs,4executable builds plus source-built tasks/analyzers/test graph builds/discovery/metadata. Old22command templates stay byte exact and are not dual-configuration evidence.",
+    "All101 reviewed source targets/38 exact prerequisites selected. Physical actual TargetPath/AssemblyName/PE-PDB and every emitted source document plus generated/materialized bytes required; pure enum/record no-sequence declarations separately compile/hash bound.",
+    "No test filtering/discovery skip/mock replacement. Every discovered actual case must be Passed and reconcile to full original TRX; all186 selected source methods/at least232 authored cases are minima, never claimed results before execution.",
+    "Exact source-built Avalonia task target/output closure and each independently restored actual graph/NuGet physical hash/metadata closure must remain equal before/after execution. Original guarded creator PID/pidfd/session/drains plus distinct primary/close/persistence/post-pin failures retained.",
+    "256MiB retained evidence,16MiB command log,1200s per original command and180minSDK job are polling acceptance bounds, not atomic filesystem/process caps. Raw package/output dependencies are fingerprinted; retained physical producer PE/PDB/source-built task/generated source bytes remain independently replayable.",
+    "Both SDK/headless passes and every original native cohort outcome remain required; SDK source compilation is not ordinary installed Home bootstrap/current actor/owner-selected provider/real Agent route/UI/Dulche/Files receipt/Windows/macOS/Android/iOS native acceptance.",
+    "Terra pass-start/B/C4/A1 standalone contracts remain separately held; no hosted/cloud/paid provider activation or product scope expansion."
   ],
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker2-mail-root22-private-full-caller04-prefix/manifest.json",
-      "sha256": "38b68509748523d25b8a517fbbb654dfbcbeac976f715a7a54e32d47ce5b91dd"
+      "path": "/workspace/astra-source/worker1-home-den-studio-joint-sdk-native-plan05-reviewed-core-transport-and-original-avatar-callback/manifest.json",
+      "bytes": 81795,
+      "sha256": "62b8e1b7ebb94ddd5a50ed7632b18e675eeaff4ce236fd3d1875ea2289c6df4a"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-draft-alias-profile-corrective-source01/manifest.json",
-      "sha256": "8b15ec2392b0ea3c20dcaeff5ab3dff021ec53b4f6775dfc8c20eb8310bf8c6b"
+      "path": "/workspace/astra-source/worker1-joint05-complete-plan-freeze-and-home14-portable-preservation-recipe01.json",
+      "bytes": 8559,
+      "sha256": "7c8e950f410c6cb026e43ef71e342470ef63611b4460ccedc2a5a3a1c6d2feef"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-failed-original-diagnostic01.json",
-      "sha256": "5bd7029ee31890ba78d1e7a0bebd47c695dfe43450114cf8235974928390b009"
+      "path": "/workspace/astra-source/worker2-joint05-complete-source-target-project-preservation-peer01.json",
+      "bytes": 3271,
+      "sha256": "7b613237c0361f445940da78c80621ccaeccb3b35255853554d10d4fbbdef951"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-resource-failure-diagnostic02.json",
-      "sha256": "934504c588fb5831d341b05a330664f4a107ba6bbd474813b0a862411bbbc2eb"
+      "path": "/workspace/astra-source/worker1-home13-current30-full-corrective-package14-original-dispatcher-navigation/manifest.json",
+      "bytes": 42866,
+      "sha256": "71a832d080e815b61936a8c60bf41d641e973f51ab9364e9567c1bf35d4e2e68"
     },
     {
-      "path": "/workspace/astra-source/checkpoint22-publication-local.json",
-      "sha256": "b7ff7fc3baeac9dc86764c280bc689a01cd167849eea46b1434ca527ac9c92ba"
+      "path": "/workspace/astra-source/worker1-home13-current30-full-corrective-package14-original-dispatcher-navigation/config.json",
+      "bytes": 67806,
+      "sha256": "83000537083a2ffaad28e32f8848f279a807c87b6c8699ba2025c459ce5ecbc3"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-canonical-draft-aliases-corrective-source02/manifest.json",
-      "sha256": "0bdca5255e0deb7d5143ef69ae6eef895f2237d2335d40178bbb834a58472da4"
+      "path": "/workspace/astra-source/worker4-admin-current30-sdk-web-full-owning-package03-original-persistence-errors/manifest.json",
+      "bytes": 31438,
+      "sha256": "79d5fb4bbe7864fb462f18bbca992ce2909ad24589f50bf5805dec89a570a306"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-alias-profile-full-corrective05/manifest.json",
-      "sha256": "572e62d3d4f2d4093b42458af7fb1abbf483f4c5247be25a27d16c6a59654432"
+      "path": "/workspace/astra-source/worker4-files03-complete-owning-provider-scope-original-receipt-source-peer01.json",
+      "bytes": 3069,
+      "sha256": "2a2934dfebd83297b84514bda7d4a0e20c8fab6e3382469677bed906224f4fad"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-canonical-model-aliases-corrective-source03/manifest.json",
-      "sha256": "d952adbc90ec6a13523ca037fd038c3d21a6b5650ecca9584e449fc3ec24d9ff"
+      "path": "/workspace/astra-source/worker3-shared-math06-actuale2d-full-three-corrective-caller-package06/construct.py",
+      "bytes": 7207,
+      "sha256": "54ac40564878065206bf97323b7584acaffe237e515d1974484b25867c2331df"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-canonical-aliases-full-corrective06/manifest.json",
-      "sha256": "3837d1b926f1f2956772bdab186df0a4e7ddb07f7d5aaa6a32e3473e0ab26ef7"
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package04-original-path-search-guard/astra-joint-native-sdk01-owning.py",
+      "bytes": 41306,
+      "sha256": "1474b60ead85bb03e89611aa90cc4219cadc0d783024e29db84ba8d37cf621fd"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail04-actual-canonical-model-aliases-full-corrective07/manifest.json",
-      "sha256": "0fde33865cccd5f446a46110066265e8c866b17cb286e72cf21dd7cc90566566"
+      "path": "/workspace/astra-source/worker2-joint05-portable-sdk-native-validation-package01/whole-sdk03-driver-inverse.json",
+      "bytes": 4582,
+      "sha256": "edb2d83eee9ac1b5e9a1298546c466a89726875ba07aa10eda68cd33670663f9"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail07-actual-mime-content-and-console-schema-corrective-source01/manifest.json",
-      "sha256": "5015c7296201d07d99e708f6bc22ef9bf91b65db327001715f5036d0f035c218"
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package03-complete-command-ledger/astra-joint-native-sdk01-sources.json",
+      "bytes": 81094,
+      "sha256": "d1536f65a3e3dfc338f8dad7097e1d386d2fe1a7dbc57743c1de466d27d08085"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail07-spaces02-six-small-original-diagnosis01.json",
-      "sha256": "09d52a48ddf54511c0f03b177bf5a92519b391456a543f06c4fcf5c910b3436b"
+      "path": "/workspace/astra-source/worker2-joint05-portable-sdk-native-validation-package01/astra-joint-sdk-test-inventory.py",
+      "bytes": 2783,
+      "sha256": "04d301b990202b2101a0042074b5d515cf4721f303f56693ae8fdf3ab643cb09"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail07-actual-content-console-schema-full-corrective08/manifest.json",
-      "sha256": "2b988342bfe33ea1dac9455c9fbb08c3908fe05824a8e7f2fb9b4306941dc5a8"
+      "path": "/workspace/astra-source/worker2-joint05-portable-sdk-native-validation-package02-complete-original-console-native-and-launcher/whole-home14-workflow-inverse.json",
+      "bytes": 650,
+      "sha256": "14115b1ab82c9b85c7da3e734e88b678b354e576f7d1d628fb7c0f3f3251b96d"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-actual-crl-pki-source01/manifest.json",
-      "sha256": "9b989254d1f559a4f01f57f2acabec10bb692dbd63f10b249a7f0068aa56a1c9"
+      "path": "/workspace/astra-source/worker2-joint05-portable-sdk-native-validation-package02-complete-original-console-native-and-launcher/haven-chat-model-ci.yml",
+      "bytes": 18602,
+      "sha256": "c6212457040ee98e0772bd5560ebe1b15d86f8d1e905390c64453ece401b72ab"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-all-three-original-full-failure-closure01.json",
-      "sha256": "80e9360164ad4863d425db4c71c8c714f127605151bfd7e9c15e83f1d5f5a124"
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package03-complete-command-ledger/astra_joint_sdk_profile_caller.py",
+      "bytes": 7900,
+      "sha256": "4cd2e8c2a0f7d7db215eb8c0fb1ec15817aa39711deecc6b724039f1db432c18"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-owning-original-full-closure01.json",
-      "sha256": "d61e903a0b032eeb71751f0a396f75d14ac074d2ea86705cdb0deec0c6477a90"
+      "path": "/workspace/astra-source/worker2-joint05-portable-sdk-native-validation-package02-complete-original-console-native-and-launcher/astra-joint-sdk-ephemeral-profile.py",
+      "bytes": 8631,
+      "sha256": "64ff4aca1aba22f20941fecdb4867c4e07c69abe9c362d52d8ec9ecfa87447c7"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe01.json",
-      "sha256": "0eeee033351bc37974d5f25f5cc2095a0a0604e5919213a035a0c849a8dfb6d1"
+      "path": "/workspace/astra-source/worker2-joint05-portable-sdk-native-validation-package02-complete-original-console-native-and-launcher/whole-package01-validation-inverse.json",
+      "bytes": 11417,
+      "sha256": "628928c33fe6055b77303bef9b702760b991366eb9894c945092f1eab2cf00d0"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe01.py",
-      "sha256": "043e94ac6c0f2f9f2d308619eed4c9a3fdbffe073cd4b086eb4c4b27f953b2de"
+      "path": "/workspace/astra-source/worker1-joint05-executable-package01-complete-source-api-held-peer01.json",
+      "bytes": 6415,
+      "sha256": "b50b0281a6c36525a6a39c6aafd06f8880a4861672b944bdf2712126f419e884"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-actual-crl-pki-full-corrective09/manifest.json",
-      "sha256": "2ef8bf2686cd8cd8d0fb016b4037dfdccad27420236870e46881b6a7c8b1a535"
+      "path": "/workspace/astra-source/worker4-joint05-sdk01-complete-configuration-original-custody-held-peer01.json",
+      "bytes": 6956,
+      "sha256": "dd3381625c1b54f4c64f12a28e4687e2b7e800d8230c2033705ffa49605df8e6"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-actual-crl-pki-source02-all-cleanup-failures/manifest.json",
-      "sha256": "e71c1e2b66f648a623dc4f1a349d70343f11a4ee5e5eee6ea0ceb3009003dd6a"
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package03-complete-command-ledger/whole-package02-command-ledger-and-metadata-inverse.json",
+      "bytes": 9856,
+      "sha256": "58d862328d39b2fb9a8962cd62abb46214cfdd51af4b60e0ad1aee20d2f08f13"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe02.json",
-      "sha256": "4280a2e9aa41eea2842a69939398ba1ded425531940cf6c07b7dd0e6a0a929ca"
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package03-complete-command-ledger/strict-command-ledger-source-controls.py",
+      "bytes": 5078,
+      "sha256": "bde458fa1f717fbf3cde8a5fd4dc86f6e5c393775d9a56706b2434127aebd676"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe02.py",
-      "sha256": "73d03df5fff22649b77a84cfa42a468964f29e000349befac4e4b6b99a5fa817"
+      "path": "/workspace/astra-source/worker1-joint05-executable-package02-complete-canonical-api-prerequisite-extension-peer01.json",
+      "bytes": 6051,
+      "sha256": "a06dd2f047cea0dd4d34d409773bddfe23121dd42de485c8409ac78d21cfdacd"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail10-actual-byte-preserving-attachment-webkit-drain-source01/manifest.json",
-      "sha256": "c40f27f5ab5159aa680345042505cf0ac32ea0d3688f996ecaaa78af1ae8963c"
+      "path": "/workspace/astra-source/worker4-joint05-sdk02-complete-original-console-native-custody-held-extension-peer01.json",
+      "bytes": 4578,
+      "sha256": "1a1faa42d505540fa84b537bb82f116a8b049ca310737802c5dafd2e794431b3"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail10-all-three-original-full-failure-closure01.json",
-      "sha256": "e54c20cea598a4671a115cf38ec059fee0705c5ffc7ffefc41b5a633f98b5002"
+      "path": "/workspace/astra-source/worker4-joint05-sdk02-nested-original-ledger-custody-held-extension-peer02.json",
+      "bytes": 1757,
+      "sha256": "e71219ff3da9edcbc73b8100f08097901b77fb77a85aa234bbe65e4d0b76600b"
     },
     {
-      "path": "/workspace/astra-source/worker4-mail10-native-delegation-path-diagnosis01.json",
-      "sha256": "d7c5eaba771d620a6719fc26d0b55ce72bd1e2e1dfaa254fc5d1696f3d900cf1"
+      "path": "/workspace/astra-source/worker6-joint-sdk02-complete-native-profile-caller-source-held-peer305.json",
+      "bytes": 11046,
+      "sha256": "b5ee73bd8aba88910878cb69bd65e241fc7b600d9007d99a9261bcfc7da373f0"
     },
     {
-      "path": "/workspace/astra-source/worker1-mail-mimekit418-preparation-review01/review.json",
-      "sha256": "6c6b2654c13503b3859a0b640aa1b87ef5185bad52e9db5050cde10a47c686b0"
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package04-original-path-search-guard/whole-package03-one-original-path-search-call-inverse.json",
+      "bytes": 2203,
+      "sha256": "a445fedca186f6f6544e04891531cd721b7d9e22b4c592d90d6aaab1ffea30e7"
     },
     {
-      "path": "/workspace/astra-source/worker2-spaces03-full-three-original-acceptance01.json",
-      "sha256": "9dcb47f514b9d0c541506b1906cadbf21f4c929c96168a7097a9a859c6494b97"
+      "path": "/workspace/astra-source/worker1-joint05-executable-package03-strict-command-ledger-complete-extension-peer01.json",
+      "bytes": 2953,
+      "sha256": "447033baad063a6480139872720f245c87616380f16a6a0703c101dc70c2b741"
     },
     {
-      "path": "/workspace/astra-source/worker2-spaces03-current22-four-source-publication-plan01.json",
-      "sha256": "de133271d7cf8a2dee6cc84bfc55b617f7b85abe169401250fdbd1dc4130b2a8"
+      "path": "/workspace/astra-source/worker4-joint05-sdk03-complete-original-command-ledger-custody-source-extension-peer01.json",
+      "bytes": 2076,
+      "sha256": "de3bd515ae6834f775e3c1e5c115af0a89dcbcb99a63b938c658c9b99d3ca375"
     },
     {
-      "path": "/workspace/astra-source/worker2-mail10-actual-byte-preserving-attachment-webkit-drain-full-corrective11/freeze-full-package.py",
-      "sha256": "485cbb999ae543eaf9d5e377579aa42b78ea62816c4b62f4677ee1b2e2d11f59"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint25-publication-local.json",
-      "sha256": "924553c09e69b3e8c3a91721b3cac93ce0b62c090d61dc903eafafcc1fb00849"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-full-hosted-caller-draft01/mapping.json",
-      "sha256": "277a7912749320bd528198de68942fdc4b530fecfe1327b9e2211b2bd068a8a9"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-full-hosted-caller-draft02-complete-current-cohorts/mapping.json",
-      "sha256": "8b0f3742860004a9583e0c4fbb5f9cb600be9b7b8d868f0bbd48d13ce128cc14"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-full-hosted-caller-draft02-complete-current-cohorts/map-accepted-union.py",
-      "sha256": "f560accf6f667c75ec66d4340ee6e815ec214961feec61f134f3b2da2f4031b4"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-current25-full-native-caller-package01/freeze-private-package.py",
-      "sha256": "781d7008ae177510e03e799e240af049bcfaffd4a471c4ab08701a64c66b49d4"
-    },
-    {
-      "path": "/workspace/astra-source/worker5-home-prompt02-fullsemantic-native-wiring-peer01.json",
-      "sha256": "4499f1a1c1bfc033344c7ac9032c5f08d0c7867ba9a030c9aad27a837ad4fda0"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-home-core-api-original-snapshot-fence-source-peer132.json",
-      "sha256": "cf7fc178498eb0dbb3289d28d388c64e1e5ca00b3746f6bcfeb896a0d4473105"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-acknowledged-native-activation-source02-explicit-completion-test-presenter/manifest.json",
-      "sha256": "d55ea73697f9279305b457a3246318a0c62e1af5d6e83c4351a1fe1aa426a9c8"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-core-api-original-snapshot-fence-source01/manifest.json",
-      "sha256": "d23e86ab789612503436dc0e6fca351bb2ed80c153f35e7f59c0715e46ce8c09"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-host-composition-source01/manifest.json",
-      "sha256": "1172f5467a9445be3412b437d08e218d629ee22e13c0c000059bbe136eb0bc91"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-current25-full-native-caller-package01/manifest.json",
-      "sha256": "ab8cc9cf3dec4c423e986ac538bce65fda5a25bc76b1097a10a32b9068c74bd3"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint27-publication-local.json",
-      "sha256": "ed8d800a5d35acae7fcf6acc80a05db93c73cfe650d363de477862e390f067bf"
-    },
-    {
-      "path": "/workspace/astra-source/worker2-mail11-full-three-original-acceptance01.json",
-      "sha256": "eada20cad3642e15cef014fdab4a1d4fc0d9b248e8f5910de6b518054c967db5"
-    },
-    {
-      "path": "/workspace/astra-source/root-mail11-full-three-original-replay471.json",
-      "sha256": "a8c20a33f463ef407050426ebc8577381affa3840c5ac4a8666a2b27df8bfccf"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-mail11-full-original-native-tls-custody-peer02-current26.json",
-      "sha256": "0f7107ba662c2909d3620e3206b2e31f75c0714b1366f931adaa6a3a4bc2892b"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-home-prompt-host-fixture01-source-api-peer01.json",
-      "sha256": "3b692ea8e291e0110fb08dfcc674c6ff99d985766f7ecfb0a43408b334580a20"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-current27-full-native-caller-package02/refresh-private-package.py",
-      "sha256": "5eb97e3e218db176ba3808bfdaea8d84a9da1b4444349569e8f9ba7fa51a09e8"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites-consumer-source06-unresolved-component-selection-purge/manifest.json",
-      "sha256": "7797c0a45e7e9b746ac7d3a1fe1b7c9a84c1a456d7736d217a8c7acaa8dc412b"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-prompt-current27-full-native-caller-package02/manifest.json",
-      "sha256": "ba08baa24cbfebe408f431fcd980926a0197f8bc6a6d377651542a201aaecb2e"
-    },
-    {
-      "path": "/workspace/astra-source/worker5-sites-consumer06-complete-native-ui-authority-source-peer01.json",
-      "sha256": "f263158702e14142a2ff867e5a881b1d367961857208e341e44be265ca0c50c8"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-sites-consumer04-observed-binding-home-api-peer-extension01.json",
-      "sha256": "fc6c54bdc62dcf162326d6cf0e3eb3d14154d74abb0d27ca9bf8837a025a0e15"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-home-prompt-host-fixture01-source-api-peer01.json",
-      "sha256": "3b692ea8e291e0110fb08dfcc674c6ff99d985766f7ecfb0a43408b334580a20"
-    },
-    {
-      "path": "/workspace/astra-source/worker2-mail11-full-three-original-acceptance01.json",
-      "sha256": "eada20cad3642e15cef014fdab4a1d4fc0d9b248e8f5910de6b518054c967db5"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-mail11-full-original-native-tls-custody-peer02-current26.json",
-      "sha256": "0f7107ba662c2909d3620e3206b2e31f75c0714b1366f931adaa6a3a4bc2892b"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint27-publication-local.json",
-      "sha256": "ed8d800a5d35acae7fcf6acc80a05db93c73cfe650d363de477862e390f067bf"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint26-publication-local.json",
-      "sha256": "3f37533c2d4fbb384287dfbfe81f1b757fd240c5ba11aca2f3c7fa335ffaeb10"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites-home-current27-full-native-caller-package02-current-home-ledger/manifest.json",
-      "sha256": "c4a1feea5eca50ab1a8e218b3df2239b1e39dada56dacfb699d928a57fc395fd"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites210-full-three-original-failure-closure01/receipt.json",
-      "sha256": "9b9354f8d8aec3168d4748ef8df7d16082a3bc7c57520ca0f769dc50b9ef66aa"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-compiled-pair-physical-name-source01/manifest.json",
-      "sha256": "2de151e2cd79621c67ef1848b1e5992d2c4ab953c3cb97253c472aed8394e699"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites-compiled-pair-physical-name-source01/manifest.json",
-      "sha256": "4fe133a0d72f983ba0a206b1163e6ee59a9d8c8ec631e5ee2c02356fe1bc3baf"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-home-sites-physical-pair-source-peer179.json",
-      "sha256": "be508fd534bf362d37a3868324996c1cce07a46b140cb9aac2bd817d3b54a151"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites210-lifecycle-namespace-corrective-source07/manifest.json",
-      "sha256": "df5038d3e6efa483fdc8b8cde171e56129915b195651cc3cf9aefca064520208"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites210-actual-compiler-and-physical-pair-full-corrective-package03/manifest.json",
-      "bytes": 15855,
-      "sha256": "7d542e4d527fd2b9d8a7110c879eb45f3303286575060aed459b9730b4ef3e14"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-sites210-corrective03-full-source-preservation-peer01.json",
-      "bytes": 27560,
-      "sha256": "9502a7cf4745af4f5dca4117519b350c586c644e75d7b1f3c2c05e7e269893ff"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-native-classic-activation-probe-source06-original-shutdown-failures/manifest.json",
-      "bytes": 11095,
-      "sha256": "1ffd60415469b9d31059ccbf4c22c0262e02d0bb7389fd747855478e53708c48"
-    },
-    {
-      "path": "/workspace/astra-source/worker5-home-native-observer06-exact-shutdown-failure-source-peer01.json",
-      "bytes": 12801,
-      "sha256": "2a70cf2e61689198c451524609777d6bda59ddbce0e64778c462655ef15fd1c6"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-original-native-caller-source02-independent-original-failure-drains/manifest.json",
-      "bytes": 11053,
-      "sha256": "85555f3891242b134f8cc8eacd04b2a3e606a61866b99b4fbcaa86e019136732"
-    },
-    {
-      "path": "/workspace/astra-source/worker5-home-original-native-caller02-three-lifecycle-corrections-source-peer01.json",
-      "bytes": 11108,
-      "sha256": "4bcb775a964634c18d6ab3197b4f4620d73445a84e5bf0cf1a445479ff2c4a85"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package01/manifest.json",
-      "bytes": 22468,
-      "sha256": "5bbf54125ad9a6c9047a8af1bbbbc04a33cae744e1eb9ce764edc2e3e9357268"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-native-classic-activation-probe-source07-exact-review-cancellation-provenance/manifest.json",
-      "bytes": 15862,
-      "sha256": "ca14b83b0891dc613e90912db59d09956402bd0605afe51f905b6ebf212f0331"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-home-original-native-full01-metadata-custody-peer01.json",
-      "bytes": 6298,
-      "sha256": "213bfdaf3dc8044baa2a1f9d982750fc85126db164b301ee701da2b279eab9fb"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-home-original-native-full01-source-pdb-producer-tables-peer186.json",
-      "bytes": 11578,
-      "sha256": "5dc7e244bdf3657ff8788ba92fb6608352cabe6c0068c8cf09708ecf667db357"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package02-exact-review-cancellation-provenance/manifest.json",
-      "bytes": 25453,
-      "sha256": "a735f97d4fc804b9654d1db571f5e892ed4a502820a3a17768316f1fa4ed7ea7"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package03-complete-semantic-product-set/manifest.json",
-      "bytes": 26007,
-      "sha256": "00a297a7d6ce4255e53e835189a8c6dbad18effd1a4ffa8126b816f87386426e"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package04-canonical-cut-self-manifest/manifest.json",
-      "bytes": 26345,
-      "sha256": "c31fbb13818140c0f9904c57c240c152ba4717f9d4aefa56d866a56d9ab96888"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-native-classic-activation-probe-source09-explicit-original-Avalonia-application/manifest.json",
-      "bytes": 22551,
-      "sha256": "81b627f09732edda5707a63f32c8974ceeef78ac9f0e645e5d4021e495adb755"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-sites03-actual-home-application-binder-source01/manifest.json",
-      "bytes": 4726,
-      "sha256": "f8211fe928bcd0443322eb01c5116d6e75f99e80b0ae5774af06170cd4c80f96"
-    },
-    {
-      "path": "/workspace/astra-source/worker2-home07-full04-metadata-provenance-preservation-peer01.json",
-      "bytes": 2644,
-      "sha256": "2494449380197f0cc313d5dac6fb379af3cdfaea2e8bf483559ae4f17926b941"
-    },
-    {
-      "path": "/workspace/astra-source/worker5-home-native-observer07-exact-review-cancellation-source-peer01.json",
-      "bytes": 14783,
-      "sha256": "03a0337d1d39b0181e8dca3901b60feced67a90f438e01f2e04c5070d6ae67ec"
-    },
-    {
-      "path": "/workspace/astra-source/worker5-home-native-observer08-distinct-unrequested-test-proof-peer01.json",
-      "bytes": 12260,
-      "sha256": "0db880fccaa864ad2d336c88ce895b44fca215525ee529c486fa10d428bc69aa"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package05-actual-presenter-binder/manifest.json",
-      "sha256": "eeacbce4907e866683469a827665b2149e49557fa7019f1887b87c2ddd8c2fe1"
-    },
-    {
-      "path": "/workspace/astra-source/worker2-home09-full05-binder-metadata-preservation-peer01.json",
-      "sha256": "8e9e24f3477ddeeb09c89d1b3add356d9b8d9606887145eb8747bec3328c1fbc"
-    },
-    {
-      "path": "/workspace/astra-source/worker5-home-native-source09-exact-application-binder-peer01.json",
-      "sha256": "61cefbab48f16d07ab1a8e1ac68e905bf838e6458d953492ca3b15ead31e1fff"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint28-publication-local.json",
-      "sha256": "1aa5f2709c8686cee25c2c90fa31eb6fe54ccc2de509aff4bb606f6add281c6b"
-    },
-    {
-      "path": "/workspace/astra-source/worker2-imap16-accepted-four-source-home211-union-inventory01.json",
-      "sha256": "5cabec421f7a979304839cfe986d405eeff5208430860248307e2f73eb424330"
-    },
-    {
-      "path": "/workspace/astra-source/root-imap16-full-three-original-replay524.json",
-      "sha256": "34168156bbe2a02a3c46b470658af0d3770cd3c7243c81e535dfc65de52e8c1c"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites03-actual-canonical-reachability-visibility-source08/manifest.json",
-      "sha256": "0224a64e00abd17c5aac0f31475785b2d99e71b93374aba3363d5fe1041abe12"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-sites03-reachable-source08-canonical-traversal-api-peer01.json",
-      "sha256": "c1ece82eea167d2eb385a4947b38e862c0f7f06a41c15505626491abb3b03f72"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-current28-original-native-full-caller-package07-accurate-final-manifest/manifest.json",
-      "sha256": "de0d2af7bfa18c41ddbcffe747b77fdf5dd7e7c9bad2a035fb5ed8e78aaf92d4"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-current28-original-native-full-caller-package06-accepted-imap-and-sites-reachability/config.json",
-      "sha256": "2af81b5d0a4c674ab2a2a288571cd8dba71082267f2c12dd1a9b04303f78d57b"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint30-publication-local.json",
-      "sha256": "2c564108c0110315f8922efdd6a3ec572e89f17e88cf42a1f0b3f116b7099cc3"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint29-publication-local.json",
-      "sha256": "77429ce9dd285c10d48ece85d5d75b5c321e7952c4f0d70483c11b3c8edc5298"
-    },
-    {
-      "path": "/workspace/astra-source/worker3-math06-accepted23-four-class-method-current29-union-inventory01.json",
-      "sha256": "711fd33d1aa28d133114bd668a13ab155d1c6653622b74eb78676ebf06a02110"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home07-regression-resource-original-failure-closure01.json",
-      "sha256": "bf2d322b69b58a855ddbc613c7b971517902b2ebf52e3b2132d29a3cbbc9134e"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home07-actual-host-fixture-application-source02/manifest.json",
-      "sha256": "dc2d537e50406bf47bcec25911671b537914b20f891b0346495a72316e90bc14"
-    },
-    {
-      "path": "/workspace/astra-source/worker2-home07-host-fixture-source02-actual-binder-peer01.json",
-      "sha256": "329940cdf1ae62799b58d651b951a56e9b828e7908d770505073d6341e960cd9"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites04-observed-native-fixture-compiler-source09/manifest.json",
-      "sha256": "5d0fb2cd17031b515a727ffa6dee53a1d691927320affc44606105e57301da47"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-sites-native-fixture09-actual-api-whole-inverse-peer01.json",
-      "sha256": "32d9955958c9256c9d691bd326168e320c28074139fbfbcd350ed244c693b5d7"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites05-actual-xunit2029-fixture-source10/manifest.json",
-      "sha256": "59967e6ef234ac74622a196c54c3e7f5980f3835500f4ec692c32d445ae6e0b6"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-sites10-actual-xunit2029-whole-source-api-peer01.json",
-      "sha256": "ec8e639bf48b51dc7128a753c16360e09a53a2761909071bdee13ebb04e11b07"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home09-regression-full-original-failure-closure01.json",
-      "sha256": "165f1607a75c4967d6c1d38824aa170f3840b473e7368ed7a3915e9bfbcb5827"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home07-current30-full-corrective-package09-accurate-executable-metadata/manifest.json",
-      "sha256": "c51bfc224ef2841f8030e69db644b7a8c6426385a8c77a2ba3bc81ee307fd292"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home09-current30-full-corrective-package11-complete-inherited-guard-provenance/manifest.json",
-      "sha256": "4c28a89adbac6803913be0a3b9dad214522245614e2959046557501384399d20"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home11-contextual-finish-original-prompt-fixture-source01/manifest.json",
-      "sha256": "2f9f11512aedf13867676d17b9d2197c4fc75eaf7622a56e8d786a7318b09ee7"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home11-regression-full-original-failure-closure01.json",
-      "sha256": "f4707b2041bea670858c34613839e635a4756a7435129936949675c6e27059ed"
-    },
-    {
-      "path": "/workspace/astra-source/worker2-home11-original-prompt-fixture-source01-peer01.json",
-      "sha256": "06407c0c4f039d275a37f05e2c164cdd3cfa1a5232ac5030143c97ad87eea4df"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home11-current30-full-corrective-package12-original-acknowledged-finish-fixture/manifest.json",
-      "sha256": "5d7d75e5f37a88ea5d4ca10d41dd8759dc3ae818ef54b533e8044557d970b9d2"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home11-current30-full-corrective-package13-truthful-historical-regression-capture/manifest.json",
-      "sha256": "5e8ebb5d5f814cdf3f66005edcecad8596761c7bdc816437cb63ef242c65006f"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-sites08-actual-dispatcher-navigation-fixture-source11/manifest.json",
-      "sha256": "c325130ccef5b7a366f30f77112adb842a1bc3820e1b58bb2d1b72b34547863c"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-sites11-original-dispatcher-fixture-source-api-peer01.json",
-      "sha256": "532435e8bf7f31f6a986c219c33634233dd9fdf8ce1ecbcd3dd7b165c9229163"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home13-owning-part04-complete-available-original-trx-closure01.json",
-      "sha256": "f5494818b6002339e39e0d5f4f3670c499c8aa51ea0312c5bd1f4d4c881911e8"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/worker1-home11-current30-full13/root-launch-receipt.json",
-      "sha256": "3cb843593299541fb335288ff6cc91b4e8ab41e31c65aeeb0ab9420add52daf7"
-    },
-    {
-      "path": "/workspace/astra-source/root-read-closed-evidence733.py",
-      "sha256": "8834231d8131ba5739531c631453d330f414d765da7fb486496bb44ab9ce8a65"
+      "path": "/workspace/astra-source/worker6-sdk03-complete-command-ledger-binding-corrective-source-extension-peer307.json",
+      "bytes": 5575,
+      "sha256": "e036398fc37ab8a89bbc80a9d5f48a66212168510248fcdd85988974fbe1b083"
     }
   ],
   "sharedCakeIdContract": null

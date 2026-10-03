@@ -57,6 +57,16 @@ public static class ServiceCollectionExtensions
             artifactActions: provider.GetServices<IHomeProductivityArtifactActionProvider>()));
         services.TryAddSingleton<IHomeProductivityEngine>(provider => provider.GetRequiredService<HomeProductivityEngine>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeProductivityEngineService>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, HomeCoreServiceReadActionPolicies>());
+        services.TryAddSingleton<HomeNativeCoreApiSessions>(provider => new(
+            provider.GetRequiredService<HomePermissionTrustService>(),
+            provider.GetRequiredService<IAuthenticatedResourceActorSource>(),
+            provider.GetRequiredService<IHomeNativeInstalledPeerVerifier>(),
+            () => provider.GetRequiredService<IHomeCoreApi>()));
+        services.TryAddSingleton<IHomeCoreAuthorization>(provider => provider.GetRequiredService<HomeNativeCoreApiSessions>());
+        services.TryAddSingleton<IHomeCoreApi>(provider => new HomeCoreApi(
+            provider.GetRequiredService<HomeCoreRuntime>(), provider.GetRequiredService<IHomeCoreAuthorization>(),
+            provider.GetRequiredService<IAuthenticatedResourceActorSource>()));
         services.TryAddSingleton<HomeCoreRuntime>();
         services.TryAddSingleton<IVersionedModelRouteRepository, HomeVersionedModelRouteRepository>();
         services.TryAddSingleton<HomePersonalModelRoutes>(provider => new(
@@ -81,7 +91,7 @@ public static class ServiceCollectionExtensions
             return new(provider.GetRequiredService<IModelProviderRegistry>(), provider.GetRequiredService<IHomeCoreStateStore>(),
                 new HomePermissionCallerIdentity(actor.ActorId, "9to1 native Home host", "os-bound-local-profile", actor.AuthenticationRevision, true),
                 provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>(), provider.GetServices<IHomeActionPolicySource>(),
-                provider.GetRequiredService<HomePersonalModelRoutes>(), provider.GetService<IHomeApprovalPromptPresenter>());
+                provider.GetRequiredService<HomePersonalModelRoutes>());
         });
         services.AddSingleton<IAppAiCoordinatorFactory>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IAppAiModelPicker>(provider => provider.GetRequiredService<HomeAppAiServices>());

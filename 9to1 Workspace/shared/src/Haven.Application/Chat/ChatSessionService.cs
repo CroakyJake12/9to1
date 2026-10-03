@@ -38,7 +38,8 @@ public sealed class ChatSessionService(
     IDefaultProviderStore? defaultProviders = null,
     CheckpointService? checkpoints = null,
     IProjectInstructionSource? projectInstructionFiles = null,
-    IMemoryQuerySource? memorySource = null)
+    IMemoryQuerySource? memorySource = null,
+    IChatExecutionAdmission? originalExecutionAdmissions = null)
 {
     private readonly ChatModelInventoryCache _modelInventory =
         modelInventory ?? new ChatModelInventoryCache(ollama);
@@ -102,8 +103,16 @@ public sealed class ChatSessionService(
         PermissionMode browserPermission = PermissionMode.FullAccess,
         IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
         IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
-        ComputerUseRequest? computerUseRequest = null)
+        ComputerUseRequest? computerUseRequest = null,
+        object? originalExecutionAuthority = null)
     {
+        using var originalAdmission = originalExecutionAuthority is null ? null :
+            await ChatOriginalExecutionBoundary.OpenAsync(originalExecutionAdmissions,
+                originalExecutionAuthority, conversation.Id, model.Name, cancellationToken).ConfigureAwait(false);
+        if (originalAdmission is not null) cancellationToken = originalAdmission.Token;
+        ValueTask DemandOriginalAsync(string modelIdentity, OllamaToolCall? originalCall, CancellationToken token) =>
+            originalAdmission is null ? ValueTask.CompletedTask :
+                originalAdmission.DemandAsync(modelIdentity, originalCall, token);
         await safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken).ConfigureAwait(false);
         ModelDescriptor etaModel = model;
 
@@ -111,6 +120,8 @@ public sealed class ChatSessionService(
             ChatEtaRequest request,
             CancellationToken token)
         {
+            using var originalEtaLifetime = originalAdmission?.LinkOriginalLifetime(token);
+            if (originalEtaLifetime is not null) token = originalEtaLifetime.Token;
             var activity = request.RecentActivity.Count == 0
                 ? "No completed steps yet."
                 : string.Join("; ", request.RecentActivity);
@@ -121,19 +132,24 @@ public sealed class ChatSessionService(
                 "Return exactly one clear duration such as '8 minutes', '45 minutes', or '2 hours'. " +
                 "Do not return a range, explanation, uncertainty, or refusal.";
 
-            return await ollama.CompleteAsync(
+            await DemandOriginalAsync(etaModel.Name, null, token).ConfigureAwait(false);
+            var estimate = await ollama.CompleteAsync(
                 new OllamaChatRequest(
                     etaModel.Name,
                     [new OllamaMessage("user", etaPrompt)],
                     effort,
                     "Return one concrete remaining-time duration and nothing else."),
                 token).ConfigureAwait(false);
+            await DemandOriginalAsync(etaModel.Name, null, token).ConfigureAwait(false);
+            return estimate;
         }
 
-        await using var execution = new ChatExecutionTracker(
+        var execution = new ChatExecutionTracker(
             ChatExecutionStage.Preparing,
             EstimateEtaAsync);
 
+        async IAsyncEnumerable<ChatStreamEvent> RunOriginalAsync()
+        {
         var promptActionId = Guid.NewGuid();
         executionEvents?.TryPublish(new ExecutionEvent(
             Guid.NewGuid(), execution.OperationId, promptActionId, null, ExecutionOrigin.Haven,
@@ -208,9 +224,11 @@ public sealed class ChatSessionService(
 
         if (!conversation.IsTemporary)
         {
+            await DemandOriginalAsync(etaModel.Name, null, cancellationToken).ConfigureAwait(false);
             await conversations.UpsertConversationAsync(
                 conversation with { UpdatedAt = now },
                 cancellationToken).ConfigureAwait(false);
+            await DemandOriginalAsync(etaModel.Name, null, cancellationToken).ConfigureAwait(false);
             await conversations.AddMessageAsync(
                 userMessage,
                 cancellationToken).ConfigureAwait(false);
@@ -235,7 +253,10 @@ public sealed class ChatSessionService(
                 null,
                 DateTimeOffset.UtcNow);
             if (!conversation.IsTemporary)
+            {
+                await DemandOriginalAsync(etaModel.Name, null, cancellationToken).ConfigureAwait(false);
                 await conversations.AddMessageAsync(availabilityMessage, cancellationToken).ConfigureAwait(false);
+            }
             execution.Complete();
             execution.Changed -= PublishExecution;
             yield return ChatStreamEvent.AssistantCompleted(availabilityMessage);
@@ -244,6 +265,7 @@ public sealed class ChatSessionService(
 
         execution.Update(ChatExecutionStage.LoadingModel, "Loading Model");
         await safety.EnsureMayActAsync(conversation.Id, "chat.model-discovery", cancellationToken).ConfigureAwait(false);
+        await DemandOriginalAsync(model.Name, null, cancellationToken).ConfigureAwait(false);
         var installed = await _modelInventory.GetAsync(
             forceRefresh: false,
             cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -279,6 +301,7 @@ public sealed class ChatSessionService(
                 installed,
                 requiredCapabilities)
             ?? model;
+        await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
         etaModel = turnModel;
 
         string? personalityDirective = null;
@@ -347,6 +370,11 @@ public sealed class ChatSessionService(
         var calendarDefinitions = calendarTools is null
             ? []
             : await calendarTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken).ConfigureAwait(false);
+        var originalWorkspaceDefinitions = originalExecutionAuthority is null
+            ? Array.Empty<OllamaToolDefinition>()
+            : await workspaceTools.GetOriginalDefinitionsAsync(originalExecutionAuthority, conversation.Id,
+                turnModel.Name, selectedRegisteredCapabilities, cancellationToken).ConfigureAwait(false);
+        await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
         var availabilityPlan = CreateAvailabilityPlan(
             conversation.Mode,
             workspaceRoot,
@@ -357,7 +385,8 @@ public sealed class ChatSessionService(
             computerPassCandidate.Definitions,
             mcpDefinitions,
             calendarDefinitions,
-            pluginBindings);
+            pluginBindings,
+            originalWorkspaceDefinitions);
 
         var modelPlan = availabilityPlan.RestrictToModel(turnModel);
         var modelCapabilities = FilterCapabilitiesForTurn(
@@ -448,38 +477,71 @@ public sealed class ChatSessionService(
                 PermissionMode permission,
                 CancellationToken token)
             {
+                using var originalToolLifetime = originalAdmission?.LinkOriginalLifetime(token);
+                if (originalToolLifetime is not null) token = originalToolLifetime.Token;
+                await DemandOriginalAsync(turnModel.Name, call, token).ConfigureAwait(false);
+                WorkspaceToolResult? originalResult = null;
+                Exception? originalFailure = null;
+                Exception? settlementFailure = null;
+                OllamaToolCall? originalDispatchCall = null;
+                try
+                {
+                    originalDispatchCall = originalAdmission is null ? call :
+                        await originalAdmission.GetDispatchCallAsync(turnModel.Name, call, token).ConfigureAwait(false);
+                    originalResult = await ExecuteAdmittedRuntimeAsync(originalDispatchCall).ConfigureAwait(false);
+                }
+                catch (Exception error) { originalFailure = error; }
+                // The actual call admission returned above. Never settle a pending/refused admission.
+                if (originalAdmission is not null && originalDispatchCall is not null)
+                {
+                    try { await originalAdmission.CompleteCallAsync(turnModel.Name, call, originalDispatchCall, originalResult,
+                        originalFailure, CancellationToken.None).ConfigureAwait(false); }
+                    catch (Exception error) { settlementFailure = error; }
+                }
+                if (originalFailure is not null && settlementFailure is not null && !ReferenceEquals(originalFailure, settlementFailure))
+                    throw new AggregateException("Original tool dispatch and owning outcome settlement refused.", originalFailure, settlementFailure);
+                if (originalFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(originalFailure).Throw();
+                if (settlementFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(settlementFailure).Throw();
+                return originalResult ?? throw new InvalidOperationException("The original tool runtime returned no result.");
+
+                async Task<WorkspaceToolResult> ExecuteAdmittedRuntimeAsync(OllamaToolCall dispatchCall)
+                {
                 if (runtime == ToolRuntimeKind.Computer && computerPass is not null)
-                    return await computerPass.ExecuteAsync(call, token).ConfigureAwait(false);
+                    return await computerPass.ExecuteAsync(dispatchCall, token).ConfigureAwait(false);
                 if (runtime == ToolRuntimeKind.Browser && browserTools is not null)
-                    return await browserTools.ExecuteAsync(call, token).ConfigureAwait(false);
+                    return await browserTools.ExecuteAsync(dispatchCall, token).ConfigureAwait(false);
                 if (runtime == ToolRuntimeKind.Automation && automationTools is not null)
-                    return await automationTools.ExecuteAsync(call, conversation.Mode, conversation.Id, conversation.ContainerId, token).ConfigureAwait(false);
+                    return await automationTools.ExecuteAsync(dispatchCall, conversation.Mode, conversation.Id, conversation.ContainerId, token).ConfigureAwait(false);
                 if (runtime == ToolRuntimeKind.Mcp && mcpTools is not null)
-                    return await mcpTools.ExecuteAsync(call, selectedRegisteredCapabilities, permission, token).ConfigureAwait(false);
+                    return await mcpTools.ExecuteAsync(dispatchCall, selectedRegisteredCapabilities, permission, token).ConfigureAwait(false);
                 if (runtime == ToolRuntimeKind.Plugin && pluginTools is not null)
                 {
-                    var binding = pluginBindings.FirstOrDefault(item => item.Definition.Name.Equals(call.Name, StringComparison.Ordinal));
+                    var binding = pluginBindings.FirstOrDefault(item => item.Definition.Name.Equals(dispatchCall.Name, StringComparison.Ordinal));
                     if (binding is null)
                         return new WorkspaceToolResult(
-                            new ToolActivity(Guid.NewGuid(), call.Name.Replace('_', ' '), "Plugin binding was not found for this pass.", false, TimeSpan.Zero, DateTimeOffset.UtcNow),
+                            new ToolActivity(Guid.NewGuid(), dispatchCall.Name.Replace('_', ' '), "Plugin binding was not found for this pass.", false, TimeSpan.Zero, DateTimeOffset.UtcNow),
                             "Tool error: plugin binding was not found for this pass.");
-                    return await pluginTools.ExecuteAsync(binding, call, execution.OperationId, activeActionId ?? parentActionId, token).ConfigureAwait(false);
+                    return await pluginTools.ExecuteAsync(binding, dispatchCall, execution.OperationId, activeActionId ?? parentActionId, token).ConfigureAwait(false);
                 }
                 if (runtime == ToolRuntimeKind.Calendar && calendarTools is not null)
-                    return await calendarTools.ExecuteAsync(call, selectedRegisteredCapabilities, permission, token).ConfigureAwait(false);
-                if (runtime == ToolRuntimeKind.Workspace && workspaceRoot is not null)
+                    return await calendarTools.ExecuteAsync(dispatchCall, selectedRegisteredCapabilities, permission, token).ConfigureAwait(false);
+                if (runtime == ToolRuntimeKind.Workspace && (workspaceRoot is not null || originalExecutionAuthority is not null))
                 {
                     // A checkpoint is recorded before the first applicable mutation of this execution.
-                    if (checkpoints is not null &&
-                        ModelToolPermissionMap.Map(call.Name) == RestrictedModelCapability.EditFiles)
+                    if (workspaceRoot is not null && checkpoints is not null &&
+                        ModelToolPermissionMap.Map(dispatchCall.Name) == RestrictedModelCapability.EditFiles)
                         await checkpoints.EnsureBeforeMutationAsync(
                             execution.OperationId, conversation.Id, conversation.ContainerId,
                             workspaceRoot, checkpoints.Mode, cancellationToken).ConfigureAwait(false);
-                    return await workspaceTools.ExecuteAsync(workspaceRoot, call, token, conversation.Id, conversation.ContainerId).ConfigureAwait(false);
+                    // The checkpoint may await policy/storage; refresh currentness without spending another call.
+                    await DemandOriginalAsync(turnModel.Name, null, token).ConfigureAwait(false);
+                    return await workspaceTools.ExecuteAsync(workspaceRoot, dispatchCall, token, conversation.Id, conversation.ContainerId,
+                        originalExecutionAuthority: originalExecutionAuthority, originalModelIdentity: turnModel.Name).ConfigureAwait(false);
                 }
                 return new WorkspaceToolResult(
-                    new ToolActivity(Guid.NewGuid(), call.Name.Replace('_', ' '), "Registered runtime is unavailable.", false, TimeSpan.Zero, DateTimeOffset.UtcNow),
+                    new ToolActivity(Guid.NewGuid(), dispatchCall.Name.Replace('_', ' '), "Registered runtime is unavailable.", false, TimeSpan.Zero, DateTimeOffset.UtcNow),
                     "Tool error: registered runtime is unavailable.");
+                }
             }
 
             async Task<WorkspaceToolResult> ExecuteToolAsync(OllamaToolCall call)
@@ -501,7 +563,7 @@ public sealed class ChatSessionService(
                         ToolRuntimeKind.Mcp => mcpTools is not null,
                         ToolRuntimeKind.Plugin => pluginTools is not null && pluginBindings.Any(item => item.Definition.Name.Equals(call.Name, StringComparison.Ordinal)),
                         ToolRuntimeKind.Calendar => calendarTools is not null,
-                        ToolRuntimeKind.Workspace => workspaceRoot is not null,
+                        ToolRuntimeKind.Workspace => workspaceRoot is not null || originalExecutionAuthority is not null,
                         _ => false
                     };
                     var startedAt = DateTimeOffset.UtcNow;
@@ -509,6 +571,8 @@ public sealed class ChatSessionService(
                     invocationEvidence.Enqueue(new(invocationId, call.Name, selectedRuntime.ToString(),
                         available ? ToolInvocationObservationStatus.RuntimeReturned : ToolInvocationObservationStatus.UnavailableBeforeDispatch,
                         available ? observed.Activity.Succeeded : null, startedAt, DateTimeOffset.UtcNow, retryOf, observed.Failure?.Code));
+                    // Retain the actual dispatch observation, then fence any result/event publication.
+                    await DemandOriginalAsync(turnModel.Name, null, token).ConfigureAwait(false);
                     return observed;
                 }
 
@@ -687,6 +751,15 @@ public sealed class ChatSessionService(
                 } };
             }
 
+            async Task<OllamaToolCall?> TryOriginalBridgeAsync()
+            {
+                await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
+                var bridged = await TryBridgeToolCallAsync(ollama, turnModel, effort, prompt,
+                    toolDefinitions, generationOptions, cancellationToken).ConfigureAwait(false);
+                await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
+                return bridged;
+            }
+
             var bootstrapCall = computerPass?.TryCreateBootstrapCall(prompt);
             if (bootstrapCall is not null)
             {
@@ -710,6 +783,7 @@ public sealed class ChatSessionService(
                 try
                 {
                     await safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken).ConfigureAwait(false);
+                    await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
                     response = await ollama.ChatWithToolsAsync(new OllamaToolRequest(
                         turnModel.Name, turns, toolDefinitions, effort, system, generationOptions), cancellationToken).ConfigureAwait(false);
                 }
@@ -718,11 +792,12 @@ public sealed class ChatSessionService(
                     unsupportedToolSchema = true;
                 }
 
+                await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
                 if (unsupportedToolSchema)
                 {
                     bridgeAttempted = true;
                     var bridged = LooksLikeToolRequest(prompt)
-                        ? await TryBridgeToolCallAsync(ollama, turnModel, effort, prompt, toolDefinitions, generationOptions, cancellationToken).ConfigureAwait(false)
+                        ? await TryOriginalBridgeAsync().ConfigureAwait(false)
                         : null;
                     if (bridged is not null)
                     {
@@ -753,7 +828,7 @@ public sealed class ChatSessionService(
                     if (!bridgeAttempted && callsUsed == 0 && LooksLikeToolRequest(prompt))
                     {
                         bridgeAttempted = true;
-                        var bridged = await TryBridgeToolCallAsync(ollama, turnModel, effort, prompt, toolDefinitions, generationOptions, cancellationToken).ConfigureAwait(false);
+                        var bridged = await TryOriginalBridgeAsync().ConfigureAwait(false);
                         if (bridged is not null)
                         {
                             callsUsed++;
@@ -807,6 +882,7 @@ public sealed class ChatSessionService(
             var firstChunk = true;
             var thinkingBuffer = new StringBuilder();
             await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream", cancellationToken).ConfigureAwait(false);
+            await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
             await foreach (var chunk in ollama.StreamChatAsync(new(turnModel.Name, requestMessages, effort, system, Options: generationOptions), cancellationToken).ConfigureAwait(false))
             {
                 if (firstChunk)
@@ -817,6 +893,7 @@ public sealed class ChatSessionService(
 
                 // Detect thinking tokens (prefixed with \x00T:)
                 await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken).ConfigureAwait(false);
+                await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
                 if (chunk.StartsWith("\x00T:"))
                 {
                     var thinkingContent = chunk[3..];
@@ -835,10 +912,45 @@ public sealed class ChatSessionService(
         var assistantMetadata = toolActivities.Count == 0 ? null : JsonSerializer.Serialize(new { toolActivities });
         var assistant = new ChatMessage(assistantId, conversation.Id, MessageRole.Assistant, buffer.ToString(), agentName, turnModel.Name, assistantMetadata, DateTimeOffset.UtcNow);
         if (!conversation.IsTemporary)
+        {
+            await DemandOriginalAsync(turnModel.Name, null, cancellationToken).ConfigureAwait(false);
             await conversations.AddMessageAsync(assistant, cancellationToken).ConfigureAwait(false);
+        }
         execution.Complete();
         execution.Changed -= PublishExecution;
         yield return ChatStreamEvent.AssistantCompleted(assistant);
+        }
+
+        // Keep the SAME original iterator and timer in outer custody. Yields stay outside catches;
+        // a main MoveNext refusal cannot be replaced by independent enumerator/timer cleanup.
+        var original = RunOriginalAsync().GetAsyncEnumerator(cancellationToken);
+        Exception? primary = null;
+        var cleanup = new List<Exception>();
+        try
+        {
+            while (true)
+            {
+                bool moved;
+                try { moved = await original.MoveNextAsync().ConfigureAwait(false); }
+                catch (Exception error) { primary = error; break; }
+                if (!moved) break;
+                try { await DemandOriginalAsync(etaModel.Name, null, cancellationToken).ConfigureAwait(false); }
+                catch (Exception error) { primary = error; break; }
+                yield return original.Current;
+            }
+        }
+        finally
+        {
+            try { await original.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception error)
+            { if (!ReferenceEquals(error, primary) && !cleanup.Any(item => ReferenceEquals(item, error))) cleanup.Add(error); }
+            try { await execution.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception error)
+            { if (!ReferenceEquals(error, primary) && !cleanup.Any(item => ReferenceEquals(item, error))) cleanup.Add(error); }
+            if (cleanup.Count != 0) throw new AggregateException("Original Chat action and cleanup failures retained.",
+                primary is null ? cleanup : new[] { primary }.Concat(cleanup));
+            if (primary is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
+        }
     }
 
     private static string SummarizePrompt(string prompt)
@@ -1074,7 +1186,8 @@ public sealed class ChatSessionService(
         IReadOnlyList<OllamaToolDefinition> computerDefinitions,
         IReadOnlyList<OllamaToolDefinition>? mcpDefinitions = null,
         IReadOnlyList<OllamaToolDefinition>? calendarDefinitions = null,
-        IReadOnlyList<PluginToolBinding>? pluginBindings = null) =>
+        IReadOnlyList<PluginToolBinding>? pluginBindings = null,
+        IReadOnlyList<OllamaToolDefinition>? originalWorkspaceDefinitions = null) =>
         (toolAvailability ?? ToolAvailabilityPlanner.Default).Create(
             new ToolAvailabilityContext(
                 mode,
@@ -1096,7 +1209,8 @@ public sealed class ChatSessionService(
                 automationTools?.GetDefinitions(false, true) ?? [],
                 mcpDefinitions ?? [],
                 calendarDefinitions ?? [],
-                pluginBindings ?? []));
+                pluginBindings ?? [],
+                OriginalWorkspace: originalWorkspaceDefinitions ?? []));
 
     /// <summary>
     /// Performs the approvable step owned by this component.

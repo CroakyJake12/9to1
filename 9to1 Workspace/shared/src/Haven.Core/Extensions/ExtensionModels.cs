@@ -168,7 +168,10 @@ public sealed record ResolvedSkill(
     string? WorkflowJson,
     string? ContextRulesJson,
     IReadOnlyDictionary<string, string> Resources,
-    IReadOnlyList<string> CapabilityIds);
+    IReadOnlyList<string> CapabilityIds,
+    // Observation captured by the maintained resolver from its SAME selected original package.
+    // This immutable witness grants no execution/resource authority; older consumers default null.
+    string? OriginalPackageFingerprint = null);
 
 public sealed record ExtensionSkillCatalogEntry(
     string SkillId,

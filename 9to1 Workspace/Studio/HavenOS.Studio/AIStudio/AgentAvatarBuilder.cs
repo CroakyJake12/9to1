@@ -47,6 +47,17 @@ public sealed class AgentAvatarBuilder(AgentPresentationService canonical)
         => AgentAvatarPresentation.Snapshot(draft with {
             Reactions = draft.Reactions.Where(r => r.EventId != eventID).ToArray() });
 
+    public Task<AgentDefinitionRecord> OpenAsync(string namespaceID, string agentID,
+        CancellationToken cancellationToken = default) => canonical.GetAsync(namespaceID, agentID, cancellationToken);
+    public Task<AgentDefinitionRecord> AssignAsync(string namespaceID, string agentID, long expectedRevision,
+        AgentPresentationDefinition draft, string operationID, CancellationToken cancellationToken = default)
+        => canonical.SetAsync(namespaceID, agentID, expectedRevision, draft, operationID, cancellationToken);
+    public Task<AgentPresentationFrame> PreviewDraftAsync(string namespaceID, string agentID, long expectedRevision,
+        AgentPresentationDefinition draft, string? stateID, string? presentationEvent, string readableActivity,
+        bool reducedMotion, CancellationToken cancellationToken = default)
+        => canonical.PreviewDraftAsync(namespaceID, agentID, expectedRevision, draft, stateID, presentationEvent,
+            readableActivity, reducedMotion, cancellationToken);
+
     public Task<AgentDefinitionRecord> SaveAsync(string namespaceID,string agentID,long expectedRevision,
         AgentPresentationDefinition draft,string operationID,CancellationToken cancellationToken=default)
         =>canonical.SetAsync(namespaceID,agentID,expectedRevision,draft,operationID,cancellationToken);

@@ -76,6 +76,85 @@ public sealed class StudioDenLifetimeTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Lifetime.RetryExistingImportAuditAsync(review.RequestId, fixture.Ownership));
     }
 
+    [Fact]
+    public Task Selected_factory_borrows_the_same_actual_Store_and_never_grants_Execute_or_Admin() =>
+        WithFactoryFixtureAsync(async fixture =>
+        {
+            var id = await fixture.Lifetime.SelectAsync(Path.Combine(fixture.Root, "selected"), true, fixture.Ownership);
+            var factory = await fixture.Lifetime.OpenBoundFactoryAsync(fixture.Receipts);
+            var throughFactory = await factory.OpenAsync();
+            var throughSession = await fixture.Lifetime.OpenBoundSessionAsync(fixture.Receipts);
+            Assert.Equal(id, throughFactory.DenId); Assert.Equal(throughSession.Actor, throughFactory.Actor);
+            Assert.Same(throughSession.Den.Store, throughFactory.Den.Store);
+            var repeated = await factory.OpenAsync(); Assert.Same(throughFactory.Den.Store, repeated.Den.Store);
+            var agent = await throughFactory.Den.SaveAsync(new AgentDefinitionRecord
+                { Id = "factory-agent", NamespaceId = "personal", DisplayName = "Factory Agent", Version = "1" }, 0, "factory-save");
+            Assert.Equal(agent.Id, (await throughSession.Den.GetAsync<AgentDefinitionRecord>("personal", agent.Id))!.Id);
+            Assert.False(await throughFactory.Den.AccessPolicy.IsAllowedAsync(throughFactory.Actor.ActorId, "personal", agent.Id, DenPermission.Execute));
+            Assert.False(await throughFactory.Den.AccessPolicy.IsAllowedAsync(throughFactory.Actor.ActorId, "personal", agent.Id, DenPermission.Administer));
+            Assert.Equal(1, fixture.Retired);
+        });
+
+    [Fact]
+    public Task Existing_selected_factory_cannot_bypass_actual_Home_ownership_review() =>
+        WithFactoryFixtureAsync(async fixture =>
+        {
+            var existingRoot = Path.Combine(fixture.Root, "existing-factory");
+            await using (var original = await DenStore.CreateAsync(existingRoot, [new("personal", "personal")])) { }
+            var id = await fixture.Lifetime.SelectAsync(existingRoot, false, fixture.Ownership);
+            var factory = await fixture.Lifetime.OpenBoundFactoryAsync(fixture.Receipts);
+            Assert.False((await fixture.Lifetime.ReadAsync(id, default))!.NewlyCreated);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => factory.OpenAsync());
+            var review = await fixture.Lifetime.RequestExistingImportAsync(fixture.Ownership);
+            Assert.Equal(HomePermissionRequestState.PendingApproval, review.State);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => factory.OpenAsync());
+            Assert.True((await fixture.Permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+            await fixture.Lifetime.CompleteExistingImportAsync(review.RequestId, fixture.Ownership);
+            var session = await factory.OpenAsync(); Assert.Equal(id, session.DenId);
+            Assert.Same((await fixture.Lifetime.OpenBoundSessionAsync(fixture.Receipts)).Den.Store, session.Den.Store);
+            Assert.False(await session.Den.AccessPolicy.IsAllowedAsync(session.Actor.ActorId, "personal", "factory-agent", DenPermission.Execute));
+        });
+
+    [Fact]
+    public Task Selected_factory_handoff_cancellation_replacement_and_disposal_keep_original_provider_fences() =>
+        WithFactoryFixtureAsync(async fixture =>
+        {
+            await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Lifetime.OpenBoundFactoryAsync(fixture.Receipts));
+            var firstId = await fixture.Lifetime.SelectAsync(Path.Combine(fixture.Root, "first-factory"), true, fixture.Ownership);
+            var firstFactory = await fixture.Lifetime.OpenBoundFactoryAsync(fixture.Receipts);
+            var first = await firstFactory.OpenAsync();
+            using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => fixture.Lifetime.OpenBoundFactoryAsync(fixture.Receipts, cancelled.Token));
+            Assert.Same(first.Den.Store, (await firstFactory.OpenAsync()).Den.Store);
+            var secondId = await fixture.Lifetime.SelectAsync(Path.Combine(fixture.Root, "second-factory"), true, fixture.Ownership);
+            Assert.NotEqual(firstId, secondId);
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => firstFactory.OpenAsync());
+            var secondFactory = await fixture.Lifetime.OpenBoundFactoryAsync(fixture.Receipts);
+            var second = await secondFactory.OpenAsync(); Assert.Equal(secondId, second.DenId);
+            Assert.NotSame(first.Den.Store, second.Den.Store);
+            await fixture.Lifetime.DisposeAsync();
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => fixture.Lifetime.OpenBoundFactoryAsync(fixture.Receipts));
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => secondFactory.OpenAsync());
+        });
+
+    // Every original owned cleanup is attempted independently; a failing assertion is not replaced.
+    private static async Task WithFactoryFixtureAsync(Func<Fixture, Task> action)
+    {
+        Fixture? fixture = null; var failures = new List<Exception>();
+        try { fixture = new Fixture(); await action(fixture); }
+        catch (Exception error) { failures.Add(error); }
+        if (fixture is not null)
+        {
+            fixture.BeforeRetire = null;
+            try { await fixture.Lifetime.DisposeAsync(); }
+            catch (Exception error) { if (!failures.Any(original => ReferenceEquals(original, error))) failures.Add(error); }
+            try { if (Directory.Exists(fixture.Root)) Directory.Delete(fixture.Root, true); }
+            catch (Exception error) { if (!failures.Any(original => ReferenceEquals(original, error))) failures.Add(error); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException(failures);
+    }
+
     private sealed class Fixture : IAsyncDisposable
     {
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "astra-studio-host-" + Guid.NewGuid().ToString("N"));

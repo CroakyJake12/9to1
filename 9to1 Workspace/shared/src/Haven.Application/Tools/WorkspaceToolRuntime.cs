@@ -25,7 +25,8 @@ public sealed record WorkspaceToolResult(ToolActivity Activity, string Output, T
 public sealed class WorkspaceToolRuntime(
     IWorkspaceToolService tools,
     IWorkspaceStateRepository? history = null,
-    TerminalCommandActivityHub? commandActivity = null)
+    TerminalCommandActivityHub? commandActivity = null,
+    IWorkspaceOriginalToolDispatcher? originalTools = null)
 {
     /// <summary>
     /// Stores max file characters locally so this component can preserve the dependency, cache, or state between member calls.
@@ -75,7 +76,29 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Runs execute async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
-    public async Task<WorkspaceToolResult> ExecuteAsync(string workspaceRoot, OllamaToolCall call, CancellationToken cancellationToken, Guid? conversationId = null, Guid? containerId = null)
+    /// <summary>Registered original owning definitions are observations; each effect still requires the SAME private admission.</summary>
+    public ValueTask<IReadOnlyList<OllamaToolDefinition>> GetOriginalDefinitionsAsync(object originalExecutionAuthority,
+        Guid conversationId, string modelIdentity, IReadOnlyCollection<ActiveCapability> currentCapabilities,
+        CancellationToken cancellationToken = default) => originalTools is null
+            ? ValueTask.FromResult<IReadOnlyList<OllamaToolDefinition>>([])
+            : originalTools.GetOriginalDefinitionsAsync(originalExecutionAuthority, conversationId, modelIdentity,
+                currentCapabilities, cancellationToken);
+
+    public Task<WorkspaceToolResult> ExecuteAsync(string? workspaceRoot, OllamaToolCall call, CancellationToken cancellationToken,
+        Guid? conversationId = null, Guid? containerId = null, object? originalExecutionAuthority = null,
+        string? originalModelIdentity = null)
+    {
+        if (originalExecutionAuthority is null)
+            return ExecuteLegacyAsync(workspaceRoot!, call, cancellationToken, conversationId, containerId);
+        if (originalTools is null || conversationId is null || conversationId == Guid.Empty || string.IsNullOrWhiteSpace(originalModelIdentity))
+            throw new UnauthorizedAccessException("The registered original owning tool route is unavailable.");
+        return originalTools.ExecuteOriginalAsync(originalExecutionAuthority, conversationId.Value,
+            originalModelIdentity, call, cancellationToken).AsTask();
+    }
+
+    // The entire original local path is preserved. No original admission is inferred from a root, call or result.
+    private async Task<WorkspaceToolResult> ExecuteLegacyAsync(string workspaceRoot, OllamaToolCall call, CancellationToken cancellationToken,
+        Guid? conversationId = null, Guid? containerId = null)
     {
         var started = Stopwatch.GetTimestamp();
         try

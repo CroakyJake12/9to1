@@ -10,7 +10,9 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
 {
     private readonly AgentPresentationService _canonical;
     private readonly AgentAvatarBuilder _builder;
+    private readonly (string NamespaceID, string AgentID)? _boundAgent;
     private readonly Func<CancellationToken, Task>? _authorityLost;
+    private readonly CancellationToken _owningLifetime;
     private readonly SemaphoreSlim _operations = new(1, 1);
     private AgentDefinitionRecord? _agent;
     private AgentPresentationDefinition? _draft;
@@ -24,10 +26,14 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
 
     public AgentAvatarPreview? Preview { get; }
 
-    public AgentAvatarEditor(AgentPresentationService canonical, DenAgentPresentationAssets? assets = null, Func<CancellationToken, Task>? authorityLost = null)
+    public AgentAvatarEditor(AgentPresentationService canonical, DenAgentPresentationAssets? assets = null, Func<CancellationToken, Task>? authorityLost = null,
+        (string NamespaceID, string AgentID)? boundAgent = null, CancellationToken owningLifetime = default)
     {
         _canonical = canonical;
         _authorityLost = authorityLost;
+        _boundAgent = boundAgent;
+        _owningLifetime = owningLifetime;
+        Bindings.Set("AllowAgentSelection", boundAgent is null);
         Preview = assets is null ? null : new(assets);
         _builder = new(canonical);
         foreach (var field in new[] { "Status", "NamespaceID", "AgentID", "AgentName", "Revision", "StaticAsset", "AccessibleName", "InitialState", "StateID", "StateLabel", "StateAsset", "FromState", "ToState", "TransitionEvent", "ReactionEvent", "ReactionState", "PreviewEvent", "AvatarActivity", "PreviewAsset" })
@@ -46,17 +52,26 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
 
     public async Task OpenAsync(string namespaceID, string agentID, CancellationToken cancellationToken = default)
     {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _owningLifetime);
+        cancellationToken = linked.Token;
         await _operations.WaitAsync(cancellationToken);
-        try { Preview?.Clear(); Load(await _canonical.GetAsync(namespaceID, agentID, cancellationToken)); }
+        try { RequireBoundIdentity(namespaceID, agentID); Preview?.Clear(); Load(await _canonical.GetAsync(namespaceID, agentID, cancellationToken)); }
         finally { _operations.Release(); }
     }
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _owningLifetime);
+        cancellationToken = linked.Token;
         await _operations.WaitAsync(cancellationToken);
         try
         {
-            if (command == "OpenAvatar") { Load(await _canonical.GetAsync(Text("NamespaceID"), Text("AgentID"), cancellationToken)); return; }
+            if (command == "OpenAvatar")
+            {
+                var namespaceID = Text("NamespaceID"); var agentID = Text("AgentID");
+                RequireBoundIdentity(namespaceID, agentID);
+                Load(await _canonical.GetAsync(namespaceID, agentID, cancellationToken)); return;
+            }
             var agent = _agent ?? throw new DenException(DenErrorCode.NotFound, "Open an Agent first.");
             var draft = _draft;
             if (draft is null && command == "SetAvatarIdentity")
@@ -74,10 +89,19 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
                 case "SetAvatarReaction": _draft = _builder.SetReaction(draft, new(Text("ReactionEvent"), Text("ReactionState"))); break;
                 case "RemoveAvatarReaction": _draft = _builder.RemoveReaction(draft, Text("ReactionEvent")); break;
                 case "SaveAvatar":
-                    Load(await _builder.SaveAsync(agent.NamespaceId, agent.Id, agent.Revision, draft, Guid.NewGuid().ToString("N"), cancellationToken)); return;
+                case "AssignAvatar":
+                    Load(await _builder.AssignAsync(agent.NamespaceId, agent.Id, agent.Revision, draft, Guid.NewGuid().ToString("N"), cancellationToken)); return;
+                case "PreviewCoding":
+                case "PreviewJoke":
+                case "PreviewIdle":
+                    var kind = command == "PreviewCoding" ? AgentPresentationActivityKind.Coding :
+                        command == "PreviewJoke" ? AgentPresentationActivityKind.UserJoke : AgentPresentationActivityKind.Idle;
+                    var simulated = AgentPresentationEvents.Describe(kind);
+                    Bindings.Set("PreviewEvent", simulated.EventId); Bindings.Set("AvatarActivity", simulated.ReadableActivity);
+                    goto case "PreviewAvatar";
                 case "PreviewAvatar":
                     Preview?.Clear();
-                    var frame = await _canonical.PreviewDraftAsync(agent.NamespaceId, agent.Id, agent.Revision, draft,
+                    var frame = await _builder.PreviewDraftAsync(agent.NamespaceId, agent.Id, agent.Revision, draft,
                         string.IsNullOrWhiteSpace(Text("StateID")) ? null : Text("StateID"), Text("PreviewEvent"), Text("AvatarActivity"), Flag("ReducedMotion"), cancellationToken);
                     if (Preview is not null) await Preview.LoadAsync(agent.NamespaceId, frame, cancellationToken,
                         draft.States.FirstOrDefault(state => state.StateId == frame.StateId)?.Loop ?? false);
@@ -91,14 +115,22 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
         catch (DenException error)
         {
             Preview?.Clear(); Bindings.Set("Status", $"{error.Code}: {error.Message}");
-            if (error.Code == DenErrorCode.Forbidden && _authorityLost is not null) await _authorityLost(CancellationToken.None);
+            if (error.Code == DenErrorCode.Forbidden && _authorityLost is not null)
+                try { await _authorityLost(CancellationToken.None); }
+                catch (Exception cleanup) { throw new AggregateException(error, cleanup); }
             throw;
         }
         finally { _operations.Release(); }
     }
 
+    private void RequireBoundIdentity(string namespaceID, string agentID)
+    {
+        if (_boundAgent is { } bound && (namespaceID != bound.NamespaceID || agentID != bound.AgentID))
+            throw new DenException(DenErrorCode.Conflict, "The embedded avatar editor must retain the same canonical Agent.");
+    }
     private void Load(AgentDefinitionRecord agent)
     {
+        RequireBoundIdentity(agent.NamespaceId, agent.Id);
         Preview?.Clear();
         var draft = agent.Presentation is null ? null : AgentAvatarPresentation.Snapshot(agent.Presentation);
         _agent = agent; _draft = draft;

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Security.Cryptography;
 using HavenOS.Home.Core;
 
 namespace HavenOS.Home.PermissionsTrustNotifications;
@@ -148,6 +147,8 @@ public sealed class HomePermissionTrustService
                 ResultMessage = "Home approval is required before the target app action can execute.",
             };
             ReplaceRequest(state, request);
+            AddAudit(state, request, HomePermissionAuditKind.ApprovalPromptShown, request.State,
+                request.ResultCode, request.ResultMessage, now);
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
             return Authorization(request);
         }
@@ -211,34 +212,6 @@ public sealed class HomePermissionTrustService
             return request is null
                 ? new(HomePermissionRequestState.Denied, "HOME_PERMISSION_REQUEST_NOT_FOUND", "The request was not found.", requestId, null)
                 : Authorization(request);
-        }
-        finally { _gate.Release(); }
-    }
-
-    /// <summary>Trusted Home UI observation only, after the exact native scene is mounted and visible.
-    /// This audit acknowledgement never approves, trusts or begins execution.</summary>
-    public async Task<HomePermissionOperationResult> AcknowledgePromptDisplayedAsync(string requestId,
-        string displayedRequestDigest, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(requestId) || string.IsNullOrWhiteSpace(displayedRequestDigest))
-            return Failure("HOME_PROMPT_OBSERVATION_INVALID", "The exact displayed request is required.");
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
-            var request = FindPending(state, requestId);
-            if (request is null) return Failure("HOME_REQUEST_NOT_PENDING", "The request is no longer awaiting approval.");
-            var actualDigest = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(request)));
-            if (!StringComparer.Ordinal.Equals(displayedRequestDigest, actualDigest))
-                return Failure("HOME_PROMPT_REQUEST_CHANGED", "The request changed. Display and review it again.");
-            if (state.Audit.Any(item => item.RequestId == requestId &&
-                item.Kind == HomePermissionAuditKind.ApprovalPromptShown && item.ResultCode == "HOME_PROMPT_DISPLAY_ACKNOWLEDGED"))
-                return Success("HOME_PROMPT_DISPLAY_ACKNOWLEDGED", "The native Home prompt display is already recorded.");
-            AddAudit(state, request, HomePermissionAuditKind.ApprovalPromptShown, request.State,
-                "HOME_PROMPT_DISPLAY_ACKNOWLEDGED", "The exact pending request was displayed by the native Home scene.",
-                _timeProvider.GetUtcNow());
-            await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-            return Success("HOME_PROMPT_DISPLAY_ACKNOWLEDGED", "The native Home prompt display is recorded.");
         }
         finally { _gate.Release(); }
     }
@@ -324,29 +297,34 @@ public sealed class HomePermissionTrustService
                         "HOME_ACCEPT_AND_TRUST_GRANTED", "A 30-day trust grant was created for the requested scope.", now,
                         HomeTrustLevel.AcceptAndTrust);
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
-                        "HOME_ACCEPT_AND_TRUST_GRANTED", "The requested ordinary scope was approved and trusted for 30 days.", HomeTrustLevel.AcceptAndTrust);
+                        "HOME_ACCEPT_AND_TRUST_GRANTED", "The requested ordinary scope was approved and trusted for 30 days.", HomeTrustLevel.AcceptAndTrust)
+                        with { AppliedGrantId = trustedGrant.GrantId };
                     break;
                 case HomeApprovalChoice.AcceptAndAlwaysTrust:
                     if (string.IsNullOrWhiteSpace(request.Caller.IdentityVersion))
                         return Failure("HOME_CALLER_IDENTITY_VERSION_REQUIRED", "A tamper-evident caller identity version is required before persistent trust can be granted.");
-                    state.Grants.Add(CreateGrant(request, HomeTrustLevel.AlwaysTrust, now, null, null, null));
+                    var alwaysGrant = CreateGrant(request, HomeTrustLevel.AlwaysTrust, now, null, null, null);
+                    state.Grants.Add(alwaysGrant);
                     AddAudit(state, request, HomePermissionAuditKind.TrustGranted, HomePermissionRequestState.Approved,
                         "HOME_ALWAYS_TRUST_GRANTED", "The user explicitly granted persistent trust for the requested scope.", now,
                         HomeTrustLevel.AlwaysTrust);
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
-                        "HOME_ALWAYS_TRUST_GRANTED", "The requested scope was approved with persistent trust.", HomeTrustLevel.AlwaysTrust);
+                        "HOME_ALWAYS_TRUST_GRANTED", "The requested scope was approved with persistent trust.", HomeTrustLevel.AlwaysTrust)
+                        with { AppliedGrantId = alwaysGrant.GrantId };
                     break;
                 case HomeApprovalChoice.GrantTemporaryTrustedAccess:
                     if (string.IsNullOrWhiteSpace(request.Caller.IdentityVersion))
                         return Failure("HOME_CALLER_IDENTITY_VERSION_REQUIRED", "A tamper-evident caller identity version is required before temporary trust can be granted.");
-                    state.Grants.Add(CreateGrant(request, HomeTrustLevel.TemporaryAlwaysTrust, now,
+                    var temporaryGrant = CreateGrant(request, HomeTrustLevel.TemporaryAlwaysTrust, now,
                         temporaryOptions!.Duration is { } duration ? now + duration : null,
-                        temporaryOptions.ActionCount, temporaryOptions.Fallback));
+                        temporaryOptions.ActionCount, temporaryOptions.Fallback);
+                    state.Grants.Add(temporaryGrant);
                     AddAudit(state, request, HomePermissionAuditKind.TemporaryTrustGranted, HomePermissionRequestState.Approved,
                         "HOME_TEMPORARY_TRUST_GRANTED", "The user granted limited temporary trusted access.", now,
                         HomeTrustLevel.TemporaryAlwaysTrust);
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
-                        "HOME_TEMPORARY_TRUST_GRANTED", "The requested scope was approved within the selected temporary limit.", HomeTrustLevel.TemporaryAlwaysTrust);
+                        "HOME_TEMPORARY_TRUST_GRANTED", "The requested scope was approved within the selected temporary limit.", HomeTrustLevel.TemporaryAlwaysTrust)
+                        with { AppliedGrantId = temporaryGrant.GrantId };
                     break;
                 default:
                     return Failure("HOME_APPROVAL_CHOICE_INVALID", "The selected approval choice is not supported.");

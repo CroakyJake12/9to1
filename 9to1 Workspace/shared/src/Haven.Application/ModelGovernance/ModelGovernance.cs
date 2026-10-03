@@ -226,7 +226,7 @@ public static class ModelToolPermissionMap
 {
     public static RestrictedModelCapability? Map(string? toolName) => toolName?.Trim() switch
     {
-        "write_file" or "replace_in_file" or "apply_change_set" => RestrictedModelCapability.EditFiles,
+        "write_file" or "replace_in_file" or "apply_change_set" or "files_rename" => RestrictedModelCapability.EditFiles,
         "run_command" or "run_tests" => RestrictedModelCapability.RunCommands,
         null or "" => null,
         var name when name.StartsWith("computer_", StringComparison.Ordinal) => RestrictedModelCapability.ComputerUse,

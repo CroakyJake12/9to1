@@ -12,7 +12,7 @@ permissions:
   contents: read
 jobs:
   validate:
-    if: startsWith(github.ref, 'refs/heads/validation/astra-desktop-visible-mail30-root22-')
+    if: startsWith(github.ref, 'refs/heads/validation/astra-desktop-visible-mail30-root22-') || startsWith(github.ref, 'refs/heads/validation/astra-desktop-visible-joint05-root30-')
     strategy:
       fail-fast: false
       matrix:
@@ -195,3 +195,161 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  joint-native-sdk:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-desktop-visible-joint05-root30-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      AVALONIA_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
+      MSBUILDDISABLENODEREUSE: '1'
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Materialize the same three exact SDK source dependencies
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
+      - name: Materialize exact original renderer donors for whole SDK suites
+        run: git submodule update --init --depth=1 -- "9to1 Workspace/Canvas/Source/Rnote" "9to1 Workspace/Picture/Source/glycin"
+      - uses: dtolnay/rust-toolchain@1.98.1
+      - name: Provision maintained Linux headless prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libglib2.0-dev libcairo2-dev libpango1.0-dev librsvg2-dev libseccomp-dev liblcms2-dev libxml2-dev libfontconfig1-dev bubblewrap apparmor-utils fonts-dejavu-core xvfb xauth openssl ca-certificates openjdk-21-jre-headless libwebkit2gtk-4.1-0
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Run full independent Debug and Release SDK matrices
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/astra-mail-trusted-tls.py -- xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24 -nolisten tcp" python3 .github/scripts/astra-joint-sdk-ephemeral-profile.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-desktop-visible-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+      - name: Freeze every original SDK evidence byte into bounded indexed bundles
+        id: sdk-bundles
+        if: ${{ always() }}
+        run: python3 .github/scripts/astra-files-artifact-parts.py --input artifacts/desktop-visible-owning --output artifacts/joint-sdk-parts
+      - name: Retain complete original SDK fullfile and piece index
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-manifest-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/manifest.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 00
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 0 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-00-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-00.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 01
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 1 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-01-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-01.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 02
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 2 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-02-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-02.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 03
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 3 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-03-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-03.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 04
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 4 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-04-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-04.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 05
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 5 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-05-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-05.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 06
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 6 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-06-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-06.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 07
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 7 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-07-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-07.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 08
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 8 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-08-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-08.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 09
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 9 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-09-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-09.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 10
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 10 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-10-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-10.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original SDK evidence bundle 11
+        if: ${{ always() && steps.sdk-bundles.outputs.count != '' && fromJSON(steps.sdk-bundles.outputs.count) > 11 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-joint-native-sdk-bundle-11-${{ github.sha }}
+          path: artifacts/joint-sdk-parts/bundle-11.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14

@@ -125,8 +125,42 @@ public interface IPersistentAgentCatalog
     ValueTask<AgentResult<IReadOnlyList<PersistentAgentSnapshot>>> ResolveForAsync(AgentInvocationContext context, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Capabilities are observations; only the registered Home issuer can create a token
+/// accepted by Chat's private admission registry. The original lifetime can only cancel work.</summary>
+public sealed record AgentStepAdmission(IReadOnlySet<string> EffectiveCapabilities,
+    object OriginalExecutionAuthority, CancellationToken OriginalLifetime);
+
 public interface IAgentPermissionBroker
 {
+    /// <summary>Bind the same privately admitted context to the actual committed canonical run.
+    /// Reconstructed DTOs or a process restart cannot recreate this binding.</summary>
+    ValueTask<AgentResult<bool>> BindOriginalRunAsync(AgentInvocationContext originalContext,
+        AgentRunSnapshot committedCanonicalRun, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(AgentResult<bool>.Failure(new(AgentFailureCode.PermissionDenied,
+            "No original Home Agent run admission is registered.", committedCanonicalRun.AgentRunId)));
+
+    /// <summary>The owning coordinator supplies its retained original context and exact new step
+    /// reference. Home rechecks its actual run/attempt/session/Den/actor/lifetime and object authority.</summary>
+    ValueTask<AgentResult<bool>> AuthorizeOriginalStepAsync(AgentInvocationContext originalContext,
+        AgentExecutionStep originalStep, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(AgentResult<bool>.Failure(new(AgentFailureCode.PermissionDenied,
+            "No original Home Agent step admission is registered.", originalStep.AgentRunId)));
+
+    /// <summary>Only a previously admitted exact step reference can receive a current opaque token.
+    /// Public IDs, capability strings and copied steps confer no execution authority.</summary>
+    ValueTask<AgentResult<AgentStepAdmission>> GetOriginalStepAdmissionAsync(AgentExecutionStep originalStep,
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(AgentResult<AgentStepAdmission>.Failure(new(AgentFailureCode.PermissionDenied,
+            "The exact original Agent step has no Home-issued execution authority.", originalStep.AgentRunId)));
+
+    /// <summary>Resolve only the SAME privately registered issuer exception for this SAME
+    /// original step and actual still-pending request. Public/copy exceptions or request
+    /// DTOs cannot manufacture an approval pause. Refusal preserves the original error.</summary>
+    ValueTask<AgentResult<AgentApprovalRequirement>> GetOriginalApprovalAsync(AgentExecutionStep originalStep,
+        Exception originalFailure, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(AgentResult<AgentApprovalRequirement>.Failure(new(AgentFailureCode.PermissionDenied,
+            "No exact original Home approval pause is registered.", originalStep.AgentRunId)));
+
     ValueTask<AgentResult<IReadOnlySet<string>>> ResolveCapabilitiesAsync(
         AgentCapabilityPolicy agentPolicy,
         AgentInvocationContext context,

@@ -39,6 +39,15 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
     private string? _warningRequest;
     private bool _disposed;
 
+    /// <summary>Snapshot the same original current Home scene action pipelines after a native click.
+    /// Capture before deactivation/disposal and await this exact task; completion never grants permission or proves an action outcome.</summary>
+    public Task WhenActionsIdleAsync()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _host.WhenActionsIdleAsync();
+    }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.VerifyAccess();

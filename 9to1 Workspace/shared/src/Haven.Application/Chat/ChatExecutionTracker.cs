@@ -13,6 +13,9 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
     private readonly object _gate = new();
     private readonly List<ChatExecutionLogEntry> _log = [];
     private readonly CancellationTokenSource _lifetime = new();
+    private readonly Task _originalTimerTask;
+    private Task? _closeTask;
+    private Task? _originalCloseRunnerTask;
     private readonly Func<ChatEtaRequest, CancellationToken, Task<string?>>? _etaProvider;
     private readonly DateTimeOffset _startedAt = DateTimeOffset.UtcNow;
 
@@ -37,7 +40,7 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
         _etaProvider = etaProvider;
         _log.Add(new ChatExecutionLogEntry(_startedAt, initialStage, _status));
         MarkStageStart(initialStage);
-        _ = RunTimersAsync(_lifetime.Token);
+        _originalTimerTask = RunTimersAsync(_lifetime.Token);
     }
 
     public Guid OperationId { get; }
@@ -290,14 +293,36 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        if (!_finished)
+        lock (_gate)
         {
-            Cancel();
+            if (_closeTask is not null) return new(_closeTask);
+            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _closeTask = completion.Task; // Publish before original cancellation callbacks can reenter.
+            _originalCloseRunnerTask = CloseAndPublishAsync(completion);
+            return new(_closeTask);
         }
+    }
 
-        _lifetime.Cancel();
-        _lifetime.Dispose();
-        return default;
+    private async Task CloseAndPublishAsync(TaskCompletionSource completion)
+    {
+        try { await CloseOriginalAsync().ConfigureAwait(false); completion.TrySetResult(); }
+        catch (Exception failure) { completion.TrySetException(failure); }
+    }
+
+    private async Task CloseOriginalAsync()
+    {
+        List<Exception>? failures = null;
+        void Retain(Exception failure)
+        {
+            failures ??= [];
+            if (!failures.Any(original => ReferenceEquals(original, failure))) failures.Add(failure);
+        }
+        try { if (!_finished) Cancel(); } catch (Exception failure) { Retain(failure); }
+        try { _lifetime.Cancel(); } catch (Exception failure) { Retain(failure); }
+        try { await _originalTimerTask.ConfigureAwait(false); } catch (Exception failure) { Retain(failure); }
+        try { _lifetime.Dispose(); } catch (Exception failure) { Retain(failure); }
+        if (failures is { Count: 1 }) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures is { Count: > 1 }) throw new AggregateException("Original Chat timer cancellation and drain failures are retained.", failures);
     }
 }
 

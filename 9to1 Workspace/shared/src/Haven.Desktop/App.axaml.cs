@@ -156,7 +156,8 @@ public sealed partial class App : Avalonia.Application
             defaultProviders: provider.GetRequiredService<IDefaultProviderStore>(),
             checkpoints: provider.GetRequiredService<CheckpointService>(),
             projectInstructionFiles: provider.GetRequiredService<IProjectInstructionSource>(),
-            memorySource: provider.GetRequiredService<IMemoryQuerySource>()));
+            memorySource: provider.GetRequiredService<IMemoryQuerySource>(),
+            originalExecutionAdmissions: provider.GetService<IChatExecutionAdmission>()));
         collection.AddSingleton<UserPreferencesService>();
         collection.AddSingleton<Services.AvatarStore>();
         collection.AddSingleton<Services.OllamaWakeService>();

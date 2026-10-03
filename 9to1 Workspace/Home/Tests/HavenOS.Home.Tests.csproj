@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../../Browse/HavenOS.Apps.Browse.csproj" />
     <ProjectReference Include="..\HavenOS.Home.csproj" />
+    <ProjectReference Include="..\..\..\9to1 Models\Dulche Alpha\Dulche.Agents.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>

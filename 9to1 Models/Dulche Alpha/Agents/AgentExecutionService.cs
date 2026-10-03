@@ -10,6 +10,8 @@ public sealed class AgentExecutionService(
 {
     private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _runLocks = new(StringComparer.Ordinal);
+    // Private originating contexts are never persisted or reconstructed from run DTOs.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, AgentInvocationContext> _originalContexts = new(StringComparer.Ordinal);
 
     public async ValueTask<AgentResult<AgentExecutionSnapshot>> StartAsync(
         AgentRunRequest request,
@@ -46,7 +48,7 @@ public sealed class AgentExecutionService(
                 var priorSnapshot = await store.ReadAsync(prior.AgentRunId, cancellationToken);
                 return priorSnapshot is null
                     ? Fail<AgentExecutionSnapshot>(AgentFailureCode.StateStoreUnavailable, "The idempotent run index points to a missing snapshot.", prior.AgentRunId, recoverable: true)
-                    : AgentResult<AgentExecutionSnapshot>.Success(priorSnapshot);
+                    : await BindOriginalRunAsync(request.Context, priorSnapshot, false, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -78,16 +80,14 @@ public sealed class AgentExecutionService(
         var initial = new AgentExecutionChangeSet(runId, 0, "create:" + (idempotencyKey ?? runId), Run: run,
             Events: [startedEvent]);
         if (initial.Validate() is { } invalid) return AgentResult<AgentExecutionSnapshot>.Failure(invalid);
-        try
-        {
-            var created = await store.CommitAsync(initial, cancellationToken);
-            return AgentResult<AgentExecutionSnapshot>.Success(created);
-        }
+        AgentExecutionSnapshot created;
+        try { created = await store.CommitAsync(initial, cancellationToken).ConfigureAwait(false); }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             return Fail<AgentExecutionSnapshot>(AgentFailureCode.StateStoreUnavailable, "The AgentRun could not be durably created.", runId, recoverable: true,
                 details: new Dictionary<string, string> { ["exception"] = exception.GetType().Name });
         }
+        return await BindOriginalRunAsync(request.Context, created, true, cancellationToken).ConfigureAwait(false);
     }
 
     public ValueTask<AgentResult<AgentExecutionSnapshot>> GetAsync(string agentRunId, CancellationToken cancellationToken = default) =>
@@ -104,7 +104,21 @@ public sealed class AgentExecutionService(
 
     public async ValueTask<AgentResult<AgentExecutionSnapshot>> ResumeAsync(string agentRunId, CancellationToken cancellationToken = default)
     {
-        var result = await TransitionAsync(agentRunId, AgentRunState.Running, "run.resumed", cancellationToken);
+        var original = await store.ReadAsync(agentRunId, cancellationToken).ConfigureAwait(false);
+        if (original?.Run.State == AgentRunState.AwaitingApproval &&
+            original.Run.LastErrorCode == AgentFailureCode.ApprovalRequired.ToString() && original.Run.CheckpointId is null)
+            return new(original, new(AgentFailureCode.CheckpointUnavailable,
+                "The original approval pause has no canonical continuation checkpoint; replaying its prompt or owner effects is refused.",
+                agentRunId, Retryable: false));
+        if (original is null) return Fail<AgentExecutionSnapshot>(AgentFailureCode.AgentRunNotFound, "AgentRun was not found.", agentRunId);
+        // The approval guard and transition share the SAME inspected snapshot. The
+        // owning store's ExpectedRevision refuses a later approval/lifecycle commit;
+        // a second latest read cannot silently authorize replay of the paused work.
+        var now = _clock.GetUtcNow();
+        var transitioned = AgentRunStateMachine.Transition(original.Run, AgentRunState.Running, now);
+        if (transitioned.Error is { } error) return AgentResult<AgentExecutionSnapshot>.Failure(error);
+        var result = await CommitRunAsync(original, transitioned.Value!, "run.resumed:" + Guid.NewGuid().ToString("N"),
+            "run.resumed", now, cancellationToken).ConfigureAwait(false);
         if (result.Error is not null) return result;
         return await ExecuteNextStepAsync(agentRunId, cancellationToken);
     }
@@ -142,12 +156,20 @@ public sealed class AgentExecutionService(
                 definition.AllowedTools ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase), current.Run.BudgetLimits,
                 current.Run.ContextSnapshot, current.CompletedConsequentialActionIds, current.LastEventSequence, current.Run.CheckpointId);
 
+            if (!_originalContexts.TryGetValue(agentRunId, out var originalContext))
+                return await FailRunAsync(current, new(AgentFailureCode.PermissionDenied,
+                    "The original Home context is unavailable; a fresh trusted admission is required.", agentRunId), cancellationToken);
+            var admission = await permissions.AuthorizeOriginalStepAsync(originalContext, step, cancellationToken).ConfigureAwait(false);
+            if (admission.Error is not null || admission.Value != true)
+                return await FailRunAsync(current, admission.Error ?? new(AgentFailureCode.PermissionDenied,
+                    "The exact original Agent step was not admitted.", agentRunId), cancellationToken);
+
             AgentExecutionStepResult result;
             try
             {
                 result = await adapter.ExecuteStepAsync(step, async (executionEvent, token) =>
                 {
-                    var published = await PublishEventAsync(agentRunId, executionEvent, token);
+                    var published = await PublishEventAsync(current, executionEvent, token);
                     if (published.Error is { } error)
                         throw new InvalidOperationException($"Execution event persistence failed: {error.Code}.");
                 }, cancellationToken);
@@ -159,11 +181,14 @@ public sealed class AgentExecutionService(
             }
             catch (Exception exception)
             {
-                return await FailRunAsync(current, new(AgentFailureCode.ExecutionFailed, "The execution adapter failed.", agentRunId, true, true,
+                return await FailRunAsync(current, new(AgentFailureCode.ExecutionFailed, "The execution adapter failed.", agentRunId, true, false,
                     new Dictionary<string, string> { ["exception"] = exception.GetType().Name }), cancellationToken);
             }
 
-            return await ApplyStepResultAsync(agentRunId, result, cancellationToken);
+            var applied = await ApplyStepResultAsync(current, result, cancellationToken).ConfigureAwait(false);
+            if (applied.Value?.Run.State is AgentRunState.Completed or AgentRunState.Failed or AgentRunState.Stopped or AgentRunState.Cancelled)
+                _originalContexts.TryRemove(agentRunId, out _);
+            return applied;
         }
         finally { gate.Release(); }
     }
@@ -203,10 +228,48 @@ public sealed class AgentExecutionService(
         return await CommitRunAsync(current, resumed, "recover.finish:" + Guid.NewGuid().ToString("N"), canContinue ? "run.recovered" : "run.cannot_recover", now, cancellationToken);
     }
 
-    private async ValueTask<AgentResult<AgentExecutionSnapshot>> ApplyStepResultAsync(string runId, AgentExecutionStepResult result, CancellationToken cancellationToken)
+    private async ValueTask<AgentResult<AgentExecutionSnapshot>> BindOriginalRunAsync(
+        AgentInvocationContext originalContext, AgentExecutionSnapshot committed, bool createdByThisCall, CancellationToken cancellationToken)
     {
+        var bound = await permissions.BindOriginalRunAsync(originalContext, committed.Run, cancellationToken).ConfigureAwait(false);
+        if (bound.Error is null && bound.Value == true)
+        {
+            _originalContexts[committed.Run.AgentRunId] = originalContext;
+            return AgentResult<AgentExecutionSnapshot>.Success(committed);
+        }
+        var failure = bound.Error ?? new(AgentFailureCode.PermissionDenied,
+            "The original Home context was not bound to this canonical Agent run.", committed.Run.AgentRunId);
+        if (!createdByThisCall)
+            return new(committed, failure with { Retryable = false, Details = new Dictionary<string, string>
+            {
+                ["canonicalRunCreated"] = "false", ["executionAdmitted"] = "false",
+                ["canonicalRunId"] = committed.Run.AgentRunId,
+                ["canonicalState"] = committed.Run.State.ToString()
+            }});
+        // This is a known durable creation with refused execution, not an uncommitted retry.
+        var failed = await FailRunAsync(committed, failure, cancellationToken).ConfigureAwait(false);
+        var details = new Dictionary<string, string>(failure.Details ?? new Dictionary<string, string>())
+        {
+            ["canonicalRunCreated"] = "true", ["executionAdmitted"] = "false",
+            ["canonicalRunId"] = committed.Run.AgentRunId,
+            ["canonicalState"] = (failed.Value ?? committed).Run.State.ToString()
+        };
+        if (failed.Error is { } stateError)
+        {
+            details["stateTransitionErrorCode"] = stateError.Code.ToString();
+            details["stateTransitionErrorMessage"] = stateError.Message;
+        }
+        return new(failed.Value ?? committed, failure with { Details = details, Retryable = false });
+    }
+
+    private async ValueTask<AgentResult<AgentExecutionSnapshot>> ApplyStepResultAsync(AgentExecutionSnapshot dispatched, AgentExecutionStepResult result, CancellationToken cancellationToken)
+    {
+        var runId = dispatched.Run.AgentRunId;
         var current = await store.ReadAsync(runId, cancellationToken);
         if (current is null) return Fail<AgentExecutionSnapshot>(AgentFailureCode.AgentRunNotFound, "AgentRun was not found.", runId);
+        if (!SameOriginalDispatch(current, dispatched))
+            return new(current, new(AgentFailureCode.RevisionConflict,
+                "The original dispatched run changed; this result cannot overwrite a pause, stop, cancellation or later attempt.", runId, Retryable: false));
         if (result.State == AgentRunState.AwaitingApproval && result.Approvals.Count == 0)
             return await FailRunAsync(current, new(AgentFailureCode.ExecutionFailed, "The adapter requested approval without a persisted approval requirement.", runId), cancellationToken);
         if (result.State == AgentRunState.Blocked && result.Blockers.Count == 0)
@@ -239,10 +302,17 @@ public sealed class AgentExecutionService(
             details: new Dictionary<string, string> { ["exception"] = exception.GetType().Name }); }
     }
 
-    private async ValueTask<AgentResult<AgentExecutionSnapshot>> PublishEventAsync(string runId, AgentExecutionEventEnvelope item, CancellationToken cancellationToken)
+    private async ValueTask<AgentResult<AgentExecutionSnapshot>> PublishEventAsync(AgentExecutionSnapshot dispatched, AgentExecutionEventEnvelope item, CancellationToken cancellationToken)
     {
+        var runId = dispatched.Run.AgentRunId;
         var current = await store.ReadAsync(runId, cancellationToken);
         if (current is null) return Fail<AgentExecutionSnapshot>(AgentFailureCode.AgentRunNotFound, "AgentRun was not found.", runId);
+        if (!SameOriginalDispatch(current, dispatched))
+            return new(current, new(AgentFailureCode.RevisionConflict,
+                "The original dispatched run changed before this event publication.", runId, Retryable: false));
+        if (item.RootRequestId != runId || item.ExecutionId != dispatched.Run.CurrentAttemptId)
+            return Fail<AgentExecutionSnapshot>(AgentFailureCode.InvalidInvocationContext,
+                "An execution event must belong to the same original root and attempt.", runId);
         var sequenced = item with { RootRequestId = runId, Sequence = current.LastEventSequence + 1 };
         try
         {
@@ -254,6 +324,27 @@ public sealed class AgentExecutionService(
         { return Fail<AgentExecutionSnapshot>(AgentFailureCode.StateStoreUnavailable, "The execution event could not be persisted.", runId, true,
             details: new Dictionary<string, string> { ["exception"] = exception.GetType().Name }); }
     }
+
+    // Run.Revision changes at every canonical lifecycle mutation. Additive event-only
+    // commits may advance the snapshot revision without retiring this original attempt.
+    // The following Commit uses the inspected snapshot revision, so a later mutation
+    // is still refused atomically by the owning state store rather than reread/retried.
+    private static bool SameOriginalDispatch(AgentExecutionSnapshot current, AgentExecutionSnapshot dispatched) =>
+        current.Run.State == AgentRunState.Running && dispatched.Run.State == AgentRunState.Running &&
+        current.Run.Revision == dispatched.Run.Revision &&
+        current.Run.AgentRunId == dispatched.Run.AgentRunId &&
+        current.Run.CurrentAttemptId == dispatched.Run.CurrentAttemptId &&
+        current.Run.AgentId == dispatched.Run.AgentId &&
+        current.Run.DefinitionRevision == dispatched.Run.DefinitionRevision &&
+        current.Run.SessionId == dispatched.Run.SessionId &&
+        current.Run.CallerId == dispatched.Run.CallerId &&
+        current.Run.SurfaceId == dispatched.Run.SurfaceId &&
+        current.Run.SpaceId == dispatched.Run.SpaceId &&
+        current.Run.ProjectOrEntityId == dispatched.Run.ProjectOrEntityId &&
+        current.Run.Objective == dispatched.Run.Objective &&
+        current.Run.EndpointId == dispatched.Run.EndpointId &&
+        current.Run.ModelId == dispatched.Run.ModelId &&
+        current.Run.ProviderId == dispatched.Run.ProviderId;
 
     private async ValueTask<AgentResult<AgentExecutionSnapshot>> TransitionAsync(string runId, AgentRunState target, string kind, CancellationToken cancellationToken)
     {

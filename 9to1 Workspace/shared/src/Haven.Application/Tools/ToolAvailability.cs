@@ -54,7 +54,8 @@ public sealed record ToolDefinitionSources(
     IReadOnlyList<OllamaToolDefinition> ReusableTasks,
     IReadOnlyList<OllamaToolDefinition>? Mcp = null,
     IReadOnlyList<OllamaToolDefinition>? Calendar = null,
-    IReadOnlyList<PluginToolBinding>? Plugins = null);
+    IReadOnlyList<PluginToolBinding>? Plugins = null,
+    IReadOnlyList<OllamaToolDefinition>? OriginalWorkspace = null);
 
 /// <summary>
 /// Represents tool availability plan and keeps its related state and behavior together.
@@ -188,6 +189,7 @@ public sealed class ToolAvailabilityPlanner
         var reasons = new Dictionary<string, string>(StringComparer.Ordinal);
         var capabilities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         PlanWorkspace(context, sources.Workspace, definitions, routes, reasons, capabilities);
+        PlanOriginalWorkspace(sources.OriginalWorkspace ?? [], definitions, routes, reasons, capabilities);
         PlanComputer(context, sources.Computer, definitions, routes, reasons, capabilities);
         PlanBrowser(context, sources.BrowserBackground, sources.BrowserInteractive, definitions, routes, reasons, capabilities);
         PlanAutomations(context, sources.Automation, sources.ReusableTasks, definitions, routes, reasons, capabilities);
@@ -200,6 +202,24 @@ public sealed class ToolAvailabilityPlanner
     /// <summary>
     /// Performs the plan workspace step owned by this component.
     /// </summary>
+    // Only the registered current owning dispatcher supplies these observations to the admitted Chat path.
+    // Planner metadata grants nothing. Actual opaque admission/approval/currentness remains required at dispatch.
+    private static void PlanOriginalWorkspace(IReadOnlyList<OllamaToolDefinition> source,
+        List<OllamaToolDefinition> definitions, Dictionary<string, ToolRuntimeKind> routes,
+        Dictionary<string, string> reasons, HashSet<string> capabilities)
+    {
+        foreach (var definition in source)
+        {
+            if (RuntimeSafetyState.IsSafeMode)
+            {
+                reasons[definition.Name] = SafeModeReason(definition.Name);
+                continue;
+            }
+            Add(definition, ToolRuntimeKind.Workspace, definitions, routes);
+            capabilities.Add("write-file");
+        }
+    }
+
     private static void PlanWorkspace(ToolAvailabilityContext context, IReadOnlyList<OllamaToolDefinition> source,
         List<OllamaToolDefinition> definitions, Dictionary<string, ToolRuntimeKind> routes,
         Dictionary<string, string> reasons, HashSet<string> capabilities)

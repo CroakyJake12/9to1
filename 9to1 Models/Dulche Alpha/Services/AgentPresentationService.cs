@@ -38,6 +38,24 @@ public sealed class AgentPresentationService(DulcheDen den, IAgentPresentationAs
         return await den.SaveAsync(agent with { Presentation = presentation }, expectedRevision, operationId, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Read a current canonical presentation for an observed host context. A frame is only
+    /// display data; it conveys neither asset access nor permission to execute Agent work.</summary>
+    public async Task<AgentPresentationFrame> PresentCurrentAsync(string namespaceId, string agentId,
+        long expectedRevision, string? stateId, string? presentationEvent, string readableActivity,
+        bool reducedMotion, CancellationToken cancellationToken = default)
+    {
+        var before = await GetAsync(namespaceId, agentId, cancellationToken).ConfigureAwait(false);
+        if (before.Revision != expectedRevision)
+            throw new DenException(DenErrorCode.Conflict, "The Agent changed before activity presentation.");
+        var frame = await PreviewAsync(namespaceId, agentId, stateId, presentationEvent, readableActivity,
+            reducedMotion, cancellationToken).ConfigureAwait(false);
+        var after = await GetAsync(namespaceId, agentId, cancellationToken).ConfigureAwait(false);
+        if (frame.DefinitionRevision != expectedRevision || after.Revision != expectedRevision)
+            throw new DenException(DenErrorCode.Conflict, "The Agent changed during activity presentation.");
+        cancellationToken.ThrowIfCancellationRequested();
+        return frame;
+    }
+
     public async Task<AgentPresentationFrame> PreviewAsync(string namespaceId, string agentId, string? stateId,
         string? presentationEvent, string readableActivity, bool reducedMotion, CancellationToken cancellationToken = default)
     {

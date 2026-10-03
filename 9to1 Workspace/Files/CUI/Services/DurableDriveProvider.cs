@@ -66,11 +66,31 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         return new(page, offset + page.Length < items.Length ? (offset + page.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
     }
 
-    public async Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, CancellationToken cancellationToken)
+    public Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, CancellationToken cancellationToken) =>
+        MutateCoreAsync(operation, newName, null, null, cancellationToken);
+
+    /// <summary>Already-authorised original structural operation. Store/actor/authority are fenced under the owning metadata lease.</summary>
+    public Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, Guid expectedStoreId,
+        FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(operation); ArgumentNullException.ThrowIfNull(authority);
+        if (expectedStoreId == Guid.Empty || authority.ActorId != operation.ActorId || authority.ActorId != _owner)
+            return Task.FromResult(Fail<FilesOperation>(FilesErrorCode.PermissionDenied,
+                "The original owning commit binding is unavailable.", operation.Operation, operation.ItemId));
+        return MutateCoreAsync(operation, newName, expectedStoreId, authority, cancellationToken);
+    }
+
+    private async Task<FilesResult<FilesOperation>> MutateCoreAsync(FilesOperation operation, string? newName,
+        Guid? expectedStoreId, FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
     {
         FilesResult<FilesOperation>? result = null;
+        try
+        {
         await _store.UpdateAsync(state =>
         {
+            if (expectedStoreId is { } originalStore && (state.StoreId != originalStore ||
+                state.StoreOwnerPrincipalId != _owner || state.StoreLocationId != Location.Id))
+                throw new OriginalFilesStoreChangedException();
             var prior = state.Operations.FirstOrDefault(item => item.Id == operation.Id);
             if (prior is not null)
             {
@@ -123,7 +143,12 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
             var change = new FilesChangeEvent(Guid.NewGuid().ToString("N"), new(state.Events.Count + 1), operation.Id, operation.ItemId, operation.ActorId, operation.Operation, operation.BaseRevisionId, revision, now, metadata);
             result = FilesResult<FilesOperation>.Success(committed);
             return state with { Items = [.. state.Items.Where(item => item.Metadata.Id != operation.ItemId), entry], Operations = [.. state.Operations, committed], Events = [.. state.Events, change] };
-        }, cancellationToken);
+        }, authority is null ? null : authority.ValidateAsync, cancellationToken);
+        }
+        catch (OriginalFilesStoreChangedException) when (expectedStoreId is not null)
+        { return Fail<FilesOperation>(FilesErrorCode.RevisionConflict, "The original Files store changed before commit.", operation.Operation, operation.ItemId); }
+        catch (FilesCommitAuthorityChangedException) when (authority is not null)
+        { return Fail<FilesOperation>(FilesErrorCode.PermissionDenied, "Original authority changed before commit.", operation.Operation, operation.ItemId); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
         return result;
     }

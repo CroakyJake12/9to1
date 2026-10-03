@@ -245,6 +245,7 @@ public sealed record ApprovalRecord : DenRecord
 
 public sealed record AgentDefinitionRecord : DenRecord
 {
+    public string? Description { get; init; }
     public AgentPresentationDefinition? Presentation { get; init; }
     public required string DisplayName { get; init; }
     public required string Version { get; init; }
@@ -256,6 +257,17 @@ public sealed record AgentDefinitionRecord : DenRecord
     public IReadOnlyList<string> AllowedPermissions { get; init; } = [];
     public string? ModelPolicyJson { get; init; }
     public string? BudgetJson { get; init; }
+    // Optional declarations preserve existing development records when absent. Availability and
+    // sharing are observations/declarations only; the current owning authority remains decisive.
+    public IReadOnlyList<AgentAvailabilityBinding>? AvailabilityBindings { get; init; }
+    public IReadOnlyList<AgentKnowledgeReference> KnowledgeReferences { get; init; } = [];
+    public IReadOnlyList<AgentQuickActionDefinition> QuickActions { get; init; } = [];
+    public AgentMemoryPolicy? MemoryPolicy { get; init; }
+    public string? CapabilityPolicyJson { get; init; }
+    public string? DelegationPolicyJson { get; init; }
+    public DenAgentGraphReference? GraphReference { get; init; }
+    public AgentSharingMetadata? SharingMetadata { get; init; }
+    public AgentDefinitionLifecycle? LifecycleState { get; init; }
     public bool Enabled { get; init; }
 }
 

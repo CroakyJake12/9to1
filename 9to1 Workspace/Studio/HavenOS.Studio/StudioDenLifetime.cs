@@ -112,6 +112,24 @@ public sealed class StudioDenLifetime(
         finally { _changes.Release(); }
     }
 
+    /// <summary>Returns the actual factory for the SAME currently selected provider.
+    /// The caller borrows its Store; factory/session observations grant no Execute or Admin.
+    /// Replacement or disposal retires that provider. OpenAsync still verifies current Home ownership.</summary>
+    public async Task<HomePersonalDenFactory> OpenBoundFactoryAsync(
+        IResourceStoreOwnershipReceiptAuthority receipts, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(receipts);
+        await _changes.WaitAsync(ct);
+        try
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            var selected = _provider ?? throw new InvalidOperationException("Select a Den first.");
+            ct.ThrowIfCancellationRequested();
+            return new HomePersonalDenFactory(selected, receipts, actors);
+        }
+        finally { _changes.Release(); }
+    }
+
     public async Task<HomePersonalDenSession> OpenBoundSessionAsync(IResourceStoreOwnershipReceiptAuthority receipts, CancellationToken ct = default)
     {
         await _changes.WaitAsync(ct);

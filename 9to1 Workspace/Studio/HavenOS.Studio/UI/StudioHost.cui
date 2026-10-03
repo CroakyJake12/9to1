@@ -1,17 +1,80 @@
-<Cui><ScrollViewer><StackPanel padding="20" spacing="8">
-<TextBlock text="AI Studio" font-size="28" />
-<TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Studio workspace status" />
-<Button content="Create a Den in an empty folder…" action="CreateDen" />
-<Button content="Open an existing Den…" action="OpenDen" />
-<Button content="Review existing Den ownership in Home" action="RequestImport" />
-<Button content="Complete approved Den import" action="CompleteImport" />
-<Button action="RetryImportAudit" content="Retry Den import audit" />
-<Object Type="studio.host-approvals" />
-<TextBox text="{Binding AgentName, mode=TwoWay, type=string}" accessible-name="New Agent name" />
-<Button content="Create Agent" action="CreateAgent" />
-<ComboBox ItemsSource="{Binding AgentNames}" SelectedIndex="{Binding SelectedAgentIndex, mode=TwoWay, type=int}" accessible-name="Choose Agent" />
-<Button content="Refresh Agents" action="RefreshAgents" />
-<Button content="Open selected Agent" action="OpenAgent" />
-<Button content="Import an avatar image into this Agent…" action="ImportAvatar" />
-<Object Type="studio.host-editor" />
-</StackPanel></ScrollViewer></Cui>
+<Cui>
+  <ScrollViewer>
+    <StackPanel padding="20" spacing="10">
+      <TextBlock text="AI Studio" font-size="28" />
+      <TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Studio workspace status" />
+      <StackPanel spacing="6">
+        <Button content="Create a Den in an empty folder…" action="CreateDen" />
+        <Button content="Open an existing Den…" action="OpenDen" />
+        <Button content="Review existing Den ownership in Home" action="RequestImport" />
+        <Button content="Complete approved Den import" action="CompleteImport" />
+        <Button action="RetryImportAudit" content="Retry Den import audit" />
+      </StackPanel>
+      <Object Type="studio.host-approvals" />
+      <StackPanel spacing="6">
+        <ComboBox ItemsSource="{Binding AgentNames}" SelectedIndex="{Binding SelectedAgentIndex, mode=TwoWay, type=int}" accessible-name="Choose Agent" />
+        <Button content="Refresh Agents" action="RefreshAgents" />
+        <Button content="Open selected Agent" action="OpenAgent" />
+      </StackPanel>
+      <TextBlock text="Agent Builder" font-size="24" font-weight="Bold" />
+      <StackPanel orientation="Horizontal" spacing="8">
+        <TextBlock text="{Binding BuilderSaveState}" accessible-name="Agent draft save state" />
+        <Button content="Save canonical Agent draft" action="SaveAgentDraft" />
+        <Button content="Validate current Agent draft" action="ValidateAgentDraft" />
+        <Button content="Recover the saved Agent" action="RecoverSavedAgent" />
+      </StackPanel>
+      <StackPanel orientation="Horizontal" spacing="8">
+        <Button content="Automations" action="OpenAgentAutomations" is-enabled="false" accessible-description="Automations is unavailable until its current authorised Agent service is connected." />
+        <Button content="Preview" action="PreviewAgentDraft" is-enabled="false" accessible-description="Preview is unavailable until its current authorised Agent service is connected." />
+        <Button content="Share" action="ShareAgent" is-enabled="false" accessible-description="Share is unavailable until its current authorised Agent service is connected." />
+        <Button content="⋯" action="AgentOverflow" is-enabled="false" accessible-description="⋯ is unavailable until its current authorised Agent service is connected." />
+      </StackPanel>
+      <TextBlock text="{Binding AgentIdentity}" accessible-name="Canonical Agent identity and revision" />
+      <TextBlock text="{Binding BuilderStatus}" text-wrapping="Wrap" accessible-name="Agent authoring status" />
+      <TextBox name="studio-AgentName" text="{Binding AgentName, mode=TwoWay, type=string}" accessible-name="New Agent name" font-size="24" />
+      <TextBox name="studio-AgentDescription" text="{Binding AgentDescription, mode=TwoWay, type=string}" accessible-name="Agent purpose and description" />
+      <Button content="Create Agent" action="CreateAgent" />
+      <Button content="Import an avatar image into this Agent…" action="ImportAvatar" />
+      <Object Type="studio.host-editor" />
+      <TextBlock text="Plugins / Connectors" font-size="20" font-weight="Bold" />
+      <Button content="+ Add Plugin or Connector" is-enabled="false" accessible-description="Current capability discovery is unavailable." />
+      <TextBox name="studio-PluginIDs" text="{Binding PluginIDs, mode=TwoWay, type=string}" multiline="true" accessible-name="Plugins, one exact registry ID per line" />
+      <TextBox name="studio-McpCapabilityIDs" text="{Binding McpCapabilityIDs, mode=TwoWay, type=string}" multiline="true" accessible-name="MCP capabilities, one exact registry ID per line" />
+      <TextBox name="studio-ToolIDs" text="{Binding ToolIDs, mode=TwoWay, type=string}" multiline="true" accessible-name="Tools, one exact registry ID per line" />
+      <TextBlock text="Skills" font-size="20" font-weight="Bold" />
+      <Button content="+ Add Skill" is-enabled="false" accessible-description="Current installed Skill discovery is unavailable." />
+      <TextBox name="studio-SkillIDs" text="{Binding SkillIDs, mode=TwoWay, type=string}" multiline="true" accessible-name="Skills, one exact registry ID per line" />
+      <TextBlock text="Knowledge / Files" font-size="20" font-weight="Bold" />
+      <TextBlock text="Memory" font-weight="Bold" />
+      <TextBlock text="{Binding AgentMemorySummary}" text-wrapping="Wrap" accessible-name="Saved Agent memory scope" />
+      <TextBlock text="{Binding AgentKnowledgeSummary}" text-wrapping="Wrap" accessible-name="Saved canonical knowledge provenance" />
+      <Button content="+ Add Knowledge or File" is-enabled="false" accessible-description="Current authorised knowledge selection is unavailable." />
+      <Button content="{Binding MoreOptionsCaption}" action="ToggleBuilderMoreOptions" accessible-name="Expand or collapse Agent More Options" />
+      <StackPanel name="studio-more-options" is-visible="{Binding MoreOptionsExpanded, type=bool}" spacing="8">
+        <TextBlock text="Availability" font-size="18" />
+        <TextBlock text="{Binding AgentAvailabilitySummary}" text-wrapping="Wrap" accessible-name="Agent availability, separate from permissions" />
+        <Button content="Restrict Access" is-enabled="false" accessible-description="Current availability scope selection is unavailable." />
+        <TextBlock text="Default Model" font-size="18" />
+        <CheckBox content="Inherit the current model policy" checked="{Binding InheritModel, mode=TwoWay, type=bool}" />
+        <TextBox name="studio-ModelID" text="{Binding ModelID, mode=TwoWay, type=string}" accessible-name="Explicit model ID" />
+        <TextBox name="studio-ProviderID" text="{Binding ProviderID, mode=TwoWay, type=string}" accessible-name="Explicit provider ID" />
+        <CheckBox content="Allow cloud within current model access" checked="{Binding AllowCloud, mode=TwoWay, type=bool}" />
+        <CheckBox content="Allow model fallback within current policy" checked="{Binding AllowFallback, mode=TwoWay, type=bool}" />
+        <TextBox name="studio-RequiredCapabilities" text="{Binding RequiredCapabilities, mode=TwoWay, type=string}" multiline="true" accessible-name="Required model capabilities, one exact ID per line" />
+        <Button content="Choose Default Model…" is-enabled="false" accessible-description="The current Universal Model Picker has not been connected." />
+        <TextBlock text="Quick Actions" font-size="18" />
+        <TextBlock text="{Binding AgentQuickActionSummary}" text-wrapping="Wrap" accessible-name="Saved manual Agent quick actions" />
+        <TextBlock text="Budget and permission limits" font-size="18" />
+        <TextBlock text="Budget upper limits; empty fields leave the existing parent and permission limits in force." text-wrapping="Wrap" />
+        <TextBox name="studio-MaxTokens" text="{Binding MaxTokens, mode=TwoWay, type=string}" accessible-name="Maximum tokens" />
+        <TextBox name="studio-MaxTimeSeconds" text="{Binding MaxTimeSeconds, mode=TwoWay, type=string}" accessible-name="Maximum time in seconds" />
+        <TextBox name="studio-MaxSteps" text="{Binding MaxSteps, mode=TwoWay, type=string}" accessible-name="Maximum steps" />
+        <TextBox name="studio-MaxToolCalls" text="{Binding MaxToolCalls, mode=TwoWay, type=string}" accessible-name="Maximum tool calls" />
+        <TextBox name="studio-MaxCost" text="{Binding MaxCost, mode=TwoWay, type=string}" accessible-name="Maximum cost in the runtime billing currency" />
+        <TextBox name="studio-AllowedPermissions" text="{Binding AllowedPermissions, mode=TwoWay, type=string}" multiline="true" accessible-name="Permission upper bounds, one exact ID per line" />
+      </StackPanel>
+      <TextBlock text="Instructions" font-size="20" font-weight="Bold" />
+      <TextBox name="studio-AgentInstructions" text="{Binding AgentInstructions, mode=TwoWay, type=string}" multiline="true" accessible-name="Agent instructions and boundaries" min-height="240" text-wrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</Cui>

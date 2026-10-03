@@ -38,6 +38,18 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
     public CuiSceneAvailability? Availability { get; private set; }
     public IReadOnlyList<CuiDiagnostic> Diagnostics { get; private set; } = [];
 
+    /// <summary>Snapshot the actual action pipelines accepted by the current initialized scene.
+    /// Capture on the UI thread after the native click and before replacement or disposal.
+    /// The returned original loader completion remains awaitable after retirement; settlement does not attest action success.
+    /// Uninitialized or disposed hosts refuse a new snapshot rather than reporting fabricated idle.</summary>
+    public Task WhenActionsIdleAsync()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return (_loader ?? throw new InvalidOperationException("The current CUI scene has not initialized its action loader."))
+            .WhenActionsIdleAsync();
+    }
+
     public async Task<CuiSceneAvailability> ShowAsync(CuiNativeScene scene, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);

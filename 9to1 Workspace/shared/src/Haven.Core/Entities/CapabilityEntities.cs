@@ -6,7 +6,12 @@ public enum CapabilityPlatform
     None = 0,
     Windows = 1,
     Android = 2,
-    All = Windows | Android
+    // Preserve the historical All=3 token and its Windows/Android scope.
+    All = Windows | Android,
+    Linux = 4,
+    MacOS = 8,
+    iOS = 16,
+    AllSupported = Windows | Android | Linux | MacOS | iOS
 }
 
 public enum CapabilityRiskClass
