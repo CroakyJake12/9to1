@@ -46,16 +46,16 @@
     {
       "path": ".github/scripts/astra-home-portable-pdb.py",
       "mode": "100644",
-      "object": "fe8a99f1a63651eeeed063a6ee098a4af1180b7a",
-      "bytes": 9183,
-      "sha256": "0017b45750c739cbd5fc34d72e63357ec7ce22f04eb12d6b5991ef64e4f68b0b"
+      "object": "3e3a40fa85e47c3772c356560d9ac3c4765371c2",
+      "bytes": 11602,
+      "sha256": "7054a88565c33e62ad002ee2cd794adc7000fb08cac9153dd0a0dc9e9c4d484a"
     },
     {
       "path": ".github/scripts/astra-organisation-full-owning.py",
       "mode": "100644",
-      "object": "8d34a2c2b3f4c89fb8e9ba97561c4734221a4770",
-      "bytes": 30468,
-      "sha256": "97ba3ed8bbaf4a4ccd9c51e5eda6f0175f3757fc8d5f11e6a0152d045b0ef059"
+      "object": "4a22e146e95c6a031b96ffc8cd2578231b576c25",
+      "bytes": 30507,
+      "sha256": "c0fd3bc49319d3880e788d37df12fa860aa1a8094c18fa31c98c04db9298fd9b"
     },
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
@@ -72,6 +72,20 @@
       "sha256": "c1dd0c7cee53614bd738ac3d92e7be8a23099328e6d9358b7caae7d67f792abe"
     },
     {
+      "path": ".github/scripts/astra-source-owned-generated-context-tests.py",
+      "mode": "100644",
+      "object": "53ae28a72c514aba2b0b302de896f306ea056ebd",
+      "bytes": 4970,
+      "sha256": "129f8f279c890315db38e88f052248014ad880f86eb0b7666bd311a0e3965e8d"
+    },
+    {
+      "path": ".github/scripts/astra-symbol-persistence-error-tests.py",
+      "mode": "100644",
+      "object": "b4bf620e8972189bb685b57995f50301f76f8da6",
+      "bytes": 3668,
+      "sha256": "8270e3ee4b4755804460afd2e1a3ee8ada4251cd223863c046ea830e24368e5c"
+    },
+    {
       "path": ".github/scripts/haven-android-smoke.sh",
       "mode": "100644",
       "object": "a17f0247da08a499ae2193bc1f3c288af7d883e0",
@@ -81,9 +95,9 @@
     {
       "path": ".github/validation/astra-organisation-owning-sources.json",
       "mode": "100644",
-      "object": "493749667245ea70aae650731bb04a7acc596175",
-      "bytes": 6807,
-      "sha256": "5fe36890cf410cdb0557dcaf95b7ab1174c7cafde7a46f61c2a83d6363240fb7"
+      "object": "4762c30051085b79656710c26a8528b8dc261775",
+      "bytes": 6808,
+      "sha256": "bd35f4a99dd73e9c5063659e673f5f66b03f61d9574b374a497f2a3aec3925f6"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -65062,9 +65076,9 @@
     {
       "path": "handoff/team-a/admin-sdk03/receiving-validation-provenance.json",
       "mode": "100644",
-      "object": "89a3bd3016b4bbae5fab3e75a6797c570e3fb30d",
-      "bytes": 40695,
-      "sha256": "3ca02b086bb4a38966373163d9ce9d0bf27cd24db0d1a9e9e3a64eb9bcbbbd13"
+      "object": "57ecd05d1175b2aa883a46228a20c9a60afcbb19",
+      "bytes": 52080,
+      "sha256": "3fb010c71d45f0ab92ceb2a3e705176c2959b90244e498425288b81d03d13dca"
     },
     {
       "path": "handoff/team-a/reviewed-source-delivery-manifest.json",
