@@ -1,0 +1,17 @@
+  Determining projects to restore...
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj (in 276 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/HavenOS.Terminal.csproj (in 18 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Spaces/HavenOS.Spaces.csproj (in 8 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Sites/HavenOS.Sites.csproj (in 785 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Picture/Core/HavenOS.Images.Core.csproj (in 332 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Mail/HavenOS.Mail.csproj (in 813 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Games/CUI/HavenOS.Games.csproj (in 46 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Files/NativeUI/HavenOS.Files.NativeUI.csproj (in 42 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj (in 643 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj (in 4 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj (in 18 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Canvas/HavenOS.Canvas.csproj (in 9 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Canvas/NativeUI/HavenOS.Canvas.NativeUI.csproj (in 39 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj (in 8.51 sec).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj (in 8.55 sec).
+  49 of 64 projects are up-to-date for restore.

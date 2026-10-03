@@ -1,0 +1,14 @@
+[
+  {
+    "probe": "Omitted mandatory/default-SHOULD via non-requirement",
+    "defects": [],
+    "acceptedIntegrity": true,
+    "interpretation": "Expected semantic-review boundary: README/report explicitly do not certify complete inventory or truth of applicability/exclusions."
+  },
+  {
+    "probe": "Omitted mandatory/default-SHOULD via excluded",
+    "defects": [],
+    "acceptedIntegrity": true,
+    "interpretation": "Expected semantic-review boundary: README/report explicitly do not certify complete inventory or truth of applicability/exclusions."
+  }
+]

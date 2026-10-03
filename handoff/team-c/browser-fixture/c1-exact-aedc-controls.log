@@ -1,0 +1,14 @@
+test_changed_birth_no_signal (__main__.Controls.test_changed_birth_no_signal) ... ok
+test_changed_session_no_signal (__main__.Controls.test_changed_session_no_signal) ... ok
+test_creator_identity_loss_no_signal (__main__.Controls.test_creator_identity_loss_no_signal) ... ok
+test_escaped_session_descendant_adopted_and_reaped (__main__.Controls.test_escaped_session_descendant_adopted_and_reaped) ... ok
+test_normal_strict_reaping (__main__.Controls.test_normal_strict_reaping) ... ok
+test_timeout_no_receipt (__main__.Controls.test_timeout_no_receipt) ... ok
+test_missing_executable_fails_preflight_after_reaping_own_child (__main__.ProductionLauncherControls.test_missing_executable_fails_preflight_after_reaping_own_child) ... ok
+test_same_production_launch_preflight_strict_reaps (__main__.ProductionLauncherControls.test_same_production_launch_preflight_strict_reaps) ... ok
+test_unavailable_private_session_fails_same_launch_preflight (__main__.ProductionLauncherControls.test_unavailable_private_session_fails_same_launch_preflight) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.238s
+
+OK

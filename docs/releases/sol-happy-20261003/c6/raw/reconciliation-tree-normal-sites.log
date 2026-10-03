@@ -1,0 +1,21 @@
+{"id": "reconciliation-tree-normal-sites", "tested_tree": "674bd79202e3ce531ad0601d94b479353c6f813a", "not_a_commit": true, "checkout_head": "11e37a988d6036c89e9a9e7292284da8c1a0f5e7", "proposed_reconciliation_parents": ["11e37a988d6036c89e9a9e7292284da8c1a0f5e7", "a63d77fe5a9dfea56c938eaa85678a9e170368ec"], "unstaged_source_paths_before": [], "command": ["/workspace/.tools/dotnet/dotnet", "test", "9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj", "--configuration", "Release", "--logger", "trx", "--results-directory", "/tmp/c6-reconciliation-sites-results"], "cwd": "/workspace/team-c/reconciliation", "started": "2026-10-03T17:42:32.210066+00:00", "expected": "Normal real project test discovery nonzero, all tests pass; tree stays immutable; source compatibility rehearsal only"}
+  Determining projects to restore...
+  Restored /workspace/team-c/reconciliation/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 86 ms).
+  Restored /workspace/team-c/reconciliation/9to1 Workspace/Sites/HavenOS.Sites.csproj (in 699 ms).
+  Restored /workspace/team-c/reconciliation/9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj (in 704 ms).
+  6 of 9 projects are up-to-date for restore.
+  CakeOS.Cui.Language -> /workspace/team-c/reconciliation/framework/CUI/Language/bin/Release/net10.0/CakeOS.Cui.Language.dll
+  Haven.Core -> /workspace/team-c/reconciliation/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/team-c/reconciliation/framework/CUI/AI/bin/Release/net10.0/NineToOne.Cui.AI.dll
+  CakeOS.Cui.Core -> /workspace/team-c/reconciliation/framework/CUI/Core/bin/Release/net10.0/CakeOS.Cui.Core.dll
+  Haven.Application -> /workspace/team-c/reconciliation/9to1 Workspace/shared/src/Haven.Application/bin/Release/net10.0/Haven.Application.dll
+  Den -> /workspace/team-c/reconciliation/9to1 Models/Dulche Alpha/bin/Release/net10.0/Den.dll
+  Dulche.Runtime -> /workspace/team-c/reconciliation/9to1 Models/Dulche Alpha/bin/Release/net10.0/Dulche.Runtime.dll
+  HavenOS.Home -> /workspace/team-c/reconciliation/9to1 Workspace/Home/bin/Release/net10.0/HavenOS.Home.dll
+  HavenOS.Sites -> /workspace/team-c/reconciliation/9to1 Workspace/Sites/bin/HavenOS.Sites/Release/net10.0/HavenOS.Sites.dll
+  HavenOS.Sites.Tests -> /workspace/team-c/reconciliation/9to1 Workspace/Sites/bin/HavenOS.Sites.Tests/Release/net10.0/HavenOS.Sites.Tests.dll
+Test run for /workspace/team-c/reconciliation/9to1 Workspace/Sites/bin/HavenOS.Sites.Tests/Release/net10.0/HavenOS.Sites.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /tmp/c6-reconciliation-sites-results/_5f26f397bc73_2026-10-03_17_42_38_net10.0.trx
+
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 991 ms - HavenOS.Sites.Tests.dll (net10.0)

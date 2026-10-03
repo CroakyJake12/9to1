@@ -1,0 +1,14 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-custody-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj",
+    "MSBuildProjectName": "Avalonia.Desktop",
+    "MSBuildProjectFile": "Avalonia.Desktop.csproj",
+    "Configuration": "Debug",
+    "Platform": "AnyCPU",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/project.assets.json",
+    "RestoreOutputPath": "/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/"
+  }
+}

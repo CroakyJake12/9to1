@@ -1,0 +1,11 @@
+{"id": "root-exact-467e9d6-sites", "tested_commit": "ddbab7ceafd164b1b1ec771dd0873ada87ab2eb8", "worktree_status": "", "command": ["/workspace/.tools/dotnet/dotnet", "test", "eng/service-validation/Sites.Source.Tests.csproj", "--configuration", "Release", "--logger", "trx", "--results-directory", "/tmp/c6-root-sites-results"], "cwd": "/workspace/team-c/integration", "expected": "Default Sites source-linked tests discover39 and all pass without analyzer suppression", "started": "2026-10-03T17:29:15.957174+00:00"}
+  Determining projects to restore...
+  Restored /workspace/team-c/integration/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 99 ms).
+  Restored /workspace/team-c/integration/eng/service-validation/Sites.Source.Tests.csproj (in 199 ms).
+  Haven.Core -> /workspace/team-c/integration/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
+  Sites.Source.Tests -> /workspace/team-c/integration/eng/service-validation/bin/Release/net10.0/Sites.Source.Tests.dll
+Test run for /workspace/team-c/integration/eng/service-validation/bin/Release/net10.0/Sites.Source.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /tmp/c6-root-sites-results/_5f26f397bc73_2026-10-03_17_29_19_net10.0.trx
+
+Passed!  - Failed:     0, Passed:    39, Skipped:     0, Total:    39, Duration: 300 ms - Sites.Source.Tests.dll (net10.0)

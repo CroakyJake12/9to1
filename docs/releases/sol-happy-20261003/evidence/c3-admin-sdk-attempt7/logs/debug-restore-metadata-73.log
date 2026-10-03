@@ -1,0 +1,14 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+    "MSBuildProjectName": "Avalonia.MicroCom",
+    "MSBuildProjectFile": "Avalonia.MicroCom.csproj",
+    "Configuration": "Debug",
+    "Platform": "AnyCPU",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.MicroCom/",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.MicroCom/project.assets.json",
+    "RestoreOutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.MicroCom/"
+  }
+}

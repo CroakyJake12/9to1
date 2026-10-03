@@ -1,0 +1,9 @@
+{
+  "scenario": "orphan",
+  "launcherReleased": true,
+  "creatorWaitProven": true,
+  "primary": "None",
+  "cleanup": [],
+  "retainedData": "/tmp/original-custody-939e4711",
+  "sessionInitialized": true
+}

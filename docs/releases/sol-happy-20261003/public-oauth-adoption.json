@@ -1,0 +1,289 @@
+{
+  "integrationBaseline": "5073c83a2b8592f135954a868f7d9db2c4c53256",
+  "proposalHead": "27aa37abb0462869d2b1cb1aa5ee1371b8b13415",
+  "productionAndTestSource": "04ff6067d212bb9e8547a5ff93b859d9fc473118",
+  "delivery": "Exact selected Git blobs; proposal branch ancestry and unrelated product changes not merged.",
+  "existingAuthSourceChanges": [
+    "cloud/cake-id-auth/src/index.ts"
+  ],
+  "reviewEvidence": [
+    "8e07b2f0",
+    "f3e17acc",
+    "2df2f8a0",
+    "8b797d69"
+  ],
+  "localResults": {
+    "publicRoutes": 117,
+    "issuerOrigin": 27,
+    "maintainedIdentity": 222,
+    "exitCodes": [
+      0,
+      0,
+      0
+    ]
+  },
+  "qualification": "Local actual Workerd/D1 with reviewed separate Linux custody adapter. Original npm test entry untouched. Historical a44 results retain original source. No browser completion/provider/deployment/.NET RSA or auth_revision acceptance.",
+  "files": [
+    {
+      "path": "cloud/cake-id-auth/BROWSER_FIXTURE.md",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 7460,
+      "sha256": "151a15e6fc28d25e7c5a6376269f0c0f8aab5bfbe8cb458cc4e8588f026fe3f4"
+    },
+    {
+      "path": "cloud/cake-id-auth/PUBLIC_CLIENT_CORS.md",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 5549,
+      "sha256": "7bcea2442f44655d269915dc171a97b39c73ea68f7208e2eafd0437abf17cfbc"
+    },
+    {
+      "path": "cloud/cake-id-auth/src/index.ts",
+      "status": "M",
+      "gitMode": "100644",
+      "bytes": 8961,
+      "sha256": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/browser-fixture.mjs",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 13613,
+      "sha256": "b4e59d4ec800621b6fd75f036f7a0cb291bee83f55107779543e9f9ebd80ce89"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/integration-custody-proof.json",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1054,
+      "sha256": "79e790128af327c88305ca3d9e2bf25f2129690aa89c0e008f02539bab8eaed1"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/integration-custody.mjs",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 43674,
+      "sha256": "5c5d92a3cb531e9d32ea48f8f5d320ca2bc75401236ee9fa3e639fe6a96169ac"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/integration-lifecycle.mjs",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 448,
+      "sha256": "86dedd7c95b91756b4b335b283f42faa36815755351aca1c7468b747b91d4836"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/integration-lifecycle.test.mjs",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 965,
+      "sha256": "6a06a65e79f73183a186cf15979340f996cbedbff9b5e7bd3abeb284661e0659"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/issuer-origin.mjs",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 8504,
+      "sha256": "166d85b72fc7c6af617f330b3c7b732ea3c7f8c16176af56e3f9b2338b7dc702"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/linux-fixture-custodian.py",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 10003,
+      "sha256": "f078219ca4dbc6c0eedce942cdc1bcc71958db48a79d54d5b6825d3de30e2fa2"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/linux-fixture-custodian.test.py",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 4978,
+      "sha256": "508aa6eb1387dd780908e43d7bc12c4d9b26bfb40c71eb0ae4a1762bb0db436c"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/public-cors.mjs",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 15232,
+      "sha256": "58545b7051fd3f357d503efaa837186d7e0bd0157c418b3736e637bfe72d99e3"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/README.md",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 3389,
+      "sha256": "43f0d8a3887dd47814becd6881fb46fb068a21c8371c9ef3bd996b5aa42d6985"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/evidence.json",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 8526,
+      "sha256": "13d7644fe3af3685b1fce9a6f6345ee5667353392fa07e2dd4d2746d3c7ae9ef"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/c1-independent-04ff-issuer-origin.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1454,
+      "sha256": "d272632194e34375e23c9b783c6d59e1e1f8659c84006979f760168caf8542ff"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/c1-independent-4d946-runtime.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1378,
+      "sha256": "0197d94d16eaba2705b446d0c84615dc951acd4e48d94afd18591a6c8d1f9b37"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/original-to-adapted.diff",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 6563,
+      "sha256": "cb08438fb5f0ca8a00f530b97ec2f648fd5a5e5c8cf72b902c3ef7c8ddca9f99"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-custody-nine-final.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1145,
+      "sha256": "fb93185b8bf4dd0c1e7892bdb7d2921c54375ca1ab10a08c5928b894fd6235e0"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-exact-4d946-runtime.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1327,
+      "sha256": "b8a308605dd5848ef35c6079e9bb2fe0c58a0da931584df5e181d013ec77a0d9"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-final-runtime.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1378,
+      "sha256": "0d798581c5023e5f5607a2a7b34ed8f700a24b69edb908476466c6ed09f9cbc2"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-fixed-first.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 773,
+      "sha256": "8acb815baeaa4b901c79cd7a25c072f56e19925a985bdb747cfa9a61444b9016"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-fixed-runtime-first.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1111,
+      "sha256": "4e714561bcb8aa27f297d9f60ce6fa149acab377c476b8052a72c4b55acd6627"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-fixed-runtime-second.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1377,
+      "sha256": "0ed50d765ad73f3832bb359b4214edbaa69da011e6047760d76aef55a0e79c36"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-issuer-aedc-baseline-corrected.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1454,
+      "sha256": "47406224abd0e818bd31fccd4a33c950849e9d3671eddb53b3a4d4b8a570cd79"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-issuer-aedc-baseline.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1425,
+      "sha256": "1b203caf788a99f3db584ca4ef493bc74fd553f801b29127c46f13f558cc5509"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-issuer-current-negative.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1405,
+      "sha256": "2ebd02434cd4ba86716299a46926caf538afb843c413d29973287e245cd64694"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-issuer-fixed.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1403,
+      "sha256": "b69ea2d3d19ade68ade0720641cd59b8ccf424c87534ba21f9acafc14f94ea5b"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-maintained-regression-04ff.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1328,
+      "sha256": "2396ed1e708e8bb7c4d64ee1294161674c97e8369f56ce7d469e29884e08baaa"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-maintained-regression-de350.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1328,
+      "sha256": "69e3c0767360ebecd466111de794c914daccf59a822e43db3378dc5c60b4d4a2"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-npm-ci.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 25,
+      "sha256": "164ec9a18702f66eb076d1d5d738bfbaa8141a04a8a5c059ff026c39259e4b3e"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-original-negative.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1207,
+      "sha256": "1c45cc522cf8ba70038a47e26b33cd0ab0365ff9c7e2ec4a9c6a7ab317c9b618"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-paths-04ff.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 1378,
+      "sha256": "9812e8bf9f9681e6864c55304156f9204b724223e4ffa4ef5ab5a22ecc0e6cc0"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-schema-final.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 206,
+      "sha256": "d6a9b2ae361185972cd0ba6d06116dcd5ba4133a2dae78111bb0ccb01c818945"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-typecheck-04ff.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 264,
+      "sha256": "361020da676192c9b0f13a944334995c3356720b8359af6ff3a21209ca972010"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-typecheck-final.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 264,
+      "sha256": "361020da676192c9b0f13a944334995c3356720b8359af6ff3a21209ca972010"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-typecheck-fixed.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 264,
+      "sha256": "361020da676192c9b0f13a944334995c3356720b8359af6ff3a21209ca972010"
+    },
+    {
+      "path": "handoff/team-c/public-client-cors/raw/public-cors-typecheck.log",
+      "status": "A",
+      "gitMode": "100644",
+      "bytes": 551,
+      "sha256": "caea6e6bd05485f623ac1a107a8ae3976e5b249070f2301187f3a82702dbaeb2"
+    }
+  ],
+  "adoptedCommit": "56fcaa4248a99c594e66ec267426ba42ffcd3d90",
+  "rawWhitespacePreservation": "Exact raw/original-to-adapted.diff has a path-specific trailing-space attribute; original bytes are unchanged."
+}

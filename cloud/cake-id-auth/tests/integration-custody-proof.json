@@ -1,0 +1,14 @@
+{
+  "originalSha256": "0ce6579e115e1879e8dc8d7595f4e0aa6a3146e8329517012c744b7c21077363",
+  "adaptedSha256": "5c5d92a3cb531e9d32ea48f8f5d320ca2bc75401236ee9fa3e639fe6a96169ac",
+  "domainBodySha256": "815221d9eb88c9836f79c8c276e836504d8984c481501ada0e97335335f5d4d2",
+  "domainBodyBytes": 27982,
+  "domainBodyIdentical": true,
+  "originalUnedited": true,
+  "custodianSource": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+  "execution": "node tests/integration-custody.mjs",
+  "variance": "Linux-only preflight, pidfd custodian launch/drain, spawn error handling and private directory permissions only; all domain helpers, fixtures and assertions unchanged; lifecycle collector retains original exception alongside cleanup failure",
+  "assertionBodyBytes": 27783,
+  "assertionBodySha256": "e9406fdb224761e57d0ec5a03e31720025caac04da96a5eddff453141e0e9bc1",
+  "domainBodyComparison": "27982-byte original domain-and-catch region is identical after removing only added mainFailure = error assignment; 27783-byte assertion body is literally byte-identical."
+}

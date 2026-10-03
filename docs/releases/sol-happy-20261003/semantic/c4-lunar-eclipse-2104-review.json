@@ -1,0 +1,994 @@
+{
+  "revision": {
+    "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "title": "9to1 Development Specification",
+    "revisionId": "ANLCKQlZuLSuopoik2qJHrWoQxliYXJ0xjJfH2ncI9frS-Tm7sLiDFLwVdoLZ3-gbZ4aB1qDkX6j9nGYYpvqrgULBc32eKABkwDZNo2d3v8",
+    "paragraphs": 8534,
+    "document_url": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "capture": "Atomic get_document_text at 2026-10-03 21:04 UTC",
+    "serialization": "paragraph text joined with newline and one final newline",
+    "bytes": 1383780,
+    "sha256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c"
+  },
+  "newSource": {
+    "path": "/workspace/team-c/spec-native-final-2104.txt",
+    "bytes": 1383780,
+    "sha256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c"
+  },
+  "priorSource": {
+    "path": "/workspace/team-c/spec-native-1943.txt",
+    "bytes": 1342924,
+    "sha256": "9eb6e32f293aab39f5f45f06b56afb1f051751d103d3e7db1a5e4dd31c1fe87c"
+  },
+  "delta": {
+    "path": "/workspace/team-c/spec-native-final-2104.diff",
+    "bytes": 42521,
+    "sha256": "556579cc6fc074a2ee4890472d86aa2982e074c3fc1d25d64d8199b52ee6ca83",
+    "read": "Entire delta plus full LE01-15 source lines8337-8534 read; paragraph count176delta is source custody, not requirements denominator."
+  },
+  "unchangedPrefix8336": true,
+  "earlierC4ExactQuoteMapping": [
+    {
+      "id": "C4-F-HOST",
+      "prior_source_line": 9903,
+      "new_lines": [
+        8246
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-IDENTITY",
+      "prior_source_line": 9904,
+      "new_lines": [
+        8247
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-METADATA",
+      "prior_source_line": 1895,
+      "new_lines": [
+        1519
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-REPLICA",
+      "prior_source_line": 1897,
+      "new_lines": [
+        1520
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-ACCESS",
+      "prior_source_line": 9905,
+      "new_lines": [
+        8248
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-DELIVERY",
+      "prior_source_line": 9906,
+      "new_lines": [
+        8249
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-TRANSFER-ID",
+      "prior_source_line": 9907,
+      "new_lines": [
+        8250
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-RESUME",
+      "prior_source_line": 1987,
+      "new_lines": [
+        1567
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-INTEGRITY",
+      "prior_source_line": 1989,
+      "new_lines": [
+        1568
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-COMMIT",
+      "prior_source_line": 9907,
+      "new_lines": [
+        8250
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-RECONCILE",
+      "prior_source_line": 9907,
+      "new_lines": [
+        8250
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-QUOTA",
+      "prior_source_line": 9908,
+      "new_lines": [
+        8251
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-QUOTA-UI",
+      "prior_source_line": 1933,
+      "new_lines": [
+        1540
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-PUSH",
+      "prior_source_line": 9909,
+      "new_lines": [
+        8252
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-CURSOR",
+      "prior_source_line": 1939,
+      "new_lines": [
+        1543
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-IDEMPOTENT",
+      "prior_source_line": 1941,
+      "new_lines": [
+        1544
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-CONFLICT",
+      "prior_source_line": 1977,
+      "new_lines": [
+        1562
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-RAW-CONFLICT",
+      "prior_source_line": 1889,
+      "new_lines": [
+        1516
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-OFFLINE",
+      "prior_source_line": 1969,
+      "new_lines": [
+        1558
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-HYDRATE",
+      "prior_source_line": 1957,
+      "new_lines": [
+        1552
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-EVICT",
+      "prior_source_line": 1971,
+      "new_lines": [
+        1559
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-VERSIONS",
+      "prior_source_line": 1995,
+      "new_lines": [
+        1571
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-TRASH",
+      "prior_source_line": 2001,
+      "new_lines": [
+        1574
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-CASCADE",
+      "prior_source_line": 2003,
+      "new_lines": [
+        1575
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-ACL",
+      "prior_source_line": 2007,
+      "new_lines": [
+        1577
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-INHERIT",
+      "prior_source_line": 2009,
+      "new_lines": [
+        1578
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-SHARED",
+      "prior_source_line": 2011,
+      "new_lines": [
+        1579
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-LINK",
+      "prior_source_line": 2013,
+      "new_lines": [
+        1580
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-READ-PARITY",
+      "prior_source_line": 9910,
+      "new_lines": [
+        8253
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-PROVIDERS",
+      "prior_source_line": 1903,
+      "new_lines": [
+        1523
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-F-API",
+      "prior_source_line": 1754,
+      "new_lines": [
+        1411
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-CLOUDFLARE",
+      "prior_source_line": 9912,
+      "new_lines": [
+        8255
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "BLOCKED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-PROVENANCE",
+      "prior_source_line": 9913,
+      "new_lines": [
+        8256
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-ASSETS",
+      "prior_source_line": 9914,
+      "new_lines": [
+        8257
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-ROUTES",
+      "prior_source_line": 9914,
+      "new_lines": [
+        8257
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-SERVER",
+      "prior_source_line": 9914,
+      "new_lines": [
+        8257
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-BUILD-ISOLATION",
+      "prior_source_line": 9915,
+      "new_lines": [
+        8258
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-CREDENTIAL-ISOLATION",
+      "prior_source_line": 9915,
+      "new_lines": [
+        8258
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-FAILURE",
+      "prior_source_line": 9916,
+      "new_lines": [
+        8259
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-ROLLBACK",
+      "prior_source_line": 9916,
+      "new_lines": [
+        8259
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-NAMESPACE",
+      "prior_source_line": 9917,
+      "new_lines": [
+        8260
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-SLUG",
+      "prior_source_line": 7291,
+      "new_lines": [
+        5984
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-NAME",
+      "prior_source_line": 7296,
+      "new_lines": [
+        5988
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-DOMAIN-CHALLENGE",
+      "prior_source_line": 7304,
+      "new_lines": [
+        5995
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-DOMAIN-TAKEOVER",
+      "prior_source_line": 7305,
+      "new_lines": [
+        5996
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-DNS-SCOPE",
+      "prior_source_line": 7307,
+      "new_lines": [
+        5998
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "BLOCKED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-TLS",
+      "prior_source_line": 7244,
+      "new_lines": [
+        5937
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-MANUAL-DNS",
+      "prior_source_line": 7308,
+      "new_lines": [
+        5999
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-ORIGIN",
+      "prior_source_line": 9918,
+      "new_lines": [
+        8261
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "BLOCKED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-LIMITS",
+      "prior_source_line": 9919,
+      "new_lines": [
+        8262
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-INACTIVITY-EARLY",
+      "prior_source_line": 1314,
+      "new_lines": [
+        1105
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-INACTIVITY-LATE",
+      "prior_source_line": 1314,
+      "new_lines": [
+        1105
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-SOURCE",
+      "prior_source_line": 7312,
+      "new_lines": [
+        6002
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-DERIVED",
+      "prior_source_line": 7319,
+      "new_lines": [
+        6008
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-RECOVERY",
+      "prior_source_line": 7321,
+      "new_lines": [
+        6010
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-SECRET",
+      "prior_source_line": 7263,
+      "new_lines": [
+        5956
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-PREVIEW",
+      "prior_source_line": 7373,
+      "new_lines": [
+        6060
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-S-DYNAMIC-OWNERS",
+      "prior_source_line": 7401,
+      "new_lines": [
+        6088
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-X-STATE-TRANSACTION",
+      "prior_source_line": 9870,
+      "new_lines": [
+        8213
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "BLOCKED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-X-FIRSTPARTY-ISOLATION",
+      "prior_source_line": 9871,
+      "new_lines": [
+        8214
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "BLOCKED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-X-BACKUP",
+      "prior_source_line": 9952,
+      "new_lines": [
+        8295
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "MISSING",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-X-PRIVACY",
+      "prior_source_line": 9953,
+      "new_lines": [
+        8296
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "BLOCKED",
+      "runtime_relabelled": false
+    },
+    {
+      "id": "C4-X-COMPAT",
+      "prior_source_line": 9954,
+      "new_lines": [
+        8297
+      ],
+      "exact_body_unchanged": true,
+      "prior_state": "IMPLEMENTED-UNVERIFIED",
+      "runtime_relabelled": false
+    }
+  ],
+  "actionableBoundedMap": [
+    {
+      "id": "C4-LE-OWNERS",
+      "source_line": 8342,
+      "quote": "Use the existing ownership boundaries: Home owns shared runtime, packages, permissions and Mesh; Spaces owns conversations and sidebar/tab presentation; Dulche/Den retains its runtime and persistent AI-state responsibilities; Files owns canonical file identity and storage operations; Cards owns flashcard semantics; Planner owns planning entities. Existing shared CUI, Productivity Engine, Node Graph, preview/editor and integration services MUST be reused. Do not create parallel stores, permission brokers, installers or reduced embedded app implementations.",
+      "behavior": "Home Mesh/package/permissions, Spaces conversation/presentation, Den AI state, Files storage, Cards cards, Planner planning retain authority; shared engines reused.",
+      "proposed_owner": "A1/A4,A2,A3,B; C coordinator",
+      "next_action": "Register disjoint owners/actual existing contract paths before edits; C4/C5 consume acknowledged shared APIs.",
+      "required_test": "Reject private store/permission/install duplicates and check original IDs across embeds.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-SUPERSESSION",
+      "source_line": 8343,
+      "quote": "The new mini sidebar and custom main sidebar explicitly replace the earlier fixed Spaces navigation hierarchy and its layout-specific acceptance test. Built-in Space behaviour, safe extension hooks and permission protections remain mandatory; required destinations MUST remain discoverable through the rail/switcher and Spaces browser. Customisation changes presentation, not security authority.",
+      "behavior": "Replace old fixed Spaces navigation hierarchy and its layout-only acceptance; keep built-in behaviors/protections/discoverability.",
+      "proposed_owner": "A Spaces/Home + B browser",
+      "next_action": "Update precise inherited layout acceptance with canonical supersession basis; retain unrelated tests.",
+      "required_test": "Both rail/dropdown access authorized built-ins/user nested spaces; protected items cannot shadow.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-PACKAGES",
+      "source_line": 8355,
+      "quote": "The single trusted installer MUST install Home, all mandatory modules, the selected app and its app-required dependencies. Selecting a second app MUST reuse compatible shared packages. Internal platform package formats may be used; separate user-facing standalone MSIX installers for individual apps are not the distribution model. Native Windows and 9to1-OS use this contract through their supported packaging mechanisms. Browser apps use authenticated shared web services and MUST NOT require a local Home installation.",
+      "behavior": "Native single installer installs Home/shared core/selected app dependencies; browser needs no local Home.",
+      "proposed_owner": "A Home/package/OS; B browser; C1 release delivery",
+      "next_action": "Publish existing package manifest classifications/version ranges/platforms/reverse dependencies; actual artifact test.",
+      "required_test": "Clean install selected apps, dependency cancel/deny/update interruption, repair/rollback without artifact loss.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-RAIL",
+      "source_line": 8366,
+      "quote": "The rail is the default. Each pinned Space is an independently selectable, named item, followed by access to the Spaces browser. The browser exposes all authorised Spaces and the existing create/edit/manage actions, including unpinned built-ins and nested user-created Spaces. Pinning, unpinning and reordering preserve SpaceID; names are not identities.",
+      "behavior": "Pinned stable SpaceIDs+browser rail is default; persisted dropdown alternative equivalent and drafts retained.",
+      "proposed_owner": "A Spaces + B browser",
+      "next_action": "Use same existing navigation/Space store, version preferences and registered actions.",
+      "required_test": "Pin/reorder/restart and keyboard/narrow nav both layouts without conversation movement.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-TABS",
+      "source_line": 8374,
+      "quote": "A Spaces tab MUST have stable TabID, target type/identity, source Space/context, current view mode and restorable navigation state. Targets include canonical conversations, images/artifacts, registered AppSurfaces and safe Generative UI surfaces. Ordinary Open focuses an existing equivalent target tab; an explicit new-view action may open another view of the same canonical entity. Tabs support select, close, reorder and keyboard navigation.",
+      "behavior": "Stable TabID/context/mode/nav; normal Open focuses equivalent target; explicit new-view allows duplicate view of same entity.",
+      "proposed_owner": "A Spaces/AppSurface + B browser",
+      "next_action": "Publish versioned Tabs schemas/lifecycle and real registered surface composition.",
+      "required_test": "Two chats+artifact switch/close/restart/OpenInApp retains IDs/edit; no prompt/action replay.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-BACKGROUND",
+      "source_line": 8375,
+      "quote": "Switching or closing a tab MUST NOT delete its artifact or cancel an explicitly background-capable Dulche run. Preserve drafts; closing an unsaved editor must save safely or offer Save/Discard/Cancel where a decision is required. Restore saved tab targets and layout after restart, showing unavailable targets honestly. Restoration MUST NOT replay prompts, external actions or historical tool calls.",
+      "behavior": "Closing preserves artifact/draft and authorized background run; restoration cannot replay tools.",
+      "proposed_owner": "A Den/Spaces + C5 jobs + B",
+      "next_action": "Bind actual run identity/capability and saved tab target lifecycle; bounded inactive rendering.",
+      "required_test": "Close running tab, background continues; unsaved Save/Discard/Cancel, cache permission revoke.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-SIDEBAR",
+      "source_line": 8399,
+      "quote": "Resolve each configurable field as Space Override, then User Preference, then Default. Show which values are controlled by a Space and why an attempted edit is constrained. Reset clears the chosen user override rather than deleting Space data. Built-in protected behaviour cannot be removed, replaced or shadowed through either editor or Plugin IDs. Security and organisation policy restrict every level of this presentation precedence.",
+      "behavior": "Space override > User preference > Default, policy restricts all; reset only user override, protected IDs cannot shadow.",
+      "proposed_owner": "A Spaces/contribution registry + B",
+      "next_action": "Publish typed section/item/rule persistence and precedence resolver.",
+      "required_test": "All three precedence levels/reset/reorder/remove; source chats preserved.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-RULES",
+      "source_line": 8400,
+      "quote": "Manual section membership stores references. Automatic membership is an inspectable, validated Automation/Node Graph rule over authorised chat metadata/content, including topic/keyword matching and configured inactivity duration. Removing an inactive chat from a section MUST NOT archive, delete or move the source chat. Manual and rule-based contributions must resolve to one visible reference per section; changing/disabling a rule must not erase unrelated manual membership. Match updates are incremental and bounded, not repeated whole-history scans.",
+      "behavior": "Validated automation rules use authorized chat data, bounded incremental matching and one reference per section; inactivity removal does not delete/archive/move chat.",
+      "proposed_owner": "A Automations/NodeGraph/Spaces + C5 + B",
+      "next_action": "Reuse canonical rule engine/events and current source permission; preserve unrelated manual references.",
+      "required_test": "Keyword/inactivity/manual overlap, disable rule/detach plugin/revoke access without orphan handler.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-USAGE",
+      "source_line": 8407,
+      "quote": "Each measure identifies provider, connection/account, resource/unit, used amount, limit when known, period/reset semantics, observed-at time and freshness/availability state. Use existing account/provider APIs; billing and quota enforcement remain server-authoritative. Multiple accounts and resources MUST NOT be combined into an unexplained percentage. Preserve Dulche's null/Na/zero distinction: unavailable is not zero or unlimited.",
+      "behavior": "Actual source-labelled resource/account/windows/freshness with null/Na/zero preserved; no fabricated limit/unlimited/aggregate percentages.",
+      "proposed_owner": "C3 accounting + C5 providers; A/B usage UI",
+      "next_action": "Publish existing APIs/events metrics and observed freshness, use bounded polling only where provider needs it.",
+      "required_test": "Real allowance+external measurable limit/reset/unavailable/account switch; no stale account value or composer overlap.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-MODE",
+      "source_line": 8418,
+      "quote": "Storage mode is a property of the existing canonical conversation and its managed attachments/derived records, not a separate Local Chats database. Local permits storage on the current device only; Mesh permits authorised replicas across devices in the selected personal/team namespace; Cloud adds encrypted account-storage backup to that Mesh scope. All Mesh Devices never means every device in an unrelated organisation. A newly created chat defaults to Local unless the user has explicitly chosen another eligible default. Existing chats retain their known placement on upgrade; do not migrate them silently.",
+      "behavior": "Existing canonical conversation+attachments/derived records has Local/Mesh/Cloud placement; new chat Local default unless explicit eligible default, no silent upgrade migration.",
+      "proposed_owner": "A Spaces/Den/Home/Mesh/Files; C4 storage + C5 transport; B",
+      "next_action": "Owner publish versioned placement policy in existing stores, inspect actual current data; no new Local Chats DB.",
+      "required_test": "Restart new/existing chats; inspect source/device/account copies and preserve known placement.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-TRANSFER",
+      "source_line": 8419,
+      "quote": "Persist ConversationID, requested/effective storage mode, authorised namespace/destination DeviceIDs, storage-policy revision and transfer state through the existing Spaces/Den/Files/Home contracts. Transfers expose JobID and per-destination Pending, Transferring, Synced, Failed or Blocked state with revision acknowledgements and retry/cancel controls. Cloud access requires a server-authoritative paid entitlement and StorageAllocatedBytes greater than 10,000,000,000 bytes; available quota is a separate check. Exactly 10 GB does not qualify, and a client label or Send to Cloud action cannot bypass entitlement checks.",
+      "behavior": "Persist canonical IDs/policy revision/namespaces/destinations; per-destination job states+revision ACK/retry/cancel.",
+      "proposed_owner": "A HomeMesh+SpacesDenFiles; C4 bytes; C5 job custody; B",
+      "next_action": "Publish GetPlacement/SetPlacement/transfer exact schemas and bind current folder transport separately.",
+      "required_test": "Interrupt/restart/replay exact JobID and revisions with no duplicate history/copies.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-ENTITLEMENT",
+      "source_line": 8419,
+      "quote": "Persist ConversationID, requested/effective storage mode, authorised namespace/destination DeviceIDs, storage-policy revision and transfer state through the existing Spaces/Den/Files/Home contracts. Transfers expose JobID and per-destination Pending, Transferring, Synced, Failed or Blocked state with revision acknowledgements and retry/cancel controls. Cloud access requires a server-authoritative paid entitlement and StorageAllocatedBytes greater than 10,000,000,000 bytes; available quota is a separate check. Exactly 10 GB does not qualify, and a client label or Send to Cloud action cannot bypass entitlement checks.",
+      "behavior": "Cloud needs paid entitlement AND allocation >10000000000 bytes; exactly10GB fails; available quota separate.",
+      "proposed_owner": "C3 grants/quota + C2 scope + C4 storage",
+      "next_action": "Use authoritative paid/allocation/query+reservation hooks; explicit byte threshold now fixed, no commercial prices invented.",
+      "required_test": "Unpaid/exact10GB/>10GB/fullquota/revoked cases; local source retained.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-DEVICE",
+      "source_line": 8420,
+      "quote": "Send to Cloud is an explicit promotion. Send to Device previews one authorised Mesh destination and sends only there; it does not silently enable full Mesh or Cloud mode. The destination initially retains that received chat locally. Transfers preserve canonical history/branches and do not replay stored requests or tools. Independent edits reconcile through existing revision/branch conflict rules, never silent last-write-wins.",
+      "behavior": "SendToDevice one previewed authorized Mesh destination only, received copy initially Local; Cloud promotion distinct; preserve canonical branches/no tools replay.",
+      "proposed_owner": "A HomeMesh/SpacesDen + C5 + C4 + B",
+      "next_action": "Reuse existing enrolled/revocable device namespace protocol; owner define history acknowledgement/conflict version mapping.",
+      "required_test": "One destination receives, unrelated devices do not; replay none; independent edits conflict safely.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-WIDEN",
+      "source_line": 8421,
+      "quote": "Before widening placement, show the destination/account, affected conversation and attachment scope, encryption/permission state and quota impact. Commit the widened policy only through authorised domain actions; pending transfers are not reported as complete. Cancellation or interruption retains a valid source copy and exposes any already completed destination copies. Retries are idempotent and recheck permissions, device revocation and entitlements.",
+      "behavior": "Preview account/destinations/attachment/encryption/permission/quota; commit policy authorized, pending not complete, cancellation shows completed target copies.",
+      "proposed_owner": "A permission/domain + C2/C3/C4/C5 + B",
+      "next_action": "Owner current commit authority and policy+per-target state durability; encryption architecture preserved.",
+      "required_test": "Cancel/interrupt after some targets, source valid and exact completed/failed/blocked statuses.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-DOWNSHIFT",
+      "source_line": 8422,
+      "quote": "Reducing placement stops new replication immediately. The UI MUST distinguish future sync policy from deletion of existing replicas. Show existing copies and offer an explicit, recoverable removal/reassignment flow under the owning storage policy. Offline cleanup remains pending until acknowledged; do not claim remote copies or external backups have been erased without evidence. Billing expiry/quota failure preserves local work and blocks newly unauthorised cloud writes rather than destroying the sole copy.",
+      "behavior": "Stop future replication immediately; existing copies removal separate recoverable flow, offline ACK pending, billing failure preserves sole local copy.",
+      "proposed_owner": "A FilesHomeMeshSpaces + C4 + C3 + C5 + B",
+      "next_action": "Reuse owning cleanup/retention state; retention/grace external policy remains OPEN not guessed.",
+      "required_test": "Offline device downshift/revoke; no erased claim before ACK; expired billing blocks new writes only.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-TEMPORARY",
+      "source_line": 8423,
+      "quote": "Temporary chats are always local-only. Their messages, attachments and derived chat state MUST NOT enter Mesh, account backup or durable cross-Space memory while temporary. Save creates a durable local conversation first; a separate authorised action is needed to widen placement. Direct UI/API/Automation transfer attempts on an unsaved temporary chat return TemporaryChatMustBeSaved.",
+      "behavior": "Temporary messages/assets/derived state no Mesh/account backup/crossSpace memory; Save durableLocal first; unsaved transfer returns TemporaryChatMustBeSaved.",
+      "proposed_owner": "A SpacesDen/memory/index + C4/C5 + B",
+      "next_action": "Enforce all transfer/search/memory/log/backup paths in existing policy, no fake local flag.",
+      "required_test": "UI/API/Automation/network storage negative controls, save then distinct authorized promotion.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-AI-LOCALITY",
+      "source_line": 8424,
+      "quote": "Storage locality and AI/tool execution locality are separate controls. A Local chat MUST NOT be uploaded for account storage or silently exposed through sync, search indexes, telemetry, memory or logging. Remote model/tool processing is allowed only through the separately authorised privacy route, clearly disclosed; a configured cloud fallback alone is not permission. Enforce the global Privacy Ceiling, encryption and log-minimisation rules. User copy must describe verified behaviour, not promise absolute privacy or treat restrained wording as permission for accidental uploads.",
+      "behavior": "Local storage and remote model/tool processing separate; no index/telemetry/log sync leak and no cloudfallback permission.",
+      "proposed_owner": "A Den privacy/runtime + C5 gateway + C2 + C4 + B",
+      "next_action": "Use actual Home/privacy grants and source scope; no absolute privacy marketing.",
+      "required_test": "Deny remote fallback/embedded context; inspect network/index/log/telemetry side effects.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-RECOMMEND",
+      "source_line": 8441,
+      "quote": "Revise These contains at most three distinct topics across all subjects combined; show fewer when fewer eligible topics exist. Candidates come from the user's recorded difficulty/proficiency and review dates. Use a deterministic, versioned ranking: recorded weak topics first, then overdue or oldest-reviewed topics, with stable TopicID tie-breaking; do not invent a low proficiency for an unassessed topic. Explain the recommendation basis and open a new Study chat bound to the selected topic and authorised sources.",
+      "behavior": "Three topics total; deterministic versioned weak-first then overdue/oldest with stableTopicID tie; unassessed not invented lowproficiency.",
+      "proposed_owner": "A Study service + B; C5 source APIs if online",
+      "next_action": "Use existing recorded progress/review service and publish ranking version.",
+      "required_test": "Multiple subjects only3slots/fewer/none; recommendation reason+canonical topic chat.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-BANK",
+      "source_line": 8465,
+      "quote": "Revision Bank is a persistent Study resource catalogue over canonical artifacts, not a second file store. It includes created revision materials, existing materials explicitly enrolled/imported and future materials classified by an authorised rule; it MUST NOT silently expose unrelated private documents. Each ResourceID records owning app, canonical ArtifactID/FileID or source reference, resource type, subject/topic links, category membership, provenance, owner/scope and revision. Files/owning apps retain payload, sharing, history and deletion authority.",
+      "behavior": "Catalog canonical owning resources, explicit enroll/authorized rule, no second file store/unrelated disclosure.",
+      "proposed_owner": "A Study/Files owner + B; C4 storage/ACL",
+      "next_action": "Publish ResourceID->ownerArtifact/FileID/reference/current ACL/revision; no duplicated payload.",
+      "required_test": "Create/edit/reopen/rename/move/restore/revoke same original; removeBank keeps source.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-CATEGORIES",
+      "source_line": 8466,
+      "quote": "Recommended, All, Flashcards, Notes, Papers and Quizzes are the default category tabs. Custom categories such as Homework have stable IDs and configurable order. Automatic creation of a category for an uncovered material type is opt-in and idempotent. Categories are filters/membership views, not duplicated artifacts. Recommended draws from recorded difficult/neglected topics and authorised linked resources, with an honest empty state when no match exists.",
+      "behavior": "Default categories fixed; customID order; auto uncoveredtype opt-in idempotent; recommendations actual evidence.",
+      "proposed_owner": "A Study + B",
+      "next_action": "Persist category membership views using existing catalogue, distinguish editor tabs.",
+      "required_test": "Opt-in creates once, decline creates none, empty recommended truthful.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-CARDS",
+      "source_line": 8493,
+      "quote": "Cards is a first-party CUI app. No external app donor is selected by this section. It MUST ship through the normal app catalogue, modular installer, Files/open-with and registered preview/editor paths, with the global launch screen, settings, permissions and contextual AI bar. Windows, 9to1-OS and web retain the same canonical flashcard model; other already-supported client obligations remain active. A platform constraint must be declared and tested, not hidden behind an empty app shell or assumed mobile fallback.",
+      "behavior": "Cards newlyshipping app, no external donor selected; Windows/OS/web same model, existing client obligations retained.",
+      "proposed_owner": "A Cards/Shared Productivity/HomeFiles + B browser; C4 persisted bytes",
+      "next_action": "Register catalogue/package/Files handlers/preview/editor; owner publish CardSet/Card/Review schemas.",
+      "required_test": "Structured front/back/rich/image/graph/ink save/restart/export; same set inCards/SpacesBank.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-REVIEW",
+      "source_line": 8498,
+      "quote": "A rating MUST persist on the card's personal review record. When a valid Study topic link exists, it MUST submit attributed evidence to the existing Study service and update linked views. An unlinked card remains usable and offers topic linking rather than fabricating a mapping. Shared deck edits do not overwrite other users' review records. Inline Spaces flashcards and Revision Bank entries must be able to open/save the same canonical set.",
+      "behavior": "Personal attributed review distinct shareddeck; validTopic link feeds existingStudy service, unlinked usable/no fabricated mapping; view cannot contentedit.",
+      "proposed_owner": "A CardsStudy/permissions + B; C4 ACL/history",
+      "next_action": "Separate current principal review from sharedcontent commits and preserve typed evidence.",
+      "required_test": "Twousers reviews private; linked/unlinked rating; sharededits conflict; flipping not mastery.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-BURROW",
+      "source_line": 8504,
+      "quote": "A Burrow is a named planning context over existing Planner entities, not a duplicate calendar engine or a copy of events/tasks/assignments. It has stable BurrowID, name/icon, owner/scope, ordering, archive state and revision. Native items may have one BurrowID or be Unassigned; the All view includes authorised items across burrows without duplicate identities. Existing items remain Unassigned unless the user assigns them or an existing explicit association provides a deterministic migration.",
+      "behavior": "ExistingPlanner items logical grouping not duplicate calendars; Unassigned default, one canonicalStudyBurrow perScope, IDs stable.",
+      "proposed_owner": "A PlannerStudy + B; C5 provider connectors",
+      "next_action": "Versioned Burrow catalogue+membership in owner engine, source currentACL remains independent.",
+      "required_test": "StudyMinecraft All once; move preserves times/reminders/providerIDs; recurrence scope/delete keeps original.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-SCHEMA",
+      "source_line": 8512,
+      "quote": "Before consumers implement against them, owners MUST publish the versioned action catalogue with exact argument/result schemas, affected stable IDs, owner/scope, required permissions, risk/reversibility, expectedRevision for writes, pagination for lists and operationId for replayable mutations. Long operations return JobID/status/cancellation and per-target outcomes. Read/search/preview/context and write APIs enforce the same current permissions; client-supplied account, Space or Burrow IDs do not grant access.",
+      "behavior": "Owners publish versioned exact action/result/permission/expectedRevision/pagination/opID schemas BEFORE consumers; no parallel namespaces/stores.",
+      "proposed_owner": "A shared owners + B/C consumers + root",
+      "next_action": "Publish catalogues for placement/tabs/sidebar/StudyBank/Cards/Burrows; ownerACK adoption.",
+      "required_test": "UI/API parity, replay/conflict/denial/revocation and declared errors/target states.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    },
+    {
+      "id": "C4-LE-RESOURCE",
+      "source_line": 8524,
+      "quote": "Resource and reliability evidence MUST state actual hardware/platform, dataset size, active/inactive tab counts, timing and memory/storage observations. Exercise long chat lists, many tabs, large card sets and mixed revision materials. Use approved project budgets where defined; where a release budget is absent, record measured results and the proposed release baseline for approval rather than inventing a passing number. No unbounded cache, polling loop or full-history rescan may substitute for bounded incremental behaviour.",
+      "behavior": "Measure real dataset/hardware/tabcount/memory/timing; absent budget proposed forapproval, not fabricated pass; exact artifacts install/upgrade/repair.",
+      "proposed_owner": "A/B/C6 + C1 delivery",
+      "next_action": "Record release workload/budget proposals and final candidate evidence without relabel.",
+      "required_test": "Populated UI/keyboard/screenreader/200percent, missingapp install/privacyjourney/recovery.",
+      "state": "BLOCKED",
+      "state_basis": "Owner implementation/schema and exact current evidence not provided for this newly explicit behavior; no absence/completion inferred from source review. Independent existing work continues.",
+      "test_outcome": "NOT_RUN by C4",
+      "scope": "Shipping LE + inherited obligations; not a denominator"
+    }
+  ],
+  "historicalEvidence": "Earlier dy/hK source maps and runtime results preserved; no runtime/provider acceptance relabelled to latest ANL revision. Prior incompleteprose/duplicatePass4 unresolved notes are historical: explicitLE defaults/scope now resolve superseded parts, not prior tests.",
+  "explicitScope": "All namedLE shipping; adds existing requirements; fixedSpaces navigation layout-specific test explicitly superseded. Droid explicitlyPostRelease,TrainingLabOUTOFSCOPE; no deadline/model/temporaryAndroid/productionpermission inherited. Launcher installer distinction explicit; no newfee/provider/donor/deadline.",
+  "remainingDecisions": "Exact owner schemas/actor+lease+permission transport/encryption policy implementation/current device and cloud provider configs, commercial lifecycle/retention-grace/service budgets/cutover approval remain dependent seams. Explicit mode/threshold/defaults are specified now and must not be left OPEN as unspecified.",
+  "noProductionChanges": true,
+  "globalDenominator": "Still unresolved; bounded map not full atomicLE/inherited decomposition."
+}

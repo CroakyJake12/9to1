@@ -1,0 +1,17 @@
+{
+  "head": "ae1d14c6b307913d046318e74a17cbbe94f46f90",
+  "cutSha256": "b90105fef02b821fc8b84ef30458ac6b2b6dda1f80b9afc77ecc377e8ddf59bd",
+  "driverExit": 1,
+  "commands": 33,
+  "commandExitZero": 33,
+  "strictDrainsTrue": 33,
+  "suiteExecutions": 0,
+  "releaseConfigurationExecuted": false,
+  "sourcePdbPhase": "ENTERED-REFUSED: required adjacent physical PDB missing for configured embedded Avalonia.Build.Tasks",
+  "actualSdk": "10.0.401",
+  "workflowSdk": "10.0.301",
+  "retainedCompiledFiles": 2328,
+  "retainedCompiledBytes": 496241112,
+  "fullAcceptance": "UNVERIFIED",
+  "keyProposalIntegrated": false
+}

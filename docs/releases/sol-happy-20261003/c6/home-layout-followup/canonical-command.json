@@ -1,0 +1,25 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "run",
+    "--project",
+    "apps/Web/Tests/HomeLayout.Tests.csproj",
+    "-c",
+    "Release",
+    "--",
+    "9to1 Workspace/Home/UI/Home.cui"
+  ],
+  "cwd": "/workspace/team-c/c6-home-layout-source",
+  "startUTC": "2026-10-03T20:48:56.993590+00:00",
+  "commit": "28b3fa6d8a8099fc5ee01c9ff479e34eabaa89c3",
+  "environmentOverrides": {
+    "DOTNET_CLI_HOME": "/tmp/c6-layout-dotnet",
+    "NUGET_PACKAGES": "/workspace/.tools/nuget",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "XDG_CACHE_HOME": "/tmp/c6-layout-cache",
+    "XDG_CONFIG_HOME": "/tmp/c6-layout-config",
+    "AVALONIA_TELEMETRY_OPTOUT": "1"
+  },
+  "exitCode": 134,
+  "endUTC": "2026-10-03T20:50:32.433392+00:00"
+}

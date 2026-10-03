@@ -1,0 +1,267 @@
+{
+  "acceptedEvidenceBytes": 1289524,
+  "cleanupTypes": [],
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-head.log",
+      "logBytes": 41,
+      "logSha256": "722ec6b245c07ee91c3fd2c661b2115e2f22218425ca6baa65f77fdfb609e649",
+      "name": "before-head",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47432,
+        "launcherStartTicks": "1127890"
+      },
+      "seconds": 0.06092264300059469
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "ls-tree",
+        "-rz",
+        "HEAD"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-tree.log",
+      "logBytes": 1279821,
+      "logSha256": "261ac76a1a38534dc85ce7171eb40d2f538cb1f68470095574c8c6c97052eb61",
+      "name": "before-tree",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47433,
+        "launcherStartTicks": "1127897"
+      },
+      "seconds": 0.05791072499960137
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "9to1 Workspace/Terminal/Source/libvterm",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-dependency-0.log",
+      "logBytes": 41,
+      "logSha256": "fb50a469c6f084ccd18f9b9539b761a71ad9672ed8f22805a8af03c96ead6968",
+      "name": "before-dependency-0",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47434,
+        "launcherStartTicks": "1127938"
+      },
+      "seconds": 0.05823263300044346
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "9to1 Workspace/Terminal/Source/libvterm",
+        "status",
+        "--porcelain",
+        "--untracked-files=no"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-dependency-clean-0.log",
+      "logBytes": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "before-dependency-clean-0",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47435,
+        "launcherStartTicks": "1127944"
+      },
+      "seconds": 0.05711107500064827
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-dependency-1.log",
+      "logBytes": 41,
+      "logSha256": "39c78435e3dd2775372baf77da56bf2997fc21f9482a3cc2e1e28a35f4c43f2a",
+      "name": "before-dependency-1",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47436,
+        "launcherStartTicks": "1127951"
+      },
+      "seconds": 0.057240579999415786
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+        "status",
+        "--porcelain",
+        "--untracked-files=no"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-dependency-clean-1.log",
+      "logBytes": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "before-dependency-clean-1",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47437,
+        "launcherStartTicks": "1127957"
+      },
+      "seconds": 0.05774297099924297
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "framework/CUI/vendor/Avalonia/external/XamlX",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-dependency-2.log",
+      "logBytes": 41,
+      "logSha256": "8ee0b953e6680e5e0c5629ef793b7a2da517c5fcd78b0eb4affa8bc911a5baf5",
+      "name": "before-dependency-2",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47438,
+        "launcherStartTicks": "1127964"
+      },
+      "seconds": 0.058308957999543054
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "framework/CUI/vendor/Avalonia/external/XamlX",
+        "status",
+        "--porcelain",
+        "--untracked-files=no"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-dependency-clean-2.log",
+      "logBytes": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "before-dependency-clean-2",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47439,
+        "launcherStartTicks": "1127970"
+      },
+      "seconds": 0.05777984700034722
+    },
+    {
+      "argv": [
+        "/usr/bin/bash",
+        "9to1 Workspace/shared/eng/prepare-cui-source.sh",
+        "--check"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/before-source-preparation-check.log",
+      "logBytes": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "before-source-preparation-check",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47440,
+        "launcherStartTicks": "1127977"
+      },
+      "seconds": 0.05740357800095808
+    },
+    {
+      "argv": [
+        "dotnet",
+        "--info"
+      ],
+      "cleanupTypes": [],
+      "creatorPidfdCaptured": true,
+      "exitCode": 1,
+      "extraEnvironment": {},
+      "log": "logs/toolchain.log",
+      "logBytes": 129,
+      "logSha256": "c8630378da607efc6102b408ea0b3821afdeb55985e4f875004fd6d36bdd4b39",
+      "name": "toolchain",
+      "originalSessionCaptured": true,
+      "primaryType": "RuntimeError",
+      "seal": {
+        "drained": true,
+        "expectedManagedLaunch": true,
+        "launcherPid": 47451,
+        "launcherStartTicks": "1127984"
+      },
+      "seconds": 0.058407365999300964
+    }
+  ],
+  "configurations": [],
+  "cutSha256": "cfa586a17661fea8c6670c58f04753e5f871e4a609b7e0c59b3ef8e9187164c5",
+  "head": "b15efce71eb0d778e0be50a1b996a9fcba05049c",
+  "primaryType": "RuntimeError",
+  "qualification": "Synthetic original local CAKE sessions and canonical SDK/Web harnesses only; no remote credential, native UI, billing-provider, whole Admin or BIZ acceptance",
+  "status": "ACTUAL_WHOLE_SDK_WEB_REFUSED_OR_FAILED"
+}

@@ -1,0 +1,5 @@
+{"command": ["node", "/workspace/team-c/evidence/c6/browser83-runtime/run-independent-pointer-smoke.cjs", "/workspace/team-c/evidence/c6/browser83-runtime/wwwroot", "/workspace/team-c/evidence/c6/browser83-runtime/attempt1", "83c24b2f0033fb2828169921fc905a327120143b"], "cwd": "/workspace/team-c/evidence/c6/browser83-runtime", "startUTC": "2026-10-03T20:05:05.323731+00:00", "runnerSha256": "ff152d4f0547a133b938c5021643edcf1933d8835af5eea4a609626538569dbf", "sourceCommit": "83c24b2f0033fb2828169921fc905a327120143b", "artifactCommit": "bc04bd3608f2fa29d5cfcb9c5ea86ac054d4bec3"}
+cold-home HomeServiceUnavailable 
+pointer-disabled-open-studio HomeServiceUnavailable 
+pointer-enabled-library HomeServiceUnavailable #/home.library
+pointer-enabled-events HomeServiceUnavailable #/home.events

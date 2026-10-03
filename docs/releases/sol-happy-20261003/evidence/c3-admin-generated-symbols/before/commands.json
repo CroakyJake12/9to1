@@ -1,0 +1,58 @@
+[
+  {
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "build",
+      "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "--disable-build-servers",
+      "-m:1",
+      "-nr:false",
+      "-p:UseSharedCompilation=false",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before",
+      "-p:IncludeProjectNameInArtifactsPaths=true",
+      "-p:Configuration=Debug",
+      "-p:TargetFramework=netstandard2.0",
+      "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+      "-p:EnableWindowsTargeting=true"
+    ],
+    "exitCode": 0,
+    "primary": null,
+    "cleanup": [],
+    "seal": {
+      "expectedManagedLaunch": true,
+      "drained": true,
+      "launcherPid": 62875,
+      "launcherStartTicks": "1487678"
+    }
+  },
+  {
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "-nologo",
+      "-m:1",
+      "-nr:false",
+      "-p:UseSharedCompilation=false",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before",
+      "-p:IncludeProjectNameInArtifactsPaths=true",
+      "-p:Configuration=Debug",
+      "-p:TargetFramework=netstandard2.0",
+      "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+      "-p:EnableWindowsTargeting=true",
+      "-getProperty:TargetPath,TargetFramework,Configuration,DebugType,EmitCompilerGeneratedFiles,IntermediateOutputPath,CompilerGeneratedFilesOutputPath",
+      "-getItem:Compile"
+    ],
+    "exitCode": 0,
+    "primary": null,
+    "cleanup": [],
+    "seal": {
+      "expectedManagedLaunch": true,
+      "drained": true,
+      "launcherPid": 62957,
+      "launcherStartTicks": "1488190"
+    }
+  }
+]

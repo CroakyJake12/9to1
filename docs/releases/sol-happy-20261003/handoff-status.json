@@ -1,0 +1,229 @@
+{
+  "recordedUTC": "2026-10-03T23:45:49.852795+00:00",
+  "releaseStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
+  "acceptedHead": null,
+  "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
+  "pullRequestState": "OPEN_DRAFT",
+  "historicalServiceSource": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+  "adoptedPublicOAuth": {
+    "integrationCommit": "56fcaa4248a99c594e66ec267426ba42ffcd3d90",
+    "actualProductionTestSource": "04ff6067d212bb9e8547a5ff93b859d9fc473118",
+    "indexSha256": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+    "assertions": {
+      "publicPaths": 117,
+      "issuerOrigin": 27,
+      "maintainedIdentity": 222
+    },
+    "exitCodes": [
+      0,
+      0,
+      0
+    ],
+    "peerIssuerOriginAssertions": 27,
+    "qualification": "Actual local Workerd/D1/maintained library, Node transport; reviewed separate Linux custody adapter. Package/schema/provider/session code and original integration assertions unchanged. B browser journeys remain separate.",
+    "fixtureSuccessorSource": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "assertionModulesUnchangedByFixtureSuccessor": true,
+    "validationQualification": "117/27/222 execution stays bound to recorded immutable04ff/maintained driver evidence. Current production index and public/issuer/maintained assertion modules are unchanged; EF new fixture lifecycle has independent actual bootstrap/process controls, no new complete OAuth journey claim."
+  },
+  "isolatedSDK7": {
+    "head": "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+    "cutSha256": "9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d",
+    "outerExitCode": 0,
+    "completedCommands": 379,
+    "exitZeroCommands": 379,
+    "strictDrainsTrue": 379,
+    "executedWholeSuites": [
+      {
+        "name": "debug-whole-accounts",
+        "exitCode": 0
+      },
+      {
+        "name": "debug-whole-organisation-pools",
+        "exitCode": 0
+      },
+      {
+        "name": "debug-whole-web",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-accounts",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-organisation-pools",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-web",
+        "exitCode": 0
+      }
+    ],
+    "actualReceiptStatus": "ACTUAL_WHOLE_ACCOUNTS_ORGPOOLS_WEB_DEBUG_RELEASE_SDK_PASS",
+    "completedConfigurations": [
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Debug",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      },
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Release",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      }
+    ],
+    "acceptedEvidenceBytes": 110292911,
+    "primaryType": null,
+    "cleanupTypes": [],
+    "qualification": "Only actual original maintained local SDK/Web harness outcomes recorded. No genuine HTTPS issuer/provider/native/global release acceptance, no product key fix/global source adoption/new whole A3 owner ACK. SDK10.0.401 differs workflow10.0.301.",
+    "outerCommand": {
+      "cwd": "/workspace/team-c/c3-admin-symbol-errors-validation",
+      "argv": [
+        "python3",
+        ".github/scripts/astra-organisation-full-owning.py",
+        "--expected-commit",
+        "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+        "--manifest",
+        ".github/validation/astra-organisation-full-owning-cut.json",
+        "--manifest-sha",
+        "9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d"
+      ],
+      "environment": {
+        "PATHprepend": "/workspace/.tools/dotnet",
+        "DOTNET_ROOT": "/workspace/.tools/dotnet",
+        "DOTNET_CLI_HOME": "/workspace/team-c/evidence/c3/admin-sdk03/dotnet-home",
+        "NUGET_PACKAGES": "/workspace/team-c/evidence/c3/admin-sdk03/nuget"
+      },
+      "stdoutStderr": "/workspace/team-c/evidence/c3/admin-sdk03/original-driver-symbol-errors-attempt7.log"
+    }
+  },
+  "cloudflare": {
+    "skillsLoaded": 16,
+    "callableAccountTools": 0,
+    "oauthAndAccountAccess": "UNVERIFIED",
+    "readOnlyBrowserFallback": "UNAVAILABLE/MCP SSE HTTP404; no account page read"
+  },
+  "deploymentStatus": "NOT_DEPLOYED",
+  "commercialStatus": "NOT_ENABLED",
+  "mainMerged": false,
+  "localPCDelivery": "DESTINATION_AND_ACTUAL_DELIVERY_NOT_VERIFIED",
+  "sharedSourceAdoption": "Separately reviewed A63/eec Home/CUI/provider/OIDC/Admin proposals remain unadopted. Existing C-owned foundations and the reviewed public OAuth fix are in the release candidate.",
+  "remainingGates": [
+    "Current owner API catalogues and Files async session/read/publication authority",
+    "Configured browser sign-in/disposal/focus/input/AX/Wave and whole product journeys",
+    "Genuine issuer/signing/auth_revision and real authenticated provider services",
+    "Full semantic/default-SHOULD/donor/platform/installed/security/recovery acceptance",
+    "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
+    "Verified exact tested artifacts delivered to Jacob PC"
+  ],
+  "qualification": "Local source/harness outcomes do not establish a combined accepted executable, deployment, full requirement denominator or final release acceptance. All prior failures and unissued4472/de683 cuts retained; SDK10.0.401 variance explicit.",
+  "isolatedSDK7Audit": {
+    "commit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
+    "path": "c6/sdk7-ae6ca7-publication-audit.json",
+    "publicPayloadsVerified": 2300,
+    "externalOutputFilesVerified": 7223,
+    "physicalSymbolPairsVerified": 102,
+    "sourceDocumentOccurrencesVerified": 8770,
+    "compileInputOccurrencesVerified": 8354,
+    "restorePairsUnchanged": 6,
+    "errors": 0,
+    "payloadRerun": false
+  },
+  "nativeOriginalsFollowup": {
+    "linux19RootRecords": {
+      "sourceCommit": "bb6472f22c25edb50155f1b0f86a67e2d7f06b4f",
+      "files": 4,
+      "bytes": 36528,
+      "hashErrors": 0,
+      "completeRootTestLogSha256": "3bc806db746dd1d89824e13fedbd3d86bcc017e2d7f6d946ae9eae6d9d3cb46e",
+      "qualification": "Original12socket cancellation failures/unknown startup predicate retained; no local payload rerun."
+    },
+    "canvas03": {
+      "sourceCommit": "e83cc9ea",
+      "wholeFilesVerified": 295,
+      "piecesVerified": 284,
+      "publishedPayloadsVerified": 40,
+      "originalAliasesVerified": 34,
+      "rootReadOnlyReplayErrors": 0,
+      "inspectionBytes": 101324067,
+      "inspectionCapBytes": 536870912,
+      "completeCanvasLogSha256": "9c38a04d79027589cb3cea924f375e40c74be43be9a219dfc512d95b73977eca",
+      "originalOutcomes": {
+        "executed": 96,
+        "passed": 94,
+        "failed": 2,
+        "skipped": 0
+      },
+      "qualification": "Complete logs/TRX/receipt/all10session records; keyed and exact numerical failures retained. No standalone per-command ledger in complete295file manifest. Unknown cause/task-settlement/full native/installed/source-symbol acceptance remains. No payload executed or tests rerun."
+    }
+  },
+  "formsPresentSourceReview": {
+    "sourceCommit": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
+    "reviewCommit": "a57175d17da8baab3776da8a9055801cf678057c",
+    "verifiedPins": {
+      "Forms": 11,
+      "Present": 4
+    },
+    "missingFormsBodies": [
+      "apps/Web/Forms/FormsBrowserRoute.cs",
+      "apps/Web/Forms/FormsBrowserSession.cs"
+    ],
+    "qualification": "Exact both requests read/hashed; missing bodies in both declared baseline and delivered source prevent complete adapter ACK. No new approved C-owned executable contract, implementation or runtime acceptance."
+  },
+  "receiverFixtureRecovery": {
+    "originalRequest": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
+    "originalToolSession": 63118,
+    "originalState": "HELD: B8798/private state retained without strict receipt; original kernel handles/reap authority unavailable. No foreign numeric-ID recovery or state deletion. Exact cause of tool loss unknown.",
+    "candidate": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "candidateStatus": "REVIEWED/ADOPTED exact11C-owned test/helper files; final independent fresh8799 Workerd/D1 smoke exit0/strict5reaps/secretsremoved/portreleased,10actualPTY+listener/EOF/stop controls pass. Final immutable457 publication/raw/source/protected hashes verify. OldBfixture HELD/retained; no new complete OAuth/browser/provider acceptance.",
+    "reviewedRuntimeSource": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "independentReview": "715e9098",
+    "freshLocalSmoke": {
+      "port": 8799,
+      "exitCode": 0,
+      "strictReaped": true,
+      "originalsDisappeared": true,
+      "kernelReaps": 5,
+      "ownedSecretsRemoved": true,
+      "portReleased": true,
+      "command": [
+        "node",
+        "tests/browser-fixture.mjs"
+      ],
+      "env": {
+        "XDG_CONFIG_HOME": "/workspace/team-c/evidence/c1/xdg",
+        "CAKE_BROWSER_FIXTURE_PORT": "8799",
+        "CAKE_BROWSER_FIXTURE_SMOKE": "1"
+      },
+      "scope": "Actual local Workerd/D1 bootstrap with two fictional accounts/exact client; no browser callback or external services.",
+      "source": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+      "qualification": "Final smoke completed before transient root exec transport loss; original tool exit0/strict receipt and secret-absence readback preserved. Root transport then recovered; no cause inferred.",
+      "cwd": "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth",
+      "originalToolSession": 43999
+    },
+    "publicationCommit": "457dbe9e8d397765e81b3c801517bad7d0d3dee6",
+    "publicationEvidenceSha256": "cdebb4b9f845156e2f814deb24764b41a623c1ef890acd5ea565f95ff010aff7",
+    "sourceAdoptionCommit": "21cdc40f37e4fbe466d47c9a396821e487893635",
+    "publicationAudit": {
+      "commit": "03924a94e9cb807b11986116726da00d1c5e6141",
+      "path": "c6/fixture-recovery-457dbe-publication-audit.json",
+      "publicHandoffFilesVerified": 32,
+      "rawHashesVerified": 28,
+      "sourceFilesVerified": 11,
+      "protectedUnchangedFilesVerified": 15,
+      "errors": 0,
+      "payloadRerun": false
+    }
+  }
+}

@@ -1,0 +1,420 @@
+{
+  "reviewer": "C5",
+  "proposal": "a56c7d48e2c02a7ed3d9d03612d5bfc4b4776a04",
+  "parent": "4472a4fd9730c4f432570e12a2d86b6b16fc7cb1",
+  "result": "bounded source ACK; no actionable new regression found",
+  "scope": "isolated Linux validation tooling only; no source adoption/full SDK or production acceptance",
+  "completeChangedSourceBindings": [
+    {
+      "path": ".github/scripts/astra-original-native-session-drain.py",
+      "bytes": 6932,
+      "sha256": "b64955841ac1c1cdaa7e8e3ed2d9d487c6b7faae7bd581fae626e37cae964329"
+    },
+    {
+      "path": ".github/scripts/astra-original-session-subreaper-tests.py",
+      "bytes": 13961,
+      "sha256": "052b86bed577165e70bf12a5fdeb12c635da89c98332dc93c8dc58de8b1aeb0c"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "5fe36890cf410cdb0557dcaf95b7ab1174c7cafde7a46f61c2a83d6363240fb7"
+    }
+  ],
+  "independentCommand": "ASTRA_SUBREAPER_TEST_EVIDENCE=/workspace/team-c/evidence/c5/custody-errors-a56-review python3 .github/scripts/astra-original-session-subreaper-tests.py",
+  "cwd": "/workspace/team-c/c3-admin-custody-errors-proposal",
+  "discovered": 13,
+  "passed": 13,
+  "failed": 0,
+  "exitCode": 0,
+  "evidence": [
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review.log",
+      "bytes": 1618,
+      "sha256": "cd3f0dd4ee5a5d1695430f4eb81fe36949566c83efbf0c99312d4404a90fdbfc"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/birth-mismatch/88223-pending.json",
+      "bytes": 528,
+      "sha256": "b056574ef9404bf2409995401fdb957f6e136a8f2dcdda7d0ca3277b1c1cdc2f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/birth-mismatch/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "30502333e7bb386e4f2086e70a08f2203b203cc44bb4c9af270677cffa2d1229"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/birth-mismatch-final/88223-pending.json",
+      "bytes": 528,
+      "sha256": "b056574ef9404bf2409995401fdb957f6e136a8f2dcdda7d0ca3277b1c1cdc2f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/birth-mismatch-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "30502333e7bb386e4f2086e70a08f2203b203cc44bb4c9af270677cffa2d1229"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/birth-mismatch-final/negative-observation.json",
+      "bytes": 212,
+      "sha256": "c3bedd36c2c9aaf353c1c03c9ce7d670594e9df9318dcecb918fa87d5bf371e5"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/creator/88226-pending.json",
+      "bytes": 528,
+      "sha256": "b79534e13e6bb3ff48f9365017fc52696c02f00cf7c1c73f022ba864ddf9599b"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/creator/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "1330005726e73f764f904fbc65df898b0c47665f445d764775d7c6d9107e40d7"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/creator-final/88226-pending.json",
+      "bytes": 528,
+      "sha256": "b79534e13e6bb3ff48f9365017fc52696c02f00cf7c1c73f022ba864ddf9599b"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/creator-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "1330005726e73f764f904fbc65df898b0c47665f445d764775d7c6d9107e40d7"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/creator-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "af65326941cb6f66d2da29f4152edbe910edd22bd3e42d8777f3f8755afd1520"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/escape/88243-pending.json",
+      "bytes": 260,
+      "sha256": "4a917f8cbbc7bfe17522ad52f8120626eb36a2a4e902446344191906b98d8b38"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/escape/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/escape/negative-observation.json",
+      "bytes": 121,
+      "sha256": "b61833a0bdd05b3403cb56e818718f9560aa1a87adb44f6240047ce290c9d942"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/escape-final/88243-pending.json",
+      "bytes": 260,
+      "sha256": "4a917f8cbbc7bfe17522ad52f8120626eb36a2a4e902446344191906b98d8b38"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/escape-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/escape-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "244c8c833c63864ceb17a60733ffd47c86ae06523961828fa4dfa4d70c4b48e4"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign/88229-pending.json",
+      "bytes": 528,
+      "sha256": "0f39f00e6e49dd01c69459886420b77dcc30436e46e8d9cba95b6746329c689f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5ec8bfd63395946d5e5d5f4e5772b3d55492db776ce468527e32a935d664ef4c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign-final/88229-pending.json",
+      "bytes": 528,
+      "sha256": "0f39f00e6e49dd01c69459886420b77dcc30436e46e8d9cba95b6746329c689f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5ec8bfd63395946d5e5d5f4e5772b3d55492db776ce468527e32a935d664ef4c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "337c07c0235e77b87ffe50d0a8051ce2b9f6e567caa6bfb760a3ee5dd0856c44"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign-refusal/88229-pending.json",
+      "bytes": 308,
+      "sha256": "0bb9e66d10d50063347626edb00360df5b5e8183753ffa633123664a77890070"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign-refusal/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/foreign-refusal/negative-observation.json",
+      "bytes": 116,
+      "sha256": "e7232f963c0b4fabb5e5a333bbc57b6bc34d2468275df94f79f5de2be2d68807"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/live/88236-pending.json",
+      "bytes": 528,
+      "sha256": "7d52f451b9a82c65da6d157323d62ba4b5c06456fd0abbd334a71a3c6427ed3a"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/live/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "e86830f8302a202731d05ba0934d133035bdf475d5b3126f3c820d59ccc7786d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/live-final/88236-pending.json",
+      "bytes": 528,
+      "sha256": "7d52f451b9a82c65da6d157323d62ba4b5c06456fd0abbd334a71a3c6427ed3a"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/live-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "e86830f8302a202731d05ba0934d133035bdf475d5b3126f3c820d59ccc7786d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/live-final/negative-observation.json",
+      "bytes": 202,
+      "sha256": "1e7bfa73b5b7445990020ad05d4585e4715bd0c8ae31f0c3458e53471366848a"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/not-owned/88239-pending.json",
+      "bytes": 528,
+      "sha256": "2ae93ea3b25db629bf60393bbd73c79cac441fd41740357799e4628e2efe4223"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/not-owned/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "fcafcd86bf828340ccb6a668ebffa7d34decf200a28ffd3a98e4c541069c4d0f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/not-owned-final/88239-pending.json",
+      "bytes": 528,
+      "sha256": "2ae93ea3b25db629bf60393bbd73c79cac441fd41740357799e4628e2efe4223"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/not-owned-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "fcafcd86bf828340ccb6a668ebffa7d34decf200a28ffd3a98e4c541069c4d0f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/not-owned-final/negative-observation.json",
+      "bytes": 207,
+      "sha256": "29e555b78e34fffec230a9fa70109a6c3cc5d2c584fe0f08e98dd0b42e20b41c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/orphan/88233-pending.json",
+      "bytes": 528,
+      "sha256": "ecb5bcf2cd50c3ecd1963d5a59ae7a6a086613320ef6638d5ae6dd860bcd22e3"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/orphan/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "dc2c1122e85c2c49bd94e04762252172560b897ce64096ca0318ccca024b5da9"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/orphan-final/88233-pending.json",
+      "bytes": 528,
+      "sha256": "ecb5bcf2cd50c3ecd1963d5a59ae7a6a086613320ef6638d5ae6dd860bcd22e3"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/orphan-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "dc2c1122e85c2c49bd94e04762252172560b897ce64096ca0318ccca024b5da9"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/orphan-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "08744e7b20e26ebd0816497398ccfbecdad812c5456d9577ae7491a414f297a2"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close/88217-pending.json",
+      "bytes": 528,
+      "sha256": "bccfd558e6bdcceb4ac03d4dde3bae376d25240a9783a33048f57055668067c1"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "592018666e2677e0f2acf1d7077a67178a56be84f3dd4bc0e308553328928bce"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close-final/88217-pending.json",
+      "bytes": 528,
+      "sha256": "bccfd558e6bdcceb4ac03d4dde3bae376d25240a9783a33048f57055668067c1"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "592018666e2677e0f2acf1d7077a67178a56be84f3dd4bc0e308553328928bce"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "fe079449814d55b58a27ddfd6bb37306d78ed88d3387b9a9ac3e94b4c5b9ed4f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close-negative/88217-pending.json",
+      "bytes": 308,
+      "sha256": "214262549605ee3708dc9ed97e8e1004e556982a0e093221b4ffcd055076962e"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/send-close-negative/negative-observation.json",
+      "bytes": 153,
+      "sha256": "f2c07d1214c490a67856068e070a8d83a94d97cbe943e6553db2f07e6304b7f2"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/setup-acquire-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/setup-acquire-final/negative-observation.json",
+      "bytes": 287,
+      "sha256": "0221d75063c3da53c44fc593baa257436bc0a5dd87de6075d9a067b5764d6c5a"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/setup-close-final/88215-pending.json",
+      "bytes": 259,
+      "sha256": "c544ef203bd57968fb6fde53340d74e9c563f89c00f8445ffd3b45ff3d80b289"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/setup-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "06958155286eccb1ebbd26185ee827ea90ca27f8fbd28252a986951a2f368ad9"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/setup-close-final/negative-observation.json",
+      "bytes": 282,
+      "sha256": "2d5d4345f54dc629892bd2fa264a71a7e0461f31314e123137214b71b497f90f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/unenrolled/negative-observation.json",
+      "bytes": 38,
+      "sha256": "470f001781cb5b388dbf97f531c8e777fa712e727184ea142a84496fc7153e9a"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close/88220-pending.json",
+      "bytes": 528,
+      "sha256": "2b9b3619be6f962b85c97fdd28d7ac21304b63da7290df5c6d1a96c9b0a94561"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "07b6a29cdd04a2485bebf4056cbc9987f991c8a9bdbec53b0275741615d68945"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close-final/88220-pending.json",
+      "bytes": 528,
+      "sha256": "2b9b3619be6f962b85c97fdd28d7ac21304b63da7290df5c6d1a96c9b0a94561"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "07b6a29cdd04a2485bebf4056cbc9987f991c8a9bdbec53b0275741615d68945"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "77ea3bc97b5e24dab43805220770978b1ba192aee5c8e3bd7308a7232d0e9e5c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close-negative/88220-pending.json",
+      "bytes": 308,
+      "sha256": "b77f408cfee240bfa295f971ef0beb52270894340b98cf29681a4fca801c794e"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/wait-close-negative/negative-observation.json",
+      "bytes": 151,
+      "sha256": "fe86ccb4a4670b02159b87b00b7d926c6f2605f56e3eeee12298b3449cfaebaf"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close/88212-pending.json",
+      "bytes": 528,
+      "sha256": "b4a71e26cac65a665b85e559b07431cc7cda7054506dbb01ffd2fbf2b4b7370d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "12c7389af6d0f4dc926e67b48b282cfc40c4fa82d2bfe66bdf4fd0076dc42368"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close-final/88212-pending.json",
+      "bytes": 528,
+      "sha256": "b4a71e26cac65a665b85e559b07431cc7cda7054506dbb01ffd2fbf2b4b7370d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "12c7389af6d0f4dc926e67b48b282cfc40c4fa82d2bfe66bdf4fd0076dc42368"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close-final/negative-observation.json",
+      "bytes": 209,
+      "sha256": "9132aebe187af6b8a482ae1a46a18238ee008bb870f52781e5a3168199fcb28f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close-negative/88212-pending.json",
+      "bytes": 308,
+      "sha256": "eacdfe6b3711b9ef06c2924735aa2d7becabec1d77f57f2e6f1ba6668c9e4d72"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/custody-errors-a56-review/write-close-negative/negative-observation.json",
+      "bytes": 154,
+      "sha256": "0a1616fec1e7b541cd28b542e066d876256635c8232a1060a60e36371af49cf1"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/team-a-fe96-owner-held-peer.json",
+      "bytes": 5093,
+      "sha256": "a29e4c208a888c52a448b74a6962a4e73fd42a0b5f7b599896811beb38b3da64"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/custody-error-before-final-send.log",
+      "bytes": 1487,
+      "sha256": "0741d1c3e17bdcd524300609df49aa50d65a0c6da06e7cb026f86045437e698e"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/custody-error-before-final-wait.log",
+      "bytes": 1491,
+      "sha256": "63fb1b28a24ca72fb3b453a6e94c19b3625fe5042fd6f35ee000d4e457c2fcec"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/custody-error-before-final-write.log",
+      "bytes": 1491,
+      "sha256": "63fb1b28a24ca72fb3b453a6e94c19b3625fe5042fd6f35ee000d4e457c2fcec"
+    }
+  ],
+  "holdsReviewed": [
+    "A3 same-handle body exception replacement by finally close",
+    "A3 fixture unprotected acquisition/cleanup and ambiguity retention"
+  ],
+  "conclusions": [
+    "captured_fd preserves actual original exception identity and independent close failure using BaseExceptionGroup; one error rethrows original object.",
+    "Setup/acquisition is protected; pipe closes, release, foreign settle, authoritative original Popen wait, original drain and creator close each independently collected. Partial initialization does not manufacture complete custody.",
+    "Fixture data deleted only after no primary/cleanup errors, initialized session, proven original creator disappearance and non-escape case. Refused/ambiguous data retained.",
+    "Original own-child stable PIDFD waitid, owner birth, exact session/group/birth, creator Popen custody, no-Z-ignoring, escape/foreign refusal and complete disappearance gates unchanged.",
+    "Own negative receipts preserve original signal/wait/write BodyFailure plus genuine same-handle EBADF; setup-close preserves two real EBADF and setup-acquire proves child waited with no launcher release.",
+    "Old-helper send/wait/write negative logs retain lost-body assertions; reviewed as supplied evidence rather than independently replayed."
+  ],
+  "qualification": [
+    "Earlier C5 fe96 review did not identify these fault paths; A3 identified actionable holds, now specifically covered by this proposal and independent controls.",
+    "No full SDK run; SDK6 NOT_RUN. Fresh external source pin and owner/integrator adoption remain separate.",
+    "Injected body hooks are local fault controls around actual owned child/PIDFD; not provider or product acceptance.",
+    "No historical PID1 zombies signalled or reaped."
+  ]
+}

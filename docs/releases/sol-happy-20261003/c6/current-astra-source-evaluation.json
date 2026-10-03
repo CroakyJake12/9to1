@@ -1,0 +1,47 @@
+{
+  "tested_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "isolated_worktree": "/workspace/team-c/c6-astra",
+  "source_role": "Current provisional Team A source, not globally accepted release",
+  "core_result": {
+    "outcome": "PASS-PARTIAL",
+    "CUI": {
+      "discovered": 31,
+      "executed": 31,
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Home": {
+      "discovered": 329,
+      "executed": 329,
+      "passed": 329,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Spaces": {
+      "discovered": 26,
+      "executed": 26,
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0
+    },
+    "total": 386,
+    "exit_code": 0,
+    "warnings_in_log": 0
+  },
+  "historical_baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "superseded_baseline_findings": [
+    "CanvasArtifactSession compile delegate mismatch",
+    "Dulche missing Haven references in normal core build",
+    "Home temporary action-limit fallback test failure"
+  ],
+  "repair_review": "Home ExpireGrantsAsync now expires exhausted TemporaryAlwaysTrust action counts; original fallback assertions unchanged apart from type alias imports. Normal current-source test suite passes.",
+  "remote_coordination": "Coordinator reports verified remote Team A registration396c381 with explicit existing integrator handover to Team C. C6 does not independently claim remote readback; root owns coordination, acknowledgement and accepted-head changes.",
+  "remaining_gates": [
+    "Full semantic source decomposition and native/provider/platform/deployed acceptance",
+    "Reviewed integration of current source and dependency-compatible owning changes",
+    "Fresh final integrated-candidate tests and artifacts",
+    "OPEN commercial/isolation/operational decisions and real provider configuration"
+  ],
+  "raw_log": "raw/astra-exact-a63d77f-core.log"
+}

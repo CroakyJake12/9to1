@@ -1,0 +1,174 @@
+{
+  "base": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "branch": "team-c/sol-happy-c5-provider-reconciled",
+  "normal30_source_equality": "UNVERIFIED:not delivered",
+  "provider_patch_lines": 7,
+  "locality": "local fixtures;no actual provider/deployment",
+  "results": [
+    {
+      "check": "original16",
+      "path": "/workspace/team-c/evidence/c5/reconciled/sixteen/c5-reconciled-sixteen.trx",
+      "sha256": "7f3d507c04cfd976b5b6ac868523b1d22e15191f05a75fe0f5483879dc02229d",
+      "exit_code": 0,
+      "counters": {
+        "total": "16",
+        "executed": "16",
+        "passed": "16",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "check": "routing24_debug",
+      "path": "/workspace/team-c/evidence/c5/reconciled/routing-debug/c5-reconciled-routing-debug.trx",
+      "sha256": "aa51e8efe148029c04fac28ae349dba20d90d8ba8e061b6e0c39604759253315",
+      "exit_code": 0,
+      "counters": {
+        "total": "24",
+        "executed": "24",
+        "passed": "24",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "check": "routing24_release",
+      "path": "/workspace/team-c/evidence/c5/reconciled/routing-release/c5-reconciled-routing-release.trx",
+      "sha256": "5913b187d36793760aa5e9e706a396fc08667b8d83f6311e527de1e8ca34083b",
+      "exit_code": 0,
+      "counters": {
+        "total": "24",
+        "executed": "24",
+        "passed": "24",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "check": "production35_debug",
+      "path": "/workspace/team-c/evidence/c5/reconciled/production-debug/c5-production-scope-debug.trx",
+      "sha256": "d144ceb63e1ee0c02087f1e4f8b4b77e147b8154b22442e1561f9c12fdc212f4",
+      "exit_code": 0,
+      "counters": {
+        "total": "35",
+        "executed": "35",
+        "passed": "35",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "check": "production35_release",
+      "path": "/workspace/team-c/evidence/c5/reconciled/production-release/c5-production-scope-release.trx",
+      "sha256": "5681378de38d9461e89228fa5c1f43d31f546ce0ed9bd583e15b9b078025bb60",
+      "exit_code": 0,
+      "counters": {
+        "total": "35",
+        "executed": "35",
+        "passed": "35",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "check": "original_a63_negative",
+      "path": "/workspace/team-c/evidence/c5/reconciled/negative/c5-reconciled-negative.trx",
+      "sha256": "73f9b7d78c5c331e1514efb11650ed4f20515d2a617b591c28596ea2b1cc8e86",
+      "exit_code": 1,
+      "counters": {
+        "total": "24",
+        "executed": "24",
+        "passed": "14",
+        "failed": "10",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "check": "project-debug.log",
+      "path": "/workspace/team-c/evidence/c5/reconciled/project-debug.log",
+      "sha256": "eeda59999fb6a894306f862e7b167e6aa98166db2de3d1de424ab8d16da717b5",
+      "exit_code": 1,
+      "outcome": "failed before discovery;0executed;preserved source/dependency failure"
+    },
+    {
+      "check": "project-release.log",
+      "path": "/workspace/team-c/evidence/c5/reconciled/project-release.log",
+      "sha256": "0ba63f17039199bc70df3c2b228306a6690304bba36f78e99729a61be8178710",
+      "exit_code": 1,
+      "outcome": "failed before discovery;0executed;preserved source/dependency failure"
+    },
+    {
+      "check": "harness-debug.log",
+      "path": "/workspace/team-c/evidence/c5/reconciled/harness-debug.log",
+      "sha256": "a3c54147d923e8552d1c24183468e69f93c569cf4b559d7ee9656d7f40cd6e95",
+      "exit_code": 1,
+      "outcome": "failed before discovery;0executed;preserved source/dependency failure"
+    }
+  ]
+}

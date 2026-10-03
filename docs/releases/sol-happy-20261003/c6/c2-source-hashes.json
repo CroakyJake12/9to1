@@ -1,0 +1,234 @@
+[
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/package-lock.json",
+    "sha256": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/package.json",
+    "sha256": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/scripts/build-ui.mjs",
+    "sha256": "5fda0e019884db0a0c0b86a0b8892702648f0de2999ccc7ca844d020ce2d00e8"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/scripts/generate-schema.mjs",
+    "sha256": "716c88b1dc96a90cc037b89b49c72049f0a2ecd50ab41772e5f5fec3911ece53"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/scripts/schema-exporter.ts",
+    "sha256": "3588b1efd823587528f5d799a017d6544d1b370191d91f7f4893b4acb7d7f643"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/scripts/validate-schema.mjs",
+    "sha256": "ee56ed7e0d0dd487affcdf8fca3fd203edcfac74603b7c769ef00f7f305b4804"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/assets.d.ts",
+    "sha256": "4ef8773cbd9f6c8375b8dc86abecb8efa4d7a225545730b0e4843cc7c679e902"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/auth.ts",
+    "sha256": "2a6c5baacb77ac4480e11f0ddcb86e0005ea627e569931ea6478cf1faf6f9576"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/browser.ts",
+    "sha256": "34d6f759e43dbedb2b9858c7065f16008c833fb2a8680b01ef43f3cfe5641916"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/contract.ts",
+    "sha256": "0079dd38eb839278cb8045ae98fe61fb15a5aa19dec4b121003c4d21d8614bdf"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/env.ts",
+    "sha256": "23df0c3c8e220d5848c8082887cf57456ae3665c238f327a45d5df202493ca18"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/index.ts",
+    "sha256": "5b5e8084471224dad888bdd40aeac6b66074bad218d7d5ec0c199a248e201127"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/limiter.ts",
+    "sha256": "84ea958917d7651968f9f5ab8e579b6130e9606e3f94b77c141eca2d1b4da3f7"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/local.ts",
+    "sha256": "d6192cb5c61a9006e6aa358b023c97f996338b972cd67a95f535159ee808c00a"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/pages.ts",
+    "sha256": "fa595ec9110e133325dff0c6ad4f220ceca19d38216f79a55e19f565b3d4b3b6"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/resource-api.ts",
+    "sha256": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/src/worker-configuration.d.ts",
+    "sha256": "8aa63811d8d500ab4d0fb5e5991f489118a108395ec988693bea1f50108c7a3c"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/tests/integration.mjs",
+    "sha256": "f4904b90919852491ad5a5080eac84e7d76950bd570a30d65475ac74512fe219"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/tests/password-hash-worker.ts",
+    "sha256": "e74538e74c207630603a19da6deec0f41ef82b142dd40aa1615e3a11215a04dc"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/tests/password-runtime.mjs",
+    "sha256": "c9e7c7bd74e09a12a8a0d83bec820aaba8c60fd937c71587104d81dcba621b30"
+  },
+  {
+    "path": "/workspace/team-c/c2-auth/cloud/cake-id-auth/tsconfig.json",
+    "sha256": "0c0795f6236f72c4558e6a447140f152ba126e51941ba9598f64ff4ba3c02a9e"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Dulche/llamacpp/backend-matrix.json",
+    "sha256": "f02601ceafe22468452ec35190bd31711431c4f74790bea280cecf51530ad9b1"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Dulche/llamacpp/model-manifest.example.json",
+    "sha256": "73a489b80687b1732cc356937a4c905ca80de079cd904757dce9c67aac5b6a0d"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Dulche/llamacpp/provider-contract.json",
+    "sha256": "efa065e46d262f9d3ff3e353f122584ad017522549c5776eaa477b6ad3397ecc"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json",
+    "sha256": "a405604d96589319a425726910e009fff5a8b44b5ff3a87f0a67da36dca67ee6"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json",
+    "sha256": "ea3ce979d7bf05b0e5ea2d282ace21a8d9dc16acef2e5988729a7094c7eb6705"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Apps/HomeAppsFeature.cs",
+    "sha256": "774cba7ed004e1b5d0da7a08469fe9829f93a8e0c2d71af73192cc2a5d2c13ad"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Apps/HomePackageDatabase.cs",
+    "sha256": "83d50314122b8f9ef375e1603319999228c539a4798daecd62ef575cfa3f4ce5"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Core/FileHomeCoreStateStore.cs",
+    "sha256": "e6730303b384854e561d9b7e98c2d9ece7ff908b6d46301f6d9718ce12d87f3d"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Core/HomeCoreApi.cs",
+    "sha256": "a5c4cbdb78bafc83a70889727f930d00ec4750d8e1112e28ecfadd9b1b4eb0b7"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+    "sha256": "5c81b2667d25f6ab9eb706d72c28ef208ecd95c7fc633b7421afbd8b40ef77c4"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+    "sha256": "31049e99050bb90da5e1f10346bd6611ead9f2b745d513ae094c54f9fbc3f317"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Core/HomeCoreStateService.cs",
+    "sha256": "8b12dc8cb184428442e2990b1c3a0c57f39d5c9437a2d5ce76094aec526faebb"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs",
+    "sha256": "55811f5e952d6a39f51ff65f2442f86fd15230e53282903f0a5cdb953aeebf15"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Core/HomeProductivityEngine.cs",
+    "sha256": "26f98269e66e8c47467e7708faf523414bf5cf7736e59b2266b133453e2c6459"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/Discover/HomeDiscoverCatalog.cs",
+    "sha256": "f4ff317558c9490dbb27eb0394a20eb9e7b5f185850b570d34eba4ff90d62e2c"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/HomeCuiScene.cs",
+    "sha256": "8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/HomeDashboard.cs",
+    "sha256": "6631e03a072f32c7922d87ebebdf3d64af604df359d3211b7635af054b10d9b9"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/HomeEcosystem.cs",
+    "sha256": "0a76789337ccd85a0ebf9e7ee2df38062e74b2edb29e15355d1eea999e726949"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/HomePermissionModels.cs",
+    "sha256": "67d474bee128aba2538451bb887b3337f72fa95d4026bc3fb11aebe49a594f84"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
+    "sha256": "897058c9743ea7356b6a289680094aed2131bcb63cfcc6dcdb53800ed5a70deb"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelCatalogueEntry.cs",
+    "sha256": "8aad2ac73ec22e8276be736c2603e743871ac447b69aa547a370f696f243605d"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiScene.cs",
+    "sha256": "13ff05f4d8440b361482ed93919dc0989e2d7ac59340e7bdb79e8dd3965e7d5f"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerRouteEditor.cs",
+    "sha256": "a9db88c6d7fa8af4ac4900c5459c60aa99ab8e4e1e07c2531b48cb9fcf9b75f2"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/PermissionsTrustNotifications/HomeFeatureStoreException.cs",
+    "sha256": "e2fc0395e752b5d04c708755d727c0fa969b06996c5c6339f74d75c72b93c3d2"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Source/Home/PermissionsTrustNotifications/HomeNotificationFeatureProvider.cs",
+    "sha256": "026c69213a4bfa822e86fa2d612e6a5b478d488c05aade71ddd3c86d41ee9996"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+    "sha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+    "sha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+    "sha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+    "sha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+    "sha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+    "sha256": "82a3e8727a6e83c77114cba6d5017525ebfe6105a67affaaa53c41ad246ce3ba"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+    "sha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+    "sha256": "43625b2b48cada3fc880c6c960c92e3af9a25963479cdef5923fac5417157c4d"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+    "sha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+    "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+    "sha256": "01dc1e3ecf4f27e724afa9c7a4abf3cb254baf779fd74d28c77fee3f95a57277"
+  },
+  {
+    "path": "/workspace/team-c/c2/9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+    "sha256": "a2e75feb059173d564c9993080b5de4b0a233184042cee88aed850feb85cd30c"
+  }
+]

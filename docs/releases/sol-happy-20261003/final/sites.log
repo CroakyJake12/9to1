@@ -1,0 +1,28 @@
+{"candidate": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70", "tree": "c1e9df46618f14985aff5f222706b448a34c65da", "cwd": "/workspace/team-c/integration", "command": ["dotnet", "test", "eng/service-validation/Sites.Source.Tests.csproj", "-c", "Release", "--logger", "trx;LogFileName=sites-final.trx", "--results-directory", "/workspace/team-c/evidence/final-candidate"], "startUTC": "2026-10-03T17:41:45.819166+00:00"}
+
+Welcome to .NET 10.0!
+---------------------
+SDK Version: 10.0.401
+
+----------------
+Installed an ASP.NET Core HTTPS development certificate.
+To trust the certificate, run 'dotnet dev-certs https --trust'
+Learn about HTTPS: https://aka.ms/dotnet-https
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+  Determining projects to restore...
+  Restored /workspace/team-c/integration/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 105 ms).
+  Restored /workspace/team-c/integration/eng/service-validation/Sites.Source.Tests.csproj (in 383 ms).
+  Haven.Core -> /workspace/team-c/integration/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
+  Sites.Source.Tests -> /workspace/team-c/integration/eng/service-validation/bin/Release/net10.0/Sites.Source.Tests.dll
+Test run for /workspace/team-c/integration/eng/service-validation/bin/Release/net10.0/Sites.Source.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c/evidence/final-candidate/sites-final.trx
+
+Passed!  - Failed:     0, Passed:    39, Skipped:     0, Total:    39, Duration: 288 ms - Sites.Source.Tests.dll (net10.0)

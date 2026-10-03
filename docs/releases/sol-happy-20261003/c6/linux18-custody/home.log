@@ -1,0 +1,5 @@
+Test run for /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Home.Tests/release_linux-x64/HavenOS.Home.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /home/runner/work/9to1/9to1/artifacts/desktop-visible-owning/trx/home.trx
+
+Passed!  - Failed:     0, Passed:   340, Skipped:     0, Total:   340, Duration: 2 s - HavenOS.Home.Tests.dll (net10.0)

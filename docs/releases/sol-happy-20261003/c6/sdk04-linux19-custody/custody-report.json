@@ -1,0 +1,139 @@
+{
+  "indices": {
+    "joint": {
+      "artifact": 11286030139,
+      "outerBytes": 21231,
+      "outerSha256": "1d918c3580393e136f66634dcde0dfcae25d85c37e3600b5e81e99bf400e45da",
+      "manifestBytes": 186125,
+      "manifestSha256": "e88c683bf35f1d9cb2bb5433911783c7ab194eaeec50442b274d23d880db580e",
+      "files": 365,
+      "pieces": 327,
+      "logicalBytes": 48994566,
+      "innerBytes": 49030580,
+      "safeDescriptors": true
+    },
+    "owning": {
+      "artifact": 11285149516,
+      "outerBytes": 11387,
+      "outerSha256": "e94880a5cb8ce31b4052f56911c75f81cddc90a9bc8615025f05fa5791ba9c89",
+      "manifestBytes": 75455,
+      "manifestSha256": "24c39f3aad2f5544e6d43174c2b7c66c9454542adaf8d65a9a17c1182eee39e5",
+      "files": 166,
+      "pieces": 142,
+      "logicalBytes": 44942806,
+      "innerBytes": 44958470,
+      "safeDescriptors": true
+    },
+    "linux19": {
+      "artifact": 11285287490,
+      "outerBytes": 39704,
+      "outerSha256": "8add158c39fe958c52dd3f5074f1791fa248ce1cdda9fcd6e8a01c525ffcb26d",
+      "manifestBytes": 273274,
+      "manifestSha256": "3e0fe58922abbebc1c11dfbf92752ca6865e92b4b4f162db0aa66027fde163e1",
+      "files": 551,
+      "pieces": 507,
+      "logicalBytes": 47769682,
+      "innerBytes": 47825496,
+      "safeDescriptors": true
+    }
+  },
+  "archives": {
+    "joint": [
+      {
+        "artifact": 11285571027,
+        "outerBytes": 27272048,
+        "outerSha256": "4c265198a99fe247240e857160c1b962614dd0443dd67e05187800421e1021d0",
+        "innerBytes": 27271908,
+        "innerSha256": "65ac51a7001d520b013de43344ed2292d1dc1b852395da83f46495cf9645e92e",
+        "members": 81,
+        "allCRCPathTypeChecks": true
+      },
+      {
+        "artifact": 11286030142,
+        "outerBytes": 21758812,
+        "outerSha256": "fcc6a1f99ad0a23065016063f5b4c23dd1fa5a42f5479a45f3d956e40ab6aedb",
+        "innerBytes": 21758672,
+        "innerSha256": "e99dfa97655c4cdde7c24fbac507a03573c38c0619642447272a2b4a74ee9cda",
+        "members": 246,
+        "allCRCPathTypeChecks": true
+      }
+    ],
+    "owning": [
+      {
+        "artifact": 11285611410,
+        "outerBytes": 27272268,
+        "outerSha256": "4e05caefb1545fb656e17248073839e40a1d21d88b52a4971636c5f68dc32bd1",
+        "innerBytes": 27272128,
+        "innerSha256": "317ca1b9820500bc16a50c0d7adb390d5449241c9c9582a8d069162bdc2e6769",
+        "members": 83,
+        "allCRCPathTypeChecks": true
+      },
+      {
+        "artifact": 11286075200,
+        "outerBytes": 17686482,
+        "outerSha256": "452da1ad15f1831cf4b93483c6ee55d69da7c874d6a32b436570805b21ad5937",
+        "innerBytes": 17686342,
+        "innerSha256": "b4987bbb2263e2010b8b7d93ad341182da7f4f33f4df6d8b18266675e444e790",
+        "members": 59,
+        "allCRCPathTypeChecks": true
+      }
+    ],
+    "linux19": [
+      {
+        "artifact": 11285426765,
+        "outerBytes": 27279528,
+        "outerSha256": "567ebfd473f37aad5e973209d0f395a98f29b182e42ba11929d8002f521b981c",
+        "innerBytes": 27279388,
+        "innerSha256": "b3ab9b3500ff1a623ebaabf316369e4fd2cf6bef7f8d13092111f8b7f997b3c1",
+        "members": 149,
+        "allCRCPathTypeChecks": true
+      },
+      {
+        "artifact": 11285356942,
+        "outerBytes": 20546248,
+        "outerSha256": "fcb9f81f705fa7a5f9e0836d51980499c61c4846e97f014a74da55ffc7e8bf37",
+        "innerBytes": 20546108,
+        "innerSha256": "6a9987fcca5954edb616b471eb20c30010f02e8467e8c2e5ad0dbb14361f92a4",
+        "members": 358,
+        "allCRCPathTypeChecks": true
+      }
+    ]
+  },
+  "reconstruction": {
+    "joint": {
+      "files": 365,
+      "logicalBytes": 48994566,
+      "allPieceAndWholeFileHashes": true,
+      "missingDescriptors": 0
+    },
+    "owning": {
+      "files": 166,
+      "logicalBytes": 44942806,
+      "allPieceAndWholeFileHashes": true,
+      "missingDescriptors": 0
+    },
+    "linux19": {
+      "files": 551,
+      "logicalBytes": 47769682,
+      "allPieceAndWholeFileHashes": true,
+      "missingDescriptors": 0
+    }
+  },
+  "errors": [],
+  "boundedAdmission": {
+    "logicalBytes": 141707054,
+    "innerBytes": 141814546,
+    "indexBytes": 534854,
+    "maximumInspectionMaterialized": 284056454,
+    "cap": 536870912,
+    "strategy": "Store original outer+inner archives; stream pieces into one reconstructed file per descriptor, never materialize duplicate piece trees"
+  },
+  "inspectionObservedBytes": 287024587,
+  "currentFreeBytes": {
+    "/workspace": 8964952064,
+    "/tmp": 8465530880
+  },
+  "payloadsExecuted": false,
+  "testsRerun": false,
+  "signedDownloadURLsPublished": false
+}

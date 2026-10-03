@@ -1,0 +1,137 @@
+{
+  "candidate": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+  "branch": "team-c/sol-happy-c2-browser-fixture",
+  "runtimeBase": "142ea1c61d31f77de98e8e0a2d0c7ae8142b0b84",
+  "reviewedRuntimeEquivalent": "3e1b9462fa59dea815de8d1f92b13acd88ef8bda",
+  "source": {
+    "cloud/cake-id-auth/tests/browser-fixture.mjs": "a73b6a531afac281d4d0b962ac32d7c7e320d10da4b4cd96d179a877537d5f2a",
+    "cloud/cake-id-auth/tests/linux-fixture-custodian.py": "f078219ca4dbc6c0eedce942cdc1bcc71958db48a79d54d5b6825d3de30e2fa2",
+    "cloud/cake-id-auth/tests/linux-fixture-custodian.test.py": "508aa6eb1387dd780908e43d7bc12c4d9b26bfb40c71eb0ae4a1762bb0db436c",
+    "cloud/cake-id-auth/BROWSER_FIXTURE.md": "151a15e6fc28d25e7c5a6376269f0c0f8aab5bfbe8cb458cc4e8588f026fe3f4"
+  },
+  "controls": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "exit": 0,
+    "command": "python3 -B tests/linux-fixture-custodian.test.py"
+  },
+  "smoke": {
+    "command": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c2/xdg CAKE_BROWSER_FIXTURE_SMOKE=1 node tests/browser-fixture.mjs",
+    "cwd": "/workspace/team-c/c2-browser-fixture/cloud/cake-id-auth",
+    "exit": 0,
+    "strictKernelReaps": 5,
+    "actualProductionHelperMatchesCandidate": true,
+    "laterChangesOnlyAdditionalTestsAndDocs": true,
+    "exactIndependentlyReplayedCandidate": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+    "peerCommand": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c1/xdg CAKE_BROWSER_FIXTURE_SMOKE=1 node tests/browser-fixture.mjs"
+  },
+  "logs": {
+    "/workspace/team-c/evidence/c2/browser-fixture-fork-launch-nine-controls.log": "d51f15c99000706c1183ad6bee4f67d697e04e06e51e46f549ee126f3d7fb384",
+    "/workspace/team-c/evidence/c2/browser-fixture-fork-launch-smoke.log": "fb6038d798e2016f6b89a673b7beb034c283712cecf29d97af13de1f55510cc2",
+    "/workspace/team-c/evidence/c2/browser-fixture-smoke.log": "be5b865391e865bf09469155ffb1b3cb27e847545e6b09a404c4a0cd478e0b39",
+    "/workspace/team-c/evidence/c2/browser-fixture-smoke-xdg.log": "48e15eb8dc7d3fc3f3b3c5b19f251230a617f5dcb733a039634236561db8f83c",
+    "/workspace/team-c/evidence/c2/browser-fixture-drain-smoke.log": "47a189e3e24943a1641b951cd07ac997e5e0703e24f3d19e83ef6619cb78dc8b",
+    "/workspace/team-c/evidence/c2/browser-fixture-posix-failure-cleanup.json": "f53dd073617734426efd5d86dd7ce8f98e40f04299775493525b88ccdfda07b1"
+  },
+  "receivingFailure": {
+    "path": "/workspace/team-c/evidence/c1/browser-fixture-review/smoke.log",
+    "sha256": "e77686d516f6b998fe57e3c8b7f8c6fa4fa0785a26df0f4fb8af848ce03a5d10",
+    "qualification": "Unsupported posix_spawn setsid before any actual child creation; preserved, superseded by exact production fork capability controls"
+  },
+  "peerReview": {
+    "reviewer": "C1",
+    "exactCandidate": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+    "sourceAllLines": "ACK",
+    "controls": {
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "exit": 0
+    },
+    "actualWorkerD1Smoke": {
+      "exit": 0,
+      "accounts": 2,
+      "strictReaped": true,
+      "originalsDisappeared": true,
+      "kernelReaps": 5
+    },
+    "portCustody": "8798 released after cleanup; no receiving listener retained"
+  },
+  "noCredentialsInRecord": true,
+  "acceptance": "Local isolated actual Worker fixture only, no actual browser journey/production/native/.NET acceptance",
+  "status": "READY_FOR_RECEIVER_OWN_ISOLATED_FIXTURE_LAUNCH_ONLY",
+  "historicalHolds": [
+    "4111 live-quiescence was not strict reaping; superseded",
+    "843 posix_spawn setsid unsupported: real receiving failure preserved",
+    "Earlier unavailable writable home and invalid loopback web callback failures preserved"
+  ],
+  "custodyQualification": "This fixture subreaper actually reaps its own process family. It does not signal PID1/pre-existing orphans or change the original SDK custody guard.",
+  "contracts": {
+    "issuer": "http://127.0.0.1:8798/api/auth",
+    "apiOriginAndAudience": "http://127.0.0.1:8798",
+    "historicalIntegrationAudienceNotListener": "http://127.0.0.1:5095",
+    "browserOrigin": "https://client.example.test:5096",
+    "registeredCallback": "https://client.example.test:5096/callback",
+    "requires": "B browser-local hostname mapping and isolated test certificate trust; no public DNS/global trust change",
+    "privateManifest": "Read generated path from ready line inside test process; do not print/commit credentials or tokens"
+  },
+  "remainingGaps": [
+    "Actual browser callback/profile/session durable journeys",
+    "Production/staging deployment and external email delivery",
+    "Strict .NET RSA producer compatibility and genuine auth_revision semantics",
+    "Files legacy actor resolver has no acknowledged Worker adapter",
+    "Native/provider/org/real reserved identity provisioning acceptance"
+  ],
+  "committedPublicLogs": {
+    "c2-nine-controls.log": {
+      "originalPath": "/workspace/team-c/evidence/c2/browser-fixture-fork-launch-nine-controls.log",
+      "sha256": "d51f15c99000706c1183ad6bee4f67d697e04e06e51e46f549ee126f3d7fb384"
+    },
+    "c2-fork-worker-smoke.log": {
+      "originalPath": "/workspace/team-c/evidence/c2/browser-fixture-fork-launch-smoke.log",
+      "sha256": "fb6038d798e2016f6b89a673b7beb034c283712cecf29d97af13de1f55510cc2"
+    },
+    "c1-exact-aedc-controls.log": {
+      "originalPath": "/workspace/team-c/evidence/c1/browser-fixture-review/aedc-controls.log",
+      "sha256": "4ae5aa26f78d0aae731d9c46cea965a59758b96a7f5c2c8e0821441e83f0b9c5"
+    },
+    "c1-exact-aedc-worker-smoke.log": {
+      "originalPath": "/workspace/team-c/evidence/c1/browser-fixture-review/aedc-smoke.log",
+      "sha256": "cc3966310c914e25c4f3a71a873e2e7aaab3cce043e11df68540dcb9ae76d254"
+    },
+    "historical-c1-posix-spawn-failure.log": {
+      "originalPath": "/workspace/team-c/evidence/c1/browser-fixture-review/smoke.log",
+      "sha256": "e77686d516f6b998fe57e3c8b7f8c6fa4fa0785a26df0f4fb8af848ce03a5d10"
+    },
+    "historical-c2-unwritable-home.log": {
+      "originalPath": "/workspace/team-c/evidence/c2/browser-fixture-smoke.log",
+      "sha256": "be5b865391e865bf09469155ffb1b3cb27e847545e6b09a404c4a0cd478e0b39"
+    },
+    "historical-c2-invalid-web-loopback.log": {
+      "originalPath": "/workspace/team-c/evidence/c2/browser-fixture-smoke-xdg.log",
+      "sha256": "48e15eb8dc7d3fc3f3b3c5b19f251230a617f5dcb733a039634236561db8f83c"
+    },
+    "historical-c2-zombie-held.log": {
+      "originalPath": "/workspace/team-c/evidence/c2/browser-fixture-drain-smoke.log",
+      "sha256": "47a189e3e24943a1641b951cd07ac997e5e0703e24f3d19e83ef6619cb78dc8b"
+    },
+    "historical-zombie-manual-custody.json": {
+      "originalPath": "/workspace/team-c/evidence/c2/browser-fixture-drain-manual-cleanup.json",
+      "sha256": "c8c0ee7afa6f53d460fea7a09f56b22813c48e81b5ab36a8135912267dbfbe84"
+    },
+    "historical-posix-failure-cleanup.json": {
+      "originalPath": "/workspace/team-c/evidence/c2/browser-fixture-posix-failure-cleanup.json",
+      "sha256": "f53dd073617734426efd5d86dd7ce8f98e40f04299775493525b88ccdfda07b1"
+    }
+  },
+  "listenerStatus": {
+    "8798": "available",
+    "5095": "available",
+    "5096": "available"
+  },
+  "privateSecretsRemoved": true,
+  "noAuthProductionSourceChanged": true,
+  "receiverIsolation": "Each receiver launches this exact source in its own environment. Assigned loopback ports apply per isolated receiver; C private files/server are not cross-chat credentials or shared hosted access.",
+  "rootOwnerReview": "Root confirmed complete custodian/Node/controls/docs review and C1 exact runtime ACK before this final handoff"
+}

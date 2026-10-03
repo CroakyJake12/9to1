@@ -1,0 +1,296 @@
+[
+  {
+    "nodeId": "2",
+    "ignored": false,
+    "role": {
+      "type": "internalRole",
+      "value": "RootWebArea"
+    },
+    "chromeRole": {
+      "type": "internalRole",
+      "value": 144
+    },
+    "name": {
+      "type": "computedString",
+      "value": "9to1",
+      "sources": [
+        {
+          "type": "relatedElement",
+          "attribute": "aria-labelledby"
+        },
+        {
+          "type": "attribute",
+          "attribute": "aria-label"
+        },
+        {
+          "type": "attribute",
+          "attribute": "aria-label",
+          "superseded": true
+        },
+        {
+          "type": "relatedElement",
+          "value": {
+            "type": "computedString",
+            "value": "9to1"
+          },
+          "nativeSource": "title"
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "focusable",
+        "value": {
+          "type": "booleanOrUndefined",
+          "value": true
+        }
+      },
+      {
+        "name": "focused",
+        "value": {
+          "type": "booleanOrUndefined",
+          "value": true
+        }
+      },
+      {
+        "name": "url",
+        "value": {
+          "type": "string",
+          "value": "http://127.0.0.1:18764/"
+        }
+      }
+    ],
+    "childIds": [
+      "6"
+    ],
+    "backendDOMNodeId": 2,
+    "frameId": "BEA08B9B74426D81FCAB3431D01039C1"
+  },
+  {
+    "nodeId": "13",
+    "ignored": false,
+    "role": {
+      "type": "role",
+      "value": "status"
+    },
+    "chromeRole": {
+      "type": "internalRole",
+      "value": 159
+    },
+    "name": {
+      "type": "computedString",
+      "value": "",
+      "sources": [
+        {
+          "type": "relatedElement",
+          "attribute": "aria-labelledby"
+        },
+        {
+          "type": "attribute",
+          "attribute": "aria-label"
+        },
+        {
+          "type": "attribute",
+          "attribute": "title"
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "live",
+        "value": {
+          "type": "token",
+          "value": "polite"
+        }
+      },
+      {
+        "name": "atomic",
+        "value": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      {
+        "name": "relevant",
+        "value": {
+          "type": "tokenList",
+          "value": "additions text"
+        }
+      }
+    ],
+    "parentId": "12",
+    "childIds": [
+      "18"
+    ],
+    "backendDOMNodeId": 13
+  },
+  {
+    "nodeId": "3",
+    "ignored": false,
+    "role": {
+      "type": "role",
+      "value": "main"
+    },
+    "chromeRole": {
+      "type": "internalRole",
+      "value": 118
+    },
+    "name": {
+      "type": "computedString",
+      "value": "9to1 application",
+      "sources": [
+        {
+          "type": "relatedElement",
+          "attribute": "aria-labelledby"
+        },
+        {
+          "type": "attribute",
+          "value": {
+            "type": "computedString",
+            "value": "9to1 application"
+          },
+          "attribute": "aria-label",
+          "attributeValue": {
+            "type": "string",
+            "value": "9to1 application"
+          }
+        },
+        {
+          "type": "attribute",
+          "attribute": "title",
+          "superseded": true
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "focusable",
+        "value": {
+          "type": "booleanOrUndefined",
+          "value": true
+        }
+      }
+    ],
+    "parentId": "12",
+    "childIds": [
+      "14",
+      "4",
+      "15"
+    ],
+    "backendDOMNodeId": 3
+  },
+  {
+    "nodeId": "18",
+    "ignored": false,
+    "role": {
+      "type": "internalRole",
+      "value": "StaticText"
+    },
+    "chromeRole": {
+      "type": "internalRole",
+      "value": 158
+    },
+    "name": {
+      "type": "computedString",
+      "value": "Account services are unavailable. Your files and activity have not been loaded.",
+      "sources": [
+        {
+          "type": "contents",
+          "value": {
+            "type": "computedString",
+            "value": "Account services are unavailable. Your files and activity have not been loaded."
+          }
+        }
+      ]
+    },
+    "properties": [],
+    "parentId": "13",
+    "childIds": [
+      "-1000000002"
+    ],
+    "backendDOMNodeId": 18
+  },
+  {
+    "nodeId": "14",
+    "ignored": false,
+    "role": {
+      "type": "internalRole",
+      "value": "Canvas"
+    },
+    "chromeRole": {
+      "type": "internalRole",
+      "value": 10
+    },
+    "name": {
+      "type": "computedString",
+      "value": "",
+      "sources": [
+        {
+          "type": "relatedElement",
+          "attribute": "aria-labelledby"
+        },
+        {
+          "type": "attribute",
+          "attribute": "aria-label"
+        },
+        {
+          "type": "attribute",
+          "attribute": "title"
+        }
+      ]
+    },
+    "properties": [],
+    "parentId": "3",
+    "childIds": [],
+    "backendDOMNodeId": 14
+  },
+  {
+    "nodeId": "4",
+    "ignored": false,
+    "role": {
+      "type": "role",
+      "value": "generic"
+    },
+    "chromeRole": {
+      "type": "internalRole",
+      "value": 88
+    },
+    "name": {
+      "type": "computedString",
+      "value": "",
+      "sources": [
+        {
+          "type": "relatedElement",
+          "attribute": "aria-labelledby"
+        },
+        {
+          "type": "attribute",
+          "attribute": "aria-label"
+        }
+      ]
+    },
+    "properties": [],
+    "parentId": "3",
+    "childIds": [],
+    "backendDOMNodeId": 4
+  },
+  {
+    "nodeId": "-1000000002",
+    "ignored": false,
+    "role": {
+      "type": "internalRole",
+      "value": "InlineTextBox"
+    },
+    "chromeRole": {
+      "type": "internalRole",
+      "value": 101
+    },
+    "name": {
+      "type": "computedString",
+      "value": "Account services are unavailable. Your files and activity have not been loaded."
+    },
+    "properties": [],
+    "parentId": "18",
+    "childIds": []
+  }
+]

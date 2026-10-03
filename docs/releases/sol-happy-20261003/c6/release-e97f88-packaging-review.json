@@ -1,0 +1,107 @@
+{
+  "auditedHead": "e97f88e77963a8766aa3c68caf987052960bb2c5",
+  "method": "Read immutable Git objects only; no tests or original payload execution.",
+  "indices": {
+    "c3-admin-generated-symbols": {
+      "expected": 23,
+      "observed": 23,
+      "hashSizeTrackingErrors": [],
+      "recursiveBinaryFiles": []
+    },
+    "c3-admin-attempt4": {
+      "expected": 582,
+      "observed": 582,
+      "hashSizeTrackingErrors": [],
+      "recursiveBinaryFiles": []
+    },
+    "c3-admin-compile-metadata": {
+      "expected": 39,
+      "observed": 39,
+      "hashSizeTrackingErrors": [],
+      "recursiveBinaryFiles": []
+    }
+  },
+  "holds": [
+    "SDK5 was ACTIVE at audited head; coordinator subsequently reports REFUSED after115commands; successor not audited here.",
+    "Full SDK, native, provider, HTTPS, global semantic acceptance unresolved"
+  ],
+  "latestSpecification": {
+    "artifacts": 3,
+    "errors": [],
+    "paragraphs": 8534,
+    "paragraphsAreNotRequirementDenominator": true
+  },
+  "C5Catalogue": {
+    "files": 10,
+    "canonicalQuotes": 18,
+    "errors": [],
+    "combinedCatalogue": "MISSING",
+    "runtimeTests": "None; read-only discovery and docs only; independent prior runnable evidence remains scoped"
+  },
+  "C4Map": {
+    "groups": 25,
+    "quoteErrors": [],
+    "states": [
+      "BLOCKED"
+    ],
+    "outcomes": [
+      "NOT_RUN by C4"
+    ],
+    "globalDenominator": "Still unresolved; bounded map not full atomicLE/inherited decomposition."
+  },
+  "serviceContinuity": {
+    "recordedFiles": 52,
+    "runtimeChanges": [],
+    "historicalProseDifference": [
+      "cloud/cake-id-auth/README.md"
+    ],
+    "originalTestHead": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+    "runtimeTestPackageSchemaFiles": 51
+  },
+  "deltaOutsideDocs": [],
+  "peerBindings": [
+    {
+      "review": "C5-generated-producer-proposal-peer-review.json",
+      "sourceAndOriginalEvidenceChecks": 15,
+      "errors": [],
+      "scope": "Recorded peer controls only; C6 did not execute tests"
+    },
+    {
+      "review": "C5-compile-metadata-proposal-peer-review.json",
+      "sourceAndOriginalEvidenceChecks": 22,
+      "errors": [],
+      "scope": "Recorded peer controls only; C6 did not execute tests"
+    }
+  ],
+  "historicalByteChangesSince98034": [],
+  "originMain": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "errors": [],
+  "SDK4OriginalCommands": {
+    "commands": 114,
+    "exitZero": 114,
+    "strictDrainsTrue": 114,
+    "logHashErrors": [],
+    "wholeSuiteCommands": [
+      {
+        "name": "debug-whole-accounts",
+        "exitCode": 0
+      },
+      {
+        "name": "debug-whole-organisation-pools",
+        "exitCode": 0
+      }
+    ],
+    "releaseCommands": 0,
+    "driverExit": 1
+  },
+  "ack": "Bounded packaging/source-binding ACK only; no release or executable-source adoption.",
+  "SDK4ExternalCustody": {
+    "originalRoot": "/workspace/team-c/evidence/c3/admin-sdk03/attempt4",
+    "files": 2480,
+    "logicalBytes": 497825962,
+    "errors": [],
+    "explicitBinaryExclusions": 53,
+    "excludedPathsTracked": [],
+    "payloadExecution": false
+  }
+}

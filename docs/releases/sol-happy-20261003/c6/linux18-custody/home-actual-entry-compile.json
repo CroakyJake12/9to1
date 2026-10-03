@@ -1,0 +1,374 @@
+[
+  {
+    "path": "9to1 Workspace/Home/Tests/AgentPresentationTests.cs",
+    "sha256": "a9acba0ef14e7bb2f1ce4ff94c8b09216b2c96e38e9b480edec997bbae839794",
+    "bytes": 7376,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/DenAttachmentCommitAuthorityTests.cs",
+    "sha256": "d93b65278cd5f9eabb39b7c63c3882f259aedde82cad7ffb8e33e5df57ec467d",
+    "bytes": 11283,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/DenCommitAuthorityTests.cs",
+    "sha256": "63809eb238e9fbbb51a0252fd7c9c33b39526eb0e3911206a6bc2bf61f5e4641",
+    "bytes": 5472,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/DenModelInstallationAuthorityTests.cs",
+    "sha256": "8c9ea0ecef02316f0472060619ee629ae0958bf18b80d25b604668195fafda27",
+    "bytes": 5596,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/DenNamespaceAuthorityTests.cs",
+    "sha256": "8d3060c46cfec2b49b6a24bde384d42ec47e3a1f09ec8338bef8f2342c393ac4",
+    "bytes": 5186,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/DenReadLifetimeTests.cs",
+    "sha256": "79c90568eed41f1cc6fa66357e8ca9beb930ec29669694e8d1ace09a84b52e0f",
+    "bytes": 6639,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/DenSyncAuthorityTests.cs",
+    "sha256": "092eb5e700f92bf95eb1412c5572adffcac65271341d5ea29ce09c67b26d726d",
+    "bytes": 10588,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+    "sha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f",
+    "bytes": 3903,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs",
+    "sha256": "9a3c72d47d9e5c1cbb2eb20ea361a08380d1d9fba7f9a88dea379eefa422a732",
+    "bytes": 3827,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs",
+    "sha256": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b",
+    "bytes": 7572,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs",
+    "sha256": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678",
+    "bytes": 6664,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+    "sha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f",
+    "bytes": 7470,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+    "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2",
+    "bytes": 5361,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+    "sha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62",
+    "bytes": 1858,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+    "sha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399",
+    "bytes": 3742,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+    "sha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711",
+    "bytes": 3239,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+    "sha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd",
+    "bytes": 5739,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+    "sha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851",
+    "bytes": 7724,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+    "sha256": "92df8c2bce6f21c649a54e6c3c0410a7694224b18a67c209607e02478bed3538",
+    "bytes": 10297,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+    "sha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168",
+    "bytes": 12232,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeEquationObjectTests.cs",
+    "sha256": "e1409d8c3ab5d4b6fc8c5929c0dc9ae98b22a5f24116447a62914e367477fe96",
+    "bytes": 3828,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+    "sha256": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3",
+    "bytes": 3653,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+    "sha256": "6db11baf2b6f8f35df9286580af2662a54a5d78a86d770bc3d7ca712de6f5847",
+    "bytes": 24363,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeInvocationCatalogueTests.cs",
+    "sha256": "251884877db0b43ca2c930d4fc8e6634d0588456106b294cf83297c723c8f48e",
+    "bytes": 4722,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs",
+    "sha256": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c",
+    "bytes": 9387,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeLocalProfileIdentityTests.cs",
+    "sha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be",
+    "bytes": 11503,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+    "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a",
+    "bytes": 3275,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
+    "sha256": "709959ba007efc61463e614e76809e9e295ae94a39db6871ea72957ef1cf328e",
+    "bytes": 3329,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+    "sha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15",
+    "bytes": 22483,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+    "sha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df",
+    "bytes": 16705,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs",
+    "sha256": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567",
+    "bytes": 11965,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs",
+    "sha256": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12",
+    "bytes": 778,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs",
+    "sha256": "9f31eb55a44f51a8a9ab2579daac621237dc5dbb0dc7f4ddbb9492e057657939",
+    "bytes": 4794,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNativePeerObservationTests.cs",
+    "sha256": "0ef3f4160e43d4f2f56f14a490261fa7ddcff275500eea412e3c722d89fbcc80",
+    "bytes": 3690,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNativeServiceHostTests.cs",
+    "sha256": "59dc16cedcfee5eaff81096305babce87e9754104a5fd5c98d6b6bef4b77b959",
+    "bytes": 2674,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNativeSessionLeaseTests.cs",
+    "sha256": "3d70dc1c706d5fed878ba0379cfa4f625edf61b8019297238becf4d05fb94d95",
+    "bytes": 2835,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+    "sha256": "95369d868c2c6b2c2dad754d54b13a31d4c0dff51dcf5f9a3b390a660809e593",
+    "bytes": 24279,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNotesSharedObjectsTests.cs",
+    "sha256": "d00cb9c718e2f349446f1ef6c885a58549dd8a2480731e9f564502379f6756a8",
+    "bytes": 5995,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+    "sha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b",
+    "bytes": 5652,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs",
+    "sha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a",
+    "bytes": 5641,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+    "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced",
+    "bytes": 5592,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+    "sha256": "7d8b9e5e5db1b9e4987c5e283a9cbe6813960f22c0d20a1745e6a62866bb42aa",
+    "bytes": 10363,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomePersonalDenFactoryTests.cs",
+    "sha256": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb",
+    "bytes": 8010,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
+    "sha256": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e",
+    "bytes": 12986,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+    "sha256": "77f007be4e841daacb097f733d15104e685cfc428a4a5a78fe91c7db6894554f",
+    "bytes": 9652,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeProductivityEnvelopeTests.cs",
+    "sha256": "8d2b4ba935a34fe104ad4783827ed13258e433c3b38fb806076b618413d30cf4",
+    "bytes": 4748,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeProductivityGeometryTests.cs",
+    "sha256": "1c47a86ee2036f0f17db517c1ee4eb187a5b8dfe221ea806b86c8de019507d6c",
+    "bytes": 6767,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeProductivityInsertionTests.cs",
+    "sha256": "b7a07b981753f8b79a00976645cdac2a1455d3de899cf7a3650c9709a21c106e",
+    "bytes": 3013,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeProductivityRasterTests.cs",
+    "sha256": "0e9875a5cde5b4b40c932585d8e907429053a0fa6d70b0cda1de45a7588da2c6",
+    "bytes": 1056,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeProductivityStyleTransferTests.cs",
+    "sha256": "5c0debb5acd891076aad4321be12b2ef4d2e5ebfd3187b84f9d41fe68a6e3007",
+    "bytes": 3921,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeRejectedBeginAuditTests.cs",
+    "sha256": "41a1fcd6c4b737b141d882e0d8bc6a12df9e0496271fe4b38176f01b6dbee2ff",
+    "bytes": 5154,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeRejectedClaimAuditTests.cs",
+    "sha256": "09ef37406c726e512651e8f9d1ee2a637fe5b468920087c7573ad5bf41a6f525",
+    "bytes": 5544,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs",
+    "sha256": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7",
+    "bytes": 19458,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs",
+    "sha256": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41",
+    "bytes": 9903,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeStoreImportAuditTests.cs",
+    "sha256": "ac549b92f504917d9183cf28abaa54a317b098e01a0afb5ca40ea700427ded31",
+    "bytes": 5261,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeTerminalAdviceTests.cs",
+    "sha256": "9f8aa7f07244e52f8b4e14ac4e6187eb919f1ea2593f76b70bbbdf074114f7af",
+    "bytes": 2171,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeUnclaimedExecutionAbortTests.cs",
+    "sha256": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0",
+    "bytes": 7616,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
+    "sha256": "eb7ac43e027b462ecbd9c82846b56774c005539175e45dbbc5d4738766e63bd0",
+    "bytes": 4280,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeVersionedNodeGraphRepositoryTests.cs",
+    "sha256": "dfb20fca453c42eb41bf01351f5feaf6711e26f4fc2123d36996ddf2d85fc742",
+    "bytes": 2426,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
+    "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca",
+    "bytes": 13985,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
+    "sha256": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6",
+    "bytes": 5077,
+    "tracked": true
+  },
+  {
+    "path": "9to1 Workspace/Home/Tests/WebMcpInvocationTests.cs",
+    "sha256": "242adfc44883887f116f4f86e1dabc9e4ef1a70f934ddaf693c7054a94261b60",
+    "bytes": 1693,
+    "tracked": true
+  }
+]

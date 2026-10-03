@@ -1,0 +1,20 @@
+test_changed_birth_is_not_reaped (__main__.Controls.test_changed_birth_is_not_reaped) ... ok
+test_creator_remains_owned_by_popen (__main__.Controls.test_creator_remains_owned_by_popen) ... ok
+test_foreign_session_is_not_reaped (__main__.Controls.test_foreign_session_is_not_reaped) ... ok
+test_kernel_owned_original_orphan_is_reaped (__main__.Controls.test_kernel_owned_original_orphan_is_reaped) ... ok
+test_live_original_child_is_not_reaped (__main__.Controls.test_live_original_child_is_not_reaped) ... ok
+test_original_non_owned_child_is_not_reaped (__main__.Controls.test_original_non_owned_child_is_not_reaped) ... ok
+test_unenrolled_owner_is_refused (__main__.Controls.test_unenrolled_owner_is_refused) ... ok
+test_unobserved_escaped_child_refuses_custody (__main__.Controls.test_unobserved_escaped_child_refuses_custody) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.218s
+
+OK
+{"reapedOwnedChild": {"observedTuple": [55197, 55198, 55198, "1362990", "Z"], "originalTuple": [55197, 55198, 55198, "1362990", "Z"], "ownerPid": 55197, "ownerStartTicks": "1362982", "waitCode": 1, "waitPid": 55199, "waitStatus": 23}, "scenario": "birth-mismatch", "seal": {"drained": true, "expectedManagedLaunch": true, "launcherPid": 55198, "launcherStartTicks": "1362987"}}
+{"reapedOwnedChild": {"observedTuple": [55200, 55201, 55201, "1363007", "Z"], "originalTuple": [55200, 55201, 55201, "1363007", "Z"], "ownerPid": 55200, "ownerStartTicks": "1362999", "waitCode": 1, "waitPid": 55202, "waitStatus": 23}, "scenario": "creator", "seal": {"drained": true, "expectedManagedLaunch": true, "launcherPid": 55201, "launcherStartTicks": "1363005"}}
+{"reapedOwnedChild": {"observedTuple": [55203, 55204, 55204, "1363024", "Z"], "originalTuple": [55203, 55204, 55204, "1363024", "Z"], "ownerPid": 55203, "ownerStartTicks": "1363016", "waitCode": 1, "waitPid": 55205, "waitStatus": 23}, "scenario": "foreign", "seal": {"drained": true, "expectedManagedLaunch": true, "launcherPid": 55204, "launcherStartTicks": "1363022"}}
+{"reapedOwnedChild": {"observedTuple": [55207, 55208, 55208, "1363043", "Z"], "originalTuple": [55207, 55208, 55208, "1363043", "Z"], "ownerPid": 55207, "ownerStartTicks": "1363035", "waitCode": 1, "waitPid": 55209, "waitStatus": 23}, "scenario": "orphan", "seal": {"drained": true, "expectedManagedLaunch": true, "launcherPid": 55208, "launcherStartTicks": "1363041"}}
+{"reapedOwnedChild": {"observedTuple": [55210, 55219, 55219, "1363060", "Z"], "originalTuple": [55210, 55219, 55219, "1363060", "Z"], "ownerPid": 55210, "ownerStartTicks": "1363052", "waitCode": 1, "waitPid": 55220, "waitStatus": 23}, "scenario": "live", "seal": {"drained": true, "expectedManagedLaunch": true, "launcherPid": 55219, "launcherStartTicks": "1363057"}}
+{"reapedOwnedChild": {"observedTuple": [55221, 55222, 55222, "1363078", "Z"], "originalTuple": [55221, 55222, 55222, "1363078", "Z"], "ownerPid": 55221, "ownerStartTicks": "1363069", "waitCode": 1, "waitPid": 55223, "waitStatus": 23}, "scenario": "not-owned", "seal": {"drained": true, "expectedManagedLaunch": true, "launcherPid": 55222, "launcherStartTicks": "1363074"}}
+{"scenario": "escape", "originalSealDrained": false, "escapedOwnedTuple": [55225, 55227, 55227, "1363101", "Z"]}

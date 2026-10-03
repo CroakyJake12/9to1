@@ -1,0 +1,31 @@
+# CAKE ID issuer / .NET consumer compatibility evidence
+
+Reviewed 2026-10-03. This is read-only contract evidence, not an approved protocol amendment.
+
+Issuer tested: `3e1b9462fa59dea815de8d1f92b13acd88ef8bda`, based on preserved issuer backup `7cc52df0411e0e9e617918f6c5158283cc3199fc`.
+Consumer inspected: `a63d77fe5a9dfea56c938eaa85678a9e170368ec`.
+Pinned libraries: Better Auth and OAuth provider 1.7.7; source obtained through `npm ci` from the existing lockfile.
+
+Native Linux Workerd + local D1 integration executed 222 assertions and exited 0. C6 independently reproduced that exact issuer head with 222 assertions and exit 0. The guarded synthetic reservation fixture proved wrong-owner denial and matching canonical-owner rename while preserving identity and revision. A targeted synthetic-owner fault made a wrong-owner request return 200 instead of 409; the unchanged assertion detected it and exited 1. Production source was restored and the full local run passed. No real Jacob identity, reserved binding, Business grant, provider environment or external email was provisioned.
+
+These runs use the Node public-client harness and local HTTP issuer. They do not establish .NET consumer integration, trusted production ingress or deployed-service acceptance.
+
+## Exact incompatibilities and owning requests
+
+Line numbers below refer to the immutable commits identified above.
+
+| Gate | Issuer / maintained-provider evidence | Consumer evidence | Required owning action |
+|---|---|---|---|
+| API audience / resource selection | `cloud/cake-id-auth/src/auth.ts:142` registers API_RESOURCE. Local integration supplies RFC 8707 `resource` to authorization and code exchange. Provider `dist/introspect-CNR06Oy3.mjs:449` resolves resource policy; absence of resource does not establish the configured API audience. | `9to1 Workspace/Web/RemoteWebOidcFlow.cs:81` builds authorization parameters without resource; `:91` exchanges the originating form unchanged. `9to1 Workspace/Accounts/Remote/OidcPublicClient.cs:27` exchange form also omits resource. API verification requires configured ResourceAudience at `RemoteWebOidcFlow.cs:98`. | Team A must acknowledge and add the approved exact ResourceAudience parameter to authorization and token exchange, retaining S256, state/nonce, exact redirects and distinct public ID-token/API-token audiences. |
+| Profile/session response envelopes | Worker `src/resource-api.ts:96` returns `{profile:{...}}`; `:196` returns `{sessions:[...]}`; mutation responses also wrap profile. `/api/account/current` is a direct object at `:88`. | `9to1 Workspace/Accounts/Remote/WorkerAccountApiClient.cs:25` requests a direct RemoteProfile; session reads request RemoteSession[]. `:80` directly deserializes T without envelope mapping. | Team A must acknowledge and map the existing profile/session wrapper contract with bounded parsing and unchanged canonical identity/revision checks. Route names alone are not compatible wire evidence. Do not silently alter server wrappers while consumers are active. |
+| Signing algorithm / JWKS | Worker `src/auth.ts:139` uses `jwt()` defaults. Better Auth `dist/plugins/jwt/utils.mjs:21` defaults EdDSA/Ed25519, yielding OKP public keys. Its supported `JwtOptions.jwks.keyPairConfig` includes RS256 with modulusLength (`dist/plugins/jwt/types.d.mts:230`). | `9to1 Workspace/Accounts/Remote/IdentityModelIssuerReader.cs:26` rejects every non-RSA JWK, regardless of configured token algorithm; `:33` enforces allowed algorithms. A mixed OKP/RSA key set also fails that check. | Obtain owning acknowledgement of a compatible issuer signing/key-rotation configuration before changes. Retain strict consumer signature and key checks. Any existing key history needs a reviewed migration/rotation path; no keys were deleted or replaced. |
+| Genuine authentication revision | Issuer `src/auth.ts` has no authentication-revision field or producer. OAuth `customAccessTokenClaims` is supported (`dist/oauth-C_7TvkRL.d.mts:1750`) and can fetch a canonical user record; it does not define revision lifecycle semantics. Standard sid is emitted independently for access tokens. | `9to1 Workspace/Accounts/Remote/OidcResourceConsumer.cs:39` requires a nonblank AuthenticationRevision. `IdentityModelIssuerReader.cs:48` uses the approved claim mapping. `9to1 Workspace/Web/RemoteWebOidcClientComposition.cs:15` requires that mapping at composition. | Teams A/C must agree the genuine server-authentication revision authority, persistence, transitions, revocation and claim name. No sid, mutable profile revision, browser generation, timestamp or constant may be substituted without that contract. No dummy producer was added. |
+| Secure local cross-process transport | Existing local config uses `http://127.0.0.1:8798`; production issuer config is absent. | `RemoteWebOidcFlow.cs:73`, `BoundedIssuerKeysSource.cs:13` and `WorkerAccountApiClient.cs:21` require approved exact HTTPS endpoints. | An authorized local HTTPS fixture with real certificate trust and exact issuer/discovery/JWKS/client/API configuration, or authorized staging, is needed for actual cross-process execution. Do not disable HTTPS, bypass certificate validation or label HTTP Node tests as .NET integration. |
+
+## Bounded coordination request
+
+Team A owns the .NET consumer and shared models. Request acknowledgement for the resource-parameter and existing response-envelope mappings, plus agreement with Team C on the signing-key configuration and genuine authentication-revision semantics. Team C owns changes to this existing issuer after that acknowledgement. Do not create another identity authority or relax consumer verification to make the fixture pass.
+
+Keep lower-case canonical UUID subjects, strict issuer identity, public-client ID-token audience, distinct resource access-token audience, S256 PKCE, exact redirects/scopes, nonce and lifetime checks. The final cross-process gate must exercise the real .NET code against the real issuer, profile/session routes, refresh and revocation; synthetic claims or mocked network responses remain partial evidence.
+
+Deployment, mail delivery, verified Jacob provisioning and the account-bound free Business feature grant, organisation services, and production recovery remain separate blocked/unverified gates.

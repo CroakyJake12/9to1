@@ -1,0 +1,118 @@
+{
+  "runId": "sol-happy-20261003",
+  "reviewed_coordination_commit": "10edea30c464a771e0efa33ba2720d11d9a9d798",
+  "reviewed_candidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "decision": "BOUNDED_DESIGN_ACK_ONLY; WIRE_AND_REVISION_MAPPING_UNRESOLVED",
+  "scope": "C4 ACK is a constraint/compatibility review, not Team B consent, source acceptance, implementation authority beyond existing ownership, or permission to bypass Terra pass-start gates.",
+  "acknowledged": [
+    "Reuse HostedItemId/FilesLocationId/FilesRevisionId/FilesOperationId and actual DurableDriveProvider/VersionedJsonStateStore authority; no competing hosted model/store.",
+    "Stable Project-scoped SectionID/AppearanceID are logical grouping/placement identities independent of physical ParentId and referenced original.",
+    "Create/section CRUD/reorder/add-reference/assign/unsectioned/remove are typed mutations carrying expected owning revision and original operation identity; same-authority commit includes organisation+operation+event and returns exact IDs/result revision or conflict.",
+    "Source ACL remains independently current and checked for read/open/edit/share/export/search/AI; membership does not grant source access.",
+    "Remove section/appearance preserves original source bytes/parent/identity; explicit keep-Unsectioned vs remove-placement semantics required.",
+    "No fabricated Space for standalone Sheet/Link/Replay; A1 owns compatible common source-reference/NodeGraph extension."
+  ],
+  "unresolved_questions": [
+    {
+      "id": "C4-SEAM-ITEM",
+      "question": "Which owner-approved underlying HostedItemKind and versioned organisation payload/schema represent Project without ordinary-folder fallback or silently reinterpreting existing Artifact/Reference items? What provider native-metadata capability distinguishes unsupported storage before creation?",
+      "proof": "HostedItemKind currently File/Folder/Artifact/Reference/SymbolicLink; no Project enum or generic organisation wire in reviewed contract.",
+      "required_owner": "A4 plus A1 shared contracts; B browser binding; C4 persistence review"
+    },
+    {
+      "id": "C4-SEAM-REVISION",
+      "question": "Does expected owning revision mean metadata CurrentRevisionId, organisation content head, or an owner-specific revision translated explicitly to FilesRevisionId? Which result/base revisions apply when changing only membership vs editing referenced original, including Unsectioned?",
+      "proof": "FilesRevisionId is Guid, change cursor is long, Productivity SpaceRevision is long and source reference FilesRevisionId is Guid; these cannot be equated or cast by assumption.",
+      "required_owner": "A4/A1 revision contract, B/C4 adapters"
+    },
+    {
+      "id": "C4-SEAM-IDEMPOTENCY",
+      "question": "What registered typed payload and canonical digest algorithm/encoding/version binds operation key to section/appearance/original IDs, expected revision, actor/scope, ordered data and absence values? What structured code reports reuse with changed payload?",
+      "proof": "FilesOperationPayload currently five optional fields; provider prior-request equality checks only actor/item/operation/destination/base/NewName. Existing generic string operation is not proof of exhaustive typed Project dispatch or digest.",
+      "required_owner": "A4/A1 schema and operation equality, B/C4 exact transport"
+    },
+    {
+      "id": "C4-SEAM-ATOMIC",
+      "question": "Which same-authority State fields/version migration contain organisations/section placements and exact operation/event result? How are old clients/schema rejection, cancellation and post-commit notification/replay handled?",
+      "proof": "DurableDriveProvider.State contains Items/Operations/Events plus artifact/revision data, and UpdateAsync atomically writes one envelope. Separate FilesOperationJournal has its own store and cannot alone prove atomic multi-store organisation+event commit.",
+      "required_owner": "A4 persistence model and A1 shared schema; C4 provider commit review"
+    },
+    {
+      "id": "C4-SEAM-ACL",
+      "question": "Which current actor/session/account/organisation permission check validates host write and independently current source access at commit/read; what denied-reference metadata may be revealed? Does membership commit require target existence/read without acquiring edit permission?",
+      "proof": "Reviewed DurableDriveProvider MutateAsync compares ActorId to store owner; this does not establish full shared ACL/revocation semantics for Project references. Existing Store commit-authority validation must preserve current guards; no permissive fallback.",
+      "required_owner": "A1/A4 current permission API, C2 hosted identity/ACL, B/C4 caller binding"
+    },
+    {
+      "id": "C4-SEAM-REFERENCE",
+      "question": "What A1-compatible owner-independent reference carries canonical original ID/owning app/optional selector/revision policy for standalone organisations/documents, while preserving Space-specific APIs for genuine Spaces?",
+      "proof": "ProductivityArtifactReferenceSource requires SpaceId/SpaceRevision/SpaceContextReference/FilesRevisionId; a synthetic Space would invent authority/context.",
+      "required_owner": "A1 common reference/NodeGraph; A4 consumers; B/C4 reuse"
+    }
+  ],
+  "required_proofs": [
+    "Homework Project with Maths/French sections, nested folder/organisation, section rename/reorder/deep link survives reopen; same canonical original IDs and byte hashes.",
+    "Assign/reorder/unsection/remove against stale revision returns conflict; two concurrent clients cannot silently overwrite.",
+    "Repeat identical operation ID+payload yields exact same IDs/revision/event; same ID different typed payload fails; crash between durable state and notification replays without duplicate effects.",
+    "Remove section keep-Unsectioned/remove-appearance choices both retain original bytes/parent; independent-copy and original deletion remain distinct owning operations.",
+    "Host editor lacking source access sees redacted reference; viewer reads permitted contents without mutation; revocation after cached resolver/approval is rechecked.",
+    "One State atomic boundary contains project+operation+event; interrupted commit preserves previous valid state/recoverable draft; unknown schema rejected; native/web use same canonical representation.",
+    "Current installed native/web/source/PDB and real hosted provider acceptance remain separate from source review and fake fixtures."
+  ],
+  "source_proofs": [
+    {
+      "source_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+      "git_blob": "badcbb61b72d4941df55441d223d6355715e03d0",
+      "bytes": 18979,
+      "sha256": "782a90fd485a8126aef986ad964ee938535ce1791466320882ebce4fd360d149",
+      "evidence_class": "read-only committed source review; not runtime/provider acceptance"
+    },
+    {
+      "source_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.cs",
+      "git_blob": "43469d0861f212b57cd1fbfabffd6e1b77455f4a",
+      "bytes": 13061,
+      "sha256": "174f3dff88be82b616e3d284d83c1a507eeb412f951fe29ee70d1bd2387d6756",
+      "evidence_class": "read-only committed source review; not runtime/provider acceptance"
+    },
+    {
+      "source_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Files/CUI/Services/VersionedJsonStateStore.cs",
+      "git_blob": "2025a1822fe2c6b46612f0c4a6a37a6ac9105ce2",
+      "bytes": 9496,
+      "sha256": "5736e28865831da0033f106ed2041e7429ab81dfb6fe9b185a1065be305254d6",
+      "evidence_class": "read-only committed source review; not runtime/provider acceptance"
+    },
+    {
+      "source_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Files/CUI/Services/FilesOperationJournal.cs",
+      "git_blob": "545ce21be3675c9e1a175cf7542572bfe29e4237",
+      "bytes": 5180,
+      "sha256": "42847657aae39fbb0fa075527d0ec46eeb68a13ea1c4678a664a1c55cce3b5f6",
+      "evidence_class": "read-only committed source review; not runtime/provider acceptance"
+    },
+    {
+      "source_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/shared/src/Haven.Application/Productivity/ProductivityArtifactReferences.cs",
+      "git_blob": "d4ecf56694a4d5dbbeeeac4b58efee119357d88f",
+      "bytes": 789,
+      "sha256": "c6bfb246a88969760b3cba8dda2b13a4af8fe30d3b7de393aa4926a56d80977a",
+      "evidence_class": "read-only committed source review; not runtime/provider acceptance"
+    }
+  ],
+  "admin_delivery": {
+    "related": "No Admin code/SDK overlap authorised by this review.",
+    "coordination_source04ManifestSha256": "83b1e8b7ba9b42b1472fa0bfabdd979b51d53d451ad780f1a92026003edbf381",
+    "coordination_combinedManifestSha256": "79d5fb4bbe7864fb462f18bbca992ce2909ad24589f50bf5805dec89a570a306",
+    "state": "Hash references only; no accessible committed source package provided to C4. NOT SOURCE-ACCEPTED.",
+    "required_delivery": "Remote branch+exact tested/reviewed commit containing all17 source04 bodies and SDK03 drivers, manifests mapping every path to byte/hash and full original evidence locations; fetch/readback verifies commit/tree/bytes before any source compatibility/test ACK. Local path/chat hash alone is not delivery."
+  },
+  "platforms": [
+    "Windows",
+    "9to1-OS",
+    "web",
+    "hosted adapters"
+  ],
+  "exception_basis": "None; canonical TF-F01/TF-F03 and TF-X02/SH07 remain mandatory. Prior exact-head/main-merge/local-artifact Terra pass-start gate remains visible; no feature source materialised here."
+}

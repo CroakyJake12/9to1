@@ -1,0 +1,23 @@
+﻿
+#nullable enable
+#pragma warning disable CS0108, CS0114
+
+using System;
+using System.Text;
+using System.Collections;
+using System.Collections.Generic;
+using System.Numerics;
+using Avalonia.Rendering.Composition.Server;
+using Avalonia.Rendering.Composition.Transport;
+using Avalonia.Rendering.Composition.Animations;
+
+[System.Flags]
+enum CompositionSimplePenChangedFields : byte
+{
+    Brush = 1,
+    DashStyle = 2,
+    LineCap = 4,
+    LineJoin = 8,
+    MiterLimit = 16,
+    Thickness = 32
+}
