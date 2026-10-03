@@ -29,13 +29,16 @@ internal sealed class BrowserHomeContext : ICuiBindingContext, ICuiActionDispatc
 
     public bool Open(HomeFeatureNavigationRequest request)
     {
+        if (!CanOpen(request)) return false;
         var route = ShellActions.Values.FirstOrDefault(value => HomeRouteIds.For(value) == request.RouteId);
-        if (!ShellActions.Values.Contains(route) || HomeRouteIds.For(route) != request.RouteId) return false;
         _navigation.Navigate(route);
         _navigation.State(route).SelectedObjectId = request.EntityId;
         _surface.ApplyNavigation(_navigation);
         return true;
     }
+
+    internal static bool CanOpen(HomeFeatureNavigationRequest request) =>
+        ShellActions.Values.Any(route => HomeRouteIds.For(route) == request.RouteId);
 
     public bool TryGetValue(string path, out object? value)
     {

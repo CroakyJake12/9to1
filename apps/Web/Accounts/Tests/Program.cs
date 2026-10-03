@@ -30,6 +30,21 @@ var cases = new (string Name, Func<Task> Run)[]
         await view.DispatchAsync("RequestSignIn", null);
         Check(invoked && Value(view, "HasAccount") is false && Value(view, "CanEdit") is false, "sign-in callback became a local account grant");
     }),
+    ("sign-in survives its own private view cleanup without stale refresh or presentation", async () =>
+    {
+        var reads = 0; var stalePresentation = 0; var disposed = false; AccountBrowserBindings? view = null;
+        using var controlled = view = new AccountBrowserBindings(new Script((_, _) => { reads++; return Error("AuthenticationRequired"); }), action => { if (disposed) stalePresentation++; action(); return Task.CompletedTask; },
+            ct => { view!.Dispose(); disposed = true; Check(!ct.IsCancellationRequested, "signin cancelled by own private cleanup"); return Task.CompletedTask; });
+        await controlled.DispatchAsync("RequestSignIn", null);
+        Check(reads == 0 && stalePresentation == 0 && Value(controlled, "HasAccount") is false, "old disposed signin view refreshed/presented/granted account");
+    }),
+    ("explicit caller cancellation still cancels sign-in after private view cleanup", async () =>
+    {
+        using var cts = new CancellationTokenSource(); var reached = false; AccountBrowserBindings? view = null;
+        using var controlled = view = new AccountBrowserBindings(new Script((_, _) => Error("AuthenticationRequired")), action => { action(); return Task.CompletedTask; },
+            ct => { view!.Dispose(); Check(!ct.IsCancellationRequested, "view cleanup became caller cancel"); cts.Cancel(); reached = ct.IsCancellationRequested; ct.ThrowIfCancellationRequested(); return Task.CompletedTask; });
+        await controlled.DispatchAsync("RequestSignIn", null, cts.Token); Check(reached && Value(controlled, "HasAccount") is false, "caller cancellation lost or created grant");
+    }),
     ("profile edits save changed fields and exact original revision only", async () =>
     {
         JsonElement? patch = null;

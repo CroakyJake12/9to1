@@ -9,14 +9,19 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
     // provider invocation must not also become a second raw keyboard click.
     browserDocument.body.append(root);
     const elements = new Map();
+    const nativeHost = browserDocument.getElementById?.('nine-to-one-root');
     let disposed = false;
     let generation;
     let restoringFocus = false;
+    let nativeFocusedId;
+    let nativeHostTabIndex;
+    let ownsHostTabIndex = false;
 
     function clear() {
         root.replaceChildren();
         elements.clear();
         generation = undefined;
+        nativeFocusedId = undefined;
     }
 
     function refresh() {
@@ -25,6 +30,14 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
         const snapshot = JSON.parse(owner.ReadAccessibility());
         if (generation !== snapshot.generation) clear();
         generation = snapshot.generation;
+        nativeFocusedId = snapshot.elements.find(peer => peer.focused)?.id;
+        // Native pointer/keyboard focus remains available; sequential browser
+        // focus uses the actual peer projection rather than the raw input host.
+        if (nativeHost && nativeHost.tabIndex !== -1) {
+            if (!ownsHostTabIndex) nativeHostTabIndex = nativeHost.getAttribute('tabindex');
+            nativeHost.tabIndex = -1;
+            ownsHostTabIndex = true;
+        }
         root.dataset.unsupportedPeers = snapshot.unsupported.join(',');
         const current = new Set();
         for (const peer of snapshot.elements) {
@@ -80,12 +93,44 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
         }
     }
 
+    function nativeTab(event) {
+        if (disposed || event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey
+            || !nativeHost?.contains(event.target)) return;
+        refresh();
+        // Capture before the native host's Tab handler can prevent the browser
+        // traversal. Other keys still follow the owning native input adapter.
+        event.stopImmediatePropagation();
+        const nodes = [...root.children].filter(node => node.dataset.nativePeerId && !node.disabled && node.tabIndex >= 0);
+        if (!nodes.length) return;
+        const current = nodes.findIndex(node => node.dataset.nativePeerId === nativeFocusedId);
+        const next = current < 0 ? (event.shiftKey ? nodes.length - 1 : 0) : current + (event.shiftKey ? -1 : 1);
+        if (next < 0 || next >= nodes.length) {
+            // Let normal browser traversal leave the app at either boundary.
+            nodes[current].focus({ preventScroll: true });
+            return;
+        }
+        event.preventDefault();
+        nodes[next].focus({ preventScroll: true });
+    }
+
+    function releaseNativeHost() {
+        if (!nativeHost) return;
+        browserDocument.removeEventListener('keydown', nativeTab, true);
+        if (ownsHostTabIndex && nativeHost.tabIndex === -1) {
+            if (nativeHostTabIndex === null) nativeHost.removeAttribute('tabindex');
+            else nativeHost.setAttribute('tabindex', nativeHostTabIndex);
+        }
+        ownsHostTabIndex = false;
+    }
+
     let timer;
     try {
         refresh();
+        if (nativeHost) browserDocument.addEventListener('keydown', nativeTab, true);
         timer = browserWindow.setInterval(refresh, 250);
     } catch (error) {
         disposed = true;
+        releaseNativeHost();
         clear();
         root.remove();
         throw error;
@@ -96,6 +141,7 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
         dispose() {
             if (disposed) return;
             disposed = true;
+            releaseNativeHost();
             browserWindow.clearInterval(timer);
             clear();
             root.remove();

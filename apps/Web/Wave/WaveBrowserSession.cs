@@ -5,6 +5,7 @@ using System.Text.Json;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using HavenOS.Apps.Wave;
+using HavenOS.Home.Core;
 using NineToOne.Web.Media;
 
 namespace NineToOne.Web.Wave;
@@ -55,6 +56,23 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     public string Status { get; private set; } = "Create a project or open one saved in this browser.";
     public string? ErrorCode { get; private set; }
     public long SavedRevision => _savedRevision;
+
+    /// <summary>Preserve the view/draft; the shell disposes this owner only after every participant is ready.</summary>
+    public async Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken token = default)
+    {
+        if (_disposed) return new(true, "Succeeded", "The Wave session is already closed.", true);
+        var attempted = false;
+        var prepared = await OperateAsync(async () =>
+        {
+            attempted = true;
+            return await SaveBeforeLeavingAsync(token);
+        }, token);
+        if (_disposed) return new(true, "Succeeded", "The Wave session is already closed.", true);
+        if (!attempted) return new(false, "OperationBusy", "Wave is still processing an operation. Its project and unsaved edits are retained.", false);
+        return prepared && !IsDirty
+            ? new(true, "Succeeded", "Wave's local project is saved and ready to close.", true)
+            : new(false, ErrorCode ?? "StorageFailed", Status, false);
+    }
 
     public async Task RefreshAsync(CancellationToken token = default)
     {

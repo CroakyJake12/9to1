@@ -1,0 +1,31 @@
+<Cui id="write.browser" version="1">
+  <Actions><Action name="OpenSavedDocument" command="OpenDocument" parameter="{Binding savedDocument}" /></Actions>
+  <Grid RowDefinitions="Auto,Auto,*" margin="12">
+    <TextBlock grid-row="0" text="{Binding DocumentTitle}" font-size="24" />
+    <StackPanel grid-row="1" margin="0,8">
+      <WrapPanel>
+        <Button content="New" action="CreateDocument" is-enabled="{Binding CanCreate}" />
+        <Button content="Save" action="SaveDocument" is-enabled="{Binding CanSave}" />
+        <Button content="Bold" action="BoldSelection" is-enabled="{Binding CanBold}" />
+        <Button content="Undo" action="Undo" is-enabled="{Binding CanUndo}" />
+        <Button content="Redo" action="Redo" is-enabled="{Binding CanRedo}" />
+        <Button content="Close" action="CloseDocument" is-enabled="{Binding CanClose}" />
+        <Button content="Import native package" action="ImportPackage" is-enabled="{Binding CanImportPackage}" />
+        <Button content="Download native package" action="ExportPackage" is-enabled="{Binding CanExportPackage}" />
+      </WrapPanel>
+      <TextBlock text="{Binding SaveStatus}" accessible-name="Document save status" text-wrapping="Wrap" />
+      <TextBlock text="{Binding PackageCleanupWarning}" accessible-name="Native package warning" text-wrapping="Wrap" />
+      <If Condition="{Binding HasUnknownCommitOutcome}">
+        <Button content="Inspect saved state" action="InspectSavedState" is-enabled="{Binding CanInspectSavedState}" />
+      </If>
+      <TextBlock text="Saved documents on this browser" font-size="16" margin="0,8,0,4" />
+      <Button content="Refresh documents" action="RefreshDocuments" is-enabled="{Binding CanRefreshDocuments}" />
+      <ScrollViewer max-height="160">
+        <Repeat Source="{Binding Documents}" As="savedDocument" Key="{Binding savedDocument.Id}">
+          <Button content="{Binding savedDocument.Title}" action="OpenSavedDocument" is-enabled="{Binding CanBrowseDocuments}" />
+        </Repeat>
+      </ScrollViewer>
+    </StackPanel>
+    <ScrollViewer grid-row="2"><Object Type="WriteDocumentSurface" /></ScrollViewer>
+  </Grid>
+</Cui>

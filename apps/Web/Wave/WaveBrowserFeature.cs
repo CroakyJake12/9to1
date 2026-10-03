@@ -7,12 +7,17 @@ using NineToOne.Web.Media;
 
 namespace NineToOne.Web.Wave;
 
-public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IDisposable
+public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserCloseParticipant, IDisposable
 {
     private readonly WaveBrowserSession _session;
     private readonly CuiDocument _document;
     private WaveViewLifetime? _view;
     public string RouteId => "app.wave";
+    // A missing/unacknowledged save receipt leaves IsDirty true; no guessed receipt changes readiness.
+    public bool HasUnsavedChanges => _session.IsDirty || _session.IsBusy;
+
+    public Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default) =>
+        _session.PrepareToCloseAsync(cancellationToken);
 
     public WaveBrowserFeature(IWaveBrowserMedia media, string markup)
     {
@@ -58,7 +63,15 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IDisposable
         return new(_document, _session, _session, _view);
     }
 
-    public void Dispose() { _view?.Dispose(); _session.Dispose(); }
+    public void Dispose()
+    {
+        List<Exception>? errors = null;
+        try { _view?.Dispose(); } catch (Exception error) { (errors ??= []).Add(error); }
+        _view = null;
+        // A failing external playback cleanup must not skip clearing this owner session.
+        try { _session.Dispose(); } catch (Exception error) { (errors ??= []).Add(error); }
+        if (errors is not null) throw new AggregateException("Wave teardown reported browser cleanup failures.", errors);
+    }
 
     private sealed class WaveViewLifetime : IDisposable
     {

@@ -95,10 +95,10 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (_disposed) return;
-        // A confirmed session mutation clears/disposes this private view before server dispatch.
-        // Its transport retains explicit caller cancellation; the reviewed client pins the original session token.
+        // Confirmed session mutations and trusted sign-in clear/dispose this private view during their lifecycle.
+        // They retain explicit caller cancellation; the reviewed mutation client pins the original session token.
         // View disposal still cancels reads and profile writes and never permits another command on this view.
-        using var request = command == "ConfirmSessionMutation"
+        using var request = command is "ConfirmSessionMutation" or "RequestSignIn"
             ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
             : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         if (!await _gate.WaitAsync(0, request.Token)) return; // Never queue an edit or revocation behind a different operation.
@@ -134,7 +134,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
             {
                 await _openSignIn!(request.Token);
                 // Returning from trusted sign-in is not an account grant. Only the real service can populate this view.
-                await RefreshAsync(request.Token);
+                if (!_disposed) await RefreshAsync(request.Token);
             }
             else
             {
@@ -254,7 +254,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     private static string? Text(JsonElement? value, string field) => value is { ValueKind: JsonValueKind.Object } record && record.TryGetProperty(field, out var item) && item.ValueKind == JsonValueKind.String ? item.GetString() : null;
     private static object? Scalar(JsonElement value) => value.ValueKind switch
     { JsonValueKind.String => value.GetString(), JsonValueKind.Number => value.GetRawText(), JsonValueKind.True => true, JsonValueKind.False => false, _ => null };
-    private Task Present(Action action) => _present(() => { if (!_disposed) { action(); Changed(); } });
+    private Task Present(Action action) => _disposed ? Task.CompletedTask : _present(() => { if (!_disposed) { action(); Changed(); } });
     private void Changed() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     private void ClearPrivate() { _current = null; _profile = null; _sessions = []; _sessionsChecked = false; _draft.Clear(); _changed.Clear(); _conflict = false; _conflictRevision = null; _revision = 0; _selectedSession = null; _confirmation = null; _pendingMutation = null; }
     public void Dispose()

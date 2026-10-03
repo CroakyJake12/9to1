@@ -10,7 +10,7 @@ using HavenOS.Home.Core;
 
 namespace NineToOne.Web;
 
-public sealed class BrowserApplication : Application, IDisposable
+public sealed class BrowserApplication : Application, IAsyncDisposable
 {
     private readonly ContentControl _view = new();
     private readonly BrowserSurfaceRegistry _surfaces = new();
@@ -25,9 +25,12 @@ public sealed class BrowserApplication : Application, IDisposable
     private string? _currentAddress;
     private long _navigationVersion;
     private bool _disposed;
+    private bool _closing;
+    private Exception? _presentationCleanupError;
 
     /// <summary>Registration is supplied by the composition root after obtaining real authenticated owner adapters.</summary>
     public BrowserSurfaceRegistry Surfaces => _surfaces;
+    public bool HasUnsavedChanges => !_disposed && _surfaces.HasUnsavedChanges;
 
     internal string ReadAccessibility()
     {
@@ -36,11 +39,16 @@ public sealed class BrowserApplication : Application, IDisposable
     }
     internal bool PerformAccessibility(string id, string operation, string? value)
     {
+        if (_disposed || _closing) return false;
         _availability?.Refresh();
         return _accessibility.Perform(id, operation, value);
     }
 
-    public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this, "Home");
+    public override void Initialize()
+    {
+        CuiNativeHost.InitialisePrimitiveTheme(this, "Home");
+        NineToOne.Web.Write.WriteRetainedSceneResources.Register(this);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {
@@ -68,7 +76,7 @@ public sealed class BrowserApplication : Application, IDisposable
 
     public async Task OpenFragmentAsync(string fragment)
     {
-        if (_disposed) return;
+        if (_disposed || _closing) return;
         _navigationCancellation?.Cancel();
         _navigationCancellation?.Dispose();
         _navigationCancellation = new();
@@ -81,18 +89,18 @@ public sealed class BrowserApplication : Application, IDisposable
         }
 
         Program.ShowStatus("Loading", "Opening your destination…");
-        var dispatch = await BrowserRouteDispatcher.OpenAsync(_surfaces, request!, target =>
+        var dispatch = await BrowserRouteDispatcher.PrepareAsync(_surfaces, request!, BrowserHomeContext.CanOpen, target =>
         {
             EnsureHome();
-            return _home!.Open(target) ? new(_homeDocument!, _home, _home) : null;
+            var home = new BrowserHomeContext(_homeDocument!, NavigateHome);
+            return home.Open(target) ? new(_homeDocument!, home, home, Admission: new HomeAdmission(this, home)) : null;
         }, cancellation);
-        var (result, surface, isUnavailableHome) = dispatch;
-        if (_disposed || version != _navigationVersion || cancellation.IsCancellationRequested)
+        var (result, present, isUnavailableHome) = dispatch;
+        if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
         {
-            surface?.Lifetime?.Dispose();
             return;
         }
-        if (!result.Succeeded || surface is null)
+        if (!result.Succeeded || present is null)
         {
             // The requested address stays intact; a failed deep link never opens a different artifact.
             Program.ShowStatus(result.Code, "This destination is unavailable. Your link has been preserved so you can try again.");
@@ -100,11 +108,19 @@ public sealed class BrowserApplication : Application, IDisposable
         }
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            if (_disposed || version != _navigationVersion || cancellation.IsCancellationRequested)
-                surface.Lifetime?.Dispose();
-            else if (Render(surface, BrowserRouteCodec.Encode(request!)))
-                Program.ShowStatus(isUnavailableHome ? "HomeServiceUnavailable" : "Ready",
-                    isUnavailableHome ? "Account services are unavailable. Your files and activity have not been loaded." : "");
+            if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
+                return;
+            var surface = present();
+            if (surface is null)
+            {
+                Program.ShowStatus("BrowserPresentationExpired", "This destination changed before it could open. Try opening it again.");
+                return;
+            }
+            if (Render(surface, BrowserRouteCodec.Encode(request!)))
+                Program.ShowStatus(_presentationCleanupError is not null ? "BrowserPresentationCleanupFailed"
+                        : isUnavailableHome ? "HomeServiceUnavailable" : "Ready",
+                    _presentationCleanupError is not null ? "Your destination opened, but the previous view could not fully close."
+                        : isUnavailableHome ? "Account services are unavailable. Your files and activity have not been loaded." : "");
         });
     }
 
@@ -119,12 +135,13 @@ public sealed class BrowserApplication : Application, IDisposable
         if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidOperationException("The canonical Home CUI resource is invalid.");
         _homeDocument = document;
-        _home = new(document, request =>
-        {
-            var fragment = BrowserRouteCodec.Encode(request);
-            Program.WriteFragment(fragment, false);
-            QueueNavigation(fragment);
-        });
+    }
+
+    private void NavigateHome(HomeFeatureNavigationRequest request)
+    {
+        var fragment = BrowserRouteCodec.Encode(request);
+        Program.WriteFragment(fragment, false);
+        QueueNavigation(fragment);
     }
 
     private bool Render(BrowserCuiSurface surface, string address)
@@ -132,13 +149,16 @@ public sealed class BrowserApplication : Application, IDisposable
         var languageVersion = surface.Document.RootProperties.GetValueOrDefault("version") as CuiLiteralValue;
         if (!CuiRuntimeCompatibility.IsLanguageVersionCompatible(languageVersion?.Value))
         {
-            surface.Lifetime?.Dispose();
+            try { surface.Lifetime?.Dispose(); }
+            finally { surface.Admission?.Reject(); }
             Program.ShowStatus("HomeServiceIncompatible", "This view requires an incompatible runtime. Your previous view has been preserved.");
             return false;
         }
         var candidate = surface.ControlRegistry is null ? new CuiControlLoader() : new CuiControlLoader(surface.ControlRegistry);
         BrowserActionAvailability.Observation? candidateAvailability = null;
         var transferred = false;
+        var previousContent = _view.Content;
+        var previousRoot = (previousContent as ScrollViewer)?.Content as Control;
         try
         {
             candidate.SetBindingContext(surface.Bindings);
@@ -153,7 +173,7 @@ public sealed class BrowserApplication : Application, IDisposable
             candidateAvailability = BrowserActionAvailability.Observe(root, candidate, surface.Document, surface.Actions, surface.Bindings);
             foreach (var control in root.GetLogicalDescendants().OfType<Control>().Prepend(root))
             {
-                if (control is TextBox input && ReferenceEquals(surface.Bindings, _home))
+                if (control is TextBox input && surface.Bindings is BrowserHomeContext)
                 {
                     input.IsEnabled = false;
                     ToolTip.SetTip(input, "Search requires an available account service.");
@@ -173,28 +193,55 @@ public sealed class BrowserApplication : Application, IDisposable
                 scroll.Loaded += (_, _) => scroll.Offset = offset;
             _view.Content = scroll;
             _accessibility.Bind(root);
+            // The independent owner commits only after reversible native installation.
+            surface.Admission?.Accept();
             _loader = candidate;
             _surfaceLifetime = surface.Lifetime;
             _availability = candidateAvailability;
             _currentAddress = address;
             transferred = true;
-            try { previousAvailability?.Dispose(); }
-            finally
-            {
-                try { previousLoader?.Dispose(); }
-                finally { previousLifetime?.Dispose(); }
-            }
+            List<Exception>? cleanupErrors = null;
+            Retire(() => previousAvailability?.Dispose());
+            Retire(() => previousLoader?.Dispose());
+            Retire(() => previousLifetime?.Dispose());
+            _presentationCleanupError = cleanupErrors is null ? null
+                : new AggregateException("The prior browser presentation had teardown failures.", cleanupErrors);
             return true;
+
+            void Retire(Action cleanup)
+            {
+                try { cleanup(); }
+                catch (Exception error) { (cleanupErrors ??= []).Add(error); }
+            }
         }
         finally
         {
             if (!transferred)
             {
-                try { candidateAvailability?.Dispose(); }
+                try
+                {
+                    if (!ReferenceEquals(_view.Content, previousContent))
+                    {
+                        try { _view.Content = previousContent; }
+                        finally
+                        {
+                            if (previousRoot is not null) _accessibility.Bind(previousRoot);
+                            else _accessibility.Clear();
+                        }
+                    }
+                }
                 finally
                 {
-                    try { candidate.Dispose(); }
-                    finally { surface.Lifetime?.Dispose(); }
+                    try { candidateAvailability?.Dispose(); }
+                    finally
+                    {
+                        try { candidate.Dispose(); }
+                        finally
+                        {
+                            try { surface.Lifetime?.Dispose(); }
+                            finally { surface.Admission?.Reject(); }
+                        }
+                    }
                 }
             }
         }
@@ -212,6 +259,7 @@ public sealed class BrowserApplication : Application, IDisposable
         _availability = null;
         _home = null;
         _homeDocument = null;
+        _presentationCleanupError = null;
         _scrollOffsets.Clear();
         _currentAddress = null;
         List<Exception>? errors = null;
@@ -231,16 +279,65 @@ public sealed class BrowserApplication : Application, IDisposable
         }
     }
 
-    public void Dispose()
+    public async Task<bool> CloseAsync(CancellationToken cancellationToken = default)
     {
-        if (_disposed) return;
-        _disposed = true;
-        try { ResetPrivateContext(); }
+        if (_disposed) return true;
+        if (_closing) return false;
+        _closing = true;
+        _view.IsEnabled = false;
+        try
+        {
+            ++_navigationVersion;
+            _navigationCancellation?.Cancel();
+            var closed = await _surfaces.ClearAsync(cancellationToken);
+            if (!closed.Succeeded || closed.Value != true)
+            {
+                Program.ShowStatus(closed.Code, closed.Message);
+                return false;
+            }
+            _disposed = true;
+            ResetPrivateContext();
+            return true;
+        }
+        catch
+        {
+            // Preparation failures retain owners; teardown failures occur after
+            // all prepared owners have been detached and must clear their view.
+            if (_surfaces.AvailableRoutes.Count == 0)
+            {
+                _disposed = true;
+                ResetPrivateContext();
+            }
+            throw;
+        }
         finally
         {
-            _navigationCancellation?.Dispose();
-            _navigationCancellation = null;
-            _surfaces.Clear();
+            _closing = false;
+            if (_disposed)
+            {
+                _navigationCancellation?.Dispose();
+                _navigationCancellation = null;
+            }
+            else _view.IsEnabled = true;
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!await CloseAsync()) throw new InvalidOperationException("Browser owners could not close. Their drafts remain open.");
+    }
+
+    internal void ReplacePrivateAccountSettings()
+    {
+        ResetPrivateContext();
+        if (_disposed || _closing) return;
+        BrowserFeatureComposition.RegisterPrivateAccountSettings(_surfaces);
+        QueueNavigation(Program.ReadFragment());
+    }
+
+    private sealed class HomeAdmission(BrowserApplication application, BrowserHomeContext home) : IBrowserPresentationAdmission
+    {
+        public void Accept() => application._home = home;
+        public void Reject() { }
     }
 }

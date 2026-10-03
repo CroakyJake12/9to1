@@ -36,7 +36,10 @@ public static partial class Program
     public static void LocationChanged(string fragment) => Application?.QueueNavigation(fragment);
 
     [JSExport]
-    public static void CloseShell() => Application?.Dispose();
+    public static async Task<bool> CloseShell() => Application is null || await Application.CloseAsync();
+
+    [JSExport]
+    public static bool HasUnsavedChanges() => Application?.HasUnsavedChanges == true;
 
     [JSExport]
     public static string ReadAccessibility() => Application?.ReadAccessibility() ?? "{\"generation\":0,\"elements\":[],\"unsupported\":[]}";
@@ -47,9 +50,12 @@ public static partial class Program
     [JSExport]
     public static void PrivateContextInvalidated()
     {
-        Application?.ResetPrivateContext();
-        ShowStatus("PermissionRequired", "Your session must be checked before reopening private content. Reload to continue.");
+        Application?.ReplacePrivateAccountSettings();
+        ShowStatus("PermissionRequired", "Sign in before reopening private content.");
     }
+
+    [JSExport]
+    public static void OwnedAccountContextChanged() => Application?.ReplacePrivateAccountSettings();
 
     [JSImport("readFragment", "nineToOneBrowser")]
     internal static partial string ReadFragment();
@@ -59,4 +65,7 @@ public static partial class Program
 
     [JSImport("showStatus", "nineToOneBrowser")]
     internal static partial void ShowStatus(string code, string message);
+
+    [JSImport("reduceMotion", "nineToOneBrowser")]
+    internal static partial bool ReduceMotion();
 }

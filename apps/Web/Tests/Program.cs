@@ -219,8 +219,126 @@ await Run("B1-LIFETIME-04-failing-disposal-still-removes-and-disposes-all", () =
     catch (AggregateException error) { Check(error.InnerExceptions.Count == 1 && error.InnerExceptions[0].Message == "UNIT teardown fault"); }
     Check(otherDisposals == 1 && registry.AvailableRoutes.Count == 0);
 });
-Console.WriteLine($"Discovered: 26; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
-return executed == 26 ? 0 : 1;
+await RunAsync("B1-LIFETIME-05-failed-save-preserves-owner-and-draft", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var disposed = 0;
+    var owner = new ClosingHandler("app.write", _ => Task.FromResult(new HomeCoreOperationResult<bool>(false, "CommitOutcomeUnknown", "Draft preserved.")), () => { disposed++; return ValueTask.CompletedTask; });
+    registry.Register(owner, _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    var closed = await registry.ClearAsync();
+    Check(!closed.Succeeded && closed.Code == "CommitOutcomeUnknown" && disposed == 0 && registry.HasUnsavedChanges);
+    Check(registry.AvailableRoutes.Contains("app.write") && (await registry.OpenAsync(new("app.write"), default)).Result.Succeeded);
+});
+await RunAsync("B1-LIFETIME-06-awaits-preparation-and-disposal-before-success", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var disposalStarted = false;
+    var prepared = new TaskCompletionSource<HomeCoreOperationResult<bool>>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var disposed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    registry.Register(new ClosingHandler("app.write", _ => prepared.Task, () => { disposalStarted = true; return new(disposed.Task); }), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    var close = registry.ClearAsync();
+    Check(!close.IsCompleted && !disposalStarted && registry.AvailableRoutes.Contains("app.write"));
+    Check((await registry.OpenAsync(new("app.write"), default)).Result.Code == "BrowserClosing");
+    Check(!registry.Register(new Handler("app.wave", r => Task.FromResult(Success(r))), _ => FixtureSurface()).Succeeded);
+    prepared.SetResult(new(true, "Succeeded", "Saved.", true));
+    while (!disposalStarted) await Task.Yield();
+    Check(!close.IsCompleted && registry.AvailableRoutes.Count == 0);
+    disposed.SetResult();
+    Check((await close).Succeeded);
+});
+await RunAsync("B1-LIFETIME-07-async-teardown-attempts-all-owners", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var otherDisposals = 0;
+    registry.Register(new ClosingHandler("app.write", _ => Task.FromResult(new HomeCoreOperationResult<bool>(true, "Succeeded", "Saved.", true)), () => throw new IOException("UNIT async cleanup fault")), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    registry.Register(new DisposableHandler("app.wave", r => Task.FromResult(Success(r)), () => otherDisposals++), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    try { await registry.ClearAsync(); throw new Exception("Asynchronous teardown failure was suppressed."); }
+    catch (AggregateException error) { Check(error.InnerExceptions.Count == 1 && error.InnerExceptions[0].Message == "UNIT async cleanup fault"); }
+    Check(otherDisposals == 1 && registry.AvailableRoutes.Count == 0);
+});
+await RunAsync("B1-LIFETIME-08-cancelled-preparation-retains-owner", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var disposed = 0;
+    using var cancellation = new CancellationTokenSource();
+    registry.Register(new ClosingHandler("app.write", token => { cancellation.Cancel(); token.ThrowIfCancellationRequested(); throw new Exception("Cancelled close was accepted."); }, () => { disposed++; return ValueTask.CompletedTask; }), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    try { await registry.ClearAsync(cancellation.Token); throw new Exception("Cancelled close was accepted."); }
+    catch (OperationCanceledException) { }
+    Check(disposed == 0 && registry.HasUnsavedChanges && (await registry.OpenAsync(new("app.write"), default)).Result.Succeeded);
+});
+await Run("B1-LIFETIME-09-synchronous-clear-cannot-drop-async-draft", () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var disposed = 0;
+    registry.Register(new ClosingHandler("app.write", _ => throw new Exception("Synchronous clear attempted preparation."), () => { disposed++; return ValueTask.CompletedTask; }), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    try { registry.Clear(); throw new Exception("Synchronous clear dropped an asynchronous owner."); }
+    catch (InvalidOperationException) { }
+    Check(disposed == 0 && registry.AvailableRoutes.Contains("app.write") && registry.HasUnsavedChanges);
+});
+await RunAsync("B1-LIFETIME-10-pending-open-cannot-replace-view-during-close", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var renders = 0; var disposals = 0;
+    var opened = new TaskCompletionSource<HomeFeatureNavigationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var prepared = new TaskCompletionSource<HomeCoreOperationResult<bool>>(TaskCreationOptions.RunContinuationsAsynchronously);
+    registry.Register(new ClosingHandler("app.write", _ => prepared.Task, () => { disposals++; return ValueTask.CompletedTask; }, _ => opened.Task),
+        _ => { renders++; return FixtureSurface(); }, BrowserSurfaceScope.DeviceLocal);
+    var request = new HomeFeatureNavigationRequest("app.write");
+    var pendingOpen = registry.OpenAsync(request, default);
+    var closing = registry.ClearAsync();
+    opened.SetResult(Success(request));
+    var late = await pendingOpen;
+    Check(!late.Result.Succeeded && late.Result.Code == "BrowserClosing" && late.Surface is null && renders == 0);
+    prepared.SetResult(new(false, "CommitOutcomeUnknown", "Draft retained.", false));
+    Check(!(await closing).Succeeded && disposals == 0 && registry.HasUnsavedChanges);
+    Check((await registry.OpenAsync(request, default)).Result.Succeeded && renders == 1);
+});
+await Run("B1-LIFETIME-11-unsupported-private-async-owner-and-sync-save-veto", () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var disposed = 0;
+    var asyncOwner = new ClosingHandler("app.write", _ => throw new Exception("Private async owner must not prepare."), () => { disposed++; return ValueTask.CompletedTask; });
+    Check(!registry.Register(asyncOwner, _ => FixtureSurface()).Succeeded && registry.AvailableRoutes.Count == 0);
+    var syncOwner = new PreparingDisposableHandler(() => disposed++);
+    Check(!registry.Register(syncOwner, _ => FixtureSurface()).Succeeded && registry.AvailableRoutes.Count == 0);
+    Check(registry.Register(syncOwner, _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal).Succeeded);
+    try { registry.Clear(); throw new Exception("Synchronous clear bypassed the owner's save veto."); }
+    catch (InvalidOperationException) { }
+    Check(disposed == 0 && registry.HasUnsavedChanges && registry.AvailableRoutes.Contains("app.wave"));
+});
+await RunAsync("B1-ADMISSION-01-prepare-defers-render-until-current-view-is-ready", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var renders = 0;
+    registry.Register(new Handler("app.write", r => Task.FromResult(Success(r))), _ => { renders++; return FixtureSurface(); });
+    var prepared = await registry.PreparePresentationAsync(new("app.write"), default);
+    Check(prepared.Result.Succeeded && prepared.Present is not null && renders == 0);
+    Check(prepared.Present!() is not null && renders == 1);
+});
+await RunAsync("B1-ADMISSION-02-cancel-or-context-reset-rejects-prepared-render", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var renders = 0;
+    using var cancellation = new CancellationTokenSource();
+    registry.Register(new Handler("app.write", r => Task.FromResult(Success(r))), _ => { renders++; return FixtureSurface(); });
+    var cancelled = await registry.PreparePresentationAsync(new("app.write"), cancellation.Token);
+    var invalidated = await registry.PreparePresentationAsync(new("app.write"), default);
+    cancellation.Cancel();
+    Check(cancelled.Present!() is null && renders == 0);
+    registry.ClearPrivateContext();
+    Check(invalidated.Present!() is null && renders == 0);
+});
+await RunAsync("B1-ADMISSION-03-prepared-owner-denial-retains-authority-over-fallback", async () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var fallbacks = 0;
+    registry.Register(new Handler(HomeFeatureRouteIds.Dashboard, r => Task.FromResult(new HomeFeatureNavigationResult(false, "PermissionDenied", "Denied.", r))), _ => throw new Exception("Denied owner was rendered."));
+    var prepared = await BrowserRouteDispatcher.PrepareAsync(registry, new(HomeFeatureRouteIds.Dashboard), _ => true,
+        _ => { fallbacks++; return FixtureSurface(); }, default);
+    Check(!prepared.Result.Succeeded && prepared.Result.Code == "PermissionDenied" && prepared.Present is null && fallbacks == 0);
+});
+await RunAsync("B1-ADMISSION-04-home-navigation-is-deferred-and-cancelled-without-replay", async () =>
+{
+    var fallbacks = 0;
+    using var cancellation = new CancellationTokenSource();
+    var prepared = await BrowserRouteDispatcher.PrepareAsync(new(), new(HomeFeatureRouteIds.Dashboard), _ => true,
+        _ => { fallbacks++; return FixtureSurface(); }, cancellation.Token);
+    Check(prepared.Result.Succeeded && prepared.IsUnavailableHome && fallbacks == 0);
+    cancellation.Cancel();
+    Check(prepared.Present!() is null && fallbacks == 0);
+});
+Console.WriteLine($"Discovered: 37; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
+return executed == 37 ? 0 : 1;
 
 async Task Run(string id, Action test)
 {
@@ -259,4 +377,25 @@ sealed class FixtureContext : ICuiBindingContext, ICuiActionDispatcher
 {
     public bool TryGetValue(string path, out object? value) { value = null; return false; }
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) => throw new InvalidOperationException("Unit test must not execute an action.");
+}
+sealed class ClosingHandler(string routeId, Func<CancellationToken, Task<HomeCoreOperationResult<bool>>> prepare,
+    Func<ValueTask> dispose, Func<HomeFeatureNavigationRequest, Task<HomeFeatureNavigationResult>>? open = null) : IHomeFeatureRouteHandler, IBrowserCloseParticipant, IAsyncDisposable
+{
+    public string RouteId => routeId;
+    public bool HasUnsavedChanges => true;
+    public Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default) => prepare(cancellationToken);
+    public ValueTask DisposeAsync() => dispose();
+    public Task<HomeFeatureNavigationResult> OpenAsync(HomeFeatureNavigationRequest request, CancellationToken cancellationToken = default) =>
+        open is not null ? open(request) : Task.FromResult(new HomeFeatureNavigationResult(true, "Succeeded", "Opened", request,
+            ViewState: new(routeId, "unit-view", 17, JsonSerializer.SerializeToElement(new { }))));
+}
+sealed class PreparingDisposableHandler(Action dispose) : IHomeFeatureRouteHandler, IBrowserCloseParticipant, IDisposable
+{
+    public string RouteId => "app.wave";
+    public bool HasUnsavedChanges => true;
+    public Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(new HomeCoreOperationResult<bool>(false, "StorageFailed", "Unsaved project retained.", false));
+    public void Dispose() => dispose();
+    public Task<HomeFeatureNavigationResult> OpenAsync(HomeFeatureNavigationRequest request, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new HomeFeatureNavigationResult(false, "UnsupportedFeature", "Lifecycle unit fixture only.", request));
 }

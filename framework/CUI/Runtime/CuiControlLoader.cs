@@ -953,7 +953,7 @@ public sealed class CuiControlLoader : IDisposable
         switch (control)
         {
             case TextBox textBox:
-                textBox.TextChanged += (_, _) => Update(textBox.Text);
+                textBox.TextChanging += (_, _) => Update(textBox.Text);
                 break;
             case CheckBox checkBox:
                 checkBox.IsCheckedChanged += (_, _) => Update(checkBox.IsChecked);

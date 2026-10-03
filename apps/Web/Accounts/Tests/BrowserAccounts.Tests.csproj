@@ -6,11 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="../AccountBrowserBindings.cs" Link="Production/AccountBrowserBindings.cs" />
     <Compile Include="../../Services/IAccountBrowserTransport.cs" Link="Production/IAccountBrowserTransport.cs" />
+    <Compile Include="../../Services/BrowserAccountSignIn.cs" Link="Production/BrowserAccountSignIn.cs" />
     <Compile Include="../../../../framework/CUI/Runtime/ICuiWritableBindingContext.cs" Link="Owner/ICuiWritableBindingContext.cs" />
     <Compile Include="../../../../framework/CUI/Runtime/ICuiRepeatItemBindingContext.cs" Link="Owner/ICuiRepeatItemBindingContext.cs" />
     <ProjectReference Include="../../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />

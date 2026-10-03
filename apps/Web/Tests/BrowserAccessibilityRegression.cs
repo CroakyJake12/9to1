@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Automation.Peers;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using NineToOne.Web;
@@ -58,6 +59,21 @@ await session.Dispatch(() =>
         var edit = elements.Single(e => e.GetProperty("automationId").GetString() == "edit");
         var actionId = action.GetProperty("id").GetString()!;
         var editId = edit.GetProperty("id").GetString()!;
+        bool MatchesBounds(JsonElement json, Rect bounds) => json.ValueKind == JsonValueKind.Object
+            && json.GetProperty("x").GetDouble() == bounds.X && json.GetProperty("y").GetDouble() == bounds.Y
+            && json.GetProperty("width").GetDouble() == bounds.Width && json.GetProperty("height").GetDouble() == bounds.Height;
+        var viewport = snapshot.RootElement.GetProperty("viewport");
+        Check("Viewport uses actual logical client size and native render scaling", viewport.GetProperty("width").GetDouble() == window.ClientSize.Width
+            && viewport.GetProperty("height").GetDouble() == window.ClientSize.Height
+            && viewport.GetProperty("renderScaling").GetDouble() == window.RenderScaling);
+        Check("Supported bounds are actual native logical top-level geometry", MatchesBounds(action.GetProperty("bounds"),
+            ControlAutomationPeer.CreatePeerForElement(button).GetBoundingRectangle()));
+        var unsupportedToggle = snapshot.RootElement.GetProperty("unsupportedPeers").EnumerateArray()
+            .Single(e => e.GetProperty("controlType").GetString() == "CheckBox");
+        Check("Unsupported peer diagnostic retains native geometry without advertising actions or values",
+            MatchesBounds(unsupportedToggle.GetProperty("bounds"), ControlAutomationPeer.CreatePeerForElement(stack.Children[5]).GetBoundingRectangle())
+            && !unsupportedToggle.TryGetProperty("id", out _) && !unsupportedToggle.TryGetProperty("value", out _)
+            && !unsupportedToggle.TryGetProperty("role", out _) && !unsupportedToggle.TryGetProperty("enabled", out _));
         Check("Names and roles come from real native automation peers", action.GetProperty("name").GetString() == "Native action" && action.GetProperty("role").GetString() == "button" && edit.GetProperty("name").GetString() == "Native value");
         Check("Actual native text is projected", elements.Any(e => e.GetProperty("name").GetString() == "Actual native text"));
         Check("Invoke calls actual button provider and wired CUI action once", bridge.Perform(actionId, "invoke", null) && invokes == 1);
@@ -69,6 +85,8 @@ await session.Dispatch(() =>
         input.IsReadOnly = true;
         Check("Changed native readonly state rejects writes", !bridge.Perform(editId, "value", "rejected") && input.Text == "updated");
         Check("Focus uses actual native peer", bridge.Perform(editId, "focus", null) && input.IsFocused);
+        using var focused = JsonDocument.Parse(bridge.ReadSnapshot());
+        Check("Snapshot reports the actual current native focused peer", focused.RootElement.GetProperty("elements").EnumerateArray().Single(e => e.GetProperty("id").GetString() == editId).GetProperty("focused").GetBoolean());
         input.Focusable = false;
         Check("Changed native focusability rejects focus", !bridge.Perform(editId, "focus", null));
         Check("Unsupported provider roles are explicit", snapshot.RootElement.GetProperty("unsupported").EnumerateArray().Any(e => e.GetString() == "CheckBox"));
@@ -80,6 +98,10 @@ await session.Dispatch(() =>
         Check("Denied actual alias command narrows enabled state", !alias.IsEnabled && !bridge.Perform(aliasId, "invoke", null) && invokes == 2);
         bridge.Bind(new StackPanel());
         Check("New render generation rejects stale IDs", !bridge.Perform(actionId, "invoke", null) && !bridge.Perform(editId, "value", "stale") && input.Text == "updated");
+        bridge.Bind(new TextBox { Text = "Detached control" });
+        using var unattached = JsonDocument.Parse(bridge.ReadSnapshot());
+        Check("Unattached native geometry is explicitly unavailable", unattached.RootElement.GetProperty("viewport").ValueKind == JsonValueKind.Null
+            && unattached.RootElement.GetProperty("elements")[0].GetProperty("bounds").ValueKind == JsonValueKind.Null);
         bridge.Clear();
         using var reset = JsonDocument.Parse(bridge.ReadSnapshot());
         Check("Private reset clears semantics and rejects prior controls", reset.RootElement.GetProperty("elements").GetArrayLength() == 0 && !bridge.Perform(editId, "focus", null));

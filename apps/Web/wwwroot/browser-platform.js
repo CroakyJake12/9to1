@@ -2,6 +2,7 @@ export function createBrowserPlatform(windowObject, documentObject) {
     let lastFragment = windowObject.location.hash;
     return {
         readFragment: () => windowObject.location.hash,
+        reduceMotion: () => windowObject.matchMedia('(prefers-reduced-motion: reduce)').matches,
         writeFragment(fragment, replace) {
             if (windowObject.location.hash === fragment) return;
             const url = new URL(windowObject.location.href);
@@ -16,7 +17,7 @@ export function createBrowserPlatform(windowObject, documentObject) {
             status.hidden = message.length === 0;
             documentObject.title = '9to1';
         },
-        subscribe(locationChanged, closeShell, invalidatePrivateContext) {
+        subscribe(locationChanged, releasePage, invalidatePrivateContext, hasUnsavedChanges = () => false) {
             const navigate = () => {
                 const fragment = windowObject.location.hash;
                 if (fragment === lastFragment) return;
@@ -27,18 +28,30 @@ export function createBrowserPlatform(windowObject, documentObject) {
             // service revalidating identity. This host has no authentication authority.
             const close = event => {
                 if (event.persisted) invalidatePrivateContext();
-                else closeShell();
+                else releasePage();
             };
             const restore = event => { if (event.persisted) invalidatePrivateContext(); };
+            // The browser may terminate execution after pagehide. Warn from actual
+            // owner state; persistence must complete through an explicit awaited close.
+            const warnUnsaved = event => {
+                let dirty;
+                try { dirty = hasUnsavedChanges(); }
+                catch { dirty = true; } // An unavailable owner cannot confirm that its draft is saved.
+                if (!dirty) return;
+                event.preventDefault();
+                event.returnValue = '';
+            };
             windowObject.addEventListener('popstate', navigate);
             windowObject.addEventListener('hashchange', navigate);
             windowObject.addEventListener('pagehide', close);
             windowObject.addEventListener('pageshow', restore);
+            windowObject.addEventListener('beforeunload', warnUnsaved);
             return () => {
                 windowObject.removeEventListener('popstate', navigate);
                 windowObject.removeEventListener('hashchange', navigate);
                 windowObject.removeEventListener('pagehide', close);
                 windowObject.removeEventListener('pageshow', restore);
+                windowObject.removeEventListener('beforeunload', warnUnsaved);
             };
         },
     };

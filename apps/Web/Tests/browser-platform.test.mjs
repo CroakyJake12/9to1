@@ -33,7 +33,9 @@ run('B1-HISTORY-03-replace-is-explicit', () => {
     assert.equal(calls[1][0], 'replace');
 });
 let observed, closed = 0, invalidated = 0;
-const unsubscribe = platform.subscribe(fragment => { observed = fragment; }, () => { closed++; }, () => { invalidated++; });
+let dirty = false, ownerFailed = false;
+const unsubscribe = platform.subscribe(fragment => { observed = fragment; }, () => { closed++; }, () => { invalidated++; },
+    () => { if (ownerFailed) throw new Error('UNIT owner unavailable'); return dirty; });
 run('B1-HISTORY-04-back-forward-location', () => {
     windowObject.location.hash = '#/home.library?entityId=original';
     listeners.get('popstate')();
@@ -56,7 +58,32 @@ run('B1-HISTORY-06-bfcache-preserves-live-runtime', () => {
     listeners.get('pagehide')({ persisted: false });
     assert.equal(closed, 1);
 });
+run('B1-HISTORY-08-clean-owner-does-not-warn', () => {
+    let prevented = false;
+    const event = { preventDefault() { prevented = true; } };
+    listeners.get('beforeunload')(event);
+    assert.equal(prevented, false);
+    assert.equal(Object.hasOwn(event, 'returnValue'), false);
+});
+run('B1-HISTORY-09-actual-dirty-owner-warns-without-clearing', () => {
+    dirty = true;
+    let prevented = false;
+    const event = { preventDefault() { prevented = true; } };
+    listeners.get('beforeunload')(event);
+    assert.equal(prevented, true);
+    assert.equal(event.returnValue, '');
+    assert.equal(dirty, true);
+    assert.equal(closed, 1);
+});
+run('B1-HISTORY-10-owner-failure-cannot-confirm-saved', () => {
+    ownerFailed = true;
+    let prevented = false;
+    const event = { preventDefault() { prevented = true; } };
+    listeners.get('beforeunload')(event);
+    assert.equal(prevented, true);
+    assert.equal(event.returnValue, '');
+});
 run('B1-HISTORY-07-release-subscriptions', () => {
     unsubscribe(); assert.equal(listeners.size, 0);
 });
-console.log(`Discovered: 7; executed: ${executed}; passed: ${executed}; failed: 0. Real browser acceptance: NOT-RUN.`);
+console.log(`Discovered: 10; executed: ${executed}; passed: ${executed}; failed: 0. Real browser acceptance: NOT-RUN.`);

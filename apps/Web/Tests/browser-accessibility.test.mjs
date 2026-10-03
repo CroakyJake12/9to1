@@ -70,8 +70,64 @@ const disposedEvents = (create,e) => {
   bridge.dispose(); button.handlers.click(); input.value='late'; input.handlers.input();
   assert.equal(operations,0); assert.equal(e.timers.size,0); assert.equal(e.document.body.children.length,0);
 };
+function nativeEnvironment(e) {
+  const make=e.document.createElement;
+  e.document.createElement=tag=>{
+    const node=make(tag),focus=node.focus.bind(node);
+    node.focus=()=>{if(e.document.activeElement===node)return;focus();node.handlers.focus?.();};
+    return node;
+  };
+  const host=e.document.createElement('main');host.tabIndex=0;host.attributes.tabindex='0';
+  host.getAttribute=name=>host.attributes[name]??null;
+  const set=host.setAttribute.bind(host),remove=host.removeAttribute.bind(host);
+  host.setAttribute=(name,value)=>{set(name,value);if(name==='tabindex')host.tabIndex=Number(value);};
+  host.removeAttribute=name=>{remove(name);if(name==='tabindex')host.tabIndex=-1;};
+  host.contains=node=>node===host||node?.parent===host;
+  e.document.getElementById=id=>id==='nine-to-one-root'?host:null;
+  const listeners=new Map();
+  e.document.addEventListener=(name,handler,capture)=>{assert.equal(capture,true);listeners.set(name,handler);};
+  e.document.removeEventListener=(name,handler,capture)=>{assert.equal(capture,true);if(listeners.get(name)===handler)listeners.delete(name);};
+  const event=options=>({key:'Tab',target:host,shiftKey:false,ctrlKey:false,altKey:false,metaKey:false,prevented:false,stopped:false,
+    preventDefault(){this.prevented=true;},stopImmediatePropagation(){this.stopped=true;},...options});
+  return {host,listeners,event};
+}
+const nativeTab = (create,e) => {
+  const native=nativeEnvironment(e);let focused='b';const calls=[];
+  const owner={ReadAccessibility:()=>JSON.stringify({generation:1,unsupported:[],elements:['a','b','c','d'].map(id=>({id,role:'button',name:id,enabled:id!=='c',focusable:true,focused:id===focused}))}),
+    PerformAccessibility:(id,operation)=>{calls.push({id,operation});native.host.focus();return true;}};
+  const bridge=create(e.window,e.document,owner);
+  try {
+    assert.equal(native.host.tabIndex,-1);
+    const forward=native.event();native.listeners.get('keydown')(forward);
+    assert(forward.prevented&&forward.stopped);assert.equal(e.document.activeElement.dataset.nativePeerId,'d');
+    assert.deepEqual(calls,[{id:'d',operation:'focus'}]);
+    focused='a';const backward=native.event({shiftKey:true});native.listeners.get('keydown')(backward);
+    assert(!backward.prevented&&backward.stopped);assert.equal(e.document.activeElement.dataset.nativePeerId,'a');
+  } finally {bridge.dispose();}
+  assert.equal(native.listeners.size,0);assert.equal(native.host.tabIndex,0);
+};
+const unrelatedKeys = (create,e) => {
+  const native=nativeEnvironment(e);
+  const bridge=create(e.window,e.document,{ReadAccessibility:()=>JSON.stringify({generation:1,unsupported:[],elements:[]}),PerformAccessibility:()=>{throw Error('Unexpected native operation');}});
+  try {
+    for(const options of [{key:'Enter'},{ctrlKey:true},{altKey:true},{metaKey:true},{target:e.document.body}]) {
+      const event=native.event(options);native.listeners.get('keydown')(event);assert(!event.prevented&&!event.stopped);
+    }
+    const empty=native.event();native.listeners.get('keydown')(empty);assert(empty.stopped&&!empty.prevented);
+  } finally {bridge.dispose();}
+};
+const nativeDisposed = (create,e) => {
+  const native=nativeEnvironment(e);
+  const bridge=create(e.window,e.document,{ReadAccessibility:()=>JSON.stringify({generation:1,unsupported:[],elements:[]}),PerformAccessibility:()=>false});
+  const retained=native.listeners.get('keydown');bridge.dispose();
+  const event=native.event();retained(event);assert(!event.stopped&&!event.prevented);
+  assert.equal(native.listeners.size,0);assert.equal(native.host.tabIndex,0);
+};
 for(const [name,check] of [['native-nonfocusable-remains-out-of-tab-sequence',nonfocusable],['initial-snapshot-failure-removes-root-and-timer',startupRollback],['stable-peers-follow-current-native-order-and-retain-focus',reorder],['disposed-retained-dom-controls-stop-forwarding-operations',disposedEvents]]) {
   await test(source,check); checks.push({name,result:'PASS'});
+}
+for(const [name,check] of [['native-host-tab-follows-current-peer-focus-and-skips-disabled',nativeTab],['native-host-keeps-other-keys-modifiers-and-empty-view-egress',unrelatedKeys],['disposed-native-tab-listener-stops-routing-and-restores-host',nativeDisposed]]) {
+  await test(source,check);checks.push({name,result:'PASS'});
 }
 const focusMutant=source.replace('node.tabIndex = peer.enabled && peer.focusable ? 0 : -1;','');
 assert.notEqual(focusMutant,source);
@@ -93,6 +149,12 @@ const disposedMutant=source.replaceAll('() => { if (disposed) return; owner.Perf
 assert.notEqual(disposedMutant,source);
 await assert.rejects(test(disposedMutant,disposedEvents),assert.AssertionError);
 checks.push({name:'removed-disposed-event-forwarding-guards',result:'EXPECTED_FAILURE_DETECTED'});
+const tabMutant=source.replace("if (nativeHost) browserDocument.addEventListener('keydown', nativeTab, true);",'');
+assert.notEqual(tabMutant,source);await assert.rejects(test(tabMutant,nativeTab));
+checks.push({name:'removed-native-tab-arbitration-subscription',result:'EXPECTED_FAILURE_DETECTED'});
+const focusOrderMutant=source.replace('nativeFocusedId = snapshot.elements.find(peer => peer.focused)?.id;','');
+assert.notEqual(focusOrderMutant,source);await assert.rejects(test(focusOrderMutant,nativeTab),assert.AssertionError);
+checks.push({name:'removed-actual-native-focus-order',result:'EXPECTED_FAILURE_DETECTED'});
 const report={scope:'Mock DOM/provider source-level negative controls only; NOT actual browser/CUI/provider acceptance',sourcePath,sourceSha256:crypto.createHash('sha256').update(source).digest('hex'),runnerSha256:crypto.createHash('sha256').update(fs.readFileSync(import.meta.filename)).digest('hex'),checks,productParityVerified:false};
 fs.writeFileSync(outputPath,JSON.stringify(report,null,2));
 console.log(JSON.stringify(checks));

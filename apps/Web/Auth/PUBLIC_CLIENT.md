@@ -1,0 +1,23 @@
+# Maintained public-client bridge
+
+`configured-accounts.bundle.js` composes `browser-public-client.js`, the reviewed `account-api-client.js`, and the existing `Services/account-service.js`. The issuer and registration authority remain Team C's maintained CAKE ID implementation at `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d`, with its `BROWSER_FIXTURE.md` handoff at `dc1d60eec2bb4edcdce2ba5b04883d711e692678`. No issuer, client, redirect, account, permission, entitlement or auth-revision defaults are created here.
+
+The host supplies optional `window.nineToOneBrowserConfiguration.account` with exactly these public fields: `issuer`, `apiResource`, `clientId`, `redirectUri`, `scopes`, and optional boolean `allowLoopbackForIsolatedTests`. Null configuration retains the truthful unavailable service. HTTPS is required except explicitly authorized isolated loopback HTTP issuer/resource use. The callback is HTTPS and exactly matches the configured same-origin redirect path. Public configuration must not contain passwords, client secrets, test keys, codes or tokens.
+
+Host sequence:
+
+1. Import the bundle before .NET startup. Call `handleOAuthPopupCallback(configuration.account)`; if it returns true, stop callback-page startup. It strips the one-use code from current history and forwards only to its same-origin opener. It does not establish identity.
+2. Create the module with explicit `onPrivateContextInvalidated`, `onVerifiedIdentity`, and `onFailure` callbacks and register it as `nineToOneAccounts`. After owner exports are available, await `module.prepare()` before registering private Account Settings. This clears any prior private context once; tokenless service actions can then truthfully report `AuthenticationRequired` without repeatedly disposing the sign-in view.
+3. The private invalidation callback clears the prior account view/context. For persisted page lifetime/BFCache events, await `module.invalidatePrivateContext(reason)` so the actual token supplier is cleared and pending sign-in is cancelled through the reviewed account client before owner cleanup completes; calling only the owner view cleanup leaves parent memory intact. Null configuration still awaits owner cleanup. The prepared configuration remains available for fresh sign-in. The verified callback resets prior private context and registers a fresh Account Settings adapter, preserving the separately owned device-local features. It may run only after signed ID/access token verification and a successful real `/api/account/current` response for the same subject. A callback itself never grants account access.
+4. Supply `BrowserAccountSignIn.RequestAsync` to the existing Settings factory only when `BrowserAccountSignIn.IsAvailable` is true. Trusted sign-in retains explicit caller cancellation while its own private-view cleanup disposes the old view. That disposed view cannot refresh or present afterward; the owner opens a fresh private surface and re-reads the actual service.
+
+Popup signing uses fresh S256/state/nonce and exact source/origin. Discovery issuer, token issuer/audience, ID nonce/authorized party, stable subject, and access session ID are checked using JOSE. The actual account API remains authoritative for the current session. Access tokens and the verifier live in parent memory only; refresh tokens are discarded. Sign-out, self revocation, expiry, failure, or context invalidation clear that memory. There is no persisted account/token cache. The isolated popup host must preserve its opener across the issuer navigation; `Cross-Origin-Opener-Policy: same-origin` is incompatible with this popup flow. Any host change belongs to the host owner.
+
+Rebuild using the acknowledged maintained fixture dependencies (its lock pins JOSE 6.2.12 and esbuild 0.28.1):
+
+```sh
+node apps/Web/Auth/build-public-client.mjs /workspace/team-b-c2-fixture/cloud/cake-id-auth/node_modules
+node --test apps/Web/Auth/browser-public-client.test.js
+```
+
+The build rejects other dependency versions and contains no runtime configuration. Node tests use scripted discovery and negative popup/token inputs; they are supporting unit evidence, not issuer, Worker/D1, browser/CUI, session, hosted-service or full parity acceptance. Real maintained-issuer browser acceptance remains pending and must retain exact source/build identities and strict fixture cleanup receipts. Icon upload, username availability, billing/entitlement and native RSA/auth-revision service contracts remain outstanding.

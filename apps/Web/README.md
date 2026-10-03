@@ -64,6 +64,32 @@ explicitly enables the SDK's reflection serialization contract and preserves the
 Web, Wave engine and Core assembly metadata during trimming. This consumes the
 unchanged owner codec; fresh published browser tests must verify the closure.
 
+The current composition also registers device-local Wave and Write. Write uses
+the owning structured editor and retained scene, original theme resources and
+fonts, the canonical Notes document/validator, and an atomic IndexedDB repository.
+Native `.9to1w` chooser/download operations use the unchanged owner codec through
+temporary byte staging. This assembly supplies the original `Haven` font resource
+identity and must not coexist with a desktop `Haven` executable assembly.
+The retained Write edit peer currently lacks an owning value/text provider; its
+geometry diagnostics do not establish rich editor accessibility or donor parity.
+
+Owners with drafts implement `IBrowserCloseParticipant`. Explicit `CloseShell`
+awaits preparation before removing any routes and then awaits asynchronous
+teardown. Failed or cancelled preparation retains the registered owners and draft.
+Synchronous clear rejects owners requiring preparation. Async private-context
+owners require a further owned teardown contract and are rejected at registration.
+The browser's ordinary unsaved-change prompt reads actual owner dirty/busy state.
+Page termination cannot guarantee awaited persistence; save or explicit close
+must finish before leaving. Forced termination/recovery remains an acceptance gate.
+
+Account Settings consumes optional public host configuration described in
+[Auth/PUBLIC_CLIENT.md](Auth/PUBLIC_CLIENT.md). The default is unconfigured.
+The composed public client verifies genuine maintained-issuer tokens and the
+current account API before replacing private adapters, and clears its in-memory
+credential supplier on account invalidation and cached-page suspension/restoration.
+Configured OAuth, session changes and authenticated BFCache still require actual
+browser tests against the maintained service with the exact allowed HTTPS origin.
+
 The current composition registers a device-local Wave editor backed by real
 IndexedDB transactions and the unchanged canonical Wave project/edit/decoder
 sources. Its projects belong to this browser origin; they are not hosted Files
