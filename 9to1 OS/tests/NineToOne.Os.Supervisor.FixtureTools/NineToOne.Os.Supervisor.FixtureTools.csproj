@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
+    <AssemblyName>NineToOne.Os.Supervisor.FixtureTools</AssemblyName>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><LangVersion>14.0</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../../9to1 Workspace/Home/HavenOS.Home.csproj" /><ProjectReference Include="../../apps/9to1-shell/NineToOne.Os.Shell.csproj" /></ItemGroup>
+</Project>
