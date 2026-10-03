@@ -1,0 +1,18 @@
+{"id": "c2-exact-297f361-home", "tested_commit": "297f3616d89c6249636e245e0005d05ee9bb0fe5", "worktree_status": "", "command": ["/workspace/.tools/dotnet/dotnet", "test", "/tmp/c6-c2-home-harness/C2.Tests.csproj", "--configuration", "Release", "--logger", "trx", "--results-directory", "/tmp/c6-c2-home-results"], "cwd": "/workspace/team-c/c2", "expected": "16 local source-linked Home permission tests pass; Team A acknowledgement/native route acceptance separate", "started": "2026-10-03T17:19:35.004634+00:00"}
+  Determining projects to restore...
+  Restored /tmp/c6-c2-home-harness/C2.Tests.csproj (in 697 ms).
+  C2.Tests -> /tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll
+Test run for /tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.38]     HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it [FAIL]
+  Failed HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it [9 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Approved
+Actual:   PendingApproval
+  Stack Trace:
+     at HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it() in /workspace/team-c/c2/9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs:line 130
+--- End of stack trace from previous location ---
+Results File: /tmp/c6-c2-home-results/_5f26f397bc73_2026-10-03_17_19_37_net10.0.trx
+
+Failed!  - Failed:     1, Passed:     7, Skipped:     0, Total:     8, Duration: 239 ms - C2.Tests.dll (net10.0)
