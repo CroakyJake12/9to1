@@ -142,68 +142,93 @@ public sealed class FormsCuiWorkspaceTests
     [Fact]
     public async Task Palette_and_choice_inspector_preserve_typed_ids_dirty_edits_and_immutable_publication()
     {
-        using var paths = new Paths();
-        var settings = new VersionedAtomicSettingsStore(paths);
-        var authority = new Authority();
-        var publications = new FormPublicationService(settings, settings, authority, new FormNativePublicationValidator(), actors: new PublicationActor());
-        var authoring = new FormAuthoringService(publications);
-        var allowed = true;
-        var surface = new FormsCuiWorkspace(publications, authoring, () => null, _ => allowed);
-        await surface.DispatchAsync("9to1.Forms.Create", null);
-        Assert.True(surface.TryGetValue("PaletteNames", out var paletteValue));
-        var names = Assert.IsType<string[]>(paletteValue);
-        Assert.Contains("Multiple choice", names); Assert.Contains("Email", names);
-        for (var index = 0; index < names.Length; index++)
+        var session = HeadlessUnitTestSession.StartNew(typeof(RegexApplication));
+        var originalFailures = new List<Exception>();
+        try
         {
-            Assert.True(surface.TrySetValue("SelectedPaletteIndex", index));
-            await surface.DispatchAsync("9to1.Forms.AddField", null);
+            var originalPaletteTask = session.Dispatch<bool>(async () =>
+            {
+                using var paths = new Paths();
+                var settings = new VersionedAtomicSettingsStore(paths);
+                var authority = new Authority();
+                var mathematics = new Haven.Desktop.Mathematics.FormNativeMathematicsProvider();
+                var publications = new FormPublicationService(settings, settings, authority, new FormNativePublicationValidator(mathematics), actors: new PublicationActor());
+                var authoring = new FormAuthoringService(publications);
+                var allowed = true;
+                var surface = new FormsCuiWorkspace(publications, authoring, () => null, _ => allowed);
+                await surface.DispatchAsync("9to1.Forms.Create", null);
+                Assert.True(surface.TryGetValue("PaletteNames", out var paletteValue));
+                var names = Assert.IsType<string[]>(paletteValue);
+                Assert.Contains("Multiple choice", names); Assert.Contains("Email", names);
+                for (var index = 0; index < names.Length; index++)
+                {
+                    Assert.True(surface.TrySetValue("SelectedPaletteIndex", index));
+                    await surface.DispatchAsync("9to1.Forms.AddField", null);
+                }
+                Assert.False(surface.TrySetValue("SelectedPaletteIndex", names.Length));
+                var formID = surface.FormID!.Value;
+                var authored = Decode((await publications.ReadAsync(formID)).Publication!.Draft);
+                Assert.Equal(names.Length, authored.Fields.Count);
+                Assert.Equal(authored.Fields.Count, authored.Fields.Select(field => field.FieldID).Distinct().Count());
+                var choiceIndex = authored.Fields.ToList().FindIndex(field => field.Kind == FormFieldKind.MultipleChoice);
+                var original = authored.Fields[choiceIndex];
+                var optionID = original.Options![0].OptionID;
+                Assert.True(surface.TrySetValue("SelectedFieldIndex", choiceIndex));
+                Assert.True(surface.TrySetValue("SelectedOptionIndex", 0));
+                Assert.True(surface.TrySetValue("Label", "Unsaved question label"));
+                Assert.True(surface.TrySetValue("OptionLabel", "Renamed choice"));
+                Assert.True(surface.TrySetValue("SelectedFieldIndex", 0));
+                Assert.True(surface.TrySetValue("SelectedFieldIndex", choiceIndex));
+                Assert.True(surface.TryGetValue("Label", out var dirtyLabel)); Assert.Equal("Unsaved question label", dirtyLabel);
+                Assert.True(surface.TryGetValue("OptionLabel", out var dirtyChoice)); Assert.Equal("Renamed choice", dirtyChoice);
+                Assert.False(surface.IsActionAvailable("9to1.Forms.Preview"));
+                await surface.DispatchAsync("9to1.Forms.UpdateChoice", null);
+                Assert.False(surface.IsActionAvailable("9to1.Forms.Publish")); // Saving the option must not discard the question edit.
+                await surface.DispatchAsync("9to1.Forms.SaveField", null);
+                Assert.True(surface.IsActionAvailable("9to1.Forms.Preview"));
+                await surface.DispatchAsync("9to1.Forms.AddChoice", null);
+                Assert.True(surface.TrySetValue("OptionLabel", "Renamed choice"));
+                await surface.DispatchAsync("9to1.Forms.UpdateChoice", null);
+                await surface.DispatchAsync("9to1.Forms.Publish", null);
+                var published = (await publications.ReadAsync(formID)).Publication!;
+                var publishedField = Decode(Assert.Single(published.Versions).Project).Fields.Single(field => field.FieldID == original.FieldID);
+                Assert.Equal("Unsaved question label", publishedField.Label);
+                Assert.Equal(3, publishedField.Options!.Count);
+                Assert.Equal(optionID, publishedField.Options[0].OptionID);
+                Assert.Equal(3, publishedField.Options.Select(option => option.OptionID).Distinct().Count());
+                Assert.Equal(publishedField.Options[0].Label, publishedField.Options[2].Label);
+                Assert.True(surface.TrySetValue("SelectedOptionIndex", 0));
+                Assert.True(surface.TrySetValue("OptionLabel", "Local conflict edit"));
+                var concurrent = publishedField with { Options = publishedField.Options.Select(option => option.OptionID == optionID
+                    ? option with { Label = "Concurrent edit" } : option).ToArray() };
+                Assert.True((await authoring.UpdateFieldAsync(formID, published.Revision, concurrent)).Success);
+                await Assert.ThrowsAsync<InvalidOperationException>(async () => await surface.DispatchAsync("9to1.Forms.UpdateChoice", null));
+                Assert.True(surface.TryGetValue("OptionLabel", out var retained)); Assert.Equal("Local conflict edit", retained);
+                var after = (await publications.ReadAsync(formID)).Publication!;
+                Assert.Equal("Concurrent edit", Decode(after.Draft).Fields.Single(field => field.FieldID == original.FieldID).Options![0].Label);
+                Assert.Equal("Renamed choice", Decode(Assert.Single(after.Versions).Project).Fields.Single(field => field.FieldID == original.FieldID).Options![0].Label);
+                allowed = false;
+                Assert.False(surface.TrySetValue("OptionLabel", "Denied"));
+                Assert.False(surface.TrySetValue("SelectedPaletteIndex", 0));
+                Assert.False(surface.IsActionAvailable("9to1.Forms.UpdateChoice"));
+                return true;
+            }, CancellationToken.None);
+            await originalPaletteTask;
         }
-        Assert.False(surface.TrySetValue("SelectedPaletteIndex", names.Length));
-        var formID = surface.FormID!.Value;
-        var authored = Decode((await publications.ReadAsync(formID)).Publication!.Draft);
-        Assert.Equal(names.Length, authored.Fields.Count);
-        Assert.Equal(authored.Fields.Count, authored.Fields.Select(field => field.FieldID).Distinct().Count());
-        var choiceIndex = authored.Fields.ToList().FindIndex(field => field.Kind == FormFieldKind.MultipleChoice);
-        var original = authored.Fields[choiceIndex];
-        var optionID = original.Options![0].OptionID;
-        Assert.True(surface.TrySetValue("SelectedFieldIndex", choiceIndex));
-        Assert.True(surface.TrySetValue("SelectedOptionIndex", 0));
-        Assert.True(surface.TrySetValue("Label", "Unsaved question label"));
-        Assert.True(surface.TrySetValue("OptionLabel", "Renamed choice"));
-        Assert.True(surface.TrySetValue("SelectedFieldIndex", 0));
-        Assert.True(surface.TrySetValue("SelectedFieldIndex", choiceIndex));
-        Assert.True(surface.TryGetValue("Label", out var dirtyLabel)); Assert.Equal("Unsaved question label", dirtyLabel);
-        Assert.True(surface.TryGetValue("OptionLabel", out var dirtyChoice)); Assert.Equal("Renamed choice", dirtyChoice);
-        Assert.False(surface.IsActionAvailable("9to1.Forms.Preview"));
-        await surface.DispatchAsync("9to1.Forms.UpdateChoice", null);
-        Assert.False(surface.IsActionAvailable("9to1.Forms.Publish")); // Saving the option must not discard the question edit.
-        await surface.DispatchAsync("9to1.Forms.SaveField", null);
-        Assert.True(surface.IsActionAvailable("9to1.Forms.Preview"));
-        await surface.DispatchAsync("9to1.Forms.AddChoice", null);
-        Assert.True(surface.TrySetValue("OptionLabel", "Renamed choice"));
-        await surface.DispatchAsync("9to1.Forms.UpdateChoice", null);
-        await surface.DispatchAsync("9to1.Forms.Publish", null);
-        var published = (await publications.ReadAsync(formID)).Publication!;
-        var publishedField = Decode(Assert.Single(published.Versions).Project).Fields.Single(field => field.FieldID == original.FieldID);
-        Assert.Equal("Unsaved question label", publishedField.Label);
-        Assert.Equal(3, publishedField.Options!.Count);
-        Assert.Equal(optionID, publishedField.Options[0].OptionID);
-        Assert.Equal(3, publishedField.Options.Select(option => option.OptionID).Distinct().Count());
-        Assert.Equal(publishedField.Options[0].Label, publishedField.Options[2].Label);
-        Assert.True(surface.TrySetValue("SelectedOptionIndex", 0));
-        Assert.True(surface.TrySetValue("OptionLabel", "Local conflict edit"));
-        var concurrent = publishedField with { Options = publishedField.Options.Select(option => option.OptionID == optionID
-            ? option with { Label = "Concurrent edit" } : option).ToArray() };
-        Assert.True((await authoring.UpdateFieldAsync(formID, published.Revision, concurrent)).Success);
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await surface.DispatchAsync("9to1.Forms.UpdateChoice", null));
-        Assert.True(surface.TryGetValue("OptionLabel", out var retained)); Assert.Equal("Local conflict edit", retained);
-        var after = (await publications.ReadAsync(formID)).Publication!;
-        Assert.Equal("Concurrent edit", Decode(after.Draft).Fields.Single(field => field.FieldID == original.FieldID).Options![0].Label);
-        Assert.Equal("Renamed choice", Decode(Assert.Single(after.Versions).Project).Fields.Single(field => field.FieldID == original.FieldID).Options![0].Label);
-        allowed = false;
-        Assert.False(surface.TrySetValue("OptionLabel", "Denied"));
-        Assert.False(surface.TrySetValue("SelectedPaletteIndex", 0));
-        Assert.False(surface.IsActionAvailable("9to1.Forms.UpdateChoice"));
+        catch (Exception original) { originalFailures.Add(original); }
+        finally
+        {
+            try { await session.DisposeAsync(); }
+            catch (Exception cleanup)
+            {
+                if (!originalFailures.Any(original => ReferenceEquals(original, cleanup)))
+                    originalFailures.Add(cleanup);
+            }
+        }
+        if (originalFailures.Count == 1)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(originalFailures[0]).Throw();
+        if (originalFailures.Count > 1)
+            throw new AggregateException("Original palette callback and native session disposal failed", originalFailures);
     }
 
     [Fact]
