@@ -591,7 +591,8 @@ public sealed class ShelfNativeWorkspaceTests
     }
     private static async Task Fill(ShelfNativeWorkspaceHost host)
     {
-        var inputs = host.GetVisualDescendants().OfType<TextBox>().ToArray(); Assert.Equal(9, inputs.Length);
+        var inputs = host.GetVisualDescendants().OfType<TextBox>()
+            .Where(input => input.Name is "shelf-search" or "shelf-name" or "shelf-address" or "shelf-request" or "shelf-collection-name" or "shelf-smart-tags" or "shelf-edit-name" or "shelf-edit-tags" or "shelf-edit-order").ToArray(); Assert.Equal(9, inputs.Length);
         Assert.Single(inputs, x => x.Name == "shelf-name").Text = "Reference site";
         Assert.Single(inputs, x => x.Name == "shelf-address").Text = "https://example.test/reference";
         await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);

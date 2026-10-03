@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "66ab83ad428380fc40cfa355dd6698ba255cc75e",
-  "programTree": "7de3d25f88f0ff81fbe3da94e5aaa78cb62975ae",
+  "baselineCommit": "ba9ba7dc7c4acde5db4009c9b6718cb695a731e7",
+  "programTree": "2613fad3278cf5e6fe40552f4a3e0ecc5e7ea06b",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
   "files": [
@@ -71,16 +71,16 @@
     {
       "path": ".github/validation/astra-shelf37-resource-classes.json",
       "mode": "100644",
-      "object": "1ed25f9c2ce6f0b51f1044d9fd6caee815a6a93f",
+      "object": "a712f0a43dadf69cb3ddd9eb7d79d8ced5d82c58",
       "bytes": 37291,
-      "sha256": "37864cf8e24c0d440a0eacb64a53983b13a1243668c8b64d467f760c569a8832"
+      "sha256": "45df5ba08f7e9863d7baeafa56fca7ef884e5dc938d95282d499515f15e1ec39"
     },
     {
       "path": ".github/validation/astra-shelf37-test-classes.json",
       "mode": "100644",
-      "object": "e97e9b3d81c0fd451eabb0ebbeea460985ebe0e9",
+      "object": "5636ec0f94aca214981108a3939a17f0660dd6e4",
       "bytes": 22979,
-      "sha256": "9f76fd8e3da93e29f40aa28f9ab2a1dfdc2ac11bbce36d44cbe73beed14acd9c"
+      "sha256": "c254fe4a24b0d8266de42fa829aa5298c7cac46eabc013fc91d0314bbcdeed75"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40517,9 +40517,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "mode": "100644",
-      "object": "a3ead093cb3d6836063169863af8ef98a7b19b54",
-      "bytes": 57710,
-      "sha256": "41fdb2c04c7f5c46893723b7e6718e50efc494fdfbe723424962e4c12c1fe04c"
+      "object": "6f76f95353b655aa01e238f1ad76a887cd545e4d",
+      "bytes": 57935,
+      "sha256": "8b7da98e9b93f676b34085b2320bcd023ff70f6a2665b0fba4e505efdfa89327"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -65893,7 +65893,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-shelf37-cut.json",
-  "limits": "Fresh authoritative Current21 e1644a16 source-only union: 123 exact owner/prerequisite source bindings; 38 changed product paths; whole owning42/resource44/regression12 class inventories. All accepted Current21 Mono24 and Android6 sources preserved byte-exact; accepted Maps27 sources retained except the exact ten reviewed preferred37 winners. Whole original maintained cases retained, including former Core17/Infrastructure81/Desktop24, full Home/Studio/AI/Runtime, all seven Forms CUI families and complete Files domain/interprocess console. Authored coupled61/Shelf-native18/Forms-reference16 cases and all source additions are UNCOMPILED/UNRUN in this combined graph; actual full3 zero-skip complete TRX/class coverage and genuine console completion required, no fixed historical count used as a new acceptance claim. Canonical Shelf surface/catalog/menu dispatch and actual production host-factory launcher callsite are SOURCE IMPLEMENTED; runtime reachability and ordinary Shelf parity remain UNPROVEN. The native launcher fixture covers genuine mounted launcher to production factory, not construction of the whole MainView/tab; programmatic CUI/Headless controls and controlled timing faults do not prove installed device delivery. Real configured trusted Forms/Data repositories, same original actual Home/profile/ownership composition and retained original Forms/Data receipts are mandatory for reference choices; caller-supplied table IDs/UUID values alone are not authorization. No fabricated/default reference mapping, public/respondent/AI/cloud read permission, donor authority, invocation or output grant. Reference final cross-store checks and setup/path replacement are observational, not atomic. Shelf launch behaviour edits metadata only; actual target launch/provider dispatch is unavailable without a genuine separately authorized provider. Smart offline criteria match canonical metadata tags, not installed target availability. Individual authentic Home approval and exact original private action/payload/scope/actor plus Settings-first completion/Home final fence remain mandatory for mutation; pure Source.IsFor read-composition preflight does not establish private broker actor/resource/permissions composition. All current canonical producer project references and accepted Graph/SQL/Data/Automation/Browse sources retained; Infrastructure.Tests adds only actual maintained Forms CUI and plain Avalonia.Headless source references. Whole immutable source tree/blob/gitlink guards, original bounded hang diagnostics/1200-second failure deadline, all restore-before-final-tool-restores and source-built SDK task entire closure/compiled DLL/PDB/deps/runtimeconfig/restore-package identity guards retained. Genuine installed Xvfb/GTK display preconditions must be observed in hosted owning output. Every actual test/Files console launch preseeds false seal and finally drains the exact privately issued observed Linux session using reviewed pidfd helper; launcher exit alone is not disappearance and false seal fails. Sampling does not prove unknown unseen/reparented escaped orphan closure; inherited fixture cleanup does not establish universal drain on every failure. No local SDK/build/restore, security policy mutation, historical whole-tree replay or runtime acceptance. Root alone constructs/publishes/runs, and full fresh owning/regression/resource original artifact acceptance is mandatory before product publication. Actual c7b7/run37071187515 original full3 failure proven: owning/resource CS0535 fixture lacks two IAppPaths values; regression restore helper rejected explicit cohort and old diagnostics output was not Shelf upload path. This corrective changes solely those fixture properties and exact validated all-three cohort/evidence/managed-host restore contexts with two source class repins. Every existing source/effect/authority/filter/drain/native/restore/package/task guard and whole42/44/12 inventory retained. Full actual rerun required; no previous failure artifact revision or inferred runtime pass. Actual66/run37080537813 ALL3 original compiler failures fully verified: two new exception callbacks returned ValueTask to xUnit Func<Task>. Sole corrective adds AsTask adapters to both, no provider/limit/native/assertion/production/source-scope relaxation. Same full42/44/12 and123bindings; every actual full3 source/native/PDB/task/restore/drain guard remains mandatory.",
+  "limits": "Fresh authoritative Current21 e1644a16 source-only union: 123 exact owner/prerequisite source bindings; 38 changed product paths; whole owning42/resource44/regression12 class inventories. All accepted Current21 Mono24 and Android6 sources preserved byte-exact; accepted Maps27 sources retained except the exact ten reviewed preferred37 winners. Whole original maintained cases retained, including former Core17/Infrastructure81/Desktop24, full Home/Studio/AI/Runtime, all seven Forms CUI families and complete Files domain/interprocess console. Authored coupled61/Shelf-native18/Forms-reference16 cases and all source additions are UNCOMPILED/UNRUN in this combined graph; actual full3 zero-skip complete TRX/class coverage and genuine console completion required, no fixed historical count used as a new acceptance claim. Canonical Shelf surface/catalog/menu dispatch and actual production host-factory launcher callsite are SOURCE IMPLEMENTED; runtime reachability and ordinary Shelf parity remain UNPROVEN. The native launcher fixture covers genuine mounted launcher to production factory, not construction of the whole MainView/tab; programmatic CUI/Headless controls and controlled timing faults do not prove installed device delivery. Real configured trusted Forms/Data repositories, same original actual Home/profile/ownership composition and retained original Forms/Data receipts are mandatory for reference choices; caller-supplied table IDs/UUID values alone are not authorization. No fabricated/default reference mapping, public/respondent/AI/cloud read permission, donor authority, invocation or output grant. Reference final cross-store checks and setup/path replacement are observational, not atomic. Shelf launch behaviour edits metadata only; actual target launch/provider dispatch is unavailable without a genuine separately authorized provider. Smart offline criteria match canonical metadata tags, not installed target availability. Individual authentic Home approval and exact original private action/payload/scope/actor plus Settings-first completion/Home final fence remain mandatory for mutation; pure Source.IsFor read-composition preflight does not establish private broker actor/resource/permissions composition. All current canonical producer project references and accepted Graph/SQL/Data/Automation/Browse sources retained; Infrastructure.Tests adds only actual maintained Forms CUI and plain Avalonia.Headless source references. Whole immutable source tree/blob/gitlink guards, original bounded hang diagnostics/1200-second failure deadline, all restore-before-final-tool-restores and source-built SDK task entire closure/compiled DLL/PDB/deps/runtimeconfig/restore-package identity guards retained. Genuine installed Xvfb/GTK display preconditions must be observed in hosted owning output. Every actual test/Files console launch preseeds false seal and finally drains the exact privately issued observed Linux session using reviewed pidfd helper; launcher exit alone is not disappearance and false seal fails. Sampling does not prove unknown unseen/reparented escaped orphan closure; inherited fixture cleanup does not establish universal drain on every failure. No local SDK/build/restore, security policy mutation, historical whole-tree replay or runtime acceptance. Root alone constructs/publishes/runs, and full fresh owning/regression/resource original artifact acceptance is mandatory before product publication. Actual c7b7/run37071187515 original full3 failure proven: owning/resource CS0535 fixture lacks two IAppPaths values; regression restore helper rejected explicit cohort and old diagnostics output was not Shelf upload path. This corrective changes solely those fixture properties and exact validated all-three cohort/evidence/managed-host restore contexts with two source class repins. Every existing source/effect/authority/filter/drain/native/restore/package/task guard and whole42/44/12 inventory retained. Full actual rerun required; no previous failure artifact revision or inferred runtime pass. Actual66/run37080537813 ALL3 original compiler failures fully verified: two new exception callbacks returned ValueTask to xUnit Func<Task>. Sole corrective adds AsTask adapters to both, no provider/limit/native/assertion/production/source-scope relaxation. Same full42/44/12 and123bindings; every actual full3 source/native/PDB/task/restore/drain guard remains mandatory. Actual12/run37085047698 complete originals verified: owning228pass/13fail, regression528pass, resource343pass/13fail; all26 failures identical original Fill expected9/actual14. Sole corrective selects exact nine TextBox IDs from actual pinned authored Shelf CUI, retaining count9 and all14 methods/18 outcomes. Actual12 Forms AsTask adapters inherited byte-exact. Same full42/44/12 and123bindings; every source/native/PDB/task/restore/drain/runtime/workflow guard remains mandatory. Root Shelf13 review382 refused prior to constructor because inherited productFixturePaths pointed at Forms rather than sole actual native overlay. Shelf14 corrects this exact metadata set, with every source/overlay/body/123binding/class/runtime byte unchanged13 and fresh evidence root. No retry has run.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-maps-current20-coherent96-full-owning-gate21/manifest.json",
@@ -66002,6 +66002,26 @@
     {
       "path": "/workspace/astra-source/worker3-shelf11-full3-original-compiler-failure-verification01.json",
       "sha256": "9c35aab0b42b15de1407740f3257453ff1b492a5b9153eebc3fed9b89f39282e"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf37-actual66-valuetask-assertion-full3-corrective-package12/manifest.json",
+      "sha256": "ad2ff9910ce5f253717cc3951990f00bf21641a2705859f71ff3a51861966bb7"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf12-authored-native-input-fence-source01/manifest.json",
+      "sha256": "079180265ba6efafe08eb013f9d629fadb8e9d427af95669ce70c78791622a37"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf12-full3-original-native-input-failure-verification01.json",
+      "sha256": "e8d9ed82d83987bcf6cc7cfad08995ea0709a59a461e8102971169b3af67d53f"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-resume-shelf13-authored-native-input-source-peer01.json",
+      "sha256": "c7e5450c723f86a4e66b473aeeb697dfcc76d4040dcb960ce19f917ad3107fd8"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf37-actualba9-authored-native-input-full3-corrective-package13/manifest.json",
+      "sha256": "4cc8a771f496ad659e380727b185b0a8c61e20b9be08f11fb08b11ae7fe776f2"
     }
   ],
   "sharedCakeIdContract": null

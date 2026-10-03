@@ -342,7 +342,7 @@
       "class": "ShelfNativeWorkspaceTests",
       "namespace": "Haven.Desktop.Tests",
       "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
-      "sha256": "41fdb2c04c7f5c46893723b7e6718e50efc494fdfbe723424962e4c12c1fe04c",
+      "sha256": "8b7da98e9b93f676b34085b2320bcd023ff70f6a2665b0fba4e505efdfa89327",
       "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
       "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs"
     },
