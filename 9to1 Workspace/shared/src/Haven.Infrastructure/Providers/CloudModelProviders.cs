@@ -208,17 +208,24 @@ public abstract class OpenAiCompatibleModelProviderBase(
         using var reader = new StreamReader(stream);
         while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!line.StartsWith("data:", StringComparison.OrdinalIgnoreCase)) continue;
             var payload = line[5..].Trim();
             if (payload == "[DONE]") yield break;
             if (payload.Length == 0) continue;
             using var document = JsonDocument.Parse(payload);
+            if (document.RootElement.TryGetProperty("error", out var error) && error.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined))
+                throw new IOException($"{DisplayName} reported a streaming failure. The response is incomplete.");
             CaptureUsage(document.RootElement, request.Model);
             if (!document.RootElement.TryGetProperty("choices", out var choices) || choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() == 0) continue;
             var delta = choices[0].GetProperty("delta");
             if (delta.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.String && content.GetString() is { Length: > 0 } text)
                 yield return text;
         }
+        // EOF is not a completion acknowledgement. Do not let a truncated response
+        // become success or trigger the routing layer's automatic provider fallback.
+        cancellationToken.ThrowIfCancellationRequested();
+        throw new IOException($"{DisplayName} closed the stream before completion. The response is incomplete.");
     }
 
     /// <summary>
