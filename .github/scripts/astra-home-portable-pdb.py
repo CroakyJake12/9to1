@@ -112,8 +112,16 @@ def retain_actual_symbols(path, symbols, budget, maximum_evidence):
   return
  if total+len(symbols)>maximum_evidence:raise RuntimeError('Original extracted symbol evidence budget refused')
  path.parent.mkdir(parents=True,exist_ok=True)
- with path.open('xb') as handle:
+ handle=path.open('xb');primary=None;cleanup=[]
+ try:
   handle.write(symbols);handle.flush();os.fsync(handle.fileno())
+ except BaseException as error:primary=error
+ finally:
+  try:handle.close()
+  except BaseException as error:cleanup.append(error)
+ failures=([primary] if primary is not None else [])+cleanup
+ if len(failures)==1:raise failures[0]
+ if failures:raise BaseExceptionGroup('Actual extracted symbol persistence and close failed',failures)
  if path.read_bytes()!=symbols:raise RuntimeError('Retained actual embedded symbols differ')
 
 def assert_generated_context(values, expected_artifacts, source_owner=None):
