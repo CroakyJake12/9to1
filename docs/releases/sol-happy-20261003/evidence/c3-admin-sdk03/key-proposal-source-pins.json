@@ -1,0 +1,18 @@
+{
+  "head": "2ee0365b7175a8b8dcf8160bc74185c9c887a5d9",
+  "files": [
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "bytes": 15783,
+      "sha256": "5930c9b1c23d668d820f62006fb64a2bfcae64b1665bb64ecd2053c1a44d0c4b",
+      "gitBlob": "7aefca2c9adaa0b3242e5079e6c3eb034208e0ee"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "bytes": 25566,
+      "sha256": "de448725144f7eceaf1637dae53b8b52286b643c47dc6355fe2f3f1afbbf2d72",
+      "gitBlob": "2998771dafbe5da02d05b51e8678bada6481cb27"
+    }
+  ],
+  "diffSha256": "45a2a5729c5cc4d7d3b5f96b7c9bfa9a2e71b4962d9a40e67557c8073cf09009"
+}

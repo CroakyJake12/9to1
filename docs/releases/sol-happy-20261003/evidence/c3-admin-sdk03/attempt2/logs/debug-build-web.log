@@ -1,0 +1,74 @@
+  NineToOne.Accounts -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/NineToOne.Accounts/debug_linux-x64/NineToOne.Accounts.dll
+  NineToOne.Accounts.Remote -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/NineToOne.Accounts.Remote/debug_linux-x64/NineToOne.Accounts.Remote.dll
+  CakeOS.Cui.Language -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/CakeOS.Cui.Language/debug_linux-x64/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/CakeOS.Cui.Core/debug_linux-x64/CakeOS.Cui.Core.dll
+  Haven.Core -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Haven.Core/debug_linux-x64/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/NineToOne.Cui.AI/debug_linux-x64/NineToOne.Cui.AI.dll
+  Haven.Application -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Haven.Application/debug_linux-x64/Haven.Application.dll
+  Dulche.Runtime -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Dulche.Runtime/debug_linux-x64/Dulche.Runtime.dll
+  Den -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Den/debug_linux-x64/Den.dll
+  HavenOS.Home -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/HavenOS.Home/debug_linux-x64/HavenOS.Home.dll
+  HavenOS.Sites -> /workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Sites/bin/HavenOS.Sites/debug_linux-x64/HavenOS.Sites.dll
+  Haven.UI -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Haven.UI/debug_linux-x64/Haven.UI.dll
+  HavenOS.Files.CUI -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/HavenOS.Files.CUI/debug_linux-x64/HavenOS.Files.CUI.dll
+  NineToOne.Web -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/NineToOne.Web/debug_linux-x64/NineToOne.Web.dll
+  DevAnalyzers -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/DevAnalyzers/debug_linux-x64/DevAnalyzers.dll
+  Avalonia.Analyzers.CSharp -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Analyzers.CSharp/debug_linux-x64/Avalonia.Analyzers.CSharp.dll
+  Avalonia.Analyzers.CodeFixes.CSharp -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Analyzers.CodeFixes.CSharp/debug_linux-x64/Avalonia.Analyzers.CodeFixes.CSharp.dll
+  Avalonia.Analyzers.VisualBasic -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Analyzers.VisualBasic/debug_linux-x64/Avalonia.Analyzers.VisualBasic.dll
+  DevGenerators -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/DevGenerators/debug_linux-x64/DevGenerators.dll
+  Avalonia.Base -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Base/debug_net10.0_linux-x64/Avalonia.Base.dll
+  Avalonia.Remote.Protocol -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Remote.Protocol/debug_net10.0_linux-x64/Avalonia.Remote.Protocol.dll
+  Avalonia.Controls -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Controls/debug_net10.0_linux-x64/Avalonia.Controls.dll
+  DevGenerators -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/DevGenerators/debug/DevGenerators.dll
+  Avalonia.Build.Tasks -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll
+  Avalonia.MicroCom -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.MicroCom/debug_net10.0_linux-x64/Avalonia.MicroCom.dll
+  Avalonia.OpenGL -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.OpenGL/debug_net10.0_linux-x64/Avalonia.OpenGL.dll
+  Avalonia.Vulkan -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Vulkan/debug_net10.0_linux-x64/Avalonia.Vulkan.dll
+  Avalonia.Metal -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Metal/debug_net10.0_linux-x64/Avalonia.Metal.dll
+  Avalonia.Skia -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Skia/debug_net10.0_linux-x64/Avalonia.Skia.dll
+  Avalonia.Win32.Automation -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Win32.Automation/debug_net10.0_linux-x64/Avalonia.Win32.Automation.dll
+  Parsing WinRT/winrt.idl
+  Writing C# interop code to WinRT/WinRT.Generated.cs
+  Parsing Win32Com/win32.idl
+  Writing C# interop code to Win32Com/Win32.Generated.cs
+  Parsing DirectX/directx.idl
+  Writing C# interop code to DirectX/directx.Generated.cs
+  Parsing DComposition/dcomp.idl
+  Writing C# interop code to DComposition/DComp.Generated.cs
+  Avalonia.Win32 -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Win32/debug_net10.0_linux-x64/Avalonia.Win32.dll
+  Avalonia.Markup -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Markup/debug_net10.0_linux-x64/Avalonia.Markup.dll
+  Avalonia.Markup.Xaml -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Markup.Xaml/debug_net10.0_linux-x64/Avalonia.Markup.Xaml.dll
+  Avalonia.DesignerSupport -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.DesignerSupport/debug_net10.0_linux-x64/Avalonia.DesignerSupport.dll
+  Avalonia.Dialogs -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Dialogs/debug_net10.0_linux-x64/Avalonia.Dialogs.dll
+  Avalonia.Build.Tasks -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Build.Tasks/debug_linux-x64/Avalonia.Build.Tasks.dll
+  Avalonia.Generators -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Generators/debug_linux-x64/Avalonia.Generators.dll
+  Avalonia -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia/debug_net10.0_linux-x64/Avalonia.dll
+  Parsing avn.idl
+  Writing C# interop code to Interop.Generated.cs
+
+
+
+
+
+  Avalonia.Native -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Native/debug_net10.0_linux-x64/Avalonia.Native.dll
+  Avalonia.FreeDesktop -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.FreeDesktop/debug_net10.0_linux-x64/Avalonia.FreeDesktop.dll
+  Avalonia.DBus.Generators -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.DBus.Generators/debug_linux-x64/Avalonia.DBus.Generators.dll
+  Avalonia.FreeDesktop.AtSpi -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.FreeDesktop.AtSpi/debug_net10.0_linux-x64/Avalonia.FreeDesktop.AtSpi.dll
+  Avalonia.X11 -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.X11/debug_net10.0_linux-x64/Avalonia.X11.dll
+  Avalonia.HarfBuzz -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.HarfBuzz/debug_net10.0_linux-x64/Avalonia.HarfBuzz.dll
+  Avalonia.Desktop -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Desktop/debug_net10.0_linux-x64/Avalonia.Desktop.dll
+  Avalonia.Themes.Fluent -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Themes.Fluent/debug_net10.0_linux-x64/Avalonia.Themes.Fluent.dll
+  Avalonia.Fonts.Inter -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Fonts.Inter/debug_net10.0_linux-x64/Avalonia.Fonts.Inter.dll
+  Avalonia.Headless -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Avalonia.Headless/debug_net10.0_linux-x64/Avalonia.Headless.dll
+  CakeOS.Cui.Themes -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/CakeOS.Cui.Themes/debug_linux-x64/CakeOS.Cui.Themes.dll
+  CakeOS.Cui.Runtime -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime/debug_linux-x64/CakeOS.Cui.Runtime.dll
+  HavenOS.Home.NativeUI -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/HavenOS.Home.NativeUI/debug_linux-x64/HavenOS.Home.NativeUI.dll
+  NineToOne.Admin -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/NineToOne.Admin/debug_linux-x64/NineToOne.Admin.dll
+  Web.Specs -> /workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build/bin/Web.Specs/debug_linux-x64/Web.Specs.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:02:35.78
