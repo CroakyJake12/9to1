@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "30c2328d6b3612a918d08476a9f1f4db271e2bc5",
-  "programTree": "58f073ac3490f6f996ef974ba477a78f44a274f2",
-  "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
+  "baselineCommit": "f72cdf3c3fa7653afdb931679b824e597579f86f",
+  "programTree": "7849a28a662e18a8fb9aabdaefc1ab0345c2b5bf",
+  "currentNormalCommit": "ca9b0d1aa188468f4249a058fa7ac9215145f0e8",
   "kind": "corrective",
   "files": [
     {
@@ -20,6 +20,27 @@
       "sha256": "3a1d1dcb4ed7c98614dd922a04be1e3690f6388f899c3801348e88b3ba4f1d75"
     },
     {
+      "path": ".github/scripts/astra-cake-auth-cdp-run.py",
+      "mode": "100644",
+      "object": "5c7610a14a2ef866c3d9179ef35ef31f84772184",
+      "bytes": 13464,
+      "sha256": "6a6b126168ca63a5ec53f563ed8fb944ebbdff86f3b999e954d0ed3932575b37"
+    },
+    {
+      "path": ".github/scripts/astra-cake-auth-cdp-state.py",
+      "mode": "100644",
+      "object": "4f615a1f6ecd490c3bef3a87110f3111d0e7bfb5",
+      "bytes": 14652,
+      "sha256": "3b2b7eab708cb8fa3aa424a581eae64fa9b750e620b1e39c2c3e1ffd1b5d506d"
+    },
+    {
+      "path": ".github/scripts/astra-cake-auth-headless-archive.py",
+      "mode": "100644",
+      "object": "0ef98ca9eeabf3457fc55bba740c24bd99867986",
+      "bytes": 9527,
+      "sha256": "e6e30a8dbcfcdb017ac705d045334be0515d6551347a204e9850f56000dc10b9"
+    },
+    {
       "path": ".github/scripts/astra-cake-auth-independent-run.py",
       "mode": "100644",
       "object": "6ceecad6973c9eaf404a06a6a26f01e6e035b8ad",
@@ -32,6 +53,13 @@
       "object": "7351de1cbb921610c6258b72ac9a5d8b92f37dd0",
       "bytes": 5574,
       "sha256": "6cff06f04078b3a22f8e9f91c2b3243f93b2576dddc1f07d901ac4c864334994"
+    },
+    {
+      "path": ".github/scripts/astra-cake-auth-original-headless-cdp.py",
+      "mode": "100644",
+      "object": "69fb5593192d1b3f874831d9a98fa0b6086844ae",
+      "bytes": 14666,
+      "sha256": "028570107c633e26dd8eef19350c233df976211390f7f2a3ef31a2ef42770e3f"
     },
     {
       "path": ".github/scripts/astra-cake-auth-traffic-run.py",
@@ -67,6 +95,13 @@
       "object": "a17f0247da08a499ae2193bc1f3c288af7d883e0",
       "bytes": 6997,
       "sha256": "d9f51cf3093bdb0069d6730cc6318722649f026efd42cc5619f8eea7d15d8b7f"
+    },
+    {
+      "path": ".github/validation/cake-auth-browser/login-traffic-browser-cdp-phase.mjs",
+      "mode": "100644",
+      "object": "a1d1c4df0eed5d7162589bec70c458bf66805725",
+      "bytes": 20368,
+      "sha256": "c1dafe7f2d2093539260636db62797a47529b8b455d9367eda65029a93557633"
     },
     {
       "path": ".github/validation/cake-auth-browser/official-browsers.json",
@@ -225,9 +260,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "b19469a75471953d7fd87177068de44345f7735b",
-      "bytes": 5194,
-      "sha256": "2f69682775e812279b794642592c19c32fce949c0f632654a9309985b6cec96a"
+      "object": "6d6a158961c28d14b8929a545efe7570f80bfaee",
+      "bytes": 5632,
+      "sha256": "a5d1bb86fc972ae8a51561f0a73929517fdf2cea9f9aeda6d3ac6a30d1446525"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -23239,6 +23274,13 @@
       "sha256": "658dc85e0be5e5e6d878a41c03211a8b95b4dfc56d329c23c1ad745fdb42883b"
     },
     {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalReadComposition.cs",
+      "mode": "100644",
+      "object": "6e92f9fa8c5894ac9b15d6ea403290a0e040a9ec",
+      "bytes": 491,
+      "sha256": "218879281bf0ac12a49bbe4ad0b386be9cc76ef421a289665ad8109f35c8ab4a"
+    },
+    {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalStoreOwnership.cs",
       "mode": "100644",
       "object": "ca7bb65dc8485c0de3cd3e18120b69d9b515be15",
@@ -23720,6 +23762,13 @@
       "object": "171ab682225fecf387f0715fb5dce292796896f1",
       "bytes": 11503,
       "sha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "mode": "100644",
+      "object": "e04eb02301a7ad17a4a5ef6dfe67674baf09e7bb",
+      "bytes": 3275,
+      "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
@@ -35127,9 +35176,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/NativeSpacesPage.cs",
       "mode": "100644",
-      "object": "a0cb2ac46cc63f6a6ebe5858625dc0abcab0d38b",
-      "bytes": 21664,
-      "sha256": "11187004d90ce5ad9e69be862a543d14bcd8d73b7865030c208a85bb92832617"
+      "object": "da24fe53e99c8f552fc92d23f482951be10f8977",
+      "bytes": 24500,
+      "sha256": "a2e5e42bde0910ad68f65c3baa4b0d2a9faea5ca6af3b9eb909ac2a6168a07d0"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/SpaceGeneratedSurfaceRenderer.cs",
@@ -40072,6 +40121,13 @@
       "object": "3f233a5ba90933ae82b6b0e4be9efebb071dac4d",
       "bytes": 11058,
       "sha256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+      "mode": "100644",
+      "object": "7b91b7b7961ded7e56b3fdec5ee26f03e047a7c1",
+      "bytes": 15943,
+      "sha256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
@@ -65529,7 +65585,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-cake-id-local-runtime-cut.json",
-  "limits": "Actual fixture09/29 owner source and original full6 OIDC/combined browser/THREE required jobs remain unchanged. Correct only failed wrapper: extract exactly one source-bound typed public traffic record before blanket diagnostic redaction; reject duplicates, unknown fields/scopes, booleans as counters, wrong bounds or multiple markers. No arbitrary opaque/log redaction exemptions, raw log or secret/session/account records retained. Private Miniflare cache mode0700/inode custody, original strict session/drain, D1/vars cleanup and FULL node_modules equality remain byte exact. New runtime must independently repeat the full700 request/D1 eight-attempt/1800-lock/restart scenario; response counters do not count hashes, billable CPU, ingress charges or universal quotas. Original full6 OIDC and combined browser remain required and previously failed; no overall auth/deployment/user-transfer claim.",
+  "limits": "Three original required jobs/predicates remain selected: full6 OIDC and real traffic09 unchanged; same combined browser job now runs separate source-issued original headless/CDP producer02 and additive fixture10 with its genuine full700 + generated UI two-submits/one-POST case. All29 backend owner bytes and original06/09/default combined source retained. Current23 four accepted Spaces/Home sources preserved exactly. Exact locked Playwright1.63 package/descriptor/maintained registry maps official headless153.0.8010.12/revision1243 HTTPS archive; complete original archive/CRC/member/type/mode/full extracted map retained before first native execution, with no invented upstream archive expected hash and no OS/library/process-policy edits. BOTH caller-created browser and Node original identities/session/group/birth/argv/executable and original browser socket FD/CDP endpoint/profile are mandatory; independently observe/drain both and validate both expected/pending seals before profile/vars/D1/cache cleanup. Full node_modules/browser/source equality and typed public marker guards preserved. Sampled process observations do not establish unseen descendant completeness; response counters do not count hashes, CPU, ingress charges or universal quotas. Actual prior traffic09 passed only; full6 OIDC and previous combined browser failed and remain required, no auth/deploy/user-transfer completion claim. Source02 minimal guard correction: private CDP fixture target is validation-only under .github, final actual archive redirect URL must remain HTTPS, and exact generated login UI ordinary-file bytes/SHA are captured immediately after build before browser/Worker launch and enforced through final verification. All prior backend, frozen producer/fixture contents, three selected jobs/predicates, full700, source/dependency/member/drain guards remain.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/root-cake-id-auth-owner-input109/immutable-owner-source-map-verified111.json",
@@ -65726,6 +65782,50 @@
     {
       "path": "/workspace/astra-source/worker3-cake-auth27-full-three-original-wrapper-redaction-failure-closure01.json",
       "sha256": "ac8ef636d5c0742abc88328adf78e7cee9c10e953a9d822bf94d43b30013ae66"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-traffic28-full-caller-package07-typed-public-marker/manifest.json",
+      "sha256": "13fc9df5a8d333bae351133e625449eb9fa1f3a626d852c2c95dcef57af68930"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-original-headless-cdp-producer02-complete-startup-seals/manifest.json",
+      "sha256": "071811e01aaa4b5adb19ff8d7c676d2a569d74e470bde0719410023118a0f6a5"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-cake-auth-browser-producer02-original-custody-source-peer01.json",
+      "sha256": "282063b216a0166011e55d334c1e60038757c62304ed5c7b7cbd6cd7d818e8fc"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth-direct-traffic-browser-fixture10-issued-original-cdp/manifest.json",
+      "sha256": "a13285795bcd4aa2cfd1e41b7b78e091d398cae498244fc32b3bc4960f7b9381"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth28-full-three-original-traffic-pass-verification01.json",
+      "sha256": "77d7eb0767a3d6f604ce57e64ce8c48149d2e505047dd1c20cb894bcb01c4468"
+    },
+    {
+      "path": "/workspace/astra-source/root-auth28-full-three-original-replay402.json",
+      "sha256": "77d7eb0767a3d6f604ce57e64ce8c48149d2e505047dd1c20cb894bcb01c4468"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-playwright163-maintained-process-source-probe01/manifest.json",
+      "sha256": "40e4c98ee671fe0cdf77125da68f8e0762a816c26bfe8149c06d50f73060bc2b"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint23-publication-local.json",
+      "sha256": "1c7ea89f97d6530b66bca3899a9a2e710c4819ac3ad28b69c6c032eb49d59183"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-cake-auth29-owned-cdp-current23-full-caller-package01/manifest.json",
+      "sha256": "cc991356437ea54ef03d798aad999a5d875b793b50444d19cad65fd0ff93d15c"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth29-full-caller01-cdp-semantic-peer01.json",
+      "sha256": "34372b6152f32fb0fd02d884c75ef3478719cedaa0ec58453ac9aad54512d890"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-auth29-source01-full-metadata-custody-peer01.json",
+      "sha256": "df5d3349cebb9ad51541366cf9a98daa3a0736bf8bd5db0fc5985b1f798a982f"
     }
   ],
   "sharedCakeIdContract": null

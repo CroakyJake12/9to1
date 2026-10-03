@@ -107,7 +107,7 @@ jobs:
         env:
           EXPECTED_COMMIT: ${{ inputs.expected_commit }}
           EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
-        run: python3 .github/scripts/astra-cake-auth-independent-run.py
+        run: python3 .github/scripts/astra-cake-auth-cdp-run.py
       - name: Retain bounded sanitized independent evidence including failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -116,6 +116,16 @@ jobs:
           path: artifacts/cake-auth-independent/
           if-no-files-found: error
           retention-days: 14
+
+      - name: Retain complete original public headless archive
+        if: always() && hashFiles('artifacts/cake-auth-official-headless-original/*') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-cake-auth-official-headless-archive-${{ github.sha }}
+          path: artifacts/cake-auth-official-headless-original/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
 
   independent-auth-traffic-only:
     if: startsWith(github.ref, 'refs/heads/validation/astra-cake-id-local-runtime25-independent-auth-traffic26')
