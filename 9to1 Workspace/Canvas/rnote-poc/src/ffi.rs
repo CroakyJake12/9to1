@@ -578,6 +578,46 @@ pub extern "C" fn cake_canvas_redo(handle: *mut c_void) -> CakeCanvasStatus {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_render_visible_keys(
+    handle: *const c_void, keys: *const u64, count: usize,
+    out_frame: *mut CakeCanvasRenderFrame,
+) -> CakeCanvasStatus {
+    guard_status(|| {
+        if out_frame.is_null() {
+            return CakeCanvasStatus::InvalidArgument;
+        }
+        unsafe {
+            *out_frame = CakeCanvasRenderFrame::default();
+        }
+
+        if count > 1_000_000 || count != 0 && keys.is_null() { return CakeCanvasStatus::InvalidArgument; }
+        let keys = if count == 0 { &[] } else { unsafe { slice::from_raw_parts(keys, count) } };
+        let Some(result) = with_engine(handle, |engine| block_on(engine.render_visible_keys(keys))) else {
+            return CakeCanvasStatus::InvalidHandle;
+        };
+        let frame = match result {
+            Ok(frame) => frame,
+            Err(_) => return CakeCanvasStatus::EngineError,
+        };
+        let buffer = owned_buffer(frame.bytes);
+
+        unsafe {
+            *out_frame = CakeCanvasRenderFrame {
+                format: render_format_to_abi(frame.format),
+                coordinate_space: coordinate_space_to_abi(frame.coordinate_space),
+                x: frame.bounds.x,
+                y: frame.bounds.y,
+                width: frame.bounds.width,
+                height: frame.bounds.height,
+                data: buffer.data,
+                len: buffer.len,
+            };
+        }
+        CakeCanvasStatus::Ok
+    })
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn cake_canvas_render_frame(
     handle: *const c_void,
     out_frame: *mut CakeCanvasRenderFrame,
@@ -714,6 +754,42 @@ pub extern "C" fn cake_canvas_export_selected_strokes(handle: *const c_void, key
             Ok(bytes) => { unsafe { *out_native = owned_buffer(bytes); } CakeCanvasStatus::Ok },
             Err(_) => CakeCanvasStatus::InvalidArgument,
         }
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_visible_keys_render_api_version() -> u32 { 1 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_user_layer_rank_api_version() -> u32 { 1 }
+
+/// Owned little-endian uint32 ranks corresponding exactly to the supplied keys.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_read_user_layer_ranks(handle: *const c_void, keys: *const u64,
+    count: usize, out_ranks: *mut CakeCanvasBuffer) -> CakeCanvasStatus {
+    guard_status(|| {
+        if out_ranks.is_null() { return CakeCanvasStatus::InvalidArgument; }
+        unsafe { *out_ranks = CakeCanvasBuffer::default(); }
+        if keys.is_null() || count == 0 || count > 1_000_000 { return CakeCanvasStatus::InvalidArgument; }
+        let keys = unsafe { slice::from_raw_parts(keys, count) };
+        let Some(result) = with_engine(handle, |engine| engine.read_user_layer_ranks(keys)) else { return CakeCanvasStatus::InvalidHandle; };
+        match result {
+            Ok(ranks) => { unsafe { *out_ranks = owned_buffer(ranks.iter().flat_map(|rank| rank.to_le_bytes()).collect()); } CakeCanvasStatus::Ok },
+            Err(_) => CakeCanvasStatus::InvalidArgument,
+        }
+    })
+}
+
+/// Additive ABI: actual donor user-layer rank assignment, all-or-nothing.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_assign_user_layer_ranks(handle: *mut c_void, keys: *const u64,
+    ranks: *const u32, count: usize) -> CakeCanvasStatus {
+    guard_status(|| {
+        if keys.is_null() || ranks.is_null() || count == 0 || count > 1_000_000 { return CakeCanvasStatus::InvalidArgument; }
+        let keys = unsafe { slice::from_raw_parts(keys, count) };
+        let ranks = unsafe { slice::from_raw_parts(ranks, count) };
+        let Some(result) = with_engine_mut(handle, |engine| engine.assign_user_layer_ranks(keys, ranks)) else { return CakeCanvasStatus::InvalidHandle; };
+        match result { Ok(()) => CakeCanvasStatus::Ok, Err(_) => CakeCanvasStatus::InvalidArgument }
     })
 }
 

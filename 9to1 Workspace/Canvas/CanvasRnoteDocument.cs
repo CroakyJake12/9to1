@@ -22,6 +22,7 @@ public sealed class CanvasRnoteDocument : IDisposable
     private RnoteCanvasEngine _engine;
     private readonly CanvasArtifactSession _session;
     private bool _disposed;
+    private Guid? _selectedUserLayer;
     private Guid _renderedRevision;
     private RnoteRenderFrame? _renderedFrame;
 
@@ -32,10 +33,51 @@ public sealed class CanvasRnoteDocument : IDisposable
         try
         {
             ValidateNativeStrokeBindings(artifact, engine);
+            if (ReadPersistedLayerRanks(artifact) is not null) ValidateUserLayerBindings(artifact, engine, allowLegacySingleLayer: false);
             artifact.DocumentSettings = SettingsWithEngineState(artifact.DocumentSettings, engine, report);
             _session = new CanvasArtifactSession(artifact);
         }
         catch { engine.Dispose(); throw; }
+    }
+
+    /// <summary>Editor-local stable layer selection; never persisted as canonical content.</summary>
+    public Guid ActiveNativeUserLayerId
+    {
+        get
+        {
+            lock (_gate)
+            {
+                EnsureOpen();var page=_session.GetArtifactSnapshot().Pages[0];
+                return _selectedUserLayer is Guid selected && page.Layers.Any(layer=>layer.LayerId==selected) ? selected : page.LayerOrder[0];
+            }
+        }
+    }
+
+    public string? NativeUserLayerUnavailableReason
+    {
+        get
+        {
+            lock (_gate)
+            {
+                EnsureOpen();
+                try { ValidateUserLayerBindings(_session.GetArtifactSnapshot(),_engine,allowLegacySingleLayer:true);return null; }
+                catch (NotSupportedException error) { return error.Message; }
+                catch (InvalidDataException error) { return error.Message; }
+                catch (InvalidOperationException error) { return $"Native user-layer navigation is unavailable: {error.Message}"; }
+            }
+        }
+    }
+
+    public void SelectNativeUserLayer(Guid pageId, Guid layerId)
+    {
+        lock (_gate)
+        {
+            EnsureOpen();var artifact=_session.GetArtifactSnapshot();
+            ValidateUserLayerBindings(artifact,_engine,allowLegacySingleLayer:true);
+            if(artifact.Pages[0].PageId!=pageId || !artifact.Pages[0].Layers.Any(layer=>layer.LayerId==layerId))
+                throw new ArgumentException("The selected layer is not part of the original canonical page.",nameof(layerId));
+            _selectedUserLayer=layerId;
+        }
     }
 
     public CanvasImportCompatibilityReport CompatibilityReport { get; }
@@ -97,7 +139,14 @@ public sealed class CanvasRnoteDocument : IDisposable
         => DrawStroke(samples, new CanvasMutationRequest(expectedRevision, Guid.NewGuid(), new("canvas.input", "Canvas native input")));
 
     /// <summary>The host supplies the permission-filtered actor after Home authorization.</summary>
-    public Guid DrawStroke(IReadOnlyList<RnotePointerSample> samples, CanvasMutationRequest request, CanvasRnoteInkStyle? style = null)
+    public Guid DrawStroke(IReadOnlyList<RnotePointerSample> samples, CanvasMutationRequest request, CanvasRnoteInkStyle? style = null) =>
+        DrawStrokeCore(samples,request,null,style);
+
+    /// <summary>Typed owning intent supplies its exact captured layer; later local selection cannot redirect it.</summary>
+    public Guid DrawStrokeIntoNativeUserLayer(IReadOnlyList<RnotePointerSample> samples, CanvasMutationRequest request,
+        Guid layerId, CanvasRnoteInkStyle? style = null) => DrawStrokeCore(samples,request,layerId,style);
+
+    private Guid DrawStrokeCore(IReadOnlyList<RnotePointerSample> samples, CanvasMutationRequest request, Guid? capturedLayerId, CanvasRnoteInkStyle? style)
     {
         ArgumentNullException.ThrowIfNull(samples);
         ArgumentNullException.ThrowIfNull(request);
@@ -113,7 +162,7 @@ public sealed class CanvasRnoteDocument : IDisposable
             {
                 StrokeId = request.OperationId,
                 RevisionId = request.OperationId,
-                LayerId = page.LayerOrder[0],
+                LayerId = capturedLayerId ?? page.LayerOrder[0],
                 ToolDefinitionId = inkStyle.Kind == CanvasRnoteInkKind.Solid ? "pen" : "highlighter",
                 Samples = capturedSamples.Select(sample => new CanvasStrokeSample(sample.X, sample.Y, sample.Pressure, sample.TiltX, sample.TiltY)).ToList(),
                 ResolvedBrushProperties = resolvedBrush
@@ -134,6 +183,12 @@ public sealed class CanvasRnoteDocument : IDisposable
                         if (!priorKeys.IsSubsetOf(currentKeys) || added.Length != 1)
                             throw new InvalidDataException("The donor stroke did not produce exactly one stable native entity.");
                         bindings.Add(stroke.StrokeId, added[0]);
+                        var ranks=ReadPersistedLayerRanks(artifact);
+                        if(ranks is not null)
+                        {
+                            ValidateUserLayerBindings(artifact,_engine,allowLegacySingleLayer:false);
+                            candidate.AssignUserLayerRanks([(added[0],ranks[stroke.LayerId])]);
+                        }
                     }
                     return SettingsWithEngineState(artifact.DocumentSettings, candidate, CompatibilityReport, bindings);
                 });
@@ -362,6 +417,121 @@ public sealed class CanvasRnoteDocument : IDisposable
         }
     }
 
+    /// <summary>Owning canonical/native user-layer creation. The exact new LayerID
+    /// must be captured by the caller before review. This low-level document API
+    /// is not a Home/Files capability or persistence acknowledgement.</summary>
+    public void SetNativeUserLayerVisibility(Guid pageId, Guid layerId, bool isVisible, CanvasMutationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!_engine.SupportsVisibleKeysRender) throw new NotSupportedException("The maintained donor does not expose visible-layer rendering.");
+            ApplyNativeUserLayerMutation(capture=>_session.SetLayerVisibilityWithDonor(request,pageId,layerId,isVisible,capture));
+        }
+    }
+
+    public void SetNativeUserLayerLocked(Guid pageId, Guid layerId, bool isLocked, CanvasMutationRequest request) =>
+        ApplyNativeUserLayerMutation(capture=>_session.SetLayerLockedWithDonor(request,pageId,layerId,isLocked,capture));
+
+    public void MoveNativeStrokeToUserLayer(Guid pageId, Guid strokeId, Guid destinationLayerId, CanvasMutationRequest request) =>
+        ApplyNativeUserLayerMutation(capture => _session.MoveStrokeToLayerWithDonor(request, pageId, strokeId, destinationLayerId, capture));
+
+    public void RenameNativeUserLayer(Guid pageId, Guid layerId, string name, CanvasMutationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (_gate)
+        {
+            EnsureOpen();
+            ValidateUserLayerBindings(_session.GetArtifactSnapshot(), _engine, allowLegacySingleLayer: true);
+            RequireSuccess(_session.RenameLayer(request, pageId, layerId, name));
+        }
+    }
+
+    public void CreateNativeUserLayer(Guid pageId, Guid newLayerId, string name, int? insertAt, CanvasMutationRequest request) =>
+        ApplyNativeUserLayerMutation(capture => _session.CreateLayerWithDonor(request, pageId, newLayerId, name, insertAt, capture));
+
+    public void ReorderNativeUserLayer(Guid pageId, Guid layerId, int toIndex, CanvasMutationRequest request) =>
+        ApplyNativeUserLayerMutation(capture => _session.ReorderLayerWithDonor(request, pageId, layerId, toIndex, capture));
+
+    public void DeleteNativeUserLayer(Guid pageId, Guid layerId, CanvasMutationRequest request) =>
+        ApplyNativeUserLayerMutation(capture => _session.DeleteLayerWithDonor(request,pageId,layerId,capture),allowDeletedInk:true);
+
+    private void ApplyNativeUserLayerMutation(Func<Func<CanvasArtifact, CanvasDocumentSettings>, CanvasApiResult<CanvasMutationResult>> apply,
+        bool allowDeletedInk=false)
+    {
+        lock (_gate)
+        {
+            EnsureOpen();var original = _session.GetArtifactSnapshot();
+            // Authenticate the original stored canonical/native mapping before preparing
+            // a candidate. Never adopt ranks inferred from a replacement provider/view.
+            ValidateUserLayerBindings(original, _engine, allowLegacySingleLayer: true);
+            var state = ReadPersistedState(original);
+            var bindings = state.NativeStrokeKeys ?? new Dictionary<Guid, ulong>();
+            RnoteCanvasEngine? candidate = null;
+            try
+            {
+                CanvasDocumentSettings Capture(CanvasArtifact proposed)
+                {
+                    if (proposed.ArtifactId != original.ArtifactId || proposed.Pages.Count != 1
+                        || proposed.Pages[0].PageId != original.Pages[0].PageId)
+                        throw new InvalidDataException("Layer proposal changed its original canonical document.");
+                    var page = proposed.Pages[0];
+                    var ranks = page.LayerOrder.Select((id,index) => (id,rank: checked((uint)index))).ToDictionary(value=>value.id,value=>value.rank);
+                    candidate = RnoteCanvasEngine.Open(_engine.Save());
+                    var retainedBindings=new Dictionary<Guid,ulong>(bindings);
+                    var proposedStrokeIds=page.Strokes.Select(stroke=>stroke.StrokeId).ToHashSet();
+                    var removedIds=retainedBindings.Keys.Where(id=>!proposedStrokeIds.Contains(id)).ToArray();
+                    if(removedIds.Length!=0 && !allowDeletedInk)
+                        throw new InvalidDataException("A non-delete layer transaction removed original canonical ink.");
+                    foreach(var id in removedIds)
+                    {
+                        candidate.DeleteStroke(retainedBindings[id]);
+                        retainedBindings.Remove(id);
+                    }
+                    if(!candidate.ReadStrokeKeys().ToHashSet().SetEquals(retainedBindings.Values))
+                        throw new InvalidDataException("Layer deletion changed unrelated native entity identities.");
+                    var assignments = page.Strokes.Select(stroke => (Key: retainedBindings[stroke.StrokeId], Rank: ranks[stroke.LayerId])).ToArray();
+                    if (assignments.Length != 0) candidate.AssignUserLayerRanks(assignments);
+                    var settings = SettingsWithEngineState(proposed.DocumentSettings, candidate, CompatibilityReport, retainedBindings, ranks);
+                    proposed.DocumentSettings = settings;
+                    ValidateUserLayerBindings(proposed, candidate, allowLegacySingleLayer: false);
+                    return settings;
+                }
+                RequireSuccess(apply(Capture));
+                if (candidate is not null)
+                {
+                    var prior = _engine;_engine = candidate;candidate = null;prior.Dispose();
+                }
+            }
+            finally { candidate?.Dispose(); }
+        }
+    }
+
+    private static IReadOnlyDictionary<Guid,uint>? ReadPersistedLayerRanks(CanvasArtifact artifact) =>
+        artifact.DocumentSettings.Properties.TryGetValue(StateKey,out var value) ? value.Deserialize<RnotePersistedState>()?.NativeLayerRanks : null;
+
+    private static void ValidateUserLayerBindings(CanvasArtifact artifact, RnoteCanvasEngine engine, bool allowLegacySingleLayer)
+    {
+        if (artifact.Pages.Count != 1) throw new NotSupportedException("The maintained user-layer adapter currently requires one canonical page.");
+        if (!engine.SupportsUserLayerRanks) throw new NotSupportedException("The maintained donor has no complete user-layer rank adapter.");
+        var page = artifact.Pages[0];var persisted = ReadPersistedLayerRanks(artifact);
+        if (persisted is null && (!allowLegacySingleLayer || page.LayerOrder.Count != 1))
+            throw new NotSupportedException("This document has no authenticated original canonical-to-native layer mapping.");
+        var ranks = persisted ?? new Dictionary<Guid,uint> { [page.LayerOrder[0]] = 0 };
+        if (ranks.Count != page.LayerOrder.Count || page.LayerOrder.Where((id,index) => !ranks.TryGetValue(id,out var rank) || rank != (uint)index).Any())
+            throw new InvalidDataException("Canonical layer order disagrees with its retained native rank mapping.");
+        var bindings = ReadPersistedState(artifact).NativeStrokeKeys ?? new Dictionary<Guid,ulong>();
+        if (bindings.Count != page.Strokes.Count || page.Strokes.Any(stroke=>!bindings.ContainsKey(stroke.StrokeId))
+            || !bindings.Values.ToHashSet().SetEquals(engine.ReadStrokeKeys()))
+            throw new NotSupportedException("The document requires an exact original native binding for every user-layer entity.");
+        if (page.Strokes.Count == 0) return;
+        var keys = page.Strokes.Select(stroke=>bindings[stroke.StrokeId]).ToArray();
+        var actual = engine.ReadUserLayerRanks(keys);
+        for (var index=0;index<page.Strokes.Count;index++)
+            if (actual[index] != ranks[page.Strokes[index].LayerId]) throw new InvalidDataException("Retained donor entity rank disagrees with its original canonical LayerID.");
+    }
+
     public void Rename(string name, Guid expectedRevision)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -421,7 +591,15 @@ public sealed class CanvasRnoteDocument : IDisposable
                 // Keep the active engine/history intact and cache by revision.
                 var state = ReadPersistedState(artifact);
                 using var durable = RnoteCanvasEngine.Open(Convert.FromBase64String(state.PayloadBase64));
-                _renderedFrame = durable.Render();
+                if (state.NativeLayerRanks is null) _renderedFrame = durable.Render();
+                else
+                {
+                    ValidateUserLayerBindings(artifact, durable, allowLegacySingleLayer: false);
+                    var page = artifact.Pages[0];
+                    var visibleLayers = page.Layers.Where(layer => layer.IsVisible).Select(layer => layer.LayerId).ToHashSet();
+                    var bindings = state.NativeStrokeKeys ?? new Dictionary<Guid, ulong>();
+                    _renderedFrame = durable.RenderVisibleKeys(page.Strokes.Where(stroke => visibleLayers.Contains(stroke.LayerId)).Select(stroke => bindings[stroke.StrokeId]));
+                }
                 _renderedRevision = artifact.RevisionId;
             }
             return _renderedFrame with { Svg = (byte[])_renderedFrame.Svg.Clone() };
@@ -475,13 +653,21 @@ public sealed class CanvasRnoteDocument : IDisposable
         artifact.DocumentSettings.Properties[StateKey].Deserialize<RnotePersistedState>() ?? throw new InvalidDataException("Canvas Rnote state is empty.");
 
     private static CanvasDocumentSettings SettingsWithEngineState(CanvasDocumentSettings settings, RnoteCanvasEngine engine, CanvasImportCompatibilityReport report,
-        IReadOnlyDictionary<Guid, ulong>? nativeStrokeKeys = null)
+        IReadOnlyDictionary<Guid, ulong>? nativeStrokeKeys = null, IReadOnlyDictionary<Guid,uint>? nativeLayerRanks = null)
     {
         var bytes = engine.Save();
         var retained = nativeStrokeKeys ?? (settings.Properties.TryGetValue(StateKey, out var prior)
             ? prior.Deserialize<RnotePersistedState>()?.NativeStrokeKeys : null);
+        var retainedLayers = nativeLayerRanks ?? (settings.Properties.TryGetValue(StateKey, out var priorLayers)
+            ? priorLayers.Deserialize<RnotePersistedState>()?.NativeLayerRanks : null);
+        if (retainedLayers is not null && retained is not null && retained.Count != 0)
+        {
+            var actualRanks = engine.ReadUserLayerRanks(retained.Values);
+            if (actualRanks.Any(rank => !retainedLayers.Values.Contains(rank))) throw new InvalidDataException("Donor entity rank is outside the retained canonical layer map.");
+        }
         var payload = new RnotePersistedState(1, DonorRevision, Convert.ToBase64String(bytes), Convert.ToHexString(SHA256.HashData(bytes)), report,
-            retained is null ? null : new Dictionary<Guid, ulong>(retained));
+            retained is null ? null : new Dictionary<Guid, ulong>(retained),
+            retainedLayers is null ? null : new Dictionary<Guid,uint>(retainedLayers));
         var properties = new Dictionary<string, JsonElement>(settings.Properties, StringComparer.Ordinal) { [StateKey] = JsonSerializer.SerializeToElement(payload) };
         return settings with { Properties = properties };
     }
@@ -536,5 +722,6 @@ public sealed class CanvasRnoteDocument : IDisposable
     }
 
     private sealed record RnotePersistedState(int SchemaVersion, string DonorRevision, string PayloadBase64, string Sha256,
-        CanvasImportCompatibilityReport CompatibilityReport, IReadOnlyDictionary<Guid, ulong>? NativeStrokeKeys = null);
+        CanvasImportCompatibilityReport CompatibilityReport, IReadOnlyDictionary<Guid, ulong>? NativeStrokeKeys = null,
+        IReadOnlyDictionary<Guid,uint>? NativeLayerRanks = null);
 }

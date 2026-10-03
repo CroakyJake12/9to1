@@ -26,15 +26,11 @@ public static class FilesNativeHostComposition
         services.TryAddSingleton<ICompatibilityPackageContentSource>(provider => provider.GetRequiredService<FilesCompatibilityPackageContentSource>());
         services.AddSingleton<IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
         services.AddSingleton<IMediaRetainedAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
-        services.AddSingleton<ICanonicalResourceAccessResolver>(provider => new FilesArtifactResourceResolver(async (actor, token) =>
-        {
-            var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);
-            return workspace?.Actor == actor ? workspace.Provider : null;
-        }, async (actor, appId, token) =>
-        {
-            var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);
-            return workspace?.Actor == actor && workspace.Configuration.AppFolders.TryGetValue(appId, out var folder) ? folder : null;
-        }));
+        // One genuine owner instance serves both ordinary and privately captured original observations.
+        services.TryAddSingleton<FilesArtifactResourceResolver>(provider =>
+            new FilesArtifactResourceResolver(provider.GetRequiredService<NativeFilesWorkspaceAuthority>()));
+        services.AddSingleton<ICanonicalResourceAccessResolver>(provider => provider.GetRequiredService<FilesArtifactResourceResolver>());
+        services.TryAddSingleton<FilesOriginalChildFolderReadSource>();
         services.AddSingleton<IHomeLocalStoreEvidenceProvider>(provider => provider.GetRequiredService<NativeFilesWorkspaceService>());
         return services;
     }

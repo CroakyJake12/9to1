@@ -162,6 +162,70 @@ public sealed class RnoteCanvasEngine : IDisposable
         }
     }
 
+    public bool SupportsUserLayerRanks
+    {
+        get
+        {
+            lock (_gate)
+            {
+                EnsureOpen();
+                try { return Native.UserLayerRankApiVersion() == 1; }
+                catch (EntryPointNotFoundException) { return false; }
+            }
+        }
+    }
+
+    internal ImmutableArray<uint> ReadUserLayerRanks(IEnumerable<ulong> requestedKeys)
+    {
+        ArgumentNullException.ThrowIfNull(requestedKeys);
+        var captured = new List<ulong>();
+        foreach (var key in requestedKeys)
+        {
+            if (captured.Count == 1_000_000) throw new ArgumentException("Layer query exceeds the entity limit.", nameof(requestedKeys));
+            captured.Add(key);
+        }
+        if (captured.Any(key => key == 0) || captured.Distinct().Count() != captured.Count)
+            throw new ArgumentException("Layer query requires unique nonempty donor keys.", nameof(requestedKeys));
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsUserLayerRanks) throw new NotSupportedException("The maintained donor does not expose user-layer ordering.");
+            if (captured.Count == 0) return [];
+            var keys = captured.ToArray();var buffer = new NativeBuffer();
+            try
+            {
+                Check(Native.ReadUserLayerRanks(_handle, keys, (nuint)keys.Length, out buffer), "read native user layers");
+                if (buffer.Length != (nuint)(keys.Length * 4)) throw new InvalidDataException("Native layer rank buffer violates its exact packed u32 contract.");
+                var bytes = Copy(buffer.Data, buffer.Length);var ranks = ImmutableArray.CreateBuilder<uint>(keys.Length);
+                for (var offset = 0; offset < bytes.Length; offset += 4) ranks.Add(BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(offset, 4)));
+                return ranks.MoveToImmutable();
+            }
+            finally { Native.ReleaseBuffer(ref buffer); }
+        }
+    }
+
+    internal void AssignUserLayerRanks(IEnumerable<(ulong Key, uint Rank)> assignments)
+    {
+        ArgumentNullException.ThrowIfNull(assignments);
+        var captured = new List<(ulong Key, uint Rank)>();
+        foreach (var assignment in assignments)
+        {
+            if (captured.Count == 1_000_000) throw new ArgumentException("Layer mapping exceeds the entity limit.", nameof(assignments));
+            captured.Add(assignment);
+        }
+        if (captured.Count == 0 || captured.Any(value => value.Key == 0)
+            || captured.Select(value => value.Key).Distinct().Count() != captured.Count)
+            throw new ArgumentException("Layer mapping requires unique nonempty donor keys.", nameof(assignments));
+        var keys = captured.Select(value => value.Key).ToArray();
+        var ranks = captured.Select(value => value.Rank).ToArray();
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsUserLayerRanks) throw new NotSupportedException("The maintained donor does not expose user-layer ordering.");
+            Check(Native.AssignUserLayerRanks(_handle, keys, ranks, (nuint)keys.Length), "assign native user layers");
+        }
+    }
+
     public void DeleteStroke(ulong key)
     {
         lock (_gate)
@@ -284,6 +348,48 @@ public sealed class RnoteCanvasEngine : IDisposable
         }
     }
 
+    public bool SupportsVisibleKeysRender
+    {
+        get
+        {
+            lock (_gate)
+            {
+                EnsureOpen();
+                try { return Native.VisibleKeysRenderApiVersion() == 1; }
+                catch (EntryPointNotFoundException) { return false; }
+            }
+        }
+    }
+
+    internal RnoteRenderFrame RenderVisibleKeys(IEnumerable<ulong> requestedKeys)
+    {
+        ArgumentNullException.ThrowIfNull(requestedKeys);
+        var captured = new List<ulong>();
+        foreach (var key in requestedKeys)
+        {
+            if (captured.Count >= 1_000_000) throw new ArgumentException("Visible native keys exceed the supported limit.", nameof(requestedKeys));
+            captured.Add(key);
+        }
+        var keys = captured.ToArray();
+        if (keys.Any(key => key == 0) || keys.Distinct().Count() != keys.Length)
+            throw new ArgumentException("Visible native keys must be unique and nonzero.", nameof(requestedKeys));
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsVisibleKeysRender) throw new NotSupportedException("The maintained donor does not expose visible-key rendering.");
+            var frame = new NativeFrame();
+            try
+            {
+                Check(Native.RenderVisibleKeys(_handle, keys, (nuint)keys.Length, out frame), "render visible native strokes");
+                if (frame.Format != 1 || frame.CoordinateSpace != 1 || !double.IsFinite(frame.X) || !double.IsFinite(frame.Y)
+                    || !double.IsFinite(frame.Width) || !double.IsFinite(frame.Height) || frame.Width <= 0 || frame.Height <= 0)
+                    throw new InvalidDataException("The Rnote engine returned an unsupported visible render frame.");
+                return new RnoteRenderFrame(frame.X, frame.Y, frame.Width, frame.Height, Copy(frame.Data, frame.Length));
+            }
+            finally { Native.ReleaseFrame(ref frame); }
+        }
+    }
+
     public RnoteRenderFrame Render()
     {
         lock (_gate)
@@ -371,6 +477,9 @@ public sealed class RnoteCanvasEngine : IDisposable
     }
     private static class Native
     {
+        [DllImport(Library, EntryPoint = "cake_canvas_read_user_layer_ranks", CallingConvention = CallingConvention.Cdecl)] internal static extern int ReadUserLayerRanks(EngineHandle handle, ulong[] keys, nuint count, out NativeBuffer buffer);
+        [DllImport(Library, EntryPoint = "cake_canvas_user_layer_rank_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint UserLayerRankApiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_assign_user_layer_ranks", CallingConvention = CallingConvention.Cdecl)] internal static extern int AssignUserLayerRanks(EngineHandle handle, ulong[] keys, uint[] ranks, nuint count);
         [DllImport(Library, EntryPoint = "cake_canvas_abi_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint AbiVersion();
         [DllImport(Library, EntryPoint = "cake_canvas_selection_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint SelectionApiVersion();
         [DllImport(Library, EntryPoint = "cake_canvas_stroke_keys", CallingConvention = CallingConvention.Cdecl)] internal static extern int StrokeKeys(EngineHandle handle, out NativeBuffer buffer);
@@ -397,6 +506,8 @@ public sealed class RnoteCanvasEngine : IDisposable
         [DllImport(Library, EntryPoint = "cake_canvas_redo", CallingConvention = CallingConvention.Cdecl)] internal static extern int Redo(EngineHandle handle);
         [DllImport(Library, EntryPoint = "cake_canvas_save_rnote", CallingConvention = CallingConvention.Cdecl)] internal static extern int Save(EngineHandle handle, out NativeBuffer buffer);
         [DllImport(Library, EntryPoint = "cake_canvas_buffer_release", CallingConvention = CallingConvention.Cdecl)] internal static extern void ReleaseBuffer(ref NativeBuffer buffer);
+        [DllImport(Library, EntryPoint = "cake_canvas_visible_keys_render_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint VisibleKeysRenderApiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_render_visible_keys", CallingConvention = CallingConvention.Cdecl)] internal static extern int RenderVisibleKeys(EngineHandle handle, ulong[] keys, nuint count, out NativeFrame frame);
         [DllImport(Library, EntryPoint = "cake_canvas_render_frame", CallingConvention = CallingConvention.Cdecl)] internal static extern int Render(EngineHandle handle, out NativeFrame frame);
         [DllImport(Library, EntryPoint = "cake_canvas_render_frame_release", CallingConvention = CallingConvention.Cdecl)] internal static extern void ReleaseFrame(ref NativeFrame frame);
     }

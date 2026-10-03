@@ -1,0 +1,688 @@
+{
+  "status": "ACTUAL_PREDECESSOR105_CASE_IDENTITIES_INDEPENDENTLY_READ_FROM_ORIGINAL_TRX",
+  "commit": "60b50e3edd0dd76f341770d1638d6a5beb19c727",
+  "run": 37014256092,
+  "predecessorAcceptance": "/workspace/astra-source/worker2-canvas-root18-independent-original-acceptance.json",
+  "predecessorAcceptanceSha256": "66774b7632117a9efd101d67dd2e70095f5a952353c5a575f95155e4af903995",
+  "archivesRead": [
+    {
+      "artifactId": 11229889985,
+      "path": "/workspace/attachments/5e7d3a00-8d5d-4ed6-af0f-2fdfee46cb89/11229889985.zip",
+      "bytes": 21443,
+      "sha256": "1a110bfc04dfb41c917f3c943d3bf6d4d10f7905f5ba117a232f7416d6f601db",
+      "entries": [
+        {
+          "name": "manifest.json",
+          "bytes": 145403,
+          "crc32": "5f8079af",
+          "sha256": "c38b05fec53e11c9668928ffad688797c59083a4a718e33501b4dbb489d40cab"
+        }
+      ]
+    },
+    {
+      "artifactId": 11230451338,
+      "path": "/workspace/attachments/8ef97281-5205-4d42-91a5-4f82ed522fef/11230451338.zip",
+      "bytes": 6439823,
+      "sha256": "33c84e9c7c3417cbc747a3902cd935ae225db0b4d4d5ab9faece3b0dbf6dabb0",
+      "entries": [
+        {
+          "name": "bundle-02.zip",
+          "bytes": 6439683,
+          "crc32": "bfb399c2",
+          "sha256": "e62b63af0dc4e3c8b76256e45611a21c4ca3211688524fd796a7dcdc65f56dfc"
+        }
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "trxPath": "trx/canvas.trx",
+      "trxSha256": "9f3ae98dc88f2ead3ca8c0215d0b513fd72c64ee46e503b7922cc81747f1a389",
+      "requiredPassedCases": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasCuiWorkspaceTests",
+          "method": "Host_read_only_state_disables_mutations_and_unknown_bindings_fail_closed",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasCuiWorkspaceTests.Host_read_only_state_disables_mutations_and_unknown_bindings_fail_closed",
+          "originalTestId": "625f5bf7-4e8c-7a87-a99c-e64d2a261296"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests",
+          "method": "Donor_hitboxes_do_not_use_whole_entity_bounds_and_unbound_or_locked_top_hits_never_fall_through",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests.Donor_hitboxes_do_not_use_whole_entity_bounds_and_unbound_or_locked_top_hits_never_fall_through",
+          "originalTestId": "57e0e218-cbc9-6fca-ef27-12d2d95a2f60"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAiSurfaceStateTests",
+          "method": "Surface_disposal_unsubscribes_without_cancelling_shared_request_and_explicit_cancel_still_stops_work",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAiSurfaceStateTests.Surface_disposal_unsubscribes_without_cancelling_shared_request_and_explicit_cancel_still_stops_work",
+          "originalTestId": "70eef689-291e-0e0a-dced-7b582de54006"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Resolved_solid_and_marker_styles_reach_actual_donor_and_do_not_restyle_previous_strokes",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Resolved_solid_and_marker_styles_reach_actual_donor_and_do_not_restyle_previous_strokes",
+          "originalTestId": "41c9f566-8bad-9727-209d-76852b002a02"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteCanonicalIdentityTests",
+          "method": "Canonical_selected_identity_survives_atomic_draw_replay_restart_and_history",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteCanonicalIdentityTests.Canonical_selected_identity_survives_atomic_draw_replay_restart_and_history",
+          "originalTestId": "f297275a-7468-62e4-ecc9-d4c1a610c8f7"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests",
+          "method": "Revocation_or_target_revision_change_during_capture_rejects_context",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests.Revocation_or_target_revision_change_during_capture_rejects_context",
+          "originalTestId": "ef1a91f9-1fb3-a51b-6145-90ac2b88b230"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Failed_sample_capture_cannot_leave_a_partial_native_or_canonical_stroke",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Failed_sample_capture_cannot_leave_a_partial_native_or_canonical_stroke",
+          "originalTestId": "35dfdb2b-0971-1339-5744-37815de7f9a2"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests",
+          "method": "Invalid_native_ink_properties_cannot_be_presented_as_supported_model_context",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests.Invalid_native_ink_properties_cannot_be_presented_as_supported_model_context",
+          "originalTestId": "d3ae1dff-7f8d-9326-714b-62cd49793217"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAiSurfaceStateTests",
+          "method": "Switching_tools_hides_surface_without_cancelling_actual_shared_stream_and_restores_same_controller",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAiSurfaceStateTests.Switching_tools_hides_surface_without_cancelling_actual_shared_stream_and_restores_same_controller",
+          "originalTestId": "dac95f42-4151-1092-c820-8135e369478f"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Oversized_gzip_expansion_including_concatenated_members_is_rejected_before_native_parsing",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Oversized_gzip_expansion_including_concatenated_members_is_rejected_before_native_parsing(concatenated: True)",
+          "originalTestId": "d07e1348-93ab-d937-45a1-1448cf1fd04e"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+          "method": "Paged_mode_requires_explicit_positive_page_bounds",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Paged_mode_requires_explicit_positive_page_bounds",
+          "originalTestId": "346aa895-78ff-c957-4402-a46a8ba9aeed"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeBatchTests",
+          "method": "Actual_caller_enumeration_is_bounded_before_history_or_donor_capture",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeBatchTests.Actual_caller_enumeration_is_bounded_before_history_or_donor_capture",
+          "originalTestId": "9d1098e8-a768-3a9e-778d-77d67c6a0057"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+          "method": "Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Infinite)",
+          "originalTestId": "32570daa-902f-1526-686d-1e6e92d2b017"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeQuickEraserOperationTests",
+          "method": "Exact_Quick_approval_deletes_only_topmost_overlap_and_fresh_approved_Undo_restores_actual_native_target",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeQuickEraserOperationTests.Exact_Quick_approval_deletes_only_topmost_overlap_and_fresh_approved_Undo_restores_actual_native_target",
+          "originalTestId": "d0c914a9-6123-3c86-3b92-33617a485378"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests",
+          "method": "Fresh_owner_reopens_Undo_and_Redo_as_new_guarded_Files_revisions",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests.Fresh_owner_reopens_Undo_and_Redo_as_new_guarded_Files_revisions",
+          "originalTestId": "d1e1d1b0-75e9-deab-ecff-4020e47ccf61"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests",
+          "method": "Authorized_semantic_capture_retains_target_and_excludes_engine_and_extension_blobs",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests.Authorized_semantic_capture_retains_target_and_excludes_engine_and_extension_blobs",
+          "originalTestId": "8021acf5-aaa5-30ae-5cc9-58a3b6690055"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Keyed_edit_refuses_replaced_store_with_same_target_identity_without_rewriting_foreign_bytes",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Keyed_edit_refuses_replaced_store_with_same_target_identity_without_rewriting_foreign_bytes(kind: Delete)",
+          "originalTestId": "633692e7-b62b-14d6-bdab-4063a6ebefe1"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests",
+          "method": "Actor_refresh_after_history_claim_publishes_no_restored_source",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests.Actor_refresh_after_history_claim_publishes_no_restored_source",
+          "originalTestId": "46b19462-9f5c-9118-ea71-57f1b86fd4d9"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Keyed_edit_rechecks_changed_actor_after_claim_and_never_publishes_or_replays",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Keyed_edit_rechecks_changed_actor_after_claim_and_never_publishes_or_replays(kind: Translate)",
+          "originalTestId": "ceebb6b8-4c2a-6dc4-c1c2-41b92a27344d"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests",
+          "method": "Approved_creation_refuses_substituted_destination_store_without_publication",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests.Approved_creation_refuses_substituted_destination_store_without_publication",
+          "originalTestId": "e0e5af60-1156-2435-076a-c68ee4d4cd0d"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Native_draw_serialize_reopen_preserves_structured_ink_identity_pressure_tilt_and_render",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Native_draw_serialize_reopen_preserves_structured_ink_identity_pressure_tilt_and_render",
+          "originalTestId": "069db426-eb35-919f-f4e9-752a8f3d15f2"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests",
+          "method": "Quick_erase_refuses_canonical_donor_order_disagreement_without_guessing_a_topmost_target",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests.Quick_erase_refuses_canonical_donor_order_disagreement_without_guessing_a_topmost_target",
+          "originalTestId": "ec63f994-6d4e-7c9f-9ed8-3b93bd1e7bcb"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Actual_xopp_import_retains_editable_donor_snapshot_and_reports_identity_translation_gate",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Actual_xopp_import_retains_editable_donor_snapshot_and_reports_identity_translation_gate",
+          "originalTestId": "0b10dfd1-57ad-7e5d-90e5-061f9c3b14fb"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteTrashEraserTests",
+          "method": "Invalid_eraser_input_and_missed_strokes_leave_native_entities_unchanged",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteTrashEraserTests.Invalid_eraser_input_and_missed_strokes_leave_native_entities_unchanged",
+          "originalTestId": "804b6669-dae6-096f-f600-9e6ecad5c0b8"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasWorkspacePersistenceTests",
+          "method": "Open_returns_null_for_missing_documents_and_rejects_non_canvas_notes",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasWorkspacePersistenceTests.Open_returns_null_for_missing_documents_and_rejects_non_canvas_notes",
+          "originalTestId": "60b02fb7-4547-1655-96c0-b0c8ac75da5f"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeEditTests",
+          "method": "Edits_check_revision_samples_locks_and_replay_before_capturing_donor_state",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeEditTests.Edits_check_revision_samples_locks_and_replay_before_capturing_donor_state",
+          "originalTestId": "fb30a4a0-6fda-949c-dcaa-1d3d6a770786"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Home_approved_new_Canvas_keeps_captured_native_identity_and_rejects_replay",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Home_approved_new_Canvas_keeps_captured_native_identity_and_rejects_replay",
+          "originalTestId": "1fbfb7f5-b873-9dd9-812b-a086c97a1878"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Keyed_edit_refuses_replaced_store_with_same_target_identity_without_rewriting_foreign_bytes",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Keyed_edit_refuses_replaced_store_with_same_target_identity_without_rewriting_foreign_bytes(kind: Translate)",
+          "originalTestId": "ebe07fbc-ac24-ac73-e77a-5390fbec2d4e"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+          "method": "Unsupported_format_and_schema_versions_are_rejected_without_guessing",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unsupported_format_and_schema_versions_are_rejected_without_guessing",
+          "originalTestId": "32b763be-d432-ca17-7ca0-5287691ee7aa"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests",
+          "method": "Invalid_pan_coordinates_do_not_interrupt_an_active_ink_stroke",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests.Invalid_pan_coordinates_do_not_interrupt_an_active_ink_stroke",
+          "originalTestId": "3c0e7bf7-18dd-85b6-8f5a-fa307cd6d797"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasInkObjectHandlerTests",
+          "method": "Shared_ink_rejects_identity_mismatch_unsupported_brush_and_unavailable_owner_without_fake_commit",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasInkObjectHandlerTests.Shared_ink_rejects_identity_mismatch_unsupported_brush_and_unavailable_owner_without_fake_commit",
+          "originalTestId": "f8afc4fc-3930-b023-0c73-83b2316bfeff"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests",
+          "method": "Authoritative_path_native_mismatch_and_unimplemented_path_translation_refuse",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests.Authoritative_path_native_mismatch_and_unimplemented_path_translation_refuse",
+          "originalTestId": "9525b175-14f9-7a68-ff31-633a39d08410"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Canonical_history_and_operation_replay_keep_native_engine_and_stable_stroke_in_sync",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Canonical_history_and_operation_replay_keep_native_engine_and_stable_stroke_in_sync",
+          "originalTestId": "e44156d1-0791-e0fd-84b6-c072d01d6522"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests",
+          "method": "AttachRejectsOrdinaryNotesDocument",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests.AttachRejectsOrdinaryNotesDocument",
+          "originalTestId": "87833c72-2726-ae0a-fbbc-f2710e96aa6a"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests",
+          "method": "Actual_store_replacement_preserving_all_document_ids_denies_original_Undo",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests.Actual_store_replacement_preserving_all_document_ids_denies_original_Undo",
+          "originalTestId": "2846ebda-2d1f-3276-151a-9994a18c50ad"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Home_creation_actor_change_after_claim_registers_no_artifact",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Home_creation_actor_change_after_claim_registers_no_artifact",
+          "originalTestId": "fa2b574e-2a84-1fa1-435e-63a4f393f968"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests",
+          "method": "Locked_source_and_stale_revision_refuse_without_changing_original_native_or_history",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests.Locked_source_and_stale_revision_refuse_without_changing_original_native_or_history",
+          "originalTestId": "b8aef1f3-8138-4a0f-816c-d7848130fc6a"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasInkObjectHandlerTests",
+          "method": "Shared_handler_renders_actual_native_stroke_preserves_identity_unknown_data_and_detaches_pixels",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasInkObjectHandlerTests.Shared_handler_renders_actual_native_stroke_preserves_identity_unknown_data_and_detaches_pixels",
+          "originalTestId": "55db4efa-b4ec-2278-d383-c55995f3c882"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests",
+          "method": "Typed_new_stroke_options_are_semantic_editor_state_and_concurrent_style_changes_reject_capture",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppAiContextTests.Typed_new_stroke_options_are_semantic_editor_state_and_concurrent_style_changes_reject_capture",
+          "originalTestId": "9c7306f9-52c6-5a3d-e8ff-74d026179b59"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Caller_list_is_enumerated_once_and_canonical_and_native_strokes_use_the_same_snapshot",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Caller_list_is_enumerated_once_and_canonical_and_native_strokes_use_the_same_snapshot",
+          "originalTestId": "70e95d38-8fdb-3f92-a6a1-dd2aebf88f99"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteSelectionTests",
+          "method": "Invalid_or_failed_selection_does_not_modify_the_native_document",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteSelectionTests.Invalid_or_failed_selection_does_not_modify_the_native_document",
+          "originalTestId": "c2e13e4b-82e5-91ce-acdc-2f5640311084"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteSelectionTests",
+          "method": "Selected_export_preserves_stable_native_identity_and_original_paths_without_unselected_content",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteSelectionTests.Selected_export_preserves_stable_native_identity_and_original_paths_without_unselected_content",
+          "originalTestId": "85ccc5e1-f6d9-9743-ccf5-3334e133268a"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasToolStateTests",
+          "method": "Common_pen_options_only_accept_supported_native_properties_and_capabilities_require_defined_reasons",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasToolStateTests.Common_pen_options_only_accept_supported_native_properties_and_capabilities_require_defined_reasons",
+          "originalTestId": "e429de6f-ac03-a062-6fc2-7b4306b46467"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeQuickEraserOperationTests",
+          "method": "Miss_refuses_before_Home_request_and_foreign_store_after_approval_preserves_exact_bytes",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeQuickEraserOperationTests.Miss_refuses_before_Home_request_and_foreign_store_after_approval_preserves_exact_bytes",
+          "originalTestId": "c973e353-d8c3-f847-0d43-83c4525d20d6"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests",
+          "method": "Pan_does_not_append_its_endpoint_to_an_in_progress_pen_stroke",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests.Pan_does_not_append_its_endpoint_to_an_in_progress_pen_stroke",
+          "originalTestId": "6544325b-2dd9-ffd1-94c0-6bb71772bf3f"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests",
+          "method": "Invalid_stroke_batch_is_rejected_before_changing_an_active_gesture_or_document",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests.Invalid_stroke_batch_is_rejected_before_changing_an_active_gesture_or_document",
+          "originalTestId": "2bd04b89-b354-f2a6-a283-38378f798aa4"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+          "method": "Malformed_json_has_a_stable_invalid_document_error",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Malformed_json_has_a_stable_invalid_document_error",
+          "originalTestId": "a6bd6914-9b44-7edb-12a6-7c0d180cfd3c"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests",
+          "method": "CreateManipulateInkPanUndoRedoKeepsCanonicalCanvasDocument",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasAppSurfaceTests.CreateManipulateInkPanUndoRedoKeepsCanonicalCanvasDocument",
+          "originalTestId": "324e9adb-3ff6-e410-2d77-90943a7c5541"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeEraserOperationTests",
+          "method": "Genuine_multi_stroke_erase_is_one_exact_approved_revision_and_survives_restart_Undo",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeEraserOperationTests.Genuine_multi_stroke_erase_is_one_exact_approved_revision_and_survives_restart_Undo",
+          "originalTestId": "261ca418-a2c6-b3b3-c2a7-c48c9d295ce0"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeEraserOperationTests",
+          "method": "Stale_eraser_target_denies_publication_without_replaying_a_consumed_owner",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeEraserOperationTests.Stale_eraser_target_denies_publication_without_replaying_a_consumed_owner",
+          "originalTestId": "64511f38-4ba3-652d-efe7-f9da7e374c47"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Unbounded_caller_enumeration_is_rejected_before_any_native_operation",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Unbounded_caller_enumeration_is_rejected_before_any_native_operation",
+          "originalTestId": "2e392bf9-ed46-cf41-4aeb-353b1cd3b9c0"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteStrokeMutationTests",
+          "method": "Keyed_edits_preserve_other_native_entities_and_reject_invalid_edits_without_changes",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteStrokeMutationTests.Keyed_edits_preserve_other_native_entities_and_reject_invalid_edits_without_changes",
+          "originalTestId": "c74815b4-611b-fc18-c02e-f1722e39197e"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests",
+          "method": "Quick_erase_uses_shared_keyed_deletion_and_durable_common_undo_without_retargeting",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests.Quick_erase_uses_shared_keyed_deletion_and_durable_common_undo_without_retargeting",
+          "originalTestId": "bc42563c-47fb-1bf7-a638-b914c8592556"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Keyed_edit_rechecks_changed_actor_after_claim_and_never_publishes_or_replays",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Keyed_edit_rechecks_changed_actor_after_claim_and_never_publishes_or_replays(kind: Delete)",
+          "originalTestId": "8d8aca9e-5324-77b5-cfb5-ca97bd05d636"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeSplitEraserOperationTests",
+          "method": "Foreign_original_store_after_exact_split_approval_denies_without_rewriting_or_publishing",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeSplitEraserOperationTests.Foreign_original_store_after_exact_split_approval_denies_without_rewriting_or_publishing",
+          "originalTestId": "1855d237-cf23-1864-594c-6f5cac443c47"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Initial_Canvas_creation_rejects_actor_change_without_registering_an_empty_artifact",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Initial_Canvas_creation_rejects_actor_change_without_registering_an_empty_artifact",
+          "originalTestId": "abfcbfb0-874f-db07-d3bc-a81dc0e841d0"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasToolStateTests",
+          "method": "Canonical_scene_has_exact_seven_tool_order_and_one_options_host_above_toolbar",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasToolStateTests.Canonical_scene_has_exact_seven_tool_order_and_one_options_host_above_toolbar",
+          "originalTestId": "6565bff1-b60a-3e88-db92-5a3e34605bbc"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Shared_insertion_dispatch_commits_the_exact_approved_canonical_stroke_and_rejects_changed_content",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Shared_insertion_dispatch_commits_the_exact_approved_canonical_stroke_and_rejects_changed_content",
+          "originalTestId": "5a516f2e-1814-ee70-6e6c-3f7303cd7e8f"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteCanonicalIdentityTests",
+          "method": "Unknown_or_duplicate_persisted_bindings_are_rejected_and_legacy_unbound_content_never_exports_whole_document",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteCanonicalIdentityTests.Unknown_or_duplicate_persisted_bindings_are_rejected_and_legacy_unbound_content_never_exports_whole_document",
+          "originalTestId": "6a1c6147-e6da-7226-9b57-70e79a8bc5b0"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeBatchTests",
+          "method": "Missing_duplicate_empty_locked_stale_and_throwing_candidates_preserve_entire_session",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeBatchTests.Missing_duplicate_empty_locked_stale_and_throwing_candidates_preserve_entire_session",
+          "originalTestId": "2c0c5dad-94cf-e882-d40f-adcabc15880a"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Authentication_refresh_after_Home_claim_cannot_publish_under_a_new_actor_context",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Authentication_refresh_after_Home_claim_cannot_publish_under_a_new_actor_context",
+          "originalTestId": "3364d50c-b488-5b9d-b2c0-7fa6a1dfbf8d"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteHistoryRestorationTests",
+          "method": "Successful_history_replay_keeps_current_native_and_canonical_state",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteHistoryRestorationTests.Successful_history_replay_keeps_current_native_and_canonical_state",
+          "originalTestId": "fc649af8-dcd6-61b5-f66a-3b347bc43d0e"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasEngineStateHistoryTests",
+          "method": "Stroke_and_derived_settings_commit_once_and_restore_as_the_same_history_operation",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasEngineStateHistoryTests.Stroke_and_derived_settings_commit_once_and_restore_as_the_same_history_operation",
+          "originalTestId": "6ad18aec-c1ff-23d5-3c4d-a3709cd568b4"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasWorkspacePersistenceTests",
+          "method": "Create_edit_save_and_reopen_preserves_canvas_identity_and_spatial_state",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasWorkspacePersistenceTests.Create_edit_save_and_reopen_preserves_canvas_identity_and_spatial_state",
+          "originalTestId": "9b97a68e-ac72-6696-31c3-d3006480250c"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasCuiWorkspaceTests",
+          "method": "Embedded_scene_and_dispatch_keep_the_target_captured_before_host_authorization",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasCuiWorkspaceTests.Embedded_scene_and_dispatch_keep_the_target_captured_before_host_authorization",
+          "originalTestId": "a7d6aaad-73ee-9b0b-caea-7d70151f3b3d"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Actual_Home_keyed_edits_commit_only_exact_approved_native_candidates_and_never_replay",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Actual_Home_keyed_edits_commit_only_exact_approved_native_candidates_and_never_replay",
+          "originalTestId": "234209b7-6122-dafc-1b79-ad8d13dd254c"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests",
+          "method": "Split_is_one_schema2_transaction_with_exact_input_provenance_full_order_replay_and_fresh_history",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests.Split_is_one_schema2_transaction_with_exact_input_provenance_full_order_replay_and_fresh_history",
+          "originalTestId": "47ce9265-14bb-0232-d596-11b878668858"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteStrokeMutationTests",
+          "method": "Canonical_edits_atomically_retain_identity_pressure_brush_replay_and_history",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteStrokeMutationTests.Canonical_edits_atomically_retain_identity_pressure_brush_replay_and_history",
+          "originalTestId": "9e82dfa3-3610-c65a-31a5-bc937d53de14"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeBatchTests",
+          "method": "Exact_batch_is_one_revision_history_frame_and_order_independent_replay",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasStructuredStrokeBatchTests.Exact_batch_is_one_revision_history_frame_and_order_independent_replay",
+          "originalTestId": "e3b8e129-2bba-ce53-0d34-fc2720115fa3"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasToolStateTests",
+          "method": "Tool_activation_is_transient_and_failed_native_activation_does_not_change_selected_state",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasToolStateTests.Tool_activation_is_transient_and_failed_native_activation_does_not_change_selected_state",
+          "originalTestId": "6c6eae00-98b4-87f5-c909-b06ece040856"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+          "method": "Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Paged)",
+          "originalTestId": "81caf1b1-f38b-0499-94b0-105380e15492"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteTrashEraserTests",
+          "method": "Genuine_trash_eraser_removes_colliding_native_strokes_and_retains_unrelated_entities_after_reopen",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteTrashEraserTests.Genuine_trash_eraser_removes_colliding_native_strokes_and_retains_unrelated_entities_after_reopen",
+          "originalTestId": "2f1dc790-ad81-6e24-7cb4-f84986cfb928"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests",
+          "method": "Genuine_split_candidate_preserves_original_and_reports_exact_retained_paths_and_keys",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests.Genuine_split_candidate_preserves_original_and_reports_exact_retained_paths_and_keys",
+          "originalTestId": "ce02f433-d82d-d107-1e16-684f3b080e5c"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeSplitEraserOperationTests",
+          "method": "Genuine_split_Home_approval_commits_one_schema2_revision_exact_fragment_IDs_and_fresh_approved_Undo",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeSplitEraserOperationTests.Genuine_split_Home_approval_commits_one_schema2_revision_exact_fragment_IDs_and_fresh_approved_Undo",
+          "originalTestId": "dea2c696-eb36-093d-e174-b48cd1e2343c"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+          "method": "Invalid_page_object_and_layer_references_are_reported_as_typed_validation_issues",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Invalid_page_object_and_layer_references_are_reported_as_typed_validation_issues",
+          "originalTestId": "5894aa15-f091-c75a-7233-618340ba25d6"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Foreign_issuer_changed_arguments_and_readonly_owner_do_not_publish_a_native_candidate",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Foreign_issuer_changed_arguments_and_readonly_owner_do_not_publish_a_native_candidate",
+          "originalTestId": "4532c23a-1796-4375-faec-c0c1cb6c5057"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests",
+          "method": "Changed_history_arguments_reject_claim_without_publishing_a_candidate",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeHistoryOperationTests.Changed_history_arguments_reject_claim_without_publishing_a_candidate",
+          "originalTestId": "8fef074c-a6fa-b906-382b-a575e24351ac"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests",
+          "method": "Oversized_adversarial_provenance_refuses_preview_before_clone_history_or_Home_intent",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteSplitMaterializationTests.Oversized_adversarial_provenance_refuses_preview_before_clone_history_or_Home_intent",
+          "originalTestId": "7423179e-012c-05a9-999e-1c736208318b"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteHistoryRestorationTests",
+          "method": "Invalid_donor_history_preserves_live_canonical_content_donor_and_history_for_retry",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteHistoryRestorationTests.Invalid_donor_history_preserves_live_canonical_content_donor_and_history_for_retry",
+          "originalTestId": "633fd4ae-c546-6e67-b7f6-c7bc0b6bb97f"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Claimed_actor_refresh_while_final_Files_commit_waits_publishes_no_stroke_revision_or_event",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Claimed_actor_refresh_while_final_Files_commit_waits_publishes_no_stroke_revision_or_event",
+          "originalTestId": "415e256d-c440-0dcd-4b5b-2d72a11f25ab"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Oversized_gzip_expansion_including_concatenated_members_is_rejected_before_native_parsing",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Oversized_gzip_expansion_including_concatenated_members_is_rejected_before_native_parsing(concatenated: False)",
+          "originalTestId": "10cf676f-4aaf-c98c-9e17-d7f2116e40ed"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+          "method": "Unknown_optional_fields_survive_decode_and_reencode",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unknown_optional_fields_survive_decode_and_reencode",
+          "originalTestId": "5f09a2d7-4f74-f3c9-78d5-56d30870bc9d"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests",
+          "method": "Tampered_engine_snapshot_fails_before_native_open",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteJourneyTests.Tampered_engine_snapshot_fails_before_native_open",
+          "originalTestId": "974c4d06-5aa6-626f-19be-873626d799b4"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests",
+          "method": "Genuine_hitboxes_choose_last_rendered_overlap_read_only_and_survive_restart",
+          "testName": "HavenOS.Apps.Canvas.Tests.NativeRnoteQuickEraserTests.Genuine_hitboxes_choose_last_rendered_overlap_read_only_and_survive_restart",
+          "originalTestId": "48d1934a-6dd7-050c-a935-1243bd24191f"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests",
+          "method": "Actual_os_profile_Home_capability_commits_one_native_stroke_with_Files_CAS_and_cannot_replay",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasHomeStrokeOperationTests.Actual_os_profile_Home_capability_commits_one_native_stroke_with_Files_CAS_and_cannot_replay",
+          "originalTestId": "b73e1531-881c-72ba-ecf8-c7113af6b1f7"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasFilesArtifactBridgeTests",
+          "method": "Canonical_Files_create_edit_restart_reopen_preserves_identity_and_rejects_stale_readonly_and_tampered_content",
+          "testName": "HavenOS.Apps.Canvas.Tests.CanvasFilesArtifactBridgeTests.Canonical_Files_create_edit_restart_reopen_preserves_identity_and_rejects_stale_readonly_and_tampered_content",
+          "originalTestId": "ad0ab8f4-cd2c-117a-5144-5be720333716"
+        }
+      ]
+    },
+    {
+      "trxPath": "trx/core.trx",
+      "trxSha256": "a0e1c301c390e2378e646240bd1b6e46b800605231a8a639687020dd109e6e95",
+      "requiredPassedCases": [
+        {
+          "class": "Haven.Core.Tests.CanvasSchema2Tests",
+          "method": "Invalid_stale_noop_locked_and_throwing_candidates_do_not_mutate_or_prepare",
+          "testName": "Haven.Core.Tests.CanvasSchema2Tests.Invalid_stale_noop_locked_and_throwing_candidates_do_not_mutate_or_prepare",
+          "originalTestId": "40d0867f-94ca-110f-2264-7977e9535bde"
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasSchema2Tests",
+          "method": "Atomic_replace_has_one_history_frame_exact_replay_and_schema1_undo_after_reopen",
+          "testName": "Haven.Core.Tests.CanvasSchema2Tests.Atomic_replace_has_one_history_frame_exact_replay_and_schema1_undo_after_reopen",
+          "originalTestId": "0722291b-7a9b-66c8-97da-f1b615081131"
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasSchema2Tests",
+          "method": "Schema2_authoritative_path_roundtrip_retains_samples_as_original_provenance",
+          "testName": "Haven.Core.Tests.CanvasSchema2Tests.Schema2_authoritative_path_roundtrip_retains_samples_as_original_provenance",
+          "originalTestId": "848ca04c-629e-a069-e0eb-848f458ab05b"
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasSchema2Tests",
+          "method": "Lying_collection_count_cannot_expand_batch_capture_or_invoke_callback",
+          "testName": "Haven.Core.Tests.CanvasSchema2Tests.Lying_collection_count_cannot_expand_batch_capture_or_invoke_callback",
+          "originalTestId": "043deb94-6fd8-4570-c65a-79a51619bd25"
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasSchema2Tests",
+          "method": "Batch_delete_replay_is_normalized_and_callback_cannot_reenter_receiver",
+          "testName": "Haven.Core.Tests.CanvasSchema2Tests.Batch_delete_replay_is_normalized_and_callback_cannot_reenter_receiver",
+          "originalTestId": "ff8b3050-0163-3d03-91cd-71bb0bfe9162"
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasSchema2Tests",
+          "method": "Retained_actual_schema1_native_artifact_preserves_identity_samples_and_native_state",
+          "testName": "Haven.Core.Tests.CanvasSchema2Tests.Retained_actual_schema1_native_artifact_preserves_identity_samples_and_native_state",
+          "originalTestId": "ec047c9d-650a-dfaa-0b88-595259a1074e"
+        }
+      ]
+    },
+    {
+      "trxPath": "trx/native-ui.trx",
+      "trxSha256": "8a1aefdb5d9b584200241f2aaf89c000fe668a8be851ac612b4f6572a776e879",
+      "requiredPassedCases": [
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests",
+          "method": "Real_natural_pointer_gesture_routes_exact_whole_or_partial_owner_and_has_no_write_before_approval",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests.Real_natural_pointer_gesture_routes_exact_whole_or_partial_owner_and_has_no_write_before_approval(partial: True)",
+          "originalTestId": "b99ca6dd-fa5d-d212-b746-85be0f590e7b"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests",
+          "method": "History_controls_request_fresh_exact_Home_operations_and_reopen_actual_donor_Undo_Redo",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests.History_controls_request_fresh_exact_Home_operations_and_reopen_actual_donor_Undo_Redo",
+          "originalTestId": "82733659-6373-e94f-e5d4-e8aef687e827"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests",
+          "method": "Original_store_draw_successor_denies_actual_foreign_store_substitution_before_adoption_or_write",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests.Original_store_draw_successor_denies_actual_foreign_store_substitution_before_adoption_or_write",
+          "originalTestId": "ad752d03-840a-30ea-96e7-4b9aa0211ef7"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests",
+          "method": "Accessible_chosen_stroke_requires_actual_Home_approval_and_commits_one_canonical_delete",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests.Accessible_chosen_stroke_requires_actual_Home_approval_and_commits_one_canonical_delete",
+          "originalTestId": "d0cc1ac5-c748-1fd8-3dc4-fa28a99c853e"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeInputTests",
+          "method": "Native_view_navigation_preserves_document_coordinates_and_cancels_unsubmitted_ink",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeInputTests.Native_view_navigation_preserves_document_coordinates_and_cancels_unsubmitted_ink",
+          "originalTestId": "49e02489-7f10-b5c6-b751-0f3dbab3a0c8"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeInputTests",
+          "method": "Routed_native_mouse_stroke_requires_real_Home_approval_and_exact_Files_revision",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeInputTests.Routed_native_mouse_stroke_requires_real_Home_approval_and_exact_Files_revision(changeRevision: False)",
+          "originalTestId": "a1625353-2d1e-d606-da6e-56ccf5de67a7"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeHostTests",
+          "method": "Actual_native_host_creates_then_draws_only_after_each_real_Home_approval",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeHostTests.Actual_native_host_creates_then_draws_only_after_each_real_Home_approval",
+          "originalTestId": "bba94c03-7210-99e7-eba5-65d35ae84f34"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests",
+          "method": "Real_natural_pointer_gesture_routes_exact_whole_or_partial_owner_and_has_no_write_before_approval",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests.Real_natural_pointer_gesture_routes_exact_whole_or_partial_owner_and_has_no_write_before_approval(partial: False)",
+          "originalTestId": "a1aa594e-8f52-44ef-5dad-ea62f418a3b4"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeHostTests",
+          "method": "Actual_host_retries_only_negative_audit_after_claim_or_admission_storage_failure",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeHostTests.Actual_host_retries_only_negative_audit_after_claim_or_admission_storage_failure(beginFailure: False)",
+          "originalTestId": "85de357f-9db4-1781-b5d2-7a80756bf93b"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeHostTests",
+          "method": "Actual_host_retries_only_negative_audit_after_claim_or_admission_storage_failure",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeHostTests.Actual_host_retries_only_negative_audit_after_claim_or_admission_storage_failure(beginFailure: True)",
+          "originalTestId": "e659bda6-8819-12eb-d2d7-39b73fac6207"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests",
+          "method": "View_change_cancels_real_pointer_capture_and_stale_Files_revision_retires_surface_without_request",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests.View_change_cancels_real_pointer_capture_and_stale_Files_revision_retires_surface_without_request",
+          "originalTestId": "bd469dde-443b-66c7-e819-32407c405b03"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests",
+          "method": "Real_Quick_pointer_capture_commits_only_after_actual_Home_review_and_retires_old_surface",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeEraserControlTests.Real_Quick_pointer_capture_commits_only_after_actual_Home_review_and_retires_old_surface",
+          "originalTestId": "b97e6d73-35a3-8993-a13a-97b768f205c6"
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeInputTests",
+          "method": "Routed_native_mouse_stroke_requires_real_Home_approval_and_exact_Files_revision",
+          "testName": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeInputTests.Routed_native_mouse_stroke_requires_real_Home_approval_and_exact_Files_revision(changeRevision: True)",
+          "originalTestId": "0cc0a9ae-9230-1f4e-b10b-f1ffe16ba816"
+        }
+      ]
+    }
+  ],
+  "qualification": "All original outer ZIP SHA/CRC, exact inner part2 ZIP CRC, required TRX pieces/fullfile SHA independently verified in memory. Preserve class+method+display testName tuples; random execution IDs not comparison keys. Counts describe ACTUAL predecessor only, not graph49/new run. Other source-inventoried classes without predecessor Passed outcomes still require explicit actual owning proof."
+}

@@ -9,6 +9,8 @@ namespace HavenOS.Apps.Canvas;
 public sealed record CanvasFilesOpenResult(CanvasArtifact Artifact, FilesRevision Revision, FilesRevisionId CasRevisionId)
 {
     public Guid StoreId { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ICanvasOriginalDisplaySelection? OriginalSelection { get; init; }
 }
 
 /// <summary>
@@ -16,7 +18,7 @@ public sealed record CanvasFilesOpenResult(CanvasArtifact Artifact, FilesRevisio
 /// are immutable and published through Files revision CAS. Host authentication
 /// and Files resource authorization are mandatory; no private directory fallback.
 /// </summary>
-public sealed class CanvasFilesArtifactBridge(
+public sealed partial class CanvasFilesArtifactBridge(
     IAuthenticatedResourceActorSource actors,
     Func<AuthenticatedResourceActor, DurableDriveProvider?> providers,
     FilesWorkspaceDirectoryResolver directories,
@@ -150,12 +152,29 @@ public sealed class CanvasFilesArtifactBridge(
         return SaveCoreAsync(fileId, artifact, expectedFileRevision, claimedActor, expectedStoreId, cancellationToken);
     }
 
+    public Task<FilesRevision> SaveWithFinalAuthorityAsync(HostedItemId fileId, CanvasArtifact artifact,
+        FilesRevisionId expectedFileRevision, Guid expectedStoreId, AuthenticatedResourceActor claimedActor,
+        Func<AuthenticatedResourceActor, DurableDriveProvider, CancellationToken, ValueTask<CanvasFilesFinalAuthority>> captureFinalAuthority,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(claimedActor); ArgumentNullException.ThrowIfNull(captureFinalAuthority);
+        if (expectedStoreId == Guid.Empty) throw new ArgumentException("An original Files store identity is required.", nameof(expectedStoreId));
+        return SaveCoreAsync(fileId, artifact, expectedFileRevision, claimedActor, expectedStoreId, cancellationToken, captureFinalAuthority);
+    }
+
     private async Task<FilesRevision> SaveCoreAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
-        AuthenticatedResourceActor? claimedActor, Guid? expectedStoreId, CancellationToken cancellationToken)
+        AuthenticatedResourceActor? claimedActor, Guid? expectedStoreId, CancellationToken cancellationToken,
+        Func<AuthenticatedResourceActor, DurableDriveProvider, CancellationToken, ValueTask<CanvasFilesFinalAuthority>>? captureFinalAuthority = null,
+        OriginalDisplaySelection? originalSelection = null)
     {
         ArgumentNullException.ThrowIfNull(artifact);
+        using var retainedOriginal = originalSelection is null ? null : await originalSelection.RetainAsync(cancellationToken).ConfigureAwait(false);
         if (!hostAllowsWrites()) throw new UnauthorizedAccessException("The current Canvas host is read-only.");
         var resolved = await ResolveAsync(fileId, ResourceAccess.Write, cancellationToken, expectedStoreId).ConfigureAwait(false);
+        if (originalSelection is not null && (!ReferenceEquals(resolved.Provider, originalSelection.Provider) ||
+            resolved.Actor != originalSelection.Actor || resolved.StoreId != originalSelection.StoreId ||
+            resolved.Metadata.CurrentRevisionId != originalSelection.CasRevisionId))
+            throw new UnauthorizedAccessException("Original Canvas display provider or baseline was replaced.");
         if (expectedStoreId is { } originalStore && resolved.StoreId != originalStore)
             throw new InvalidOperationException("The original Files store has been replaced.");
         if (claimedActor is not null && resolved.Actor != claimedActor)
@@ -170,6 +189,7 @@ public sealed class CanvasFilesArtifactBridge(
         var current = await resolved.Provider.GetCurrentArtifactContentAsync(fileId, cancellationToken).ConfigureAwait(false);
         if (current.IsSuccess && current.Value!.Revision.OwningAppRevisionId == artifact.RevisionId.ToString("N"))
         {
+            if (captureFinalAuthority is not null) throw new InvalidOperationException("Original claimed insertion already has a committed revision; observe its receipt without replaying the owner.");
             var prior = current.Value.Revision;
             if (prior.ContentHash != hash || prior.SizeBytes != bytes.LongLength)
                 throw new InvalidOperationException("Canvas revision identity was reused with different content.");
@@ -197,7 +217,10 @@ public sealed class CanvasFilesArtifactBridge(
             throw new UnauthorizedAccessException("The claimed Canvas execution actor changed before publication.");
         if (!ReferenceEquals(providers(resolved.Actor), resolved.Provider))
             throw new UnauthorizedAccessException("The canonical Files provider changed before Canvas publication.");
-        var commitAuthority = captureCommitAuthority is null
+        await using var retainedAuthority = captureFinalAuthority is null ? null
+            : (await captureFinalAuthority(resolved.Actor, resolved.Provider, cancellationToken).ConfigureAwait(false)
+                ?? throw new UnauthorizedAccessException("Mandatory claimed Canvas final authority is unavailable."));
+        var commitAuthority = retainedAuthority is not null ? retainedAuthority.Guard : captureCommitAuthority is null
             ? new FilesCommitAuthorityGuard(resolved.Actor.ActorId, async token =>
                 await actors.GetCurrentAsync(token).ConfigureAwait(false) == resolved.Actor && hostAllowsWrites())
             : await captureCommitAuthority(resolved.Actor, resolved.Provider, cancellationToken).ConfigureAwait(false);
@@ -206,6 +229,8 @@ public sealed class CanvasFilesArtifactBridge(
         var committed = expectedStoreId is { } pinnedStore
             ? await resolved.Provider.CommitDurableRevisionAsync(commit, Array.Empty<FilesItemRevisionPrecondition>(), pinnedStore, commitAuthority, cancellationToken).ConfigureAwait(false)
             : await resolved.Provider.CommitDurableRevisionAsync(commit, commitAuthority, cancellationToken).ConfigureAwait(false);
+        if (captureFinalAuthority is not null && committed.Error?.Code == FilesErrorCode.PermissionDenied)
+            throw new UnauthorizedAccessException("Original Canvas final claimed authority refused publication.");
         if (!committed.IsSuccess)
             throw new InvalidOperationException(committed.Error!.Message + " The candidate remains recoverable and the prior canonical revision is unchanged.");
         return committed.Value!;

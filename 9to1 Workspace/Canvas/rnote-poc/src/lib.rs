@@ -591,6 +591,63 @@ impl HeadlessCanvasEngine {
         Self::from_snapshot(snapshot).save_rnote().await
     }
 
+    /// Render an exact visible-key projection using maintained native snapshots.
+    /// Keep the original document/camera/background and durable entities intact;
+    /// hidden layers never become donor trash or disappear from saved history.
+    pub async fn render_visible_keys(&self, keys: &[u64]) -> Result<CanvasRenderFrame> {
+        if self.stroke_active || keys.len() > 1_000_000 { anyhow::bail!("invalid visibility projection boundary"); }
+        let selected = keys.iter().map(|value| rnote_engine::store::StrokeKey::from(KeyData::from_ffi(*value))).collect::<HashSet<_>>();
+        if selected.len() != keys.len() { anyhow::bail!("duplicate visible entity"); }
+        let mut snapshot = self.engine.take_snapshot();
+        if selected.iter().any(|key| !snapshot.stroke_components.contains_key(*key) || !snapshot.chrono_components.contains_key(*key)) { anyhow::bail!("missing visible entity or chronology"); }
+        Arc::make_mut(&mut snapshot.stroke_components).retain(|key,_| selected.contains(&key));
+        Arc::make_mut(&mut snapshot.chrono_components).retain(|key,_| selected.contains(&key));
+        Self::from_snapshot(snapshot).render_frame().await
+    }
+
+    /// Read actual retained donor ranks for exact entities; no canonical identity
+    /// or edit permission is inferred from a caller-supplied rank/key.
+    pub fn read_user_layer_ranks(&self, keys: &[u64]) -> Result<Vec<u32>> {
+        if keys.is_empty() || keys.len() > 1_000_000 { anyhow::bail!("bounded exact layer entities required"); }
+        let snapshot = self.engine.take_snapshot();
+        let mut seen = HashSet::new();
+        keys.iter().map(|value| {
+            let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(*value));
+            if !seen.insert(key) || !snapshot.stroke_components.contains_key(key) { anyhow::bail!("invalid layer entity"); }
+            let chrono = snapshot.chrono_components.get(key).context("missing donor chronology")?;
+            match chrono.layer {
+                rnote_engine::store::chrono_comp::StrokeLayer::UserLayer(rank) => Ok(rank),
+                _ => anyhow::bail!("reserved donor layer requires its own supported operation"),
+            }
+        }).collect()
+    }
+
+    /// Assign actual maintained donor user-layer ranks without changing stable
+    /// entity keys, per-layer chronology, authored geometry or reserved roles.
+    /// Canonical LayerID ownership/mapping is supplied by the owning document.
+    pub fn assign_user_layer_ranks(&mut self, keys: &[u64], ranks: &[u32]) -> Result<()> {
+        if self.stroke_active { anyhow::bail!("cannot change layers during an active stroke"); }
+        if keys.is_empty() || keys.len() != ranks.len() || keys.len() > 1_000_000 {
+            anyhow::bail!("layer assignment requires matched bounded entities and ranks");
+        }
+        let selected = keys.iter().map(|value| rnote_engine::store::StrokeKey::from(KeyData::from_ffi(*value))).collect::<Vec<_>>();
+        if selected.iter().copied().collect::<HashSet<_>>().len() != keys.len() { anyhow::bail!("duplicate layer entity"); }
+        let mut snapshot = self.engine.take_snapshot();
+        for key in &selected {
+            if !snapshot.stroke_components.contains_key(*key) { anyhow::bail!("missing layer entity"); }
+            let chrono = snapshot.chrono_components.get(*key).context("missing donor chronology")?;
+            if !matches!(chrono.layer, rnote_engine::store::chrono_comp::StrokeLayer::UserLayer(_)) {
+                anyhow::bail!("reserved donor layer requires its own supported operation");
+            }
+        }
+        for (key, rank) in selected.iter().zip(ranks) {
+            let chrono = Arc::make_mut(&mut snapshot.chrono_components).get_mut(*key).context("missing validated donor chronology")?;
+            Arc::make_mut(chrono).layer = rnote_engine::store::chrono_comp::StrokeLayer::UserLayer(*rank);
+        }
+        let _ = self.engine.load_snapshot(snapshot);
+        Ok(())
+    }
+
     /// Remove the exact persisted donor entity, preserving surviving slot keys,
     /// chronology, document and camera. Canonical history owns this snapshot edit.
     pub fn delete_stroke(&mut self, key: u64) -> Result<()> {
@@ -1332,6 +1389,47 @@ mod tests {
             assert_eq!(original,serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
             assert!(canvas.split_erase_candidate(&[CanvasPointerSample::new(80.0,0.0,0.5);2],f64::NAN).await.is_err());
             assert_eq!(original,serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
+        });
+    }
+
+    #[test]
+    fn genuine_user_layer_rank_changes_native_render_order_and_survives_reopen() {
+        block_on(async {
+            let mut canvas = HeadlessCanvasEngine::new();
+            canvas.set_pen_style(CanvasTool::Pen, CanvasPenStyle { color: [1.0,0.0,0.0,1.0], width: 20.0 }).unwrap();
+            canvas.draw_stroke(&sample_stroke()).unwrap();
+            let first = canvas.stroke_keys()[0];
+            canvas.set_pen_style(CanvasTool::Pen, CanvasPenStyle { color: [0.0,0.0,1.0,1.0], width: 20.0 }).unwrap();
+            canvas.draw_stroke(&sample_stroke()).unwrap();
+            let second = *canvas.stroke_keys().iter().find(|key| **key != first).unwrap();
+            let keys = canvas.stroke_keys();
+            let original_bytes = canvas.save_rnote().await.unwrap();
+            let full_frame = stable_svg(&canvas.render_frame().await.unwrap().bytes);
+            let visible_frame = stable_svg(&canvas.render_visible_keys(&[first]).await.unwrap().bytes);
+            let empty_frame = stable_svg(&canvas.render_visible_keys(&[]).await.unwrap().bytes);
+            assert_ne!(full_frame, visible_frame);assert_ne!(visible_frame, empty_frame);
+            assert_eq!(original_bytes, canvas.save_rnote().await.unwrap());
+            assert_eq!(keys, canvas.stroke_keys());
+            assert_eq!(full_frame, stable_svg(&canvas.render_frame().await.unwrap().bytes));
+            assert!(canvas.render_visible_keys(&[first,first]).await.is_err());
+            assert!(canvas.render_visible_keys(&[u64::MAX]).await.is_err());
+            let before = stable_svg(&canvas.export_svg().await.unwrap());
+            canvas.assign_user_layer_ranks(&[first,second], &[1,0]).unwrap();
+            assert_eq!(keys, canvas.stroke_keys());
+            assert_eq!(vec![1,0], canvas.read_user_layer_ranks(&[first,second]).unwrap());
+            let after = stable_svg(&canvas.export_svg().await.unwrap());
+            assert_ne!(before, after);
+            let bytes = canvas.save_rnote().await.unwrap();
+            let mut restored = HeadlessCanvasEngine::from_rnote(bytes.clone()).await.unwrap();
+            assert_eq!(keys, restored.stroke_keys());
+            assert_eq!(vec![1,0], restored.read_user_layer_ranks(&[first,second]).unwrap());
+            assert_eq!(after, stable_svg(&restored.export_svg().await.unwrap()));
+            assert!(restored.assign_user_layer_ranks(&[first,first], &[0,1]).is_err());
+            assert!(restored.assign_user_layer_ranks(&[first,u64::MAX], &[0,1]).is_err());
+            assert!(restored.assign_user_layer_ranks(&[first], &[]).is_err());
+            assert_eq!(bytes, restored.save_rnote().await.unwrap());
+            restored.assign_user_layer_ranks(&[first,second], &[0,0]).unwrap();
+            assert_eq!(before, stable_svg(&restored.export_svg().await.unwrap()));
         });
     }
 

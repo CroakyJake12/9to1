@@ -1,0 +1,607 @@
+{
+  "classes": [
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "class": "CompatibilityPackageInspectorTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeEraserControlTests.cs",
+      "class": "CanvasNativeEraserControlTests",
+      "namespace": "HavenOS.Apps.Canvas.NativeUI.Tests",
+      "sha256": "c8e854ae2b3f78687b0d0d5b73d0350b2a5b9782a269be360cff3855f18d9329"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeInputTests.cs",
+      "class": "CanvasNativeInputTests",
+      "namespace": "HavenOS.Apps.Canvas.NativeUI.Tests",
+      "sha256": "c62a1d8d5a7d518c100e2bd10544cfb5394a89a0860e407eddc0626b1b6290c7"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasHomeEraserOperationTests.cs",
+      "class": "CanvasHomeEraserOperationTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "2113af4447b17916513b884c5ddfc714e6117c77410489c5e3b843d1f3246abe"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasHomeHistoryOperationTests.cs",
+      "class": "CanvasHomeHistoryOperationTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "3b37ce94c360db63abedffffeac47e495345123ad96cbde58c4c2eea9a0f4c23"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasHomeQuickEraserOperationTests.cs",
+      "class": "CanvasHomeQuickEraserOperationTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "fc6398698b9cb06830ec08d675a65c1f41c68543b8338cfaf4f5ef611d7f456a"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasHomeSplitEraserOperationTests.cs",
+      "class": "CanvasHomeSplitEraserOperationTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "02ad17c51a36977054eab0dcb8ef49c32414c31c44e88f5cdfa946cb9950656e"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasHomeStrokeOperationTests.cs",
+      "class": "CanvasHomeStrokeOperationTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "18f857c9a90114ab445397134272fb46da1bd2489ac158742c0fb4c6cfd2a946"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasStructuredStrokeBatchTests.cs",
+      "class": "CanvasStructuredStrokeBatchTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "7c86bdb92b2d4dfdbe8dd5216065e7e3918db0ca84dfc67fc3403bdc59ded02f"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteCanonicalIdentityTests.cs",
+      "class": "NativeRnoteCanonicalIdentityTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "0f1a09ba8d603ab8af40a5f50c06867826af3627869ff2dc9f1ee66d20885bf9"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteJourneyTests.cs",
+      "class": "NativeRnoteJourneyTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "b35ff5a267cf5e64b713e83e8c724e76cdc84d430a07bcfd3581a287c115f05d"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteQuickEraserTests.cs",
+      "class": "NativeRnoteQuickEraserTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "b3cc1607cced15d76a6a8446fa7cf468a8a57c4e3c2b4a442773c6d2eabb808c"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteSplitMaterializationTests.cs",
+      "class": "NativeRnoteSplitMaterializationTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "a50b3568fc5c9a1b32f951e54e124fad54da35f82129061aff6ac6aa373943ab"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteTrashEraserTests.cs",
+      "class": "NativeRnoteTrashEraserTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "54963c1bca0af80b704e30109a05241d6826d7d08366d687578d26f5053c534c"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI.Tests/FilesDomainContractTests.cs",
+      "class": "FilesDomainContractTests",
+      "namespace": "HavenOS.Files.CUI.Tests",
+      "sha256": "12e43fb491b30922b34cf64ae4b268c01c0fc38fe0bfaf2d05eb80a69f063882"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasSchema2Tests.cs",
+      "class": "CanvasSchema2Tests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "b0254229eb84d1dd29de0d58cdf9be00b4ba86515456a686fe126608c64c7c11"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
+      "class": "FilesCompatibilityPackageContentSourceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "97bf566c0cd09b2620fed3a6a042218894de89080ce0f05b6e5bed1f5e839d51"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeChildFolderReadTests.cs",
+      "class": "FilesNativeChildFolderReadTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "deafffd9402fe03385d6dba4c4152e3222a475e124db653cf248b46f0f1bf4fe"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesMediaOriginalStoreTests.cs",
+      "class": "NativeFilesMediaOriginalStoreTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "1f152922cd67edf5f0bf0707a22aaeb11d7d47b1770bc9c01a6c67c3c5615798"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteHistoryRestorationTests.cs",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "class": "NativeRnoteHistoryRestorationTests",
+      "sha256": "7ac3a520933ecae45627b77cdce5f318b1e8523f9ae5d134b6479c100fee0efa"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasLayerDonorTransactionTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "CanvasLayerDonorTransactionTests",
+      "sha256": "9109f52099caa4eaab1936035cad8877fbdc88a7401d89611c2ffb8022075350"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteUserLayerDocumentTests.cs",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "class": "NativeRnoteUserLayerDocumentTests",
+      "sha256": "1dce61bd6d137aece9d04f72588e8500650bd93ca87ebc7873554f5a36d220de"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeLayerSelectorTests.cs",
+      "namespace": "HavenOS.Apps.Canvas.NativeUI.Tests",
+      "class": "CanvasNativeLayerSelectorTests",
+      "sha256": "6491f7e8bc25e5a8bf4450c7e501d5e7e4d39f954cce548861a9290122227bf9"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasFilesFinalAuthorityTests.cs",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "class": "CanvasFilesFinalAuthorityTests",
+      "sha256": "a6ec6f02f9c400201748e558da17f76a0b82d91fbee541f5d6dcf344fe820cbe"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalLayerAttemptTests.cs",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "class": "CanvasHomeNativeInsertionOperationTests",
+      "sha256": "cf854d6740238087511115b3d3e3410d4e15269cfc4a5b1df0a261cba45e8658"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeLayerKeyboardTests.cs",
+      "namespace": "HavenOS.Apps.Canvas.NativeUI.Tests",
+      "class": "CanvasNativeLayerKeyboardTests",
+      "sha256": "c3c842e961085aa0456adfa283f4054eef6bf6624910ded0c270e419da8a8c6c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedOriginalArgumentsTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeClaimedOriginalArgumentsTests",
+      "sha256": "4273a27363cad34d6679e8253203c866f2cb95326864f4b770ce0a1abeebd5f6"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalCommitCompositionTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeLocalCommitCompositionTests",
+      "sha256": "1662715cf2a0869247bfde22004378abc27c6fa51527b62025549e461c368034"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeLocalReadCompositionTests",
+      "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalCanonicalReadTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "FilesOriginalCanonicalReadTests",
+      "sha256": "3b7a5232872941565e72e321b885ce42999074d1472f6f743d1d90b39f3c1f87"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PictureFilesCopyResourceAdmissionTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "PictureFilesCopyResourceAdmissionTests",
+      "sha256": "bf4d59103896db87482470863e09b8981a93a9defe7ca920fc689ad38cfa623b"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalOwnerCompositionTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "FilesOriginalOwnerCompositionTests",
+      "sha256": "7ce0694150ceb07606633072e42b81ffc46ef3da1dd8be952835abe4f0cecad0"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/AgentPresentationTests.cs",
+      "sha256": "a9acba0ef14e7bb2f1ce4ff94c8b09216b2c96e38e9b480edec997bbae839794",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "AgentPresentationTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/DenAttachmentCommitAuthorityTests.cs",
+      "sha256": "d93b65278cd5f9eabb39b7c63c3882f259aedde82cad7ffb8e33e5df57ec467d",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "DenAttachmentCommitAuthorityTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/DenCommitAuthorityTests.cs",
+      "sha256": "63809eb238e9fbbb51a0252fd7c9c33b39526eb0e3911206a6bc2bf61f5e4641",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "DenCommitAuthorityTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/DenModelInstallationAuthorityTests.cs",
+      "sha256": "8c9ea0ecef02316f0472060619ee629ae0958bf18b80d25b604668195fafda27",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "DenModelInstallationAuthorityTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/DenNamespaceAuthorityTests.cs",
+      "sha256": "8d3060c46cfec2b49b6a24bde384d42ec47e3a1f09ec8338bef8f2342c393ac4",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "DenNamespaceAuthorityTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/DenReadLifetimeTests.cs",
+      "sha256": "79c90568eed41f1cc6fa66357e8ca9beb930ec29669694e8d1ace09a84b52e0f",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "DenReadLifetimeTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/DenSyncAuthorityTests.cs",
+      "sha256": "092eb5e700f92bf95eb1412c5572adffcac65271341d5ea29ce09c67b26d726d",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "DenSyncAuthorityTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs",
+      "sha256": "9a3c72d47d9e5c1cbb2eb20ea361a08380d1d9fba7f9a88dea379eefa422a732",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeArtifactReferenceObjectsTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs",
+      "sha256": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeAutomationDefinitionCommitFenceTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs",
+      "sha256": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeClaimedResourceAttestationTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+      "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeCompletionAuditRecoveryTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+      "sha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeCoreStateStoreTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+      "sha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeDashboardCancellationTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+      "sha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeDashboardDisposeTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+      "sha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeDashboardRecoveryTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+      "sha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeDashboardTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+      "sha256": "92df8c2bce6f21c649a54e6c3c0410a7694224b18a67c209607e02478bed3538",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeDiscoverCatalogTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+      "sha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeEcosystemTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeEquationObjectTests.cs",
+      "sha256": "e1409d8c3ab5d4b6fc8c5929c0dc9ae98b22a5f24116447a62914e367477fe96",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeEquationObjectTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+      "sha256": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeInstalledApplicationOriginalActorTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+      "sha256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeInstalledApplicationRegistryTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeInvocationCatalogueTests.cs",
+      "sha256": "251884877db0b43ca2c930d4fc8e6634d0588456106b294cf83297c723c8f48e",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeInvocationCatalogueTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs",
+      "sha256": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeLocalOperationLeaseTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalProfileIdentityTests.cs",
+      "sha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeLocalProfileIdentityTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
+      "sha256": "709959ba007efc61463e614e76809e9e295ae94a39db6871ea72957ef1cf328e",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeLocalStoreSetupEvidenceTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+      "sha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeModelPickerFeatureProviderTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+      "sha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeModelPickerRouteEditorTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs",
+      "sha256": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNativeActionPolicyTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs",
+      "sha256": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNativeControlledLaunchTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs",
+      "sha256": "9f31eb55a44f51a8a9ab2579daac621237dc5dbb0dc7f4ddbb9492e057657939",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNativeDiscoverySessionTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativePeerObservationTests.cs",
+      "sha256": "0ef3f4160e43d4f2f56f14a490261fa7ddcff275500eea412e3c722d89fbcc80",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNativePeerObservationTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeServiceHostTests.cs",
+      "sha256": "59dc16cedcfee5eaff81096305babce87e9754104a5fd5c98d6b6bef4b77b959",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNativeServiceHostTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeSessionLeaseTests.cs",
+      "sha256": "3d70dc1c706d5fed878ba0379cfa4f625edf61b8019297238becf4d05fb94d95",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNativeSessionLeaseTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+      "sha256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNativeWidgetRegistryTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNotesSharedObjectsTests.cs",
+      "sha256": "d00cb9c718e2f349446f1ef6c885a58549dd8a2480731e9f564502379f6756a8",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNotesSharedObjectsTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+      "sha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeNotificationFeatureProviderTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs",
+      "sha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeObservedRejectedClaimAuditTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+      "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomePackageDatabaseTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+      "sha256": "7d8b9e5e5db1b9e4987c5e283a9cbe6813960f22c0d20a1745e6a62866bb42aa",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomePermissionTrustServiceTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePersonalDenFactoryTests.cs",
+      "sha256": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomePersonalDenFactoryTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
+      "sha256": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomePreparedResourceReviewTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+      "sha256": "77f007be4e841daacb097f733d15104e685cfc428a4a5a78fe91c7db6894554f",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeProductivityEngineTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEnvelopeTests.cs",
+      "sha256": "8d2b4ba935a34fe104ad4783827ed13258e433c3b38fb806076b618413d30cf4",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeProductivityEnvelopeTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityGeometryTests.cs",
+      "sha256": "1c47a86ee2036f0f17db517c1ee4eb187a5b8dfe221ea806b86c8de019507d6c",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeProductivityGeometryTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityInsertionTests.cs",
+      "sha256": "b7a07b981753f8b79a00976645cdac2a1455d3de899cf7a3650c9709a21c106e",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeProductivityInsertionTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityRasterTests.cs",
+      "sha256": "0e9875a5cde5b4b40c932585d8e907429053a0fa6d70b0cda1de45a7588da2c6",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeProductivityRasterTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityStyleTransferTests.cs",
+      "sha256": "5c0debb5acd891076aad4321be12b2ef4d2e5ebfd3187b84f9d41fe68a6e3007",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeProductivityStyleTransferTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedBeginAuditTests.cs",
+      "sha256": "41a1fcd6c4b737b141d882e0d8bc6a12df9e0496271fe4b38176f01b6dbee2ff",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeRejectedBeginAuditTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedClaimAuditTests.cs",
+      "sha256": "09ef37406c726e512651e8f9d1ee2a637fe5b468920087c7573ad5bf41a6f525",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeRejectedClaimAuditTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs",
+      "sha256": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeResourceOperationBrokerTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs",
+      "sha256": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeSettingsClaimedResourceCommitFenceTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeStoreImportAuditTests.cs",
+      "sha256": "ac549b92f504917d9183cf28abaa54a317b098e01a0afb5ca40ea700427ded31",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeStoreImportAuditTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeTerminalAdviceTests.cs",
+      "sha256": "9f8aa7f07244e52f8b4e14ac4e6187eb919f1ea2593f76b70bbbdf074114f7af",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeTerminalAdviceTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeUnclaimedExecutionAbortTests.cs",
+      "sha256": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeUnclaimedExecutionAbortTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
+      "sha256": "eb7ac43e027b462ecbd9c82846b56774c005539175e45dbbc5d4738766e63bd0",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeVectorShapeObjectTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeVersionedNodeGraphRepositoryTests.cs",
+      "sha256": "dfb20fca453c42eb41bf01351f5feaf6711e26f4fc2123d36996ddf2d85fc742",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeVersionedNodeGraphRepositoryTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
+      "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeWebMcpBrowserLeaseTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
+      "sha256": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeWebMcpOriginalActorApprovalTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/WebMcpInvocationTests.cs",
+      "sha256": "242adfc44883887f116f4f86e1dabc9e4ef1a70f934ddaf693c7054a94261b60",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "WebMcpInvocationTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+      "sha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeActualPersistedWriteObserverTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+      "sha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeClaimedResourceCommitFenceTests"
+    }
+  ],
+  "dependencyPins": [
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalLayerAttemptTests.cs",
+      "sha256": "cf854d6740238087511115b3d3e3410d4e15269cfc4a5b1df0a261cba45e8658"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeLayerRemainingCasesTests.cs",
+      "sha256": "5f1b79349e2b1adc58b284d2529f74610153dbf34cf45d5b243caa20c88a232e"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalOwnerReadFactoryTests.cs",
+      "sha256": "86efc200d0eea894d20f632c3110ed15a386b8faa9e9bed546f737ccb3021c24"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeInsertionOperationTests.cs",
+      "sha256": "aaa7648f25157c8e0db0066cbc39f6566fc2fe13959e2bb9b2a621673166bdb5"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeLayerOperationTests.cs",
+      "sha256": "e666a8776a822d6153676188ce789a51ef7b1469d004a95e79c26880f163abc6"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeLayerDeleteTests.cs",
+      "sha256": "529719664b47820f8ad4c5b1424fc9bd960688997ad094cbe3983fce01cdf034"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalWriteProtocolTests.cs",
+      "sha256": "8ea4c606c7f057380a4f43591f5bae7d2cb6b918c97d1076ce2758b94888ac66"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalBindingPublicationTests.cs",
+      "sha256": "94a96ab69be7b2ad152c4c4cdf587b73d3fca23bda7ea257d539995d2eaa40c7"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalInsertionRecoveryTests.cs",
+      "sha256": "1ade3b4d95b81cf13c24f5ef1da091bc857bafc45a387d32c238a38655f9e14d"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalLayerInsertionTests.cs",
+      "sha256": "6b7d4b1527f5e78494cd7939618e2b04f53291238a8361d24c8636cb4f900178"
+    }
+  ],
+  "ownerManifestSha256": "745739ebbe5a465c798630ade82d0a3c552c73611a63e395f8a5a7c27c317f66",
+  "status": "SOURCE_ONLY_CURRENT21_WHOLE_HOME_PLUS_ALL_PREVIOUS_CANVAS49_CLASS_PINS_NOT_EXECUTION_COUNT",
+  "qualification": "Whole current21 Home project unfiltered; test-bearing whole classes only. CollectionDefinition helper remains compiled/pinned through DenReadLifetimeTests same whole source file. 93 declarations are not runtime counts."
+}

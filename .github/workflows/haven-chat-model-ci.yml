@@ -1,50 +1,332 @@
-# FILE DOCUMENTATION
-# Where: .github/workflows/haven-chat-model-ci.yml in the GitHub automation configuration used by continuous integration.
-# What: This file automates or configures the repository operation described by its commands and keys.
-# How: Read from top to bottom: inputs and environment first, validation/processing next, and explicit success or failure output last.
-# Why: The file keeps one cohesive responsibility in a predictable location so callers can find and replace it without unrelated changes.
-name: Haven Chat and Model Pass
-
+name: Astra Canvas49 complete native owning regression resource
 on:
   workflow_dispatch:
-
+    inputs:
+      expected_commit:
+        required: true
+        type: string
+      cut_manifest_sha256:
+        required: true
+        type: string
 permissions:
   contents: read
-
 jobs:
   validate:
-    runs-on: windows-latest
-    timeout-minutes: 45
+    if: startsWith(github.ref, 'refs/heads/validation/astra-canvas65-current22-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: [owning, regression, resource]
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      MSBUILDDISABLENODEREUSE: '1'
+      AVALONIA_TELEMETRY_OPTOUT: '1'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Materialize exact three managed dependencies
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
+      - name: Materialize exact Rnote donor
+        if: matrix.cohort == 'owning'
+        run: git submodule update --init --depth=1 -- "9to1 Workspace/Canvas/Source/Rnote"
+      - uses: dtolnay/rust-toolchain@1.98.1
+        if: matrix.cohort == 'owning'
+      - name: Install maintained native headless producers
+        if: matrix.cohort == 'owning'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libglib2.0-dev libcairo2-dev libpango1.0-dev librsvg2-dev xvfb xauth
+          mkdir -p artifacts/canvas65-managed
+          dpkg-query -W > artifacts/canvas65-managed/native-hosted-packages.txt
+      - uses: actions/setup-dotnet@v4
+        if: matrix.cohort != 'owning'
         with:
           global-json-file: global.json
-
-      - name: Restore
-        run: dotnet restore "9to1 Workspace/shared/Haven.sln"
-
-      - name: Build Debug
-        run: dotnet build "9to1 Workspace/shared/Haven.sln" -c Debug --no-restore
-
-      - name: Test Debug
-        run: dotnet test "9to1 Workspace/shared/Haven.sln" -c Debug --no-build
-
-      - name: Build automation worker
-        run: dotnet build "9to1 Workspace/shared/src/Haven.AutomationWorker/Haven.AutomationWorker.csproj" -c Debug --no-restore
-
-      - name: Upload source snapshot
-        if: always()
+      - name: Install and retain exact official SDK archive without executing SDK
+        if: matrix.cohort == 'owning'
+        run: |
+          set -euo pipefail
+          sdk_root="$RUNNER_TEMP/astra-canvas-sdk-10.0.301"
+          sdk_archive="$RUNNER_TEMP/astra-canvas-sdk-10.0.301.tar.gz"
+          test ! -e "$sdk_root"
+          test ! -e "$sdk_archive"
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 300 'https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.301/dotnet-sdk-10.0.301-linux-x64.tar.gz' --output "$sdk_archive"
+          printf '%s  %s\n' 'cfbeec3a3a1d3ad3e168e37a77c4cc26c23125acd84a86d014047da3ecffce4c368a9acac4d7c950a047fa3d98989ce8aea69f8e5842cb6d330e8911e1c335a7' "$sdk_archive" | sha512sum --check --strict
+          mkdir "$sdk_root"
+          tar --extract --gzip --file "$sdk_archive" --directory "$sdk_root" --same-permissions --no-same-owner
+          echo "ASTRA_CANVAS_OFFICIAL_SDK_ROOT=$sdk_root" >> "$GITHUB_ENV"
+          echo "ASTRA_CANVAS_OFFICIAL_SDK_ARCHIVE=$sdk_archive" >> "$GITHUB_ENV"
+          echo "DOTNET_ROOT=$sdk_root" >> "$GITHUB_ENV"
+          echo "DOTNET_MULTILEVEL_LOOKUP=0" >> "$GITHUB_ENV"
+          echo "$sdk_root" >> "$GITHUB_PATH"
+          mkdir -p artifacts/canvas-sdk-original
+          cp "$sdk_archive" artifacts/canvas-sdk-original/official-sdk-10.0.301-linux-x64.tar.gz
+      - name: Execute complete immutable cohorts
+        env:
+          COHORT: ${{ matrix.cohort }}
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+        run: |
+          set -euo pipefail
+          if [ "$COHORT" = owning ]; then
+            xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24 -nolisten tcp" python3 .github/scripts/astra-canvas65-hosted-managed.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-canvas65-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+          else
+            python3 ".github/scripts/astra-desktop-visible-${COHORT}.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-canvas65-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+          fi
+      - name: Retain full regression/resource proof including failures
+        if: ${{ always() && matrix.cohort != 'owning' }}
         uses: actions/upload-artifact@v4
         with:
-          name: haven-source-snapshot
-          path: |
-            .
-            !**/bin/**
-            !**/obj/**
-            !.git/**
-          include-hidden-files: true
-          retention-days: 3
+          name: astra-canvas49-${{ matrix.cohort }}-${{ github.sha }}
+          path: artifacts/desktop-visible-${{ matrix.cohort }}/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Bound complete native proof and complete original SDK archive separately
+        if: ${{ always() && matrix.cohort == 'owning' }}
+        id: nativebundles
+        run: python3 .github/scripts/astra-canvas65-artifact-parts.py --input artifacts/canvas65-managed --output artifacts/canvas65-parts
+      - name: Bound full official SDK originals separately
+        if: ${{ always() && matrix.cohort == 'owning' }}
+        id: sdkbundles
+        run: python3 .github/scripts/astra-canvas65-artifact-parts.py --input artifacts/canvas-sdk-original --output artifacts/canvas-sdk-parts
+      - name: Retain canvas65 complete original manifest
+        if: ${{ always() && matrix.cohort == 'owning' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-manifest-${{ github.sha }}
+          path: artifacts/canvas65-parts/manifest.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part00
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 0 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-00-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-00.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part01
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 1 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-01-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-01.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part02
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 2 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-02-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-02.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part03
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 3 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-03-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-03.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part04
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 4 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-04-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-04.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part05
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 5 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-05-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-05.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part06
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 6 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-06-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-06.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part07
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 7 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-07-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-07.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part08
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 8 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-08-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-08.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part09
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 9 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-09-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-09.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part10
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 10 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-10-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-10.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas65 part11
+        if: ${{ always() && matrix.cohort == 'owning' && steps.nativebundles.outputs.count != '' && fromJSON(steps.nativebundles.outputs.count) > 11 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas65-bundle-11-${{ github.sha }}
+          path: artifacts/canvas65-parts/bundle-11.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain canvas-sdk complete original manifest
+        if: ${{ always() && matrix.cohort == 'owning' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-manifest-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/manifest.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part00
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 0 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-00-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-00.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part01
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 1 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-01-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-01.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part02
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 2 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-02-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-02.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part03
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 3 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-03-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-03.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part04
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 4 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-04-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-04.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part05
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 5 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-05-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-05.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part06
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 6 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-06-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-06.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part07
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 7 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-07-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-07.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part08
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 8 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-08-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-08.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part09
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 9 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-09-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-09.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part10
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 10 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-10-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-10.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded canvas-sdk part11
+        if: ${{ always() && matrix.cohort == 'owning' && steps.sdkbundles.outputs.count != '' && fromJSON(steps.sdkbundles.outputs.count) > 11 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-canvas-sdk-bundle-11-${{ github.sha }}
+          path: artifacts/canvas-sdk-parts/bundle-11.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14

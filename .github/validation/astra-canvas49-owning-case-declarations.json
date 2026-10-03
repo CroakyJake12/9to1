@@ -1,0 +1,695 @@
+{
+  "status": "SOURCE_DECLARATIONS_REQUIRE_FRESH_ACTUAL_OUTCOMES_NOT_EXECUTED_COUNTS",
+  "graph": "/workspace/astra-source/worker6-canvas-current20-composed-native-layer-source-graph49.json",
+  "graphSha256": "745739ebbe5a465c798630ade82d0a3c552c73611a63e395f8a5a7c27c317f66",
+  "actualPredecessor88Sha256": "4ef4a3ef64043daebbec9dbec56eb543f535653a260f0df558b44a3c3f8b0731",
+  "wholeSelectedTestFiles": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasLayerDonorTransactionTests.cs",
+      "sourceSha256": "9109f52099caa4eaab1936035cad8877fbdc88a7401d89611c2ffb8022075350",
+      "declaredRequiredMethods": [
+        {
+          "class": "Haven.Core.Tests.CanvasLayerDonorTransactionTests",
+          "method": "Exact_original_layer_reorder_captures_once_denies_reentry_and_preserves_history_on_replay",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasLayerDonorTransactionTests",
+          "method": "Refused_native_preparation_leaves_actual_canonical_bytes_and_retry_available",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasLayerDonorTransactionTests",
+          "method": "New_layer_uses_exact_captured_identity_and_refusals_do_not_capture_or_change_owner",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasLayerDonorTransactionTests",
+          "method": "Canonical_ink_layer_move_denies_both_locked_sides_then_captures_exact_once_and_replays_history",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasLayerDonorTransactionTests",
+          "method": "Layer_state_capture_is_atomic_noop_and_existing_typed_api_replay_match_the_original_tuple",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasLayerDonorTransactionTests",
+          "method": "Exact_layer_delete_removes_its_ink_once_and_codec_reopen_restores_membership_with_history",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Core.Tests.CanvasLayerDonorTransactionTests",
+          "method": "Locked_last_missing_layer_and_failed_donor_delete_preserve_bytes_and_exact_retry",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteUserLayerDocumentTests.cs",
+      "sourceSha256": "1dce61bd6d137aece9d04f72588e8500650bd93ca87ebc7873554f5a36d220de",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Native_layer_creation_order_history_and_physical_reopen_keep_original_ids_strokes_and_colours",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Forged_retained_layer_rank_is_rejected_on_actual_native_reopen_and_original_copy_still_renders",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Native_visibility_keeps_durable_ink_history_and_lock_denies_actual_stroke_before_native_effect",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Native_stroke_layer_move_changes_real_overlap_order_with_stable_ink_and_locked_destination_refusal",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Editor_layer_selection_is_not_canonical_and_exact_captured_ink_target_survives_later_selection",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Empty_native_layers_use_real_background_frame_without_invented_strokes_or_nonempty_rank_batch",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Original_single_layer_ink_can_hide_lock_and_reopen_without_creating_a_fictitious_extra_layer",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.NativeRnoteUserLayerDocumentTests",
+          "method": "Actual_native_layer_delete_retains_other_ink_and_physical_reopen_restores_deleted_ink_and_render_history",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeLayerSelectorTests.cs",
+      "sourceSha256": "6491f7e8bc25e5a8bf4450c7e501d5e7e4d39f954cce548861a9290122227bf9",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeLayerSelectorTests",
+          "method": "Mounted_duplicate_names_select_exact_original_layer_without_canonical_write_then_real_ink_uses_its_native_rank",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeLayerSelectorTests",
+          "method": "Held_original_access_result_cannot_adopt_after_host_retirement_or_resurrect_old_native_layer_view",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeLayerSelectorTests",
+          "method": "Actual_unbound_native_import_keeps_its_render_and_reports_layer_navigation_unavailable_without_fake_rows",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeLayerSelectorTests",
+          "method": "Genuine_donor_highlighter_role_keeps_ink_and_reports_user_layer_navigation_unavailable",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/CanvasFilesFinalAuthorityTests.cs",
+      "sourceSha256": "a6ec6f02f9c400201748e558da17f76a0b82d91fbee541f5d6dcf344fe820cbe",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasFilesFinalAuthorityTests",
+          "method": "Actual_Files_publication_retains_final_authority_until_acknowledgement_or_denial",
+          "attribute": "Theory",
+          "parameters": "bool allow",
+          "inlineDataSource": [
+            "true",
+            "false"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalLayerAttemptTests.cs",
+      "sourceSha256": "cf854d6740238087511115b3d3e3410d4e15269cfc4a5b1df0a261cba45e8658",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Layer_acknowledgement_survives_real_audit_failure_or_pre_reservation_cancellation_without_owner_replay",
+          "attribute": "Theory",
+          "parameters": "bool cancellation",
+          "inlineDataSource": [
+            "false",
+            "true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Layer_attempt_rejects_foreign_completion_broker_before_claim_and_retains_same_original_capability",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Layer_attempt_owner_exception_remains_unknown_and_cannot_reexecute_or_invent_acknowledgement",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeLayerRemainingCasesTests.cs",
+      "sourceSha256": "5f1b79349e2b1adc58b284d2529f74610153dbf34cf45d5b243caa20c88a232e",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Original_Home_rename_reorder_or_stroke_move_reopens_exact_native_layer_and_history",
+          "attribute": "Theory",
+          "parameters": "CanvasNativeLayerEditKind kind",
+          "inlineDataSource": [
+            "CanvasNativeLayerEditKind.Rename",
+            "CanvasNativeLayerEditKind.Reorder",
+            "CanvasNativeLayerEditKind.MoveStroke"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalOwnerReadFactoryTests.cs",
+      "sourceSha256": "86efc200d0eea894d20f632c3110ed15a386b8faa9e9bed546f737ccb3021c24",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Actual_registered_owner_display_reads_original_payload_without_any_Home_or_Files_effect",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Legacy_store_without_owner_issuer_denies_before_private_display_is_minted",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Foreign_actual_issuer_with_same_authority_cannot_pair_with_registered_owner_before_payload_read",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Actual_foreign_drive_snapshot_at_original_path_denies_payload_and_old_context_stays_retired_after_restore",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Genuine_registered_binding_replacement_denies_before_payload_and_retired_display_cannot_resurrect",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeInsertionOperationTests.cs",
+      "sourceSha256": "aaa7648f25157c8e0db0066cbc39f6566fc2fe13959e2bb9b2a621673166bdb5",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Exact_preapproval_native_order_is_immutable_and_real_Home_Files_history_restores_it",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Original_native_insertion_denies_actor_or_store_substitution_without_publication",
+          "attribute": "Theory",
+          "parameters": "bool foreignStore",
+          "inlineDataSource": [
+            "false",
+            "true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Original_preapproval_configuration_fingerprint_denies_same_UUID_record_revision_change",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Substituted_claimed_port_cannot_adopt_original_private_display_or_consume_its_capability",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeLayerOperationTests.cs",
+      "sourceSha256": "e666a8776a822d6153676188ce789a51ef7b1469d004a95e79c26880f163abc6",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Genuine_original_layer_proposal_commits_exact_native_edit_and_reopens_history",
+          "attribute": "Theory",
+          "parameters": "CanvasNativeLayerEditKind kind",
+          "inlineDataSource": [
+            "CanvasNativeLayerEditKind.Create",
+            "CanvasNativeLayerEditKind.SetVisibility",
+            "CanvasNativeLayerEditKind.SetLocked"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Strong_layer_port_denies_other_typed_command_under_exact_original_claim_then_original_still_commits",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Strong_layer_save_denies_retired_private_display_or_changed_original_configuration",
+          "attribute": "Theory",
+          "parameters": "bool configurationChanged",
+          "inlineDataSource": [
+            "false",
+            "true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Foreign_broker_composition_denies_before_capture_or_claim_and_same_original_capability_still_commits",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasHomeNativeLayerDeleteTests.cs",
+      "sourceSha256": "529719664b47820f8ad4c5b1424fc9bd960688997ad094cbe3983fce01cdf034",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Exact_reviewed_layer_delete_commits_real_Files_native_ink_removal_and_reopens_restore_history",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalWriteProtocolTests.cs",
+      "sourceSha256": "8ea4c606c7f057380a4f43591f5bae7d2cb6b918c97d1076ce2758b94888ac66",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Malformed_or_genuine_foreign_write_context_does_not_consume_original_layer_claim",
+          "attribute": "Theory",
+          "parameters": "bool genuineForeign",
+          "inlineDataSource": [
+            "false",
+            "true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Actual_private_display_retirement_before_begin_preserves_approved_request_and_canonical_bytes",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalBindingPublicationTests.cs",
+      "sourceSha256": "94a96ab69be7b2ad152c4c4cdf587b73d3fca23bda7ea257d539995d2eaa40c7",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Actual_binding_owner_update_waits_through_Files_publication_and_original_Home_fence",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalInsertionRecoveryTests.cs",
+      "sourceSha256": "1ade3b4d95b81cf13c24f5ef1da091bc857bafc45a387d32c238a38655f9e14d",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Actual_insertion_acknowledgement_survives_audit_failure_and_pre_reservation_cancellation_without_owner_replay",
+          "attribute": "Theory",
+          "parameters": "bool cancellation",
+          "inlineDataSource": [
+            "false",
+            "true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Foreign_completion_broker_is_refused_before_attempt_or_claim_and_original_capability_remains_usable",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalLayerInsertionTests.cs",
+      "sourceSha256": "6b7d4b1527f5e78494cd7939618e2b04f53291238a8361d24c8636cb4f900178",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Exact_original_native_layer_is_frozen_before_review_and_later_local_selection_cannot_redirect_ink",
+          "attribute": "Theory",
+          "parameters": "bool explicitTarget",
+          "inlineDataSource": [
+            "false",
+            "true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasHomeNativeInsertionOperationTests",
+          "method": "Locked_or_missing_original_native_layer_cannot_prepare_an_ink_request_or_change_owning_bytes",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeLayerKeyboardTests.cs",
+      "sourceSha256": "c3c842e961085aa0456adfa283f4054eef6bf6624910ded0c270e419da8a8c6c",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeLayerKeyboardTests",
+          "method": "Genuine_mounted_native_keyboard_navigates_stable_duplicate_layer_IDs_preserves_focus_and_refuses_modified_or_external_input",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.NativeUI.Tests.CanvasNativeLayerKeyboardTests",
+          "method": "Held_original_keyboard_access_cannot_adopt_after_same_revision_row_refresh",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedOriginalArgumentsTests.cs",
+      "sourceSha256": "4273a27363cad34d6679e8253203c866f2cb95326864f4b770ce0a1abeebd5f6",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Home.Tests.HomeClaimedOriginalArgumentsTests",
+          "method": "Claimed_original_argument_matcher_rejects_substituted_proposal_and_completed_or_foreign_capability",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalCommitCompositionTests.cs",
+      "sourceSha256": "1662715cf2a0869247bfde22004378abc27c6fa51527b62025549e461c368034",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Home.Tests.HomeLocalCommitCompositionTests",
+          "method": "Exact_original_composition_and_foreign_components_are_checked_before_any_foreign_Home_read",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Home.Tests.HomeLocalCommitCompositionTests",
+          "method": "Equal_value_forwarding_actor_cannot_replace_original_source_or_trigger_an_observation",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "sourceSha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Home.Tests.HomeLocalReadCompositionTests",
+          "method": "Exact_read_composition_is_pure_and_foreign_components_do_not_create_or_change_Home",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalCanonicalReadTests.cs",
+      "sourceSha256": "3b7a5232872941565e72e321b885ce42999074d1472f6f743d1d90b39f3c1f87",
+      "declaredRequiredMethods": [
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Genuine_original_read_requires_same_registered_issuer_actor_file_action_revision_and_private_workspace_composition",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Actual_same_path_store_UUID_replacement_cannot_return_original_metadata_artifact_or_content_or_rebind_context",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Observed_original_lifetime_retirement_cannot_resurrect_when_callback_becomes_true_again",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Foreign_Home_or_same_store_replacement_profile_instance_cannot_borrow_original_workspace_read_provenance",
+          "attribute": "Theory",
+          "parameters": "bool foreignStore",
+          "inlineDataSource": [
+            "false",
+            "true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Actual_committed_revision_requires_fresh_original_context_without_rebinding_a_retained_observation",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Genuine_metadata_read_wait_uses_original_provider_and_refuses_changed_configuration_without_opening_replacement",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Original_folder_context_uses_exact_registered_issuer_action_and_revision_without_publishing_or_granting_a_project",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Original_registered_child_lease_reads_only_the_existing_mapping_and_permanently_refuses_retirement",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Original_directory_observation_checks_same_locked_store_before_returning_registered_binding",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Original_write_observation_is_separate_exact_private_issuer_scope_and_action_and_never_publishes_a_mutation",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Genuine_original_binding_lease_retains_exact_mapping_until_disposal_and_stale_capture_cannot_reenter",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Genuine_original_write_Home_route_preserves_approval_and_capability_on_foreign_context_then_claims_exact_original_tuple_once",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalCanonicalReadTests",
+          "method": "Original_resource_actor_composition_is_exact_instance_identity_without_Home_or_Files_observations",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PictureFilesCopyResourceAdmissionTests.cs",
+      "sourceSha256": "bf4d59103896db87482470863e09b8981a93a9defe7ca920fc689ad38cfa623b",
+      "declaredRequiredMethods": [
+        {
+          "class": "Haven.Desktop.Tests.PictureFilesCopyResourceAdmissionTests",
+          "method": "Actual_configured_Picture_copy_sources_and_destination_require_exact_personal_owner_type_revision_and_folder",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalOwnerCompositionTests.cs",
+      "sourceSha256": "7ce0694150ceb07606633072e42b81ffc46ef3da1dd8be952835abe4f0cecad0",
+      "declaredRequiredMethods": [
+        {
+          "class": "Haven.Desktop.Tests.FilesOriginalOwnerCompositionTests",
+          "method": "Actual_Files_registration_retains_one_original_issuer_and_ordinary_read_behavior_without_root_enrollment",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    }
+  ],
+  "qualification": "Every whole selected test source remains mandatory. For each authored Fact require actual Passed class/method; each authored Theory must preserve discovery/all exact InlineData cases, not merely one method outcome. Expected theory test display identities must be derived from actual discovery, not invented source counts. Actual predecessor all105 display tuples separately mandatory. This lexical inventory is not compile/discovery/outcome proof."
+}

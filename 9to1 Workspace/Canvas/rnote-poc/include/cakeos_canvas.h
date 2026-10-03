@@ -118,6 +118,11 @@ CakeCanvasStatus cake_canvas_render_frame(const void* handle, CakeCanvasRenderFr
 void cake_canvas_render_frame_release(CakeCanvasRenderFrame* frame);
 
 CakeCanvasStatus cake_canvas_save_rnote(const void* handle, CakeCanvasBuffer* out_buffer);
+CakeCanvasStatus cake_canvas_render_visible_keys(const void* handle, const uint64_t* keys, size_t count, CakeCanvasRenderFrame* out_frame);
+uint32_t cake_canvas_visible_keys_render_api_version(void);
+uint32_t cake_canvas_user_layer_rank_api_version(void);
+CakeCanvasStatus cake_canvas_read_user_layer_ranks(const void* handle, const uint64_t* keys, size_t count, CakeCanvasBuffer* out_ranks);
+CakeCanvasStatus cake_canvas_assign_user_layer_ranks(void* handle, const uint64_t* keys, const uint32_t* ranks, size_t count);
 void cake_canvas_buffer_release(CakeCanvasBuffer* buffer);
 
 /* Additive selection API v1. Does not change ABI 3 lifecycle/drawing exports. */

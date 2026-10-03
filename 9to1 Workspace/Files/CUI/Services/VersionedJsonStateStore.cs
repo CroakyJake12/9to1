@@ -63,6 +63,42 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
         finally { _gate.Release(); }
     }
 
+    // Owner-only existing snapshot lease. The caller already owns its Files metadata transaction;
+    // never call provider, resource authorization or Home from this lease's held section.
+    internal async Task<ExistingReadLease> AcquireExistingReadLeaseAsync(CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        FileStream? processLease = null;
+        try
+        {
+            processLease = await AcquireProcessLeaseAsync(cancellationToken).ConfigureAwait(false);
+            var snapshot = await ReadCoreAsync(cancellationToken, requireExisting: true).ConfigureAwait(false);
+            return new ExistingReadLease(snapshot, processLease, _gate);
+        }
+        catch
+        {
+            try { if (processLease is not null) await processLease.DisposeAsync().ConfigureAwait(false); }
+            finally { _gate.Release(); }
+            throw;
+        }
+    }
+
+    internal sealed class ExistingReadLease : IAsyncDisposable
+    {
+        internal TState Snapshot { get; }
+        private FileStream? _processLease;
+        private readonly SemaphoreSlim _gate;
+        internal ExistingReadLease(TState snapshot, FileStream processLease, SemaphoreSlim gate)
+        { Snapshot = snapshot; _processLease = processLease; _gate = gate; }
+        public async ValueTask DisposeAsync()
+        {
+            var processLease = Interlocked.Exchange(ref _processLease, null);
+            if (processLease is null) return;
+            try { await processLease.DisposeAsync().ConfigureAwait(false); }
+            finally { _gate.Release(); }
+        }
+    }
+
 	public Task<TState> UpdateAsync(Func<TState, TState> update, CancellationToken cancellationToken = default) =>
         UpdateAsync(update, null, cancellationToken);
 
