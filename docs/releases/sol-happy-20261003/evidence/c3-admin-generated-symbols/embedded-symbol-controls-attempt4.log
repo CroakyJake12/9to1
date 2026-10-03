@@ -1,0 +1,23 @@
+test_actual_embedded_existing_source_hashes (__main__.ActualSymbols.test_actual_embedded_existing_source_hashes) ... ok
+test_actual_external_source_hashes (__main__.ActualSymbols.test_actual_external_source_hashes) ... ok
+test_ambiguous_external_refused (__main__.ActualSymbols.test_ambiguous_external_refused) ... ok
+test_declared_bomb_refused (__main__.ActualSymbols.test_declared_bomb_refused) ... ok
+test_declared_size_mismatch_refused (__main__.ActualSymbols.test_declared_size_mismatch_refused) ... ok
+test_foreign_external_identity_refused (__main__.ActualSymbols.test_foreign_external_identity_refused) ... ok
+test_full_task_source_gate_remains_blocked (__main__.ActualSymbols.test_full_task_source_gate_remains_blocked) ... ok
+test_invalid_deflate_refused (__main__.ActualSymbols.test_invalid_deflate_refused) ... ok
+test_invalid_mpdb_signature_refused (__main__.ActualSymbols.test_invalid_mpdb_signature_refused) ... ok
+test_missing_external_refused (__main__.ActualSymbols.test_missing_external_refused) ... ok
+test_truncated_pe_refused (__main__.ActualSymbols.test_truncated_pe_refused) ... ok
+test_fixed_whole_producer_every_document_hash (__main__.ActualWholeProducerEmission.test_fixed_whole_producer_every_document_hash) ... ok
+test_original_whole_producer_missing_generated_refusal (__main__.ActualWholeProducerEmission.test_original_whole_producer_missing_generated_refusal) ... ok
+test_ancestor_symlink_refused (__main__.RetainedSymbolBounds.test_ancestor_symlink_refused) ... ok
+test_budget_refused_before_creation (__main__.RetainedSymbolBounds.test_budget_refused_before_creation) ... ok
+test_changed_existing_refused (__main__.RetainedSymbolBounds.test_changed_existing_refused) ... ok
+test_fresh_and_identical_retention (__main__.RetainedSymbolBounds.test_fresh_and_identical_retention) ... ok
+test_symlink_refused (__main__.RetainedSymbolBounds.test_symlink_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.073s
+
+OK
