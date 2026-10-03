@@ -1,0 +1,175 @@
+{
+  "runId": "sol-happy-20261003",
+  "team": "A",
+  "thread": "Project Astra la Vista",
+  "ownerIdentity": "Project Astra existing root integrator",
+  "updatedUTC": "2026-10-03T17:19:20.066466+00:00",
+  "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
+  "sourceBranch": "astra/launch-integration-20260930",
+  "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "candidateTree": "68eecf040cb3d55adc40da05df77b675102c7a65",
+  "mainAncestor": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "baselineAcceptance": "PROVISIONAL: all six current integration workflows and 13 jobs succeeded; full mandatory native/provider/package/donor acceptance remains incomplete. This is not an accepted release head.",
+  "specification": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "modifiedTime": "2026-10-03T17:00:26.970Z",
+    "sha256": "ec62e00fc98c5f9067253eb8d7c0355aff50b39452ba15d895640bc955a7e4a4",
+    "bytes": 1360715,
+    "comparison": "11:03 export differs only in the Rules heading and appended Pass4 Lunandroid/Pass5 O Yes headings/comments; prior product requirements retained. No acceptance invented for unfinished placeholder sections."
+  },
+  "userScopeDecision": "User explicitly adopted the uploaded Team A assignment, superseding earlier Pass1-only scope. All active native/shared/OS requirements remain owned; canonical pass-start acceptance/merge/drop gates remain visible.",
+  "releaseIntegrationHandover": {
+    "explicit": true,
+    "from": "Existing Project Astra root integrator",
+    "to": "Team C / Sol Happy",
+    "effective": "This published record",
+    "authority": "Team C is sole writer/integrator of release/sol-happy-20261003, combined index, accepted-head pointer, and any resulting main merge.",
+    "rootRestriction": "Team A will not merge main, mutate the release branch, or continue independent global release publication. Root remains sole writer of Team A source/validation branches and Team A coordination records.",
+    "existingPullRequest": "https://github.com/CroakyJake12/9to1/pull/1",
+    "existingPullRequestState": "Draft, unmerged; preserve reviewed history and existing evidence.",
+    "acknowledgement": "REQUESTED: confirm this handover and incorporate/review the a63 candidate history before relying on old main compile failures."
+  },
+  "modelAssignments": {
+    "A1": "worker1_resume, GPT-6.1 Sol inherited continuing assignment",
+    "A2": "worker3_resume, GPT-6.1 Sol inherited continuing assignment",
+    "A3": "worker4_resume, GPT-6.1 Sol inherited continuing assignment",
+    "A4": "worker2_resume, GPT-6.1 Sol inherited continuing assignment",
+    "A5": "worker5_resume, GPT-6.1 Sol inherited continuing assignment",
+    "A6": "worker6_resume, GPT-6.1 Sol inherited continuing assignment",
+    "coordinator": "Inherited runtime model; model switching unavailable. Six existing workers; no recursive spawning."
+  },
+  "claims": [
+    {
+      "worker": "A1",
+      "owner": "worker1_resume",
+      "paths": [
+        "9to1 Workspace/Home/Source/Home/HomeNativeCoreApiSessions.cs",
+        "9to1 Workspace/shared/src/Haven.Core/**",
+        "9to1 Workspace/shared/src/Haven.Application/Chat/**",
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Agents/**",
+        "9to1 Workspace/shared/src/Haven.Desktop/Components/**"
+      ],
+      "task": "Canonical Home/Core/CUI lifecycle, current actor/session/Den/model permissions, same original task execution and settlement; acyclic shared engines. Exact frozen package target lists remain authoritative; no blanket permission for unrelated edits.",
+      "state": "CONTINUING_SOURCE_FIXES_AND_JOINT_SDK_NATIVE_VALIDATION_PENDING"
+    },
+    {
+      "worker": "A2",
+      "owner": "worker3_resume",
+      "paths": [
+        "native Mathematics/Forms/Graph existing owned source targets",
+        "Data/Wave/Motion/Maps/Shelf existing native claims"
+      ],
+      "task": "Productivity and creative native authoring, persistence, donor parity and typed APIs. Existing W2 Write/Present/Boards/Planner and W6 Canvas/Picture/Games claims transfer only by explicit acknowledgement.",
+      "state": "CONTINUING; Math/Forms source fixes and original runtime evidence pending"
+    },
+    {
+      "worker": "A3",
+      "owner": "worker4_resume",
+      "paths": [
+        "native AI/Spaces/Studio/Agents/Automations/Dev/Stack/Terminal and connected app claims after explicit handoff"
+      ],
+      "task": "Preserve existing owner sources; finish bounded Admin SDK correction and hosted/browser handoff before taking native AI/developer ownership. Studio authored by W6 transfers after independent peers.",
+      "state": "TRANSITION_PENDING_BOUNDED_HANDOFF"
+    },
+    {
+      "worker": "A4",
+      "owner": "worker2_resume",
+      "paths": [
+        "canonical Files native agent rename and current permission/SafeMode owner targets",
+        "Files organisation/Link/Prototype/Paths/Replay/Variants native integrations after pass-start gates"
+      ],
+      "task": "Finish Files03 and current Den presentation handoff, inventory all ten organisation types and existing engines; no parallel models, fabricated grants or duplicated hosted transport.",
+      "state": "FILES03_FROZEN_SOURCE_PEERS_PENDING; TERRA_NATIVE_INVENTORY_ONLY"
+    },
+    {
+      "worker": "A5",
+      "owner": "worker5_resume",
+      "paths": [
+        "9to1 OS",
+        "9-1 OS (Android)",
+        "owned Linux packaging/native guards and Home socket transport"
+      ],
+      "task": "Actual install/update/repair/bootstrap/OS/mobile/hardware validation; same original shutdown tasks and controlled launch authority.",
+      "state": "LINUX18_FROZEN_PEERS_CLEAR_UNRUN; FULL_PLATFORM_ACCEPTANCE_PENDING"
+    },
+    {
+      "worker": "A6",
+      "owner": "worker6_resume",
+      "paths": [
+        "Team A validation/evidence records and isolated acceptance callers"
+      ],
+      "task": "Independent requirement/test coverage, native/donor/installed app journeys, failure evidence and final candidate verification. Existing authored Canvas/Studio changes require other reviewers and explicit handoff.",
+      "state": "CANVAS11_FAILURE_DIAGNOSIS_AND_STUDIO287_SOURCE_HANDOFF_BEFORE_FULL_VALIDATION_LEAD"
+    }
+  ],
+  "ownershipAcknowledgements": {
+    "TeamB": "Acknowledge apps/Web/** and eng/browser/** browser-surface claims. Shared CUI/domain/engines remain Team A owned; send precise required seam/contract changes for ACK. No private Home or service replacement.",
+    "TeamC_C1_C4": "Existing W4 explicitly relinquishes further hosted Web/Admin/Sites implementation. C1 SiteDeploymentService rollback internals and C4 SitePublicIdentityService domain/stale-revision internals have no overlapping active W4 draft. Ownership acknowledged; review/test/integration approval remains distinct.",
+    "TeamC_C2": "HomePermissionTrustService identity-version binding remains proposed shared/native change; A1 reviewing exact 297f3616d89c6249636e245e0005d05ee9bb0fe5. Do not assume integration ACK yet.",
+    "TeamC_C5": "CloudModelProviders stream truncation/cancellation claim requires exact proposed commit and A1/A3 source review; no duplicate implementation will be started.",
+    "Auth": "cloud/cake-id-auth backup7cc52df0411e0e9e617918f6c5158283cc3199fc preserved, sole future/new account authority; no WordPress user/linked data transfer. Team C owns hosted runtime; Team A client contract remains strict."
+  },
+  "actualEvidence": [
+    {
+      "candidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "outcome": "6 workflows/13 jobs SUCCESS",
+      "qualification": "Current integration provisional, not whole specification verification; prior accepted component histories retained."
+    },
+    {
+      "candidate": "900026076f2e7238fa431d5f984c34fe48477081",
+      "workflowRun": 37138212542,
+      "component": "Canvas11",
+      "outcome": "Regression/resource SUCCESS, owning execution FAILURE",
+      "qualification": "Original tiny index admission pending; native SDK/source/guard outcomes cannot be inferred from job status."
+    },
+    {
+      "candidate": "e8f48d666c7b18eaffeffb9a88fc0b1800dfa136",
+      "workflowRun": 37135352375,
+      "component": "Forms11",
+      "outcome": "Regression/resource SUCCESS, owning FAILURE",
+      "cause": "Native validation caller references undefined assert_native_unchanged; Forms12 binds existing full positive desktop guard, independently reviewed, unrun."
+    },
+    {
+      "candidate": "9006e522f1dd49a348214200508fb35ede2f7409",
+      "workflowRun": 37132001101,
+      "component": "Home14",
+      "outcome": "Regression/resource SUCCESS, owning FAILURE",
+      "cause": "Original native child exit/marker guard failed; inner cause requires original evidence."
+    },
+    {
+      "candidate": "4e7b798e5a2d8d08404a835f7866a40c6d47817a",
+      "workflowRun": 37131077597,
+      "component": "Rational04",
+      "outcome": "All3 jobs SUCCESS; owning original independently owner-reviewed",
+      "qualification": "812 tests passed,0 failed/skipped in owning original; sibling resource/regression originals outstanding, no full archive acceptance yet."
+    },
+    {
+      "candidate": "0128f9539e60ee156cfd8677757a049f70734a7f",
+      "workflowRun": 37132088498,
+      "component": "Sites09",
+      "outcome": "All3 jobs SUCCESS",
+      "qualification": "Full original evidence unadmitted; no WPE browser or hosted publisher/deployment acceptance."
+    }
+  ],
+  "requests": [
+    "Team C confirm explicit existing-integrator handover and review/incorporate current a63 history; do not restart older main components or treat old Canvas/Dulche compile failures as current candidate failures.",
+    "Team B provide exact missing import paths and pinned source identities on its tested candidate; Team A will inspect existing full source/materialization history and coordinate a narrow fix, preserving upstream source.",
+    "Team C send exact C5 proposed commit and acknowledge narrow C1/C4 handoff; A1 reviews C2 before shared contract ACK.",
+    "Confirm Team A may continue isolated existing native validation branches and SDK/native CI packages while Team C alone publishes the combined release; coordinate final candidate reruns after integration.",
+    "Publish approved shared hosted Files/account/session/permission/model/job/billing API contracts and isolated test deployment identities; no parallel credential/backend service will be built.",
+    "Preserve exact lower-case UUID sub, strict issuer, public ID-token audience/distinct access API audience, genuine auth_revision distinct sid, S256 PKCE, exact redirects/scopes and current domain permission enforcement; existing full OIDC blocker is not fixed by weakening consumers."
+  ],
+  "blockers": [
+    "Sandbox catalog tools return MCPUnknown tool; cloud/executor skill catalogs empty. No Sandbox Operating Contract or runtime capability claimed.",
+    "Full native/provider/installed package/hardware/recovery/donor acceptance incomplete.",
+    "Cloud/D1/email/DNS/WordPress/paid activation holds persist; existing WorkersPaid app rejection still counts ingress, no billing-cap claim.",
+    "1x AI Dust/provider/storage/infrastructure/operating/payment cost and explicit service-limit inputs remain missing/configurable; final-charge-dependent fees, shared-cost-once and 15% tax-exclusive margin requirement preserved.",
+    "Protected original workspace dirty16 source rows and180 source hashes remain untouched; constrained workspace/tmp fixed storage floors preserved.",
+    "Hosted/browser ownership ACKs and final integrated candidate acceptance pending."
+  ],
+  "evidenceLocation": "Durable root/owner source hashes and original proofs at /workspace/astra-source; local paths alone are not cross-chat delivery. Published validation branch heads and GitHub run IDs above are remotely reproducible; further reviewed Team A commits/evidence will be published continuously.",
+  "testStatus": "PARTIAL; VERIFIED/IMPLEMENTED-UNVERIFIED/MISSING/BLOCKED kept per requirement, no defensible completion percentage yet.",
+  "deploymentStatus": "NOT_DEPLOYED_BY_THIS_HANDOVER",
+  "commercialStatus": "NOT_ENABLED",
+  "coordinationProtocol": "Only Team A records updated through current-parent non-force push and exact remote readback. Team C alone owns index and accepted-head."
+}
