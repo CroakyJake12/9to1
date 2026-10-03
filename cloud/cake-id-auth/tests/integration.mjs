@@ -287,6 +287,16 @@ try {
   assert.equal(browserBundle.status, 200);
   assert.match(await browserBundle.text(), /dataset\.busy|\.disabled/);
 
+  const missingUsername = await authClient.$fetch("/sign-up/email", {
+    method: "POST", body: { name: "Required fields", email: `missing-${runId}@example.test`, password: "Test-passphrase-9!NoSharedAccount" },
+  });
+  assert.ok(missingUsername.error, "direct registration cannot omit required Username");
+  const blankName = await authClient.$fetch("/sign-up/email", {
+    method: "POST", body: { name: "   ", username: `blank_${runId}`, email: `blank-${runId}@example.test`, password: "Test-passphrase-9!NoSharedAccount" },
+  });
+  assert.ok(blankName.error, "direct registration cannot save a whitespace-only required Name");
+  syntheticSource++;
+
   testAccount = await createSyntheticAccount("auth-main", `synthetic_${runId}`, "Test-passphrase-9!NoSharedAccount");
   const reserved = await authClient.$fetch("/sign-up/email", {
     method: "POST",
@@ -316,6 +326,10 @@ try {
   assert.ok(resetToken, "reset message carries a single-use token");
   const resetResponse = await jsonRequest(`${authPath}/reset-password`, "POST", { token: resetToken, newPassword: "New-test-passphrase-8!LocallyVerified" });
   assert.equal(resetResponse.status, 200, `password reset accepted: ${await resetResponse.clone().text()}`);
+  const replayReset = await jsonRequest(`${authPath}/reset-password`, "POST", { token: resetToken, newPassword: "Replay-passphrase-must-not-work!" });
+  assert.equal(replayReset.status, 400, "recovery token is single use");
+  const oldPassword = await authClient.signIn.email({ email: testAccount.email, password: testAccount.password });
+  assert.ok(oldPassword.error, "old password no longer signs in after recovery");
   const login = await authClient.signIn.email({ email: testAccount.email, password: "New-test-passphrase-8!LocallyVerified" });
   assert.equal(login.error, null, "the new password verifies through the Worker password hasher");
   durationMs.passwordResetAndLogin = Math.round(performance.now() - startHash);
@@ -331,7 +345,7 @@ try {
     application_type: "web",
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"],
-    scope: "openid profile email cake:account:read cake:profile:read cake:profile:write cake:sessions:read cake:sessions:revoke",
+    scope: "openid profile email offline_access cake:account:read cake:profile:read cake:profile:write cake:sessions:read cake:sessions:revoke",
     skip_consent: false,
     require_pkce: true,
   });
@@ -351,11 +365,12 @@ try {
   assert.ok(wrongVerifier.error, "wrong PKCE verifier is rejected");
   const consumedCode = await exchangeCode(discovery, client.client_id, profileFlow.code, profileFlow.verifier, 400);
   assert.equal(consumedCode.error, "invalid_grant", "failed PKCE attempt consumes the authorization code");
-  const validProfileFlow = await authorizationCode(discovery, client.client_id, "openid profile email cake:account:read cake:profile:read", true);
+  const validProfileFlow = await authorizationCode(discovery, client.client_id, "openid profile email offline_access cake:account:read cake:profile:read", true);
   const profileToken = await exchangeCode(discovery, client.client_id, validProfileFlow.code, validProfileFlow.verifier);
   durationMs.passwordLoginAndTokenExchange = Math.round(performance.now() - startedExchange);
   assert.ok(profileToken.access_token && profileToken.id_token, "authorization code produced OIDC and API tokens");
 
+  assert.ok(profileToken.refresh_token, "authorized offline access provides a refresh token");
   const jwks = createRemoteJWKSet(new URL(discovery.jwks_uri));
   const { payload: idClaims } = await jwtVerify(profileToken.id_token, jwks, { issuer: discovery.issuer, audience: client.client_id });
   assert.match(String(idClaims.sub), /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i, "ID token subject is canonical UUID");
@@ -379,6 +394,7 @@ try {
   assert.equal(profileRead.status, 200, `authorized profile read: ${await profileRead.clone().text()}`);
   const profileBody = await profileRead.json();
   assert.equal(profileBody.profile.accountId, testAccount.id, "resource route binds token subject to its own account row");
+  for (const optional of ["icon", "pronouns", "job"]) assert.equal(profileBody.profile[optional], null, `optional ${optional} starts unset`);
   assert.equal(profileBody.profile.revision, 1, "new profile begins with a server-owned revision");
   const deniedProfileWrite = await jsonRequest("/api/account/profile", "PATCH", { expectedRevision: 1, fields: { name: "Must not update" } }, { authorization: `Bearer ${profileToken.access_token}` });
   assert.equal(deniedProfileWrite.status, 401, "resource profile update requires its distinct write scope");
@@ -389,6 +405,35 @@ try {
   const updatedProfile = (await profileWrite.json()).profile;
   assert.equal(updatedProfile.name, "Updated synthetic profile", "resource profile update binds to the token subject without requiring a browser cookie");
   assert.equal(updatedProfile.revision, 2, "profile mutation advances its server revision");
+  const writeProfile = async (revision, fields) => jsonRequest("/api/account/profile", "PATCH", {
+    expectedRevision: revision, fields,
+  }, { authorization: `Bearer ${profileWriteToken.access_token}` });
+  const optionalWrite = await writeProfile(2, { icon: "https://assets.example.test/icon.png", pronouns: "they/them", job: "Researcher" });
+  assert.equal(optionalWrite.status, 200, "optional profile fields can be added");
+  const optionalProfile = (await optionalWrite.json()).profile;
+  assert.equal(optionalProfile.revision, 3);
+  const preservedWrite = await writeProfile(3, { name: "Only name changed" });
+  assert.equal(preservedWrite.status, 200);
+  const preservedProfile = (await preservedWrite.json()).profile;
+  for (const optional of ["icon", "pronouns", "job"]) assert.equal(preservedProfile[optional], optionalProfile[optional], `omitted ${optional} survives partial update`);
+  const clearOptional = await writeProfile(4, { icon: null, pronouns: null, job: null });
+  assert.equal(clearOptional.status, 200, "optional profile fields can be cleared");
+  const clearedProfile = (await clearOptional.json()).profile;
+  for (const optional of ["icon", "pronouns", "job"]) assert.equal(clearedProfile[optional], null, `optional ${optional} can be cleared`);
+  const renamed = await writeProfile(5, { username: `renamed_${runId}` });
+  assert.equal(renamed.status, 200, "username rename is an authorized profile update");
+  const renamedProfile = (await renamed.json()).profile;
+  assert.equal(renamedProfile.accountId, testAccount.id, "rename preserves canonical account identity");
+  assert.equal(renamedProfile.username, `renamed_${runId}`);
+  for (const username of ["CroakyJake", "CROAKYJAKE", "croakyjake"]) {
+    assert.equal((await writeProfile(6, { username })).status, 409, "ordinary profile rename cannot claim reserved handle or case variants");
+  }
+  for (const field of ["name", "username"]) assert.equal((await writeProfile(6, { [field]: "   " })).status, 400, "required fields reject whitespace");
+  assert.equal((await writeProfile(6, { constructor: "unregistered field" })).status, 400, "prototype-inherited names are not registered profile fields");
+  const unchanged = (await (await response("/api/account/profile", { headers: { authorization: `Bearer ${profileToken.access_token}` } })).json()).profile;
+  assert.equal(unchanged.revision, 6, "failed profile mutations preserve committed revision");
+  assert.equal(unchanged.username, renamedProfile.username, "denied reservations preserve the approved username");
+
   const staleWrite = await jsonRequest("/api/account/profile", "PATCH", { expectedRevision: 1, fields: { name: "Stale update" } }, { authorization: `Bearer ${profileWriteToken.access_token}` });
   assert.equal(staleWrite.status, 409, "profile compare-and-swap rejects a stale revision");
   const missingScope = await response("/api/account/sessions", { headers: { authorization: `Bearer ${profileToken.access_token}` } });
@@ -433,6 +478,13 @@ try {
   assert.equal(revoked.status, 204, "self-session revoke succeeds under its explicit scope");
   const afterRevocation = await response("/api/account/profile", { headers: { authorization: `Bearer ${profileToken.access_token}` } });
   assert.equal(afterRevocation.status, 401, "revoked session immediately invalidates its otherwise correctly signed access token");
+
+  const refreshAfterRevocation = await globalThis.fetch(discovery.token_endpoint, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: profileToken.refresh_token, client_id: client.client_id, resource }),
+  });
+  assert.equal(refreshAfterRevocation.status, 400, "revoked session cannot refresh its OAuth token");
+  assert.equal((await refreshAfterRevocation.json()).error, "invalid_grant", "revoked refresh token fails explicitly");
 
   // A mismatched resource is rejected by the OAuth authorization layer before token issuance.
   const wrongResourceURL = new URL(discovery.authorization_endpoint);

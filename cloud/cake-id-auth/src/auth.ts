@@ -1,5 +1,6 @@
 import { oauthProvider } from "@better-auth/oauth-provider";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { jwt, username } from "better-auth/plugins";
 import { AUTH_BASE_PATH, ACCESS_TOKEN_SECONDS, AUTHORIZATION_SCOPES } from "./contract";
 import type { Env } from "./env";
@@ -65,6 +66,19 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24,
       cookieCache: { enabled: false },
+    },
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-up/email") return;
+        const name = ctx.body?.name;
+        const username = ctx.body?.username;
+        if (typeof name !== "string" || !name.trim() || name.trim().length > 100
+            || typeof username !== "string" || !username.trim()) {
+          throw new APIError("BAD_REQUEST", { code: "INVALID_PROFILE", message: "Name and Username are required." });
+        }
+        ctx.body.name = name.trim();
+        ctx.body.username = username.trim();
+      }),
     },
     disabledPaths: ["/update-user", "/update-username"],
     emailAndPassword: {
