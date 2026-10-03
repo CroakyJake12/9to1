@@ -47,10 +47,10 @@ public sealed class RationalGraphPlotPreparer : IGraphPlotPreparer
             };
             if (reference is null) continue;
             var expression = graph.Expressions.Single(value =>
-                value.ExpressionID == reference.Value.ExpressionID && value.Revision == reference.Value.Revision);
+                value.ExpressionID == reference.ExpressionID && value.Revision == reference.Revision);
             try
             {
-                var function = primitive as GraphFunction ?? new GraphFunction(primitive.PrimitiveID, reference.Value);
+                var function = primitive as GraphFunction ?? new GraphFunction(primitive.PrimitiveID, reference);
                 var source = expression.LaTeX; var includeBoundary = true; bool? shadeAbove = null;
                 if (primitive is GraphEquation or GraphInequality)
                 {
@@ -317,6 +317,7 @@ public sealed class RationalGraphPlotPreparer : IGraphPlotPreparer
         }
         private void Check()
         {
+            token.ThrowIfCancellationRequested();
             operationBudget.Check();
         }
         private double Display(ERational exact)
