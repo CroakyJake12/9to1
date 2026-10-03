@@ -58,3 +58,6 @@ Compile-metadata receiving successor8189d31aa86a4fa200d938345a07d976e5ea1030 ind
 
 
 SDK6 generated-context successor4472a4fd9730c4f432570e12a2d86b6b16fc7cb1 independently wholemap ACK: cutSHAc08a4a41f8864a7c399c68fbd81b5bea1c86a95a165a172a351c6add902c1284,2841721bytes. ALL9457physicalmode/Gitobject/bytes/SHA==HEAD/cut onlyselfexcluded;22links3actualmaterializeddeps exactclean.28originaldeliveryrows including17products/frozenmetadata unchanged; all23sidecaroriginal→actualroot/byte/hash mappings verified, four addedcontrolpins match exact declared reviewed source. Driver/PDBhelper/catalog/newcontextcontrols byte-identical074420b9c4e1a2d66b5081d742e191be16bf2f92; onlyexpected6paths changed vs8189. C5 runtime/helper-control review remains distinct from C1 receivingmap proof. Root may issue fresh external pin; no C1 SDK run/global adoption, SDKvariance/keybaseline and historical refusals remain preserved.
+
+
+SDK6 issuance HOLD update: root explicitly did NOT authorize4472 execution after fresh A peer ef1a11f7 held fe96 helper/control exception preservation (finally pidfdclose masking body errors and acquisition/cleanup failure paths). Valid physical mapping is source custody proof only, not external issuance or runtime acceptance. C3 prepares separate owner correction/fresh peer/cut;4472 remains HELD. Original source/map evidence retained unchanged.
