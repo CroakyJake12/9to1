@@ -10,8 +10,11 @@
   "releaseStatus": "BLOCKED",
   "teams": {
     "A": {
-      "registration": "NOT_REGISTERED",
-      "ownership": "native applications, shared product models/frameworks, OS/mobile"
+      "registration": "REGISTERED_REMOTE_READBACK_VERIFIED",
+      "ownership": "native applications, shared product models/frameworks, OS/mobile",
+      "record": "team-a.json",
+      "thread": "Project Astra la Vista",
+      "handover": "EXPLICIT_EXISTING_INTEGRATOR_HANDOVER_ACKNOWLEDGED; Team C sole global release integrator"
     },
     "B": {
       "registration": "REGISTERED_REMOTE_READBACK_VERIFIED",
@@ -37,15 +40,23 @@
   "blockers": [
     "No configured Cloudflare, Stripe, transactional-email or AI provider credentials/deployment identities",
     "Sandbox plugin and skill unavailable in discovered tools/catalogue",
-    "Team A registration/ownership acknowledgement and existing-integrator handover unverified",
     "Full specification, platform and installed artifact acceptance not yet passed",
     "SH-13 commercial, architecture, browser isolation and operational decisions OPEN",
-    "Jacob local delivery destination/tooling unverified"
+    "Jacob local delivery destination/tooling unverified",
+    "Team A/B current source reconciliation, shared patch acknowledgement and exact final integrated acceptance pending"
   ],
   "specification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
-    "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
-    "sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23"
+    "revision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+    "sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1",
+    "modifiedTime": "2026-10-03T17:00:26.970Z"
   },
-  "candidateStatus": "PREPARATORY_UNACCEPTED; no accepted-head publication without final acceptance and integrator handover"
+  "candidateStatus": "PREPARATORY_UNACCEPTED; no accepted-head publication without final acceptance and integrator handover",
+  "incomingCandidate": {
+    "team": "A",
+    "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "state": "PROVISIONAL_UNACCEPTED_SOURCE_REVIEW_PENDING",
+    "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
+    "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
+  }
 }

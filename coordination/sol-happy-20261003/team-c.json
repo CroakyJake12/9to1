@@ -54,19 +54,28 @@
     "Team B claims acknowledged: apps/Web and eng/browser remain B owned. No hosted Files transport exists yet; no staged backend or synthetic remote accounts available. Existing auth backup recovered and being validated; do not build parallel identity.",
     "Team A resolve existing CanvasArtifactSession.cs:511 CS1593 and Dulche.Runtime missing project references; full Home/Sites acceptance blocked before discovery.",
     "Team A session trust identity binding patch proposed at 297f3616d89c6249636e245e0005d05ee9bb0fe5; review/ownership acknowledgement required before integration. C5 stream truncation/cancellation fix proposed separately.",
-    "Full requirement/platform interpretation remains incomplete: lossless 8344 source-clause inventory is not a semantic requirement count or completion percentage."
+    "Full requirement/platform interpretation remains incomplete: lossless 8344 source-clause inventory is not a semantic requirement count or completion percentage.",
+    "Team A handover accepted and C1/C4 ownership acknowledgement recorded. Preserve and continue isolated native validation branches; source/current CI reconciliation underway, a63 not silently accepted.",
+    "C5 exact remotely published proposed commit4f6040271094748f9065b3b53f1239b0d7f2190d on team-c/sol-happy-c5: actual provider source tests16/16 independently repeated;7 negative-control failures; no provider integration claim. Please A1/A3 review/ACK or take ownership.",
+    "C2 Home proposed297f3616d89c6249636e245e0005d05ee9bb0fe5 on remote team-c/sol-happy-c2: independent7/8; preexisting temporary-trust fallback failure persists on98a. Astra current Home service changes that path; reconcile rather than treat98a failure as a63 evidence.",
+    "Hosted issuer dc6725d/53edc25 retains canonical account/profile/session/scopes and fixes openid resource retention and strict issuer. Existing .NET RSA-only validation versus Worker defaultEdDSA and genuineauth_revision producer semantics remain unverified/need explicit accepted contract; no weakened consumers or invented auth_revision.",
+    "Team B apps/Web/Auth ownership acknowledged; use cloud/cake-id-auth actual maintained protocol, no fabricated issuer/client/redirect/token defaults. New local210 evidence does not provide staging identity or full .NET/browser integration.",
+    "Fresh canonical revision adds only Study App future-pass text atline10002; record unresolved scoped coverage. Full semantic denominator still incomplete."
   ],
-  "testStatus": "CUI baseline 31/31 PASS; full Home/Sites fail compilation; Spaces not run by fail-fast core runner. Local unit/provider-double evidence is not SH-12 acceptance.",
+  "testStatus": "Preparatory candidate rooted in98a: linked actual Sites39/39 and billing12/12 local checks; C6 exactauth5899 local210assertions. Oldmain Home/Sites compile failures retained ONLY as98a/preparatory evidence, not alleged failures on incoming Astra a63. Full A/B/C final release suite not passed.",
   "evidenceLocation": "Worker commits and docs/releases/sol-happy-20261003; forthcoming exact logs",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "2e10ca9",
+  "candidateCommit": "11e37a988d6036c89e9a9e7292284da8c1a0f5e7",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
     "path": "cloud/cake-id-auth",
-    "state": "PRESERVED_EXISTING_SOURCE_UNDER_NATIVE_LINUX_WORKERD_VALIDATION",
-    "protocol": "Existing issuer PKCE/OIDC and scopes/account/profile/sessions in cloud/cake-id-auth/README.md; not deployed or cross-client verified"
+    "state": "RECOVERED_HISTORY_PRESERVED; LOCAL_WORKERD_D1_PARTIAL_VERIFIED",
+    "protocol": "Existing issuer PKCE/OIDC and scopes/account/profile/sessions in cloud/cake-id-auth/README.md; not deployed or cross-client verified",
+    "hostedPatch": "53edc25e104e3c5d56d64563038f957a6b2533b1",
+    "journeyPatch": "5899e215467efa4bdb1792d579f961f58b9e93bd",
+    "localEvidence": "C6 independently reproduced210 assertions; not .NET/browser/deployed acceptance"
   },
   "reviewedProvisionalChanges": [
     {
@@ -87,5 +96,21 @@
       "localTests": "9/9 PASS, independent C6 reproduction",
       "integration": "PREPARATORY_ONLY"
     }
-  ]
+  ],
+  "handoverAcknowledgement": "Explicit existing Astra integrator handover in remotely verified team-a.json accepted. Team A retains isolated native/shared source branches and SDK/native CI; Team C alone writes global release/index/accepted-head.",
+  "specification": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "revision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+    "sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1",
+    "modifiedTime": "2026-10-03T17:00:26.970Z"
+  },
+  "cloudflareSetup": {
+    "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
+    "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
+    "state": "PRIVATE_PLUGIN_SAVED_BACKEND_READBACK_VERIFIED; host reports installed; no Cloudflare tools exposed or OAuth/account access verified in this session",
+    "sourceGuide": "https://developers.cloudflare.com/agent-setup/prompt.md",
+    "skills": 16,
+    "mcpServers": 5,
+    "resourcesProvisioned": false
+  }
 }
