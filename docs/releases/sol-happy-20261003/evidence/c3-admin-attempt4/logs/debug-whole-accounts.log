@@ -1,0 +1,4 @@
+PASS: organisation lifecycle, recipient transfer, durable replay, current owner, archive, admission and personal identity
+PASS: canonical Admin members and roles, scoped pagination, current revocation and detached snapshots
+PASS: canonical Admin roles, bounded original export jobs, current sessions and terminal custody (12 scenarios)
+PASS: thresholds, resource independence, concurrent reservations, restart, idempotency, hosting quotas, inactivity, unresolved presets
