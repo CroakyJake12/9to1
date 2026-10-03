@@ -1,0 +1,308 @@
+  Haven.Core -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Core/release_linux-x64/Haven.Core.dll
+  NineToOne.Cui.AI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/NineToOne.Cui.AI/release_linux-x64/NineToOne.Cui.AI.dll
+  Haven.Application -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Application/release_linux-x64/Haven.Application.dll
+  DevAnalyzers -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/DevAnalyzers/release_linux-x64/DevAnalyzers.dll
+  Avalonia.Analyzers.CSharp -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Analyzers.CSharp/release_linux-x64/Avalonia.Analyzers.CSharp.dll
+  Avalonia.Analyzers.CodeFixes.CSharp -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Analyzers.CodeFixes.CSharp/release_linux-x64/Avalonia.Analyzers.CodeFixes.CSharp.dll
+  Avalonia.Analyzers.VisualBasic -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Analyzers.VisualBasic/release_linux-x64/Avalonia.Analyzers.VisualBasic.dll
+  DevGenerators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/DevGenerators/release_linux-x64/DevGenerators.dll
+  Avalonia.Base -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Base/release_net10.0_linux-x64/Avalonia.Base.dll
+  Avalonia.Remote.Protocol -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Remote.Protocol/release_net10.0_linux-x64/Avalonia.Remote.Protocol.dll
+  Avalonia.Controls -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Controls/release_net10.0_linux-x64/Avalonia.Controls.dll
+  DevGenerators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/DevGenerators/release/DevGenerators.dll
+  Avalonia.Build.Tasks -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll
+  Avalonia.MicroCom -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.MicroCom/release_net10.0_linux-x64/Avalonia.MicroCom.dll
+  Avalonia.OpenGL -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.OpenGL/release_net10.0_linux-x64/Avalonia.OpenGL.dll
+  Avalonia.Vulkan -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Vulkan/release_net10.0_linux-x64/Avalonia.Vulkan.dll
+  Avalonia.Metal -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Metal/release_net10.0_linux-x64/Avalonia.Metal.dll
+  Avalonia.Skia -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Skia/release_net10.0_linux-x64/Avalonia.Skia.dll
+  Avalonia.Win32.Automation -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Win32.Automation/release_net10.0_linux-x64/Avalonia.Win32.Automation.dll
+  Avalonia.Win32 -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Win32/release_net10.0_linux-x64/Avalonia.Win32.dll
+  Avalonia.Markup -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Markup/release_net10.0_linux-x64/Avalonia.Markup.dll
+  Avalonia.Markup.Xaml -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Markup.Xaml/release_net10.0_linux-x64/Avalonia.Markup.Xaml.dll
+  Avalonia.DesignerSupport -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.DesignerSupport/release_net10.0_linux-x64/Avalonia.DesignerSupport.dll
+  Avalonia.Dialogs -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Dialogs/release_net10.0_linux-x64/Avalonia.Dialogs.dll
+  Avalonia.Build.Tasks -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Build.Tasks/release_linux-x64/Avalonia.Build.Tasks.dll
+  Avalonia.Generators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Generators/release_linux-x64/Avalonia.Generators.dll
+  Avalonia -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia/release_net10.0_linux-x64/Avalonia.dll
+  Avalonia.Native -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Native/release_net10.0_linux-x64/Avalonia.Native.dll
+  Avalonia.FreeDesktop -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.FreeDesktop/release_net10.0_linux-x64/Avalonia.FreeDesktop.dll
+  Avalonia.DBus.Generators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.DBus.Generators/release_linux-x64/Avalonia.DBus.Generators.dll
+  Avalonia.FreeDesktop.AtSpi -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.FreeDesktop.AtSpi/release_net10.0_linux-x64/Avalonia.FreeDesktop.AtSpi.dll
+  Avalonia.X11 -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.X11/release_net10.0_linux-x64/Avalonia.X11.dll
+  Avalonia.HarfBuzz -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.HarfBuzz/release_net10.0_linux-x64/Avalonia.HarfBuzz.dll
+  Avalonia.Desktop -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Desktop/release_net10.0_linux-x64/Avalonia.Desktop.dll
+  Avalonia.Themes.Fluent -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Themes.Fluent/release_net10.0_linux-x64/Avalonia.Themes.Fluent.dll
+  Avalonia.Fonts.Inter -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Fonts.Inter/release_net10.0_linux-x64/Avalonia.Fonts.Inter.dll
+  Avalonia.Headless -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Headless/release_net10.0_linux-x64/Avalonia.Headless.dll
+  CakeOS.Cui.Language -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Language/release_linux-x64/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Core/release_linux-x64/CakeOS.Cui.Core.dll
+  CakeOS.Cui.Themes -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Themes/release_linux-x64/CakeOS.Cui.Themes.dll
+  CakeOS.Cui.Runtime -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime/release_linux-x64/CakeOS.Cui.Runtime.dll
+  HavenOS.Forms -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Forms/release_linux-x64/HavenOS.Forms.dll
+  Dulche.Runtime -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Dulche.Runtime/release_linux-x64/Dulche.Runtime.dll
+  Den -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Den/release_linux-x64/Den.dll
+  HavenOS.Home -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Home/release_linux-x64/HavenOS.Home.dll
+  HavenOS.Games -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Games/release_linux-x64/HavenOS.Games.dll
+  HavenOS.Home.NativeUI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Home.NativeUI/release_linux-x64/HavenOS.Home.NativeUI.dll
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c: In function ‘init_utf8’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(20,38): warning G534C2D24: unused parameter ‘enc’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     20 | static void init_utf8(VTermEncoding *enc, void *data_)
+        |                       ~~~~~~~~~~~~~~~^~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c: In function ‘decode_utf8’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(28,40): warning G534C2D24: unused parameter ‘enc’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     28 | static void decode_utf8(VTermEncoding *enc, void *data_,
+        |                         ~~~~~~~~~~~~~~~^~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c: In function ‘decode_usascii’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(162,43): warning G534C2D24: unused parameter ‘enc’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    162 | static void decode_usascii(VTermEncoding *enc, void *data,
+        |                            ~~~~~~~~~~~~~~~^~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(162,54): warning GCB2928EA: unused parameter ‘data’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    162 | static void decode_usascii(VTermEncoding *enc, void *data,
+        |                                                ~~~~~~^~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c: In function ‘decode_table’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(187,52): warning GCB2928EA: unused parameter ‘data’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    187 | static void decode_table(VTermEncoding *enc, void *data,
+        |                                              ~~~~~~^~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(73,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     73 |   { KEYCODE_ENTER,   '\r'   }, // ENTER
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(74,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     74 |   { KEYCODE_TAB,     '\t'   }, // TAB
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(75,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     75 |   { KEYCODE_LITERAL, '\x7f' }, // BACKSPACE == ASCII DEL
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(76,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     76 |   { KEYCODE_LITERAL, '\x1b' }, // ESCAPE
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(78,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     78 |   { KEYCODE_CSI_CURSOR, 'A' }, // UP
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(79,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     79 |   { KEYCODE_CSI_CURSOR, 'B' }, // DOWN
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(80,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     80 |   { KEYCODE_CSI_CURSOR, 'D' }, // LEFT
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(81,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     81 |   { KEYCODE_CSI_CURSOR, 'C' }, // RIGHT
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(85,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     85 |   { KEYCODE_CSI_CURSOR, 'H' }, // HOME
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(86,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     86 |   { KEYCODE_CSI_CURSOR, 'F' }, // END
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(93,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     93 |   { KEYCODE_SS3,    'P' },     // F1
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(94,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     94 |   { KEYCODE_SS3,    'Q' },     // F2
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(95,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     95 |   { KEYCODE_SS3,    'R' },     // F3
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(96,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     96 |   { KEYCODE_SS3,    'S' },     // F4
+        |   ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c:67:7: note: ‘csinum’ declared here
+     67 |   int csinum;
+        |       ^~~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/parser.c: In function ‘vterm_input_write’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/parser.c(242,24): warning G2BD25E6E: this statement may fall through [-Wimplicit-fallthrough=] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    242 |       vt->parser.state = CSI_INTERMED;
+        |       ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/parser.c:243:5: note: here
+    243 |     case CSI_INTERMED:
+        |     ^~~~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/parser.c(145,55): warning G9A105832: ‘string_start’ may be used uninitialized [-Wmaybe-uninitialized] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    145 |         string_fragment(vt, string_start, bytes + pos - string_start, false);
+        |                                           ~~~~~~~~~~~~^~~~~~~~~~~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/parser.c:114:15: note: ‘string_start’ was declared here
+    114 |   const char *string_start;
+        |               ^~~~~~~~~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c: In function ‘lookup_colour’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(91,44): warning GB055172E: unused parameter ‘state’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     91 | static int lookup_colour(const VTermState *state, int palette, const long args[], int argcount, VTermColor *col)
+        |                          ~~~~~~~~~~~~~~~~~~^~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c: In function ‘setpenattr’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(119,74): warning G7741D18B: unused parameter ‘type’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    119 | static void setpenattr(VTermState *state, VTermAttr attr, VTermValueType type, VTermValue *val)
+        |                                                           ~~~~~~~~~~~~~~~^~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c: In function ‘vterm_state_setpen’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(465,58): warning G16A12372: suggest braces around empty body in an ‘if’ statement [-Wempty-body] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    465 |       DEBUG_LOG("libvterm: Unhandled CSI SGR %ld\n", arg);
+        |                                                          ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c: In function ‘vterm_state_getpen’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(504,69): warning G1D88F9B1: unused parameter ‘argcount’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    504 | INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
+        |                                                                 ~~~~^~~~~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/screen.c: In function ‘erase_user’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/screen.c(311,43): warning G5CC864D6: unused parameter ‘selective’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    311 | static int erase_user(VTermRect rect, int selective, void *user)
+        |                                       ~~~~^~~~~~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/screen.c: In function ‘line_popcount’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/screen.c(511,59): warning G1E6229FC: unused parameter ‘rows’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    511 | static int line_popcount(ScreenCell *buffer, int row, int rows, int cols)
+        |                                                       ~~~~^~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c: In function ‘on_text’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(353,20): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    353 |         if(saved_i >= state->combine_chars_size)
+        |                    ^~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(357,18): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    357 |       if(saved_i >= state->combine_chars_size)
+        |                  ^~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(443,19): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    443 |         if(save_i >= state->combine_chars_size)
+        |                   ^~
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(447,17): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    447 |       if(save_i >= state->combine_chars_size)
+        |                 ^~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c: In function ‘request_status_string’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(1848,11): warning GBB19D676: comparison of integer expressions of different signedness: ‘int’ and ‘long unsigned int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+   1848 |   while(i < sizeof(state->tmp.decrqss)-1 && tmp[i])
+        |           ^
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(1850,11): warning GBB19D676: comparison of integer expressions of different signedness: ‘int’ and ‘long unsigned int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+   1850 |   while(i < sizeof(state->tmp.decrqss)-1 && frag.len--)
+        |           ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c: In function ‘vterm_state_send_selection’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(2307,5): warning GA026ECF4: ‘static’ is not at beginning of declaration [-Wold-style-declaration] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+   2307 |     const static char selection_chars[] = "cpqs";
+        |     ^~~~~
+  In function ‘request_status_string’,
+      inlined from ‘on_dcs’ at /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c:1930:5:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(1909,14): warning GC090DE88: ‘reply’ may be used uninitialized [-Wmaybe-uninitialized] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+   1909 |         reply--;
+        |         ~~~~~^~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c: In function ‘on_dcs’:
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c:1902:11: note: ‘reply’ was declared here
+   1902 |       int reply;
+        |           ^~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c: In function ‘bisearch’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(134,11): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    134 |   if (ucs < table[0].first || ucs > table[max].last)
+        |           ^
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(134,35): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    134 |   if (ucs < table[0].first || ucs > table[max].last)
+        |                                   ^
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(138,13): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    138 |     if (ucs > table[mid].last)
+        |             ^
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(140,18): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    140 |     else if (ucs < table[mid].first)
+        |                  ^
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/vterm.c: In function ‘default_malloc’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/vterm.c(12,48): warning G1124E96D: unused parameter ‘allocdata’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     12 | static void *default_malloc(size_t size, void *allocdata)
+        |                                          ~~~~~~^~~~~~~~~
+  /home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/vterm.c: In function ‘default_free’:
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/vterm.c(20,43): warning G1124E96D: unused parameter ‘allocdata’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+     20 | static void default_free(void *ptr, void *allocdata)
+        |                                     ~~~~~~^~~~~~~~~
+  HavenOS.Terminal -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Terminal/release_linux-x64/HavenOS.Terminal.dll
+  HavenOS.Terminal.NativeUI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Terminal.NativeUI/release_linux-x64/HavenOS.Terminal.NativeUI.dll
+  HavenOS.Sites -> /home/runner/work/9to1/9to1/9to1 Workspace/Sites/bin/HavenOS.Sites/release_linux-x64/HavenOS.Sites.dll
+  Haven.UI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.UI/release_linux-x64/Haven.UI.dll
+  HavenOS.Files.CUI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Files.CUI/release_linux-x64/HavenOS.Files.CUI.dll
+  HavenOS.Canvas -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Canvas/release_linux-x64/HavenOS.Canvas.dll
+  HavenOS.Images.Core -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Images.Core/release_linux-x64/HavenOS.Images.Core.dll
+  HavenOS.Canvas.NativeUI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Canvas.NativeUI/release_linux-x64/HavenOS.Canvas.NativeUI.dll
+  HavenOS.Spaces -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Spaces/release_linux-x64/HavenOS.Spaces.dll
+  Haven.Infrastructure -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Infrastructure/release_linux-x64/Haven.Infrastructure.dll
+  HavenOS.Wave -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave.dll
+  HavenOS.Motion -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Motion/release_linux-x64/HavenOS.Motion.dll
+  Haven.Browser -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Browser/release_linux-x64/Haven.Browser.dll
+  HavenOS.Mail -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Mail/release_linux-x64/HavenOS.Mail.dll
+  HavenOS.Files.NativeHost -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Files.NativeHost/release_linux-x64/HavenOS.Files.NativeHost.dll
+  HavenOS.Apps.Browse -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Apps.Browse/release_linux-x64/HavenOS.Apps.Browse.dll
+  Haven.Desktop -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Desktop/release_net10.0_linux-x64/Haven.dll
+  HavenOS.Files.NativeUI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Files.NativeUI/release_linux-x64/HavenOS.Files.NativeUI.dll
+  Haven.Desktop.Tests -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Desktop.Tests/release_net10.0_linux-x64/Haven.Desktop.Tests.dll
+
+Build succeeded.
+
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(20,38): warning G534C2D24: unused parameter ‘enc’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(28,40): warning G534C2D24: unused parameter ‘enc’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(162,43): warning G534C2D24: unused parameter ‘enc’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(162,54): warning GCB2928EA: unused parameter ‘data’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/encoding.c(187,52): warning GCB2928EA: unused parameter ‘data’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(73,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(74,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(75,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(76,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(78,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(79,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(80,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(81,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(85,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(86,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(93,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(94,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(95,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/keyboard.c(96,3): warning G18A1BEFA: missing initializer for field ‘csinum’ of ‘keycodes_s’ [-Wmissing-field-initializers] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/parser.c(242,24): warning G2BD25E6E: this statement may fall through [-Wimplicit-fallthrough=] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/parser.c(145,55): warning G9A105832: ‘string_start’ may be used uninitialized [-Wmaybe-uninitialized] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(91,44): warning GB055172E: unused parameter ‘state’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(119,74): warning G7741D18B: unused parameter ‘type’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(465,58): warning G16A12372: suggest braces around empty body in an ‘if’ statement [-Wempty-body] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/pen.c(504,69): warning G1D88F9B1: unused parameter ‘argcount’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/screen.c(311,43): warning G5CC864D6: unused parameter ‘selective’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/screen.c(511,59): warning G1E6229FC: unused parameter ‘rows’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(353,20): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(357,18): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(443,19): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(447,17): warning G90A914DE: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(1848,11): warning GBB19D676: comparison of integer expressions of different signedness: ‘int’ and ‘long unsigned int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(1850,11): warning GBB19D676: comparison of integer expressions of different signedness: ‘int’ and ‘long unsigned int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(2307,5): warning GA026ECF4: ‘static’ is not at beginning of declaration [-Wold-style-declaration] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/state.c(1909,14): warning GC090DE88: ‘reply’ may be used uninitialized [-Wmaybe-uninitialized] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(134,11): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(134,35): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(138,13): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/unicode.c(140,18): warning GABCAEDC3: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/vterm.c(12,48): warning G1124E96D: unused parameter ‘allocdata’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/../Source/libvterm/src/vterm.c(20,43): warning G1124E96D: unused parameter ‘allocdata’ [-Wunused-parameter] [/home/runner/work/9to1/9to1/9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj]
+    41 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:44.56

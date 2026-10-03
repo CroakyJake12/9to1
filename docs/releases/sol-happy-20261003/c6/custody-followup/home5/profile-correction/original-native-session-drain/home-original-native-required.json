@@ -1,0 +1,11 @@
+{
+  "drained": true,
+  "status": "original native session drained",
+  "launcherPid": 34663,
+  "profileRetained": "/tmp/astra-native-probe-q_ykiy3n",
+  "profileOriginalInodesCurrent": true,
+  "originalCallbackTaskSettledMarkerObserved": false,
+  "failureTypes": [
+    "RuntimeError"
+  ]
+}

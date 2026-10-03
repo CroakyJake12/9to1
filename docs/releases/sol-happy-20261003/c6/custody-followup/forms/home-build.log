@@ -1,0 +1,18 @@
+  Haven.Core -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Core/release_linux-x64/Haven.Core.dll
+  NineToOne.Cui.AI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/NineToOne.Cui.AI/release_linux-x64/NineToOne.Cui.AI.dll
+  Haven.Application -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Application/release_linux-x64/Haven.Application.dll
+  Haven.Browser -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Browser/release_linux-x64/Haven.Browser.dll
+  Haven.UI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.UI/release_linux-x64/Haven.UI.dll
+  HavenOS.Apps.Browse -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Apps.Browse/release_linux-x64/HavenOS.Apps.Browse.dll
+  CakeOS.Cui.Language -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Language/release_linux-x64/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Core/release_linux-x64/CakeOS.Cui.Core.dll
+  Dulche.Runtime -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Dulche.Runtime/release_linux-x64/Dulche.Runtime.dll
+  Den -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Den/release_linux-x64/Den.dll
+  HavenOS.Home -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Home/release_linux-x64/HavenOS.Home.dll
+  HavenOS.Home.Tests -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Home.Tests/release_linux-x64/HavenOS.Home.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.93

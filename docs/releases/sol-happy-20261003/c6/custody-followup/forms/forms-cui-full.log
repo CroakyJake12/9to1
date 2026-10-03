@@ -1,0 +1,57 @@
+Test run for /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Forms.CUI.Tests/release_linux-x64/HavenOS.Forms.CUI.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+/home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Forms.CUI.Tests/release_linux-x64/HavenOS.Forms.CUI.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.09]   Discovering: HavenOS.Forms.CUI.Tests
+[xUnit.net 00:00:00.16]   Discovered:  HavenOS.Forms.CUI.Tests
+[xUnit.net 00:00:00.20]   Starting:    HavenOS.Forms.CUI.Tests
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Typed_table_publishes_but_reference_column_requires_actual_Data_lookup [268 ms]
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Draft_structure_is_editable_but_publication_requires_actual_configured_capability(capability: "renderer") [10 ms]
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Draft_structure_is_editable_but_publication_requires_actual_configured_capability(capability: "audience") [1 ms]
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Draft_structure_is_editable_but_publication_requires_actual_configured_capability(capability: "theme") [1 ms]
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Draft_structure_is_editable_but_publication_requires_actual_configured_capability(capability: "graph") [1 ms]
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Draft_structure_is_editable_but_publication_requires_actual_configured_capability(capability: "layout") [1 ms]
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Draft_structure_is_editable_but_publication_requires_actual_configured_capability(capability: "data") [8 ms]
+  Passed HavenOS.Forms.Tests.FormNativePublicationValidatorTests.Draft_structure_is_editable_but_publication_requires_actual_configured_capability(capability: "review") [1 ms]
+  Passed HavenOS.Forms.Tests.FormNativePageOrderOwnerTests.Native_page_order_actions_preserve_ids_published_version_and_reject_stale_or_revoked_owner [405 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Palette_and_choice_inspector_preserve_typed_ids_dirty_edits_and_immutable_publication [531 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Live_regex_tester_uses_runtime_semantics_without_changing_physical_form [51 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Table_column_inspector_persists_typed_stable_columns_and_preserves_conflicted_drafts [54 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Owning_builder_saves_and_moves_canonical_field_then_reopens_immutable_publication_and_preserves_dirty_edit_on_conflict [52 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Actual_native_publication_capabilities_preserve_advanced_draft_and_prior_active_version [13 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Fixed_row_authoring_keeps_stable_ids_and_published_rows_when_draft_changes [42 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Row_limit_inspector_retains_invalid_and_conflicted_text_until_saved_or_discarded [32 ms]
+  Passed HavenOS.Forms.Tests.FormsCuiWorkspaceTests.Mounted_regex_inputs_refresh_live_results_and_preserve_invalid_pattern [872 ms]
+  Passed HavenOS.Forms.Tests.FormNativeResponseSurfaceTests.Published_native_columns_reflow_same_inputs_without_saving_draft_then_submit_through_actual_store [231 ms]
+  Passed HavenOS.Forms.Tests.FormNativeResponseSurfaceTests.Published_workspace_retry_opens_same_durable_response_and_real_native_answers_save [116 ms]
+  Passed HavenOS.Forms.Tests.FormNativeResponseSurfaceTests.Native_answers_save_through_durable_owner_and_invalid_visible_draft_blocks_submission_after_partial_save [154 ms]
+  Passed HavenOS.Forms.Tests.FormNativeResponseSurfaceTests.Native_conflict_retains_draft_until_explicit_reload_and_authentication_change_clears_surface_without_write [111 ms]
+  Passed HavenOS.Forms.Tests.FormNativeResponseSurfaceTests.Definition_and_scope_keep_published_schema_and_reject_old_authentication_before_response_operation [52 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewViewportTests.Actual_window_width_reflows_visible_fields_in_order_and_quiz_advance_reserves_no_hidden_slots(mode: Quiz) [88 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewViewportTests.Actual_window_width_reflows_visible_fields_in_order_and_quiz_advance_reserves_no_hidden_slots(mode: Form) [52 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewViewportTests.Actual_preview_columns_reflow_retained_canonical_fields_and_response_without_rebuilding_inputs [39 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewViewportTests.Actual_native_viewport_switch_preserves_same_canonical_response_and_invalid_numeric_draft [31 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Clearing_optional_typed_native_input_removes_prior_value_without_stale_submission(kind: Duration, valid: "00:00:01") [31 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Clearing_optional_typed_native_input_removes_prior_value_without_stale_submission(kind: DateTime, valid: "2026-09-30T12:30:00.0000000+00:00") [22 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Clearing_optional_typed_native_input_removes_prior_value_without_stale_submission(kind: Email, valid: "person@example.test") [59 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Clearing_optional_typed_native_input_removes_prior_value_without_stale_submission(kind: Time, valid: "12:30:00") [17 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Clearing_optional_typed_native_input_removes_prior_value_without_stale_submission(kind: Date, valid: "2026-09-30") [16 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Native_ranking_preserves_option_identity_order_and_blocks_empty_required_draft [76 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Native_table_edits_typed_cells_preserves_row_ids_and_blocks_stale_valid_submission [80 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Invalid_visible_numeric_text_cannot_submit_last_valid_value(kind: Number) [24 ms]
+[xUnit.net 00:00:04.26]   Finished:    HavenOS.Forms.CUI.Tests
+Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Invalid_visible_numeric_text_cannot_submit_last_valid_value(kind: Decimal) [25 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Invalid_visible_numeric_text_cannot_submit_last_valid_value(kind: Currency) [20 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Invalid_visible_numeric_text_cannot_submit_last_valid_value(kind: Rating) [20 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Actual_native_set_choices_validate_required_answers_and_mark_stable_ids(kind: MultipleChoice) [63 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Actual_native_set_choices_validate_required_answers_and_mark_stable_ids(kind: CheckboxSet) [26 ms]
+  Passed HavenOS.Forms.Tests.FormNativePreviewTests.Actual_native_quiz_fields_keep_option_identity_question_release_and_detached_control_isolation [50 ms]
+  Passed HavenOS.Forms.Tests.FormNativeHomePublicationResponseTests.Actual_Home_owned_native_publication_recovers_failed_mount_and_original_session_denies_revocation_or_root_replacement(replaceRoot: True) [364 ms]
+  Passed HavenOS.Forms.Tests.FormNativeHomePublicationResponseTests.Actual_Home_owned_native_publication_recovers_failed_mount_and_original_session_denies_revocation_or_root_replacement(replaceRoot: False) [152 ms]
+
+Test Run Successful.
+Total tests: 42
+     Passed: 42
+ Total time: 4.9752 Seconds
+Results File: /home/runner/work/9to1/9to1/artifacts/desktop-visible-owning/trx/forms-cui-full.trx
