@@ -12,13 +12,15 @@ Fragment routes retain application context through reload without requiring a
 production rewrite or changing another team's public routing configuration.
 The process-local scroll cache uses the full encoded request address, including
 artifact/entity identity, is bounded to 256 destinations, and clears with the
-private context. Actual CUI render/scroll restoration remains unverified while
-the vendor build is blocked.
+private context. Actual CUI render/scroll restoration requires production browser
+verification; source-linked route tests alone do not establish it.
 
 The composition root registers an existing authenticated
 `IHomeFeatureRouteHandler` with `BrowserApplication.Surfaces.Register(handler,
 viewState => new BrowserCuiSurface(document, bindings, actions, lifetime))`.
 The owner returns a successful `HomeFeatureViewState` with the same RouteId.
+Registered owners take priority for Home routes as well as application routes.
+Owner denial, failure or unavailable results never open the fallback Home view.
 Documents and bindings must use canonical product state; action dispatchers must
 implement `ICuiActionAvailability` to enable their actual available commands.
 The shell does not interpret JSON state as a guessed schema or invent providers.
@@ -40,9 +42,34 @@ user receives a session-check state and reload entry point; a preserved tab does
 not reopen old private content based only on browser history. The account owner
 must subsequently revalidate identity before registering private destinations.
 
-Build the WebAssembly project only once shared tooling and vendor build support
-are restored. The baseline vendor checkout lacks required build imports, and
-this host does not bypass those failures with replacement NuGet binaries.
+The historical `98a0882` checkout lacked vendor build imports. The incoming
+`a63d77f` owner candidate restores the broad source build graph. Its exact XamlX
+and DBus gitlinks must be materialised before building; old-main failures are not
+evidence of candidate failures. Build the pinned browser adapter's JavaScript
+from its unchanged `webapp/bun.lock` and `build.js`, then publish the host with
+the installed .NET 10 WebAssembly SDK. The SDK uses static web assets rather
+than the legacy `AppBundle` target. The host imports the source adapter's actual
+asset/GL contracts and retains the native packages' SDK-selected library variants.
+The shared CUI helpers initialise the existing primitive theme and Inter font.
+
+The isolated run used root-selected `Bun.Unofficial.Tool` version `1.3.4`; the
+donor project itself does not pin that tool. After reserving build resources,
+run the following with writable `DOTNET_CLI_HOME`/`NUGET_PACKAGES` and that tool
+installed outside the checkout:
+
+```bash
+# From the pinned Avalonia.Browser/webapp directory:
+/workspace/team-b-tooling/bun/bun install --frozen-lockfile
+/workspace/team-b-tooling/bun/bun build.js
+
+# From the repository root:
+/workspace/.tools/dotnet/dotnet publish apps/Web/NineToOne.Web.csproj -c Release
+```
+
+Serve the actual `apps/Web/bin/Release/net10.0/publish/wwwroot` output read-only.
+Do not copy a source shell over incomplete build output or substitute runtime
+modules. Successful compilation or local publication does not establish
+deployment or product parity.
 Deployment, supported-browser policy, actual service negotiation, shared AI bar,
 full application surfaces, continuity, visual/accessibility and resource acceptance
 remain required gates. Evidence is maintained in the run's B1 ledger.
