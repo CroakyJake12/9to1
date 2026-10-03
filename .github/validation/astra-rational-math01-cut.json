@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "baselineCommit": "7d73f79d19a698ed5bc9c684d5a536575cf812af",
   "programTree": "fb3e7ede0d739082ea85cb900ed2e43f658411e4",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
-  "kind": "initial",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -50,9 +50,9 @@
     {
       "path": ".github/scripts/astra-rational-math01-resource.py",
       "mode": "100644",
-      "object": "809580e661e041bfe93d7d440e7b72781d10a50a",
-      "bytes": 33574,
-      "sha256": "f356c31d9b29fbbc06b7abebf54a884eb50fbc41239bc1202fd4044f92df4fcd"
+      "object": "ab3c354de67a0655e40bc8a3a0e29063a74a8f91",
+      "bytes": 39286,
+      "sha256": "7e121ab44731ca8915d5bfc2682a15b7bf43b2af10223de898d8cb993fbf26e4"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -66229,7 +66229,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-rational-math01-cut.json",
-  "limits": "Whole accepted Math06 owning46/resource48/regression12 classes and original helpers/workflow/restore/native/source-built tasks/session/drain/full-suite guards preserved; additive real evaluator Desktop class31 exact method/case outcomes produces47/49/12. All original22 Math outcomes retained. Actual five pinned maintained package identities and runtime DLL/package-byte binding plus original Core/Application/Desktop PE/PDB retention required; full final source/document/native/original-task/restore/drain acceptance remains mandatory. Source-only restricted exact rational original-domain capability; no sampled/float marking proof, general symbolic/domain-equivalence oracle, hard CPU/memory/wall-time cap, App/DI/Forms policy activation, function/equation/inequality plotting or whole current Pass1/platform completion. Original current30 Android/IMAP and unrelated product source inherited unchanged. No cloud/provider/account/credential migration. Logical first-party Core/Application/Desktop producer requirements are unchanged; the actual pinned Desktop AssemblyName Haven is mapped explicitly to original Haven.dll/Haven.pdb, with truthful pair byte/SHA receipts.",
+  "limits": "Whole accepted Math06 owning46/resource48/regression12 classes and original helpers/workflow/restore/native/source-built tasks/session/drain/full-suite guards preserved; additive real evaluator Desktop class31 exact method/case outcomes produces47/49/12. All original22 Math outcomes retained. Actual five pinned maintained package identities and runtime DLL/package-byte binding plus original Core/Application/Desktop PE/PDB retention required; full final source/document/native/original-task/restore/drain acceptance remains mandatory. Source-only restricted exact rational original-domain capability; no sampled/float marking proof, general symbolic/domain-equivalence oracle, hard CPU/memory/wall-time cap, App/DI/Forms policy activation, function/equation/inequality plotting or whole current Pass1/platform completion. Original current30 Android/IMAP and unrelated product source inherited unchanged. No cloud/provider/account/credential migration. Logical first-party Core/Application/Desktop producer requirements are unchanged; the actual pinned Desktop AssemblyName Haven is mapped explicitly to original Haven.dll/Haven.pdb, with truthful pair byte/SHA receipts. Actual Rational02 failed resource204 original proves31 new evaluator and22 old Math passes plus13 legacy native typeface casts; no full3 acceptance. This sole resource caller selects the existing TestAppBuilder Skia branch only for the actual desktop-owning child, retaining exact created0700 capture directory/environment/process birth witnesses/emitted ordinary SHA inventory and SAME strict original session drain. Parent environment and green owning/regression bodies remain exact. No vendor/static cache patch, source/case deselection or first-initialization ordering claim. The SAME output/session process objects are retained; independent identity-deduplicated original body, exact session initializer/drain, seal, capture-finalization and output-close failures survive together. No adopted/recreated process or omitted strict custody failure. Sole command-function wrapper/body adapter reverses to complete03; all positive scenarios/renderer scope/timeout/source guards unchanged.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-maps-current20-coherent96-full-owning-gate21/manifest.json",
@@ -66962,6 +66962,46 @@
     {
       "path": "/workspace/astra-source/worker3-build-rational02-physical-producer-mapping.py",
       "sha256": "c5888b83f22fe5d51f87e6a79aebafa1e5dd0b96c35c77bae1b8cf71925292c2"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-rational-math01-current30-full-three-caller-package02-physical-producers/manifest.json",
+      "sha256": "2b8bc8549b284c83ed3d9c127343ed08729e7d24b7f5070b07da9967c98d3100"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-rational02-resource204-original-font-failure-closure02.json",
+      "sha256": "a21d678a06013717cd2809394f95931bc22a64d878cc66680fe48d8b18d21483"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-rational02-all-selected-compiled-source-pdb-supplement03.json",
+      "sha256": "bedeb2444455f28fdf049cee303f6a0a285ac7a05a8b99bc743298b2c7abcfcb"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-rational02-maintained-skia-headless-font-lifetime-source01/receipt.json",
+      "sha256": "3b235e94863934afb7db20c3f849cc912cdb6e537ae923ae66826a35e9c34607"
+    },
+    {
+      "path": "/workspace/astra-source/root-rational02-resource-original-failure-admission718.json",
+      "sha256": "05c2ad4639509753417003432a3816501831c135d573d2936b758f2ccf96bc0f"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-rational-fullcaller02-physical-producers-complete-preservation-peer01.json",
+      "sha256": "95f32be5a500b439d63ff11c0a78d86d0c8a4685cdec5f70d5a2a6122527d7f6"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-rational-fullcaller02-physical-producer-source-extension-peer01.json",
+      "sha256": "29a88ad7328cda7e3bb738ac5d53bca02935d0c68173117e1c8324b85ab598bf"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-build-rational03-scoped-skia-resource-producer.py",
+      "sha256": "0391d212ef3567b892dbecae136079c5fc3488341430c9667fd098f0cef60d09"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-rational-math03-actual7d73-current30-scoped-skia-resource-producer/manifest.json",
+      "sha256": "abcaf8bbbb9f4a04e7eb16cca7f341f2d6ffb24e190cc6f84e499d7e0330f2bd"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-build-rational04-independent-original-failure-collector.py",
+      "sha256": "4958ad211a012f6f1f9092e30e070a3c9aabcf9442775af62faa1acde4a4ffcd"
     }
   ],
   "sharedCakeIdContract": null

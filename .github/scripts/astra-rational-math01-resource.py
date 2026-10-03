@@ -4,8 +4,63 @@ p=argparse.ArgumentParser();p.add_argument('--expected-commit',required=True);p.
 root=pathlib.Path.cwd();out=root/'artifacts/desktop-visible-resource';out.mkdir(parents=True,exist_ok=True)
 def digest(path):
  with path.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
+# This source-bound producer selects the EXISTING test builder's Skia branch.
+# It supplies child-only environment; the parent/global environment is never changed.
+def prepare_native_render_capture(name):
+ import stat,uuid
+ if name!='desktop-owning':return None,None
+ if out.is_symlink() or not stat.S_ISDIR(out.lstat().st_mode):raise RuntimeError('Native capture artifact parent not ordinary')
+ parent=out/'native-render-capture';parent.mkdir(mode=0o700,exist_ok=False)
+ if parent.is_symlink() or stat.S_IMODE(parent.lstat().st_mode)!=0o700:raise RuntimeError('Native capture parent identity unavailable')
+ path=parent/(name+'-'+uuid.uuid4().hex);path.mkdir(mode=0o700,exist_ok=False)
+ before=path.lstat()
+ if path.is_symlink() or not stat.S_ISDIR(before.st_mode) or stat.S_IMODE(before.st_mode)!=0o700 or not path.resolve().is_relative_to(out.resolve()):raise RuntimeError('Native capture child identity unavailable')
+ claim={'suite':name,'environmentKey':'HAVEN_VISUAL_CAPTURE_DIR','childEnvironmentValue':str(path.resolve()),'directory':str(path.relative_to(out)),'directoryIdentity':{'dev':before.st_dev,'inode':before.st_ino,'mode':before.st_mode},'drained':False,'observedOriginalEnvironments':{},'emittedFiles':[]}
+ claim_path=out/(name+'-native-render-capture-producer.json')
+ claim_path.write_text(json.dumps(claim,indent=2)+'\n')
+ child_env=os.environ.copy();child_env['HAVEN_VISUAL_CAPTURE_DIR']=claim['childEnvironmentValue']
+ return {'path':path,'claim':claim,'claimPath':claim_path},child_env
+def observe_native_render_capture(session,capture):
+ if capture is None:return
+ claim=capture['claim'];claim['launcherPid']=session.root;claim['launcherTuple']=session.original
+ for pid,expected in list(session.members.items()):
+  before=session.stat(pid)
+  if before is None or before[4]=='Z':continue
+  if before[1:4]!=expected[1:4]:raise RuntimeError('Native capture original process identity changed')
+  try:raw=(pathlib.Path('/proc')/str(pid)/'environ').read_bytes()
+  except FileNotFoundError:continue
+  after=session.stat(pid)
+  if after is None or after[4]=='Z':continue
+  if after[1:4]!=expected[1:4]:raise RuntimeError('Native capture process changed while reading selected environment')
+  values=[entry.split(b'=',1)[1] for entry in raw.split(b'\0') if entry.startswith(b'HAVEN_VISUAL_CAPTURE_DIR=')]
+  if values!=[os.fsencode(claim['childEnvironmentValue'])]:raise RuntimeError('Original native process lacks exact child renderer environment')
+  claim['observedOriginalEnvironments'][str(pid)]={'pid':pid,'startTicks':expected[3],'selectedEnvironmentValue':claim['childEnvironmentValue']}
+ capture['claimPath'].write_text(json.dumps(claim,indent=2)+'\n')
+def finish_native_render_capture(session,capture):
+ if capture is None:return
+ import stat
+ claim=capture['claim'];path=capture['path'];after=path.lstat();expected=claim['directoryIdentity']
+ if path.is_symlink() or {'dev':after.st_dev,'inode':after.st_ino,'mode':after.st_mode}!=expected:raise RuntimeError('Original native capture child replaced')
+ if str(session.root) not in claim['observedOriginalEnvironments']:raise RuntimeError('Original native launcher renderer environment unobserved')
+ if not json.loads((session.records/'expected-managed-launch.json').read_text()).get('drained'):raise RuntimeError('Native capture original session not drained')
+ directories=[];emitted=[]
+ for item in sorted(path.rglob('*')):
+  info=item.lstat()
+  if item.is_symlink():raise RuntimeError('Native capture emitted symlink')
+  relative=str(item.relative_to(out))
+  if stat.S_ISDIR(info.st_mode):directories.append({'path':relative,'dev':info.st_dev,'inode':info.st_ino,'mode':info.st_mode})
+  elif stat.S_ISREG(info.st_mode) and info.st_nlink==1:emitted.append({'path':relative,'bytes':info.st_size,'sha256':digest(item),'mode':info.st_mode})
+  else:raise RuntimeError('Native capture emitted nonordinary or linked file')
+ claim.update(drained=True,emittedFiles=emitted,emittedDirectories=directories,directoryIdentityAfter=expected,qualification='Existing source-bound Skia branch selected for this original resource Desktop producer; emitted files retained as actual ordinary bytes. This receipt alone is not pixel, native test or full-cohort acceptance.')
+ capture['claimPath'].write_text(json.dumps(claim,indent=2)+'\n')
 def command(args,name):
- with (out/(name+'.log')).open('wb') as log:
+ # Keep the actual original body, output handle and session; no error can erase
+ # a distinct earlier error merely because final custody verification also fails.
+ failures=[];log=None;process=None;session=None;records=None;capture=None;result=None
+ def retain(error):
+  if all(error is not original for original in failures):failures.append(error)
+ def run_original():
+  nonlocal process,session,records,capture
   # Build/restore/property commands retain their original synchronous contract.
   ownedTest = name in {x[0] for x in globals().get('checks',[])} or name=='cui-domain'
   if not ownedTest:
@@ -15,43 +70,64 @@ def command(args,name):
   (records/'expected-managed-launch.json').write_text(json.dumps({'expectedManagedLaunch':True,'drained':False})+'\n')
   import importlib.util
   spec=importlib.util.spec_from_file_location('shelf37_original_owned_session',root/'.github/scripts/astra-original-native-session-drain.py');module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
-  process=subprocess.Popen(args,stdout=log,stderr=subprocess.STDOUT,start_new_session=True);session=None
+  capture,child_env=prepare_native_render_capture(name)
+  process=subprocess.Popen(args,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,env=child_env)
   started=time.monotonic();snapshots=[];nextSnapshot=started
-  try:
-   session=module.OriginalSession(process,records)
-   while process.poll() is None:
-    session.observe()
-    if time.monotonic()>=nextSnapshot:
-     rows=[]
-     for p in pathlib.Path('/proc').iterdir():
-      if not p.name.isdigit():continue
-      try:
-       stat=(p/'stat').read_text();pgid=int(stat[stat.rfind(')')+2:].split()[2])
-       if pgid!=process.pid:continue
-       row={'pid':int(p.name),'stat':stat,'cmdline':(p/'cmdline').read_bytes().decode(errors='replace'),'status':(p/'status').read_text(),'threads':[]}
-       for thread in sorted((p/'task').iterdir()):
-        tr={'tid':int(thread.name)}
-        for field in ('stat','wchan','stack'):
-         try:tr[field]=(thread/field).read_text()[:16384]
-         except OSError as e:tr[field+'Error']=str(e)
-        row['threads'].append(tr)
-       rows.append(row)
-      except (OSError,ValueError):continue
-     snapshots.append({'elapsedSeconds':time.monotonic()-started,'processes':rows})
-     (out/(name+'-owned-process-snapshots.json')).write_text(json.dumps(snapshots,indent=2))
-     nextSnapshot=time.monotonic()+30
-    if time.monotonic()-started>1200:
-     (out/(name+'-external-timeout.txt')).write_text('FAILED: actual full cohort exceeded 1200 seconds; no success or source-cause inference.\n')
-     return 124
-    time.sleep(.05)
-   return process.wait()
-  finally:
-   # The parent exiting does not establish descendant disappearance.
+  # Retain the SAME original object before its exact initializer can persist/throw.
+  session=module.OriginalSession.__new__(module.OriginalSession)
+  module.OriginalSession.__init__(session,process,records)
+  observe_native_render_capture(session,capture)
+  while process.poll() is None:
+   session.observe()
+   observe_native_render_capture(session,capture)
+   if time.monotonic()>=nextSnapshot:
+    rows=[]
+    for p in pathlib.Path('/proc').iterdir():
+     if not p.name.isdigit():continue
+     try:
+      stat=(p/'stat').read_text();pgid=int(stat[stat.rfind(')')+2:].split()[2])
+      if pgid!=process.pid:continue
+      row={'pid':int(p.name),'stat':stat,'cmdline':(p/'cmdline').read_bytes().decode(errors='replace'),'status':(p/'status').read_text(),'threads':[]}
+      for thread in sorted((p/'task').iterdir()):
+       tr={'tid':int(thread.name)}
+       for field in ('stat','wchan','stack'):
+        try:tr[field]=(thread/field).read_text()[:16384]
+        except OSError as e:tr[field+'Error']=str(e)
+       row['threads'].append(tr)
+      rows.append(row)
+     except (OSError,ValueError):continue
+    snapshots.append({'elapsedSeconds':time.monotonic()-started,'processes':rows})
+    (out/(name+'-owned-process-snapshots.json')).write_text(json.dumps(snapshots,indent=2))
+    nextSnapshot=time.monotonic()+30
+   if time.monotonic()-started>1200:
+    (out/(name+'-external-timeout.txt')).write_text('FAILED: actual full cohort exceeded 1200 seconds; no success or source-cause inference.\n')
+    return 124
+   time.sleep(.05)
+  return process.wait()
+ try:
+  log=(out/(name+'.log')).open('wb')
+  result=run_original()
+ except BaseException as error:retain(error)
+ finally:
+  if process is not None:
+   # The parent exiting does not establish descendant disappearance. Each
+   # independent original close proof is attempted even if an earlier one fails.
    try:
-    if session is not None:session.drain()
-   finally:
+    if session is None:raise RuntimeError('Actual original whole-suite session object unavailable')
+    session.drain()
+   except BaseException as error:retain(error)
+   try:
     if not json.loads((records/'expected-managed-launch.json').read_text()).get('drained'):
      raise RuntimeError('Actual original whole-suite session cleanup unproved')
+   except BaseException as error:retain(error)
+   try:finish_native_render_capture(session,capture)
+   except BaseException as error:retain(error)
+  if log is not None:
+   try:log.close()
+   except BaseException as error:retain(error)
+ if len(failures)==1:raise failures[0].with_traceback(failures[0].__traceback__)
+ if failures:raise BaseExceptionGroup('Original whole-suite body and custody failures',failures)
+ return result
 commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
 if len(a.expected_commit)!=40 or any(c not in '0123456789abcdef' for c in a.expected_commit) or commit!=a.expected_commit or os.environ.get('GITHUB_SHA',commit)!=commit:raise SystemExit('immutable commit mismatch')
 if a.manifest!='.github/validation/astra-rational-math01-cut.json':raise SystemExit('unexpected self-manifest path')
