@@ -67,13 +67,22 @@ export class AccountApiClient {
 
   updateProfile(expectedRevision, fields, { signal } = {}) {
     const allowed = new Set(['name', 'username', 'icon', 'pronouns', 'job']);
-    if (!positiveRevision(expectedRevision) || !object(fields) || !Object.keys(fields).length ||
-        Object.keys(fields).some(key => !allowed.has(key)) ||
-        Object.entries(fields).some(([key, value]) => typeof value !== 'string' && !(value === null && !['name', 'username'].includes(key)))) {
+    if (!positiveRevision(expectedRevision) || expectedRevision >= Number.MAX_SAFE_INTEGER || !object(fields)) {
       return Promise.resolve(failed('InvalidArgument', 'UpdateProfile'));
     }
-    return this.#request('UpdateProfile', '/api/account/profile', 'PATCH', { expectedRevision, fields },
-      value => object(value) && profile(value.profile), signal);
+    // Read caller-owned values once, validate that snapshot, then dispatch only our own plain data.
+    // Token acquisition may yield; caller mutation/getters/toJSON must not change the approved edit.
+    let entries;
+    try { entries = Object.entries(fields); }
+    catch { return Promise.resolve(failed('InvalidArgument', 'UpdateProfile')); }
+    if (!entries.length || entries.some(([key, value]) => !allowed.has(key) ||
+        (typeof value !== 'string' && !(value === null && !['name', 'username'].includes(key))))) {
+      return Promise.resolve(failed('InvalidArgument', 'UpdateProfile'));
+    }
+    const snapshot = Object.fromEntries(entries);
+    const nextRevision = expectedRevision + 1;
+    return this.#request('UpdateProfile', '/api/account/profile', 'PATCH', { expectedRevision, fields: snapshot },
+      value => object(value) && profile(value.profile) && value.profile.revision === nextRevision, signal);
   }
 
   listSessions({ signal } = {}) {

@@ -44,7 +44,7 @@ test('current account preserves exact wire body and uses protected fetch policy'
 
 test('profile patch preserves omitted fields and explicit nullable clears; no client entitlement body', async () => {
   const requests = [];
-  const api = client(async (url, options) => { requests.push([url, options]); return json({ profile }); });
+  const api = client(async (url, options) => { requests.push([url, options]); return json({ profile: { ...profile, revision: 2 } }); });
   const fields = { name: 'New name', pronouns: null };
   assert.equal((await api.updateProfile(1, fields)).ok, true);
   assert.equal(requests[0][0], 'https://account.invalid/api/account/profile');

@@ -8,12 +8,15 @@ Before account, session or organisation switching, await `invalidatePrivateConte
 
 Operations: `getCurrent`, `getProfile`, `updateProfile(expectedRevision, fields)`, `listSessions`, `signOut`, `revokeSession`, `revokeAllOtherSessions`. Every request accepts `{ signal }`. Profile updates forward only the specified fields, including explicit `null` clears, and do not fill omissions. Server revision checks, validation/reservation, authorisation and data normalization remain authoritative. Session mutation success requires the protocol's 204; ordinary reads/profile writes require validated 200 JSON. Return values distinguish transport/protocol/cancellation failures from source-defined errors and preserve conflict revision in `error.body`.
 
+Profile updates read and validate the caller's scalar fields once into an independent plain snapshot before asynchronous token acquisition. Later caller edits and serialization hooks cannot alter the dispatched patch. The acknowledged Worker CAS statement updates a matching revision by exactly one; success requires that exact successor revision. The expected revision and its successor must both be safely representable integers, so an update at `Number.MAX_SAFE_INTEGER` is rejected before token acquisition or dispatch.
+
 No request retries mutations automatically. Session mutations capture the current short-lived bearer before cleanup can clear/switch the token supplier, then invalidate private views before dispatch; concurrent context changes block dispatch. The captured bearer lives only on that call stack. Fetch uses `credentials: omit`, `cache: no-store`, `redirect: error` and `referrerPolicy: no-referrer`; credentials are never sent to redirected origins. This module stores no token or user records, makes no authentication request itself and does not parse token claims as authority.
 
 Local checks:
 
 ```sh
 node --test apps/Web/Auth/account-api-client.test.js
+node --test apps/Web/Auth/account-api-client.profile-review.test.js
 ```
 
 These fake-response and isolated loopback transport fixtures verify client logic only. They do not establish OAuth issuer, provider, real browser, account-session, UI, permissions, hosted service or parity acceptance. Staging issuer/API resource/public client/redirect, real delivery, verified reserved-account provisioning, and integration with C2's issuer remain absent/unverified. Profile icon is currently the server's HTTPS URL field; an icon-upload contract and username-availability action are not present in this acknowledged route set. Do not invent them or declare full profile acceptance.
