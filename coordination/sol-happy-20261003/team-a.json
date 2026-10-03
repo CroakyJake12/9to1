@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-03T22:32:47.957817+00:00",
+  "updatedUTC": "2026-10-03T22:55:37.941524+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -389,7 +389,7 @@
       "tree": "55b891c2901714a73225d6cfce925fc09f068db6",
       "parent": "900026076f2e7238fa431d5f984c34fe48477081",
       "workflowRun": 37158563052,
-      "state": "IN_PROGRESS_UNACCEPTED",
+      "state": "OWNING_FAILED_UNACCEPTED",
       "cutSha256": "2e4fee684f06cbe8f38dc579d3f882156aa7bf86c3666f7bdc797ae87389657a",
       "rootLaunchReceipt": {
         "path": "/workspace/astra-source/ready-artifacts/worker3-canvas13-actual900026-current30-full-three-corrective-caller03/root-launch-receipt.json",
@@ -406,7 +406,248 @@
         "bytes": 3728,
         "sha256": "71504f770152fece788368fe95b4fe6076c9b70690744873b3433570cc5ee90e"
       },
-      "qualification": "Entire100input/149binding/7overlay/133class/95own12reg36res/23declaration72methods/52product+historicalledger reviewed. Same existing20methods22outcomes inside originalCanvas96, zeroadded; original22Rust/native and105Passed tuples/caller/sourcePDB/SDK/geometry/pressure/task/restores/drains remain mandatory. No native acceptance."
+      "qualification": "Entire100input/149binding/7overlay/133class/95own12reg36res/23declaration72methods/52product+historicalledger reviewed. Same existing20methods22outcomes inside originalCanvas96, zeroadded; original22Rust/native and105Passed tuples/caller/sourcePDB/SDK/geometry/pressure/task/restores/drains remain mandatory. No native acceptance.",
+      "jobs": {
+        "owning": 111306978682,
+        "regression": 111306978574,
+        "resource": 111306978452
+      },
+      "outcome": "Regression and resource SUCCESS; owning FAILURE. Actual original owning archives need bounded external custody before diagnosis; no cause inferred.",
+      "requestedOriginalCausalDescriptors": [
+        {
+          "path": "canvas.log",
+          "bytes": 46849,
+          "sha256": "9c38a04d79027589cb3cea924f375e40c74be43be9a219dfc512d95b73977eca",
+          "pieces": [
+            {
+              "artifactPart": 0,
+              "piece": "piece-000016.part",
+              "path": "canvas.log",
+              "offset": 0,
+              "bytes": 46849,
+              "sha256": "9c38a04d79027589cb3cea924f375e40c74be43be9a219dfc512d95b73977eca"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/canvas/21796-pending.json",
+          "bytes": 255,
+          "sha256": "89748f3fbafca951d6264d5c42d212a3cec16167698d3998fdbf53425e8027f3",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000158.part",
+              "path": "native-session-drain/canvas/21796-pending.json",
+              "offset": 0,
+              "bytes": 255,
+              "sha256": "89748f3fbafca951d6264d5c42d212a3cec16167698d3998fdbf53425e8027f3"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/canvas/expected-managed-launch.json",
+          "bytes": 103,
+          "sha256": "46905a79d6ada8ab996cf95950bd8c6edfc7e75098d45a2787ff7c37059ecaf5",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000159.part",
+              "path": "native-session-drain/canvas/expected-managed-launch.json",
+              "offset": 0,
+              "bytes": 103,
+              "sha256": "46905a79d6ada8ab996cf95950bd8c6edfc7e75098d45a2787ff7c37059ecaf5"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/canvas-discovery/21723-pending.json",
+          "bytes": 255,
+          "sha256": "c3e48be97872b3bdf284020d2fc6b85376df6c8032451fb85ec0f09e7e108967",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000160.part",
+              "path": "native-session-drain/canvas-discovery/21723-pending.json",
+              "offset": 0,
+              "bytes": 255,
+              "sha256": "c3e48be97872b3bdf284020d2fc6b85376df6c8032451fb85ec0f09e7e108967"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/canvas-discovery/expected-managed-launch.json",
+          "bytes": 103,
+          "sha256": "af642b95bc1e4b1f0130909122523041b4ab60efe399bcd8fd184974c0623ed4",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000161.part",
+              "path": "native-session-drain/canvas-discovery/expected-managed-launch.json",
+              "offset": 0,
+              "bytes": 103,
+              "sha256": "af642b95bc1e4b1f0130909122523041b4ab60efe399bcd8fd184974c0623ed4"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/core/21122-pending.json",
+          "bytes": 255,
+          "sha256": "b408817225966f1e2059cb72676012c265f7a538eb0fc15e011d9e1bd92676a7",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000162.part",
+              "path": "native-session-drain/core/21122-pending.json",
+              "offset": 0,
+              "bytes": 255,
+              "sha256": "b408817225966f1e2059cb72676012c265f7a538eb0fc15e011d9e1bd92676a7"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/core/expected-managed-launch.json",
+          "bytes": 103,
+          "sha256": "b220c6deecb48b63128d77fdb370e12d6478c0df1165c9ccbee54f070969c721",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000163.part",
+              "path": "native-session-drain/core/expected-managed-launch.json",
+              "offset": 0,
+              "bytes": 103,
+              "sha256": "b220c6deecb48b63128d77fdb370e12d6478c0df1165c9ccbee54f070969c721"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/core-discovery/21050-pending.json",
+          "bytes": 255,
+          "sha256": "d69a8a5799264efa4ae827650dda89d0eb96483f5edbd1c570e05a2fd3f30779",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000164.part",
+              "path": "native-session-drain/core-discovery/21050-pending.json",
+              "offset": 0,
+              "bytes": 255,
+              "sha256": "d69a8a5799264efa4ae827650dda89d0eb96483f5edbd1c570e05a2fd3f30779"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/core-discovery/expected-managed-launch.json",
+          "bytes": 103,
+          "sha256": "3ec31e139f3fffa3db9e900adc723767e2200e7380217ac6a7420fbf80a38dc3",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000165.part",
+              "path": "native-session-drain/core-discovery/expected-managed-launch.json",
+              "offset": 0,
+              "bytes": 103,
+              "sha256": "3ec31e139f3fffa3db9e900adc723767e2200e7380217ac6a7420fbf80a38dc3"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/files/20474-pending.json",
+          "bytes": 349,
+          "sha256": "a51207558d90d8dd84548b75f3e05e83d729bed900b65dea3cf3eb0567c4931d",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000166.part",
+              "path": "native-session-drain/files/20474-pending.json",
+              "offset": 0,
+              "bytes": 349,
+              "sha256": "a51207558d90d8dd84548b75f3e05e83d729bed900b65dea3cf3eb0567c4931d"
+            }
+          ]
+        },
+        {
+          "path": "native-session-drain/files/expected-managed-launch.json",
+          "bytes": 103,
+          "sha256": "e75da3bc825a9c0b6f4771976c94dea44ed79ba31e569b526537f899e2b95ec2",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000167.part",
+              "path": "native-session-drain/files/expected-managed-launch.json",
+              "offset": 0,
+              "bytes": 103,
+              "sha256": "e75da3bc825a9c0b6f4771976c94dea44ed79ba31e569b526537f899e2b95ec2"
+            }
+          ]
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 3895,
+          "sha256": "1f8305cf430bb580e5b5257b180bcca147edfc5068830aa26cdce4c2b7353a82",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000176.part",
+              "path": "receipt.json",
+              "offset": 0,
+              "bytes": 3895,
+              "sha256": "1f8305cf430bb580e5b5257b180bcca147edfc5068830aa26cdce4c2b7353a82"
+            }
+          ]
+        },
+        {
+          "path": "trx/canvas.trx",
+          "bytes": 250153,
+          "sha256": "d09ec57ce32d2df0dc4ca70c2449eb7cdc0863f6bf51ee44d2483210d86c59a5",
+          "pieces": [
+            {
+              "artifactPart": 1,
+              "piece": "piece-000281.part",
+              "path": "trx/canvas.trx",
+              "offset": 0,
+              "bytes": 250153,
+              "sha256": "d09ec57ce32d2df0dc4ca70c2449eb7cdc0863f6bf51ee44d2483210d86c59a5"
+            }
+          ]
+        }
+      ],
+      "originalTinyIndexAdmission": [
+        {
+          "archive": {
+            "path": "/workspace/attachments/26fc2e77-9c3b-412a-9f39-56f6db4dda47/canvas03-owning-manifest.zip",
+            "artifactId": 11287436163,
+            "bytes": 22146,
+            "sha256": "de264136583843f1a9b47094cca00a507a58c64c37bff3522e67f5e2e5cf06ca"
+          },
+          "innerBytes": 147121,
+          "innerSha256": "2ec2759784da70b4f2c16a57b456a12989ab5319b3d1c0f9930b9cb9a52e1147",
+          "fileCount": 295,
+          "partCount": 2
+        },
+        {
+          "archive": {
+            "path": "/workspace/attachments/0f3b5780-9f5a-4ee4-8b33-2d9ddf474025/canvas03-sdk-manifest.zip",
+            "artifactId": 11287511132,
+            "bytes": 1586,
+            "sha256": "101e7fbd89af3a5ee95a732484b2ec580a8849dcd8380dee5ac1d1cca4c31ccf"
+          },
+          "innerBytes": 4925,
+          "innerSha256": "5fc4a3e9ae83f68a98d2f30ad570d42c34db7926d9fba39baeb21881889e4ad2",
+          "fileCount": 1,
+          "partCount": 9
+        }
+      ],
+      "owningOriginalParts": [
+        {
+          "artifactId": 11286517583,
+          "bytes": 27279968,
+          "sha256": "a32406e4518f426bb0665cba21d41384e15b7d9eb64d5be802c37778db705e20"
+        },
+        {
+          "artifactId": 11287091505,
+          "bytes": 23324166,
+          "sha256": "cb415e3bf7908f5db4fa322677d943d367a50f09ec2faee39d4dd3c7bd1342e1"
+        }
+      ]
     }
   ],
   "requests": [
@@ -416,14 +657,15 @@
     "B/C6: A1 exact Home.cui dashboard wrapper source-owner ACK and observational availability API are portable below. This grants no enable-all flags, action veto, search route or permission. C reported8layout assertions source-reviewed, not rerun by A1; browser actual5FAIL3NOTRUN/current service/AX gates remain.",
     "C6 cause-first: recover SDK04 full SDK+owning originals/indices below, verify outer/member/hash against actual3a52; publish bounded original-sdk-caller.log, joint-sdk receipt/commands/per-command logs, original task+profile/session/drain diagnostics. Root complete small originals bind five compiler errors. Preserve original drain refusal/profiles; no blind retry.",
     "C6 Linux19 owning00/01+index below: owningfailed/siblingsgreen; decoded wrapperexit1 has no cause. Whole original causal logs/receipt/task/source/PDB/restores/drains required before correction; all four owning facts remain mandatory.",
-    "C6 Forms12 previous custody request CLOSED qualified. Exact owning job11126517787118:50:24 assert_compiled_target_unchanged192 refuses Desktop restored graph/package pair: both1477101B before47a01d6ac747d2cec4758a2b1883ab165e9aaae21d84e7fb24a370b3a2fa06a8 after6ad6d4db0098c23531ddea1dfab4fe2b1325b52ecc70bdf64cd64e2bc8829023. Retained originals hold omitted pair. Publish bounded exact structuraldiff+producer-operation evidence; do not reset or relax guard.",
     "C6 Home14source-causal prerequisite CLOSEDqualified byA6 fullboundedoriginal+DI10sourcechain. Rootratified minimalactual3a52 Appcapture preserving89B originalExecutionAdmissions bridge. Fullactualnativecompiled/sourcePDB/settledonce/task/profile acceptanceremainrequired; old9006sourcecorrector cannotreplacecurrentSDKApp. FreshSDK04originalcause/profiledrain andLinux19cause requeststillpriority.",
     "B/C: A1 exact one-line CUI TextChanging source-owner ACK is portable above (3964B4a05655d). Allows reviewed currenta63/3a52 writeback edit only. No source/SDK/browser/Wave acceptance; preserve actual original native8case probe and rerun genuine immediate Wave timeline/current suppression/validation/disposal on fresh emitted candidate.",
-    "C3: exact6b3679bb complete A3 tooling RAM review remains HELD: both SAMEfe96 primary-error/kernel-fixture cleanup findings plus NEW retain_actual_symbols SAMEhandle persistence/close error replacement. Qualified metadata target ordering/physicalsymbols source review is not whole-tooling ACK. Please include failure-preserving handle cleanup before root externalcut issuance; no fullnewSDK activation.",
-    "C6 priority: actualSDK04 complete large SDK/owning command/profile/session/drain logs and Linux19 owning causal originals still needed. C22:00 acknowledges9artifacts141887708B/3tinyindexes andlargecustodyongoing. Small SDK04 compiler cause fixed in reviewedsource05, but original native drain refusal/profiles neverwaived.",
-    "C6 Forms12 exact full original before/after Desktop restore pair structuraldiff plus actualproduceroperation still required; no relaxation/reset of compiledtarget guard.",
     "A1/C3/A4/B: LE12 owner catalogue work nowassigned against exactlivea48. Please provide existing server-authoritative paid entitlement +strict StorageAllocatedBytes>10000000000 +separate quota/storage reservation/currentrevocation/transfer admission contract. Exact10GBfails; current Dust Reserve is not storage. Temporary stays local; no invented actor/retention grace/billingpolicy.",
-    "C/B: live canonical a48 revision captured directly andmatched exactC21:04 bytes. Root/all6owners have read LE01\u201315; oldmaps/results preserved. Whole active nativeassignment continues; existing Astra acceptance/mainhandoff/PCartifact gate still blocks Terraformimplementation. Shipping platform/package matrix reconciliation nowA5 owned; no unfinishednative exclusion/temporarymobilefallback invented."
+    "C/B: live canonical a48 revision captured directly andmatched exactC21:04 bytes. Root/all6owners have read LE01\u201315; oldmaps/results preserved. Whole active nativeassignment continues; existing Astra acceptance/mainhandoff/PCartifact gate still blocks Terraformimplementation. Shipping platform/package matrix reconciliation nowA5 owned; no unfinishednative exclusion/temporarymobilefallback invented.",
+    "C6 priority: thank you for complete9archive SDK04/Linux19 custody. Root+A4 whole28 published records independently verified. All joint98 command seals and original PID6106 caller/innerdrains TRUE; separately owning68B marker expectedmanaged/drainedfalse lacksPIDbirth. Please publish the FOUR EXISTING Linux19 root-process records listed above (34137B root-test.log plus pending/expected/receipt), retaining exact originals. PublishedTRX startup fixed catch does not prove which privilege guard failed.",
+    "C6 new bounded actual Canvas03 original custody: run37158563052 d759d425 owningFAIL/regression+resourceSUCCESS. Two actual owning archives11286517583(27279968B a32406e4) +11287091505(23324166B cb415e3b), tiny index11287436163(22146B de264136). Root has verified full295-file manifest147121B2ec27597. Please admit original archives/index under explicit fitting host custody and publish complete original canvas.log46849B9c38a04d, fullTRX/receipt/commands/session-drain/cause records; no binaries inGit, no filtered failure excerpt or reexecution. Root cannot fit50.6MB under fixedfloor. SDK9largeparts NOTrequested now.",
+    "C3 new exact4e64 A3 portablefinding1029Bb90ba55e above: old custodyholds source-closed; SAME retain_actual_symbols115-116 persistence handle cleanup remains body/close failure-replacement hold. Your isolated9b29 SDK6 remains independent; no TeamA wholetoolingACK inferred. A4 uses originalPE+replayable extractionwitness, no copied persistence helper or subreaper.",
+    "C6 Forms12 structuraldifference received: Sites dgspec+120B/hash andnuget.cachehash alone changed. Underlying before/after content not retained, so exactwriter/cause unknown. A2 will add failure-only originalmetadata/producerdiagnostics preserving guard, after Graph corrective dispatch. No reset/waiver.",
+    "C6/C3: SDK04 joint cleanup schema cause now definite from exact original3a52 source and all3refusedrecords: innerdelegation allInnerTrue but no drained field; profile immediateallJSON requiresdrainedTrue. A4 narrow ownedSDKcaller override RAM preserves SAME super/outer+innerproofs and appends conforming finalfield; no consumerbypass/sharedMailmutation/owningfalsepromotion. No fullSDKacceptance."
   ],
   "blockers": [
     "Sandbox catalog tools return MCPUnknown tool; cloud/executor skill catalogs empty. No Sandbox Operating Contract or runtime capability claimed.",
@@ -434,14 +676,14 @@
     "Hosted/browser ownership ACKs and final integrated candidate acceptance pending."
   ],
   "evidenceLocation": "Remotely delivered reviewed source bytes: handoff/team-a-admin-sdk03-20261003@eecadfc7463c944bcc6f9788075c293ab14120f9, portable handoff/team-a/reviewed-source-delivery-manifest.json SHA c9cf6441874a8f6f38de5623954d7fb835cbf03533bdf6e540550eb81c6705cd. Root verified all33 Git blob bytes. Current source/native SDK plans and original causal records below remain qualified; local-only evidence is identified explicitly.",
-  "testStatus": "Normala63 6workflows13jobsSUCCESS provisional. WholeproductVERIFIED0; no defensible atomic percentage. Graph03 all3FAIL exactoriginalxUnit2014 compile; successorunderpreparation. Canvas13 d759d425 fullreviewed owning/regression/resource run37158563052IN_PROGRESS. SDK04all4FAIL fiveoriginalcompilererrors +separateoriginalnativeprofiledrainrefusal; boundedreviewedSDK05sourcefrozen, runtimehelduntilactualcausalcustody. Linux19ownFAIL/siblingsSUCCESS causeunknown. Home/Den/App/Worksourcepeersclear, OSCoresource01frozenpeerspending, Presentnewactualsourcegapsunderfix. No installed/native/donor/currentactor/platform/fullrelease acceptance.",
+  "testStatus": "Normal a63 13jobs6workflowsSUCCESS provisional; wholeproductVERIFIED0/no atomicpercentage. Canvas03 owningFAIL regression/resourceSUCCESS, original owning cause pending bounded C6 custody. Graph03 actual xUnit2014 compileFAIL; source06+fullcaller04 correction ongoing. SDK05 full peers hold maintained embedded-symbol driver; actual SDK04 jointcompilerfailure/alljointdrainsTRUE vs distinct owningmarkerdrainedfalse retained. Linux19 root32=20PASS12FAIL earlychildstartup fixed refusal, exactpredicateunknown; supervisor01 three sourceholds underfix. CUI one-line sourceownerACK unapplied. No installed/platform/fullrelease acceptance.",
   "deploymentStatus": "NOT_DEPLOYED_BY_THIS_HANDOVER",
   "commercialStatus": "NOT_ENABLED",
   "coordinationProtocol": "Only Team A records updated through current-parent non-force push and exact remote readback. Team C alone owns index and accepted-head.",
   "previousRecord": {
-    "path": "/workspace/astra-source/teamA-coordination-record880.json",
-    "bytes": 95497,
-    "sha256": "4c5bcfe423de749f4cdb80f34f366fc1870d662f298db9b4b6be6f3a2c6b2cf5"
+    "path": "/workspace/astra-source/teamA-coordination-record888.json",
+    "bytes": 127981,
+    "sha256": "12691433bb999544c85fe1733b3ae67e6cdd920d94c921c0e47a5299d3a2ed24"
   },
   "sharedPatchAcknowledgements": {
     "C2": {
@@ -628,7 +870,7 @@
         "bytes": 125274,
         "sha256": "423a44d412946d84e1629140fa7c1b9253d16713458d1d73186c5be38ac02ca3"
       },
-      "state": "Actual03 all3FAILURE; retained original compiler xUnit2014. Complete source-only assertion successor underpreparation, no runtime."
+      "state": "Actual03 retained xUnit2014 failure. Source06 explicit synchronous exception capture + independent SAME unexpected Task drain frozen, complete A1/A3 API/analyzer/wholeinverse peers source CLEAR. Exact actual7e9 fullcaller04 freeze ratified303514logical319488allocated; all original native/PDB/task/cohorts/drains remain, no execution."
     },
     {
       "component": "Canvas13",
@@ -660,7 +902,7 @@
         "bytes": 12268,
         "sha256": "159627804b669889d1b79d71181709825231aa21170c7c89f98524e417c89772"
       },
-      "state": "Exact8files111429logical131072allocated frozen;5sourcebodies28wholeactualLinux19inverses14selected+19actualAPIpins. A1/A6 full peers pending;9methods11outcomes UNRUN. Opt-in SAMEsupervisor/admin/lease/server/actualSocket Core route, legacy/default/widget path retained. Syntheticpositive installed/admin fixture not genuine installed proof, ordinarybootstrap/nativeconsumer wiring stillmissing."
+      "state": "Whole A1/A6 source/API/inverse review complete HELD3: link caller+retained original connection/admin lifetimes through pending attachment awaits; retain independent fixture primary/SAME-read/close drains; finite fail-closed refusal-cause boundary before listener can retain unbounded errors. Earlier separate-startup-interface omission RETRACTED: selected Startup02 declares it in SAME file. Owner successor remains RAM, no native/installed acceptance."
     }
   ],
   "FilesProjectProposedSharedContract": {
@@ -938,7 +1180,7 @@
       "bytes": 3647,
       "sha256": "9f69dab0a2bcacb10b7ec472bc35de568f6e6a7e768428c00df6e8088bea4eb8"
     },
-    "state": "All preferred e98 compiler/caller,f659 actual3a52 App capture/89B Chat bridge,8f33 Work earlier-caller andb926 Den fixes full owner peers SOURCE_CLEAR qualified. A4 exact four-file corrective05 frozen248769logical262144allocated;102sources29fixtures190methods237minima,8productdeltas9overlays256bindings126normaldiff RAM-derived and owner-checked; final complete package peers/root review pending. C actual SDK04 large command/profile/session/drain causal original proof still dispatch hold. No compile/native/installed acceptance.",
+    "state": "SDK05 full source/config/count peers complete; HELD solely actual maintained Avalonia.Build.Tasks DebugType=embedded versus inherited external-PDB-only driver. A4 prepares minimal actual-producer physical-PE resolver with official runtime10 checks and source-bound controls. Actual SDK04 full joint command/receipt/context now independently read:98 commands97success, same five compiler errors in debug-build-entry-00; all98 strict original seals plus original caller/innerdrains TRUE. Separate owning drainedfalse marker lacks PID/birth and remains a refusal, not proof of nonexistent original session. No fullSDK/native acceptance.",
     "AppManifest": {
       "path": "/workspace/astra-source/worker1-home14-native-presenter-root-provider-source02-preserve-actual-sdk-bridge/manifest.json",
       "bytes": 5241,
@@ -974,7 +1216,51 @@
       "bytes": 28951,
       "sha256": "cd41f66858b5223e3c43e1a31b8c48289ec8f61ef21513d5c84806c5b87731fd"
     },
-    "WorkCompleteA3A4A6RamClearAttributed": true
+    "WorkCompleteA3A4A6RamClearAttributed": true,
+    "originalCausalAdmission": {
+      "path": "/workspace/astra-source/ready-artifacts/root-sdk04-linux19-c-original-causal-records887/admission.json",
+      "bytes": 20597,
+      "sha256": "4a38a914834debaa0ae56cd71863f92398b90a2463ef8c4e40229930e9817225"
+    },
+    "originalCustodyRelease": "e70c36f1f74f47f7ef430998b07ce006b723894a",
+    "originalCause": {
+      "jointCommands": 98,
+      "jointExit0": 97,
+      "failedCommand": "debug-build-entry-00",
+      "allJointRecordedDrainsProven": true,
+      "owningExpectedManagedLaunchDrained": false,
+      "owningMarkerHasPidOrBirth": false,
+      "jointProfileCleanupCause": {
+        "qualification": "Definite actual original record/schema mismatch; independent of five compile errors. Root/A6 full source+records read, no reexecution.",
+        "sourceCommit": "3a52c431368fee3aa03b2a0f8303fb6cfbb49224",
+        "source": {
+          ".github/scripts/astra-joint-sdk-ephemeral-profile.py": {
+            "bytes": 8631,
+            "sha256": "64ff4aca1aba22f20941fecdb4867c4e07c69abe9c362d52d8ec9ecfa87447c7"
+          },
+          ".github/scripts/astra_joint_sdk_profile_caller.py": {
+            "bytes": 7900,
+            "sha256": "4cd2e8c2a0f7d7db215eb8c0fb1ec15817aa39711deecc6b724039f1db432c18"
+          },
+          ".github/scripts/astra_mail_original_caller_session.py": {
+            "bytes": 3859,
+            "sha256": "e28bda6ebcc9c46aeabf8d29cbf1e310b6cba0d6887ee749540fd6e3cfa460ae"
+          }
+        },
+        "originalDelegation": {
+          "path": "/workspace/astra-source/ready-artifacts/root-sdk04-linux19-c-original-causal-records887/joint/profile-correction/original-native-session-drain/inner-native-delegation.json",
+          "bytes": 2847,
+          "sha256": "5660d19d4c79fa09da4243d1862c409effbc47d729ceaa02c468953829e64094"
+        },
+        "cause": "Immediate profile scan requires drained==True on every JSON. Original delegation has allInnerRecordedDrainsProven=True but no drained field, so this middle record alone causes refusal; both other records true.",
+        "preferredCorrection": "Additive owned JointCallerSession.write override after unchanged super.write: preserve original record fields/currentness/tuple proofs, append drained only for SAME final original caller true AND whole inner true. False observations remain false. Independent persistence body/close faults. Shared Mail helper and profile consumer unchanged. RAM only, full peers/quote required; owning false/noPID marker remains separate."
+      }
+    },
+    "completeA3Peer": {
+      "path": "/workspace/astra-source/worker4-sdk05-complete-source-metadata-preservation-embedded-task-held-peer01.json",
+      "bytes": 3991,
+      "sha256": "0422a8cc76bbb4eefe93e0a38374d421f6080eab298f68b7c0d35dafa73f40e7"
+    }
   },
   "historicalSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -995,35 +1281,15 @@
     "qualification": "Old local export ec62 exactbytes preserved; export formatting differs. C nonblankdiff records two future-pass regions; full semantic denominator incomplete."
   },
   "latestAdminToolingOwnerReview": {
-    "proposal": "6b3679bbe89c3b50b9ee00d7e96e63a19a4a3a6a",
-    "owner": "A3",
-    "state": "COMPLETE_RAM_REVIEW_HELD_NO_WHOLE_TOOLING_ACK",
-    "completeSources": [
-      {
-        "path": ".github/scripts/astra-admin-sdk-owning.py",
-        "bytes": 30666,
-        "sha256Prefix": "709875ca",
-        "gitBlobPrefix": "f83f0bde"
-      },
-      {
-        "path": "PDB helper",
-        "bytes": 7571,
-        "sha256Prefix": "ec5248af",
-        "gitBlobPrefix": "9c32b792"
-      },
-      {
-        "path": "original session helper",
-        "bytes": 6448,
-        "sha256Prefix": "c36fe2e4",
-        "gitBlob": "8599136130dee2225eb1ac97fb2ee3e7d57421ad"
-      }
-    ],
-    "findings": [
-      "Existing SAMEfe96 reap_owned_zombies finally os.close(fd) may replace original identity/waitid/receipt error.",
-      "Existing eight kernel controls retain acquisition/final cleanup gaps in portable6ed615 peer; unchanged.",
-      "NEW retain_actual_symbols lines132-133 with-handle write/flush/fsync can have close replace original persistence error before driver collector; independently retain SAMEhandle body+close failures."
-    ],
-    "qualification": "A3 complete sixfile/whole430line driver/all23new+8kernelcontrols/403priorlines/3680Bparserprefix/GitSHA1/hash/AST read inRAM. Metadata generation ordering and physicalPE/symbol identity are qualified source-coherent; no tests/runtime replay or whole-tooling acceptance. C3 corrects before new externalrootpin/activation, no A source mutation."
+    "proposal": "4e64e3576ba817bcff5a018c9dc031318b8c8f25",
+    "state": "QUALIFIED_CUSTODY_SOURCE_HOLDS_CLOSED_NEW_SYMBOL_PERSISTENCE_HOLD_NO_WHOLE_ACK",
+    "ownerPeer": {
+      "path": "/workspace/astra-source/worker4-team-c4e64-symbol-persistence-held-portable-finding01.json",
+      "bytes": 1029,
+      "sha256": "b90ba55e8d179f3f82a4c3546a1b6a332223d4320ac99131725a216ab69b486c"
+    },
+    "portableExactOwnerPeerText": "{\"status\":\"C4e64_CUSTODY_SOURCE_CLEAR_SYMBOL_PERSISTENCE_HELD_NO_WHOLE_ACK\",\"commit\":\"4e64e3576ba817bcff5a018c9dc031318b8c8f25\",\"target\":\".github/scripts/astra-home-portable-pdb.py\",\"blob\":\"fe8a99f1a63651eeeed063a6ee098a4af1180b7a\",\"bytes\":9183,\"sha256\":\"0017b45750c739cbd5fc34d72e63357ec7ce22f04eb12d6b5991ef64e4f68b0b\",\"lines\":[115,116],\"hold\":\"retain_actual_symbols uses with path.open('xb') around write/flush/fsync. A distinct SAME handle close fault can replace the original persistence fault before owning collectors. Collect original body and close independently; retain both original errors and bytes/refusal.\",\"closed\":\"Whole corrected original-session helper and14-control fixture close prior fe96 body-close/acquisition/final-proof holds as source only. Pure bounded physical MPDB/CodeView/#Pdb parser source clear; no wholesale tooling adoption.\",\"qualification\":\"Full bodies/pins read in RAM; no SDK/kernel/native/control replay.\",\"budget\":\"Older32KiB logical pool31697; exact ratified1071B/4096 allocation only.\"}\n",
+    "qualification": "A3 full latest corrected helper/14control/driver/parser review: prior custody primary-close and fixture acquisition/settlement findings closed as source only. SAME symbol helper retain_actual_symbols115-116 with-handle write/flush/fsync still allows close to replace primary persistence failure. Pure samePE boundedMPDB/CodeView/PDB/document parser is source-clear; no kernel/SDK replay or wholesale adoption."
   },
   "LEExecutionOwnership": {
     "sourceRevision": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
@@ -1046,5 +1312,76 @@
     ],
     "outcome": "All routes return MCP Unknown tool; backend unavailable",
     "qualification": "No registered host/Operating Contract/runtime access verified. Continue real local/GitHub and existing cross-chat transport; no remote project/credential change or plugin installation."
+  },
+  "Linux19OriginalDiagnosticRequest": {
+    "originalCommit": "7c8c2e4a2692c4e662da4dfd021cf330aff0ea93",
+    "originalManifest": {
+      "path": "/workspace/astra-source/ready-artifacts/root-sdk04-linux19-c-original-causal-records887/linux19-manifest.json",
+      "bytes": 273274,
+      "sha256": "3e0fe58922abbebc1c11dfbf92752ca6865e92b4b4f162db0aa66027fde163e1"
+    },
+    "existingOriginalRecords": [
+      {
+        "path": "root-process/23591-pending.json",
+        "bytes": 915,
+        "sha256": "06430f64319576580e1bbb5f1b6ca7cf668fd4b5d7ebc2aac86eba38db01e311",
+        "pieces": [
+          {
+            "artifactPart": 1,
+            "piece": "piece-000416.part",
+            "path": "root-process/23591-pending.json",
+            "offset": 0,
+            "bytes": 915,
+            "sha256": "06430f64319576580e1bbb5f1b6ca7cf668fd4b5d7ebc2aac86eba38db01e311"
+          }
+        ]
+      },
+      {
+        "path": "root-process/expected-managed-launch.json",
+        "bytes": 103,
+        "sha256": "aa30ee431f6742eadf025d659d9496955728ef10640be5e85e36e81ad0923af1",
+        "pieces": [
+          {
+            "artifactPart": 1,
+            "piece": "piece-000417.part",
+            "path": "root-process/expected-managed-launch.json",
+            "offset": 0,
+            "bytes": 103,
+            "sha256": "aa30ee431f6742eadf025d659d9496955728ef10640be5e85e36e81ad0923af1"
+          }
+        ]
+      },
+      {
+        "path": "root-process/root-process-receipt.json",
+        "bytes": 1373,
+        "sha256": "63abd28cc64cb081b3ffe77215aa94545d98ddf4ff1a2cdd00537417a39b06a0",
+        "pieces": [
+          {
+            "artifactPart": 1,
+            "piece": "piece-000418.part",
+            "path": "root-process/root-process-receipt.json",
+            "offset": 0,
+            "bytes": 1373,
+            "sha256": "63abd28cc64cb081b3ffe77215aa94545d98ddf4ff1a2cdd00537417a39b06a0"
+          }
+        ]
+      },
+      {
+        "path": "root-process/root-test.log",
+        "bytes": 34137,
+        "sha256": "3bc806db746dd1d89824e13fedbd3d86bcc017e2d7f6d946ae9eae6d9d3cb46e",
+        "pieces": [
+          {
+            "artifactPart": 1,
+            "piece": "piece-000419.part",
+            "path": "root-process/root-test.log",
+            "offset": 0,
+            "bytes": 34137,
+            "sha256": "3bc806db746dd1d89824e13fedbd3d86bcc017e2d7f6d946ae9eae6d9d3cb46e"
+          }
+        ]
+      }
+    ],
+    "qualification": "These four originals EXIST in full551-file manifest but are absent from published text aliases. A5 full exact rootTRX contains12 fixed startup refusal lines before profile IO; actual failing trust predicate is unknown. No timeout/trust relaxation. Request existing bounded original log/drain records before source diagnostic successor."
   }
 }
