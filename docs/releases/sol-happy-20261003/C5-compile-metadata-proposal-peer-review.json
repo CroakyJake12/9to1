@@ -1,0 +1,128 @@
+{
+  "reviewer": "C5",
+  "proposal": "6b3679bbe89c3b50b9ee00d7e96e63a19a4a3a6a",
+  "parent": "b7546513952de912ddcfcdff09125b041de2d411",
+  "ack": "No actionable bounded regression; tooling source proposal only",
+  "review": "Every changed line in two files, actual SDK target definitions, original query wrapper, physical symbols/source contexts and retained wrong-order negative",
+  "behavior": "For items queries run actual SDK GenerateTargetFrameworkMonikerAttribute then GenerateAssemblyInfo before getItem:Compile. SDK TFM target requires existing Compile, so order matters for package with zero evaluated initial source; no CoreCompile, injected fake items or empty exemption. Original strict source/PDB/creator/session/cut assertions retained.",
+  "independent_controls": {
+    "command": "ASTRA_METADATA_RECEIVING_ROOT=/workspace/team-c/c3-admin-generated-validation ASTRA_METADATA_EVIDENCE_ROOT=/workspace/team-c/evidence/c3/admin-sdk03 python3 .github/scripts/astra-compile-metadata-tests.py",
+    "cwd": "/workspace/team-c/c3-admin-compile-metadata-proposal",
+    "exit": 0,
+    "discovered": 5,
+    "passed": 5,
+    "failed": 0,
+    "log": "/workspace/team-c/evidence/c5/compile-metadata-6b367-review.log",
+    "sha256": "952b80df1ddd9366455e220b3f2b5f3b55ecb5a1634a17aff0cb9b729aac67dc"
+  },
+  "independent_evidence": {
+    "queries": "before/wrong-order-fixed/corrected-fixed2 three real queries each, all9exit0/originalsessiondraintrue, no primary/cleanup errors",
+    "contexts": "all three before/fixed2 metadata properties identical",
+    "compile_counts": {
+      "package": "0->1 exact original PDB AssemblyInfo input",
+      "Accounts": "4->7 exact seven original PDB documents",
+      "Web": "2->5 all five Compile inputs PDB-bound; six PDB docs includes genuine emitted ASP.NET PublicTopLevelProgram generator source"
+    },
+    "outputs": "All2480 original output files byte/size/SHA independently rehashed unchanged between before and corrected fixed2",
+    "wrong_order_negative": "One newly generated uncompiled .NETCoreApp TFM attribute preserved with old query/log/output delta and exact hash; incorrect order not adopted"
+  },
+  "holds": [
+    "Full original SDK attempt4 remains refused after114commands/twoDebugsuites; no full successor rerun",
+    "Root fresh external completecut pin required",
+    "No global adoption/product/provider/fullSDK acceptance"
+  ],
+  "source_hashes": [
+    {
+      "path": ".github/scripts/astra-compile-metadata-tests.py",
+      "bytes": 3408,
+      "sha256": "9cae1c5cfe22dd0fa7bf5976b60d31e1fb9e45ba98340fd462d488e23af8a5be"
+    },
+    {
+      "path": ".github/scripts/astra-organisation-full-owning.py",
+      "bytes": 30666,
+      "sha256": "709875ca0b81d4ba9003c6b6ecf0a4b12a35e9f4d6702eaf71c1acd16d2e922f"
+    }
+  ],
+  "evidence_hashes": [
+    {
+      "path": "/workspace/team-c/evidence/c5/compile-metadata-6b367-review.log",
+      "sha256": "952b80df1ddd9366455e220b3f2b5f3b55ecb5a1634a17aff0cb9b729aac67dc"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/run-compile-metadata-partial.py",
+      "sha256": "5b6bb28df9a69ff173692e7d54b845e1e803ae7b356c3135849832f2fff91f36"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-before-output-closure.json",
+      "sha256": "e1ac053210a437da3a00c935e30d2a32111b945f244749b7075a605e0b2aa5b6"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed2-output-closure.json",
+      "sha256": "e1ac053210a437da3a00c935e30d2a32111b945f244749b7075a605e0b2aa5b6"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-output-delta.json",
+      "sha256": "d1259583bac888a7878cc2710dc18d1c679e753e2ccfef09e7e4c77a173b1fa1"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed/new-uncompiled-TFM-attribute.generated.cs",
+      "sha256": "f79c1ad9a9fc76110b3655f5bfb5ff4e3168e9addceff05b937c0796f0ec34eb"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-before/commands.json",
+      "sha256": "fcd14c6ec1cf4c83a01b2331111b93b61742b72e0a1e6e1ac3ae54b1fd204eb1"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-before/project-0.log",
+      "sha256": "abb55df481055ccbbfdde45d3e4031b1e1f07f64ab0704a79561d3ff00c38181"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-before/project-1.log",
+      "sha256": "dcd789e5702ced67eeef8fe9e4066482f9a2e90b32470d2d4b107e55d50020f9"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-before/project-2.log",
+      "sha256": "78df9662da8480889ec4f952609fa98b2a4f7ae0b37f0be99895b12aa5bade78"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed/commands.json",
+      "sha256": "e5e1efaa8898ba141c95f80abc69ff0ea84cfdb7809f305d50a3454423edfcdb"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed/project-0.log",
+      "sha256": "05f3ebb2a87c8f46addb3bdaea87d92fe01f452c541d71dd161a0fef2795edfa"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed/project-1.log",
+      "sha256": "0209a6a7e4ff937dc27d688aebb5c10750b2d0fe56169adf89056d9d97c4eed1"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed/project-2.log",
+      "sha256": "e74289c93e862d9c788a5dc246b4ba6456c964ce7c26ffeb40266089919fce22"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed2/commands.json",
+      "sha256": "326c02c4cd5d9a47e839af2fc60228a003a1a7f303cf6c00a6a2b93b5aa21ab9"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed2/project-0.log",
+      "sha256": "9523c32b5c484b30da29c500a1c47a80e67611a1cbbfff3bb8e1834e34a45d5e"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed2/project-1.log",
+      "sha256": "87adc6196c1a4b9c78eced0a831d7dec031cbb252e6c5947890fa0f88e721063"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/compile-metadata-fixed2/project-2.log",
+      "sha256": "b64ab9e33e25df3af6144bea243e3590562e7fb2ff917ff3797766b6f5df60b5"
+    },
+    {
+      "path": "/workspace/.tools/dotnet/sdk/10.0.401/Microsoft.Common.CurrentVersion.targets",
+      "sha256": "879d9742497730b1c8bac7b90c3b14bcb3d4280a87c50b651a1c4430744207ba"
+    },
+    {
+      "path": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.GenerateAssemblyInfo.targets",
+      "sha256": "aed5db2d53cb2517edb7cae09dfd543b177ae733d5331536bd044d772bad18e8"
+    }
+  ]
+}
