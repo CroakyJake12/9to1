@@ -120,7 +120,7 @@ public sealed class SitesNativeAuthoringConsumerTests
             };
             await page.RefreshAndDisplayAsync(token);
             Assert.Null(surface.Document); Assert.Null(page.DisplayedDocument); Assert.Empty(page.CurrentView.Projects);
-            Assert.Empty(page.Scene.Root!.DescendantsAndSelf().OfType<Haven.UI.Components.Button>().Where(row => row.Name.StartsWith("Sites.Project.", StringComparison.Ordinal)));
+            Assert.Empty(page.Scene.Root!.DescendantsAndSelf().OfType<Haven.UI.Components.Button>().Where(row => row.Name is { } name && name.StartsWith("Sites.Project.", StringComparison.Ordinal)));
             fixture.Binding = original;
             Assert.Null((await session.ReadCurrentAsync(token)).Preview); // restoring access cannot resurrect a cleared cached document.
             Assert.Null(surface.Document);
@@ -383,7 +383,7 @@ public sealed class SitesNativeAuthoringConsumerTests
             Assert.Equal(Actor, originalActor); Reviews++; Requests.Add(requestID);
             Assert.Equal(HomePermissionRequestState.PendingApproval, (await Permissions.GetAuthorizationAsync(requestID, token)).State);
             if (BeforeReview is { } before) await before(requestID, token);
-            Assert.True((await Permissions.DecideAsync(requestID, HomeApprovalChoice.Accept, token)).Succeeded);
+            Assert.True((await Permissions.DecideAsync(requestID, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
         }
         public async Task<SiteProject> Seed(SiteNativeAuthoringSession session, CancellationToken token)
         {

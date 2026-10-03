@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="ScottPlot.Avalonia" Version="[5.1.59]" />
     <PackageVersion Include="Avalonia" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Android" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.0.1" />

@@ -1,0 +1,153 @@
+{
+  "component": "ScottPlot.Avalonia + ScottPlot coordinate graph projection",
+  "version": "5.1.59",
+  "declaredPackageCommit": "fc81e78241e532daa97b47049b399dff81e80054",
+  "license": "MIT; complete upstream notices retained",
+  "nativePackageTargets": [
+    "net8.0",
+    "net10.0"
+  ],
+  "nativeAvaloniaMinimum": "12.0.0",
+  "currentFramework": "12.0.1",
+  "compatibilityStatus": "Source/API/target compatibility inspected; actual hosted compilation/native render test still required",
+  "packageSourceHashes": [
+    {
+      "id": "ScottPlot.Avalonia",
+      "version": "5.1.59",
+      "hashAlgorithm": "SHA512",
+      "packageHash": "Y6Q98AuVe42kEMtOlpsyLpNjpZdPYrp1TUsIjcrzkOUZggEc3Fp7L0R2zOafvchCh8hFUJ02BghnoYLTkHb/dw==",
+      "packageSize": 41277,
+      "registrationUrl": "https://api.nuget.org/v3/registration5-gz-semver2/scottplot.avalonia/5.1.59.json",
+      "catalogUrl": "https://api.nuget.org/v3/catalog0/data/2026.06.22.19.53.24/scottplot.avalonia.5.1.59.json",
+      "catalogBytes": 7421,
+      "catalogSha256": "d968ff754e93d45212bea56656c5be21df65ff38826b42140d70bd0a9809314d"
+    },
+    {
+      "id": "ScottPlot",
+      "version": "5.1.59",
+      "hashAlgorithm": "SHA512",
+      "packageHash": "Gjp9eL3BxFSbjAe84Laj5NOV+f0Y8evTsRuRyjQWQyMgh603+9ce3NGC/4AhKaY17xpgu9pUvgwo3+p4nCA72A==",
+      "packageSize": 2369354,
+      "registrationUrl": "https://api.nuget.org/v3/registration5-gz-semver2/scottplot/5.1.59.json",
+      "catalogUrl": "https://api.nuget.org/v3/catalog0/data/2026.06.22.19.53.24/scottplot.5.1.59.json",
+      "catalogBytes": 15229,
+      "catalogSha256": "52193ee5ae1e002321243fdbf8372f4791f3b7e6ad60edbda35562a0f7eaa713"
+    }
+  ],
+  "wholeInspectedSource": [
+    {
+      "name": "AvaPlot.cs",
+      "sha": "765135a64be263797757906d6aabc2d0f4fb4014",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5%20Controls/ScottPlot.Avalonia/AvaPlot.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/AvaPlot.cs",
+      "bytes": 4805,
+      "sha256": "979612984793c5e0758ab2ea8cfb5a9eff22f33e383b752ba68de2e7d688ffed",
+      "verifiedGitBlob": "765135a64be263797757906d6aabc2d0f4fb4014"
+    },
+    {
+      "name": "ScottPlot.Avalonia.csproj",
+      "sha": "af3bc5a5709ae8a06763aeee06942ebf4b41cccc",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5%20Controls/ScottPlot.Avalonia/ScottPlot.Avalonia.csproj",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/ScottPlot.Avalonia.csproj",
+      "bytes": 2659,
+      "sha256": "871a27ab6411a0407ddaf9dbaa20c8b8e7a14f2dd0cdb4d4d449d7e1eeb534f3",
+      "verifiedGitBlob": "af3bc5a5709ae8a06763aeee06942ebf4b41cccc"
+    },
+    {
+      "name": "Plot.cs",
+      "sha": "f9650b6983c3a62c1d591769069b82130706582f",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/Plot.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/Plot.cs",
+      "bytes": 24501,
+      "sha256": "13e704922633016d8c68a4b68a37ac7b96eabca3878a0743afd68086310f19a3",
+      "verifiedGitBlob": "f9650b6983c3a62c1d591769069b82130706582f"
+    },
+    {
+      "name": "PlottableAdder.cs",
+      "sha": "3b03371cb6e6cc3f06f86be75b7f9aff8e571b17",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/PlottableAdder.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/PlottableAdder.cs",
+      "bytes": 46328,
+      "sha256": "18301ffc7fcf5711d4086cde19101459b6061291fd631bcc36ca5b02a37e5cc9",
+      "verifiedGitBlob": "3b03371cb6e6cc3f06f86be75b7f9aff8e571b17"
+    },
+    {
+      "name": "AxisManager.cs",
+      "sha": "cd9e400ccecb5a53ef9fab678bd857fef1ae2899",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/AxisManager.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/AxisManager.cs",
+      "bytes": 36797,
+      "sha256": "831326084c00a11e515f060486f1b285cfad4a2f1acda929c0623a63084fb9d6",
+      "verifiedGitBlob": "cd9e400ccecb5a53ef9fab678bd857fef1ae2899"
+    },
+    {
+      "name": "NumericFixedInterval.cs",
+      "sha": "3a759d51697c6f95ad8a1f60eb7a342ef1f77410",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/TickGenerators/NumericFixedInterval.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/NumericFixedInterval.cs",
+      "bytes": 1171,
+      "sha256": "ccff0af3c253cb9ca7bfa80b8dbaac406b70cbd97c5e0616676f6e985f6d1891",
+      "verifiedGitBlob": "3a759d51697c6f95ad8a1f60eb7a342ef1f77410"
+    },
+    {
+      "name": "LICENSE.txt",
+      "sha": "cb177033a11de9529081995dad49bc207ec6b413",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/LICENSE",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/LICENSE.txt",
+      "bytes": 1096,
+      "sha256": "d32218dd6fcc1e749bcbe2c193cb5703863724e58d1693aa9f278edefee69f7b",
+      "verifiedGitBlob": "cb177033a11de9529081995dad49bc207ec6b413"
+    },
+    {
+      "name": "NOTICES.txt",
+      "sha": "c3e3aad4003dd43ede60171e9aa63f5ee0c2debf",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/Notices/NOTICES.txt",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/NOTICES.txt",
+      "bytes": 20768,
+      "sha256": "35d4c7707199a9c30ae29879cda7d961ecbd9b5b9f22039701717f9040ee064b",
+      "verifiedGitBlob": "c3e3aad4003dd43ede60171e9aa63f5ee0c2debf"
+    },
+    {
+      "name": "Coordinates.cs",
+      "sha": "758d7ea8e33e07180eede95fa71e8c805eb0eaf7",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/Primitives/Coordinates.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/Coordinates.cs",
+      "bytes": 3072,
+      "sha256": "91ec92fc6b411637a060a78f47d12ddb6499f0d436106efc93d98dafd44da277",
+      "verifiedGitBlob": "758d7ea8e33e07180eede95fa71e8c805eb0eaf7"
+    },
+    {
+      "name": "PixelRect.cs",
+      "sha": "64d5ddd55bcf07860ef7264f2c034968ad21882a",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/Primitives/PixelRect.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/PixelRect.cs",
+      "bytes": 13528,
+      "sha256": "00f7ac44c0cdace52af220bbc761ae8bac451913a06e1b79c4eae3378bd504ee",
+      "verifiedGitBlob": "64d5ddd55bcf07860ef7264f2c034968ad21882a"
+    },
+    {
+      "name": "UserInputProcessor.cs",
+      "sha": "b795ee058cb015c799a674521610d316872b2559",
+      "sourceUrl": "https://github.com/ScottPlot/ScottPlot/blob/fc81e78241e532daa97b47049b399dff81e80054/src/ScottPlot5/ScottPlot5/Interactivity/UserInputProcessor.cs",
+      "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/UserInputProcessor.cs",
+      "bytes": 7663,
+      "sha256": "0b46c68d4b42e1aa38d0dc1c3f0de09b5b11a3cce6a5bf3c9157d2d80db07105",
+      "verifiedGitBlob": "b795ee058cb015c799a674521610d316872b2559"
+    }
+  ],
+  "projectionCapabilities": [
+    "typed point",
+    "coordinate table",
+    "line",
+    "ordered curve",
+    "polygonal region",
+    "axes/grid/range"
+  ],
+  "unavailableCapabilities": [
+    "symbolic function/equation/inequality evaluation",
+    "algebraic graph equivalence"
+  ],
+  "runtimeClaim": false,
+  "packageInstalledLocally": false,
+  "notes": "Maintained renderer and public pointer-to-coordinate API consumed without library patch. Shared decimal graph data is persisted separately from transient double display projection. Host owns authorization, identity, approvals and atomic persistence."
+}

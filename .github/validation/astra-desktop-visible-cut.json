@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "f1421d516dd99018589917f10b79c6c2b954baab",
-  "programTree": "c26a1fd164e3ac64fb5c78e7baf25ae52dd94c51",
-  "currentNormalCommit": "24531d46f2179096e53556070f61edaa47c93955",
+  "baselineCommit": "83566d6a016f08a0322e404f8c6b48c43d7bdf30",
+  "programTree": "0882d52726884c248807c835b420f90f248fb01d",
+  "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
     {
@@ -134,9 +134,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "29fbce560fcc756f14e30eb8d91398e0c5b5cbbe",
+      "object": "b6c5be3bbd0847106eab357540945cff63615abf",
       "bytes": 105913,
-      "sha256": "98202e435aebdb91faeee34794066b7027b97729e45cd5b8bfb43feb1ac63d26"
+      "sha256": "fc2bd627e0564b4663d3aae27a8be89354567a6f94aac4a36a4e441cacf42b6d"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -659,9 +659,9 @@
     {
       "path": "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
       "mode": "100644",
-      "object": "33ac373116fc9f45b0f5c05f3dac26f3848ea7b1",
-      "bytes": 8917,
-      "sha256": "d560666a859d9d8a7197017f5c63dc207a4cc59634e80e917174d1c05120b13d"
+      "object": "870029585fae19a18b4968105d010bd7d4aa4d70",
+      "bytes": 9081,
+      "sha256": "b88e8d1f8731e60357f1be61a0ec73bb98719f2ea5c4d43934bcc39b464d48cf"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenImeService.cs",
@@ -27882,9 +27882,9 @@
     {
       "path": "9to1 Workspace/shared/src/Directory.Packages.props",
       "mode": "100644",
-      "object": "eafccb98196ed8ef72286845276487ece2fc7180",
-      "bytes": 1922,
-      "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
+      "object": "3d06cea5f9131680ed447fb423feebeba5f477e3",
+      "bytes": 1993,
+      "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Abstractions.cs",
@@ -29334,6 +29334,27 @@
       "object": "4e8bcb189b7e509e91451fd31c21859040e6dce0",
       "bytes": 8671,
       "sha256": "6713358b81002e8c762a659587169438abaa2a0c99685bfa2aabf4e642269d53"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+      "mode": "100644",
+      "object": "36b36dc1c7125e19730d6af26bc37855c7dc20d1",
+      "bytes": 2955,
+      "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+      "mode": "100644",
+      "object": "083b6d7e7b0a286deefabf0666777db73d004c75",
+      "bytes": 6875,
+      "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+      "mode": "100644",
+      "object": "4a5a4faf91adf7d8411cc48b154abe60c3d4891b",
+      "bytes": 985,
+      "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshAbstractions.cs",
@@ -30953,6 +30974,55 @@
       "sha256": "9cd8fa5b3a6ba95df6213101451c39fab370c2696d9ae397b5e0bf52d294848c"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+      "mode": "100644",
+      "object": "feb448bd1efb310a3c1b13a6080ec1b3d682e045",
+      "bytes": 2442,
+      "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphMarking.cs",
+      "mode": "100644",
+      "object": "fd9a98281150388e649d4efb8934921533244ed7",
+      "bytes": 4048,
+      "sha256": "a2b93dd4e16b062e3a796ac3b4363a7aba333bc14b82b84839b4dbd2b0af7097"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+      "mode": "100644",
+      "object": "d2dc5869041bb679ec660c8779d40e37f0357f4c",
+      "bytes": 713,
+      "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+      "mode": "100644",
+      "object": "447b4f5a3a7fa7bf6baabd25a5b9cfdee4c51385",
+      "bytes": 2387,
+      "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+      "mode": "100644",
+      "object": "d859f7dcef2ff9d83a1025a0e497f1ae7abc83e3",
+      "bytes": 1569,
+      "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathMarking.cs",
+      "mode": "100644",
+      "object": "87b5a049de93d4a158a829c0cf7ab5a313a9f111",
+      "bytes": 7479,
+      "sha256": "1f6eeeffd5a1b4e2b112ec960e8014b720076b641c6011266b69cd28ebcdde89"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "mode": "100644",
+      "object": "87785d51f086935fe1dbdec0490347c7d2534106",
+      "bytes": 14310,
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAssetReference.cs",
       "mode": "100644",
       "object": "22299dbd0ae4f2f34df4e5767b0e83fc0a6c4e8f",
@@ -32411,9 +32481,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
       "mode": "100644",
-      "object": "7449d5addf6d81685eb1132fc14e911293819bf8",
-      "bytes": 6066,
-      "sha256": "7e75751d1049a08da7eb14ef31dc46d319eab0bec86c860251c771f5cd4bf501"
+      "object": "60a07f89fbe75d944105b4e158625b90530b5aee",
+      "bytes": 6312,
+      "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaImageResolver.cs",
@@ -33037,6 +33107,34 @@
       "object": "45cd946e68f72bf05a5440391216dad871d22d92",
       "bytes": 2863,
       "sha256": "201868943d39896f42c28b6a83d7ce6661cba4b9fe60c7e9986b68c9aca2f133"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+      "mode": "100644",
+      "object": "e95474e1f7a0e8ebbfee0833c8efe56f655333c1",
+      "bytes": 1943,
+      "sha256": "1924346384b8943949b06c416be834f5f580a6bb1aebe25f12482e7d3178fb28"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+      "mode": "100644",
+      "object": "0e9e62652249a366082433a1b0390e473529637b",
+      "bytes": 4260,
+      "sha256": "a4ecc966757fe6d99fe0e2decd3cc96c5c75290d853efeb3eeddbaa23c78d7b1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+      "mode": "100644",
+      "object": "23907c9fb325b582408e59b191a70c3ff6e14e73",
+      "bytes": 8178,
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+      "mode": "100644",
+      "object": "9f7fedf9835b87c8a869109360fa24de7f3cd3ef",
+      "bytes": 9274,
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/NotesGlobalUsings.cs",
@@ -33716,6 +33814,27 @@
       "object": "f9934e5b7a7ae62cd6402e45bd4f9d96eb33e480",
       "bytes": 77993,
       "sha256": "54e479254465e596f864215cb1a80b0d35d770bf92b406230cb81efdf251a12b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/LICENSE.txt",
+      "mode": "100644",
+      "object": "cb177033a11de9529081995dad49bc207ec6b413",
+      "bytes": 1096,
+      "sha256": "d32218dd6fcc1e749bcbe2c193cb5703863724e58d1693aa9f278edefee69f7b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/NOTICES.txt",
+      "mode": "100644",
+      "object": "c3e3aad4003dd43ede60171e9aa63f5ee0c2debf",
+      "bytes": 20768,
+      "sha256": "35d4c7707199a9c30ae29879cda7d961ecbd9b5b9f22039701717f9040ee064b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+      "mode": "100644",
+      "object": "e24c61c11dfe39165bdc0868f15371557a789203",
+      "bytes": 8238,
+      "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/UiBatcher.cs",
@@ -39206,6 +39325,20 @@
       "sha256": "d4a715bf721edc0988b7f52c8c0d5daf802b17806f98c9cd0909825678da38f9"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs",
+      "mode": "100644",
+      "object": "59384325ca6f1fb09dc698cd73ab02c281bd82d0",
+      "bytes": 4503,
+      "sha256": "b1909c91396c66139f89ebb68be5c41abee969b47f80f29d6fe79e5b464c6476"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs",
+      "mode": "100644",
+      "object": "18366cbef4b8a319f44c7a246aeaf0caa41c5fbb",
+      "bytes": 10429,
+      "sha256": "0de78df0d34b6f772f93eb2502ee1cae3e2069b0e07008cb2c28ce4bdfc6d3b7"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ShelfCollectionOrderingTests.cs",
       "mode": "100644",
       "object": "4e28397ea936b9e05a5822910d5021fc8677ba96",
@@ -40153,9 +40286,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomePromptHostCompositionTests.cs",
       "mode": "100644",
-      "object": "8f343041d734b369f3b7dfd5ffd2cb87cd473f78",
-      "bytes": 4055,
-      "sha256": "9a22130a0769575a81dc0cfd1ea3a1b18a19fcdc8586165c156282274f8576ff"
+      "object": "f608dd1ef6538619b1b6e01267e95e859d14deb0",
+      "bytes": 4064,
+      "sha256": "97fa0a263c0edce76a01afe98bf976fd5e566aac683bbf6c5e86e23b801c1040"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeTerminalHostTests.cs",
@@ -40774,6 +40907,20 @@
       "sha256": "6f8f5ae83009b0ab5dfd87ace16dd49159390dd1a0a3363c720bc5bacb8b311e"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
+      "mode": "100644",
+      "object": "54b2065b863702384d635bed18417e9323d9483c",
+      "bytes": 7357,
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
+      "mode": "100644",
+      "object": "273d73db3f200994d4d716c34cbefb4f2f5a7376",
+      "bytes": 8938,
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "mode": "100644",
       "object": "6f76f95353b655aa01e238f1ad76a887cd545e4d",
@@ -40783,9 +40930,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SitesNativeAuthoringConsumerTests.cs",
       "mode": "100644",
-      "object": "174a925306980a989177f62fda86c258b6c972c7",
-      "bytes": 29380,
-      "sha256": "079e425630610ec367dc5b66d1e7a220499ba2a655a33cb20ef478de169551c3"
+      "object": "4f099baba27fc65f6acbbef86a7eb0d0c7790ded",
+      "bytes": 29419,
+      "sha256": "bf74238c16fdc50152d5e2b961e2b1ef4111c4a1dab259c365f416a3fa2878c4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -42463,9 +42610,9 @@
     {
       "path": "docs/ASTRA-WORKING-LEDGER.md",
       "mode": "100644",
-      "object": "ba2a3b1399763ee75f76c245dbe51854cd838af1",
-      "bytes": 76644,
-      "sha256": "c512eee1aba42bec711824e41150f8d71e2defdf7cd1087f72fd1bc07668e50b"
+      "object": "f23f1f84b8b48004b98c41f44069435a30be53ff",
+      "bytes": 78602,
+      "sha256": "3174c16d89654eb6b7dde1ce3d3c8aa6dac29f596a5a00add4e0a96b6919e986"
     },
     {
       "path": "docs/CONSOLIDATION.md",
@@ -66188,7 +66335,11 @@
     "Current28 exact four accepted IMAP16 products and complete Inbox fixture are preserved. Append its two actual TLS Passed-method requirements and whole class to all retained210 owning classes =>211; regression12/resource44 remain byte-identical. Owning Mail suite remains unfiltered.",
     "The complete actual Sites03 regression/resource originals prove three desktop compiler errors. Correct only existing Reachable method visibility and explicit Avalonia.Application binding in the original Home presenter. Every method body, action, authorization, assertion and existing lifecycle/native/TLS guard remains unchanged.",
     "Owning03 index is fully verified but its three bundles and actual contents remain unread. No owning failure cause or complete three-family closure is inferred; narrow observed compiler correction is explicitly root-authorized from two complete original families.",
-    "No native browser DOM, classic visible UI, full Home/Sites acceptance or deployment claim. All original unfiltered suites, source/PDB/copy/task/restore/native/CRL/Java/session/profile/drain gates remain mandatory. Private unexecuted corrective only."
+    "No native browser DOM, classic visible UI, full Home/Sites acceptance or deployment claim. All original unfiltered suites, source/PDB/copy/task/restore/native/CRL/Java/session/profile/drain gates remain mandatory. Private unexecuted corrective only.",
+    "All inherited limits above are predecessor history. Current30 refresh preserves the exact accepted Math23 sources, Android30 compile correction and current ledger; existing 211/12/44 membership and all caller filters remain unchanged. The four Math classes are outside these exact filters, and retain their separate accepted Math06 runtime proof.",
+    "Only the original Sites fixture nullable Name and named fifth cancellationToken binding, plus the original Home host fixture Avalonia.Application namespace, change fixture behavior. Every assertion, nine Sites methods/fourteen outcomes and both Home host facts are preserved by whole inverses.",
+    "The actual83566 Sites04 source fixture is byte-identical to actual685d Home07 and its two full failed original families bind the compiler errors. Actual Sites04 hosted jobs failed, but their bundle contents remain unreviewed; no specific owning failure, complete owning closure or native acceptance is inferred.",
+    "Every original process/session/native/TLS/Java/CRL/profile/source/PDB/task/restore/drain caller and workflow remains byte-identical to actual83566. This is an unexecuted corrective package; separate real NativeWebView/classic observer acceptance remains pending."
   ],
   "inputManifests": [
     {
@@ -66478,6 +66629,46 @@
     {
       "path": "/workspace/astra-source/worker4-imap16-full-original-native-tls-custody-peer01.json",
       "sha256": "acff42a7ad70200e0fdbb784916eda3b6d855a7048cb9fc3d45781d5316752fd"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites211-current28-observed-compiler-full-corrective-package04/manifest.json",
+      "sha256": "887c591f5a3855497c7b308af2cd6dc67e7f6f59f73bded78556047e8dd3ce5a"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint30-publication-local.json",
+      "sha256": "2c564108c0110315f8922efdd6a3ec572e89f17e88cf42a1f0b3f116b7099cc3"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint29-publication-local.json",
+      "sha256": "77429ce9dd285c10d48ece85d5d75b5c321e7952c4f0d70483c11b3c8edc5298"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites04-observed-native-fixture-compiler-source09/manifest.json",
+      "sha256": "5d0fb2cd17031b515a727ffa6dee53a1d691927320affc44606105e57301da47"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home07-actual-host-fixture-application-source02/manifest.json",
+      "sha256": "dc2d537e50406bf47bcec25911671b537914b20f891b0346495a72316e90bc14"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites-native-fixture09-actual-api-whole-inverse-peer01.json",
+      "sha256": "32d9955958c9256c9d691bd326168e320c28074139fbfbcd350ed244c693b5d7"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-sites09-actual-native-fixture-api-whole-case-peer01.json",
+      "sha256": "dc8f087b2adb52f5f4f12add5ff5400858952c9e27db8198e5354568adc1a51e"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home07-regression-resource-original-failure-closure01.json",
+      "sha256": "bf2d322b69b58a855ddbc613c7b971517902b2ebf52e3b2132d29a3cbbc9134e"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites-current28-full04-exact-source-whole-case-preservation-peer01.json",
+      "sha256": "9a71b61360388b89d436ce8ae9e55a1032fad71ddef6eda1a2b873950fb35941"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sites211-current28-corrective04-full-preservation-peer01.json",
+      "sha256": "ef6d6a02afa56eee779a13e37d5ba3f7f449f3474e594425a14cf7d597f3beb2"
     }
   ],
   "sharedCakeIdContract": null
