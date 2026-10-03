@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "59702be2c8b9cca2df4563fd6144caf0606a03f2",
-  "programTree": "cbd32aad2aa92261cccaac3524b95720c856f010",
+  "baselineCommit": "31c02f04d1fdcd2f784cc0ba5ee5c44d34fa0f9d",
+  "programTree": "9bc26d18bbdecb7d5d39770d5b7c9b1ffd9d4d69",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
   "files": [
@@ -106,9 +106,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "29d7f9b367265f03587ec4282e2aa179566da92f",
-      "bytes": 88733,
-      "sha256": "7d78c71901ef36848620e186e29aecc33a2425cc82936ecfbb41d312756f0df7"
+      "object": "5a28de5c52aa62a29940b496afe69058b7e850b4",
+      "bytes": 89028,
+      "sha256": "28cf601b037754791e9667f0468f03c3934bca41dbf35bf3fe0a97e7b7dde2ed"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -39670,9 +39670,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMailAttachmentContentTests.cs",
       "mode": "100644",
-      "object": "fa2a0f7647f43c596be76b319cb9b4e118efef65",
-      "bytes": 13520,
-      "sha256": "36d634b1b1633be66fe7a6c82337ea29991153a36d238d014cbcfc1bc598ce33"
+      "object": "641319fbf927a51532ec3ca40d912c9d66ecf210",
+      "bytes": 13644,
+      "sha256": "c5ae3333bc9baba712bfdebc3a96f4997373ecbbbbe835c937e8e7fd54bbf11d"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMediaAssetSourceResolverTests.cs",
@@ -65985,10 +65985,10 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Exact actual597 failed caller parent: production canonical MailDraft alias, fixture canonical MailDraft+MailAccount aliases, exact accepted193f required ABI4profile metadata, and sole owning-class SHA repin. All31 sourcebindings/178+12+36 wholeclass counts/full3/scripts/TLS/task/restore/compiled/PDB/methodguards preserved.",
-    "Owning failed beforemanagedbuild due absentprofile; regression/resource actualCS0104 at NativeHost MailDraft. No new test/native/MIME completion claimed. Real normalTLS readiness and sampled Java/caller drains occurred but do not establish transport Send success.",
-    "Full3 fresh actual gates remain mandatory; no guard weakening, TLS bypass, case pruning, project substitution or default Send/Home authority activation.",
-    "Actual NativeHost CS0104 exposed first; complete source collision audit also identified fixture canonical MailDraft and MailAccount uses importing both public model namespaces. Only explicit aliases change; no test bodies/assertions/cases changed."
+    "Exact actual31c Mail07 failed parent. Sole onefixture nullableContent explicit refusal plus owning whole178 requiredconsoleHarness descriptor restoration and fixtureSHA repin. All31 product bindings/native/TLS/scripts/task/restore/compiled/PDB/source/three required cohorts retained.",
+    "Actual reg/resource CS8602 and owning KeyError remain failures; original owning117-file multipart closure pending and mandatory before launch. No actual MIME bytes/native/Send acceptance inferred.",
+    "Explicit no cleanup exemption, provider or path substitution, case pruning, source guard weakening, defaultauthority or fake console success.",
+    "All original fixture cases/whole178 owning families/currentHome61 and existing whole-method continuity guards preserved; actual full3 must run after review."
   ],
   "inputManifests": [
     {
@@ -66026,6 +66026,18 @@
     {
       "path": "/workspace/astra-source/worker2-mail04-actual-canonical-aliases-full-corrective06/manifest.json",
       "sha256": "3837d1b926f1f2956772bdab186df0a4e7ddb07f7d5aaa6a32e3473e0ab26ef7"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail04-actual-canonical-model-aliases-full-corrective07/manifest.json",
+      "sha256": "0fde33865cccd5f446a46110066265e8c866b17cb286e72cf21dd7cc90566566"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail07-actual-mime-content-and-console-schema-corrective-source01/manifest.json",
+      "sha256": "5015c7296201d07d99e708f6bc22ef9bf91b65db327001715f5036d0f035c218"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail07-spaces02-six-small-original-diagnosis01.json",
+      "sha256": "09d52a48ddf54511c0f03b177bf5a92519b391456a543f06c4fcf5c910b3436b"
     }
   ],
   "sharedCakeIdContract": null

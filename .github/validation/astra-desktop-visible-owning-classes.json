@@ -253,7 +253,7 @@
       "class": "FilesMailAttachmentContentTests",
       "fullClass": "Haven.Desktop.Tests.FilesMailAttachmentContentTests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMailAttachmentContentTests.cs",
-      "sha256": "36d634b1b1633be66fe7a6c82337ea29991153a36d238d014cbcfc1bc598ce33",
+      "sha256": "c5ae3333bc9baba712bfdebc3a96f4997373ecbbbbe835c937e8e7fd54bbf11d",
       "namespace": "Haven.Desktop.Tests",
       "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
     },
@@ -1425,5 +1425,10 @@
       "namespace": "NineToOne.Os.Shell.Tests",
       "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
     }
-  ]
+  ],
+  "consoleHarness": {
+    "path": "9to1 Workspace/Files/CUI.Tests/Program.cs",
+    "sha256": "b837c0a84fc24fff5e9093577e46147bb8690a74b9d3530a8aea75767f9e050d",
+    "requiredMessage": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery."
+  }
 }

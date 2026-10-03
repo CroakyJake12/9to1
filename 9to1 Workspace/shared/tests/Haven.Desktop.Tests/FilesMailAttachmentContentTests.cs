@@ -118,7 +118,8 @@ public sealed class FilesMailAttachmentContentTests
             }
             var part = Assert.IsAssignableFrom<MimePart>(Assert.Single(received.Attachments));
             Assert.Equal("attachment.txt", part.FileName); Assert.Equal("text/plain", part.ContentType.MimeType);
-            using var actual = new MemoryStream(); await part.Content.DecodeToAsync(actual, ct);
+            var content = part.Content ?? throw new InvalidOperationException("The actual MIME attachment content is missing.");
+            using var actual = new MemoryStream(); await content.DecodeToAsync(actual, ct);
             Assert.Equal(f.Bytes, actual.ToArray()); Assert.Contains(draft.PlainBody, received.TextBody);
             Assert.Equal(address, Assert.Single(received.From.Mailboxes).Address);
             Assert.Equal(beforeHome, await File.ReadAllBytesAsync(f.HomeFile, ct)); Assert.Equal(beforeDrive, await File.ReadAllBytesAsync(f.DriveFile, ct));
