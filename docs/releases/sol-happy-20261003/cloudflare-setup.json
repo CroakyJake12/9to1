@@ -33,5 +33,18 @@
   "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
   "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
   "status": "PRIVATE_PLUGIN_SAVED_AND_BACKEND_READBACK_VERIFIED; host reports installed; no Cloudflare MCP tools exposed or OAuth/account access verified",
-  "resourcesProvisioned": false
+  "resourcesProvisioned": false,
+  "selectionFollowup": {
+    "userSelectedReference": "cloudflare@openai-curated-remote",
+    "equivalenceToPrivatePlugin": "UNESTABLISHED",
+    "cloudflareToolsExposed": 0,
+    "cloudflareSkillsDiscovered": 0,
+    "oauthAccountAccess": "UNVERIFIED",
+    "environmentObservedRevision": 6,
+    "environmentCapabilities": [],
+    "environmentSecrets": [],
+    "environmentOutboundIdentities": [],
+    "nextPrerequisite": "Host must load selected plugin tools and complete connection; official guide requires agent restart after MCP registration",
+    "pluginOrSettingsChanged": false
+  }
 }

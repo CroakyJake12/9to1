@@ -85,11 +85,16 @@ Team A retains native/shared source branches; Team B retains browser surfaces.
 Incoming Astra history contains 1,568 changed files relative to main and has
 successful provisional CI. Its source acceptance and final integration remain
 pending; successful CI does not supply full native/provider/package acceptance.
-Team B's browser bootstrap/account adapters are held on three independently
-reproduced review defects: registered Home routes bypass authenticated handlers,
-profile input remains mutable across token acquisition, and updates accept an
-unchanged response revision. Exact requests, probes and reviews are retained in
-[final/](final/) and published through the shared transport.
+Team B fixed the three independently reproduced browser review defects in incoming
+source `830f747b70df07797c586f6124890fa5028452b2`: registered Home owners now execute
+before unavailable fallback, profile fields are captured before token acquisition,
+and update success requires exactly the next revision. Independent exact-source
+checks passed 22/22 route tests and 28/28 account tests; the original account probes
+also confirm both repairs. Closure evidence is in [browser-review-update/](browser-review-update/).
+Original failure evidence remains in [final/](final/). This browser source depends
+on provisional Astra `a63d77f`, including shared CUI theme/font helpers absent from
+this branch. Incorporation, owning shared-source acknowledgement, published WASM
+artifacts and actual mounted-browser/provider acceptance remain pending.
 
 Proposed Home session identity binding `297f361` and shared provider streaming
 repair `4f604027` remain on separate remotely published branches pending Team A
@@ -119,7 +124,7 @@ in this handoff do not certify those platforms. Canonical exception bases are
 recorded in [c6/platform-and-exception-bases.jsonl](c6/platform-and-exception-bases.jsonl);
 no broad exception or mobile fallback is inferred.
 
-Release remains blocked by current-source review/integration, the browser defects,
+Release remains blocked by current-source review/integration and browser runtime acceptance,
 cross-process identity contracts, missing authenticated provider/staging services,
 SH-13 commercial/architecture/isolation/capacity/recovery/budget decisions, full
 product/donor/accessibility/security/recovery/platform gates and verified local-PC
@@ -135,9 +140,15 @@ five MCP endpoints. Its saved files were read back from the backend; the host
 reports it installed. This session exposes no Cloudflare MCP tools, so OAuth,
 account access and deployed-provider acceptance remain unverified.
 
-Open [Cloudflare](https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4)
-in the host to finish connection and refresh the session's tools. No credentials
-belong in chat. Assembly provenance and status are in [cloudflare-setup.json](cloudflare-setup.json).
+The user's subsequently selected `cloudflare@openai-curated-remote` reference is
+distinct from the saved private plugin ID; equivalence was not established. After
+that selection, complete tool/skill discovery still exposed no Cloudflare tools or
+skills, and current managed-environment observations contained no provider identity
+or credentials. Host connection and tool loading must succeed before account
+verification can run. The official guide requires an agent restart to load newly
+configured MCP servers. No credentials belong in chat. The saved private package
+is [Cloudflare](https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4);
+assembly provenance and status are in [cloudflare-setup.json](cloudflare-setup.json).
 
 ## Recovery and delivery
 

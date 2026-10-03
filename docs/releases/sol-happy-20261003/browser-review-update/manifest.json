@@ -1,0 +1,88 @@
+{
+  "sourceBranch": "team-b/astra-browser-validation-20261003",
+  "sourceHead": "830f747b70df07797c586f6124890fa5028452b2",
+  "parentDependency": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "fixCommits": {
+    "account": "f38ffac525e555921d580776086ceb37182ec681",
+    "homeDispatch": "d4c18169ac52fee2bd0ad47e39da8de7a2a001a0"
+  },
+  "findingDisposition": "THREE_PRIOR_P2_FINDINGS_CLOSED_IN_INCOMING_SOURCE",
+  "integration": "NOT_INCORPORATED; shared current-source acceptance pending",
+  "checks": [
+    {
+      "name": "homeRouteDispatch",
+      "cwd": "/workspace/team-c/c1-review-b1-fixed",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+        "-c",
+        "Release"
+      ],
+      "envOverrides": {
+        "DOTNET_CLI_HOME": "/workspace/team-c/evidence/c1/review-b1-fixed/dotnet-home",
+        "NUGET_PACKAGES": "/workspace/team-c/evidence/c1/review-b1-fixed/nuget",
+        "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+      },
+      "discovered": 22,
+      "executed": 22,
+      "passed": 22,
+      "failed": 0,
+      "exitCode": 0,
+      "log": "bootstrap-tests.log"
+    },
+    {
+      "name": "accountTransport",
+      "cwd": "/workspace/team-c/c2-b-fix-review",
+      "command": [
+        "node",
+        "--test",
+        "apps/Web/Auth/account-api-client.test.js",
+        "apps/Web/Auth/account-api-client.profile-review.test.js"
+      ],
+      "envOverrides": {},
+      "discovered": 28,
+      "executed": 28,
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "log": "account-tests.log"
+    },
+    {
+      "name": "originalAccountProbes",
+      "cwd": "/workspace/team-c/c2-b-fix-review",
+      "command": [
+        "node",
+        "/workspace/team-c/evidence/c2/b-adapter-fixed-input-probe.mjs"
+      ],
+      "envOverrides": {},
+      "exitCode": 0,
+      "log": "account-original-probes.log",
+      "originalProbeDifference": "Only /c2-b-review/ -> /c2-b-fix-review/ in import path; assertions, fixtures and request/result logic unchanged"
+    }
+  ],
+  "limitations": [
+    "Source-linked domain dispatch with fixture owners/fallbacks; no actual mounted browser rendering",
+    "Account transport doubles/local fixtures; no real issuer or account service acceptance",
+    "Shared CUI theme/font helpers exist in incoming Astra and are absent from release branch",
+    "Published WASM assets, SDK ABI variants, owning shared-source acknowledgement and full provider/product acceptance remain unverified"
+  ],
+  "artifactHashes": {
+    "bootstrap-review.md": "c851d7dd0759d831a5171e40aac4c43f75bdc740b41020116bbc1c29c6db47f3",
+    "bootstrap-tests.log": "737cfef4f594613091c87c5b36c6a5d0fc10d1e53fa96cd29e9223d21bfb772d",
+    "account-review.json": "76a0ed2c5a4b43b9a761301f15da12abe6d0640d585d4536176c543169fbc028",
+    "account-tests.log": "627beb7a6462028ab2218d6066dbbf3ca40b768574f1aed3656949b544809aad",
+    "account-original-probes.log": "6269183da236d0381fc3e4ad6c8962d9adbaa53978119a325439cd7cc609181e",
+    "account-original-probes.mjs": "3793625c42ad421589ccadd28c875ccacf4f38992f7a29a04bcae5f4a4fc1efd"
+  },
+  "preservedEvidenceAliases": {
+    "route-tests.log": "bootstrap-tests.log",
+    "b-adapter-830f747-tests.log": "account-tests.log",
+    "b-adapter-fixed-input-probe.log": "account-original-probes.log",
+    "b-adapter-fixed-input-probe.mjs": "account-original-probes.mjs"
+  },
+  "aliasExplanation": "Independent review files preserve original bytes and original local basenames/paths; this mapping identifies the exact copied, hash-verified packaged artifacts.",
+  "independentPackagingReview": "C6 reviewed staged documentation/evidence at parent67e1419: six new artifacts tracked/hashes match; original19 unchanged; source ancestry and bounded closure claims verified. Alias mapping added to resolve preserved original basenames."
+}
