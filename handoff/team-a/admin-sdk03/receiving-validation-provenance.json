@@ -5,7 +5,7 @@
   "rows": [
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
       "bytes": 23792,
       "sha256": "990e08a53d7e5728e46d9033aa6275c94419566bca7114b8164b885e337a92d9",
@@ -15,11 +15,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdminJobs.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
       "bytes": 6941,
       "sha256": "530dbbc5a38f63037e13be662f2745edadff2be5852cf348b002927aa666a44c",
@@ -29,11 +30,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-canonical-collections-source01/sources/9to1 Workspace/Accounts/OrganisationAdministration.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationAdministration.cs",
       "bytes": 5636,
       "sha256": "8bb5ce52f01b896a5dba257ef5bd132d2bf66f3a9fe6a5b1b1ef812c96d131bd",
@@ -43,11 +45,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdministration.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-canonical-collections-source01/sources/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
       "bytes": 459,
       "sha256": "1dbb6e282e601e814261b04945f67102267206388586cc6dc4375176d59cc88b",
@@ -57,11 +60,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/OrganisationContracts.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationContracts.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationContracts.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationContracts.cs",
       "bytes": 5141,
       "sha256": "22e003cc311d0545297a24e287afd93b48d0a89b93c7db21b715fd2354456298",
@@ -71,11 +75,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationContracts.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationContracts.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationContracts.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationContracts.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationContracts.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationContracts.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-organisation-lifecycle-current30-source01/sources/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationLifecycle.cs",
       "bytes": 15756,
       "sha256": "1bb78389d445654b09a756fe1c64a27d5d4a3c21fd873bcf6cb9ccedf7182407",
@@ -85,11 +90,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationLifecycle.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-organisation-lifecycle-current30-source02-owner-lock-recheck/sources/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
       "bytes": 6601,
       "sha256": "2928309de1932eb19121a20dcc5471c34e7f2e588728ed93c648eeebeae6d8e1",
@@ -99,11 +105,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationOwningOperation.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
       "bytes": 7894,
       "sha256": "892eaa144d8e182089c263413ec17d0ff5175e3a8021888186f712ffd81f26bd",
@@ -113,11 +120,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/OrganisationService.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationService.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/OrganisationService.cs",
       "repositoryPath": "9to1 Workspace/Accounts/OrganisationService.cs",
       "bytes": 19263,
       "sha256": "59ba0ab354893fe62c9e59db3eee0e72ac04fd72962782b998f640580a378c5c",
@@ -127,11 +135,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/OrganisationService.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/OrganisationService.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/OrganisationService.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationService.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/OrganisationService.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/OrganisationService.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-canonical-collections-source01/sources/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
       "repositoryPath": "9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
       "bytes": 11526,
       "sha256": "eb27113b66e660fe9d3d02eb3008539d40daa3254a022a5735e29dd765c1f1c7",
@@ -141,11 +150,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-organisation-lifecycle-current30-source02-owner-lock-recheck/sources/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
       "repositoryPath": "9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
       "bytes": 33395,
       "sha256": "bb8b1d66e1932bea01c50f18dcefe1e08823b08d4cc85013f3b133ce3acc5e35",
@@ -155,11 +165,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
       "repositoryPath": "9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
       "bytes": 23522,
       "sha256": "094a954991553e344d05c1477dc71e745b68a9eb35df71a073da51e7ce701418",
@@ -169,11 +180,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/Tests/Program.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/Program.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/Tests/Program.cs",
       "repositoryPath": "9to1 Workspace/Accounts/Tests/Program.cs",
       "bytes": 33408,
       "sha256": "9b54905018e32d6ab64e554faa2db600f151bf268aa78d694f43785bfcd3f863",
@@ -183,11 +195,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Accounts/Tests/Program.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Accounts/Tests/Program.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Accounts/Tests/Program.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/Program.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Accounts/Tests/Program.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Accounts/Tests/Program.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Web/AdminWebDomain.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/AdminWebDomain.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Web/AdminWebDomain.cs",
       "repositoryPath": "9to1 Workspace/Web/AdminWebDomain.cs",
       "bytes": 8269,
       "sha256": "c7f91887244922cb93815d3fcd229501e8b76ee1994ec1d9a40e28572b42b962",
@@ -197,11 +210,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Web/AdminWebDomain.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Web/AdminWebDomain.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Web/AdminWebDomain.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/AdminWebDomain.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/AdminWebDomain.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/AdminWebDomain.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Web/Program.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/Program.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Web/Program.cs",
       "repositoryPath": "9to1 Workspace/Web/Program.cs",
       "bytes": 10977,
       "sha256": "81462812cab372cf11f80db938ebb375e666a4eedbe23fcf176526b4f26d99e1",
@@ -211,11 +225,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Web/Program.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Web/Program.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Web/Program.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/Program.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/Program.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/Program.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
       "repositoryPath": "9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
       "bytes": 6478,
       "sha256": "0dc1024d198cf2adcc1381b77dee54d1debfc32b33aca6f44e453746312187a2",
@@ -225,11 +240,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Web/Tests/Program.cs",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/Tests/Program.cs",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Web/Tests/Program.cs",
       "repositoryPath": "9to1 Workspace/Web/Tests/Program.cs",
       "bytes": 13244,
       "sha256": "7a412cb1a8f256b92ab5942d28928b7313f8840a02b196d247ff8f99603abb89",
@@ -239,11 +255,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/9to1 Workspace/Web/Tests/Program.cs",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/9to1 Workspace/Web/Tests/Program.cs",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/9to1 Workspace/Web/Tests/Program.cs",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/Tests/Program.cs"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Workspace/Web/Tests/Program.cs",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/9to1 Workspace/Web/Tests/Program.cs"
     },
     {
       "originalPath": "/workspace/astra-source/worker3-shared-math06-actuale2d-full-three-corrective-caller-package06/sources/.github/scripts/astra-original-native-session-drain.py",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-original-native-session-drain.py",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-original-native-session-drain.py",
       "repositoryPath": ".github/scripts/astra-original-native-session-drain.py",
       "bytes": 3791,
       "sha256": "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be",
@@ -251,17 +268,18 @@
       "parentCasVerified": true,
       "historicalReceivedPath": "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-original-native-session-drain.py",
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/.github/scripts/astra-original-native-session-drain.py",
-      "receivedBytes": 6448,
-      "receivedSha256": "c36fe2e48e35fe3c90826e5ac01daafaa8178856b619ae6ef5fba517a4a61ac6",
-      "intentionalProposalDifference": true,
-      "reviewSourceCommit": "074420b9c4e1a2d66b5081d742e191be16bf2f92",
+      "receivedBytes": 6932,
+      "receivedSha256": "b64955841ac1c1cdaa7e8e3ed2d9d487c6b7faae7bd581fae626e37cae964329",
+      "intentionalProposalDifference": "Exact custody failure-preservation proposal: same-handle original error collection; helper pin updated; no identity/disappearance waiver",
+      "reviewSourceCommit": "4e64e3576ba817bcff5a018c9dc031318b8c8f25",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/.github/scripts/astra-original-native-session-drain.py",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/.github/scripts/astra-original-native-session-drain.py",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-original-native-session-drain.py"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-original-native-session-drain.py",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-original-native-session-drain.py"
     },
     {
       "originalPath": "/workspace/astra-source/worker3-shared-math06-actuale2d-full-three-corrective-caller-package06/sources/.github/scripts/astra-auth-restore-evidence.py",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-auth-restore-evidence.py",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-auth-restore-evidence.py",
       "repositoryPath": ".github/scripts/astra-auth-restore-evidence.py",
       "bytes": 10043,
       "sha256": "d3681c1578ba683a40f200028bd567fd7d21b47643053adccb08cbdac5624ee3",
@@ -271,11 +289,12 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/.github/scripts/astra-auth-restore-evidence.py",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/.github/scripts/astra-auth-restore-evidence.py",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/.github/scripts/astra-auth-restore-evidence.py",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-auth-restore-evidence.py"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-auth-restore-evidence.py",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-auth-restore-evidence.py"
     },
     {
       "originalPath": "/workspace/astra-source/worker3-forms-original-native-caller-source05-complete-pdb-parser-closure/astra-home-portable-pdb.py",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-home-portable-pdb.py",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-home-portable-pdb.py",
       "repositoryPath": ".github/scripts/astra-home-portable-pdb.py",
       "bytes": 3680,
       "sha256": "f7f4ac108d287f211eb43e26c5602a2646f149382af0bc8f3fcfff9c4a1d98c8",
@@ -289,11 +308,12 @@
       "intentionalProposalDifference": true,
       "reviewSourceCommit": "074420b9c4e1a2d66b5081d742e191be16bf2f92",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/.github/scripts/astra-home-portable-pdb.py",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-home-portable-pdb.py"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-home-portable-pdb.py",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-home-portable-pdb.py"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-current30-sdk-web-full-owning-package03-original-persistence-errors/astra-organisation-full-owning.py",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-organisation-full-owning.py",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-organisation-full-owning.py",
       "repositoryPath": ".github/scripts/astra-organisation-full-owning.py",
       "bytes": 29107,
       "sha256": "dd5c059f436ddb867d019f81b985f01cace6142ca0c19a11c8f9c0786ec8f901",
@@ -307,11 +327,12 @@
       "reviewSourceCommit": "074420b9c4e1a2d66b5081d742e191be16bf2f92",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/.github/scripts/astra-organisation-full-owning.py",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/.github/scripts/astra-organisation-full-owning.py",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-organisation-full-owning.py"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-organisation-full-owning.py",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-organisation-full-owning.py"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-current30-sdk-web-full-owning-package01/astra-organisation-owning-sources.json",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/validation/astra-organisation-owning-sources.json",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/validation/astra-organisation-owning-sources.json",
       "repositoryPath": ".github/validation/astra-organisation-owning-sources.json",
       "bytes": 6807,
       "sha256": "3b7ba31564c78a3b8c70eb836cebc3f18073a36aeb4f50dff109f584420ab086",
@@ -320,16 +341,17 @@
       "historicalReceivedPath": "/workspace/team-c/c3-admin-receipt/.github/validation/astra-organisation-owning-sources.json",
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/.github/validation/astra-organisation-owning-sources.json",
       "receivedBytes": 6807,
-      "receivedSha256": "e83228fd948c07c0ed170186e0c9fe994adad18cc2d3ca44664bcc967636a2a7",
-      "intentionalProposalDifference": true,
-      "reviewSourceCommit": "074420b9c4e1a2d66b5081d742e191be16bf2f92",
+      "receivedSha256": "5fe36890cf410cdb0557dcaf95b7ab1174c7cafde7a46f61c2a83d6363240fb7",
+      "intentionalProposalDifference": "Exact custody failure-preservation proposal: same-handle original error collection; helper pin updated; no identity/disappearance waiver",
+      "reviewSourceCommit": "4e64e3576ba817bcff5a018c9dc031318b8c8f25",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/.github/validation/astra-organisation-owning-sources.json",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/.github/validation/astra-organisation-owning-sources.json",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/validation/astra-organisation-owning-sources.json"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/validation/astra-organisation-owning-sources.json",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/validation/astra-organisation-owning-sources.json"
     },
     {
       "originalPath": "/workspace/astra-source/worker4-admin-current30-sdk-web-full-owning-package02-actual-producer-graph/astra-organisation-full-owning.yml",
-      "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/workflows/astra-organisation-full-owning.yml",
+      "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/workflows/astra-organisation-full-owning.yml",
       "repositoryPath": ".github/workflows/astra-organisation-full-owning.yml",
       "bytes": 1864,
       "sha256": "02f4dd2f484dfc97b3ab2e68d202353dbe0116c4cf32ae7e0559ce2796287bca",
@@ -339,7 +361,8 @@
       "previousCorrectedReceivedPath": "/workspace/team-c/c3-admin-driver-validation/.github/workflows/astra-organisation-full-owning.yml",
       "previousSubreaperReceivedPath": "/workspace/team-c/c3-admin-subreaper-validation/.github/workflows/astra-organisation-full-owning.yml",
       "previousGeneratedSymbolReceivedPath": "/workspace/team-c/c3-admin-generated-validation/.github/workflows/astra-organisation-full-owning.yml",
-      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/workflows/astra-organisation-full-owning.yml"
+      "previousCompileMetadataReceivedPath": "/workspace/team-c/c3-admin-compile-validation/.github/workflows/astra-organisation-full-owning.yml",
+      "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/workflows/astra-organisation-full-owning.yml"
     }
   ],
   "validationSuccessor": {
@@ -356,11 +379,13 @@
   },
   "additionalValidationSource": {
     "path": ".github/scripts/astra-original-session-subreaper-tests.py",
-    "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-original-session-subreaper-tests.py",
-    "bytes": 9290,
-    "sha256": "00a9fce72580ae7ee9d24b54a619d18a2e190c55ce2be4ef031621367c3b2168",
-    "reviewSourceCommit": "fe96d5004a8a608967186000da1f5deda31df470",
-    "qualification": "Eight real Linux custody controls, not productSDK acceptance."
+    "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-original-session-subreaper-tests.py",
+    "bytes": 14767,
+    "sha256": "c1dd0c7cee53614bd738ac3d92e7be8a23099328e6d9358b7caae7d67f792abe",
+    "reviewSourceCommit": "4e64e3576ba817bcff5a018c9dc031318b8c8f25",
+    "qualification": "14 actual Linux custody controls retain original8 plus6 error/acquisition/final-proof controls; not SDK suite acceptance.",
+    "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-original-session-subreaper-tests.py",
+    "historicalOriginalEightControlHead": "fe96d5004a8a608967186000da1f5deda31df470"
   },
   "generatedSymbolValidationSuccessor": {
     "historicalReceivingHead": "ae1d14c6b307913d046318e74a17cbbe94f46f90",
@@ -371,11 +396,12 @@
   },
   "additionalEmbeddedSymbolValidationSource": {
     "path": ".github/scripts/astra-embedded-symbol-tests.py",
-    "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-embedded-symbol-tests.py",
+    "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-embedded-symbol-tests.py",
     "bytes": 6823,
     "sha256": "2aa9aa59ba8728d7a85e80d5df8383e93c31fbe04e11579ee612013663bdc998",
     "reviewSourceCommit": "f5476552cf0b84133e8f6cc6d735a366cc6479dd",
-    "qualification": "18 real actual producer/identity/retention controls; not original suite acceptance."
+    "qualification": "18 real actual producer/identity/retention controls; not original suite acceptance.",
+    "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-embedded-symbol-tests.py"
   },
   "compileMetadataValidationSuccessor": {
     "historicalReceivingHead": "b7546513952de912ddcfcdff09125b041de2d411",
@@ -385,11 +411,12 @@
   },
   "additionalCompileMetadataValidationSource": {
     "path": ".github/scripts/astra-compile-metadata-tests.py",
-    "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-compile-metadata-tests.py",
+    "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-compile-metadata-tests.py",
     "bytes": 3408,
     "sha256": "9cae1c5cfe22dd0fa7bf5976b60d31e1fb9e45ba98340fd462d488e23af8a5be",
     "reviewSourceCommit": "6b3679bbe89c3b50b9ee00d7e96e63a19a4a3a6a",
-    "qualification": "Five actual SDK compiler-input/source-identity/output-preservation controls, not total product suite count."
+    "qualification": "Five actual SDK compiler-input/source-identity/output-preservation controls, not total product suite count.",
+    "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-compile-metadata-tests.py"
   },
   "generatedContextValidationSuccessor": {
     "historicalReceivingHead": "8189d31aa86a4fa200d938345a07d976e5ea1030",
@@ -400,10 +427,19 @@
   },
   "additionalGeneratedContextValidationSource": {
     "path": ".github/scripts/astra-generated-context-tests.py",
-    "receivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-generated-context-tests.py",
+    "receivedPath": "/workspace/team-c/c3-admin-custody-validation/.github/scripts/astra-generated-context-tests.py",
     "bytes": 3364,
     "sha256": "8941d07eb9fb295ac91470e9735eeb6efca867332935c038a64bfaf4ceb760b4",
     "reviewSourceCommit": "074420b9c4e1a2d66b5081d742e191be16bf2f92",
-    "qualification": "10 real canonical SDK owner-root/source identity controls; not full product suite acceptance."
+    "qualification": "10 real canonical SDK owner-root/source identity controls; not full product suite acceptance.",
+    "previousGeneratedContextReceivedPath": "/workspace/team-c/c3-admin-context-validation/.github/scripts/astra-generated-context-tests.py"
+  },
+  "custodyErrorsValidationSuccessor": {
+    "historicalReceivingHead": "4472a4fd9730c4f432570e12a2d86b6b16fc7cb1",
+    "historicalUnissuedCutSHA256": "c08a4a41f8864a7c399c68fbd81b5bea1c86a95a165a172a351c6add902c1284",
+    "proposalHead": "4e64e3576ba817bcff5a018c9dc031318b8c8f25",
+    "peerInitial": "409a7aaeea21a9ea81fc7797a5b63c65047370b7",
+    "peerFinalDelta": "4f9edec374f1b069b5fb6753d8cfdfad09c75962",
+    "qualification": "Original A3 HELD paths corrected with independent same-handle failure preservation and protected fixture acquisitions/cleanup/final proof. All17products/frozenmetadata/suite inventory unchanged; keyfix absent. Original refusals preserved. SDK6 NOT_RUN, owner adoption separate, fresh root external pin required. SDK10.0.401 variance remains."
   }
 }

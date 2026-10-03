@@ -60,16 +60,16 @@
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
       "mode": "100644",
-      "object": "8599136130dee2225eb1ac97fb2ee3e7d57421ad",
-      "bytes": 6448,
-      "sha256": "c36fe2e48e35fe3c90826e5ac01daafaa8178856b619ae6ef5fba517a4a61ac6"
+      "object": "c7a4eb371de51946563cc75d5d3772c6183f83de",
+      "bytes": 6932,
+      "sha256": "b64955841ac1c1cdaa7e8e3ed2d9d487c6b7faae7bd581fae626e37cae964329"
     },
     {
       "path": ".github/scripts/astra-original-session-subreaper-tests.py",
       "mode": "100644",
-      "object": "323e292595f595411c9630cf078cffae5933785c",
-      "bytes": 9290,
-      "sha256": "00a9fce72580ae7ee9d24b54a619d18a2e190c55ce2be4ef031621367c3b2168"
+      "object": "ee378f9f01ae7afe5d42f9e335be14bcd6f8fa09",
+      "bytes": 14767,
+      "sha256": "c1dd0c7cee53614bd738ac3d92e7be8a23099328e6d9358b7caae7d67f792abe"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -81,9 +81,9 @@
     {
       "path": ".github/validation/astra-organisation-owning-sources.json",
       "mode": "100644",
-      "object": "c2e6d90d6c2ca54aba90a2af6d6741d4ee0ef07b",
+      "object": "493749667245ea70aae650731bb04a7acc596175",
       "bytes": 6807,
-      "sha256": "e83228fd948c07c0ed170186e0c9fe994adad18cc2d3ca44664bcc967636a2a7"
+      "sha256": "5fe36890cf410cdb0557dcaf95b7ab1174c7cafde7a46f61c2a83d6363240fb7"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -65062,9 +65062,9 @@
     {
       "path": "handoff/team-a/admin-sdk03/receiving-validation-provenance.json",
       "mode": "100644",
-      "object": "63d28bd19a94da0e8fd0c786dcad58d5df08c719",
-      "bytes": 35567,
-      "sha256": "6a0ae527c098074d2f90bd4edaa9f50a175c58a1a7e181812f033919092d5964"
+      "object": "89a3bd3016b4bbae5fab3e75a6797c570e3fb30d",
+      "bytes": 40695,
+      "sha256": "3ca02b086bb4a38966373163d9ce9d0bf27cd24db0d1a9e9e3a64eb9bcbbbd13"
     },
     {
       "path": "handoff/team-a/reviewed-source-delivery-manifest.json",
