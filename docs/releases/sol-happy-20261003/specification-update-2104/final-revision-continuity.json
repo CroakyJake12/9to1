@@ -1,0 +1,13 @@
+{
+  "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "revisionId": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+  "previousRevisionId": "ANLCKQlZuLSuopoik2qJHrWoQxliYXJ0xjJfH2ncI9frS-Tm7sLiDFLwVdoLZ3-gbZ4aB1qDkX6j9nGYYpvqrgULBc32eKABkwDZNo2d3v8",
+  "recordedUTC": "2026-10-03T21:48:17.775730+00:00",
+  "capture": "Final atomic get_document_text; get_document revision probe agreed. Paragraph text joined with newline and exactly one final newline.",
+  "paragraphs": 8534,
+  "bytes": 1383780,
+  "sha256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c",
+  "identicalTrackedSource": "native-text.txt",
+  "byteComparison": "Entire 1383780-byte native serialization identical to tracked21:04 capture; no textual scope/default/requirement change. Reason for revision change not inferred.",
+  "qualification": "Prior maps/results retain original source identities; clause count is not requirement count, no completion or acceptance inferred."
+}
