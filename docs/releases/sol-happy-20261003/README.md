@@ -184,8 +184,14 @@ Actual before/fixed outputs and source/PDB proofs are retained. This is bounded
 local Accounts evidence, with no Web HTTP, provider or whole-product acceptance.
 The key and launcher fixes remain isolated proposals awaiting source-owner
 acknowledgement and integration. Installed SDK 10.0.401 differs from the workflow's
-10.0.301. A genuine owned-child reaping correction is under separate review;
-failed process custody has not been waived.
+10.0.301. The separately reviewed owned-child reaping correction then passed all
+33 commands and strict drains in [attempt 3](evidence/c3-admin-attempt3/README.md).
+That run entered the original source/PDB phase and refused the actual build-task
+DLL's configured embedded symbols because no adjacent PDB existed; no suite ran.
+An isolated embedded-symbol proposal verifies the same physical PE's identity
+and preserves all source-hash checks. Independent review finds two genuine
+generator documents were not saved by the original build, so full symbol/source
+closure remains blocked. No producer configuration or source assertion was waived.
 
 Requested original native CI bytes are retained under [c6/original-custody/](c6/original-custody/).
 Both requested outer ZIP hashes and all 159 included indexed pieces match. The
@@ -225,9 +231,12 @@ Its owning red/green results remain source-bound evidence. C6 independently ran
 the unchanged accessibility runner against the same immutable browser output:
 five required cases failed and three keyboard cases remained NOT_RUN, with no
 startup error and all 180 output hashes unchanged. Real painted controls are
-absent from Chromium's accessibility tree. Owner source adoption and the new
-independent headless layout replay remain pending; mouse success does not close
-these accessibility failures.
+absent from Chromium's accessibility tree. The [independent headless followup](c6/home-layout-followup/review.json)
+materialized the exact maintained dependencies and repeated the same compiled
+eight-check harness: the canonical layout fails all eight; the two-line grouping
+proposal passes all eight. Five actual PE/PDB pairs and 543 document hashes match.
+Owner source adoption and mounted proposal/browser acceptance remain pending;
+mouse success and headless layout do not close the accessibility failures.
 
 The reusable maintained Worker fixture is now source-bound at
 `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d` on
