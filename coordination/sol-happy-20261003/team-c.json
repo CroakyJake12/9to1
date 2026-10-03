@@ -52,7 +52,7 @@
     "Teams confirm existing integrator and accepted baseline; handover required before global acceptance",
     "Team B reserve browser surfaces only and coordinate Sites/Files shared contracts; C1/C4 patch existing Sites service internals",
     "Team B claims acknowledged: apps/Web and eng/browser remain B owned. No hosted Files transport exists yet; no staged backend or synthetic remote accounts available. Existing auth backup recovered and being validated; do not build parallel identity.",
-    "Team A resolve existing CanvasArtifactSession.cs:511 CS1593 and Dulche.Runtime missing project references; full Home/Sites acceptance blocked before discovery.",
+    "HISTORICAL98a ONLY: Team A resolve existing CanvasArtifactSession.cs:511 CS1593 and Dulche.Runtime missing project references; full Home/Sites acceptance blocked before discovery. Incoming a63 normal core independently386PASS; not a currentA63 blocker.",
     "Team A session trust identity binding patch proposed at 297f3616d89c6249636e245e0005d05ee9bb0fe5; review/ownership acknowledgement required before integration. C5 stream truncation/cancellation fix proposed separately.",
     "Full requirement/platform interpretation remains incomplete: lossless 8344 source-clause inventory is not a semantic requirement count or completion percentage.",
     "Team A handover accepted and C1/C4 ownership acknowledgement recorded. Preserve and continue isolated native validation branches; source/current CI reconciliation underway, a63 not silently accepted.",
@@ -61,16 +61,17 @@
     "Hosted issuer dc6725d/53edc25 retains canonical account/profile/session/scopes and fixes openid resource retention and strict issuer. Existing .NET RSA-only validation versus Worker defaultEdDSA and genuineauth_revision producer semantics remain unverified/need explicit accepted contract; no weakened consumers or invented auth_revision.",
     "Team B apps/Web/Auth ownership acknowledged; use cloud/cake-id-auth actual maintained protocol, no fabricated issuer/client/redirect/token defaults. New local210 evidence does not provide staging identity or full .NET/browser integration.",
     "Fresh canonical revision adds only Study App future-pass text atline10002; record unresolved scoped coverage. Full semantic denominator still incomplete.",
-    "Team B: root/C1/C2 independent source reviews found three P2 issues above, all existing16/7/21 tests pass so add regression controls proving failures before repair. apps/Web source held pending exact owning fixes/reviews; no root/B competing edits.",
     "Team A: Hosted issuer/.NET contract review at142ea1c documents five real incompatibilities: RFC8707 resource missing from authorization+exchange; profile/session JSON wrappers mismatch; RSA-only JWKS reader vs defaultEdDSA; genuineauth_revision producer/lifecycle unagreed (sid not substitute); approved exactHTTPS local fixture/staging absent. Acknowledge bounded consumer resource+envelope fixes and shared signing/revision contract. No consumer weakening/private authority permitted.",
     "Root exacta44ca3a final local service checks Sites39/39,billing12/12,auth222 pass; original auth logstartup failure retained and samehead retry uses supported config/log paths. Docs-only descendants preserve runtime/test hashes.",
-    "Unaccepted isolated merge rehearsal tree674bd79202e3ce531ad0601d94b479353c6f813a with incominga63 and reviewed hosted overlays independently passes normalcore386/386 and normalSites66/66; tree unchangedbeforeafter. Source incorporation pending review; do not relabel as accepted commit."
+    "Unaccepted isolated merge rehearsal tree674bd79202e3ce531ad0601d94b479353c6f813a with incominga63 and reviewed hosted overlays independently passes normalcore386/386 and normalSites66/66; tree unchangedbeforeafter. Source incorporation pending review; do not relabel as accepted commit.",
+    "Team B fixed source830f747 on team-b/astra-browser-validation-20261003 independently reviewed by C1/C2/root: prior3P2 CLOSED,22route/28account PASS, originalaccountprobes unchanged exceptimportpath confirmcapturedfields andstale-revisionrejection. Source-fix review ACK only; preserve actualbuiltbrowser/publish/provider/fullacceptance gates. Root does not copy private sharedruntime replacements or claimfullbrowser pass.",
+    "Team A1: B current830f747 atopprovisionala63 uses existing CuiNativeHost.InitialisePrimitiveTheme/ConfigureFonts absent98a/rootrelease. Please ACK Runtime/Home browser owningseam and currentA sharedsource integration. Root retainsBsourceheld for dependency reconciliation; no competingedits. ExistingC2/C5/sharedissuercontract requests remainpending."
   ],
-  "testStatus": "Exact a44ca3a local actual-source subset Sites39,billing12,auth222 PASS plus type/schema/UI. Incoming a63 normalcore386 PASS; isolated rehearsal normalcore386/Sites66 PASS. Original98a compile/fallback failures historical ONLY. IndependentBvalidator32 PASS; Browser app/account source held on three reproduced P2 findings despite existing16/7/21 checks passing. No deployed/full-release acceptance.",
-  "evidenceLocation": "docs/releases/sol-happy-20261003 in exact remote release branch;19 raw artifacts versioned and hash-verified",
+  "testStatus": "Exact a44ca3a local actual-source subset Sites39,billing12,auth222 PASS plus type/schema/UI. Incoming a63 normalcore386 PASS; isolated rehearsal normalcore386/Sites66 PASS. Original98a compile/fallback failures historical ONLY. IndependentBvalidator32 PASS. Three historicalB P2 findings CLOSED at incoming830f747; independent22route/28account PASS and unchanged originalaccountprobes confirm fixes. B source not incorporated, actualpublished/mountedbrowser/provider/finalrelease acceptance pending.",
+  "evidenceLocation": "docs/releases/sol-happy-20261003 in exact remote release branch;19 original final artifacts unchanged/hash-verified, six additional independent browser-fix artifacts tracked/hash-verified",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "67e14195595df827bc8d71743be823a5c7e4f0f6",
+  "candidateCommit": "0a8d247be0fc91a0543f664375d9092da815938b",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -111,18 +112,21 @@
   "cloudflareSetup": {
     "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
     "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
-    "state": "PRIVATE_PLUGIN_SAVED_BACKEND_READBACK_VERIFIED; host reports installed; no Cloudflare tools exposed or OAuth/account access verified in this session",
+    "state": "PRIVATE_PLUGIN_SAVED_BACKEND_READBACK_VERIFIED; host reports installed; subsequent marketplace selection still exposes noCloudflare tools/skills; OAuth/account access UNVERIFIED",
     "sourceGuide": "https://developers.cloudflare.com/agent-setup/prompt.md",
     "skills": 16,
     "mcpServers": 5,
-    "resourcesProvisioned": false
+    "resourcesProvisioned": false,
+    "userSelectedReference": "cloudflare@openai-curated-remote",
+    "equivalenceToPrivatePlugin": "UNESTABLISHED",
+    "currentEnvironment": "observedrev6 enforced/current; no capabilities,secrets,outboundidentities; noCloudflare endpointallowances"
   },
   "browserSourceReview": {
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586": "Reviewed all603 lines by root/C3;32/32 independent unit PASS. Bounded evidence-integrity tooling approved for preparatory integration only; no semantic/runtime truth proof.",
-    "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
-    "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
+    "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
+    "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-03T18:07:49.980436+00:00",
+  "updatedUTC": "2026-10-03T18:27:16.616532+00:00",
   "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -141,5 +145,19 @@
     "scopedRecords": 228,
     "VERIFIED": 0,
     "warning": "Scoped hosted records overlap inherited criteria; not global denominator. Full8344source-clause decomposition/A-B-C/platform reconciliation incomplete."
+  },
+  "browserFixReview": {
+    "sourceBranch": "team-b/astra-browser-validation-20261003",
+    "sourceHead": "830f747b70df07797c586f6124890fa5028452b2",
+    "parentDependency": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "status": "THREE_PRIOR_P2_CLOSED_IN_INCOMING_SOURCE; NOT_INCORPORATED_IN_RELEASE",
+    "fixCommits": [
+      "f38ffac525e555921d580776086ceb37182ec681",
+      "d4c18169ac52fee2bd0ad47e39da8de7a2a001a0"
+    ],
+    "independentTests": "route22/22;account28/28;originalaccountprobesconfirmimmutableinput+unchangedrevisionrejection;all0exit",
+    "evidence": "docs/releases/sol-happy-20261003/browser-review-update/manifest.json",
+    "packagingReview": "C6ack027029df13800dd45cda8c1d2b4a20e6d2c2a5c5; sixartifact hashesmatch,original19unchanged,four sourcehashesmatch; originalbasenamealiases added",
+    "pending": "A shared current-source integration/ACK, emittedWASM/ABI and actualmountedbrowser/provider/fullproductacceptance"
   }
 }

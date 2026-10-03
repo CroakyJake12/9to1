@@ -44,8 +44,8 @@
     "SH-13 commercial, architecture, browser isolation and operational decisions OPEN",
     "Jacob local delivery destination/tooling unverified",
     "Team A/B current source reconciliation, shared patch acknowledgement and exact final integrated acceptance pending",
-    "Three reproduced browser P2 findings await owning B fixes; .NET issuer resource/envelope/signing/authentication-revision/HTTPS compatibility await A/C contract acknowledgements",
-    "All deployed SH12 journeys NOT-RUN; exact full mandatory/native/donor/platform/product acceptance and global semantic denominator incomplete"
+    "All deployed SH12 journeys NOT-RUN; exact full mandatory/native/donor/platform/product acceptance and global semantic denominator incomplete",
+    "Browser prior3P2 sourcefixes independentlyverified at incoming830f747; incorporation awaits provisionalA sharedsource review/ACK and finalpublished/mountedbrowser/provideracceptance. .NET issuer resource/envelope/signing/authentication-revision/HTTPS contracts remainpending."
   ],
   "specification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -61,6 +61,10 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "67e14195595df827bc8d71743be823a5c7e4f0f6",
-  "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3"
+  "candidateHead": "0a8d247be0fc91a0543f664375d9092da815938b",
+  "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
+  "browserFixReview": {
+    "head": "830f747b70df07797c586f6124890fa5028452b2",
+    "review": "3priorP2CLOSED; independentroute22/account28PASS; source/runtime acceptancepending"
+  }
 }
