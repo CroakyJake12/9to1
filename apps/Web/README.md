@@ -97,8 +97,10 @@ identifiers. Private-context reset removes the presentation while retaining that
 local owner session. Full shell disposal removes both private and local owners.
 Account Settings uses the maintained account client protocol with an explicitly
 unconfigured service module until an owner supplies reviewed authentication.
-Write, Files, Sites and Picture are being integrated in subsequent bounded
-changes; their full specification requirements remain outstanding.
+Write is now composed for actual browser validation. Files and Sites adapters
+are committed but require maintained provider/HTTP activation; Picture, Present
+and Forms remain separate unregistered proposals. Their full specification
+requirements and all applicable platform journeys remain outstanding.
 
 The native action availability observer applies a disposable value restriction
 through Avalonia's public property API. Removing that restriction restores the
@@ -164,7 +166,7 @@ NUGET_PACKAGES=/workspace/team-b-evidence/sol-happy-20261003/b1/tooling/nuget \
 # Actual retained Haven virtual-peer membership, distinct from Write editor acceptance:
 /workspace/.tools/dotnet/dotnet run --project apps/Web/Tests/BrowserVirtualAccessibility.Tests.csproj -c Release
 
-# Actual CUI dashboard layout; preserve failure until the owning Home source is fixed:
+# Actual owner-approved CUI dashboard layout, distinct from browser verification:
 /workspace/.tools/dotnet/dotnet run --project apps/Web/Tests/HomeLayout.Tests.csproj -c Release -- '9to1 Workspace/Home/UI/Home.cui'
 
 B1_BROWSER_EVIDENCE=/workspace/team-b-evidence/sol-happy-20261003/b1/browser \
