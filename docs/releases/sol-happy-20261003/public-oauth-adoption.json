@@ -283,5 +283,7 @@
       "bytes": 551,
       "sha256": "caea6e6bd05485f623ac1a107a8ae3976e5b249070f2301187f3a82702dbaeb2"
     }
-  ]
+  ],
+  "adoptedCommit": "56fcaa4248a99c594e66ec267426ba42ffcd3d90",
+  "rawWhitespacePreservation": "Exact raw/original-to-adapted.diff has a path-specific trailing-space attribute; original bytes are unchanged."
 }

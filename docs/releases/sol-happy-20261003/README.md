@@ -28,9 +28,11 @@ delivery to Jacob's PC. The combined accepted-head pointer remains null.
 
 Service runtime/test/package/schema source was tested at
 `a44ca3a10a538afd0715f3ad3dcd8d83931c2f70`, tree
-`c1e9df46618f14985aff5f222706b448a34c65da`. Later changes add documentation,
-evidence and the separately tested evidence validator; recorded service source
-bytes remain unchanged. Old results are not relabelled as final release acceptance.
+`c1e9df46618f14985aff5f222706b448a34c65da`. Later documentation and validator additions preserved those service bytes through
+`5073c83a`. The reviewed public OAuth fix subsequently changes only the existing
+auth `src/index.ts`; package, schema, provider/session implementation and original
+maintained assertions remain unchanged. Historical results retain their original
+source, with fresh actual-source identity results recorded separately below.
 Commands, identities, raw output, TRX results and SHA-256 hashes are retained in
 [final/summary.json](final/summary.json) and [final/manifest.json](final/manifest.json).
 
@@ -206,10 +208,15 @@ the new tooling guard incorrectly required beneath a configuration-specific
 intermediate directory. Its actual project declares generated files under the
 same isolated per-project base directory. Web and Release remain NOT_RUN; a
 path-provenance correction passed ten independent controls with all 2,480
-outputs unchanged. The next complete receiving map at `4472a4fd` is verified,
-but root has issued no execution pin: fresh owner review identifies two
-exception-preservation/acquisition-cleanup issues in the subreaper helper and
-its controls. Those are being corrected in isolation. No empty-input exemption,
+outputs unchanged. The historical receiving map at `4472a4fd` was held without execution after
+owner review found exception-preservation and fixture-cleanup defects. The
+corrected isolated successor `4e64e357` preserves primary and cleanup exceptions,
+including a failed final disappearance proof. C5 independently passes all 14
+actual Linux controls. Root and C1 verify the fresh `9b29cae7` complete receiving
+cut, all original/proposal mappings, dependencies and unchanged product inventory.
+Root issued its external pin for the complete original SDK6 attempt; execution
+is in progress. This grants isolated validation, with no global shared-source
+adoption or new owner acknowledgement inferred. No empty-input exemption,
 invented source or source-hash waiver was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
 and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 
@@ -277,10 +284,17 @@ independently repeats the expected failing source-linked control; there is no
 cross-account disclosure or live-provider claim. The 33 Node controls separately
 pass. B owns the exception-safe cleanup correction and configured browser
 composition: the published source supplies no account client or sign-in callback.
-Actual maintained public discovery/JWKS responses also lack required CORS for
-the HTTPS fixture client; C2 is testing a path-specific backend correction with
-unchanged provider login-cookie/CSRF and token/session checks. These are concrete
-local owner seams, with no inference that staging prevents independent work.
+The maintained public OAuth CORS correction is now adopted as exact reviewed
+source in `56fcaa42`. Only discovery, JWKS and token paths grant configured
+public CORS; provider login-cookie/CSRF and token/session checks remain unchanged.
+An exact issuer-origin exemption preserves legitimate same-origin token requests.
+Actual Workerd/D1 passes 117 public-path, 27 issuer-origin and 222 unchanged
+maintained identity assertions through the reviewed custody adapter. C1 repeats
+the 27 issuer-origin assertions independently. Strict kernel cleanup succeeds;
+original failures and source/argv variance are retained in the
+[public handoff](../../../handoff/team-c/public-client-cors/README.md) and
+[adoption receipt](public-oauth-adoption.json). These controlled Node transport
+checks do not close B-owned configured browser journeys or deployed acceptance.
 
 The reusable maintained Worker fixture is now source-bound at
 `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d` on
@@ -298,11 +312,22 @@ The requested [original custody followup](c6/custody-followup/README.md)
 verifies Graph02, Forms12, Home14 part05 and Canvas11 part00. Root repeated all
 four outer/member CRC/SHA checks with zero errors. Graph02's original Desktop
 build fails before discovery on `Assert.Throws(Func<Task>)` (CS0619/xUnit2014).
-Forms12 records eight managed TRX results but lacks the native runtime failure
-receipt, so that native cause remains unresolved. Home14 retains a missing settled
+The later Forms12 followup identifies a native restore-graph guard refusal: only
+three recorded metadata fields change under Sites. Exact before/after metadata
+payloads are absent, so their content and the precise writer remain unresolved. Home14 retains a missing settled
 callback marker despite drained records. Canvas parts00/01 reconstruct all 295
 indexed files and preserve all five failures. These are historical byte custody
 and causal observations; no payload was executed or native acceptance inferred.
+
+The newer [SDK04/Linux19 original custody](c6/sdk04-linux19-custody/README.md)
+verifies nine original archives/indexes, 976 pieces and 1,082 reconstructed files;
+root independently replays all hashes with zero errors and executes no payload.
+SDK04 joint fails compilation before tests, with all 98 recorded joint drains
+true; its separate owning profile retains a false drain. Linux19 root records
+20 passes and 12 socket-cancellation failures, alongside original Home 340/340
+and OS 199/199. Direct-child observations do not prove signed/UID-dropped native
+or installed acceptance. These original failures and qualified causes remain
+visible, with no guard reset or acceptance waiver.
 
 ## Specification and remaining gates
 
