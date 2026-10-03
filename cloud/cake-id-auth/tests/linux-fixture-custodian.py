@@ -5,7 +5,6 @@ import json
 import os
 import select
 import signal
-import subprocess
 import sys
 import time
 
@@ -163,9 +162,11 @@ def main():
         stopping = True
     signal.signal(signal.SIGINT, stop)
     signal.signal(signal.SIGTERM, stop)
-    child = subprocess.Popen(sys.argv[1:], start_new_session=True, stdin=subprocess.DEVNULL)
+    # posix_spawn has no Popen destructor/poll path that could wait on a reused numeric PID.
+    child_pid = os.posix_spawn(sys.argv[1], sys.argv[1:], os.environ, setsid=True,
+                               file_actions=[(os.POSIX_SPAWN_OPEN, 0, '/dev/null', os.O_RDONLY, 0)])
     custody.observe()
-    if child.pid not in custody.records:
+    if child_pid not in custody.records:
         raise RuntimeError('Original creator child not captured; fixture held')
     while not stopping:
         custody.observe()
@@ -177,8 +178,6 @@ def main():
                 raise RuntimeError('Unknown custody command; fixture held')
     receipt = custody.drain()
     os.write(3, (json.dumps(receipt) + '\n').encode())
-    # P_PIDFD already reaped the Popen child; do not poll/wait it by reused PID.
-    child.returncode = 0
 
 
 if __name__ == '__main__':
