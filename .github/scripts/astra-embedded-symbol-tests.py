@@ -1,5 +1,5 @@
 """Actual retained SDK producer symbol controls; no product suite acceptance."""
-import hashlib,importlib.util,os,pathlib,struct,unittest
+import tempfile,hashlib,importlib.util,os,pathlib,struct,unittest
 ROOT=pathlib.Path(__file__).resolve().parents[2]
 spec=importlib.util.spec_from_file_location('actual_pdb',ROOT/'.github/scripts/astra-home-portable-pdb.py');pdb=importlib.util.module_from_spec(spec);spec.loader.exec_module(pdb)
 RECEIVING=pathlib.Path(os.environ['ASTRA_SYMBOL_RECEIVING_ROOT']).resolve()
@@ -45,4 +45,29 @@ class ActualSymbols(unittest.TestCase):
   with self.assertRaises(ValueError):pdb.actual_symbols(self.altered(self.proof['origin']['debugRecordOffset']+8,b'\xff\xff\xff\xff'))
  def test_truncated_pe_refused(self):
   with self.assertRaises(ValueError):pdb.actual_symbols(self.dll[:64])
+class RetainedSymbolBounds(unittest.TestCase):
+ def test_fresh_and_identical_retention(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   path=pathlib.Path(tmp)/'symbols.portable-pdb';pdb.retain_actual_symbols(path,b'actual',lambda:0,6)
+   pdb.retain_actual_symbols(path,b'actual',lambda:6,6);self.assertEqual(path.read_bytes(),b'actual')
+ def test_changed_existing_refused(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   path=pathlib.Path(tmp)/'symbols.portable-pdb';path.write_bytes(b'original')
+   with self.assertRaises(RuntimeError):pdb.retain_actual_symbols(path,b'different',lambda:8,100)
+   self.assertEqual(path.read_bytes(),b'original')
+ def test_symlink_refused(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   original=pathlib.Path(tmp)/'original';original.write_bytes(b'original');path=pathlib.Path(tmp)/'symbols.portable-pdb';path.symlink_to(original)
+   with self.assertRaises(RuntimeError):pdb.retain_actual_symbols(path,b'changed',lambda:8,100)
+   self.assertEqual(original.read_bytes(),b'original')
+ def test_ancestor_symlink_refused(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   root=pathlib.Path(tmp);(root/'actual').mkdir();(root/'link').symlink_to(root/'actual',target_is_directory=True)
+   with self.assertRaises(RuntimeError):pdb.retain_actual_symbols(root/'link'/'symbols.portable-pdb',b'actual',lambda:0,100)
+   self.assertFalse((root/'actual'/'symbols.portable-pdb').exists())
+ def test_budget_refused_before_creation(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   path=pathlib.Path(tmp)/'symbols.portable-pdb'
+   with self.assertRaises(RuntimeError):pdb.retain_actual_symbols(path,b'actual',lambda:95,100)
+   self.assertFalse(path.exists())
 if __name__=='__main__':unittest.main(verbosity=2)

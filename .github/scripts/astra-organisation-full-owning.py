@@ -262,7 +262,7 @@ def main():
             phase = configuration.lower()
             managed = root / 'artifacts/root14-managed-build'; host = root / 'artifacts/root14-host-build-tasks'
             common = ['-m:1', '-nr:false', '-p:UseSharedCompilation=false', '-p:AvsSkipBuildingLegacyTargetFrameworks=True',
-                      '-p:EnableWindowsTargeting=true', '-p:Configuration=' + configuration]
+                      '-p:EnableWindowsTargeting=true', '-p:EmitCompilerGeneratedFiles=true', '-p:Configuration=' + configuration]
             output_props = ['-p:UseArtifactsOutput=true', '-p:ArtifactsPath=' + str(managed), '-p:IncludeProjectNameInArtifactsPaths=true']
             managed_props = [*common, *output_props, '-p:RuntimeIdentifier=linux-x64', '-p:RuntimeIdentifiers=linux-x64', '-p:SelfContained=false']
             host_props = [*common, '-p:TargetFramework=netstandard2.0', '-p:UseArtifactsOutput=true',
@@ -275,7 +275,7 @@ def main():
             command(phase + '-build-source-tasks', ['dotnet', 'build', TASK_PROJECT, '--no-restore', '--disable-build-servers', *host_props])
             def query(project, props, label, items=False):
                 argv = ['dotnet', 'msbuild', project, '-nologo', *props,
-                    '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation']
+                    '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation,EmitCompilerGeneratedFiles,IntermediateOutputPath,CompilerGeneratedFilesOutputPath']
                 if items: argv.append('-getItem:Compile')
                 return json.loads(command(phase + '-evaluate-' + label, argv))
             task_evaluated = query(TASK_PROJECT, host_props, 'source-tasks', True)
@@ -297,6 +297,7 @@ def main():
                 if capture_output is not True or text is not True or argv[:2] != ['dotnet', 'msbuild'] or argv.count('-p:Configuration=Release') != 1:
                     raise RuntimeError('Unexpected unchanged restore metadata API')
                 actual = [('-p:Configuration=' + configuration) if value == '-p:Configuration=Release' else value for value in argv]
+                actual.insert(-1, '-p:EmitCompilerGeneratedFiles=true')
                 query_number += 1
                 stdout = command(phase + '-restore-metadata-' + str(query_number), actual)
                 evaluated = json.loads(stdout)['Properties']
@@ -334,6 +335,10 @@ def main():
                         raise RuntimeError('Actual compiled project/configuration mismatch')
                     if P(values['AvaloniaBuildTasksLocation']).resolve() != task_target:
                         raise RuntimeError('Actual original consumer build-task location differs')
+                    intermediate = P(values['IntermediateOutputPath']).resolve()
+                    generated = P(values['CompilerGeneratedFilesOutputPath']).resolve()
+                    if values['EmitCompilerGeneratedFiles'] != 'true' or not intermediate.is_relative_to(root) or not generated.is_relative_to(intermediate):
+                        raise RuntimeError('Actual original compiler-generated output context invalid')
                     target = P(values['TargetPath']).resolve(); external = target.with_suffix('.pdb')
                     if not target.is_relative_to(root) or target.is_symlink() or not target.is_file() or external.is_symlink():
                         raise RuntimeError('Complete actual first-party physical PE/symbol input invalid: ' + project)
@@ -343,10 +348,7 @@ def main():
                         pair.append(external)
                     else:
                         extracted = out / phase / 'embedded-symbols' / (digest(target) + '.portable-pdb')
-                        extracted.parent.mkdir(parents=True, exist_ok=True)
-                        if extracted.exists() and extracted.read_bytes() != symbols:
-                            raise RuntimeError('Retained actual embedded symbols changed')
-                        extracted.write_bytes(symbols)
+                        pdb.retain_actual_symbols(extracted, symbols, budget, MAX_EVIDENCE)
                         symbol_proof['retainedExtractedSymbols'] = str(extracted.relative_to(out))
                     identity = symbol_proof['identity']
                     documents = pdb.pdb_documents(symbols)

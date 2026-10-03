@@ -98,3 +98,20 @@ def actual_symbols(dll, external_pdb=None, maximum=16*1024*1024):
   symbols=external_pdb;kind='external-portable-pdb';origin={'physicalPeSha256':hashlib.sha256(dll).hexdigest()}
  identity=assert_actual_pair(dll,symbols)
  return symbols,{'kind':kind,'origin':origin,'bytes':len(symbols),'sha256':hashlib.sha256(symbols).hexdigest(),'identity':identity}
+
+def retain_actual_symbols(path, symbols, budget, maximum_evidence):
+ """Retain explicit extracted bytes under the owning driver's existing budget."""
+ import os,stat
+ if path.is_symlink():raise RuntimeError('Extracted symbol symlink refused')
+ total=budget()
+ for parent in path.parents:
+  if parent.is_symlink():raise RuntimeError('Extracted symbol ancestor symlink refused')
+ if path.exists():
+  if not stat.S_ISREG(path.stat().st_mode) or path.read_bytes()!=symbols:
+   raise RuntimeError('Retained actual embedded symbols changed/nonregular')
+  return
+ if total+len(symbols)>maximum_evidence:raise RuntimeError('Original extracted symbol evidence budget refused')
+ path.parent.mkdir(parents=True,exist_ok=True)
+ with path.open('xb') as handle:
+  handle.write(symbols);handle.flush();os.fsync(handle.fileno())
+ if path.read_bytes()!=symbols:raise RuntimeError('Retained actual embedded symbols differ')
