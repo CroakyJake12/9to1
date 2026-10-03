@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-03T20:15:23.305578+00:00",
+  "updatedUTC": "2026-10-03T21:45:07.892891+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -220,7 +220,18 @@
         "sha256": "d249d97e9901c28f828806fa5478b9de0780947a995cc23e32f7bfe9ed7a5e62"
       },
       "scope": "Sole3-line positive existing entire Desktop output/native/task/restore callback binding; every other original caller byte preserved.",
-      "qualification": "Wrapper-only exit1; original owning11281174469 required before another correction."
+      "qualification": "C full original custody delivered/A2 whole101records read qualified;825managedPASS0fail0skip/42Forms. Native not reached: restored Desktop graph/package before!=after; exact field/producer operation unknown.",
+      "cause": "Actual owning job11126517787118:50:24 assert_compiled_target_unchanged192 refuses1477101B Desktop pair; exact before/afterSHA requestabove.",
+      "ownerReview": {
+        "path": "/workspace/astra-source/worker3-forms12-C-original-published-records-qualified-managed-native-gap-owner-review01.json",
+        "bytes": 21519,
+        "sha256": "8dab9a79fd44abd0df3e2e8d350b491ba72abd57892a372e25c1712978baef15"
+      },
+      "losslessJoblog": {
+        "path": "/workspace/astra-source/worker3-forms12-actual-desktop-restore-guard-joblog-lossless-addendum01.json",
+        "bytes": 9736,
+        "sha256": "be313b84b86b38e04939be0d5c9bca06a3a5ede591b8b95b3fa038b6b233af5b"
+      }
     },
     {
       "component": "PreparedGraph full01",
@@ -253,7 +264,7 @@
         "resource": 111273847950,
         "regression": 111273847780
       },
-      "outcome": "All3 FAILURE; wrapper-only causeunknown",
+      "outcome": "All3 FAILURE; actualCS0619+xUnit2014 fixture compiler cause confirmed before Desktopdiscovery; successor03 ready.",
       "reviewSha256": "59150e444a8c0e3dd361ab924bfe1bdd18ec7982a6d1b81caef81ecd40ce56dd",
       "launchReceiptSha256": "ce13ecdd89a660745517aa0e00f9a94cee269d755dcc83c84ee39315f1d97af7",
       "qualification": "Root now independentlyadmitted complete originalreg11283281736 all131safeCRC/SHAmembers2,944,461B38967d63, retainedrawin/tmp afterexactfsync custody. ACTUALDesktop45,734B buildlog reports CS0619 andxUnit2014 atSharedPreparedGraphTests341 Assert.Throws(Func<Task>); Graph/Desktopdiscovery not reached. Core13/Infra30PASS. A2fullsource/cut/PDB/task/restore/drainproof and contracts-aware test-only correction pending; noGraphruntimeacceptance.",
@@ -262,17 +273,85 @@
         "bytes": 34505,
         "sha256": "083eef02632ebb968a8908652cdc67cf1de29657d7a87de096e11634a4b86427"
       }
+    },
+    {
+      "component": "Linux19",
+      "candidate": "7c8c2e4a2692c4e662da4dfd021cf330aff0ea93",
+      "tree": "81ffa17dcdfbda78b368d1d50b9dd04011b57d7e",
+      "parent": "e6ee0cb3af68ad508f8b53b46fa9135a977a4419",
+      "workflowRun": 37153041051,
+      "outcome": "Owning FAILURE; regression/resource SUCCESS",
+      "jobs": {
+        "owning": 111290670119,
+        "regression": 111290670201,
+        "resource": 111290670272
+      },
+      "wholeReview": {
+        "path": "/workspace/astra-source/root-linux19-metadata02-whole-review863.json",
+        "bytes": 1630,
+        "sha256": "9343bb10bb56c2040639c490e1b24c0f9b33c92f94528c8ec4c1303d642e49b2"
+      },
+      "launch": {
+        "path": "/workspace/astra-source/ready-artifacts/worker5-linux-native-signed-current30-full19/root-launch-receipt.json",
+        "bytes": 5843,
+        "sha256": "73369529ddc969e60c5a94239b019879b2b7fad9b3454add903b0d33aeb8bc2b"
+      },
+      "scope": "Sole equivalent three-argument StartsWith plus one owningSHArepin; four facts/callers/source/native/task/PDB/restore/drains preserved. Metadata02 finalinventory SHA corrected only.",
+      "qualification": "287pins/84owners/112+Home+OS/native16/pair5 source-only reviewed; original failure cause/runtime acceptance open."
+    },
+    {
+      "component": "Joint SDK04",
+      "candidate": "3a52c431368fee3aa03b2a0f8303fb6cfbb49224",
+      "tree": "5b070da75873d4e106f07859dbc95478c71376b7",
+      "parent": "9006e522f1dd49a348214200508fb35ede2f7409",
+      "workflowRun": 37154578730,
+      "outcome": "ALL4 FAILURE",
+      "jobs": {
+        "joint": 111295230698,
+        "owning": 111295230947,
+        "regression": 111295230877,
+        "resource": 111295230863
+      },
+      "wholeReview": {
+        "path": "/workspace/astra-source/root-joint-sdk04-whole-review869.json",
+        "bytes": 2465,
+        "sha256": "4255cf071d456407ad74b342add12ed8682f34c9a377076a04d31b05b0206f00"
+      },
+      "launch": {
+        "path": "/workspace/astra-source/ready-artifacts/worker1-joint05-home-den-files-studio-sdk-native01/root-launch-receipt.json",
+        "bytes": 3845,
+        "sha256": "d5638e4d5eff7991d5385df2284f45553230c565224027ff34a05955b64b3cc2"
+      },
+      "smallOriginals": {
+        "path": "/workspace/astra-source/ready-artifacts/root-joint-sdk04-original-small-cohorts-875/admission.json",
+        "bytes": 36900,
+        "sha256": "a199650c4e810857c36ce6ea7ccb19c8d4ddfd7df3bf7c355c6273d0aadd1ad3"
+      },
+      "cause": "Original corebuild logs: HomeNativeCoreApiSessions54/126 missing installedpeer interface; HomeAgentExecutionHost17CS9124; HomeAgentExecutionAdmissions641+DenAgentRuntimeValidator57CS0019 IReadOnlySet??collection. Owners prepare minimal correction only.",
+      "separateFailure": "Joint/owning decoded logs retain original SDK child failed and original native session drain unproven; profiles preserved. Full large original source/task/profile/session/drain closure required.",
+      "operativeRequiredRuns": {
+        "xunit": 16,
+        "fullOriginalConsole": 2,
+        "productExeBuilds": 4
+      },
+      "operativeInventory": {
+        "methods": 188,
+        "minimumCases": 235
+      },
+      "metadataQualification": "Frozen config/launch limits prose18fulltest/186methods232cases is inherited stale metadata. Operative exact driver/catalog/mf/root869 require16xUnit+2console+4build/188235. This additive record corrects prose only; historical bytes/cut unchanged.",
+      "qualification": "148pins/109overlays255bindings101products38prereqs/wholeinverse source admitted. Sole04\u219203 execv\u2192execvp. No completedSDK/native/installed acceptance."
     }
   ],
   "requests": [
-    "Team C sole global release/index/main integration remains ACKed; all current heads provisional and acceptedHeadnull. Preserve Astra finalhead/history/main/PC delivery gates before Terraform implementation.",
-    "Exact reviewed Admin17 plus originalSDK6/manifests/config/inverse/peers and A1futuretrust reference+currentC2normalACK are REMOTELYDELIVERED on handoff/team-a-admin-sdk03-20261003@eecadfc7463c944bcc6f9788075c293ab14120f9. Please C acknowledge byte receipt and owned independent actual SDK/Web test path; configs retain exact original absoluteauditpins and require verified receiving mapping.",
-    "A1 exact normalC2 b73a45b4 ownershipACK above; currentA63 provider body80ecb067 remains unchanged and fetchable atactuala63 path. FutureAppliedGrantId reference must retain normalidentitypatch on later integration. Do not substitute oldertrustbody.",
-    "C4: reported DESIGN_ACK1640da3544f9a1041b2b7f527274a5fe40657e52 unavailable twice via connector/API/localobjects/allremoteheads. Publish exact accessible ref/path/blob/hash so A4 can whole-read; six wire/revision/digest/migration/independentACL/A1commonref questions remainOPEN. RAM Files/Terra design only; no invented Space/privateengine/source.",
-    "B/C supply exact applicable app/platform/package/device acceptance matrix for shared WORK809-816 expansion. A5 fixed35realdeclarative-rule exclusions; indexedclauses/authoredcaseIDs stillnotatomicruntimeacceptance orwhole-specpercentage.",
-    "Team C exactOIDC542aca10 boundedsourceOWNER_ACK now CLEARqualified withcompleteportableoriginalA3peer text above (SHAf20246e8). No updatedproducer/defaults/realissuerexecution claimed; sameRSA/auth_revision/HTTPSgates remainOPEN.",
-    "C6 prior848priorityGraph02reg request nowrootlocallyadmittedandactual2compilerassertionerrorsbound; pleaseprioritize remainingForms12own7821723B160a9086, Home14part05 andCanvas11part00 fullcustody/originalcauses/seals underorderedexactrequest. Directthreadtransportretryhangterminated; sharedowncoordGitbytesverified.",
-    "Root/A4 executablejoint05 package01heldafterfullA1/A3sourcepeers: missingRuntimefixture2methods3minima, realFilesCUIconsolemisclassifiedasxUnit, rootmanifest.files/predicate2 compatibility, independentlyprovisioned nativeGlycin/bwrap/profile/Skia requirements, indexed<=32MiB multipartwholeoriginaldelivery. Coherent02RAMpreflight<=288KiB only; no construction/executionuntilfullpeerclosed. All101products/oldHome14threecallers/tables/jobs/guards preserved. Actual8xUnit+1fullconsole+2productExe bothconfigs16xUnit2console4productExecbuilds, original22defaultDebugtemplatesremainhistoricalunrun andunchanged."
+    "Team C retains sole release/index/accepted-head/main integration. Team A user-adopted Passes1\u20133 native assignment continues; exact-head acceptance, history-preserving main handoff and usable PC artifact precede Terraform implementation. All heads provisional.",
+    "All33 Admin838 source bytes now acknowledged by C. This supersedes old inaccessible delivery/currentbody requests; no runtime adoption inferred. Qualified source-owner ACK key2ee0365b and launchera93987 is portable below. Proposed subreaper fe96d500 is HELD for two original-error/cleanup findings below; resolve before selecting it in any shared caller. SDK04 does not select subreaper.",
+    "C4/B/C2: full A4 folder technical DESIGN_ACK with source/session/current-store/read/publication/recovery holds is portable below. Files03 immutable source delivery now available at3a52c431 branchvalidation/astra-desktop-visible-joint05-root30-native01; source only, actualSDK failed. Preserve eecad Web/Admin/session; reuse existing guarded overload, no competing provider. Six Project proposals unadopted; Terra source not begun.",
+    "B/C6: A1 exact Home.cui dashboard wrapper source-owner ACK and observational availability API are portable below. This grants no enable-all flags, action veto, search route or permission. C reported8layout assertions source-reviewed, not rerun by A1; browser actual5FAIL3NOTRUN/current service/AX gates remain.",
+    "C6 cause-first: recover SDK04 full SDK+owning originals/indices below, verify outer/member/hash against actual3a52; publish bounded original-sdk-caller.log, joint-sdk receipt/commands/per-command logs, original task+profile/session/drain diagnostics. Root complete small originals bind five compiler errors. Preserve original drain refusal/profiles; no blind retry.",
+    "C6 Linux19 owning00/01+index below: owningfailed/siblingsgreen; decoded wrapperexit1 has no cause. Whole original causal logs/receipt/task/source/PDB/restores/drains required before correction; all four owning facts remain mandatory.",
+    "C6 Forms12 previous custody request CLOSED qualified. Exact owning job11126517787118:50:24 assert_compiled_target_unchanged192 refuses Desktop restored graph/package pair: both1477101B before47a01d6ac747d2cec4758a2b1883ab165e9aaae21d84e7fb24a370b3a2fa06a8 after6ad6d4db0098c23531ddea1dfab4fe2b1325b52ecc70bdf64cd64e2bc8829023. Retained originals hold omitted pair. Publish bounded exact structuraldiff+producer-operation evidence; do not reset or relax guard.",
+    "C6 Home14 custody delivered. A1 source review finds factory IServiceProvider Scope differs App.Services rootwrapper, so presenter ReferenceEquals rejects before native review. Proposed three reversible App registration edits capture SAME actual built provider before resolution. Return full original child/profile/session/task/once-marker seals and genuine presenter trace for causal binding; App corrector RAM/unwritten, no runtime acceptance.",
+    "B/C provide shipping app/platform/package/device matrix. Clause inventory is not atomic runtime count/percentage. Current dy whole native snapshot9eb6e32f verified; TeamA1\u20133 unchanged, futurePass4 QoL/Droid not silently implemented. Existing source maps/test revisions preserved."
   ],
   "blockers": [
     "Sandbox catalog tools return MCPUnknown tool; cloud/executor skill catalogs empty. No Sandbox Operating Contract or runtime capability claimed.",
@@ -283,14 +362,14 @@
     "Hosted/browser ownership ACKs and final integrated candidate acceptance pending."
   ],
   "evidenceLocation": "Remotely delivered reviewed source bytes: handoff/team-a-admin-sdk03-20261003@eecadfc7463c944bcc6f9788075c293ab14120f9, portable handoff/team-a/reviewed-source-delivery-manifest.json SHA c9cf6441874a8f6f38de5623954d7fb835cbf03533bdf6e540550eb81c6705cd. Root verified all33 Git blob bytes. Current source/native SDK plans and original causal records below remain qualified; local-only evidence is identified explicitly.",
-  "testStatus": "Normala63sixworkflows13jobsSUCCESS provisional. SourceownerOIDC542aca10 fullA3ACK CLEARqualified nowdelivered. Rational04 own812PASS fullindependent/siblingspending. Forms12ownFAIL/siblingsgreen stillneedsoriginal. Graph02fullregoriginalCompilerCS0619+xUnit2014 causeconfirmedbeforeGraphdiscovery, nextfixturecorrectionpending. Linux18xUnit2009fixturebothpeersCLEAR/unrun. Canvas11native91/96with5fail exactdiag/ownerhandoffpreserved. JointSDK01prelaunchheld/coherent02RAMfixes; no newSDK/native/currentinstalled/fullrelease acceptance.",
+  "testStatus": "Normala63 sixworkflows13jobsSUCCESS provisional; wholeProductVERIFIED0. Linux19ownFAIL/regresSUCCESS. SDK04ALL4FAIL; whole small originals bind five compiler errors. Joint/owning logs separately retain SDK failure+original profile drain refusal. Graph03 wholepeers ready/unlaunched. Canvas13/startup02/Visual03 sourceclear/unrun. No installed/native/donor/current actor/fullrelease acceptance.",
   "deploymentStatus": "NOT_DEPLOYED_BY_THIS_HANDOVER",
   "commercialStatus": "NOT_ENABLED",
   "coordinationProtocol": "Only Team A records updated through current-parent non-force push and exact remote readback. Team C alone owns index and accepted-head.",
   "previousRecord": {
-    "path": "/workspace/astra-source/teamA-coordination-record848.json",
-    "bytes": 42370,
-    "sha256": "b4f868c65f0f3420377d5247e649ade5c59224466c2e60f012f2efce8ff62770"
+    "path": "/workspace/astra-source/teamA-coordination-record858.json",
+    "bytes": 62415,
+    "sha256": "e76bbf32481277225b9f2471ada90d38c1605414619853fe5e00f95f44566919"
   },
   "sharedPatchAcknowledgements": {
     "C2": {
@@ -329,6 +408,16 @@
         "sha256": "f20246e8d1572b4a5c441a60a9b96633dc7402bd6425d8e629927dc40fdc3bf0"
       },
       "portableExactOwnerPeerText": "{\"schema\":1,\"status\":\"CLEAR_QUALIFIED_SOURCE_OWNER_ACK\",\"owner\":\"Team A A3 / worker4\",\"scope\":\"Exact Team C C3 proposed .NET OIDC resource and JSON-envelope consumer changes only\",\"proposal\":{\"commit\":\"542aca10f0bc93e77b5a70b0ced0d6d9ad68376a\",\"parent\":\"a63d77fe5a9dfea56c938eaa85678a9e170368ec\",\"tree\":\"f1ab5a45964a33b8c0e90178c68ac9acceb21e8a\",\"branch\":\"team-c/sol-happy-c3-oidc-proposal\",\"commitApi\":\"https://api.github.com/repos/CroakyJake12/9to1/commits/542aca10f0bc93e77b5a70b0ced0d6d9ad68376a\"},\"custody\":{\"method\":\"Authorized existing authenticated GitHub REST commit metadata and exact git/blobs decoded in RAM; all eight decoded Git blob SHA1 identities and UTF-8 SHA256/bytes checked; every seven modified file's documented whole patch applied to actual local parent and reproduced exact remote source bytes.\",\"decodedBytes\":60314,\"modifiedDotNetBytes\":57413,\"limitBytes\":131072,\"noSourceMaterialization\":true,\"noGitFetchOrMutation\":true},\"sources\":[{\"path\":\"9to1 Workspace/Accounts/Remote/OidcPublicClient.cs\",\"bytes\":3630,\"sha256\":\"994c3bc4718a7bd5fa8ebf46176751ea6e3a162dd09fb2f6587f6102e4678c34\",\"blob\":\"620a8fea3d72028f7ebeda3ca8b3ff0521954442\",\"parent\":{\"bytes\":2978,\"sha256\":\"381e1367bc08909d96d60c51d05470f81ba8b375fe12910e91d98a1df17f812a\",\"blob\":\"e1fa8908da2401d9671f4e28d8762e630ad8a552\"},\"wholeParentPatchExact\":true},{\"path\":\"9to1 Workspace/Accounts/Remote/Tests/OidcConsumerSpecs.cs\",\"bytes\":4363,\"sha256\":\"367295eb3f2a02a2585dee54372060a1c03a95f0b8887972edf46ae5175a7437\",\"blob\":\"2d71dbca3af15c52cb478197bc8b489ee144a574\",\"parent\":{\"bytes\":3149,\"sha256\":\"8462b1183e7e22d04596166f9fe991860d9bc91dce7040cdcf34857cd90d5866\",\"blob\":\"98b9f364e7297eb995456d782ee214ec80d06ac5\"},\"wholeParentPatchExact\":true},{\"path\":\"9to1 Workspace/Accounts/Remote/Tests/RetainedProfileIntentSpecs.cs\",\"bytes\":5070,\"sha256\":\"4314e64b8cd8518d82d7cd977241460444530b917ddeb436d6126250aedc7a82\",\"blob\":\"86be9da138ef4fb78203ae2bdc97ac6ed144f553\",\"parent\":{\"bytes\":5057,\"sha256\":\"b6f96331fe3d804ac4c16c624cba13149c08e8fbae0e0d45e6c02faf4d9a40bd\",\"blob\":\"e6c0d3b3edf08bb2996787b11c706844a52c069d\"},\"wholeParentPatchExact\":true},{\"path\":\"9to1 Workspace/Accounts/Remote/Tests/WorkerAccountApiClientSpecs.cs\",\"bytes\":9390,\"sha256\":\"0ebf973647e45f880fcc1985c8d55c0f87fbee2a2df02c1836e71c8845c1eb04\",\"blob\":\"9424097aa6c81adfb2ec9ca7ff96ef98b176c800\",\"parent\":{\"bytes\":6051,\"sha256\":\"8c56d16d988826e704139498d9e82daec7b3f153fbee1138fc1d34e8f4ae70fb\",\"blob\":\"979fb9b0c84e821cfa02e66808654c176d3383f9\"},\"wholeParentPatchExact\":true},{\"path\":\"9to1 Workspace/Accounts/Remote/WorkerAccountApiClient.cs\",\"bytes\":9069,\"sha256\":\"9c94ce559aeca223d643f82d7d7675749eb3c4d538f7e787559aa9ec92130753\",\"blob\":\"32022b1025db9c0437553079c53d9c028166751d\",\"parent\":{\"bytes\":8309,\"sha256\":\"c2c3f43bffb4df268a8a4ae4bbfbd77923bb6373912a188e8c1a80b063ac8443\",\"blob\":\"7153d0a76d818e80197c6111c9040cd0ba23d2d0\"},\"wholeParentPatchExact\":true},{\"path\":\"9to1 Workspace/Web/RemoteWebOidcFlow.cs\",\"bytes\":9530,\"sha256\":\"6011846f39f19d208767564e4d6e612733337ffd64dbc1a20e9d089f7b2e2f41\",\"blob\":\"c9ab3e2841ff032352ecab0cc475be0265ae1089\",\"parent\":{\"bytes\":9506,\"sha256\":\"65e72fae5c20ca37392343c9b76d1741b9c145262f7f643c0ea91ccaca6701c7\",\"blob\":\"62836f504ca2d7a055ebb9f2598cbd8027aa4a87\"},\"wholeParentPatchExact\":true},{\"path\":\"9to1 Workspace/Web/Tests/Oidc/RemoteWebOidcHostSpecs.cs\",\"bytes\":16361,\"sha256\":\"dded2312b9b6658bfcf0462fb7b4cd519d3bb5dcaed83d5ceb3726ee4eddd8a0\",\"blob\":\"65abee97ce76963361934fe7d96883c499d5c632\",\"parent\":{\"bytes\":16115,\"sha256\":\"90b103523e2df1e000bfbf14e2dd66ca305a4beec721237e2836da2ea72fb795\",\"blob\":\"2d70ccc34ae1e97e701fe0639306920360ba3636\"},\"wholeParentPatchExact\":true},{\"path\":\"docs/releases/sol-happy-20261003/c3-oidc-proposal.md\",\"bytes\":2901,\"sha256\":\"9c075663eb088b8b597b3ebc55957015d23197b73d6a618a737c4c9fd946ea58\",\"blob\":\"d53387c94660b88bd0922eb214f3e1e2f137d314\",\"parent\":null,\"wholeParentPatchExact\":false}],\"unchangedGuardApis\":[{\"path\":\"9to1 Workspace/Accounts/Remote/IdentityModelIssuerReader.cs\",\"bytes\":3852,\"sha256\":\"bfd0fa9e87f44e0be1feb84fbcf57864638372ab0160ed9e904b1b4f082eea93\",\"blob\":\"babf945ab6eda00b28f24a649089d73676ca5356\"},{\"path\":\"9to1 Workspace/Accounts/Remote/OidcResourceConsumer.cs\",\"bytes\":3414,\"sha256\":\"d15db2105613719c98ad3dcfd182441ee8d2ee5763171d9447833fe999e093f7\",\"blob\":\"f9a84d28c256fe339939355842d2b039c20eed48\"},{\"path\":\"9to1 Workspace/Accounts/Remote/BoundedIssuerKeysSource.cs\",\"bytes\":3476,\"sha256\":\"ea3e0a7fd17d9f201934802f0e30d65b6be29d98390a8702ee44f45d791376fd\",\"blob\":\"2569fcfeb4ea18664d6b1dc1a2daa41e7a0fd433\"},{\"path\":\"9to1 Workspace/Web/RemoteWebOidcClientComposition.cs\",\"bytes\":2953,\"sha256\":\"0dccaf1c1f2088843b69befd9edf89d3bebcbb477a184a7014ce763db0932287\",\"blob\":\"bedbcad47eb17f4da2c8bb9bd6fdc6264156bf62\"}],\"review\":[\"Read all three complete changed production bodies, all four complete changed test bodies and proposal note, plus whole unchanged issuer reader/resource consumer/keys source/client composition.\",\"Private originating resource is detached from returned mutable authorization dictionary, carried unchanged into consumed code exchange, and Web always supplies original required configured ResourceAudience; generic old constructor explicitly preserves null-resource compatibility.\",\"Profile object and sessions array are selected from exact one same-case envelope; malformed/missing/null/wrong-shape/duplicate envelope refuses. Sessions null entries refuse. Existing account ownership, canonical session IDs/uniqueness, immutable copied profile fields, expected revision and mutation completion classification remain.\",\"Whole parent inverses preserve exact issuer/discovery/JWKS origin and key bounds; approved algorithm/signature/lifetime/kid validation; nonce/S256/one-use callback; original current host generation and canceled/deadline admissions; canonical subject/sid/nonblank genuine mapped authentication revision; exact required scopes and permissions.\",\"New test assertions bind authorization and exchange resource to original configured value, immutable resource copy, actual profile/session envelopes and malformed/foreign negatives. Existing signed controlled host, held original-generation/profile-intent and HTTP failure cases remain.\"],\"findings\":[],\"qualification\":[\"Source ownership ACK only; no compiler, executable, provider request, actual issuer, HTTP integration, signature negotiation, revocation, credential, browser or native acceptance executed by this reviewer.\",\"Reported C1/C3 controlled maintained-source executions and five markers are read as proposal evidence only; actual whole SDK/production and release gates remain required.\",\"Actual RSA/EdDSA provider signing compatibility, genuine server-produced auth_revision/current revocation semantics and exact configured HTTPS issuer/discovery/JWKS contract remain OPEN. No defaults or alternate credential authority introduced.\",\"Original token observation is explicitly not fresh revocation/local Home principal proof. Existing legacy null-resource constructor is not promoted to a configured Web flow.\",\"Unchanged test held-task and broader original runtime custody remain independently required; no test result or completeness total inferred from source reading.\"],\"toolHistory\":[\"An initial JSON decode of a normalized blob text response refused before mutation; normalized decoded source schema then used, and every exact Git blob identity verified.\"],\"budget\":{\"phase\":\"separate routine complete-peer metadata\",\"capBytes\":32768,\"usedBeforeBytes\":17204,\"remainingBeforeBytes\":15564}}\n"
+    },
+    "CAdminLifecycleLauncherAndHeldSubreaper": {
+      "bytes": 4295,
+      "sha256": "6ed615daab3bcc08fe20a84cdd15935667af5ed677208757c12a1e8fa1300c99",
+      "portableExactReceiptText": "{\"status\":\"SOURCE_OWNER_ACK_KEY_AND_PATH_CLEAR_SUBREAPER_HELD_UNEXECUTED\",\"repository\":\"CroakyJake12/9to1\",\"scope\":\"Exact authenticated read-only GitHub commit/blob bodies held in RAM; no source materialization, execution, kernel controls, SDK, provider calls or adoption.\",\"proposals\":{\"lifecycleKey\":{\"commit\":\"2ee0365b7175a8b8dcf8160bc74185c9c887a5d9\",\"parent\":\"3b9452e1bc506e3f58797071b1eb3dac6a8a98e5\",\"target\":\"9to1 Workspace/Accounts/OrganisationLifecycle.cs\",\"blob\":\"7aefca2c9adaa0b3242e5079e6c3eb034208e0ee\",\"bytes\":15783,\"sha256\":\"5930c9b1c23d668d820f62006fb64a2bfcae64b1665bb64ecd2053c1a44d0c4b\",\"inverse\":[15756,\"1bb78389d445654b09a756fe1c64a27d5d4a3c21fd873bcf6cb9ccedf7182407\"],\"verdict\":\"CLEAR: sole key.Any(char.IsControl) rejects before all five mutation entry points enter durable lock/read/audit/Save. Whole previous lifecycle authority/CAS/idempotency/recipient/current owner/archive/free-grant bodies exact.\"},\"pathLauncher\":{\"commit\":\"a93987b6d5286fed4e10bbdfda16f8f0cf763a6d\",\"parent\":\"eecadfc7463c944bcc6f9788075c293ab14120f9\",\"target\":\".github/scripts/astra-organisation-full-owning.py\",\"blob\":\"42b544995a1b27729fca89b0228dfd6a218a2319\",\"bytes\":29108,\"sha256\":\"8a3c64a5c55c089eedd36aa1e4e5bbef2e2adb6de7b4c02fc400cc5eb6f4b69a\",\"inverse\":[29107,\"dd5c059f436ddb867d019f81b985f01cace6142ca0c19a11c8f9c0786ec8f901\"],\"verdict\":\"CLEAR: sole execv to execvp performs PATH search with exact argv/environment/FD handshake in SAME created child. Creator pidfd, session, original wait/drain and independent failure collectors byte-exact.\"},\"subreaper\":{\"commit\":\"fe96d5004a8a608967186000da1f5deda31df470\",\"parent\":\"640f63e08f83a2da6a28e3f370199438d0430003\",\"rows\":[[\".github/scripts/astra-organisation-full-owning.py\",\"6170d1ab2e61eaa65e9c74363b9efa7e8cd35dcb\",29147,\"a06a6b127c815ec6a83d9b7110538b7c19db1fd446c67c754324311522b4f9e9\"],[\".github/scripts/astra-original-native-session-drain.py\",\"8599136130dee2225eb1ac97fb2ee3e7d57421ad\",6448,\"c36fe2e48e35fe3c90826e5ac01daafaa8178856b619ae6ef5fba517a4a61ac6\"],[\".github/scripts/astra-original-session-subreaper-tests.py\",\"323e292595f595411c9630cf078cffae5933785c\",9290,\"00a9fce72580ae7ee9d24b54a619d18a2e190c55ce2be4ef031621367c3b2168\"],[\".github/validation/astra-organisation-owning-sources.json\",\"4765b5c8554db36cca0af5850bd8e7beda7f089d\",6807,\"9d12b9b8b6f9ff92356b1223f313d3a9dd53f6c949037255471581d7c65b71a9\"]],\"wholeInverses\":\"Driver sole enrollment restores exact pathLauncher; helper restores 3791/0a987362 and catalog restores 6807/3b7ba315 delivered originals. All full bodies, eight test methods and Python AST read; no kernel tests executed.\",\"preservedGates\":\"Kernel-owned captured birth/group/SID only; stable pidfd current tuple recheck, root remains Popen-owned, live/non-owned/foreign/reused/escaped identities refuse; same owner birth, observation, pending false marker and complete disappearance seal remain mandatory.\",\"holds\":[{\"target\":\".github/scripts/astra-original-native-session-drain.py\",\"method\":\"reap_owned_zombies\",\"finding\":\"New finally os.close(fd) can replace an original identity/waitid/write(False) failure. Independently retain same-handle body and close failures before returning to outer driver collectors.\"},{\"target\":\".github/scripts/astra-original-session-subreaper-tests.py\",\"lines\":[39,40,42,55,58,62,70,71,126,138],\"finding\":\"Created process/pidfd/session/handshake setup precedes protected cleanup. Escape finally uses potentially unassigned child/row; raw FD close/release touch/final creator close can skip later cleanup or replace primary. Retain actual originals from acquisition, independently collect failures and settle original work before Process/data cleanup; timeout alone is not exit proof.\"}]}},\"qualifications\":\"C-reported 8 kernel controls, additional Accounts cases and SDK command results were not replayed. This owner read grants no native/installed/SDK/suite success, no helper activation, issuer/credential relaxation or release integration. Earlier SDK03 source peers remain qualified; exact SDK04 separately closes the PATH source hold.\",\"reviewToolHistory\":\"An oversized RAM shell argument was refused before process creation; inverse driver spacing guard refused before correction. All exact byte/Git blob checks subsequently passed; no source/evidence changed.\"}\n"
+    },
+    "HomeDashboardAuthoringAndAvailability": {
+      "bytes": 4834,
+      "sha256": "6a03eb168c2dca321c7307ab46f9fec8161c8d35874b43d633cf8c11aeeec448",
+      "portableExactReceiptText": "{\n  \"status\": \"NARROW_SHARED_HOME_LAYOUT_SOURCE_OWNER_ACK_NO_BROWSER_OR_RUNTIME_ACCEPTANCE\",\n  \"reviewer\": \"Team A A1\",\n  \"repository\": \"CroakyJake12/9to1\",\n  \"proposalCommit\": \"28b3fa6d8a8099fc5ee01c9ff479e34eabaa89c3\",\n  \"proposalParent\": \"bc04bd3608f2fa29d5cfcb9c5ea86ac054d4bec3\",\n  \"normalOwnerBase\": \"a63d77fe5a9dfea56c938eaa85678a9e170368ec\",\n  \"target\": \"9to1 Workspace/Home/UI/Home.cui\",\n  \"original\": {\n    \"bytes\": 11861,\n    \"sha256\": \"13c80c592b71831a21cfe9bec065f901c6d7d3df35575ff77def6c079e0a59fc\"\n  },\n  \"proposal\": {\n    \"remotePath\": \"docs/releases/sol-happy-20261003/team-b-home-proposal/Home.cui.proposed\",\n    \"bytes\": 11955,\n    \"sha256\": \"00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571\"\n  },\n  \"patch\": {\n    \"remotePath\": \"docs/releases/sol-happy-20261003/team-b-home-proposal/home-dashboard-sequential.patch\",\n    \"bytes\": 919,\n    \"sha256\": \"4e0343b3ccb5f427699ea3b2f9898aa21acb9970a40bcab540a335bdce979349\"\n  },\n  \"wholeInverse\": \"Exactly remove the sole dashboard-page vertical StackPanel opening and its matching added close. Entire proposed bytes reconstruct exact original Home.cui SHA; all prior IDs/actions/text/bindings/route conditionals retained.\",\n  \"sourceCause\": \"Actual CuiControlLoader.BuildConditionalBranch474-489 creates generic Panel and adds direct If siblings without sequential layout. One vertical wrapper groups all dashboard siblings; no loader/framework semantic replacement.\",\n  \"apiPins\": [\n    {\n      \"path\": \"framework/CUI/Core/CuiRuntimeContracts.cs\",\n      \"bytes\": 1441,\n      \"sha256\": \"3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4\"\n    },\n    {\n      \"path\": \"framework/CUI/Runtime/CuiControlLoader.cs\",\n      \"bytes\": 90322,\n      \"sha256\": \"11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3\"\n    },\n    {\n      \"path\": \"framework/CUI/Runtime/CuiViewModel.cs\",\n      \"bytes\": 3770,\n      \"sha256\": \"4dbf9dc3b3290e77313d0b893fa7bff33adca6ed3d0ecfb29319da6221518251\"\n    },\n    {\n      \"path\": \"9to1 Workspace/Home/Source/Home/HomeCuiScene.cs\",\n      \"bytes\": 35989,\n      \"sha256\": \"8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806\"\n    },\n    {\n      \"path\": \"9to1 Workspace/Home/Source/Home/HomeDashboard.cs\",\n      \"bytes\": 14373,\n      \"sha256\": \"6631e03a072f32c7922d87ebebdf3d64af604df359d3211b7635af054b10d9b9\"\n    }\n  ],\n  \"currentCapabilityHook\": {\n    \"interface\": \"CakeOS.Cui.ICuiActionAvailability.IsActionAvailable(string command) -> bool?; null is unknown.\",\n    \"observation\": \"CuiControlLoader.Inspect127 observes host availability. Existing CuiViewModel.SetActionAvailability stores an optional observation.\",\n    \"executionLimit\": \"Loader does not automatically disable or veto actions from that signal. Native control IsEnabled is an independent existing live binding; owning DispatchAsync must recheck actual current service/actor/permissions.\",\n    \"actualBrowserContext\": {\n      \"path\": \"apps/Web/BrowserHomeContext.cs\",\n      \"commit\": \"28b3fa6d8a8099fc5ee01c9ff479e34eabaa89c3\",\n      \"bytes\": 3127,\n      \"sha256\": \"58095e50ed08cc6708387e59bfada9cf07a819bfe132bf8b1d95701ac5c1b2d8\",\n      \"available\": \"Only NavigateDashboard/NavigateLibrary/NavigateEvents local shell routes. Every absent account-dependent command reports false; dispatch returns HomeServiceUnavailable.\",\n      \"notGranted\": \"No Home startup/current actor/account provider/model/runtime permission established.\"\n    },\n    \"normalHomeGap\": \"HomeCuiSurface.CanInstallAll is actual dashboard snapshot observation and RequestInstallAll refuses false, but TryGetValue omits it and HomeCuiActionDispatcher does not implement ICuiActionAvailability. No registered global-search capability/owner route found; cannot invent enabled flags or use anonymous metadata as authorization.\"\n  },\n  \"reviewedReportedEvidence\": {\n    \"layoutReportSha256\": \"6f4fa70f4e3e4a84da1145868f218e9d363b0bcc9dd402caf01e7445720e5d54\",\n    \"fixtureSha256\": \"6b600d186c3ecf8af4a47652796c9601e14835bf039ce7d85ed331cba41f8477\",\n    \"scope\": \"Source-referenced actual CUI/Skia/fonts headless layout, same eight real bounds assertions. Reported original0/8 vs proposed8/8; reviewer did not rerun.\",\n    \"limitations\": \"Harness Window setters before protected retention and await-using session error replacement are not complete native lifetime proof.\",\n    \"browser\": \"Actual immutable83 browser AX remains five FAIL and three NOT_RUN; unchanged control semantics/keyboard/installed startup remain pending.\"\n  },\n  \"action\": \"ACK exact two-line authoring proposal for reviewed delivery/isolated validation. Root/Team C owns integration; no source/branch/build/download/default capability change by A1.\",\n  \"remaining\": \"Actual installed readiness/provider/actor/current mutation/native ACK/accessibility gates remain separate and required.\"\n}\n"
     }
   },
   "completedBoundedHandoffs": [
@@ -448,6 +537,38 @@
         "sha256": "2fe8ac1d95cf6e6366397700993f36983954a28841e90425d1dea0278d453522"
       },
       "state": "A6 complete source extension CLEAR; A1 whole RAM review CLEAR to be retained by A5. Conservative owner-only cancellation cannot discard caller-originated cancellation; old5 actual historical retained, corrected7cases unrun. NormalProgram/supervised18 composition and default actor acceptance still open."
+    },
+    {
+      "component": "PreparedGraph full03",
+      "manifest": {
+        "path": "/workspace/astra-source/worker3-prepared-graph03-actual6755-current30-synchronous-retirement-assertion/manifest.json",
+        "bytes": 125274,
+        "sha256": "423a44d412946d84e1629140fa7c1b9253d16713458d1d73186c5be38ac02ca3"
+      },
+      "state": "AllcompleteA1/A3 extensions sourceCLEAR. Sole fixture expression\u2192statementAction synchronous retirement assertion+twoSHArepins. Rootwhole/constructor next; no runtime."
+    },
+    {
+      "component": "Canvas13",
+      "manifest": {
+        "path": "/workspace/astra-source/worker3-canvas11-native-fixture-source13-actual-ownership-type-and-cached-workspace/manifest.json",
+        "bytes": 30015,
+        "sha256": "2a83cbfe610c3f0f2fcfbd1a5840dafa1a9750ef05d5d3828b457724823660d5"
+      },
+      "state": "A1/A3/A4/A6 fullsource/project/API/task peersCLEAR. ExactHomeLocalStoreOwnership+cachedGetCurrent originalStore closes twofixtureholds;20oldassertions+2StoreActor/20methods22outcomes. No production/tolerance/f64/pressure/native acceptance."
+    },
+    {
+      "component": "Startup02",
+      "state": "A5 fullRAM+A3durable fullpeerCLEAR: sameoriginalConnectionLifetime admission/postawait/lockedpublication, genuine socket ownerretirednegative.14unrun. Trustedlocator/supervisedCoreServer/pre-shellnormalconsumer open.",
+      "peer": {
+        "path": "/workspace/astra-source/worker4-home-startup02-complete-original-connection-publication-native-source-extension-peer01.json",
+        "bytes": 2877,
+        "sha256": "e85f81ab8cb14dc6536bce414263974459c7bb0f9ca07d13f6bafeeffb1d692c"
+      }
+    },
+    {
+      "component": "Visual03",
+      "manifestSha256": "5c7aa582ff4def7a2dcd19f11a4dd78a84622f7dbe916e24dd17b0d03bd0b36d",
+      "state": "A1/A3/A6 fullsourceCLEAR. Three Windowinitializers split inside SAMEretainedcollector; four bodies/46oldassertionlines exact;11facts91assertinvocations76lines. NoSDK/native decoder/runtime acceptance."
     }
   ],
   "FilesProjectProposedSharedContract": {
@@ -456,7 +577,12 @@
     "identity": "Reuse HostedItemId/FilesLocationId/FilesRevisionId/FilesOperationId and same durable provider/Store; stable Project-scoped SectionID/AppearanceID distinguish logical grouping from physical ParentId. Source location/parent/original and independent current source ACL preserved.",
     "operations": "Typed CreateProject, section CRUD/reorder, AddExistingReference/assign/unsectioned/remove-appearance carry expected owning revision/original operation key/typed payload digest; same durable State commit records organisation+operation+event, returns exact IDs/revision/structured conflict; removal keeps originals.",
     "openSeam": "Underlying item-kind/wire representation and revision token mapping need B/C4 ACK. Existing ProductivityArtifactReferenceSource is Space-scoped; standalone Sheet/Link/Replay must not fabricate a Space. A1 owns any compatible common reference/NodeGraph extension.",
-    "revisionMapping": "FilesRevisionId is canonical Guid identity, distinct from resumable change cursor. Hosted sequence/ETag transport requires authoritative same-service persisted mapping or an ACKed compatible contract extension; never fabricate per-client UUID/hash, reinterpret unrelated sequence or replace pinned history with latest bytes."
+    "revisionMapping": "FilesRevisionId is canonical Guid identity, distinct from resumable change cursor. Hosted sequence/ETag transport requires authoritative same-service persisted mapping or an ACKed compatible contract extension; never fabricate per-client UUID/hash, reinterpret unrelated sequence or replace pinned history with latest bytes.",
+    "latestPortableOwnerResponse": {
+      "bytes": 9009,
+      "sha256": "4337825868ee2f31f9500d35244788774c70817647fc9f217f1b3b38db92f531",
+      "portableExactReceiptText": "{\"status\":\"FOLDER_DESIGN_ACK_WITH_HOLDS; SIX_PROJECT_SEAMS_OPEN\",\"runId\":\"sol-happy-20261003\",\"repository\":\"CroakyJake12/9to1\",\"normalCommit\":\"a63d77fe5a9dfea56c938eaa85678a9e170368ec\",\"documents\":{\"prefix\":\"docs/releases/sol-happy-20261003/semantic/\",\"rows\":[[\"c4-project-contract-ack.json\",\"14dbc666db378413c9b5a8d66e21ae7018bc59e9\",9743,\"fe9197dd58797ec8a39c569c5d7e843feae0559503a968e0ea4a8dc75985be57\",\"0b7f2c27bf13578fc99b06f0b4942d02f0395d56\"],[\"c4-project-contract-ack.md\",\"14dbc666db378413c9b5a8d66e21ae7018bc59e9\",3957,\"e3996faf16a00af8cbef1a707e75566d2a63c76ec0d5a525fddfcf908660904d\",\"f46ef6ed4e7490faae3b52ee214db482aa7f5d43\"],[\"c4-files-folder-http-proposal.json\",\"5be7afdf\",3589,\"4c6054168340e1ed128cc344397b8e6d6ad9dfc5f84f0cac3e82a6e7706b509b\",\"6f52a34845820319db8dadb3b46a1a9b0e551dd0\"],[\"c4-files-folder-http-proposal.md\",\"5be7afdf\",11811,\"e7807c1755de6cea7ae06ebf0d2f93462d5ae4953121890b2321d6c0c60d48ac\",\"2c54b6846f4190f04edc18667544c748d3732614\"]],\"columns\":[\"name\",\"immutableRef\",\"bytes\",\"sha256\",\"gitBlob\"],\"wholeReadAndHashVerified\":true},\"sourceVerification\":{\"commit\":\"eecadfc7463c944bcc6f9788075c293ab14120f9\",\"sourceProofs\":\"Whole eight sourceProofs fetched at exact proposal commit: bytes/SHA/blob match; four Files bodies equal a63. Whole Store/Identity/OriginalStructuralReceipts and Files03 provider/guard read. Prior37 actual source pins referenced, not duplicated.\",\"noProductCopies\":true},\"decision\":[\"ACK one canonical Files authority/IDs, logical Section/Appearance independent of physical parent, same-State operation/event commit, independent source ACL.\",\"Technical design ACK for personal-owner five folder operations below, pending B/C2/root wire/guard ACK and actual tests. Files03 already supplies guarded overload: reuse reviewed source after immutable delivery/validation, no competing provider edit.\"],\"folderWire\":{\"preserve\":\"Preserve List/Get and default SerializeToElement: PascalCase members, ID object Value, numeric enum Committed=2; no flatten/string-enum change.\",\"requests\":[[\"CreateFolder\",\"itemID,operationID,parentID(nullable),name\",\"Base=null\"],[\"Rename\",\"itemID,operationID,expectedRevisionID,name\",\"exact nonempty base\"],[\"Move\",\"itemID,operationID,expectedRevisionID,destinationParentID(explicit nullable)\",\"physical parent; stable ID\"],[\"Delete\",\"itemID,operationID,expectedRevisionID\",\"Trash only\"],[\"Restore\",\"itemID,operationID,expectedRevisionID\",\"exact Delete-result base; guarded provider, no latest/no-base service\"]],\"validation\":\"Exact per-action fields; nonempty Guids; required/null explicit; server owns actor/account/role/state/result/time/sequence/policy. Preserve names/IDs; no trim/case/latest substitution. Actual provider error codes.\",\"result\":\"FilesResult<FilesOperation> success requires IsSuccess+nonnull Value+Committed2+exact item/op+ResultRevisionId. HTTP200 cannot replace domain success. Uncertain response reconciles/replays SAME ID/body; no invented revision.\",\"replay\":\"Fix unrelated/sourceParent/inverse/error/policy fields null. Equality binds actor/item/action/destination/base/NewName; changed reuse InvalidState. Rich Project commands require complete typed equality, not NewName-only digest.\"},\"guardedOwner\":{\"signature\":\"MutateAsync(FilesOperation operation,string? newName,Guid expectedStoreId,FilesCommitAuthorityGuard authority,CancellationToken cancellationToken)\",\"source\":\"Files03 effective provider retained from source01:15052B/e4bf664776fb62ac77980943b66cece3eebc21a94b31a4fa2b23a06b13d6d5c4; guard1876B/f489bf53d1c5618d7e23ddcf255b0bd0bdbf63f726d3f91545082a61116f58c8\",\"ordering\":\"Guard actor==operation actor==owner BEFORE replay; original StoreId/owner/location inside SAME update before prior lookup. Store validator before callback and after fsynced candidate before File.Move. Null/manual API unchanged; no Files reentry in guard.\",\"hostHold\":\"IWorkspaceWebDomain forwards only AccountID, losing original session/client/token. C2/A1 must bind registered original session; preserve current eecad Admin/remote early return.\",\"mapping\":\"Provider owner AccountID:N differs from resource principal cake-account:D. Bind actual SAME account/session/registered client/provider/store; DTOs/strings/headers do not grant.\",\"readHold\":\"GetStoreEvidence() initializes/adopts identity, unsuitable after replacement. Read/publication needs original expected-StoreId existing-only current-owner checks before/after, preserved List/Get shape; unsupported foreign/org/shared refuses.\",\"limits\":\"Sequential session/Files checks are not global atomic revocation. Known retirement before final validation denies. C2 owns callback semantics; no remote legacy/Home fallback.\",\"recovery\":\"After admitted effect independently observe original existing Store op/event via GetOriginalStructuralReceiptAsync, matched ID/body/result. Cancellation/retirement cannot cause new-ID replay. Suppress unauthorized payload; retain known receipt/uncertainty.\"},\"projectSeams\":[{\"id\":\"C4-SEAM-ITEM\",\"proposal\":\"Append Organisation discriminator without changing0..4; versioned type payload in SAME State; stable Project-scoped Section/Appearance IDs. Default unsupported until capability/parent rules; extend explicit nesting, no Folder/Artifact fallback.\",\"open\":\"A1/B/C4 exact schema/type capability and all ten types/100 nesting pairs.\"},{\"id\":\"C4-SEAM-REVISION\",\"proposal\":\"Host CurrentRevisionId Guid is membership/section/appearance CAS, advances every host commit. Source app/content revision separate; membership identity stable. Long cursor is event position, not CAS/history. Historical pin requires real retained revision.\",\"open\":\"B/C4 exact result/base and app revision mapping; no ETag/hash/latest alias.\"},{\"id\":\"C4-SEAM-IDEMPOTENCY\",\"proposal\":\"Versioned detached command binds Store/location/project/actor/action/op/base/section/appearance/source IDs+revisions+ordered data. Proposed SHA256 canonical UTF8 with exact canonical bytes retained/equal, not digest alone; changed reuse InvalidState.\",\"open\":\"B/A1/C4 cross-language version/UUID/string/number/order/null/absence/unknown-member grammar; no wire adopted.\"},{\"id\":\"C4-SEAM-ATOMIC\",\"proposal\":\"Organisation, complete typed operation/result and Events in SAME State. Explicit migration under SAME durable lease preserves IDs/parents/content/revisions/operations/events/recoverable old bytes; old writers reject new envelope. Notify by replaying committed events, no second journal.\",\"open\":\"Version/rollback/crash/migration procedure and tests absent.\"},{\"id\":\"C4-SEAM-ACL\",\"proposal\":\"Host write permits membership only. Independent current source attach/read and owner open/edit/share/export/search/AI. Denied appearance only permitted placement ID/status, no cached title/path/hash/content. Actual session->org->owner order; no resolver reentry.\",\"open\":\"Personal native/Drive is not org/shared ACL; C2/A1/A4 authority+revocation/publication routes required.\"},{\"id\":\"C4-SEAM-REFERENCE\",\"proposal\":\"A1 owns observation-only reference: exact Files store/location/item/revision plus owner app/object/selector/revision. Genuine Space APIs stay. Both ACLs before/after reads; prepared display grants nothing. Replay actual retained bytes or unavailable.\",\"open\":\"Standalone A1 type unfrozen; B/C4/common ACK, no invented Space/context/graph identity.\"}],\"requiredProof\":\"All12 folder proposal procedures mandatory/unrun: real HTTP/PKCE/two accounts/reopen, replay/body drift, CAS race, revocation/store replacement, cancellation/known commit, invalid/cycle/name, Trash/Restore, unknown envelope/guard omission. Project history/Homework/100 nesting/source ACL/native/web/platform/quota remain denominator.\",\"remainingHolds\":[\"B wire/result ACK\",\"C2/A1 original session/current callback\",\"Remote immutable Files03 source delivery and real joint SDK/native proof\",\"Actual R2/bytes/resumable/quota/current remote auth separate\",\"A1 common-reference and six Project contract ACKs\",\"Canonical Terra prepass exact-head acceptance/main merge/artifact gate\"],\"claims\":{\"wholeRemoteDocsAnd8SourcesRead\":true,\"folderTechnicalDesignAckOnly\":true,\"projectWireAdopted\":false,\"terraformSourceMaterialised\":false,\"hostedImplementation\":false,\"actualHttpTests\":false,\"buildRestoreGitMutation\":false},\"readerClosure\":\"Remote/source/Git readers closed; no ZIP/loose cut reader or source/deploy mutation.\",\"predecessor\":{\"path\":\"/workspace/astra-source/worker2-c4-files-project-design-ack-source-contract-review01-held-remote.json\",\"bytes\":14942,\"sha256\":\"167b3d5c7e1205c3a2fa08d3baf80bccda073bde95eee3c6890dd58b39344e5b\"},\"preservedFiles03\":{\"path\":\"/workspace/astra-source/worker2-files-original-agent-rename-source03-current-safemode-commit/manifest.json\",\"bytes\":6779,\"sha256\":\"3404ebfe8d8920c305f36aa00f4200750f2689c2974a866c2f01174976134008\"},\"wholeFiles03Peer\":{\"path\":\"/workspace/astra-source/worker4-files03-complete-owning-provider-scope-original-receipt-source-peer01.json\",\"bytes\":3069,\"sha256\":\"2a2934dfebd83297b84514bda7d4a0e20c8fab6e3382469677bed906224f4fad\"}}\n"
+    }
   },
   "nativeCoverageStatus": {
     "A1": "Seven groups with439candidate lines explicitly unmapped; not a requirement denominator or completed Home bootstrap.",
@@ -486,48 +612,71 @@
   },
   "originalEvidenceCapacityRequest": {
     "to": "Team C/C6",
-    "state": "FIRST_SELECTED_ORIGINALS_RECEIVED; NEXT_BOUNDED_ACK_REQUESTED",
-    "reason": "Fixed floors unchanged. TeamA workspace~945.7MB/tmp~1079.1MB, no local large-original admission fits. Request C6 read-only existingCIoriginal custody with full byte/cause proof and bounded remotelypublished records.",
-    "firstRequestedOriginals": [
-      {
-        "component": "Forms12 original owning cause",
-        "head": "d06c0a4b3bb6903dfecf2f4c0d983b6d5e1a4302",
-        "run": 37144367423,
-        "artifactID": 11281174469,
-        "bytes": 7821723,
-        "sha256": "160a90860feae188ed6b87f5019521f558ec98dc0e407556e7ca31d255dd9853",
-        "required": "Priority2: complete whole original closure and causal native log/receipt; no invented cause from wrapperexit1. Previous11native was not reached,12positive guard must remain."
+    "state": "PREVIOUS4CUSTODY_RECEIVED_QUALIFIED; FRESH_FAILED_NATIVE_ORIGINALS_REQUESTED",
+    "noProductionChanges": "Read-only existing originals; no production/provider/DNS/WordPress/D1/email/paidservice changes.",
+    "freshSDK04": {
+      "run": 37154578730,
+      "head": "3a52c431368fee3aa03b2a0f8303fb6cfbb49224",
+      "index": {
+        "id": 11286030139,
+        "bytes": 21231,
+        "sha256": "1d918c3580393e136f66634dcde0dfcae25d85c37e3600b5e81e99bf400e45da"
       },
-      {
-        "component": "Home14 original child/native/session/task/profile seals05",
-        "head": "9006e522f1dd49a348214200508fb35ede2f7409",
-        "run": 37132001101,
-        "artifactID": 11278155730,
-        "bytes": 27284038,
-        "sha256": "d24915b971b7860b390e3f284f72b08eda2ffdd8275264409bf919b27fc617a0",
-        "innerBytes": 27283898,
-        "innerSha256": "38231bcb2911e3433dafd44b342cba37905315e2da6d6bd2f509941bfe4a6914",
-        "required": "Whole original against existing tiny index11278365732; actual child birth/session/task/native profile+once marker/display acknowledgement traces and strict drains before minimal correction. Selected810B cause alone not acceptance."
+      "ownIndex": {
+        "id": 11285149516,
+        "bytes": 11387,
+        "sha256": "e94880a5cb8ce31b4052f56911c75f81cddc90a9bc8615025f05fa5791ba9c89"
       },
-      {
-        "component": "Canvas11 original source/native/compiled00",
-        "head": "900026076f2e7238fa431d5f984c34fe48477081",
-        "run": 37138212542,
-        "artifactID": 11279997690,
-        "bytes": 27279968,
-        "sha256": "a96b616eeec80374dcbdac86614f0b6132eebcf2a48a6de95ebd5aa918ea6626",
-        "innerBytes": 27279828,
-        "innerSha256": "241d4c23e75a9725a4b39d627407dba7915643ae90c7bddbd94530aa0f071d71",
-        "required": "Whole original against tiny index11279992656 with held01; source/compiled/nativeSO cross-pieces/all originaldrains. Preserve all5 existing failures; no tolerance or registered-context/typed-history weakening."
-      }
-    ],
+      "originals": [
+        {
+          "id": 11285571027,
+          "bytes": 27272048,
+          "sha256": "4c265198a99fe247240e857160c1b962614dd0443dd67e05187800421e1021d0"
+        },
+        {
+          "id": 11286030142,
+          "bytes": 21758812,
+          "sha256": "fcc6a1f99ad0a23065016063f5b4c23dd1fa5a42f5479a45f3d956e40ab6aedb"
+        },
+        {
+          "id": 11285611410,
+          "bytes": 27272268,
+          "sha256": "4e05caefb1545fb656e17248073839e40a1d21d88b52a4971636c5f68dc32bd1"
+        },
+        {
+          "id": 11286075200,
+          "bytes": 17686482,
+          "sha256": "452da1ad15f1831cf4b93483c6ee55d69da7c874d6a32b436570805b21ad5937"
+        }
+      ]
+    },
+    "freshLinux19": {
+      "run": 37153041051,
+      "head": "7c8c2e4a2692c4e662da4dfd021cf330aff0ea93",
+      "index": {
+        "id": 11285287490,
+        "bytes": 39704,
+        "sha256": "8add158c39fe958c52dd3f5074f1791fa248ce1cdda9fcd6e8a01c525ffcb26d"
+      },
+      "originals": [
+        {
+          "id": 11285426765,
+          "bytes": 27279528,
+          "sha256": "567ebfd473f37aad5e973209d0f395a98f29b182e42ba11929d8002f521b981c"
+        },
+        {
+          "id": 11285356942,
+          "bytes": 20546248,
+          "sha256": "fcb9f81f705fa7a5f9e0836d51980499c61c4846e97f014a74da55ffc7e8bf37"
+        }
+      ]
+    },
+    "existingStructuralDiffAndHomeSourceCause": "Existing Forms12 Desktoppair and Home14 child/profile/session seals requestsabove. PriorForms/Canvas00/Graph02/Home05 custody received5be7afdf; runtime acceptanceopen.",
     "futureRemaining": [
-      "Rational04 resource11277501390/20473241B and regression11277666093/6541044B original closure",
-      "Mail17 bundle01 native/source/TLS plus resource/regression originals",
-      "Sites09 original whole native/SDK/WPE path remains unaccepted."
-    ],
-    "noProductionChanges": "Read-only existing GitHub CI originals/local isolated custody only; no deployment/provider/spend/WordPress/DNS/email/D1 changes.",
-    "receivedOriginals": "C6 completeHome14part02/Canvas11part01/Linux18part00+01 custody published14dbc666; root selected bytes845/846 independently verified. Full acceptance remains open.; Graph02reg rootlocal completeouter/membercustody now retainedrawin/tmp, priorityrequest withdrawn unlessindependentC6replaydesired."
+      "Rational04siblings",
+      "Mail17nativeTLS+siblings",
+      "Sites09nativeSDKWPEpublisher"
+    ]
   },
   "reviewedSourceDelivery": {
     "branch": "handoff/team-a-admin-sdk03-20261003",
@@ -546,7 +695,9 @@
       "bytes": 9705,
       "sha256": "7127c8d3456efa8efc9ea75a3e9a2e6be396836ffe37869dd0ed25298cb63ea7"
     },
-    "all33RemoteBlobsVerified": true
+    "all33RemoteBlobsVerified": true,
+    "receivingTeamCAll33AckReceived": true,
+    "remaining": "Genuine issuer/auth_revision/installed/provider/native/fullSDK acceptance remains; source receipt/currentC2/C5 body holds closed."
   },
   "originalCustodyReceived": {
     "TeamCReleaseRead": "14dbc666db378413c9b5a8d66e21ae7018bc59e9",
@@ -565,7 +716,16 @@
       "bytes": 1058,
       "sha256": "99038e98bf083cde59efc1ec3613d9792f5d625fccdb71c3796b89914a6989da"
     },
-    "qualification": "Exact selected Git record bytes match original tiny descriptors. C6 holds large original ZIPs; partial delivered records alone are not full original source/PDB/native/task/restore/drain closure. Prior Linux causeunknown is superseded ONLY by the actual original root-build log."
+    "qualification": "Exact selected Git record bytes match original tiny descriptors. C6 holds large original ZIPs; partial delivered records alone are not full original source/PDB/native/task/restore/drain closure. Prior Linux causeunknown is superseded ONLY by the actual original root-build log.",
+    "latestFollowup": {
+      "release": "5be7afdf",
+      "prefix": "docs/releases/sol-happy-20261003/c6/custody-followup",
+      "reportBytes": 204360,
+      "reportSha256": "3b2df94d1bc5b08db1b812b29c606e80f9e9d69eb1738a4d0855a454a6f16146",
+      "all4OuterAndMemberCustodyCReported": true,
+      "rootReadWholeReadmeAndReport": true,
+      "qualification": "No payload executed. Canvas295descriptors stillneedrootbinary/native settlement; Home settledcallbackmarkerFALSE/oldACKfailure unchanged."
+    }
   },
   "joint05FreezeRecipe": {
     "path": "/workspace/astra-source/worker1-joint05-complete-plan-freeze-and-home14-portable-preservation-recipe01.json",
@@ -602,5 +762,36 @@
       "sha256": "5cb7920384ace8104b3942ca79fae421d43ddce272b44bc4c1d148879c7761e8"
     },
     "state": "Bothcomplete source/API/wholeinversepeersCLEARqualified; exactordinalprefix assertion/all4facts intact. A5preparingRAM-onlyfullLinux19minimalfixture+classhashrepin candidate; no materialization/gateconstruction/runtimeyet."
+  },
+  "currentSpecificationNativeSnapshot": {
+    "release": "5be7afdf",
+    "path": "docs/releases/sol-happy-20261003/specification-update/native-text.txt",
+    "bytes": 1342924,
+    "sha256": "9eb6e32f293aab39f5f45f06b56afb1f051751d103d3e7db1a5e4dd31c1fe87c",
+    "gitBlob": "f5ae020d171c3ea528644d070ae3a2ae02ca2024",
+    "rootWholeGitBytesVerified": true,
+    "paragraphs": 8358,
+    "isRequirementCount": false,
+    "qualification": "Old local export ec62 exactbytes preserved; export formatting differs. C nonblankdiff records two future-pass regions; full semantic denominator incomplete."
+  },
+  "historicalGeneratedEvidenceRetention": {
+    "index": {
+      "path": "/workspace/astra-source/ready-artifacts/root-retained-closed-sdk-input-hash-captures-873/restoration-index.json",
+      "bytes": 3654,
+      "sha256": "f9b788df4ff108ee4e3886787d212fe82bf0affec715f8881b375a0b2675aa8e"
+    },
+    "reader": {
+      "path": "/workspace/astra-source/root-read-closed-evidence874.py",
+      "bytes": 7637,
+      "sha256": "a87036b6834bfd625699e221dd674f8de0b122c6bcd9e299c306b23c97181857"
+    },
+    "qualification": "A6 closedreaders; two generatedSDKhashinventories20139024B dedupgzip2192247 wholebytes/metadata. NoSDK/source/native/binary/originalZIP removed; floorsunchanged."
+  },
+  "latestTeamCCoordinationRead": {
+    "updatedUTC": "2026-10-03T21:35:26.783476+00:00",
+    "bytes": 46722,
+    "sha256": "504e758cfb2e0023276b735764b2cdb0e368dc0bb448475e2c45834c9dedc8a9",
+    "candidate": "bb90c0f14aa030c14ff98d7f2073df53027b8693",
+    "qualification": "WholeCrecord RAMread; headprovisional/acceptedHeadnull. TeamAdoesnoteditCindex/release."
   }
 }
