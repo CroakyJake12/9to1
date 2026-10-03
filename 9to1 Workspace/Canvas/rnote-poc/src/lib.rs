@@ -1432,6 +1432,20 @@ mod tests {
 
     #[test]
     fn genuine_user_layer_rank_changes_native_render_order_and_survives_reopen() {
+        fn collect_float_bits(value: &serde_json::Value, path: &str, out: &mut std::collections::BTreeMap<String,u64>) {
+            if let Some(number) = value.as_number().filter(|number| number.is_f64()) {
+                out.insert(path.to_owned(), number.as_f64().unwrap().to_bits());
+            }
+            match value {
+                serde_json::Value::Object(values) => for (key,value) in values { collect_float_bits(value,&format!("{path}/{}",key.replace('~',"~0").replace('/',"~1")),out); },
+                serde_json::Value::Array(values) => for (index,value) in values.iter().enumerate() { collect_float_bits(value,&format!("{path}/{index}"),out); },
+                _ => {},
+            }
+        }
+        // Capture only controlled fixture data; emit bounded numeric evidence only
+        // if an original assertion panics, then propagate that exact panic.
+        let mut reopen_failure_diagnostic: Option<serde_json::Value> = None;
+        let original_attempt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         block_on(async {
             let mut canvas = HeadlessCanvasEngine::new();
             canvas.set_pen_style(CanvasTool::Pen, CanvasPenStyle { color: [1.0,0.0,0.0,1.0], width: 20.0 }).unwrap();
@@ -1459,6 +1473,23 @@ mod tests {
             assert_ne!(before, after);
             let bytes = canvas.save_rnote().await.unwrap();
             let mut restored = HeadlessCanvasEngine::from_rnote(bytes.clone()).await.unwrap();
+            if bytes.len() <= 262_144 {
+                if let (Ok(original_snapshot),Ok(reopened_snapshot)) = (
+                    serde_json::to_value(canvas.engine.take_snapshot()),
+                    serde_json::to_value(restored.engine.take_snapshot())) {
+                    let mut original_bits = std::collections::BTreeMap::new();
+                    let mut reopened_bits = std::collections::BTreeMap::new();
+                    collect_float_bits(&original_snapshot,"",&mut original_bits);
+                    collect_float_bits(&reopened_snapshot,"",&mut reopened_bits);
+                    let native_hex = bytes.iter().map(|byte|format!("{byte:02x}")).collect::<String>();
+                    reopen_failure_diagnostic = Some(serde_json::json!({
+                        "schemaVersion":1,"fixture":"genuine_user_layer_rank_changes_native_render_order_and_survives_reopen",
+                        "nativeCompressedBytes":bytes.len(),"originalNativeHex":native_hex,
+                        "originalSnapshot":original_snapshot,"reopenedSnapshot":reopened_snapshot,
+                        "originalFloatBitsByJsonPointer":original_bits,"reopenedFloatBitsByJsonPointer":reopened_bits,
+                        "qualification":"Controlled synthetic native snapshot data only; exact original SVG equality and all other assertions remain authoritative."}));
+                }
+            }
             assert_eq!(keys, restored.stroke_keys());
             assert_eq!(vec![1,0], restored.read_user_layer_ranks(&[first,second]).unwrap());
             assert_eq!(after, stable_svg(&restored.export_svg().await.unwrap()));
@@ -1469,6 +1500,21 @@ mod tests {
             restored.assign_user_layer_ranks(&[first,second], &[0,0]).unwrap();
             assert_eq!(before, stable_svg(&restored.export_svg().await.unwrap()));
         });
+        }));
+        if let Err(original_panic) = original_attempt {
+            if let Some(diagnostic) = reopen_failure_diagnostic {
+                if let Ok(text) = serde_json::to_string(&diagnostic) {
+                    let line = if text.len() <= 1_048_576 {
+                        format!("ASTRA_CANVAS_REOPEN_NUMERIC_FAILURE {text}\n")
+                    } else {
+                        format!("ASTRA_CANVAS_REOPEN_NUMERIC_FAILURE_REFUSED oversized={}\n",text.len())
+                    };
+                    let mut stderr = std::io::stderr().lock();
+                    let _ = std::io::Write::write_all(&mut stderr,line.as_bytes());
+                }
+            }
+            std::panic::resume_unwind(original_panic);
+        }
     }
 
 }

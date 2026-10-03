@@ -19,6 +19,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 {
     private object _selectedMessageLifetime = new();
     private bool _disposed;
+    internal Task Initialization { get; }
     internal Task SelectedMessageLoad { get; private set; } = Task.CompletedTask;
     private readonly IMailService _mail;
     private readonly IProviderModelClient _models;
@@ -77,7 +78,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         CloseAiCommand = new RelayCommand(() => IsAiPanelVisible = false);
         RemoveComposeAttachmentCommand = new RelayCommand<MailComposeAttachmentItem>(RemoveComposeAttachment);
 
-        _ = InitializeAsync();
+        Initialization = InitializeAsync();
     }
 
     public ObservableCollection<MailAccount> Accounts { get; } = [];
@@ -92,6 +93,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         set
         {
             if (!SetProperty(ref _selectedAccount, value)) return;
+            RetireOriginalCompose();
             RetireSelectedMessage();
             _loadCancellation?.Cancel();
             // Retire old-account rows synchronously; never invoke folder loading before new access admission.
@@ -149,7 +151,15 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
     public bool IsBusy { get => _isBusy; private set { if (SetProperty(ref _isBusy, value)) RaiseStateProperties(); } }
     public DateTimeOffset? LastLoadedAt { get => _lastLoadedAt; private set { if (SetProperty(ref _lastLoadedAt, value)) RaisePropertyChanged(nameof(LastUpdatedLabel)); } }
     public bool IsStale { get => _isStale; private set => SetProperty(ref _isStale, value); }
-    public bool IsComposeOpen { get => _isComposeOpen; private set => SetProperty(ref _isComposeOpen, value); }
+    public bool IsComposeOpen
+    {
+        get => _isComposeOpen;
+        private set
+        {
+            if (!value && _isComposeOpen) RetireOriginalCompose();
+            SetProperty(ref _isComposeOpen, value);
+        }
+    }
     public bool IsSendConfirmationOpen { get => _isSendConfirmationOpen; private set => SetProperty(ref _isSendConfirmationOpen, value); }
     public string ComposeTo { get => _composeTo; set => SetProperty(ref _composeTo, value); }
     public string ComposeCc { get => _composeCc; set => SetProperty(ref _composeCc, value); }
@@ -220,6 +230,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        RetireOriginalCompose();
         RetireSelectedMessage();
         CancelDraftAutosave();
         _loadCancellation?.Cancel();
@@ -459,7 +470,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
             var result = await _mail.SaveDraftAsync(draft, CancellationToken.None);
             if (result.Succeeded)
             {
-                _composeLocalDraftId = result.LocalDraftId ?? _composeLocalDraftId;
+                SetOriginalComposeDraftId(result.LocalDraftId ?? _composeLocalDraftId);
                 _composeDraftId = result.ProviderId ?? _composeDraftId;
                 ComposeStatus = SafeFailureMessage(result);
             }
@@ -614,12 +625,13 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
             return null;
         }
         var hasHtml = !string.IsNullOrWhiteSpace(ComposeHtmlBody);
-        _composeLocalDraftId ??= Guid.NewGuid();
+        var draftId = _composeLocalDraftId ?? Guid.NewGuid();
+        SetOriginalComposeDraftId(draftId);
         return new MailDraft(
             SelectedAccount.AccountId, _composeDraftId, _composeResponseKind, _composeSourceMessageId, _composeThreadId,
             to, cc, bcc, ComposeSubject.Trim(), hasHtml ? ComposeHtmlBody : ComposeBody, hasHtml,
-            ComposeAttachments.Select(item => new MailDraftAttachment(item.FileName, item.ContentType, item.Content)).ToArray(),
-            LocalId: _composeLocalDraftId.Value, Provider: SelectedAccount.Provider);
+            ComposeAttachments.Select(item => new MailDraftAttachment(item.FileName, item.ContentType, item.Content, item.LocalId)).ToArray(),
+            LocalId: draftId, Provider: SelectedAccount.Provider);
     }
 
     private static IReadOnlyList<string> SplitAddresses(string value) => value
@@ -642,12 +654,13 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 
     private void ResetCompose()
     {
+        RetireOriginalCompose();
         CancelDraftAutosave();
         ComposeTo = ComposeCc = ComposeBcc = ComposeSubject = ComposeBody = string.Empty;
         ResetRichCompose();
         ComposeAttachments.Clear();
         _composeDraftId = null;
-        _composeLocalDraftId = null;
+        SetOriginalComposeDraftId(null);
         _composeResponseKind = MailResponseKind.New;
         _composeSourceMessageId = null;
         _composeThreadId = null;
@@ -742,12 +755,17 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 public sealed class MailComposeAttachmentItem
 {
     public MailComposeAttachmentItem(string fileName, string contentType, byte[] content)
+        : this(fileName, contentType, content, Guid.NewGuid()) { }
+
+    public MailComposeAttachmentItem(string fileName, string contentType, byte[] content, Guid localId)
     {
+        LocalId = localId == Guid.Empty ? Guid.NewGuid() : localId;
         FileName = fileName;
         ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType;
         Content = content;
     }
 
+    public Guid LocalId { get; }
     public string FileName { get; }
     public string ContentType { get; }
     public byte[] Content { get; }

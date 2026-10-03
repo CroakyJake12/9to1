@@ -4,7 +4,7 @@ using HavenOS.Files;
 namespace HavenOS.Files.NativeHost;
 
 /// <summary>Host binds actual providers to verified Home actors; caller arguments cannot select a profile or Drive.</summary>
-public sealed class FilesArtifactResourceResolver : IOriginalCanonicalReadResolver, IOriginalCanonicalWriteResolver
+public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalReadResolver, IOriginalCanonicalWriteResolver
 {
     private readonly NativeFilesWorkspaceAuthority? _originalAuthority;
     private readonly Func<AuthenticatedResourceActor, CancellationToken, ValueTask<IFilesProvider?>> _providers;
@@ -171,6 +171,8 @@ public sealed class FilesArtifactResourceResolver : IOriginalCanonicalReadResolv
         var folderRead = actionId == "files.folder.native-root.read" && scope.Access == ResourceAccess.Read;
         var browserRead = actionId == "files.browser.read" && scope.Access == ResourceAccess.Read;
         var packageRead = actionId == "os.compatibility.package.read" && scope.Access == ResourceAccess.Read;
+        var mailAttachmentRead = actionId == "mail.attachment.read" && scope.Access == ResourceAccess.Read
+            && originalProvider is DurableDriveProvider && originalStoreId is not null;
         var ownerApp = actionId switch
         {
             "write.file.open" or "write.file.save" or "write.file.create" => "write",
@@ -181,7 +183,7 @@ public sealed class FilesArtifactResourceResolver : IOriginalCanonicalReadResolv
         };
         if ((sitesWrite || pictureImport) && scope.Access != ResourceAccess.Write) return Deny("FilesActionInvalid");
         if ((pictureExport || pictureCopy) && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
-        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !folderRead && !browserRead && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
+        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !folderRead && !browserRead && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
         var provider = originalProvider ?? await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
@@ -213,7 +215,7 @@ public sealed class FilesArtifactResourceResolver : IOriginalCanonicalReadResolv
         if (folderRead) return item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesNativeFolderInvalid");
         if (browserRead) return new(true, "Allowed", actor.ActorId, revision, null);
-        if (mediaRead || packageRead) return item.Kind == HostedItemKind.File
+        if (mediaRead || packageRead || mailAttachmentRead) return item.Kind == HostedItemKind.File
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesMediaSourceInvalid");
         var creating = actionId.EndsWith(".create", StringComparison.Ordinal);
         if (creating && item.Kind != HostedItemKind.Folder) return Deny("FilesDestinationInvalid");

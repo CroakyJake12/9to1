@@ -29,6 +29,20 @@ public sealed partial class DurableDriveProvider
         return FilesResult<HostedItemMetadata>.Success(item.Metadata);
     }
 
+    public async Task<FilesResult<HostedItemMetadata>> GetForOriginalStoreAtRevisionAsync(Guid expectedStoreId, HostedItemId fileId,
+        FilesRevisionId expectedRevision, CancellationToken cancellationToken = default)
+    {
+        var state = await _store.ReadExistingAsync(cancellationToken).ConfigureAwait(false);
+        RequireOriginalReadStore(state, expectedStoreId);
+        var item = state.Items.SingleOrDefault(entry => entry.Metadata.Id == fileId);
+        if (item is null || !IsVisible(state, item))
+            return Fail<HostedItemMetadata>(FilesErrorCode.ItemNotFound, "Original item is unavailable.", "GetOriginalItem", fileId);
+        RequireOriginalReadItem(item.Metadata);
+        if (item.Metadata.CurrentRevisionId != expectedRevision)
+            return Fail<HostedItemMetadata>(FilesErrorCode.RevisionConflict, "Original item revision changed.", "GetOriginalItem", fileId);
+        return FilesResult<HostedItemMetadata>.Success(item.Metadata);
+    }
+
     public async Task<FilesResult<FilesArtifactReference>> GetArtifactForOriginalStoreAsync(Guid expectedStoreId, HostedItemId fileId,
         FilesRevisionId? expectedRevision, CancellationToken cancellationToken = default)
     {

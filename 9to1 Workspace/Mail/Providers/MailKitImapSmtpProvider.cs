@@ -13,13 +13,21 @@ using MimeKit;
 namespace HavenOS.Mail.Providers;
 
 /// <summary>Generic IMAP/SMTP adapter. OAuth access tokens are requested by reference and never logged or persisted.</summary>
-public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials) : IMailProviderAdapter
+public sealed class MailKitImapSmtpProvider : IMailProviderAdapter
 {
-    private readonly IMailCredentialResolver _credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
+    private readonly IMailCredentialResolver _credentials;
+    private readonly IMailAttachmentContentSource? _attachments;
+    public MailKitImapSmtpProvider(IMailCredentialResolver credentials) : this(credentials, null) { }
+    public MailKitImapSmtpProvider(IMailCredentialResolver credentials, IMailAttachmentContentSource? attachments)
+    {
+        _credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
+        _attachments = attachments;
+    }
     private readonly MailHtmlSanitizer _htmlSanitizer = new();
     public MailProviderKind Provider => MailProviderKind.ImapSmtp;
     public MailCapability Capabilities => MailCapability.Folders | MailCapability.Archive | MailCapability.Push |
-        MailCapability.ChangeTokens | MailCapability.Attachments | MailCapability.NativeSearch | MailCapability.Junk;
+        MailCapability.ChangeTokens | MailCapability.NativeSearch | MailCapability.Junk |
+        (_attachments is null ? MailCapability.None : MailCapability.Attachments);
 
     public async Task<MailProviderSyncBatch> SynchronizeAsync(MailAccount account, string? changeCursor, CancellationToken cancellationToken = default)
     {
@@ -74,6 +82,12 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
         ValidateAccount(account);
         ArgumentNullException.ThrowIfNull(draft);
         if (account.AccountId != draft.AccountId) throw new MailProviderException(MailErrorCode.InvalidInput, "The draft belongs to a different account.", false);
+        var originalAttachments = draft.AttachmentIds.Take(17).ToArray();
+        if (originalAttachments.Length > 16 || originalAttachments.Any(id => id == Guid.Empty) || originalAttachments.Distinct().Count() != originalAttachments.Length)
+            throw new MailProviderException(MailErrorCode.AttachmentUnavailable, "Select at most 16 distinct attachments.", false);
+        if (originalAttachments.Length != 0 && _attachments is null)
+            throw new MailProviderException(MailErrorCode.AttachmentUnavailable,
+                "This connection cannot submit attachment content yet. Keep the draft and use a connection that supports these attachments.", false);
         var identity = account.FromIdentities.FirstOrDefault(item => item.Id == draft.FromIdentityId)
             ?? throw new MailProviderException(MailErrorCode.InvalidInput, "The selected From identity is not available on this account.", false);
         var message = new MimeMessage();
@@ -89,6 +103,30 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
         if (!string.IsNullOrWhiteSpace(draft.RichBody)) builder.HtmlBody = draft.RichBody;
         if (!string.IsNullOrWhiteSpace(identity.PlainSignature)) builder.TextBody = JoinBody(builder.TextBody, identity.PlainSignature);
         if (!string.IsNullOrWhiteSpace(identity.RichSignature)) builder.HtmlBody = JoinBody(builder.HtmlBody, identity.RichSignature);
+        long totalAttachmentBytes = 0;
+        foreach (var attachmentId in originalAttachments)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            MailAttachmentContent content;
+            try { content = await _attachments!.ReadAsync(account.AccountId, draft.DraftId, attachmentId, cancellationToken).ConfigureAwait(false); }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            { throw new MailProviderException(MailErrorCode.AttachmentUnavailable, "The original attachment cannot be read. Keep the draft and select an available authorized attachment.", false, ex); }
+            if (content.AttachmentId != attachmentId || string.IsNullOrWhiteSpace(content.FileName) ||
+                content.FileName.Length > 255 || content.FileName.IndexOfAny(['/', '\\']) >= 0 || content.FileName.Any(char.IsControl))
+                throw new MailProviderException(MailErrorCode.AttachmentUnavailable, "The original attachment is unavailable.", false);
+            totalAttachmentBytes = checked(totalAttachmentBytes + content.Bytes.Length);
+            if (totalAttachmentBytes > 32L * 1024 * 1024)
+                throw new MailProviderException(MailErrorCode.AttachmentUnavailable, "Attachments exceed the 32 MiB submission limit.", false);
+            ContentType type;
+            try { type = ContentType.Parse(content.MimeType); }
+            catch (FormatException ex) { throw new MailProviderException(MailErrorCode.AttachmentUnavailable, "The attachment content type is invalid.", false, ex); }
+            // MimeKit retains this detached copy, not mutable bytes owned by the content source.
+            // A Files attachment is original content. Text MIME types must not
+            // undergo transport newline conversion when SMTP uses CRLF.
+            if (builder.Attachments.Add(content.FileName, content.Bytes.ToArray(), type) is MimePart attachment)
+                attachment.ContentTransferEncoding = ContentEncoding.Base64;
+        }
         message.Body = builder.ToMessageBody();
         var config = account.Connection!;
         using var client = new SmtpClient();

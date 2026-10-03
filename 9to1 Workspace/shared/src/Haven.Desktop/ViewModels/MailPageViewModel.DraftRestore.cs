@@ -7,14 +7,18 @@ public sealed partial class MailPageViewModel
     private async Task RestoreLatestDraftAsync()
     {
         var account = SelectedAccount;
-        if (account is null || IsComposeOpen) return;
+        if (account is null || IsComposeOpen || _disposed) return;
+        var originalCompose = Volatile.Read(ref _originalComposeGeneration);
 
         var draft = SelectLatestDraftForAccount(
             await _mail.GetDraftsAsync(CancellationToken.None), account.AccountId);
-        if (draft is null) return;
+        if (draft is null || _disposed || IsComposeOpen || !ReferenceEquals(account, SelectedAccount) ||
+            !ReferenceEquals(originalCompose, Volatile.Read(ref _originalComposeGeneration))) return;
+
+        RetireOriginalCompose();
 
         CancelDraftAutosave();
-        _composeLocalDraftId = draft.LocalId == Guid.Empty ? Guid.NewGuid() : draft.LocalId;
+        SetOriginalComposeDraftId(draft.LocalId == Guid.Empty ? Guid.NewGuid() : draft.LocalId);
         _composeDraftId = draft.ProviderDraftId;
         _composeResponseKind = draft.ResponseKind;
         _composeSourceMessageId = draft.SourceMessageId;
@@ -29,7 +33,7 @@ public sealed partial class MailPageViewModel
         ComposeAttachments.Clear();
         foreach (var attachment in draft.Attachments)
             ComposeAttachments.Add(new MailComposeAttachmentItem(
-                attachment.FileName, attachment.ContentType, attachment.Content));
+                attachment.FileName, attachment.ContentType, attachment.Content, attachment.LocalId));
 
         IsComposeOpen = true;
         ComposeStatus = draft.PersistenceState is MailDraftPersistenceState.SaveFailed or MailDraftPersistenceState.SendFailed

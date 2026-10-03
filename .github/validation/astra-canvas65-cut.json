@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "59c7486615aa61272865af88b8aed3cc868397ba",
-  "programTree": "74d1de07b0c73a831a3d3fddb3b689e4b33311a7",
-  "currentNormalCommit": "2f7759a6127a1a011d9355324c81adbf64a370b1",
+  "baselineCommit": "3d1b1e2de97dec16f548ada4cbdc04469d726654",
+  "programTree": "ffc9445a604790487313e27ef85746863f5f733e",
+  "currentNormalCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
   "kind": "corrective",
   "files": [
     {
@@ -351,9 +351,9 @@
     {
       "path": ".github/workflows/validate-write-libreoffice-poc.yml",
       "mode": "100644",
-      "object": "d6b3548f2d6da26cfca22cda25cbe5e159e6126f",
-      "bytes": 20822,
-      "sha256": "1e768081227b9ac5b20c8f9e8fcdf5ab06547b987f8a4cd40e99381e84dfbdb9"
+      "object": "ba1ec2974a0943b7abc9d42221d0fb2b33ab1a9f",
+      "bytes": 21572,
+      "sha256": "100821424d5e90822acfdb805d02ea0f777a0c8a0ddf9f88fa3630b56d44a834"
     },
     {
       "path": ".gitignore",
@@ -5398,9 +5398,9 @@
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/Cargo.toml",
       "mode": "100644",
-      "object": "b1080fb17e8a724c7a1ad8a19a3126c03042b8fd",
-      "bytes": 646,
-      "sha256": "da803a3e02a113186ec37bee6e3738647309d4197c43459bf5f988fd596047d1"
+      "object": "c3442dbfad131c18dc9887d36afc4bdfce984291",
+      "bytes": 692,
+      "sha256": "733bab07adcfbd7d1708458cfd84afc3ad5bb71a45133a0e9c56d9ddcad2c402"
     },
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/PROVENANCE.md",
@@ -5433,9 +5433,9 @@
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/src/lib.rs",
       "mode": "100644",
-      "object": "24372ab26c3be0ef329e20c019492fe3195980c7",
-      "bytes": 71984,
-      "sha256": "8b9c823a40df65d191b3b092ff93fd5f5fbfc78b0362e937a88949bcd66fbad2"
+      "object": "003b8200b75b9e3163284c9cacf822a0dcd2883c",
+      "bytes": 75176,
+      "sha256": "df1698bcbcb590de1cf0fa274165d97f1650438318976189f0019b7572a3b50c"
     },
     {
       "path": "9to1 Workspace/Canvas/tools/README.md",
@@ -6000,9 +6000,9 @@
     {
       "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.ArtifactContent.cs",
       "mode": "100644",
-      "object": "d273e3107a1f7815f3e124aed679ce16e527c039",
-      "bytes": 6161,
-      "sha256": "6adf7a978f2d76603042b1edbbd4eaa0fb9c330c8ba3a0f062bd1ff514cf310d"
+      "object": "233ac9eca5c0fc36378ebe48db66a3c969a30860",
+      "bytes": 7144,
+      "sha256": "0c6824e9240c04c78fb98c6b22a8ad5a3e88e88b2269650038682972a750b0dc"
     },
     {
       "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.ArtifactIdentity.cs",
@@ -6077,9 +6077,9 @@
     {
       "path": "9to1 Workspace/Files/CUI/Services/FilesMaterializationRegistry.cs",
       "mode": "100644",
-      "object": "d13075dc04c5bd18c4725956ea2e35767b431886",
-      "bytes": 13904,
-      "sha256": "bd1922b05478d9e36b6c58ada1a63b9806c4adf11cf2de78d8e269850122251d"
+      "object": "1aad0f575df27360cd8760919f05eca2e66d4814",
+      "bytes": 14405,
+      "sha256": "5c753769946fba700bbc4897cd5563b851fc15c86a512d5e990617f03ae715e8"
     },
     {
       "path": "9to1 Workspace/Files/CUI/Services/FilesOperationJournal.cs",
@@ -6131,11 +6131,18 @@
       "sha256": "5736e28865831da0033f106ed2041e7429ab81dfb6fe9b185a1065be305254d6"
     },
     {
+      "path": "9to1 Workspace/Files/NativeHost/FilesArtifactResourceResolver.Mail.cs",
+      "mode": "100644",
+      "object": "79100b90c8555ad8e22582f6c22b3bbadd8ceef3",
+      "bytes": 2890,
+      "sha256": "53a144ca4fa440917ee52f354649238dea208e80670d2e6bd39808b9eaa80d8c"
+    },
+    {
       "path": "9to1 Workspace/Files/NativeHost/FilesArtifactResourceResolver.cs",
       "mode": "100644",
-      "object": "eaf1e197426eb2217ec25dc12d6b8f85feab6645",
-      "bytes": 18852,
-      "sha256": "b2e70e3d225fe6a4056c428bb02dda3d044a93e5b361356df5a1f8e1877a0848"
+      "object": "d8e635986e355800cbce5191fecc3f7041804d3f",
+      "bytes": 19100,
+      "sha256": "d1dd9aa3fd1730af5f68895b69c7d955c301f5788eeecfbbd76a796bdfce3b45"
     },
     {
       "path": "9to1 Workspace/Files/NativeHost/FilesCompatibilityPackageContentSource.cs",
@@ -6152,6 +6159,13 @@
       "sha256": "85098ba20a23a6bc5576ef28316f4f2cc8c19820893802f7406749ec200d3b17"
     },
     {
+      "path": "9to1 Workspace/Files/NativeHost/FilesMailAttachmentContentSource.cs",
+      "mode": "100644",
+      "object": "1726dcbcab799a4d314bc8e75817c9f19de050ab",
+      "bytes": 11118,
+      "sha256": "00e1ddef3c2cb3b78f3d9f7a1a96676f67f65a4231f8a5334d56e4899289ec57"
+    },
+    {
       "path": "9to1 Workspace/Files/NativeHost/FilesMediaAssetSourceResolver.cs",
       "mode": "100644",
       "object": "7e4b0377ce7f2906d9d1e60f62671e063730a799",
@@ -6159,11 +6173,18 @@
       "sha256": "3d7f4fe97ce7f2a31b2717ed26487ba5bd450e9d9bf9cb79d1cf4fa3697be377"
     },
     {
+      "path": "9to1 Workspace/Files/NativeHost/FilesNativeBrowserService.MailSelection.cs",
+      "mode": "100644",
+      "object": "94cd0207d06c1731cb524c49ed6b683a2256e0c6",
+      "bytes": 2185,
+      "sha256": "ea40bbf1c12c4c1fb2fda6070ab5c81c76610d572c322955664bd5f2b4370fc3"
+    },
+    {
       "path": "9to1 Workspace/Files/NativeHost/FilesNativeBrowserService.cs",
       "mode": "100644",
-      "object": "b0f82a29fb4c394d6854b456fb32710b9d430164",
-      "bytes": 10936,
-      "sha256": "7ecad5b12c109197f0fea798a84da7e1afd7aa4b7dcf3baef755a903d0c6a764"
+      "object": "4cd0d4045b02800100efef640ff98ddb4c433f9c",
+      "bytes": 14197,
+      "sha256": "169386e08a7125cbe4d8fa65cb37c8e18a1f97399f3c4e2fd8db054628845111"
     },
     {
       "path": "9to1 Workspace/Files/NativeHost/FilesNativeFolderReadSource.cs",
@@ -6189,9 +6210,9 @@
     {
       "path": "9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj",
       "mode": "100644",
-      "object": "314123d46cf5388cc16e2eecffc4747b6ef375c7",
-      "bytes": 650,
-      "sha256": "8f5b505fe169649e4e39873a2d63cda653f584b3cb2de35f1b5bddba78955bb3"
+      "object": "5b489d637b97aee55186a0c56a2a68ca6a7d0cda",
+      "bytes": 716,
+      "sha256": "d26b332185827ccf97b6648beaefa76b094fcabb7d22efab65828f7fb06e4238"
     },
     {
       "path": "9to1 Workspace/Files/NativeHost/NativeFilesArtifactContentReader.cs",
@@ -24674,11 +24695,18 @@
       "sha256": "a81002c51c9716e6208c805d57ed3a73df68157fbf6d108b79266e01ec8ba245"
     },
     {
+      "path": "9to1 Workspace/Mail/Providers/MailAttachmentContentSource.cs",
+      "mode": "100644",
+      "object": "42f845e69d9d8217006193fcf61be4856154eb81",
+      "bytes": 553,
+      "sha256": "4dc56f216b1c5c4c9580e674ef6a0ee6f5badb486e4615945a3e34929e79259f"
+    },
+    {
       "path": "9to1 Workspace/Mail/Providers/MailKitImapSmtpProvider.cs",
       "mode": "100644",
-      "object": "c88da8d080a4503b0a7bb6c75d14f12a396e5e59",
-      "bytes": 18098,
-      "sha256": "ccf87f38cdd869b58e0b79f791e745262870b03d232e854c7f370876f9eace53"
+      "object": "4c09beb83e955567ee60c26a8aa12b7897b01387",
+      "bytes": 21260,
+      "sha256": "904101d7d62f40879bde24682d90dbc55a5e70c8e9314ca9aea5099e949e1990"
     },
     {
       "path": "9to1 Workspace/Mail/Providers/MailProviderContracts.cs",
@@ -24697,9 +24725,9 @@
     {
       "path": "9to1 Workspace/Mail/Services/MailDomainService.cs",
       "mode": "100644",
-      "object": "32afa40c74896daf95f7bbe771728ce10101246e",
-      "bytes": 37026,
-      "sha256": "7f0df74e121a5cd4804cf8f2ef741ab67d232418dfb0f652540f3e14e777bd48"
+      "object": "65bcc0873ab071c90d6965859ee147b5f9888d2d",
+      "bytes": 38519,
+      "sha256": "91bf2a0e8898abc7277d3ff03a51c87006c924e3cff6fbde2d3e6f94031481a5"
     },
     {
       "path": "9to1 Workspace/Mail/Services/MailHtmlSanitizer.cs",
@@ -24739,9 +24767,16 @@
     {
       "path": "9to1 Workspace/Mail/Tests/MailFoundationTests.cs",
       "mode": "100644",
-      "object": "d09a8dd5dd32f5552f3b92a2a54fbdaa3e35aff0",
-      "bytes": 10991,
-      "sha256": "99a00c539715a7e179eb658bc69a48340d5a0d64e03fc83206c504794b292714"
+      "object": "5e3848bd93ec412f2f4ae647cd63ae793b1a9add",
+      "bytes": 13408,
+      "sha256": "9bc21b52d83be2e1fe42eb726ef1ceeb854e553e463c403b0adfb3a9e6e9f8e4"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
+      "mode": "100644",
+      "object": "f980b8fcf8c89debdcd7e87141122594e3ed62e6",
+      "bytes": 6403,
+      "sha256": "8edeb64a3458461f26fe2f3d011dd966d4da5359ba2c8adf28a49bc0df522cf2"
     },
     {
       "path": "9to1 Workspace/Mail/UI/MailWorkspace.cui",
@@ -33417,6 +33452,13 @@
       "sha256": "15194304735f24095cd8393687984cbd8d17c17fb5a0e701d4c831ade6b1cf83"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/MailFilesAttachmentPicker.cui",
+      "mode": "100644",
+      "object": "d88b0778b8bc5543a1e72165618457bbccfe8aa9",
+      "bytes": 1077,
+      "sha256": "e0e470f8edda995161232af4237189eba34141df880e80bcf50b31f16db9a3e5"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/ShelfWorkspace.cui",
       "mode": "100644",
       "object": "9e49c4d2e75b4aa287d0fb65c8f68858f5cfd62e",
@@ -34021,16 +34063,23 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/ViewModels/MailPageViewModel.DraftAutosave.cs",
       "mode": "100644",
-      "object": "7aef3bb4516be431a14c5034589de8f3bf14a347",
-      "bytes": 5844,
-      "sha256": "38a3eacc56f4009dbb14f92d71470b0ba9c655a1849bf8b6f14fbbe9cf27d334"
+      "object": "1fb5f113257efd4f8dec79bc88a9315544ba9144",
+      "bytes": 5900,
+      "sha256": "9ec59d1c4612bcce5fb2f60a4afb8fc9bdc790b2256db78710b2195ca66e9bb7"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/ViewModels/MailPageViewModel.DraftRestore.cs",
       "mode": "100644",
-      "object": "b3c9c121989f579ef0a7298c34d7f37a8296d6cd",
-      "bytes": 2298,
-      "sha256": "0d2e7043c0773b7b388b69e99ffe1cd63b2886d53ccd06f4985b4d9973fb2eb5"
+      "object": "30592f98701451c3ce9471b6f69c12926779453a",
+      "bytes": 2618,
+      "sha256": "9a9711dd7b9df0ecbe907b06ea1a8f8196f48531346a1edf85f0c5f036f718e9"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ViewModels/MailPageViewModel.OriginalCompose.cs",
+      "mode": "100644",
+      "object": "46eb3b0d23f3b5b46fefd50b993488435ae9dc0a",
+      "bytes": 2724,
+      "sha256": "622b5b7aac6817537b5cac15701a967d499d41c3c46c7b1472c230e95f013cba"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/ViewModels/MailPageViewModel.ParityActions.cs",
@@ -34049,9 +34098,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/ViewModels/MailPageViewModel.cs",
       "mode": "100644",
-      "object": "559fcce4de34053a79eb570aab67be17b3688107",
-      "bytes": 32887,
-      "sha256": "96d406fc6c95a7fe1830737da8da7e3e6ad7149488eb4b633cda577856224331"
+      "object": "3bd606934e65b20f3ee824ad46a0c3c1368f6a40",
+      "bytes": 33498,
+      "sha256": "80ecb61f518c5f52c98d26dfe738b6a99268a6877115a557db42c7908c85adec"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/ViewModels/MainWindowModeNavigationExtensions.cs",
@@ -35398,6 +35447,13 @@
       "sha256": "f4bfe8f073f03cd234e176dfc9c34526ed110ebc5a5dccc72e3cc137001396b3"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Mail/FilesMailCanonicalAttachmentPicker.cs",
+      "mode": "100644",
+      "object": "cd5f49740a91e136ee42d159ccb48b28852fcd33",
+      "bytes": 12483,
+      "sha256": "d8f61bc21eb9014bff5a806b524075b71c22f8dd4dd46abb45d1b38d42cccbe4"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Mail/MailPage.ReadingLayout.cs",
       "mode": "100644",
       "object": "ffcfe04a9b9ba5933e5e91cee9e22be9024fac71",
@@ -35421,9 +35477,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Mail/MailPage.axaml.cs",
       "mode": "100644",
-      "object": "22477e2e02a72fe2d49af14ff04ffc8bd1d6bef2",
-      "bytes": 8835,
-      "sha256": "3aceb3c69d67a3732cc2e8d3655fad3435da4b4afed3136d406eec1fc669f220"
+      "object": "80514013b977d86383241ddfdfb65ff6b6f2bcef",
+      "bytes": 11612,
+      "sha256": "3ee9c1483e4f17f59a0e8c57e9a1a1f78695dd08daec5cd820e2004b62ed615e"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Mail/MailResponsiveLayoutPolicy.cs",
@@ -39934,6 +39990,13 @@
       "sha256": "ff146baaa534019f90e3ade0bc8fa0b57e8924cb5f4f81b6cea15d94213ddfa8"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMailAttachmentContentTests.cs",
+      "mode": "100644",
+      "object": "641319fbf927a51532ec3ca40d912c9d66ecf210",
+      "bytes": 13644,
+      "sha256": "c5ae3333bc9baba712bfdebc3a96f4997373ecbbbbe835c937e8e7fd54bbf11d"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMediaAssetSourceResolverTests.cs",
       "mode": "100644",
       "object": "6f60fdc96a33f212a026fb85b796371c2d80dcc0",
@@ -40359,6 +40422,13 @@
       "object": "e1b56edd944c844b0c373f2e243d3ef15f8427a4",
       "bytes": 9447,
       "sha256": "4a7aecfe26e9606e7dbeea967915db3f0033f2758c4c598dfe7f3c2deef39cdf"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailCanonicalFilesAttachmentTests.cs",
+      "mode": "100644",
+      "object": "f100fbedcea06c418ee8486707726612057575ea",
+      "bytes": 22071,
+      "sha256": "17697831aec6e9759497673bc643d155fcb0f47c49ef5cb95ea6ab491a507420"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailDraftRecoveryPolicyTests.cs",
@@ -66271,7 +66341,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance.",
+  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance. Preferred07 binds exact169 consumer serde_json float_roundtrip and failure-only bounded fallible numeric diagnostic, preserving all21 exact assertions and original panic. Parser causality is unverified until the fresh exact save/reopen run. Actual06 owning originals prove20/21 Rust passes and one exact SVG failure; actual06 regression/resource statuses SUCCESS have outstanding unadmitted raw original closure. No inferred whole-three/native acceptance. Coherent accepted normal27 Mail and normal26 Writer bytes retained; actual06 Native Files provider capture pair stays exact because removing only that pair gives complete normal27 bytes. Complete original95/12/36/native21, strict protected-root SDK155/full official archive/member/type/mode/source/VMR/provider/PDB/task/restores/old105 tuples/actual processes/drains remain mandatory and byte exact.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/checkpoint22-publication-local.json",
@@ -66492,6 +66562,42 @@
     {
       "path": "/workspace/astra-source/worker3-write-normal24-pinned-xamlx-workflow-correction01/manifest.json",
       "sha256": "a4a8a0c0f3d5e3d0fa3ddfda1a54c6fac642e024ab591f353373f12c14c92881"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas05-current25-protected-sdk-full-corrective06/manifest.json",
+      "sha256": "f544b2e2b288f33705f95e8d8e97593ab1cabf919d76a36b83a41f9118045e05"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas06-serde-float-roundtrip-failure-diagnostic-source169-fallible-sink/manifest.json",
+      "sha256": "c98ee57a727ff39c212d5e84a1d8e3aac9d261da95088e1ef93e0cbd4daa2647"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas169-native-feature-source-peer01.json",
+      "sha256": "134433ca7ab7147294a123c494b277e3dd2090d08702088b449f3e4fc9b973cf"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-canvas169-exact-float-feature-fallible-diagnostic-source-peer01.json",
+      "sha256": "d6eb595a19fd7105ea3cc65b3dd54bce39dbffd327a720aef130b15d7c47db7e"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas06-actual-owning-original-closure166/receipt.json",
+      "sha256": "90d4a8ce9644f9fdf126db096f2917dbfb689f24e2c3200e9627153de67befb9"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint26-publication-local.json",
+      "sha256": "3f37533c2d4fbb384287dfbfe81f1b757fd240c5ba11aca2f3c7fa335ffaeb10"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint27-publication-local.json",
+      "sha256": "ed8d800a5d35acae7fcf6acc80a05db93c73cfe650d363de477862e390f067bf"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-canvas169-current27-three-files-preservation-ratification01.json",
+      "sha256": "7bf3cbc51f3dbaba38e490675d98b75513df2cfe612443dcec589fee1c2d7aa7"
+    },
+    {
+      "path": "/workspace/astra-source/root-mail11-full-three-original-replay471.json",
+      "sha256": "a8c20a33f463ef407050426ebc8577381affa3840c5ac4a8666a2b27df8bfccf"
     }
   ],
   "sharedCakeIdContract": null,
