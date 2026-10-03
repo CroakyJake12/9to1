@@ -138,11 +138,35 @@ try {
   const hash = createHmac('sha256', key).update(`login\nemail:${a.email}\n192.0.2.91`).digest('hex');
   const readRow = async () => { const rows = await d1(`SELECT attempts,windowStartedAt,lockedUntil,updatedAt FROM cake_login_attempts WHERE keyHash='${hash}'`); assert.equal(rows.length, 1); return rows[0]; };
   const before = Math.floor(Date.now() / 1000);
+  let credentialErrorResponses = 0, builtinThrottleResponses = 0, durableThrottleResponses = 0;
   for (let i = 1; i <= 700; i++) {
     const r = await request('/api/auth/sign-in/email', { email: a.email, password: i === 700 ? a.password : 'incorrect-password' });
-    if (i <= 8) assert.ok([400, 401, 422].includes(r.status), `real wrong credential attempt ${i}`);
-    else { assert.equal(r.status, 429, `request ${i} blocked`); assert.equal((await r.json()).error, 'too_many_attempts'); assert.ok(Number(r.headers.get('retry-after')) > 0); }
+    if (i <= 8) {
+      // The durable pre-handler bucket admits at most eight attempts, while
+      // unchanged maintained Better Auth can apply its stronger 3/10s rule.
+      if (r.status === 401) {
+        const body = await r.json();
+        assert.equal(body.code, 'INVALID_EMAIL_OR_PASSWORD', 'exact maintained wrong-credential response');
+        credentialErrorResponses++;
+      } else {
+        assert.equal(r.status, 429, `early attempt ${i} requires an exact maintained throttle response`);
+        const body = await r.json();
+        assert.deepEqual(Object.keys(body).sort(), ['message'], 'maintained throttle response has its documented shape');
+        assert.equal(body.message, 'Too many requests. Please try again later.');
+        assert.ok(Number(r.headers.get('x-retry-after')) > 0, 'maintained throttle retry interval');
+        builtinThrottleResponses++;
+      }
+    } else {
+      assert.equal(r.status, 429, `request ${i} blocked by durable pre-handler limit`);
+      assert.equal((await r.json()).error, 'too_many_attempts');
+      assert.ok(Number(r.headers.get('retry-after')) > 0);
+      durableThrottleResponses++;
+    }
   }
+  assert.equal(credentialErrorResponses + builtinThrottleResponses, 8, 'all eight pre-lock API responses are observed');
+  assert.ok(credentialErrorResponses >= 1 && credentialErrorResponses <= 8, 'real credential-error responses never exceed the configured test policy');
+  assert.equal(durableThrottleResponses, 692, 'remaining actual requests use the durable lock response');
+
   const locked = await readRow();
   assert.equal(locked.attempts, 8);
   assert.ok(locked.windowStartedAt >= before);
@@ -173,9 +197,9 @@ try {
     await page.waitForFunction(() => document.querySelector('#sign-in-form').dataset.busy === 'false');
     assert.equal(loginRequests, 1, 'two real form submissions produce one real network request');
     assert.equal(await page.locator('#sign-in-form button[type=submit]').isEnabled(), true);
-    console.log(JSON.stringify({ result: 'passed', directRequests: 700, wrongAdmitted: 8, blocked: 692, durableLockSeconds: 1800, sameStoreRestart: true, browserSubmits: 2, browserNetworkRequests: 1, scope: 'isolated local Wrangler/D1 and genuine generated UI; source-backed pre-handler ordering, no credential-call counter/elapsed CPU/ingress billing/universal quota/cloud/OIDC acceptance' }));
+    console.log(JSON.stringify({ result: 'passed', directRequests: 700, durableWindowAttempts: 8, credentialErrorResponses, builtinThrottleResponses, durableThrottleResponses, throttleResponses: builtinThrottleResponses + durableThrottleResponses, durableLockSeconds: 1800, sameStoreRestart: true, browserSubmits: 2, browserNetworkRequests: 1, scope: 'isolated local Wrangler/D1 and genuine generated UI; source-backed pre-handler ordering, no credential-call counter/elapsed CPU/ingress billing/universal quota/cloud/OIDC acceptance' }));
   } else {
-    console.log(JSON.stringify({ result: 'passed', phase: 'traffic-only', browserExecuted: false, directRequests: 700, wrongAdmitted: 8, blocked: 692, durableLockSeconds: 1800, sameStoreRestart: true, scope: 'isolated local Wrangler/D1 direct API only; genuine browser still mandatory in combined phase; source-backed pre-handler ordering, no credential-call counter/elapsed CPU/ingress billing/universal quota/cloud/OIDC acceptance' }));
+    console.log(JSON.stringify({ result: 'passed', phase: 'traffic-only', browserExecuted: false, directRequests: 700, durableWindowAttempts: 8, credentialErrorResponses, builtinThrottleResponses, durableThrottleResponses, throttleResponses: builtinThrottleResponses + durableThrottleResponses, durableLockSeconds: 1800, sameStoreRestart: true, scope: 'isolated local Wrangler/D1 direct API only; genuine browser still mandatory in combined phase; source-backed pre-handler ordering, no credential-call counter/elapsed CPU/ingress billing/universal quota/cloud/OIDC acceptance' }));
   }
 } catch (error) {
   primaryFailure = error;

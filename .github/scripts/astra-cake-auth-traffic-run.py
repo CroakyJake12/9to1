@@ -35,7 +35,7 @@ assert not (package/'.dev.vars').exists() and not (package/'.local-run').exists(
 assert subprocess.check_output(['node','--version'],text=True).strip().startswith('v24.')
 env=dict(os.environ,CI='true',WRANGLER_SEND_METRICS='false',NO_COLOR='1')
 for key in env:
- if key.startswith(('CLOUDFLARE_','CF_API_')):raise ValueError('No cloud credentials in private local validation')
+ if key=='MINIFLARE_CACHE_DIR' or key.startswith(('CLOUDFLARE_','CF_API_')):raise ValueError('No cloud credentials or ambient cache overrides in private local validation')
 known_secrets=set()
 def sanitized(raw):
  text=raw.decode('utf-8','replace')
@@ -90,8 +90,12 @@ try:
   except json.JSONDecodeError:continue
   if isinstance(value,dict) and value.get('result')=='passed':markers.append(value)
  assert len(markers)==1;actual=markers[0]
- for key,value in {'phase':'traffic-only','browserExecuted':False,'directRequests':700,'wrongAdmitted':8,'blocked':692,'durableLockSeconds':1800,'sameStoreRestart':True}.items():assert type(actual[key]) is type(value) and actual[key]==value
- (out/'actual-independent-success.json').write_text(json.dumps({key:actual[key] for key in ['result','phase','browserExecuted','directRequests','wrongAdmitted','blocked','durableLockSeconds','sameStoreRestart']},indent=2)+'\n')
+ for key,value in {'phase':'traffic-only','browserExecuted':False,'directRequests':700,'durableWindowAttempts':8,'durableThrottleResponses':692,'durableLockSeconds':1800,'sameStoreRestart':True}.items():assert type(actual[key]) is type(value) and actual[key]==value
+ for key in ['credentialErrorResponses','builtinThrottleResponses','throttleResponses']:assert type(actual[key]) is int
+ assert 1<=actual['credentialErrorResponses']<=8 and 0<=actual['builtinThrottleResponses']<=7
+ assert actual['credentialErrorResponses']+actual['builtinThrottleResponses']==8
+ assert actual['throttleResponses']==actual['builtinThrottleResponses']+692
+ (out/'actual-independent-success.json').write_text(json.dumps({key:actual[key] for key in ['result','phase','browserExecuted','directRequests','durableWindowAttempts','credentialErrorResponses','builtinThrottleResponses','durableThrottleResponses','throttleResponses','durableLockSeconds','sameStoreRestart']},indent=2)+'\n')
 finally:
  verify()
  auth_node_after=inventory(package/'node_modules')
