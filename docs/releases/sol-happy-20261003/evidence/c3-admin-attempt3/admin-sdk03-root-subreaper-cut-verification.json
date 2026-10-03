@@ -1,0 +1,14 @@
+{
+  "head": "ae1d14c6b307913d046318e74a17cbbe94f46f90",
+  "cutPath": ".github/validation/astra-organisation-full-owning-cut.json",
+  "cutBytes": 2840395,
+  "cutSha256": "b90105fef02b821fc8b84ef30458ac6b2b6dda1f80b9afc77ecc377e8ddf59bd",
+  "physicalBlobsVerified": 9454,
+  "gitlinksVerified": 22,
+  "cleanMaterializedDependencies": 3,
+  "originalDeliveryRowsUnchanged": 29,
+  "originalProductRowsUnchanged": 17,
+  "originalSuiteInventoryUnchanged": true,
+  "intentionalProposal": "fe96d5004a8a608967186000da1f5deda31df470",
+  "qualification": "Read-only root receiving cut verification; no execution or source adoption."
+}
