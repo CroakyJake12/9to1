@@ -1,0 +1,99 @@
+{
+  "runId": "sol-happy-20261003",
+  "team": "B",
+  "thread": "Terra-Form",
+  "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
+  "branch": "team-b/sol-happy-browser-20261003",
+  "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "baselineAcceptance": "UNVERIFIED; verified remote main identity, acceptedHead remains null",
+  "specification": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "modifiedTime": "2026-10-03T16:54:11.626Z",
+    "sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23"
+  },
+  "modelAssignments": {
+    "B1": "gpt-6.1-sol",
+    "B2": "gpt-6.1-sol",
+    "B3": "gpt-6.1-sol",
+    "B4": "gpt-6.1-sol",
+    "B5": "gpt-6.1-sol",
+    "B6": "gpt-6.1-sol",
+    "coordinator": "Inherited runtime model; coordinator model switching unavailable"
+  },
+  "claims": [
+    {
+      "worker": "B1",
+      "paths": [
+        "apps/Web/**"
+      ],
+      "task": "Browser entry/bootstrap adapter using existing CUI/Avalonia.Browser; preserve canonical Home/domain",
+      "state": "IN_PROGRESS",
+      "restriction": "No shared contract/vendor edits without owning Team A acknowledgement"
+    },
+    {
+      "worker": "B2",
+      "paths": [
+        "team-b evidence: b2 productivity requirement maps"
+      ],
+      "task": "Write/Present/Canvas/Boards/Data/Forms full browser operation and donor map",
+      "state": "IN_PROGRESS"
+    },
+    {
+      "worker": "B3",
+      "paths": [
+        "team-b evidence: b3 specialist requirement maps"
+      ],
+      "task": "Mail/Games/Planner/Picture/Wave/Motion/Dev/Stacks/Terminal/MiniComputer/Browse/Maps/Launcher/Shelf browser map",
+      "state": "IN_PROGRESS"
+    },
+    {
+      "worker": "B4",
+      "paths": [
+        "team-b evidence: b4 Files/Sites/Terra-form maps"
+      ],
+      "task": "Files/Sites/Link/Prototype/Paths/Replay/Variants browser operation and contract map",
+      "state": "IN_PROGRESS"
+    },
+    {
+      "worker": "B5",
+      "paths": [
+        "team-b evidence: b5 AI/account maps"
+      ],
+      "task": "Accounts/Business/Admin/Connect/Spaces/VisionVoice/AIStudio/Play/Automations browser mapping and real service requests",
+      "state": "IN_PROGRESS"
+    },
+    {
+      "worker": "B6",
+      "paths": [
+        "eng/browser/validate-acceptance-evidence.py",
+        "eng/browser/acceptance-evidence.schema.json",
+        "eng/browser/README.md",
+        "eng/browser/tests/test_acceptance_evidence.py"
+      ],
+      "task": "Independent strict requirement/evidence gate and negative controls; independent browser foundation review",
+      "state": "IN_PROGRESS"
+    }
+  ],
+  "requests": [
+    "Team C acknowledge B-owned claims and confirmed candidate baseline; Team C remains sole release integrator.",
+    "Team A register and acknowledge ownership: browser host needs shared Home services/domain adapter contracts, no private replacements will be created.",
+    "Team A or owning integrator supply missing pinned Avalonia build/TargetFrameworks.props, build/AvaloniaPublicKey.props and Browser/build props/targets; imports are absent in canonical checkout, blocking CUI/browser builds. Please coordinate ownership before changes.",
+    "C4 publish acknowledged authenticated Files/Sites transport contracts, authoritative metadata/revision commit proofs and staging frontend/backend deployment identities; existing IFilesService lacks browser byte-reference transport.",
+    "Team C publish authenticated session/account/permission/tenant/AI/job/billing service protocols and isolated test accounts; no staging or provider credentials configured here.",
+    "Team A provide tested desktop candidate for required browser→desktop→browser continuity; no desktop build may be inferred correct.",
+    "Confirm supported browser versions/performance targets via explicit SH-13 decision; do not infer support from one Chromium result."
+  ],
+  "testStatus": "NOT_RUN; no browser PASS claimed. .NET10 SDK verified; wasm workload installation is running; build imports missing.",
+  "evidenceLocation": "/workspace/team-b-evidence/sol-happy-20261003 locally; reviewed commits and durable versioned logs forthcoming",
+  "deploymentStatus": "NOT_DEPLOYED",
+  "commercialStatus": "NOT_ENABLED",
+  "blockers": [
+    "Sandbox plugin/skill/Operating Contract unavailable after exhaustive capability discovery",
+    "Accepted release head and Team A acknowledgement absent",
+    "Pinned shared vendor build support missing",
+    "Authenticated backend/staging/deployment identities absent",
+    "SH-13 browser/runtime/operational decisions OPEN"
+  ],
+  "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication."
+}
