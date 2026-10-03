@@ -10,11 +10,11 @@ On unhandled caller death, the new custodian can strictly drain its own Worker d
 
 ## Receiver startup
 
-Use a **fresh separate checkout**, never the occupied original checkout. The final published branch contains the exact helper source above; fetch and pin its published delivery commit before starting. No credentials or listeners transfer between chats.
+Use a **fresh separate checkout**, never the occupied original checkout. The published branch contains the exact helper source above; fetch it and pin the fresh worktree to reviewed runtime ef6. Documentation/evidence delivery remains separately source-bound. No credentials or listeners transfer between chats.
 
 ```sh
 git fetch origin team-c/sol-happy-c2-fixture-recovery
-git worktree add --detach /workspace/cake-id-receiver-8799 <published-delivery-commit>
+git worktree add --detach /workspace/cake-id-receiver-8799 ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635
 cd /workspace/cake-id-receiver-8799/cloud/cake-id-auth
 npm ci --cache /workspace/cake-id-receiver-evidence/npm-cache
 python3 -B tests/linux-fixture-custodian.py --check
