@@ -80,7 +80,7 @@ public sealed class SharedMathNativeGraphTests
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await editor.WhenActionsIdleAsync();
                 window.MouseDown(screen, MouseButton.Left); window.MouseUp(screen, MouseButton.Left); Dispatcher.UIThread.RunJobs();
                 Assert.False(editor.TrySetValue("X", "1"));
-                Assert.Throws<ObjectDisposedException>(() => { _ = editor.DispatchAsync("PlacePoint", null); });
+                Assert.Throws<ObjectDisposedException>(() => { _ = editor.DispatchAsync("PlacePoint", null, TestContext.Current.CancellationToken); });
                 Assert.Equal(durable, MathObjectCodec.Encode(editor.Snapshot));
             }
             finally { window.Close(); }
@@ -100,7 +100,7 @@ public sealed class SharedMathNativeGraphTests
             using var editor = new SharedGraphEditorControl(graph);
             Assert.Equal(new[] { function.PrimitiveID }, editor.Projection.UnavailableSymbolicPrimitiveIDs);
             Assert.Empty(editor.Projection.RenderedPrimitiveIDs); Assert.False(editor.IsActionAvailable("PlacePoint"));
-            Assert.Throws<InvalidOperationException>(() => { _ = editor.DispatchAsync("PlacePoint", null); });
+            Assert.Throws<InvalidOperationException>(() => { _ = editor.DispatchAsync("PlacePoint", null, TestContext.Current.CancellationToken); });
             Assert.Equal(encoded, MathObjectCodec.Encode(editor.Snapshot));
             using var editable = new SharedGraphEditorControl(graph with { ResponseTools = [GraphResponseTool.PlacePoint] });
             Assert.True(editable.TrySetValue("X", "NaN")); Assert.True(editable.TrySetValue("Y", "2"));

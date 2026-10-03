@@ -377,18 +377,18 @@
       "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
       "namespace": "Haven.Desktop.Tests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
-      "sha256": "f395595ac9b8fc834a8b723264068ef120dbd5a8949f3e9b1df1fa406b02312b",
-      "origin": "Canonical shared mathematics source04, full native/API owning gate unrun",
-      "source": "/workspace/astra-source/worker3-shared-canonical-math-source04-explicit-params-consistent-overlays/manifest.json"
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9",
+      "origin": "Canonical shared mathematics source06; exact original native test cancellation correction, full gate pending",
+      "source": "/workspace/astra-source/worker3-shared-canonical-math-source06-original-native-test-cancellation/manifest.json"
     },
     {
       "class": "SharedMathNativeGraphTests",
       "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
       "namespace": "Haven.Desktop.Tests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
-      "sha256": "7f2796a9d4c03d7a1b699fa2b22cf5fc1bad47569cbf5f30a03266392e7d0c2f",
-      "origin": "Canonical shared mathematics source04, full native/API owning gate unrun",
-      "source": "/workspace/astra-source/worker3-shared-canonical-math-source04-explicit-params-consistent-overlays/manifest.json"
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e",
+      "origin": "Canonical shared mathematics source06; exact original native test cancellation correction, full gate pending",
+      "source": "/workspace/astra-source/worker3-shared-canonical-math-source06-original-native-test-cancellation/manifest.json"
     }
   ],
   "limits": "Source classes only; mandatory actual strict zero-failure zero-skip TRX required.",

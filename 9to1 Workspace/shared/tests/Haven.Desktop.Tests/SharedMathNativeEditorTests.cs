@@ -68,7 +68,7 @@ public sealed class SharedMathNativeEditorTests
                 retired.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await editor.WhenActionsIdleAsync();
                 Assert.False(editor.TrySetValue("Draft", "foreign"));
-                Assert.Throws<ObjectDisposedException>(() => { _ = editor.DispatchAsync("Fraction", null); });
+                Assert.Throws<ObjectDisposedException>(() => { _ = editor.DispatchAsync("Fraction", null, TestContext.Current.CancellationToken); });
                 Assert.Equal(last, MathObjectCodec.Encode(editor.Snapshot.LastValid));
             }
             finally { window.Close(); }
