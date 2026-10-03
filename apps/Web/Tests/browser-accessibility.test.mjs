@@ -149,7 +149,7 @@ const disposedMutant=source.replaceAll('() => { if (disposed) return; owner.Perf
 assert.notEqual(disposedMutant,source);
 await assert.rejects(test(disposedMutant,disposedEvents),assert.AssertionError);
 checks.push({name:'removed-disposed-event-forwarding-guards',result:'EXPECTED_FAILURE_DETECTED'});
-const tabMutant=source.replace("if (nativeHost) browserDocument.addEventListener('keydown', nativeTab, true);",'');
+const tabMutant=source.replace("browserDocument.addEventListener('keydown', nativeTab, true);",'');
 assert.notEqual(tabMutant,source);await assert.rejects(test(tabMutant,nativeTab));
 checks.push({name:'removed-native-tab-arbitration-subscription',result:'EXPECTED_FAILURE_DETECTED'});
 const focusOrderMutant=source.replace('nativeFocusedId = snapshot.elements.find(peer => peer.focused)?.id;','');

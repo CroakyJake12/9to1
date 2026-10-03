@@ -16,12 +16,42 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
     let nativeFocusedId;
     let nativeHostTabIndex;
     let ownsHostTabIndex = false;
+    let projectedFocus;
+
+    function releaseProjectedFocus() { projectedFocus = undefined; }
+
+    function observeFocus(event) {
+        if (disposed) return;
+        if (!nativeHost?.contains(event.target)) {
+            if (!root.contains(event.target)) releaseProjectedFocus();
+            return;
+        }
+        const claimed = projectedFocus;
+        if (!claimed) return;
+        browserWindow.queueMicrotask(() => {
+            if (disposed || projectedFocus !== claimed || generation !== claimed.generation
+                || !nativeHost.contains(browserDocument.activeElement)) return;
+            refresh();
+            const node = elements.get(claimed.id);
+            if (projectedFocus !== claimed || nativeFocusedId !== claimed.id
+                || !node || node.disabled || node.tabIndex < 0) return;
+            restoringFocus = true;
+            try { node.focus({ preventScroll: true }); }
+            finally { restoringFocus = false; }
+        });
+    }
+
+    function observePointer(event) {
+        // Pointer input intentionally selects the owning native control/IME.
+        if (!root.contains(event.target)) releaseProjectedFocus();
+    }
 
     function clear() {
         root.replaceChildren();
         elements.clear();
         generation = undefined;
         nativeFocusedId = undefined;
+        releaseProjectedFocus();
     }
 
     function refresh() {
@@ -48,9 +78,12 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
                 node.dataset.nativePeerId = peer.id;
                 node.addEventListener('focus', () => {
                     if (restoringFocus || disposed) return;
+                    const claimed = { id: peer.id, generation };
+                    projectedFocus = claimed;
                     restoringFocus = true;
                     try {
                         if (owner.PerformAccessibility(peer.id, 'focus', null)) node.focus({ preventScroll: true });
+                        else if (projectedFocus === claimed) releaseProjectedFocus();
                     } finally { restoringFocus = false; }
                 });
                 if (peer.role === 'button') {
@@ -106,7 +139,10 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
         const next = current < 0 ? (event.shiftKey ? nodes.length - 1 : 0) : current + (event.shiftKey ? -1 : 1);
         if (next < 0 || next >= nodes.length) {
             // Let normal browser traversal leave the app at either boundary.
-            nodes[current].focus({ preventScroll: true });
+            releaseProjectedFocus();
+            restoringFocus = true;
+            try { nodes[current].focus({ preventScroll: true }); }
+            finally { restoringFocus = false; }
             return;
         }
         event.preventDefault();
@@ -116,6 +152,9 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
     function releaseNativeHost() {
         if (!nativeHost) return;
         browserDocument.removeEventListener('keydown', nativeTab, true);
+        browserDocument.removeEventListener('focusin', observeFocus, true);
+        browserDocument.removeEventListener('pointerdown', observePointer, true);
+        releaseProjectedFocus();
         if (ownsHostTabIndex && nativeHost.tabIndex === -1) {
             if (nativeHostTabIndex === null) nativeHost.removeAttribute('tabindex');
             else nativeHost.setAttribute('tabindex', nativeHostTabIndex);
@@ -126,7 +165,11 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
     let timer;
     try {
         refresh();
-        if (nativeHost) browserDocument.addEventListener('keydown', nativeTab, true);
+        if (nativeHost) {
+            browserDocument.addEventListener('keydown', nativeTab, true);
+            browserDocument.addEventListener('focusin', observeFocus, true);
+            browserDocument.addEventListener('pointerdown', observePointer, true);
+        }
         timer = browserWindow.setInterval(refresh, 250);
     } catch (error) {
         disposed = true;
