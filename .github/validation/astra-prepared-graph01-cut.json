@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "6755d1660ed5d438a8d45c1f55bcde1ef6811374",
-  "programTree": "c2153ccefcfe5cdfff6487514c058ac8bb657395",
+  "baselineCommit": "7e9d233a718691b73a3db66be9be2baa1f2656a1",
+  "programTree": "ea25b575963b99b0d8e70adec5281931e9ab4f9e",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -71,16 +71,16 @@
     {
       "path": ".github/validation/astra-prepared-graph01-resource-classes.json",
       "mode": "100644",
-      "object": "158660b316560ec6ea275770e23293a526c3fc01",
-      "bytes": 44221,
-      "sha256": "4c5d5cd5469122c0869f2df1f7ebd362a07711ce7a509695101d59bddb31d65d"
+      "object": "4e0985286e1da9cc4cc65e06b6f550fdd6839461",
+      "bytes": 44275,
+      "sha256": "b4d85a573169a1ccecca73937fd9d133faa3c2de0261bd689b0faa45d2316cba"
     },
     {
       "path": ".github/validation/astra-prepared-graph01-test-classes.json",
       "mode": "100644",
-      "object": "904ac4120cc4064bfef02a58822cbeaf8a9a8dea",
-      "bytes": 29676,
-      "sha256": "6512eaaf68d69961913bd436836870575f0650ec19e061aef7978dc87463d5a2"
+      "object": "9b1b7484bb1366721b57eb70f5621ff523c34027",
+      "bytes": 29730,
+      "sha256": "89b9b07ea4d3d1e66d920f03b95dd837df87a3c4c1503ac800c94d1946b21fda"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40874,9 +40874,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedPreparedGraphTests.cs",
       "mode": "100644",
-      "object": "06e8085a21e570d33aa6c6e59efccaccabdb9a7d",
-      "bytes": 35515,
-      "sha256": "7e2058de372f03b20a193d9546b693cc6494d4740e9f8ce7f99a7904ee589e04"
+      "object": "6525f141bcb78a3d52b192b0cb827d4cd2d46851",
+      "bytes": 35857,
+      "sha256": "be6ad2c01aad77a3fec3d9d48ffe1ca256f1f4ea1093f2cbeb886a49984beb1f"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedRationalExpressionEvaluatorTests.cs",
@@ -67188,6 +67188,26 @@
     {
       "path": "/workspace/astra-source/worker4-graph-source05-synchronous-original-retirement-assertion-source-extension-peer01.json",
       "sha256": "c5d77fb63328e92b8ae6c0a73a4d2e2db82d3723e06ecc9f4f7f57595b773317"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-prepared-graph03-actual6755-current30-synchronous-retirement-assertion/manifest.json",
+      "bytes": 125274,
+      "sha256": "423a44d412946d84e1629140fa7c1b9253d16713458d1d73186c5be38ac02ca3"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shared-prepared-graph-source06-synchronous-disposed-precondition-capture/manifest.json",
+      "bytes": 32543,
+      "sha256": "fed3dc20d1ecfd9bb8f64bd6eed014f445978b3ed8732d4989747692a4475a02"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-graph03-regression131-original-exact-synchronous-precondition-closure01.json",
+      "bytes": 159304,
+      "sha256": "b8357be466a14cdf1639aea296b86157640f88a8c1ce60520e00422a062088ad"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-graph-source06-complete-A1-A3-RAM-source-peer-retainer01.json",
+      "bytes": 1538,
+      "sha256": "0fd63ec1666a5bbad096c7f0fbd1e0111eec6de02d760e0a3efe6f21bd9a6308"
     }
   ],
   "sharedCakeIdContract": null

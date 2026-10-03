@@ -321,7 +321,7 @@ public sealed class SharedPreparedGraphTests
         {
             var graph = Graph("x"); var held = new HeldPreparer();
             var view = new SharedPreparedGraphViewControl(graph, held);
-            Task? task = null, drain = null; Exception? primary = null, originalFailure = null, disposalFailure = null;
+            Task? task = null, drain = null, refusedPreparation = null; Exception? primary = null, originalFailure = null, disposalFailure = null;
             var failures = new List<Exception>(); var verifiedExpectedFailures = false;
             using var unrelated = new CancellationTokenSource(); unrelated.Cancel();
             var failure = new OperationCanceledException("UnrelatedOriginalCancellation", unrelated.Token);
@@ -338,7 +338,11 @@ public sealed class SharedPreparedGraphTests
                 Assert.Contains(cleanup.InnerExceptions, error => ReferenceEquals(error, failure));
                 Assert.All(cleanup.InnerExceptions, error => Assert.Same(failure, error));
                 Assert.Same(drain, view.OriginalDisposalTask); Assert.Null(view.Content); Assert.Null(view.Prepared);
-                Assert.Throws<ObjectDisposedException>(() => { view.SetSourceAsync(graph, TestContext.Current.CancellationToken); });
+                Exception? disposedPrecondition = null;
+                try { refusedPreparation = view.SetSourceAsync(graph, TestContext.Current.CancellationToken); }
+                catch (Exception error) { disposedPrecondition = error; }
+                Assert.IsType<ObjectDisposedException>(disposedPrecondition);
+                Assert.Null(refusedPreparation);
                 verifiedExpectedFailures = true;
             }
             catch (Exception error) { primary = error; }
@@ -346,6 +350,7 @@ public sealed class SharedPreparedGraphTests
             {
                 held.First.TrySetResult(EmptyPrepared(graph));
                 await CollectOriginalTaskFailure(task, failures, verifiedExpectedFailures ? originalFailure : null);
+                await CollectOriginalTaskFailure(refusedPreparation, failures);
                 try { drain ??= view.DisposeAsync().AsTask(); } catch (Exception error) { Retain(failures, error); }
                 await CollectOriginalTaskFailure(drain, failures, verifiedExpectedFailures ? disposalFailure : null);
             }
