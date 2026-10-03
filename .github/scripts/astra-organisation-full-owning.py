@@ -338,7 +338,7 @@ def main():
                         raise RuntimeError('Actual compiled project/configuration mismatch')
                     if P(values['AvaloniaBuildTasksLocation']).resolve() != task_target:
                         raise RuntimeError('Actual original consumer build-task location differs')
-                    generated_context = pdb.assert_generated_context(values, host if project_row['hostContext'] else managed)
+                    generated_context = pdb.assert_generated_context(values, host if project_row['hostContext'] else managed, {'root': root, 'files': cut['files']})
                     target = P(values['TargetPath']).resolve(); external = target.with_suffix('.pdb')
                     if not target.is_relative_to(root) or target.is_symlink() or not target.is_file() or external.is_symlink():
                         raise RuntimeError('Complete actual first-party physical PE/symbol input invalid: ' + project)

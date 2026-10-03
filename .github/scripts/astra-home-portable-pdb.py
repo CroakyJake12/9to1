@@ -116,7 +116,7 @@ def retain_actual_symbols(path, symbols, budget, maximum_evidence):
   handle.write(symbols);handle.flush();os.fsync(handle.fileno())
  if path.read_bytes()!=symbols:raise RuntimeError('Retained actual embedded symbols differ')
 
-def assert_generated_context(values, expected_artifacts):
+def assert_generated_context(values, expected_artifacts, source_owner=None):
  """Bind compiler output to the actual queried project's isolated SDK owner root."""
  import pathlib
  def require(condition,message):
@@ -130,8 +130,29 @@ def assert_generated_context(values, expected_artifacts):
  name=values['ArtifactsProjectName']
  require(name==values['MSBuildProjectName'] and name not in ('','.','..') and pathlib.Path(name).name==name,'Actual generated context foreign project refused')
  owner=expected/'obj'/name
+ source_proof=None
+ if source_owner is not None and pathlib.Path(values['BaseIntermediateOutputPath']).resolve()!=owner:
+  import hashlib,xml.etree.ElementTree as ET
+  root=regular_path(str(source_owner['root']))
+  project=regular_path(values['MSBuildProjectFullPath'])
+  # This alternate contract is the exact original Sites source declaration, not any agreeing path.
+  project_relative='9to1 Workspace/Sites/HavenOS.Sites.csproj'
+  props_relative='9to1 Workspace/Sites/Directory.Build.props'
+  require(project==root/project_relative and project.stem==name,'Actual source-owned generated project refused')
+  pins={row['path']:row for row in source_owner['files']}
+  for relative in (project_relative,props_relative):
+   file=regular_path(str(root/relative));data=file.read_bytes();pin=pins.get(relative)
+   require(pin is not None and pin['mode']=='100644' and len(data)==pin['bytes'] and hashlib.sha256(data).hexdigest()==pin['sha256'],'Actual source-owned generated contract cut mismatch')
+  props=root/props_relative;declarations=ET.fromstring(props.read_bytes())
+  require(declarations.tag=='Project' and not declarations.attrib,'Actual source-owned generated contract root refused')
+  expected_declarations={'BaseIntermediateOutputPath':'$(MSBuildThisFileDirectory)obj\\$(MSBuildProjectName)\\','MSBuildProjectExtensionsPath':'$(MSBuildThisFileDirectory)obj\\$(MSBuildProjectName)\\','BaseOutputPath':'$(MSBuildThisFileDirectory)bin\\$(MSBuildProjectName)\\'}
+  for field,literal in expected_declarations.items():
+   matches=[(group,node) for group in declarations for node in group if node.tag==field]
+   require(len(matches)==1 and matches[0][0].tag=='PropertyGroup' and not matches[0][0].attrib and not matches[0][1].attrib and matches[0][1].text==literal,'Actual source-owned generated declaration refused')
+  owner=props.parent/'obj'/name
+  source_proof={'project':project_relative,'props':props_relative,'propsSha256':pins[props_relative]['sha256'],'projectSha256':pins[project_relative]['sha256']}
  base=regular_path(values['BaseIntermediateOutputPath']);extensions=regular_path(values['MSBuildProjectExtensionsPath'])
  intermediate=regular_path(values['IntermediateOutputPath']);generated=regular_path(values['CompilerGeneratedFilesOutputPath'])
  require(values['EmitCompilerGeneratedFiles']=='true' and artifact==expected and base==owner and extensions==owner,'Actual generated context isolated owner root mismatch')
  require(intermediate.is_relative_to(owner) and intermediate!=owner and generated.is_relative_to(owner) and generated!=owner,'Actual generated context path escaped owner root')
- return {'artifactsPath':str(expected),'projectOwnerRoot':str(owner),'intermediateOutputPath':str(intermediate),'compilerGeneratedFilesOutputPath':str(generated)}
+ return {'artifactsPath':str(expected),'projectOwnerRoot':str(owner),'intermediateOutputPath':str(intermediate),'compilerGeneratedFilesOutputPath':str(generated),'sourceOwnedContract':source_proof}
