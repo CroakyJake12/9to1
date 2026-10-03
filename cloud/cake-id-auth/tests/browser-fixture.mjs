@@ -97,9 +97,6 @@ async function stopWorker() {
     throw new Error("Strict original descendant reaping unproven; fixture state retained");
   }
   console.log(JSON.stringify({ status: "drained", custody: receipt }));
-  if (worker.fixtureLaunchError) {
-    throw new Error("Caller journal-close authority ambiguous; fixture state retained", { cause: worker.fixtureLaunchError });
-  }
 }
 
 const browserLocation = {
@@ -261,6 +258,8 @@ try {
   // A cleanup error deliberately skips all state removal and remains an observable nonzero failure.
   await finishIntegrationCleanup(mainFailure, async () => {
   await stopWorker();
+  const journalCloseFailure = worker?.fixtureLaunchError ?? mainFailure?.fixtureJournalCloseError;
+  if (journalCloseFailure) throw new Error("Caller journal-close authority ambiguous; fixture state retained", { cause: journalCloseFailure });
   globalThis.fetch = realFetch;
   delete globalThis.window;
   if (existsSync(varsPath) && readFileSync(varsPath, "utf8") === devVars) rmSync(varsPath);

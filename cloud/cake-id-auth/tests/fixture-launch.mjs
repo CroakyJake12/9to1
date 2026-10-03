@@ -17,8 +17,12 @@ export function launchFixtureCustodian(custodianPath, command, cwd, receiptPath,
     worker.fixtureLaunchError = closeFailure;
     return worker;
   }
-  if (spawnFailure && closeFailure) throw new AggregateError([spawnFailure, closeFailure],
-    "Original spawn and journal-close failures retained", { cause: spawnFailure });
+  if (closeFailure) {
+    const error = new AggregateError(spawnFailure ? [spawnFailure, closeFailure] : [closeFailure],
+      "Original spawn and journal-close failures retained", { cause: spawnFailure ?? closeFailure });
+    error.fixtureJournalCloseError = closeFailure;
+    throw error;
+  }
   if (spawnFailure) throw spawnFailure;
   throw closeFailure ?? new Error("Custodian spawn returned no owned handle");
 }
