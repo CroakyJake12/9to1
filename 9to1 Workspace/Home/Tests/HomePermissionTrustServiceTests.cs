@@ -42,6 +42,28 @@ public sealed class HomePermissionTrustServiceTests : IDisposable
         Assert.Equal(HomePermissionRequestState.PendingApproval, afterRestart.State);
     }
 
+    [Theory]
+    [InlineData("hash-v2")]
+    [InlineData(null)]
+    public async Task Changed_caller_identity_cannot_inherit_session_approval(string? identityVersion)
+    {
+        var service = CreateService();
+        var first = await service.AuthorizeAsync(Request("boards.read"));
+        Assert.True((await service.DecideAsync(first.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        Assert.Equal(HomePermissionRequestState.Approved,
+            (await service.AuthorizeAsync(Request("boards.read"))).State);
+
+        var changed = Request("boards.read");
+        changed = changed with { Caller = changed.Caller with { IdentityVersion = identityVersion } };
+        var result = await service.AuthorizeAsync(changed);
+
+        Assert.Equal(HomePermissionRequestState.PendingApproval, result.State);
+        Assert.Equal("HOME_PERMISSION_REQUIRED", result.Code);
+        Assert.Null(result.TrustLevel);
+        Assert.Equal(HomePermissionRequestState.PendingApproval,
+            (await service.BeginExecutionAsync(result.RequestId)).State);
+    }
+
     [Fact]
     public async Task Ordinary_trust_lasts_thirty_days_but_does_not_cover_elevated_actions()
     {
