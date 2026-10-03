@@ -96,14 +96,55 @@ on provisional Astra `a63d77f`, including shared CUI theme/font helpers absent f
 this branch. Incorporation, owning shared-source acknowledgement, published WASM
 artifacts and actual mounted-browser/provider acceptance remain pending.
 
-Proposed Home session identity binding `297f361` and shared provider streaming
-repair `4f604027` remain on separate remotely published branches pending Team A
-acknowledgement. Their bounded evidence is retained; they are not integrated here.
+Team A acknowledged narrowly scoped Home identity and provider-stream edits and
+ownership of configured OIDC resource/response-envelope repairs. Home's isolated
+rebase `b73a45b4` onto `a63d77f` preserves the existing service body outside the three
+approved production edits. Normal Home tests passed 331/331; unchanged Astra with
+only the new theory failed both regression controls. Its file hash differs from
+Team A's selected working source hash, so it remains a separate proposal pending
+exact-source delivery and reconciliation. Evidence is in
+[shared-source-proposals/](shared-source-proposals/). These proposals are not
+integrated here, and local checks do not verify the full issuer/native flow.
+
+Provider proposal `54766d2a` applies exactly the seven acknowledged stream edits
+to Astra. The actual Infrastructure-project closure passed 35/35 in Debug and
+Release, including an exact committed-source Release run; original-source controls
+failed 10 of 24 cases as expected. C1 independently reviewed the patch, actual
+routing/usage tests, generator and raw results. The full normal test project still
+fails before discovery because its pinned XamlX dependency is absent from that
+checkout. Those failures are retained. Selected normal30 source equality and
+real provider acceptance remain unverified. Reproduction details are in
+[C5-provider-reconciled.md](C5-provider-reconciled.md); its generator is used in
+the separately checked-out proposal where the referenced current test files exist.
+
+OIDC proposal `542aca10` supplies the configured resource at authorization and
+code exchange and unwraps the actual Worker profile/session envelopes. Two
+maintained-source controlled harnesses passed, with five new named protocol
+checks; these executable suites report no total discovery count. C1 independently
+reviewed every changed line and reproduced both passes. Earlier protocol failures
+are retained. Authentication guards stay intact; genuine HTTPS issuer execution,
+approved signing/key compatibility and the authentication-revision producer
+contract remain unverified. The proposal is on its own remote branch.
 
 The strict .NET consumer and hosted issuer still have five concrete compatibility
 gaps described in [CONTRACT_COMPATIBILITY.md](../../../cloud/cake-id-auth/CONTRACT_COMPATIBILITY.md).
 No alternate identity service, fabricated authentication revision, weakened
 signature check or guessed organisation/permission/billing contract was introduced.
+
+C4 gives a bounded [Files Project design acknowledgement](semantic/c4-project-contract-ack.md)
+for existing identities, the same durable State authority, logical membership and
+preservation of originals. Six wire/revision/digest/migration/ACL/reference seams
+remain unresolved. No Project wire or synthetic Space was introduced. Admin
+source04/SDK03 requires exact remotely delivered source bodies and test drivers
+before compatibility or test acknowledgement.
+
+Requested original native CI bytes are retained under [c6/original-custody/](c6/original-custody/).
+Both requested outer ZIP hashes and all 159 included indexed pieces match. The
+original Home log proves a display-acknowledgement failure; Canvas shows 91/96
+passed and five failed, with core 13/13. Pending drains and source/maps in other
+bundles remain unverified. This is evidence custody, with no runtime rerun or
+native acceptance. Large ZIPs remain outside git; bounded extracted originals,
+complete indexes, hashes and a credential-free replay are versioned.
 
 ## Specification and remaining gates
 
