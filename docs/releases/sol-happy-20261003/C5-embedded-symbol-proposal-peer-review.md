@@ -1,0 +1,11 @@
+# C5 bounded embedded-symbol proposal review
+
+C5 found no actionable bounded source regression in proposal `8d51ead744baabe33949987f55d0b474f62aa9f1`. Reviewed every changed line in four files, the complete portable-symbol helper, driver and catalog. Source acknowledgement applies only to symbol-origin tooling; **full source/PDB acceptance remains blocked**.
+
+The helper extracts portable symbols from the same physical PE's MPDB record, with physical section/RVA/pointer bounds and a 16 MiB default bound on compressed payload and declared output. Raw deflate must produce exactly the declared size with EOF and no extra data. Missing, foreign-identity and ambiguous external/embedded symbols refuse acceptance. Existing RSDS GUID/stamp and portable PDB identity checks remain. Driver evidence records explicit symbol kind, physical PE/debug-record hashes and extracted-symbol hash; exact extracted bytes are retained without inventing an adjacent PDB. Evaluated source and complete PDB-document path/hash gates remain unchanged. All 17 product source rows and the suite inventory are unchanged.
+
+Independent immutable-source controls: **11 discovered, 11 passed, exit 0** using actual retained producer assemblies and malformed variants. Command: `ASTRA_SYMBOL_RECEIVING_ROOT=/workspace/team-c/c3-admin-subreaper-validation python3 .github/scripts/astra-embedded-symbol-tests.py`. [Own raw log](/workspace/team-c/evidence/c5/embedded-symbol-8d51-review.log), SHA256 `2a1131a2f88fd8699fd91380f3d6bfcc09c7f57dc964930c6ea6b9b9d621ffce`.
+
+Independently verified the physical task identity and exact extracted bytes against C3 evidence: 221 PDB documents, 219 existing actual source hashes verified, **two absent generated documents**. CompilerDynamicDependenciesAttribute.generated.cs and globalAvalonia.Media.KnownColors.cs remain missing; their absence blocks complete source proof. The passing negative control asserts this blockage; it does not waive it. Earlier attempt1 all-document failure remains retained.
+
+No full driver/SDK rerun was performed. Any successor still requires root's fresh external complete-cut pin and preserved original assertions. No global adoption or product/runtime/provider/production acceptance is claimed. [Exact source bindings and evidence hashes](C5-embedded-symbol-proposal-peer-review.json).
