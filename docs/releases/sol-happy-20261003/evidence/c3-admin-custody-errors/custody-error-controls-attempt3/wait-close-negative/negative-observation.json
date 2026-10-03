@@ -1,0 +1,7 @@
+{
+  "errors": [
+    "BodyFailure('Original actual child wait failure')",
+    "OSError(9, 'Bad file descriptor')"
+  ],
+  "originalSealDrained": false
+}

@@ -1,0 +1,9 @@
+{
+  "scenario": "send-close",
+  "launcherReleased": true,
+  "creatorWaitProven": true,
+  "primary": "None",
+  "cleanup": [],
+  "retainedData": "/tmp/original-custody-6brbwgit",
+  "sessionInitialized": true
+}
