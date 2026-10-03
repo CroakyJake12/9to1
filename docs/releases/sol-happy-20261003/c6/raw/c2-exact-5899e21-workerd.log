@@ -1,0 +1,25 @@
+{"id": "c2-exact-5899e21-workerd", "tested_commit": "5899e215467efa4bdb1792d579f961f58b9e93bd", "worktree_status": "", "command": ["npm", "--prefix", "cloud/cake-id-auth", "test"], "cwd": "/workspace/team-c/c2-auth", "expected": "Native local Workerd+D1210assertions pass including positive rotated refresh and revoke-other/signout authority removal", "started": "2026-10-03T17:31:58.281976+00:00"}
+
+> @cake/cake-id-worker@0.1.0 test
+> node tests/integration.mjs
+
+{
+  "result": "passed",
+  "assertionsExecuted": 210,
+  "environment": "local Wrangler Workerd + local D1 only",
+  "issuer": "http://127.0.0.1:8798/api/auth",
+  "authorizationEndpoint": "http://127.0.0.1:8798/api/auth/oauth2/authorize",
+  "tokenEndpoint": "http://127.0.0.1:8798/api/auth/oauth2/token",
+  "jwksUri": "http://127.0.0.1:8798/api/auth/jwks",
+  "publicClientRegistration": "synthetic and local only; client id intentionally not printed",
+  "redirectUri": "https://client.example.test/callback (synthetic test only)",
+  "passwordResetAndLoginMs": 339,
+  "passwordLoginAndTokenExchangeMs": 160,
+  "externalEmailDelivery": "not tested; messages captured in local D1 outbox",
+  "cloudflareDeployment": "none"
+}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
