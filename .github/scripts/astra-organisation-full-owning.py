@@ -79,6 +79,7 @@ def main():
     helper = root / '.github/scripts/astra-original-native-session-drain.py'
     guard = load_module(helper, 'organisation_original_session')
     OriginalSession = guard.OriginalSession
+    OriginalSession.enroll_subreaper()
     if not callable(getattr(os, 'pidfd_open', None)) or not callable(getattr(signal, 'pidfd_send_signal', None)):
         raise RuntimeError('Linux original creator pidfd required')
     observations = {'status': 'WHOLE_SDK_WEB_PENDING', 'commands': [], 'configurations': [],

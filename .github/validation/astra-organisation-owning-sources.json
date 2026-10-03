@@ -92,8 +92,8 @@
   "helpers": [
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
-      "bytes": 3791,
-      "sha256": "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be"
+      "bytes": 6448,
+      "sha256": "c36fe2e48e35fe3c90826e5ac01daafaa8178856b619ae6ef5fba517a4a61ac6"
     },
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
