@@ -23,6 +23,13 @@
       "sha256": "d3681c1578ba683a40f200028bd567fd7d21b47643053adccb08cbdac5624ee3"
     },
     {
+      "path": ".github/scripts/astra-compile-metadata-tests.py",
+      "mode": "100644",
+      "object": "d439f0fbcab5a90836410d4f6f23e48688dcd6b4",
+      "bytes": 3408,
+      "sha256": "9cae1c5cfe22dd0fa7bf5976b60d31e1fb9e45ba98340fd462d488e23af8a5be"
+    },
+    {
       "path": ".github/scripts/astra-embedded-symbol-tests.py",
       "mode": "100644",
       "object": "efe9ed874362ad3af5698030eca542174aedb5cc",
@@ -39,9 +46,9 @@
     {
       "path": ".github/scripts/astra-organisation-full-owning.py",
       "mode": "100644",
-      "object": "8b909706d39fdee29ec2866a6a3685705841520e",
-      "bytes": 30359,
-      "sha256": "cdb3728370aacd06d23d039922f105ff92f9fa05e7110fd549d143285d041fe2"
+      "object": "f83f0bdeba19287b196331a83da21286ec2cbcd1",
+      "bytes": 30666,
+      "sha256": "709875ca0b81d4ba9003c6b6ecf0a4b12a35e9f4d6702eaf71c1acd16d2e922f"
     },
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
@@ -65048,9 +65055,9 @@
     {
       "path": "handoff/team-a/admin-sdk03/receiving-validation-provenance.json",
       "mode": "100644",
-      "object": "5ba83121533e0712874f931773fa7fa06c51a923",
-      "bytes": 26104,
-      "sha256": "f4c82f076a334620914c0252c820c172b362e9e66709f42b57f6db978a3f57dd"
+      "object": "00b685a0fe1512e66dbfc5b1d837dd881aa71c3d",
+      "bytes": 30807,
+      "sha256": "0e1fa6d4d413b7f08b05abc1b1a56c4f063512072f93fbf470bb50f1b8ff595b"
     },
     {
       "path": "handoff/team-a/reviewed-source-delivery-manifest.json",
