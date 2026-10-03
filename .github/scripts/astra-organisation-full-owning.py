@@ -276,7 +276,10 @@ def main():
             def query(project, props, label, items=False):
                 argv = ['dotnet', 'msbuild', project, '-nologo', *props,
                     '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation,EmitCompilerGeneratedFiles,IntermediateOutputPath,CompilerGeneratedFilesOutputPath']
-                if items: argv.append('-getItem:Compile')
+                if items:
+                    # These actual SDK targets populate generated compiler inputs before CoreCompile.
+                    # They do not invoke CoreCompile; every resulting source is still PE/PDB/hash-bound below.
+                    argv.extend(['-target:GenerateTargetFrameworkMonikerAttribute,GenerateAssemblyInfo', '-getItem:Compile'])
                 return json.loads(command(phase + '-evaluate-' + label, argv))
             task_evaluated = query(TASK_PROJECT, host_props, 'source-tasks', True)
             task_target = P(task_evaluated['Properties']['TargetPath']).resolve()
