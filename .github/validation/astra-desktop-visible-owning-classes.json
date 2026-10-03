@@ -896,6 +896,14 @@
       "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
       "sha256": "a30ab4945b7d57e6997947bae066db33352e8cec4dfea297b637349ba8e91b55",
       "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "class": "HomeLocalReadCompositionTests",
+      "namespace": "HavenOS.Home.Tests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalReadCompositionTests",
+      "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a",
+      "origin": "Exact original required Home standalone05 composition wholeclass, unchanged owner source and entire fixture body"
     }
   ],
   "consoleHarness": {
@@ -1079,6 +1087,6 @@
   ],
   "joined95": "joined-source95.json",
   "dependencyPins": [],
-  "status": "SOURCE ONLY UNRUN current22 Spaces25 + full acceptedFiles24 + currentHome61 + Application5 + Studio1 exact union",
+  "status": "SOURCE ONLY UNRUN current22 Spaces25 + full acceptedFiles24 + currentHome61 and exact original standalone05 Home1 + Application5 + Studio1 exact union",
   "sourceComparisons": []
 }

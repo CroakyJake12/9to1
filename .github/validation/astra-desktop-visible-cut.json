@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
-  "programTree": "f7da152819658badfae1f0fcb327bfde55113104",
+  "baselineCommit": "af9b6e92d64f6fbcd14a930a999838d8fb57bc91",
+  "programTree": "0d13a602614cded5f657a602e337003c2be4ae4a",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -92,9 +92,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "ac7e1216628c1a30ea7856ca32f52f5d080ab951",
-      "bytes": 59196,
-      "sha256": "31ee526a1bf1314d06e9519110f42965e87b26df1c7e6232fffbd1210cfbf698"
+      "object": "ec27212fb22f3033f141f84301686c3ff5f1e094",
+      "bytes": 59698,
+      "sha256": "7436452edfeb343b0923835e9fb906ef556a0f9b82a3a938a6c37208c0d6aa5e"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -23379,6 +23379,13 @@
       "sha256": "658dc85e0be5e5e6d878a41c03211a8b95b4dfc56d329c23c1ad745fdb42883b"
     },
     {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalReadComposition.cs",
+      "mode": "100644",
+      "object": "6e92f9fa8c5894ac9b15d6ea403290a0e040a9ec",
+      "bytes": 491,
+      "sha256": "218879281bf0ac12a49bbe4ad0b386be9cc76ef421a289665ad8109f35c8ab4a"
+    },
+    {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalStoreOwnership.cs",
       "mode": "100644",
       "object": "ca7bb65dc8485c0de3cd3e18120b69d9b515be15",
@@ -23895,6 +23902,13 @@
       "object": "171ab682225fecf387f0715fb5dce292796896f1",
       "bytes": 11503,
       "sha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "mode": "100644",
+      "object": "e04eb02301a7ad17a4a5ef6dfe67674baf09e7bb",
+      "bytes": 3275,
+      "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
@@ -65880,10 +65894,10 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Exactcurrent22 plus ONLY2 reviewed Spaces06 source targets; actual25 wholeSpaces +all24 acceptedFiles families deduped, currentHome61/unfiltered +Application5/unfiltered +Studio1 gives112 actualunique wholefamilies.",
-    "Same real Files14 Rnote/Glycin GTK pixel/native witness, SQLite/Home authentic owning paths; task/restore/compiled/PDB/fullsource/zeroSkip/currentreg12/resource36 retained.",
-    "Source-only UNRUN; no Matrix/E2EE, callback already started cancellation, atomic SQL-through-navigation, transport/provider grant or default native host completion claim.",
-    "Sampled known original native process cleanup only, no atomic/unobserved-escape guarantee. No TLS/Java/Mail product or server activation joins."
+    "Exact actualaf9 Spaces02 failed parent, unchanged original Spaces2 source and all112 owning classes; add exact unchanged Worker1 standalone05 helper+fixture and wholeclass113. All required original and current expected method tuples remain byte-identical.",
+    "Actual owning294 full files/pieces and all three ZIP parts verified; all eight completed suites565 outcomes passed zero skips, but required absent Home original tuple correctly failed acceptance. No previous whole-owning success claimed.",
+    "Same genuine original Files14 Rnote/Glycin GTK pixel/native witness, SQLite/Home paths; all runtime/workflow/native/source/task/restore/compiled/PDB/zeroSkip/strictdrain guards and whole regression12/resource36 retained.",
+    "Pure reference-only composition check, no actor/source/provider permission grant, Home policy change, default authority or case pruning. All actual full3 gates required after review."
   ],
   "inputManifests": [
     {
@@ -65913,6 +65927,22 @@
     {
       "path": "/workspace/astra-source/worker2-mail04-actual-draft-alias-profile-corrective-source01/manifest.json",
       "sha256": "8b15ec2392b0ea3c20dcaeff5ab3dff021ec53b4f6775dfc8c20eb8310bf8c6b"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-spaces-root22-private-full-caller02-profile/manifest.json",
+      "sha256": "5b959c5f323b48325f72c35bc058e739496815465fac69c1f70c9b9e69ee7e80"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-read-composition-standalone05/manifest.json",
+      "sha256": "e0a485cc88129b6278ebe951544b9e7919f0441f79b96265fd9c0a66271d64aa"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-spaces02-actual-missing-home-original-case-full-corrective03/source-manifest.json",
+      "sha256": "d9c5f2bfa69c85802af47aaafd1fdce90245648f4391c7880b70a3942e6b4453"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-spaces02-owning-original-full-closure01.json",
+      "sha256": "b0e76a703139b4922c0de040dcbd10ac9a13b937f6a62633f984591228b6e1df"
     }
   ],
   "sharedCakeIdContract": null
