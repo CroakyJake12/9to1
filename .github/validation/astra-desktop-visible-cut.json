@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
-  "programTree": "539fdac9e67c7159c126eb432fdac8298e7839c7",
+  "baselineCommit": "e6ee0cb3af68ad508f8b53b46fa9135a977a4419",
+  "programTree": "f4f1afd937f7c6f0e7e3ad961356b986d28b86cc",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -169,9 +169,9 @@
     {
       "path": ".github/validation/astra-linux-supervised-home-owning-classes.json",
       "mode": "100644",
-      "object": "091f74309fc4156eb3c7b6bd3c64f921a18899c4",
+      "object": "184e3956c5868c1adf8c72f9076111adf57e74a2",
       "bytes": 34956,
-      "sha256": "3441fe0151433f07a8950dd8267e268c00a369e18e33a93418f70b3bef78bf56"
+      "sha256": "1b7554d695df74164ea95e2de5f3e2d4bac5935ba2f1623d804c2fbb34e7ea8f"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -3942,9 +3942,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs",
       "mode": "100644",
-      "object": "891bc352bcf4979f939d7ad239efd5301cd8cc49",
-      "bytes": 12492,
-      "sha256": "f5cb8bd461ba3234d51bc6a6be1ca2e53a0c3c260b27857b8f7bbe5d7f9cb4fd"
+      "object": "07fa72ad9319a11c20646d4cb3982105d20303df",
+      "bytes": 12487,
+      "sha256": "8513e5848234722ad49656b11def07ecb021ea0b05be89438ae59f3d91ad39a9"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/NineToOne.Os.Supervisor.Root.Tests.csproj",
@@ -67398,6 +67398,86 @@
     {
       "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package18-same-fixture-payload/coherent-source-graph.json",
       "sha256": "4f47e5be1c4386478f712c8592d7c49e7f63e7580e66be7bd02e81e7e68d5bee"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package18-same-fixture-payload/manifest.json",
+      "bytes": 74382,
+      "sha256": "1b285abb89f69ee1fabf4e28eb78197dda69f9809ae94f39e63076b9fc406665"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package18-same-fixture-payload/config.json",
+      "bytes": 93256,
+      "sha256": "289fb491393d60fe3c52fee004750dff2e2f61f7c43070ca96b4638f5bdf43d7"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package18-same-fixture-payload/construct.py",
+      "bytes": 7034,
+      "sha256": "ca38c1477496e06e528a85a4142a01d43664e99070e4c7226dabaae6aa61b1f5"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux18-actual-xunit2009-fixture-source01-exact-ordinal-prefix/manifest.json",
+      "bytes": 6516,
+      "sha256": "65f5134de240ea9c566ef693e4357e606e2e405560dec5386c21ab63fa451f36"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-retained-worker1-linux18-xunit2009-source01-exact-api-assertion-peer01.json",
+      "bytes": 1487,
+      "sha256": "6a9069354229d5c1d9d13143463c8e0e8ba78d1ace11609d627bd75c1c7d611a"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-linux18-exact-xunit2009-source-api-original-log-peer302.json",
+      "bytes": 2370,
+      "sha256": "5cb7920384ace8104b3942ca79fae421d43ddce272b44bc4c1d148879c7761e8"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/worker5-linux-native-signed-current30-full18/root-launch-receipt.json",
+      "bytes": 5843,
+      "sha256": "d015d99df1a51344c7c789c0f57a6d4863e08a60bb796442f903fb9219076e2a"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-exact-xunit2009/coherent-source-graph.json",
+      "bytes": 281649,
+      "sha256": "86cba24eb27eb14bc34ee0961e08c0bf278c91d6b34d1e0548e88051a7dd6161"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-exact-xunit2009/assembly-inputs.json",
+      "bytes": 36172,
+      "sha256": "e253d9385c6859a78304dd2463ebe7ee3fc09aafd53b53dc7c2ac4d7461e2f4a"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-exact-xunit2009/manifest.json",
+      "bytes": 92080,
+      "sha256": "09ab83dd8aad88d2d38359bbc0825ed5861639f1dfd822c19b3ffd12702072e6"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-exact-xunit2009/config.json",
+      "bytes": 63087,
+      "sha256": "041f19ab43c48a2c253bdcc7c484891607c87e2f2672be3aa43001f5fddde651"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-exact-xunit2009/coherent-source-graph.json",
+      "bytes": 281649,
+      "sha256": "86cba24eb27eb14bc34ee0961e08c0bf278c91d6b34d1e0548e88051a7dd6161"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-exact-xunit2009/assembly-inputs.json",
+      "bytes": 36172,
+      "sha256": "e253d9385c6859a78304dd2463ebe7ee3fc09aafd53b53dc7c2ac4d7461e2f4a"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-linux19-complete-current-source-native-custody-held-extension-peer01.json",
+      "bytes": 2697,
+      "sha256": "8a569025de06bde2718de543d10a180a97e419ad8b6493e41c25a1dee668f117"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-metadata02-final-inventory/coherent-source-graph.json",
+      "bytes": 282660,
+      "sha256": "f29d32b124d4c89dda7c23bf007c9b67dcf90fda343297659ab79ec27c421765"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-metadata02-final-inventory/assembly-inputs.json",
+      "bytes": 37844,
+      "sha256": "404fe5780588a54e4192e7a7a5f102b625e04359dfe7de169d9e9cc46c0bf2ce"
     }
   ],
   "sharedCakeIdContract": null

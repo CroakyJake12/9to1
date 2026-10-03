@@ -160,7 +160,7 @@ public sealed class LinuxSupervisedInstalledHomeTests
                 Assert.DoesNotContain("\\", relative);
                 Assert.All(relative.Split('/'), part => Assert.False(part is "" or "." or ".."));
                 var path = Path.GetFullPath(Path.Combine(directory, relative));
-                Assert.True(path.StartsWith(directory + Path.DirectorySeparatorChar, StringComparison.Ordinal));
+                Assert.StartsWith(directory + Path.DirectorySeparatorChar, path, StringComparison.Ordinal);
                 Assert.True(expected.Add(path));
                 var size = row.GetProperty("bytes").GetInt64();
                 var digest = Assert.IsType<string>(row.GetProperty("sha256").GetString());
