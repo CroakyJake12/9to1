@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "31c02f04d1fdcd2f784cc0ba5ee5c44d34fa0f9d",
+  "baselineCommit": "6d1056db618699a0a827fb5b586c4d6836e002f2",
   "programTree": "9bc26d18bbdecb7d5d39770d5b7c9b1ffd9d4d69",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
@@ -76,11 +76,18 @@
       "sha256": "6f1f105817e7cead42b2cc9ad2d9b3e7038a785163ccb5ef7fa61cb5eb2480a8"
     },
     {
+      "path": ".github/scripts/astra-mail-local-crl-server.py",
+      "mode": "100644",
+      "object": "ec676582d95f24567f9d9a5c7482b6c2976b1454",
+      "bytes": 2465,
+      "sha256": "d63a7e15fad8a386b88bc45f753c1c0f3a3bebe8c3e5fadcd27d7f959d552211"
+    },
+    {
       "path": ".github/scripts/astra-mail-trusted-tls.py",
       "mode": "100644",
-      "object": "750488a45671017964e4225629ba6c5f7d8644d1",
-      "bytes": 13983,
-      "sha256": "ca84bea2a9796f41cb04d7c2f860bb325078841514e1f083c73c70f9aaba6a86"
+      "object": "425b8dae723e828fb268bb3141533fbc68fb7819",
+      "bytes": 20629,
+      "sha256": "588f150122cf620c77ce636bf9720baeedfc9d5efa44f242d3cbf598b71a6cab"
     },
     {
       "path": ".github/scripts/astra_mail_original_caller_session.py",
@@ -65985,10 +65992,11 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Exact actual31c Mail07 failed parent. Sole onefixture nullableContent explicit refusal plus owning whole178 requiredconsoleHarness descriptor restoration and fixtureSHA repin. All31 product bindings/native/TLS/scripts/task/restore/compiled/PDB/source/three required cohorts retained.",
-    "Actual reg/resource CS8602 and owning KeyError remain failures; original owning117-file multipart closure pending and mandatory before launch. No actual MIME bytes/native/Send acceptance inferred.",
-    "Explicit no cleanup exemption, provider or path substitution, case pruning, source guard weakening, defaultauthority or fake console success.",
-    "All original fixture cases/whole178 owning families/currentHome61 and existing whole-method continuity guards preserved; actual full3 must run after review."
+    "No production MailKit certificate callback, revocation disable, credentials/provider or permission change. No case/assertion removal. No certificate private key or fixture password in public artifacts.",
+    "Bounded local OpenSSL HTTP download, complete signed chain CRL, missing CRL rejection, revoked certificate rejection and original helper drain verified; no .NET, MailKit, Java or OS trust acceptance inferred.",
+    "Full owning native launch/inner true seal remains required; no cleanup exemption. Exact failed actual6d and all-three original closure must be reviewed before root launch.",
+    "HTTP GET counts record observed loopback deliveries and are not attributed to a particular .NET PID.",
+    "Every observed inner evidence/caller and outer caller/Java/CRL/trust/private cleanup failure preserved alongside original owning failure in BaseExceptionGroup; no first-failure suppression. Every original drain attempted, no cleanup if disappearance unproven."
   ],
   "inputManifests": [
     {
@@ -66038,6 +66046,46 @@
     {
       "path": "/workspace/astra-source/worker2-mail07-spaces02-six-small-original-diagnosis01.json",
       "sha256": "09d52a48ddf54511c0f03b177bf5a92519b391456a543f06c4fcf5c910b3436b"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail07-actual-content-console-schema-full-corrective08/manifest.json",
+      "sha256": "2b988342bfe33ea1dac9455c9fbb08c3908fe05824a8e7f2fb9b4306941dc5a8"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-actual-crl-pki-source01/manifest.json",
+      "sha256": "9b989254d1f559a4f01f57f2acabec10bb692dbd63f10b249a7f0068aa56a1c9"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-all-three-original-full-failure-closure01.json",
+      "sha256": "80e9360164ad4863d425db4c71c8c714f127605151bfd7e9c15e83f1d5f5a124"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-owning-original-full-closure01.json",
+      "sha256": "d61e903a0b032eeb71751f0a396f75d14ac074d2ea86705cdb0deec0c6477a90"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe01.json",
+      "sha256": "0eeee033351bc37974d5f25f5cc2095a0a0604e5919213a035a0c849a8dfb6d1"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe01.py",
+      "sha256": "043e94ac6c0f2f9f2d308619eed4c9a3fdbffe073cd4b086eb4c4b27f953b2de"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-actual-crl-pki-full-corrective09/manifest.json",
+      "sha256": "2ef8bf2686cd8cd8d0fb016b4037dfdccad27420236870e46881b6a7c8b1a535"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-actual-crl-pki-source02-all-cleanup-failures/manifest.json",
+      "sha256": "e71c1e2b66f648a623dc4f1a349d70343f11a4ee5e5eee6ea0ceb3009003dd6a"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe02.json",
+      "sha256": "4280a2e9aa41eea2842a69939398ba1ded425531940cf6c07b7dd0e6a0a929ca"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe02.py",
+      "sha256": "73d03df5fff22649b77a84cfa42a468964f29e000349befac4e4b6b99a5fa817"
     }
   ],
   "sharedCakeIdContract": null
