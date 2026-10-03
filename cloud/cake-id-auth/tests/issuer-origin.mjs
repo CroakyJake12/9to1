@@ -123,7 +123,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
     const token = await tokenReply.json();
     const keys = await (await realFetch(discovery.jwks_uri)).json();
     const access = (await jwtVerify(token.access_token, createLocalJWKSet(keys), { issuer: discovery.issuer, audience: resource })).payload;
-    assert.equal(access.sub, testAccount.accountId);
+    assert.equal(access.sub, testAccount.id);
     assert.ok(access.sid);
     const current = await response("/api/account/current", { headers: { authorization: `Bearer ${token.access_token}` } });
     assert.equal(current.status, 200);
