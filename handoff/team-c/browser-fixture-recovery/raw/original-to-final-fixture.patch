@@ -1,0 +1,545 @@
+diff --git a/cloud/cake-id-auth/tests/browser-fixture.mjs b/cloud/cake-id-auth/tests/browser-fixture.mjs
+index d6d11640..ffc6f721 100644
+--- a/cloud/cake-id-auth/tests/browser-fixture.mjs
++++ b/cloud/cake-id-auth/tests/browser-fixture.mjs
+@@ -1,5 +1,9 @@
++import { installFixtureRelease, finishFixtureRelease } from "./fixture-control.mjs";
++import { finishIntegrationCleanup } from "./integration-lifecycle.mjs";
++import { launchFixtureCustodian } from "./fixture-launch.mjs";
++import { fixturePort as parseFixturePort, assertFixturePortFree } from "./fixture-network.mjs";
+ import assert from "node:assert/strict";
+-import { spawn, spawnSync } from "node:child_process";
++import { spawnSync } from "node:child_process";
+ import { randomBytes, createHash } from "node:crypto";
+ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import path from "node:path";
+@@ -34,7 +38,8 @@ const runId = randomBytes(8).toString("hex");
+ const browserOrigin = "https://client.example.test:5096";
+ const callback = `${browserOrigin}/callback`;
+ const persistPath = path.join(root, ".local-run", runId);
+-const baseURL = "http://127.0.0.1:8798";
++const fixturePort = parseFixturePort(process.env.CAKE_BROWSER_FIXTURE_PORT);
++const baseURL = `http://127.0.0.1:${fixturePort}`;
+ const authPath = "/api/auth";
+ const resource = baseURL;
+ const testKey = randomBytes(32).toString("base64url");
+@@ -42,6 +47,7 @@ const devVars = [
+   `AUTH_SECRET=${randomBytes(48).toString("base64url")}`,
+   `LOGIN_LIMITER_KEY=${randomBytes(48).toString("base64url")}`,
+   `LOCAL_TEST_KEY=${testKey}`,
++  `AUTH_BASE_URL=${baseURL}`,
+   `API_RESOURCE=${resource}`,
+   `ALLOWED_WEB_ORIGINS=${process.env.CAKE_BROWSER_FIXTURE_ISSUER_ORIGIN_TEST === "1" ? browserOrigin : `${baseURL},${browserOrigin}`}`,
+ ].join("\n") + "\n";
+@@ -50,16 +56,18 @@ if (existsSync(varsPath)) {
+   throw new Error("Refusing to overwrite an existing local .dev.vars file. Move it temporarily, then rerun this isolated test.");
+ }
+ 
++// Refuse occupied loopback ports before secrets/state; a later race still fails strict custody closed.
++await assertFixturePortFree(fixturePort);
+ mkdirSync(persistPath, { recursive: true, mode: 0o700 });
+ writeFileSync(varsPath, devVars, { flag: "wx", mode: 0o600 });
+ 
++let mainFailure;
+ let worker;
+ let workerStartupError;
+ let custodyReceipt = "";
+ let release;
+ const released = new Promise(resolve => { release = resolve; });
+-process.once("SIGINT", release);
+-process.once("SIGTERM", release);
++const closeCallerControl = installFixtureRelease(release);
+ let serverOutput = "";
+ let activeURL = new URL(baseURL);
+ const cookies = new Map();
+@@ -185,14 +193,15 @@ async function createSyntheticAccount(prefix, username, password) {
+ // State and credentials live only in ignored .local-run and .dev.vars with restrictive modes.
+ try {
+   const wrangler = path.join(root, "node_modules", "wrangler", "bin", "wrangler.js");
+-  worker = spawn("python3", [custodianPath, process.execPath, wrangler, "dev", "--local", "--config", "wrangler.local.jsonc",
+-    "--ip", "127.0.0.1", "--port", "8798", "--persist-to", persistPath],
+-    { cwd: root, stdio: ["pipe", "pipe", "pipe", "pipe"] });
++  worker = launchFixtureCustodian(custodianPath, [process.execPath, wrangler, "dev", "--local", "--config", "wrangler.local.jsonc",
++    "--ip", "127.0.0.1", "--port", String(fixturePort), "--persist-to", persistPath], root,
++    path.join(persistPath, "custody-receipt.json"));
+   worker.stdin.on("error", () => {}); // Broken control pipe is diagnosed by failed exit/receipt checks.
+   worker.stdio[3].setEncoding("utf8").on("data", chunk => { custodyReceipt += chunk; });
+   worker.once("error", error => { workerStartupError = error; });
+   worker.stdout.setEncoding("utf8").on("data", chunk => { serverOutput = (serverOutput + chunk).slice(-16000); });
+   worker.stderr.setEncoding("utf8").on("data", chunk => { serverOutput = (serverOutput + chunk).slice(-16000); });
++  if (worker.fixtureLaunchError) throw worker.fixtureLaunchError;
+   await waitForWorker();
+   const admin = await createSyntheticAccount("browser-operator", `operator_${runId}`, randomBytes(32).toString("base64url"));
+   const promoted = await jsonRequest("/__test/promote-admin", "POST", { userId: admin.id, email: admin.email }, { "x-local-test-key": testKey });
+@@ -241,13 +250,18 @@ try {
+   }
+   if (process.env.CAKE_BROWSER_FIXTURE_SMOKE !== "1") await released;
+ } catch (error) {
++  mainFailure = error;
+   console.error(`Local browser fixture failed: ${error?.message ?? "unknown error"}`);
+   process.exitCode = 1;
+ } finally {
+   // A cleanup error deliberately skips all state removal and remains an observable nonzero failure.
+-  await stopWorker();
++  await finishIntegrationCleanup(mainFailure, async () => {
++  await finishFixtureRelease(stopWorker, closeCallerControl);
++  const journalCloseFailure = worker?.fixtureLaunchError ?? mainFailure?.fixtureJournalCloseError;
++  if (journalCloseFailure) throw new Error("Caller journal-close authority ambiguous; fixture state retained", { cause: journalCloseFailure });
+   globalThis.fetch = realFetch;
+   delete globalThis.window;
+   if (existsSync(varsPath) && readFileSync(varsPath, "utf8") === devVars) rmSync(varsPath);
+   rmSync(persistPath, { recursive: true, force: true });
++  });
+ }
+diff --git a/cloud/cake-id-auth/tests/fixture-caller-control.mjs b/cloud/cake-id-auth/tests/fixture-caller-control.mjs
+new file mode 100644
+index 00000000..bead7d44
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-caller-control.mjs
+@@ -0,0 +1,39 @@
++import { installFixtureRelease } from './fixture-control.mjs';
++// Test-only process workload: actual production launch function; no auth/provider emulation.
++import { launchFixtureCustodian } from './fixture-launch.mjs';
++import { spawn, spawnSync } from 'node:child_process';
++import { writeFileSync } from 'node:fs';
++const [mode, custodian, folder, ready, marker] = process.argv.slice(2);
++const python = spawnSync('python3', ['-c', 'import sys; print(sys.executable)'], {encoding:'utf8'}).stdout.trim();
++const command = [python, '-c', `import os,time;open(${JSON.stringify(marker)},'w').write(str(os.getpid()));time.sleep(60)`];
++const worker = mode === 'baseline-loss'
++  ? spawn('python3', [custodian, ...command], { cwd: folder, stdio: ['pipe','pipe','pipe','pipe'] })
++  : launchFixtureCustodian(custodian, command, folder, `${folder}/receipt.json`);
++let receipt = '';
++worker.stdin.on('error', () => {});
++worker.stdout.on('data', () => {});
++worker.stderr.on('data', () => {});
++worker.stdio[3].setEncoding('utf8').on('data', chunk => { receipt += chunk; });
++const exited = new Promise((resolve,reject) => {
++  worker.once('error', reject);
++  worker.once('exit', code => { resolve(code); });
++});
++if (mode === 'handled') {
++  let stopping = false;
++  let closeCallerControl;
++  const stop = async () => {
++    if (stopping) return;
++    stopping = true;
++    try {
++      worker.stdin.end('stop\n');
++      if (await exited !== 0) throw new Error('custodian failed');
++      const proof = JSON.parse(receipt);
++      if (!proof.strictReaped || !proof.originalsDisappeared) throw new Error('strict proof absent');
++      writeFileSync(`${folder}/caller-finished.json`, JSON.stringify(proof), {flag:'wx',mode:0o600});
++      process.exitCode = 0;
++    } catch (error) { console.error(error.message); process.exitCode = 1; }
++    finally { closeCallerControl?.(); }
++  };
++  closeCallerControl = installFixtureRelease(stop);
++}
++writeFileSync(ready, 'ready', {flag:'wx',mode:0o600});
+diff --git a/cloud/cake-id-auth/tests/fixture-control.mjs b/cloud/cake-id-auth/tests/fixture-control.mjs
+new file mode 100644
+index 00000000..562b3dc1
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-control.mjs
+@@ -0,0 +1,22 @@
++import { createInterface } from 'node:readline';
++// Only the current caller's known input/signals: never discover or write another process's FDs.
++export function installFixtureRelease(release) {
++  const input = createInterface({input:process.stdin,terminal:false});
++  const stop = () => release();
++  const failed = () => { process.exitCode=1;release(); };
++  input.on('line',line=>{if(line==='stop')stop();else if(line.trim())failed();});
++  input.once('close',stop);
++  input.once('error',failed);
++  for(const signal of ['SIGINT','SIGTERM','SIGHUP'])process.once(signal,stop);
++  return () => {
++    for(const signal of ['SIGINT','SIGTERM','SIGHUP'])process.removeListener(signal,stop);
++    input.close();process.stdin.pause();
++  };
++}
++
++export async function finishFixtureRelease(stopOwned, disposeCaller) {
++  const failures=[];
++  try { await stopOwned(); } catch(error) { failures.push(error); }
++  try { disposeCaller(); } catch(error) { failures.push(error); }
++  if(failures.length) throw new AggregateError(failures,'Owned drain and independent caller-control disposal failures retained');
++}
+diff --git a/cloud/cake-id-auth/tests/fixture-control.test.mjs b/cloud/cake-id-auth/tests/fixture-control.test.mjs
+new file mode 100644
+index 00000000..26570a5a
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-control.test.mjs
+@@ -0,0 +1,22 @@
++import assert from 'node:assert/strict';
++import { installFixtureRelease, finishFixtureRelease } from './fixture-control.mjs';
++const signals=['SIGINT','SIGTERM','SIGHUP'];
++const before=signals.map(signal=>process.listenerCount(signal));
++const inputBefore=process.stdin.listenerCount('data');
++let released=0;
++const dispose=installFixtureRelease(()=>{released++});
++assert.deepEqual(signals.map(signal=>process.listenerCount(signal)),before.map(n=>n+1));
++dispose();
++assert.deepEqual(signals.map(signal=>process.listenerCount(signal)),before);
++assert.equal(process.stdin.listenerCount('data'),inputBefore);
++assert.equal(process.stdin.readableFlowing,false);
++assert.equal(released,1,'closing own input releases once');
++const stopFailure=new Error('strict owned drain failed');
++const disposalFailure=new Error('independent listener disposal failed');
++await assert.rejects(finishFixtureRelease(async()=>{throw stopFailure},()=>{throw disposalFailure}),
++  error=>error instanceof AggregateError && error.errors[0]===stopFailure && error.errors[1]===disposalFailure);
++let disposed=false;
++await assert.rejects(finishFixtureRelease(async()=>{throw stopFailure},()=>{disposed=true}),
++  error=>error.errors[0]===stopFailure);
++assert.equal(disposed,true,'disposal runs even after failed strict drain');
++console.log('PASS: exact listener/input disposal and original drain+disposal Error identities preserved');
+diff --git a/cloud/cake-id-auth/tests/fixture-launch.mjs b/cloud/cake-id-auth/tests/fixture-launch.mjs
+new file mode 100644
+index 00000000..ed115475
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-launch.mjs
+@@ -0,0 +1,28 @@
++import { spawn } from "node:child_process";
++import { openSync, closeSync } from "node:fs";
++
++// Exclusive private journal; injected operations are used only by isolated lifecycle controls.
++export function launchFixtureCustodian(custodianPath, command, cwd, receiptPath, operations = {}) {
++  const journal = openSync(receiptPath, "wx", 0o600);
++  let worker, spawnFailure, closeFailure;
++  try {
++    worker = (operations.spawn ?? spawn)("python3", [custodianPath, "--receipt-fd=4", ...command], {
++      cwd, detached: true, stdio: ["pipe", "pipe", "pipe", "pipe", journal],
++    });
++  } catch (error) { spawnFailure = error; }
++  try { (operations.close ?? closeSync)(journal); }
++  catch (error) { closeFailure = error; }
++  if (worker) {
++    // Never throw away an already spawned owned handle; caller installs control before raising setup failure.
++    worker.fixtureLaunchError = closeFailure;
++    return worker;
++  }
++  if (closeFailure) {
++    const error = new AggregateError(spawnFailure ? [spawnFailure, closeFailure] : [closeFailure],
++      "Original spawn and journal-close failures retained", { cause: spawnFailure ?? closeFailure });
++    error.fixtureJournalCloseError = closeFailure;
++    throw error;
++  }
++  if (spawnFailure) throw spawnFailure;
++  throw closeFailure ?? new Error("Custodian spawn returned no owned handle");
++}
+diff --git a/cloud/cake-id-auth/tests/fixture-launch.test.mjs b/cloud/cake-id-auth/tests/fixture-launch.test.mjs
+new file mode 100644
+index 00000000..4c7f958f
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-launch.test.mjs
+@@ -0,0 +1,42 @@
++import assert from 'node:assert/strict';
++import { closeSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { launchFixtureCustodian } from './fixture-launch.mjs';
++import { finishIntegrationCleanup } from './integration-lifecycle.mjs';
++const folder=mkdtempSync(path.join(os.tmpdir(),'cake-fixture-launch-control-'));
++const custodian=new URL('./linux-fixture-custodian.py',import.meta.url).pathname;
++const spawnFailure=new Error('isolated synchronous spawn failure');
++const closeFailure=new Error('isolated close failure');
++const closeAndFail=fd=>{closeSync(fd);throw closeFailure};
++let worker, exited, primaryFailure, receipt='';
++try {
++  assert.throws(()=>launchFixtureCustodian(custodian,['/bin/true'],folder,path.join(folder,'no-child.json'),{
++    spawn:()=>{throw spawnFailure},close:closeAndFail,
++  }),error=>error instanceof AggregateError && error.errors[0]===spawnFailure && error.errors[1]===closeFailure &&
++    error.fixtureJournalCloseError===closeFailure);
++  worker=launchFixtureCustodian(custodian,[process.execPath,'-e','setInterval(()=>{},1000)'],folder,
++    path.join(folder,'real-child.json'),{close:closeAndFail});
++  // Install original-child control before assertions: their failure must still stop/reap this actual child.
++  for(const stream of [worker.stdout,worker.stderr]) stream.on('data',()=>{});
++  worker.stdio[3].setEncoding('utf8').on('data',chunk=>{receipt+=chunk});
++  worker.stdin.on('error',()=>{});
++  exited=new Promise((resolve,reject)=>{worker.once('error',reject);worker.once('exit',resolve)});
++  assert.ok(worker.pid,'actual controlled custodian started before injected close failure');
++  assert.equal(worker.fixtureLaunchError,closeFailure,'owned handle retains exact original setup error');
++} catch(error) { primaryFailure=error; }
++finally {
++  await finishIntegrationCleanup(primaryFailure,async()=>{
++    if(worker) {
++      worker.stdin.end('stop\n');
++      assert.equal(await exited,0);
++      const proof=JSON.parse(receipt);
++      assert.equal(proof.strictReaped,true);assert.equal(proof.originalsDisappeared,true);
++      assert.deepEqual(JSON.parse(readFileSync(path.join(folder,'real-child.json'),'utf8')),proof);
++      // Injection actually closed its known fd before throwing; strict proof exists for this owned test directory only.
++      rmSync(folder,{recursive:true});
++    }
++  });
++}
++if(primaryFailure) throw primaryFailure;
++console.log('PASS: actual spawned handle retained and strictly drained after close error; original spawn+close objects retained');
+diff --git a/cloud/cake-id-auth/tests/fixture-network.mjs b/cloud/cake-id-auth/tests/fixture-network.mjs
+new file mode 100644
+index 00000000..7600d7d8
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-network.mjs
+@@ -0,0 +1,14 @@
++import { createServer } from "node:net";
++export function fixturePort(portText = "8798") {
++  if (!/^[1-9][0-9]{3,4}$/.test(portText) || Number(portText) < 1024 || Number(portText) > 65535 || Number(portText) === 5096) {
++    throw new Error("Fixture port must be an unprivileged loopback port distinct from the client page; no state created");
++  }
++  return Number(portText);
++}
++export async function assertFixturePortFree(port) {
++  await new Promise((resolve, reject) => {
++    const probe = createServer();
++    probe.once("error", reject);
++    probe.listen({ host: "127.0.0.1", port, exclusive: true }, () => probe.close(resolve));
++  });
++}
+diff --git a/cloud/cake-id-auth/tests/fixture-network.test.mjs b/cloud/cake-id-auth/tests/fixture-network.test.mjs
+new file mode 100644
+index 00000000..89eb0acf
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-network.test.mjs
+@@ -0,0 +1,14 @@
++import assert from "node:assert/strict";
++import { createServer } from "node:net";
++import { fixturePort, assertFixturePortFree } from "./fixture-network.mjs";
++assert.equal(fixturePort(), 8798);
++assert.equal(fixturePort("8799"), 8799);
++for (const port of ["0","1023","65536","5096","8799/path","http://127.0.0.1:8799"," 8799","8799\n"])
++  assert.throws(() => fixturePort(port), /Fixture port/);
++const listener = createServer();
++await new Promise(resolve => listener.listen(0, "127.0.0.1", resolve));
++const port = listener.address().port;
++try { await assert.rejects(assertFixturePortFree(port), error => error.code === "EADDRINUSE"); }
++finally { await new Promise(resolve => listener.close(resolve)); }
++await assertFixturePortFree(port);
++console.log("PASS: default/alternate ports, 8 invalid cases, actual busy loopback refusal and free-port success");
+diff --git a/cloud/cake-id-auth/tests/fixture-port-runtime.test.mjs b/cloud/cake-id-auth/tests/fixture-port-runtime.test.mjs
+new file mode 100644
+index 00000000..ad2b4212
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-port-runtime.test.mjs
+@@ -0,0 +1,21 @@
++import assert from 'node:assert/strict';
++import { existsSync } from 'node:fs';
++import { createServer } from 'node:net';
++import { spawn } from 'node:child_process';
++const root = new URL('../', import.meta.url);
++const vars = new URL('.dev.vars', root);
++const state = new URL('.local-run', root);
++assert.equal(existsSync(vars), false);
++assert.equal(existsSync(state), false);
++async function run(port) {
++  const child=spawn(process.execPath,['tests/browser-fixture.mjs'], {cwd:root,
++    env:{...process.env,CAKE_BROWSER_FIXTURE_PORT:port},stdio:['ignore','pipe','pipe']});
++  let log='';for(const pipe of [child.stdout,child.stderr]) pipe.on('data',data=>{log+=data});
++  const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve)});
++  assert.notEqual(code,0);assert.equal(existsSync(vars),false);assert.equal(existsSync(state),false);
++  return log;
++}
++assert.match(await run('http://127.0.0.1:8799'),/Fixture port/);
++const listener=createServer();await new Promise(resolve=>listener.listen(8799,'127.0.0.1',resolve));
++try{assert.match(await run('8799'),/EADDRINUSE/)}finally{await new Promise(resolve=>listener.close(resolve))}
++console.log('PASS: actual maintained fixture invalid/busy refusal before state/secrets; owned test listener closed');
+diff --git a/cloud/cake-id-auth/tests/fixture-pty.test.py b/cloud/cake-id-auth/tests/fixture-pty.test.py
+new file mode 100644
+index 00000000..8906104e
+--- /dev/null
++++ b/cloud/cake-id-auth/tests/fixture-pty.test.py
+@@ -0,0 +1,125 @@
++#!/usr/bin/env python3
++"""Actual private PTY fault controls; outer test subreaper strictly drains its own family."""
++import fcntl, hashlib, importlib.util, json, os, pty, shutil, subprocess, tempfile, termios, time, unittest
++from pathlib import Path
++ROOT = Path(__file__).parent.resolve()
++spec = importlib.util.spec_from_file_location('custodian', ROOT/'linux-fixture-custodian.py')
++m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
++def preserve_control_failures(primary, cleanup):
++    if cleanup:
++        raise BaseExceptionGroup('Original PTY control and independent cleanup failures retained',
++                                 ([primary] if primary is not None else []) + cleanup)
++    if primary is not None:
++        raise primary
++
++class FailureAndReceiptControls(unittest.TestCase):
++    def test_original_and_independent_cleanup_error_objects_preserved(self):
++        primary=AssertionError('original'); first=OSError('close'); second=RuntimeError('drain')
++        with self.assertRaises(ExceptionGroup) as result:
++            preserve_control_failures(primary,[first,second])
++        self.assertEqual((primary,first,second),result.exception.exceptions)
++        with self.assertRaises(AssertionError) as result:
++            preserve_control_failures(primary,[])
++        self.assertIs(primary,result.exception)
++    def test_actual_durable_receipt_short_writes_complete(self):
++        original=m.os.write
++        with tempfile.TemporaryFile() as stream:
++            def short(fd,data): return original(fd,data[:3])
++            m.os.write=short
++            try: m.publish_receipt(stream.fileno(),b'complete-private-receipt')
++            finally: m.os.write=original
++            stream.seek(0);self.assertEqual(b'complete-private-receipt',stream.read())
++    def test_zero_write_refuses_durable_proof(self):
++        original=m.os.write
++        with tempfile.TemporaryFile() as stream:
++            m.os.write=lambda fd,data:0
++            try:
++                with self.assertRaisesRegex(RuntimeError,'write incomplete'):
++                    m.publish_receipt(stream.fileno(),b'no-proof')
++            finally: m.os.write=original
++            stream.seek(0);self.assertEqual(b'',stream.read())
++
++class PtyControls(unittest.TestCase):
++    def exercise(self, mode, fault):
++        c = m.Custody()
++        temporary = None; master = None; slave = None; caller = None; primary = None
++        try:
++            temporary = tempfile.mkdtemp()
++            folder = Path(temporary); ready=folder/'ready'; marker=folder/'worker'
++            source=ROOT/'linux-fixture-custodian.py'
++            if mode=='baseline-loss':
++                source=folder/'aedc-custodian.py'
++                body=subprocess.check_output(['git','show','aedc29ec3a0a960e1ded36c0443f1efda4fcf36d:cloud/cake-id-auth/tests/linux-fixture-custodian.py'],cwd=ROOT)
++                source.write_bytes(body)
++                print('Baseline AEDC custodian SHA256',hashlib.sha256(body).hexdigest(),flush=True)
++            master,slave=pty.openpty()
++            def own_terminal():
++                os.setsid(); fcntl.ioctl(slave,termios.TIOCSCTTY,0)
++            caller=subprocess.Popen(['node',str(ROOT/'fixture-caller-control.mjs'),mode,str(source),str(folder),str(ready),str(marker)],
++                stdin=slave,stdout=slave,stderr=slave,preexec_fn=own_terminal,close_fds=True)
++            os.close(slave); slave=None
++            for _ in range(200):
++                c.observe()
++                if ready.exists() and marker.exists(): break
++                time.sleep(.01)
++            self.assertTrue(ready.exists() and marker.exists(),'actual workload ready')
++            worker=int(marker.read_text());c.observe(); self.assertIn(worker,c.records)
++            if fault=='ctrl-c': os.write(master,b'\x03')
++            elif fault=='stop-command': os.write(master,b'stop\n')
++            elif fault=='eof': os.write(master,b'\x04')
++            else: os.close(master);master=None # Genuine controlling-terminal hangup.
++            for _ in range(250):
++                c.observe()
++                if (folder/'caller-finished.json').exists() or (folder/'receipt.json').exists() and (folder/'receipt.json').stat().st_size: break
++                if mode=='baseline-loss' and m.stat(caller.pid)['state']=='Z': break
++                time.sleep(.01)
++            if mode=='baseline-loss':
++                self.assertFalse((folder/'receipt.json').exists())
++                self.assertIsNotNone(m.stat(worker),'original topology loses custodian without draining workload')
++                self.assertNotEqual(m.stat(worker)['state'],'Z')
++                print('EXPECTED BASELINE NEGATIVE: PTY loss leaves workload alive, no strict receipt',flush=True)
++            else:
++                receipt=json.loads((folder/'receipt.json').read_text())
++                self.assertTrue(receipt['strictReaped'] and receipt['originalsDisappeared'])
++                self.assertIsNone(m.stat(worker))
++                if mode=='handled': self.assertTrue((folder/'caller-finished.json').exists())
++                else: self.assertFalse((folder/'caller-finished.json').exists(),'dead caller never cleans private state')
++                print('Owned-worker strict receipt after',mode,fault,flush=True)
++        except BaseException as error:
++            primary=error
++        finally:
++            cleanup=[]; drained=False
++            for fd in (master,slave):
++                if fd is not None:
++                    try: os.close(fd)
++                    except BaseException as error: cleanup.append(error)
++            try:
++                proof=c.drain();self.assertTrue(proof['strictReaped'] and proof['originalsDisappeared']);drained=True
++                if caller is not None: caller.returncode=0 # Kernel-reaped by outer custodian; no numeric wait.
++            except BaseException as error: cleanup.append(error)
++            if drained and temporary is not None:
++                try: shutil.rmtree(temporary)
++                except BaseException as error: cleanup.append(error)
++            preserve_control_failures(primary,cleanup)
++    def test_acquisition_failure_retains_original_and_closes_actual_pty(self):
++        original_spawn=subprocess.Popen; original_pty=pty.openpty; opened=[]
++        failure=RuntimeError('isolated acquisition failure')
++        def capture_pty():
++            pair=original_pty();opened.extend(pair);return pair
++        def unavailable(*args,**kwargs): raise failure
++        subprocess.Popen=unavailable;pty.openpty=capture_pty
++        try:
++            with self.assertRaises(RuntimeError) as result: self.exercise('handled','ctrl-c')
++            self.assertIs(failure,result.exception)
++            self.assertEqual(2,len(opened))
++            for fd in opened:
++                with self.assertRaises(OSError): os.fstat(fd)
++        finally:
++            subprocess.Popen=original_spawn;pty.openpty=original_pty
++    def test_original_shared_session_hangup_negative(self): self.exercise('baseline-loss','hangup')
++    def test_detached_custodian_drains_after_unhandled_caller_loss(self): self.exercise('caller-loss','hangup')
++    def test_actual_caller_eof_handler_and_strict_receipt(self): self.exercise('handled','eof')
++    def test_actual_stop_command_handler_and_strict_receipt(self): self.exercise('handled','stop-command')
++    def test_actual_ctrl_c_handler_and_strict_receipt(self): self.exercise('handled','ctrl-c')
++    def test_actual_hangup_handler_and_strict_receipt(self): self.exercise('handled','hangup')
++if __name__=='__main__': unittest.main(verbosity=2)
+diff --git a/cloud/cake-id-auth/tests/linux-fixture-custodian.py b/cloud/cake-id-auth/tests/linux-fixture-custodian.py
+index 9005331f..fda57499 100644
+--- a/cloud/cake-id-auth/tests/linux-fixture-custodian.py
++++ b/cloud/cake-id-auth/tests/linux-fixture-custodian.py
+@@ -170,6 +170,8 @@ def launch(command, custody):
+                 os.close(3)  # A child can never write the custodian's receipt channel.
+             except OSError:
+                 pass
++            if getattr(custody, 'journal_fd', None) == 4:
++                os.close(4)  # Private durable receipt is exclusively custodian-owned.
+             os.write(write_fd, b'ready\n')
+             os.close(write_fd)
+             os.execve(command[0], command, os.environ)
+@@ -209,21 +211,38 @@ def preflight(command=None):
+     return receipt
+ 
+ 
++def publish_receipt(fd, data):
++    remaining = memoryview(data)
++    while remaining:
++        written = os.write(fd, remaining)
++        if written <= 0:
++            raise RuntimeError('Durable receipt write incomplete; fixture held')
++        remaining = remaining[written:]
++    os.fsync(fd)
++
++
+ def main():
+     if sys.argv[1:] == ['--check']:
+         preflight()
+         print('Actual fork/setsid/exec + pidfd/subreaper/reaping available')
+         return
+-    if len(sys.argv) < 2:
++    command = sys.argv[1:]
++    journal = None
++    if command and command[0] == '--receipt-fd=4':
++        journal = 4
++        command = command[1:]
++    if not command:
+         raise RuntimeError('Missing controlled child command')
+     custody = Custody()
++    custody.journal_fd = journal
+     stopping = False
+     def stop(_sig=None, _frame=None):
+         nonlocal stopping
+         stopping = True
+     signal.signal(signal.SIGINT, stop)
+     signal.signal(signal.SIGTERM, stop)
+-    launch(sys.argv[1:], custody)
++    signal.signal(signal.SIGHUP, stop)
++    launch(command, custody)
+     while not stopping:
+         custody.observe()
+         if select.select([sys.stdin], [], [], .05)[0]:
+@@ -233,7 +252,15 @@ def main():
+             else:
+                 raise RuntimeError('Unknown custody command; fixture held')
+     receipt = custody.drain()
+-    os.write(3, (json.dumps(receipt) + '\n').encode())
++    data = (json.dumps(receipt) + '\n').encode()
++    if journal is not None:
++        publish_receipt(journal, data)
++    try:
++        os.write(3, data)
++    except BrokenPipeError:
++        if journal is None:
++            raise  # No surviving proof channel: never claim a usable receipt.
++
+ 
+ 
+ if __name__ == '__main__':
