@@ -115,3 +115,23 @@ def retain_actual_symbols(path, symbols, budget, maximum_evidence):
  with path.open('xb') as handle:
   handle.write(symbols);handle.flush();os.fsync(handle.fileno())
  if path.read_bytes()!=symbols:raise RuntimeError('Retained actual embedded symbols differ')
+
+def assert_generated_context(values, expected_artifacts):
+ """Bind compiler output to the actual queried project's isolated SDK owner root."""
+ import pathlib
+ def require(condition,message):
+  if not condition:raise RuntimeError(message)
+ def regular_path(value):
+  path=pathlib.Path(value)
+  require(path.is_absolute(),'Actual generated context path must be absolute')
+  require(not path.is_symlink() and not any(parent.is_symlink() for parent in path.parents),'Actual generated context symlink refused')
+  return path.resolve()
+ expected=regular_path(str(expected_artifacts));artifact=regular_path(values['ArtifactsPath'])
+ name=values['ArtifactsProjectName']
+ require(name==values['MSBuildProjectName'] and name not in ('','.','..') and pathlib.Path(name).name==name,'Actual generated context foreign project refused')
+ owner=expected/'obj'/name
+ base=regular_path(values['BaseIntermediateOutputPath']);extensions=regular_path(values['MSBuildProjectExtensionsPath'])
+ intermediate=regular_path(values['IntermediateOutputPath']);generated=regular_path(values['CompilerGeneratedFilesOutputPath'])
+ require(values['EmitCompilerGeneratedFiles']=='true' and artifact==expected and base==owner and extensions==owner,'Actual generated context isolated owner root mismatch')
+ require(intermediate.is_relative_to(owner) and intermediate!=owner and generated.is_relative_to(owner) and generated!=owner,'Actual generated context path escaped owner root')
+ return {'artifactsPath':str(expected),'projectOwnerRoot':str(owner),'intermediateOutputPath':str(intermediate),'compilerGeneratedFilesOutputPath':str(generated)}

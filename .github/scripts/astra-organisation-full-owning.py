@@ -275,7 +275,7 @@ def main():
             command(phase + '-build-source-tasks', ['dotnet', 'build', TASK_PROJECT, '--no-restore', '--disable-build-servers', *host_props])
             def query(project, props, label, items=False):
                 argv = ['dotnet', 'msbuild', project, '-nologo', *props,
-                    '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation,EmitCompilerGeneratedFiles,IntermediateOutputPath,CompilerGeneratedFilesOutputPath']
+                    '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation,EmitCompilerGeneratedFiles,IntermediateOutputPath,CompilerGeneratedFilesOutputPath,ArtifactsPath,ArtifactsProjectName,BaseIntermediateOutputPath']
                 if items:
                     # These actual SDK targets populate generated compiler inputs before CoreCompile.
                     # They do not invoke CoreCompile; every resulting source is still PE/PDB/hash-bound below.
@@ -338,10 +338,7 @@ def main():
                         raise RuntimeError('Actual compiled project/configuration mismatch')
                     if P(values['AvaloniaBuildTasksLocation']).resolve() != task_target:
                         raise RuntimeError('Actual original consumer build-task location differs')
-                    intermediate = P(values['IntermediateOutputPath']).resolve()
-                    generated = P(values['CompilerGeneratedFilesOutputPath']).resolve()
-                    if values['EmitCompilerGeneratedFiles'] != 'true' or not intermediate.is_relative_to(root) or not generated.is_relative_to(intermediate):
-                        raise RuntimeError('Actual original compiler-generated output context invalid')
+                    generated_context = pdb.assert_generated_context(values, host if project_row['hostContext'] else managed)
                     target = P(values['TargetPath']).resolve(); external = target.with_suffix('.pdb')
                     if not target.is_relative_to(root) or target.is_symlink() or not target.is_file() or external.is_symlink():
                         raise RuntimeError('Complete actual first-party physical PE/symbol input invalid: ' + project)
@@ -390,7 +387,7 @@ def main():
                         proof_docs.append({'document': name_in_pdb, 'source': relative, 'retainedOriginalSource': source_pin, **row})
                     if not inputs or not proof_docs: raise RuntimeError('Actual complete source/PDB evidence empty')
                     compiled.append({'suite': suite['name'], 'project': project, 'evaluated': evaluated,
-                        'physicalAssembly': values['AssemblyName'], 'identity': identity, 'symbols': symbol_proof, 'pairs': [retained(file, out / phase / 'compiled') for file in pair],
+                        'physicalAssembly': values['AssemblyName'], 'identity': identity, 'symbols': symbol_proof, 'generatedOutputContext': generated_context, 'pairs': [retained(file, out / phase / 'compiled') for file in pair],
                         'compileInputs': inputs, 'allPdbDocuments': proof_docs})
                 suite_evaluated = query(suite['project'], [*managed_props, '-p:TargetFramework=net10.0'], name + '-entry')
                 target = P(suite_evaluated['Properties']['TargetPath']).resolve()
