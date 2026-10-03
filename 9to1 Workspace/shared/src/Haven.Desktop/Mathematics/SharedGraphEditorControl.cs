@@ -26,7 +26,7 @@ public sealed class SharedGraphEditorControl : ContentControl, ICuiWritableBindi
     private GraphProjection _projection = new(Guid.Empty, 0, [], [], ScottPlotGraphAdapter.Implementation);
     private GraphResponse? _lastResponse;
     private bool _disposed;
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
     public GraphDefinition Snapshot => _session.Snapshot();
     public GraphResponse? LastResponse => _lastResponse is null ? null : MathObjectCodec.Capture(_lastResponse, _limits);
     public GraphProjection Projection => _projection with {
@@ -42,7 +42,7 @@ public sealed class SharedGraphEditorControl : ContentControl, ICuiWritableBindi
         try
         {
             _projection = ScottPlotGraphAdapter.Render(_plot, Snapshot, _limits);
-            _plot.AddHandler(InputElement.PointerReleasedEvent, PointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
+            _plot.AddHandler(InputElement.PointerReleasedEvent, OnGraphPointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
             _loader.RegisterObjectRenderer("math.shared-graph", component =>
             {
                 if (component.Name != "math-graph") throw new InvalidDataException("UnexpectedMathGraphControl");
@@ -86,7 +86,7 @@ public sealed class SharedGraphEditorControl : ContentControl, ICuiWritableBindi
         { _status = "Enter exact supported decimal coordinates"; Changed("Status"); return ValueTask.CompletedTask; }
         PlacePoint(new(x, y)); return ValueTask.CompletedTask;
     }
-    private void PointerReleased(object? sender, PointerReleasedEventArgs args)
+    private void OnGraphPointerReleased(object? sender, PointerReleasedEventArgs args)
     {
         if (_disposed || args.InitialPressMouseButton != MouseButton.Left || IsActionAvailable("PlacePoint") != true) return;
         var position = args.GetPosition(_plot);
@@ -121,7 +121,7 @@ public sealed class SharedGraphEditorControl : ContentControl, ICuiWritableBindi
     public void Dispose()
     {
         if (_disposed) return; _disposed = true;
-        _plot.RemoveHandler(InputElement.PointerReleasedEvent, PointerReleased);
+        _plot.RemoveHandler(InputElement.PointerReleasedEvent, OnGraphPointerReleased);
         _loader.Dispose(); Content = null; _plot.Plot.Dispose(); PropertyChanged = null;
     }
     public const string CuiSource = """

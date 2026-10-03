@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
-  "programTree": "2f10b216bdb3d0a9cff2e7458b09145ff783e318",
+  "baselineCommit": "74fb2c0c8a57f337a6ba3fd32a459acfa1a869eb",
+  "programTree": "2ac19ffd52507136f16a32d6b9c149449980f75d",
   "currentNormalCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
-  "kind": "initial",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -32985,16 +32985,16 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
       "mode": "100644",
-      "object": "5179d40b9a816543d2aedb2c1805900c3892223c",
-      "bytes": 8153,
-      "sha256": "8ee3e04bed403f7a0d585ed87f8657360b3f991cc383d36f0012afcdb447d02e"
+      "object": "23907c9fb325b582408e59b191a70c3ff6e14e73",
+      "bytes": 8178,
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
       "mode": "100644",
-      "object": "04ef1fe80747efab83476efd664478bc82816248",
-      "bytes": 9270,
-      "sha256": "5f6c5887486fa44acbb4e7323e230ac79869686d5c2a4d7c20b048deff421da2"
+      "object": "9f7fedf9835b87c8a869109360fa24de7f3cd3ef",
+      "bytes": 9274,
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/NotesGlobalUsings.cs",
@@ -66138,7 +66138,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-shared-math01-cut.json",
-  "limits": "Exact current normal whole source/cut/Gitlinks, entire inherited Shelf14 owning42/resource44/regression12 classes retained with source hashes refreshed from actual normal; add four canonical Math classes to owning46/resource48, regression12 unchanged. All source-built tasks, original native sessions/drains, zero skips, restore/package/compiled DLL/PDB/native output and full suite controls preserved byte-exact apart from explicit manifest/class names and additive math filters. Math source04 uncompiled/unrun; real complete full-three hosted acceptance and native renderer/editor/pointer/marking cases mandatory. No Forms mathematical consumer/evaluator/symbolic marking or whole product/platform/provider completion claim. Canonical math service limits are explicitly configured source bounds, not customer allowance/provider prices. ScottPlot retained exact maintained source/license/provenance, source compatibility only until actual compile/native gate. Existing Home CSharpMath consumer is reused without global registration/framework edits.",
+  "limits": "Exact current normal whole source/cut/Gitlinks, entire inherited Shelf14 owning42/resource44/regression12 classes retained with source hashes refreshed from actual normal; add four canonical Math classes to owning46/resource48, regression12 unchanged. All source-built tasks, original native sessions/drains, zero skips, restore/package/compiled DLL/PDB/native output and full suite controls preserved byte-exact apart from explicit manifest/class names and additive math filters. Math source04 uncompiled/unrun; real complete full-three hosted acceptance and native renderer/editor/pointer/marking cases mandatory. No Forms mathematical consumer/evaluator/symbolic marking or whole product/platform/provider completion claim. Canonical math service limits are explicitly configured source bounds, not customer allowance/provider prices. ScottPlot retained exact maintained source/license/provenance, source compatibility only until actual compile/native gate. Existing Home CSharpMath consumer is reused without global registration/framework edits. Math05 corrective changes only two native control event/callback declarations after actual full3 CS0108 proof. Entire original46/48/12 classes, all22 math outcomes, helpers/workflow/restores/runtime/native/PDB/session/drain guards retained. DependencyPin inventory is empty in all three original tables; no omitted pin or invented source waiver. Strong54ac constructor ratified by root for this exact bounded corrective.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-maps-current20-coherent96-full-owning-gate21/manifest.json",
@@ -66387,6 +66387,22 @@
     {
       "path": "/workspace/astra-source/worker3-scottplot-maintained-adapter-evidence01/scottplot.nuspec",
       "sha256": "97673b42ee0eac99896be15fd56eff898e392cc19ceb5d6beb6facb01dd90f98"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shared-canonical-math-source05-explicit-native-event-and-pointer-handler/manifest.json",
+      "sha256": "c004499cb9e22d089d0d991d06b669d5397efdc36e1f67195198d12624e7b811"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shared-math04-current27-full-three-caller-package04-params-compiler-correction/manifest.json",
+      "sha256": "ba74a546a2b2349d0ca3da261b462a048822e1ec249bb27c725cf26d298cd6a6"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-shared-math-source05-native-event-pointer-api-peer01.json",
+      "sha256": "5f285afa2e9d3943fbdc463844754ded5db7c9313c2da15075962f74422407b1"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-math04-full-three-original-desktop-compiler-failure-verification02.json",
+      "sha256": "bbe6d25760c774b878727f913ee63e85d435ad844d5a961a9c89ccab8ef328f6"
     }
   ],
   "sharedCakeIdContract": null

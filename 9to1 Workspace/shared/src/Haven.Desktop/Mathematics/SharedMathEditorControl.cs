@@ -27,7 +27,7 @@ public sealed class SharedMathEditorControl : ContentControl, ICuiWritableBindin
     private string _status = "Ready";
     private bool _showSource;
     private bool _disposed;
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
     public MathEditorState Snapshot => _session.Snapshot();
     public Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
 
