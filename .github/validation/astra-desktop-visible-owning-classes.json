@@ -1681,7 +1681,7 @@
       "class": "SitesNativeAuthoringConsumerTests",
       "fullClass": "Haven.Desktop.Tests.SitesNativeAuthoringConsumerTests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SitesNativeAuthoringConsumerTests.cs",
-      "sha256": "bf74238c16fdc50152d5e2b961e2b1ef4111c4a1dab259c365f416a3fa2878c4",
+      "sha256": "7f599cfc3257da3c60dac2965f2dca73ddeae623d490cc8e8f8f44586fe70435",
       "namespace": "Haven.Desktop.Tests",
       "origin": "Complete canonical Sites test project and exact mounted Sites06 consumer source; unexecuted joined Home dependency candidate"
     },

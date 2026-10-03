@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "685d0050b43d4faf3a0178f62b6095b3472c2ba7",
-  "programTree": "713545022311e801034dc016bd326e660f1a98de",
+  "baselineCommit": "1132f792ba9fdea820ce3e32a01c64be6435260b",
+  "programTree": "74aa865f390736e1aacff660064fe7e3d02ec266",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -162,9 +162,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "fbc60c0c5d0d4cd5a253606f1aca35bebdd61720",
+      "object": "d8ab1ca4cb78bec655c40ad9073eb080d285ca32",
       "bytes": 108417,
-      "sha256": "3e70359795342a88ce5103bab7f183b1f31e36a75b7bd752200a3cc21b07c669"
+      "sha256": "c9c961c091cdc4e5bc677aaa84f3ffa9948b863a911368bf6743710ac5221b83"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -40986,9 +40986,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SitesNativeAuthoringConsumerTests.cs",
       "mode": "100644",
-      "object": "4f099baba27fc65f6acbbef86a7eb0d0c7790ded",
-      "bytes": 29419,
-      "sha256": "bf74238c16fdc50152d5e2b961e2b1ef4111c4a1dab259c365f416a3fa2878c4"
+      "object": "b57222c99eae5ddc29b9cfaa59acb91dd0bddaff",
+      "bytes": 29422,
+      "sha256": "7f599cfc3257da3c60dac2965f2dca73ddeae623d490cc8e8f8f44586fe70435"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -66397,7 +66397,8 @@
     "HomePage normalizes only exact original linked-lifetime OCE when both original linked and actual supplied review tokens are requested, retaining original as InnerException. Observer waives only requested exact supplied-token cancellation. Unrelated/default token and deactivation-only cancellation remain original failures; every independent original cleanup still runs. Actual closest12 is managed provenance evidence only; native original210/44/12/profile/session/callback acceptance remains mandatory.",
     "Exact actual Sites03 presenter CS0234 corrected solely with Avalonia.Application.Current. Two same namespace Home macro-on references proactively qualified; these are preventive/unreached and not observed native errors. Entire original presenter/probe bodies invert exactly, all App/profile/shutdown/permission/approval/cancellation/finally/drain actions unchanged. Corrected distinct-unrequested token tiny12 proof source08/W5 is pinned. Actual full3 Sites originals owned by Worker4, actual wholeHome native acceptance still mandatory.",
     "Current28 accepted IMAP four products are exact original d657/normal28 bytes overlaid onto the unchanged actual eabc corrective seed; entire owning210 class rows and all old method/TRX entries retained plus actual Inbox class/two required Passed methods (211/44/12). Resource/regression and all caller/helper/native/TLS/CRL/Java/task/restore/profile/session/shutdown/drain bodies unchanged. Current28 runtime ledger is selected exactly as validation-only; historical semantic-base ledger remains disclosed. Sites Reachable visibility is the exact one-modifier pure traversal correction for two observed CS0117 errors, with no mutation/permission body change. No constructor/ref/build/run or native acceptance inferred.",
-    "Actual Home07 owning original remains unreviewed; two complete failed regression/resource families independently closed. This corrective retains every original caller/native/PDB/restore/task/TLS/profile/session/shutdown/drain body and every old class/method/TRX mapping. Only observed two Desktop fixtures change; accepted Math23/Android30/ledger source inherited exactly, four math classes appended to owning215/resource48 with all15 methods/22 actual Passed-case minima. No evolving CoreApi, new Agent, forwarding or Sites observer source selected. No compiler/native/full-cohort acceptance inferred."
+    "Actual Home07 owning original remains unreviewed; two complete failed regression/resource families independently closed. This corrective retains every original caller/native/PDB/restore/task/TLS/profile/session/shutdown/drain body and every old class/method/TRX mapping. Only observed two Desktop fixtures change; accepted Math23/Android30/ledger source inherited exactly, four math classes appended to owning215/resource48 with all15 methods/22 actual Passed-case minima. No evolving CoreApi, new Agent, forwarding or Sites observer source selected. No compiler/native/full-cohort acceptance inferred.",
+    "This successor changes only the exact observed Sites fixture predicate assertion and its owning-class SHA. Complete admitted Home09 regression125 demonstrates xUnit2029; resource/owning originals remain held and no native/full cohort acceptance is inferred. All existing215/12/48 classes,22 Math minima, original method/TRX/caller/source/PDB/task/restore/TLS/CRL/Java/profile/shutdown/session/drain guards remain unchanged."
   ],
   "inputManifests": [
     {
@@ -66805,6 +66806,22 @@
     {
       "path": "/workspace/astra-source/worker1-sites-native-fixture09-actual-api-whole-inverse-peer01.json",
       "sha256": "32d9955958c9256c9d691bd326168e320c28074139fbfbcd350ed244c693b5d7"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites05-actual-xunit2029-fixture-source10/manifest.json",
+      "sha256": "59967e6ef234ac74622a196c54c3e7f5980f3835500f4ec692c32d445ae6e0b6"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites10-actual-xunit2029-whole-source-api-peer01.json",
+      "sha256": "ec8e639bf48b51dc7128a753c16360e09a53a2761909071bdee13ebb04e11b07"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home09-regression-full-original-failure-closure01.json",
+      "sha256": "165f1607a75c4967d6c1d38824aa170f3840b473e7368ed7a3915e9bfbcb5827"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home07-current30-full-corrective-package09-accurate-executable-metadata/manifest.json",
+      "sha256": "c51bfc224ef2841f8030e69db644b7a8c6426385a8c77a2ba3bc81ee307fd292"
     }
   ],
   "sharedCakeIdContract": null
