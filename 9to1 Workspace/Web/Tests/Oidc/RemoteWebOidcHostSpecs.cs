@@ -115,6 +115,7 @@ public static class RemoteWebOidcHostSpecs
     TokenCalls++;Assert(request.Method==HttpMethod.Post&&request.RequestUri==Config().ExactTokenEndpoint,"unexpected issuer token request");
     var form=QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync(ct));
     Assert(form["grant_type"]=="authorization_code"&&form["client_id"]=="client"&&form["code"]=="synthetic-code"&&form["redirect_uri"]==Config().ExactRedirectUri,"actual token form binding wrong");
+    Assert(form["resource"]==Config().ResourceAudience,"token exchange omitted or changed configured RFC8707 resource");
     var verifier=form["code_verifier"].ToString();Assert(Base64UrlEncoder.Encode(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)))==expectedChallenge,"actual original S256 verifier not retained");
     var id=Token("client",expectedNonce);AccessToken=Token("cake-api",null);
     return new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new{id_token=id,access_token=AccessToken,token_type="Bearer"}),Encoding.UTF8,"application/json")};
@@ -139,6 +140,7 @@ public static class RemoteWebOidcHostSpecs
    var begun=await Host.BeginAsync(Begin(issued.Cookie,issued.Csrf));
    using var result=JsonDocument.Parse(JsonSerializer.Serialize(((IValueHttpResult)begun).Value));var uri=new Uri(result.RootElement.GetProperty("authorizationUri").GetString()!);
    var parameters=QueryHelpers.ParseQuery(uri.Query);expectedNonce=parameters["nonce"].ToString();expectedChallenge=parameters["code_challenge"].ToString();Assert(parameters["code_challenge_method"]=="S256"&&expectedNonce.Length>0,"actual originating flow lacks PKCE/nonce");
+   Assert(parameters["resource"]==Config().ResourceAudience,"authorization omitted or changed configured RFC8707 resource");
    return(issued.Cookie,parameters["state"].ToString());
   }
   public DefaultHttpContext Callback(string cookie,string state){var c=Context(cookie);c.Request.QueryString=QueryString.Create(new Dictionary<string,string?>{{"state",state},{"code","synthetic-code"}});return c;}

@@ -12,7 +12,7 @@ internal static class WorkerAccountApiClientSpecs
   var policy=new TokenPolicy(token.Issuer,"resource",TokenPurpose.ApiAccessToken,null,scopes,new HashSet<string>{"RS256"});
   var calls=0;var paths=new List<string>();HttpStatusCode status=HttpStatusCode.OK;
   using var client=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(r=>
-  {calls++;paths.Add(r.Method+" "+r.RequestUri!.AbsolutePath);return new(status){Content=new StringContent(JsonSerializer.Serialize(new[]{new RemoteSession(session,account,"fictional",now,now.AddMinutes(5),null,"fictional-client")}))};}));
+  {calls++;paths.Add(r.Method+" "+r.RequestUri!.AbsolutePath);return new(status){Content=new StringContent(JsonSerializer.Serialize(new{sessions=new[]{new RemoteSession(session,account,"fictional",now,now.AddMinutes(5),null,"fictional-client")}}))};}));
   Require((await client.SessionsAsync("synthetic",default)).Value?.Single().SessionID==session);
   var before=calls;Require((await client.RevokeSessionAsync("synthetic",Guid.Empty,default)).Failure==ApiFailure.InvalidResponse);Require(calls==before);
   status=HttpStatusCode.NoContent;Require((await client.RevokeSessionAsync("synthetic",session,default)).Value?.Acknowledged==true);
@@ -22,22 +22,50 @@ internal static class WorkerAccountApiClientSpecs
   status=HttpStatusCode.Redirect;before=calls;Require((await client.RevokeSessionAsync("synthetic",session,default)).Failure==ApiFailure.CompletionUnknown);Require(calls==before+1);
   status=HttpStatusCode.ServiceUnavailable;Require((await client.SignOutAsync("synthetic",default)).Failure==ApiFailure.CompletionUnknown);
   status=HttpStatusCode.Forbidden;Require((await client.RevokeOthersAsync("synthetic",default)).Failure==ApiFailure.PermissionDenied);
-  using var foreign=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new[]{new RemoteSession(session,Guid.NewGuid(),"fictional",now,now.AddMinutes(5),null,"fictional-client")}))}));
+  using var foreign=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new{sessions=new[]{new RemoteSession(session,Guid.NewGuid(),"fictional",now,now.AddMinutes(5),null,"fictional-client")}}))}));
   Require((await foreign.SessionsAsync("synthetic",default)).Failure==ApiFailure.InvalidResponse);
   using var patch=JsonDocument.Parse("{\"name\":\"Fictional\",\"username\":\"fictional\"}");
   var patchCalls=0;
   using var profile=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new AsyncHandler(async r=>
   {patchCalls++;Require(r.Method==HttpMethod.Patch&&r.RequestUri!.AbsolutePath=="/api/account/profile");
    using var body=JsonDocument.Parse(await r.Content!.ReadAsStringAsync());Require(body.RootElement.GetProperty("expectedRevision").GetInt64()==7);Require(body.RootElement.GetProperty("fields").GetProperty("name").GetString()=="Fictional");
-   return new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new RemoteProfile(account,"Fictional","fictional",null,null,null,8)))};}));
+   return new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new{profile=new RemoteProfile(account,"Fictional","fictional",null,null,null,8)}))};}));
   Require((await profile.UpdateProfileAsync("synthetic",7,patch.RootElement,default)).Value?.Revision==8);
   Require((await profile.UpdateProfileAsync("synthetic",long.MaxValue,patch.RootElement,default)).Failure==ApiFailure.InvalidInput);Require(patchCalls==1);
   using var unexpected=JsonDocument.Parse("{\"accountID\":\"callerchosen\"}");
   Require((await profile.UpdateProfileAsync("synthetic",7,unexpected.RootElement,default)).Failure==ApiFailure.InvalidInput);Require(patchCalls==1);
-  using var wrongRevision=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new RemoteProfile(account,"Fictional","fictional",null,null,null,9)))}));
+  using var wrongRevision=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new{profile=new RemoteProfile(account,"Fictional","fictional",null,null,null,9)}))}));
   Require((await wrongRevision.UpdateProfileAsync("synthetic",7,patch.RootElement,default)).Failure==ApiFailure.CompletionUnknown);
   status=HttpStatusCode.Conflict;Require((await client.UpdateProfileAsync("synthetic",7,patch.RootElement,default)).Failure==ApiFailure.Conflict);
   status=(HttpStatusCode)429;Require((await client.SessionsAsync("synthetic",default)).Failure==ApiFailure.Limited);
+  // Actual retained Worker envelopes; controlled transport is protocol evidence only.
+  var validProfile=JsonSerializer.Serialize(new{profile=new RemoteProfile(account,"Fictional","fictional",null,null,null,8)},new JsonSerializerOptions(JsonSerializerDefaults.Web));
+  using var readProfile=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(validProfile)}));
+  Require((await readProfile.ProfileAsync("synthetic",default)).Value?.AccountID==account);
+  Require((await readProfile.ProfileForHostAsync("synthetic",()=>true,default)).Value?.Revision==8);
+  Console.WriteLine("PASS C3_OIDC_PROTOCOL_PROFILE_READ_ENVELOPE");
+  var invalidEnvelopes=new[]{"{}","{\"profile\":null}","{\"profile\":[]}","{",JsonSerializer.Serialize(new RemoteProfile(account,"Flat","flat",null,null,null,8)),"{\"profile\":{},\"profile\":{}}"};
+  foreach(var json in invalidEnvelopes)
+  {
+   using var invalid=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(json)}));
+   // Preserve existing parse-failure classification: malformed JSON is Unavailable,
+   // valid JSON with invalid protocol shape is InvalidResponse. Both refuse success.
+   Require((await invalid.ProfileAsync("synthetic",default)).Failure==(json=="{"?ApiFailure.Unavailable:ApiFailure.InvalidResponse));
+   Require((await invalid.UpdateProfileAsync("synthetic",7,patch.RootElement,default)).Failure==ApiFailure.CompletionUnknown);
+  }
+  Console.WriteLine("PASS C3_OIDC_PROTOCOL_PROFILE_INVALID_ENVELOPES six negative bodies read+mutation");
+  var validSession=new RemoteSession(session,account,"fictional",now,now.AddMinutes(5),null,"fictional-client");
+  var invalidSessions=new[]{"{}","{\"sessions\":null}","{\"sessions\":{}}","{\"sessions\":[null]}",JsonSerializer.Serialize(new{sessions=new[]{validSession,validSession}}),JsonSerializer.Serialize(new{sessions=new[]{validSession with {SessionID=Guid.Empty}}})};
+  foreach(var json in invalidSessions)
+  {
+   using var invalid=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(json)}));
+   Require((await invalid.SessionsAsync("synthetic",default)).Failure==ApiFailure.InvalidResponse);
+  }
+  Console.WriteLine("PASS C3_OIDC_PROTOCOL_SESSIONS_INVALID_ENVELOPES six negative bodies");
+  using var foreignProfile=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new Reader(token)),policy,TimeProvider.System,new Handler(_=>new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new{profile=new RemoteProfile(Guid.NewGuid(),"Foreign","foreign",null,null,null,8)}))}));
+  Require((await foreignProfile.ProfileAsync("synthetic",default)).Failure==ApiFailure.InvalidResponse);
+  Require((await foreignProfile.UpdateProfileAsync("synthetic",7,patch.RootElement,default)).Failure==ApiFailure.CompletionUnknown);
+  Console.WriteLine("PASS C3_OIDC_PROTOCOL_FOREIGN_PROFILE_DENIED");
   using var denied=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(new UnavailableIssuerTokenReader()),policy,TimeProvider.System,new Handler(_=>throw new InvalidOperationException("Unavailable verifier reached HTTP")));
   Require((await denied.SessionsAsync("synthetic",default)).Failure==ApiFailure.InvalidToken);
  }

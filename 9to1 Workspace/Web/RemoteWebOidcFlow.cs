@@ -64,7 +64,7 @@ public sealed class RemoteWebOidcFlow
  {
   Validate(config);this.browser=browser;this.config=config with {AllowedAlgorithms=new HashSet<string>(config.AllowedAlgorithms,StringComparer.Ordinal),RequestedScopes=new HashSet<string>(config.RequestedScopes,StringComparer.Ordinal)};this.reader=reader;this.exchange=exchange;
   generation=browser.CurrentGeneration();deadline=clock.GetUtcNow().AddMinutes(5);
-  originating=new(config.Issuer,config.ClientId,config.ExactRedirectUri,generation.ToString(System.Globalization.CultureInfo.InvariantCulture),deadline);
+  originating=new(config.Issuer,config.ClientId,config.ExactRedirectUri,generation.ToString(System.Globalization.CultureInfo.InvariantCulture),deadline,config.ResourceAudience);
   nonce=originating.AuthorizationParameters()["nonce"];
  }
  private static void Validate(WebOidcConfiguration c)

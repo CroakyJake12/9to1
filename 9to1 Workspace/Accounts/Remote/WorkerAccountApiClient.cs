@@ -23,12 +23,12 @@ public sealed class WorkerAccountApiClient : IDisposable
  public Task<ApiResult<RemoteCurrent>> CurrentAsync(string token,CancellationToken ct)
   =>SendAsync<RemoteCurrent>(HttpMethod.Get,"api/account/current",token,"cake:account:read",null,(x,id)=>x.AccountID==id,ct);
  public Task<ApiResult<RemoteProfile>> ProfileAsync(string token,CancellationToken ct)
-  =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id,ct);
+  =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id,ct,envelope:"profile");
  // Denial-only private Web-host read admission; Worker independently validates all authority.
  public Task<ApiResult<RemoteCurrent>> CurrentForHostAsync(string token,Func<bool> readAdmission,CancellationToken ct)
   =>SendAsync<RemoteCurrent>(HttpMethod.Get,"api/account/current",token,"cake:account:read",null,(x,id)=>x.AccountID==id,ct,readAdmission:readAdmission);
  public Task<ApiResult<RemoteProfile>> ProfileForHostAsync(string token,Func<bool> readAdmission,CancellationToken ct)
-  =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id,ct,readAdmission:readAdmission);
+  =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id,ct,readAdmission:readAdmission,envelope:"profile");
  public Task<ApiResult<RemoteProfile>> UpdateProfileAsync(string token,long expectedRevision,JsonElement fields,CancellationToken ct)
  {
   var names=new HashSet<string>{"name","username","icon","pronouns","job"};
@@ -39,11 +39,11 @@ public sealed class WorkerAccountApiClient : IDisposable
    if(!names.Contains(field.Name)||field.Value.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)
     ||(field.Value.ValueKind==JsonValueKind.String&&field.Value.GetString()!.Length>1000))
     return Task.FromResult(new ApiResult<RemoteProfile>(null,ApiFailure.InvalidInput));
-  return SendAsync<RemoteProfile>(HttpMethod.Patch,"api/account/profile",token,"cake:profile:write",new{expectedRevision,fields=fields.Clone()},(x,id)=>x.AccountID==id&&x.Revision==expectedRevision+1,ct);
+  return SendAsync<RemoteProfile>(HttpMethod.Patch,"api/account/profile",token,"cake:profile:write",new{expectedRevision,fields=fields.Clone()},(x,id)=>x.AccountID==id&&x.Revision==expectedRevision+1,ct,envelope:"profile");
  }
  public Task<ApiResult<RemoteSession[]>> SessionsAsync(string token,CancellationToken ct)
   =>SendAsync<RemoteSession[]>(HttpMethod.Get,"api/account/sessions",token,"cake:sessions:read",null,
-   (items,id)=>items.All(x=>x.AccountID==id&&x.SessionID!=Guid.Empty)&&items.Select(x=>x.SessionID).Distinct().Count()==items.Length,ct);
+   (items,id)=>items.All(x=>x is not null&&x.AccountID==id&&x.SessionID!=Guid.Empty)&&items.Select(x=>x.SessionID).Distinct().Count()==items.Length,ct,envelope:"sessions");
  public Task<ApiResult<RemoteMutationAcknowledgement>> SignOutAsync(string token,CancellationToken ct)
   =>SendAsync<RemoteMutationAcknowledgement>(HttpMethod.Post,"api/account/signout",token,"cake:sessions:revoke",null,(_,_)=>true,ct,true);
  public Task<ApiResult<RemoteMutationAcknowledgement>> RevokeSessionAsync(string token,Guid originalSelectedSessionId,CancellationToken ct)
@@ -51,7 +51,7 @@ public sealed class WorkerAccountApiClient : IDisposable
    SendAsync<RemoteMutationAcknowledgement>(HttpMethod.Delete,"api/account/sessions/"+originalSelectedSessionId.ToString("D"),token,"cake:sessions:revoke",null,(_,_)=>true,ct,true);
  public Task<ApiResult<RemoteMutationAcknowledgement>> RevokeOthersAsync(string token,CancellationToken ct)
   =>SendAsync<RemoteMutationAcknowledgement>(HttpMethod.Post,"api/account/revoke-other-sessions",token,"cake:sessions:revoke",null,(_,_)=>true,ct,true);
- private async Task<ApiResult<T>> SendAsync<T>(HttpMethod method,string route,string token,string scope,object? body,Func<T,Guid,bool> matches,CancellationToken ct,bool expectNoContent=false,Func<bool>? readAdmission=null)
+ private async Task<ApiResult<T>> SendAsync<T>(HttpMethod method,string route,string token,string scope,object? body,Func<T,Guid,bool> matches,CancellationToken ct,bool expectNoContent=false,Func<bool>? readAdmission=null,string? envelope=null)
  {
   var mutation=method!=HttpMethod.Get;ObservedApiPrincipal? principal;
   try {principal=await consumer.ObserveAsync(token,policy with {RequiredScopes=new HashSet<string>{scope}},clock.GetUtcNow(),ct);}
@@ -77,7 +77,18 @@ public sealed class WorkerAccountApiClient : IDisposable
    if(response.Content.Headers.ContentLength>65536)return new(default,mutation?ApiFailure.CompletionUnknown:ApiFailure.InvalidResponse);
    await using var stream=await response.Content.ReadAsStreamAsync(deadline.Token);using var bytes=new MemoryStream();var buffer=new byte[4096];int read;
    while((read=await stream.ReadAsync(buffer,deadline.Token))>0){if(bytes.Length+read>65536)return new(default,mutation?ApiFailure.CompletionUnknown:ApiFailure.InvalidResponse);bytes.Write(buffer,0,read);}
-   var value=JsonSerializer.Deserialize<T>(bytes.ToArray(),new JsonSerializerOptions(JsonSerializerDefaults.Web));
+   using var document=JsonDocument.Parse(bytes.ToArray(),new JsonDocumentOptions{MaxDepth=64});
+   var payload=document.RootElement;
+   if(envelope is not null)
+   {
+    if(payload.ValueKind!=JsonValueKind.Object||!payload.TryGetProperty(envelope,out var wrapped)||
+       payload.EnumerateObject().Count(p=>p.Name==envelope)!=1)
+     return new(default,mutation?ApiFailure.CompletionUnknown:ApiFailure.InvalidResponse);
+    if(envelope=="profile"&&wrapped.ValueKind!=JsonValueKind.Object||envelope=="sessions"&&wrapped.ValueKind!=JsonValueKind.Array)
+     return new(default,mutation?ApiFailure.CompletionUnknown:ApiFailure.InvalidResponse);
+    payload=wrapped;
+   }
+   var value=payload.Deserialize<T>(new JsonSerializerOptions(JsonSerializerDefaults.Web));
    return value is not null&&matches(value,principal.AccountId)?new(value,ApiFailure.None):new(default,mutation?ApiFailure.CompletionUnknown:ApiFailure.InvalidResponse);
   }
   catch(Exception error)when(error is HttpRequestException or OperationCanceledException or JsonException)

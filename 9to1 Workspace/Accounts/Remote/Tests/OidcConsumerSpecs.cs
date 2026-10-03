@@ -16,6 +16,17 @@ internal static class OidcConsumerSpecs
         Require(!flow.AcceptIdToken(id,"changed-actor",now));
         Require(!flow.AcceptIdToken(id,"original-actor",now.AddMinutes(6)));
         flow.Cancel();Require(!flow.AcceptIdToken(id,"original-actor",now));
+        var resource="https://worker.example.invalid/api";
+        var resourceFlow=new OidcOriginatingFlow("https://issuer.example.invalid","fictional-client","https://client.example.invalid/callback","original-actor",now.AddMinutes(5),resource);
+        var resourceParameters=resourceFlow.AuthorizationParameters();
+        Require(resourceParameters["resource"]==resource);
+        // Returned parameter dictionaries are untrusted copies, not the originating authority.
+        ((Dictionary<string,string>)resourceParameters)["resource"]="https://foreign.example.invalid/api";
+        Require(resourceFlow.AuthorizationParameters()["resource"]==resource);
+        var resourceExchange=resourceFlow.ConsumeCallback(resourceParameters["state"],resourceParameters["redirect_uri"],"fictional-code","original-actor",now);
+        Require(resourceExchange is not null&&resourceExchange["resource"]==resource&&resourceExchange["client_id"]=="fictional-client");
+        Require(resourceFlow.ConsumeCallback(resourceParameters["state"],resourceParameters["redirect_uri"],"fictional-code","original-actor",now) is null);
+        Console.WriteLine("PASS C3_OIDC_PROTOCOL_IMMUTABLE_RESOURCE_AUTHORIZATION_AND_EXCHANGE");
         var policy=new TokenPolicy("https://issuer.example.invalid","fictional-resource",TokenPurpose.ApiAccessToken,null,new HashSet<string>{"cake:account:read"},new HashSet<string>{"RS256"});
         Require(await new OidcResourceConsumer(new UnavailableIssuerTokenReader()).ObserveAsync("fictional",policy,now,default) is null);
         // Controlled verified-reader boundary, NOT actual JWT/JWKS/issuer verification.

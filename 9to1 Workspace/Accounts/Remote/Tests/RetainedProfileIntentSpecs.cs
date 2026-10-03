@@ -19,7 +19,7 @@ internal static class RetainedProfileIntentSpecs
   var reader=new IdentityModelIssuerReader(keys,new("sub","sid","auth_revision","scope","nonce","azp"),TimeProvider.System);
   var policy=new TokenPolicy(issuer,audience,TokenPurpose.ApiAccessToken,null,new HashSet<string>{"cake:profile:write"},new HashSet<string>{"RS256"});
   var calls=0;string? observed=null;
-  using var client=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(reader),policy,TimeProvider.System,new Handler(async request=>{calls++;Require(request.Method==HttpMethod.Patch&&request.RequestUri!.AbsolutePath=="/api/account/profile");observed=await request.Content!.ReadAsStringAsync();return new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new RemoteProfile(account,"Original","original",null,null,null,8)))};}));
+  using var client=new WorkerAccountApiClient(new("https://worker.example.invalid/"),new OidcResourceConsumer(reader),policy,TimeProvider.System,new Handler(async request=>{calls++;Require(request.Method==HttpMethod.Patch&&request.RequestUri!.AbsolutePath=="/api/account/profile");observed=await request.Content!.ReadAsStringAsync();return new(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new{profile=new RemoteProfile(account,"Original","original",null,null,null,8)}))};}));
   var document=JsonDocument.Parse("{\"name\":\"Original\",\"username\":\"original\"}");
   var pending=client.UpdateProfileAsync(raw,7,document.RootElement,default);await reached.Task;document.Dispose();
   Require(calls==0);release.SetResult();var result=await pending;
