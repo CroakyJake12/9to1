@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-03T18:16:52.625166+00:00",
+  "updatedUTC": "2026-10-03T18:42:02.543979+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -107,7 +107,13 @@
     "TeamC_C1_C4": "Existing W4 explicitly relinquishes further hosted Web/Admin/Sites implementation. C1 SiteDeploymentService rollback internals and C4 SitePublicIdentityService domain/stale-revision internals have no overlapping active W4 draft. Ownership acknowledged; review/test/integration approval remains distinct.",
     "TeamC_C2": "ONLY the three IdentityVersion approval edits and additive changed/null identity theory rebased onto current selected A1 trust-service body. Full older-main41491B source replacement is REFUSED: it omits current binding/execution/policy/immutable idempotent audit/action-count expiry/AppliedGrantId guards.",
     "TeamC_C5": "A3 ownership/source ACK for exact seven EOF/error/buffered-cancellation lines applied to current normal30. No overlapping A3 provider draft or canonical model/signature change. IOException does not trigger automatic fallback; partial output/confirmed usage retained; error payload excluded.",
-    "Auth": "cloud/cake-id-auth backup7cc52df0411e0e9e617918f6c5158283cc3199fc preserved, sole future/new account authority; no WordPress user/linked data transfer. Team C owns hosted runtime; Team A client contract remains strict."
+    "Auth": "cloud/cake-id-auth backup7cc52df0411e0e9e617918f6c5158283cc3199fc preserved, sole future/new account authority; no WordPress user/linked data transfer. Team C owns hosted runtime; Team A client contract remains strict.",
+    "TeamB_CUI_API": {
+      "path": "/workspace/astra-source/worker1-current-a63-cui-browser-api-ownership-ack01.json",
+      "bytes": 1822,
+      "sha256": "18a763b4922731296d27944d86e7560bef4e1cb61eb2b9fe925e19d90db04dab",
+      "scope": "A1 ACK actuala63 maintained public CuiNativeHost.ConfigureFonts/InitialisePrimitiveTheme and exact Runtime dependency. No browser build/WASM/ABI/mounted/provider acceptance; no stale98a replacement. Theme/font setup confers no installed Home readiness."
+    }
   },
   "actualEvidence": [
     {
@@ -120,14 +126,24 @@
       "workflowRun": 37138212542,
       "component": "Canvas11",
       "outcome": "Regression/resource SUCCESS, owning execution FAILURE",
-      "qualification": "Original tiny index admission pending; native SDK/source/guard outcomes cannot be inferred from job status."
+      "qualification": "Exact tiny original index admitted and fully descriptor-checked; full original payloads00/01 unadmitted. No inner cause or native acceptance follows from failed wrapper."
     },
     {
       "candidate": "e8f48d666c7b18eaffeffb9a88fc0b1800dfa136",
       "workflowRun": 37135352375,
       "component": "Forms11",
       "outcome": "Regression/resource SUCCESS, owning FAILURE",
-      "cause": "Native validation caller references undefined assert_native_unchanged; Forms12 binds existing full positive desktop guard, independently reviewed, unrun."
+      "cause": "Root independently verified all248 original members/9459cutfiles22links/825managed passes0fail0skip/53own classes/8compiled pairs629source docs/original task+restore+drains; native caller undefined callback before invocation. Forms12 isolated correction launched.",
+      "rootOriginalReview": {
+        "path": "/workspace/astra-source/root-teamA-forms11-original-and12-source-review823.json",
+        "bytes": 2589,
+        "sha256": "d5e09d9f1d69f7fae6dff5eeb2a6b9cde50016e79d3a4a7f21e9176df2e31049"
+      },
+      "wholeByteInverseStrengthening": {
+        "path": "/workspace/astra-source/root-teamA-forms12-exact-whole-byte-inverse-strengthening827.json",
+        "bytes": 660,
+        "sha256": "f4257283e39dd39a8ac60b4bc3c09a0ff164db2dd64affa2f9528ad08e87e188"
+      }
     },
     {
       "candidate": "9006e522f1dd49a348214200508fb35ede2f7409",
@@ -161,10 +177,15 @@
         "resource": 111258855947,
         "regression": 111258855984
       },
-      "outcome": "IN_PROGRESS",
+      "outcome": "Owning FAILURE; regression/resource SUCCESS",
       "rootReviewSha256": "00ab820576a78ff63ecf73ac3e186ebc49c05f75a136a03e4ce122c48ffb7a23",
       "launchReceiptSha256": "d015d99df1a51344c7c789c0f57a6d4863e08a60bb796442f903fb9219076e2a",
-      "qualification": "All266unique pins inclmanifest/full114members/four whole actual17 source inverses/100otheroverlays and112+12+36 tables retained. TEST-only same source-built fixture payload staged in fresh protected/run; signed/native/original source/PDB/task/restores/drain guards remain mandatory."
+      "qualification": "Decoded wrapper says whole cohort exit1 only; actual cause unknown. Exact tiny original index454files435pieces verified; native/source/task evidence largely in00, managed diagnostics01. No original payload admitted.",
+      "tinyIndexAdmission": {
+        "path": "/workspace/astra-source/teamA-linux18-tiny-original-index-admission826.json",
+        "bytes": 4209,
+        "sha256": "6797d1740ac17f4f0be14e7edc90b7c98239199539c334713e5215bb678d10f1"
+      }
     },
     {
       "component": "Forms11 complete failed owning original closure",
@@ -175,6 +196,43 @@
       "ownerFullClosureSha256": "669f75baf94237f5a40f5a260f8d7b9251e0f5377fa710489fcc360be64774c6",
       "outcome": "825managedPASS/0fail/0skip; NameError before original native producer invocation",
       "qualification": "Full248original members/53class sources/8PEPDB/629tracked documents/tasks/restores/8original drains verified; native not reached, siblings outstanding. Forms12 positive full Desktop guard is independently reviewed and unrun."
+    },
+    {
+      "component": "Forms12",
+      "candidate": "d06c0a4b3bb6903dfecf2f4c0d983b6d5e1a4302",
+      "tree": "059074bd394e2ce7637a792b059dd4c48012250a",
+      "parent": "e8f48d666c7b18eaffeffb9a88fc0b1800dfa136",
+      "workflowRun": 37144367423,
+      "jobs": {
+        "owning": 111265177871,
+        "resource": 111265177731,
+        "regression": 111265177920
+      },
+      "outcome": "IN_PROGRESS; actual original execution required",
+      "rootLaunchReceipt": {
+        "path": "/workspace/astra-source/ready-artifacts/worker3-forms-math12-actuale8f48-current30-positive-original-desktop-guard/root-launch-receipt.json",
+        "bytes": 7073,
+        "sha256": "d249d97e9901c28f828806fa5478b9de0780947a995cc23e32f7bfe9ed7a5e62"
+      },
+      "scope": "Sole3-line positive existing entire Desktop output/native/task/restore callback binding; every other original caller byte preserved."
+    },
+    {
+      "component": "PreparedGraph full01",
+      "candidate": "b8956d78aa4bc065331e898aa4ebe5eedada3bf1",
+      "tree": "9306c10716a879f7db5288055d7f9f7ae9704d74",
+      "parent": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "outcome": "ACTUAL_CI_DISPATCHED; exact run discovery pending",
+      "rootReview": {
+        "path": "/workspace/astra-source/root-teamA-graph-full01-source-cas-review828.json",
+        "bytes": 1651,
+        "sha256": "30250a93ed0b75a380cd115d1536a1e21efa2054d7e8e6b1bace3b7af7125dca"
+      },
+      "rootLaunchReceipt": {
+        "path": "/workspace/astra-source/ready-artifacts/worker3-prepared-graph01-current30-full-three-original-task-caller-package01/root-launch-receipt.json",
+        "bytes": 3909,
+        "sha256": "eaaa5efe58758f1f2a15d5d43eb48504da16a6d7f4d1327888f16cdc4d82a6ec"
+      },
+      "scope": "269unique pins/all52members216inputs207bindings29CAS/whole3caller andtable inverses; all48/50/12 classes16graph methods30outcomes plus53prior outcomes; all inherited native/task/restore/drain guards retained."
     }
   ],
   "requests": [
@@ -183,7 +241,11 @@
     "Team C owns the bounded original .NET OIDC resource/envelope fix with A3 no-overlap ACK; publish exact proposed patch plus genuine signing/auth_revision contract for review.",
     "Team B/C4 acknowledge the proposed canonical Files Project/version/permission/transport seam; no fabricated Space/private engine or ordinary-folder fallback.",
     "Team C/C6 confirm capacity for the two exact original payloads above and publish full byte-custody/cause proofs; TeamA continues independent source/native CI work.",
-    "Please acknowledge source04/Admin SDK03 transfer/testing seam before any hosted overlap; no competing root global release write or duplicate auth service."
+    "Please acknowledge source04/Admin SDK03 transfer/testing seam before any hosted overlap; no competing root global release write or duplicate auth service.",
+    "A1 precise currenta63 CUI font/theme public API/dependency ACK now above; preserve actual browser/Home installed/version/provider gates.",
+    "Exact A1 Den26 and A3 MailConnect22 ownership transfers are ACKed and published; A4 retains originalMail17 custody.",
+    "Admin SDK03 now has both complete peers; Team C may independently review/run the bounded SDK/Web package without competing hosted source work.",
+    "C6 capacity request now additionally covers Linux18 original01/00; do not relabel tiny descriptors as payload/cause/full acceptance."
   ],
   "blockers": [
     "Sandbox catalog tools return MCPUnknown tool; cloud/executor skill catalogs empty. No Sandbox Operating Contract or runtime capability claimed.",
@@ -199,9 +261,9 @@
   "commercialStatus": "NOT_ENABLED",
   "coordinationProtocol": "Only Team A records updated through current-parent non-force push and exact remote readback. Team C alone owns index and accepted-head.",
   "previousRecord": {
-    "path": "coordination/sol-happy-20261003/team-a.json",
-    "sourceCommit": "9d6cba7a1b0c5d9b44fc78edccb27304192f41bd",
-    "sha256": "a31f7b0fb23005e8395c88d7c0444063ec18a3fd65108179c22edb4358ac0d7d"
+    "path": "/workspace/astra-source/teamA-coordination-record822.json",
+    "bytes": 22917,
+    "sha256": "3a192d0450d766068f7d14c91910604b586a9f6e980a2f2fb492d47b4d64aad2"
   },
   "sharedPatchAcknowledgements": {
     "C2": {
@@ -244,6 +306,28 @@
       "receiptSha256": "17ed2d600b6e9658676bbdb02df48fab272afbc6a36ff3f8635c2e1f655fc3af",
       "source290ManifestSha256": "eff40ebf7ec7d8d4f1be06e90484c78de968000bda8800e27749a0bc2948e55d",
       "remaining": "Inherited actual animation callback originalTask and installed Home/bootstrap readiness plus SDK/native decoder/resources/retirement acceptance are still required."
+    },
+    {
+      "from": "A4/W2",
+      "to": "A1/W1",
+      "scope": "Exactly26 Den Runtime/AgentAdapters selected joint04 target rows8\u201322 and44\u201354; all selected bytes and38 owning prerequisites preserved. A4 retains Files03/ModelGovernance rename and Mail17 original custody; A3 schema/presentation/Studio excluded.",
+      "receipt": {
+        "path": "/workspace/astra-source/worker2-a1-frozen-den-exact-target-claim-handoff01.json",
+        "bytes": 919,
+        "sha256": "47339713e7530f5e6c4463e12cd9a0dc34e401ca9fe437ca5118395c5186be7b"
+      },
+      "ack": "A1 independently verified all26 exact rows and explicitly ACKed before edits."
+    },
+    {
+      "from": "A4/W2",
+      "to": "A3/W4",
+      "scope": "Exactly22 current normal30 Mail/Connect canonical app claims; six frozen input references/two pending IDLE bodies/eight unselected lease11 rows, no shared/Home/Files/Den/donor/hosted expansion. A4 retains Mail17 original evidence custody and incomplete acceptance.",
+      "receipt": {
+        "path": "/workspace/astra-source/worker2-a3-mail-connect-exact-source-evidence-claim-handoff01.json",
+        "bytes": 7806,
+        "sha256": "4db752e723e085a810a2ba6113cfcfad5bfef67fa70e564363d2c338cf32d2e1"
+      },
+      "ack": "A3 independently verified exact22 claims and all six references/two pending bodies/eight held lease rows; explicit ACK. Edit transfer effective through this published record."
     }
   ],
   "pendingSourcePackages": [
@@ -257,7 +341,46 @@
       "component": "Admin source04 plus SDK03",
       "manifestSha256": "79d5fb4bbe7864fb462f18bbca992ce2909ad24589f50bf5805dec89a570a306",
       "source04ManifestSha256": "83b1e8b7ba9b42b1472fa0bfabdd979b51d53d451ad780f1a92026003edbf381",
-      "state": "UNRUN; exact17source bodies independently peer-reviewed; fullSDK/Web drivers retain original creator/session/source/PDB/task/restore/process custody. Only isolated synthetic trusted-profile PKCE is covered until real issuer integration. Source transfer/tested reviewed commit submission to C remains pending."
+      "state": "SOURCE_PEER_COMPLETE; full SDK/Web actual execution and reviewed source integration pending Team C. No real auth/Admin/full native completion.",
+      "completePeers": [
+        {
+          "path": "/workspace/astra-source/worker1-admin-sdk03-complete-original-compiler-source-pdb-creator-peer01.json",
+          "bytes": 2774,
+          "sha256": "5a1f6cf52c2f5f18475ffecf77427523337f09e0ece5666efd1c67898cc64901"
+        },
+        {
+          "path": "/workspace/astra-source/worker2-admin-sdk03-original-persistence-close-source-peer-extension01.json",
+          "bytes": 1095,
+          "sha256": "8fd6feac80ef38447ac31d189685603a9163a233767f5409bc0764b4b7d38084"
+        }
+      ]
+    },
+    {
+      "component": "Home native Core transport01",
+      "manifest": {
+        "path": "/workspace/astra-source/worker5-home-unix-core-transport-source01-retained-legacy-frame-and-original-core-session/manifest.json",
+        "bytes": 16787,
+        "sha256": "43de447edaa19a07a96b53513a19cab740411b47218979d5879d48917db77f9d"
+      },
+      "state": "SOURCE_ONLY; A1/A6 independent source peers pending; one SAME accepted Socket/Core session/original write+drain and exact legacy behavior mandatory. No default OS activation or installed bootstrap proof."
+    },
+    {
+      "component": "TypedMath/Forms source01",
+      "manifest": {
+        "path": "/workspace/astra-source/worker3-typed-math-answer-source01-configured-canonical-families/manifest.json",
+        "bytes": 37895,
+        "sha256": "21055ecae86ab7cc9601e28845278bbc375d27c5f4336019711c846d541fd07b"
+      },
+      "state": "HELD; raw JSON decimal interval/coordinate precision can round before native exact literal policy. Coherent source02 correction pending full peers; proposed pure Application validator port A1 narrowly ACKed, cross-team headless API seam requires agreement."
+    },
+    {
+      "component": "Studio animation originalTask source01",
+      "manifest": {
+        "path": "/workspace/astra-source/worker4-studio-actual-animation-original-task-source01/manifest.json",
+        "bytes": 8123,
+        "sha256": "8aa92fba3c23a3d800e9c4e7110eda637b10e6de8dac1fecfaf122d47495ff61"
+      },
+      "state": "HELD; RefreshCore notification->Close reentry/new-frame publication and bitmap cleanup plus original Mounted fixture async close need coherent02 correction. A1/A6 whole source peers confirmed; no native execution."
     }
   ],
   "FilesProjectProposedSharedContract": {
@@ -265,19 +388,26 @@
     "passStart": "Canonical prior Astra exact-head acceptance/main merge/local artifact drop remain blocked; no Terra feature source materialized.",
     "identity": "Reuse HostedItemId/FilesLocationId/FilesRevisionId/FilesOperationId and same durable provider/Store; stable Project-scoped SectionID/AppearanceID distinguish logical grouping from physical ParentId. Source location/parent/original and independent current source ACL preserved.",
     "operations": "Typed CreateProject, section CRUD/reorder, AddExistingReference/assign/unsectioned/remove-appearance carry expected owning revision/original operation key/typed payload digest; same durable State commit records organisation+operation+event, returns exact IDs/revision/structured conflict; removal keeps originals.",
-    "openSeam": "Underlying item-kind/wire representation and revision token mapping need B/C4 ACK. Existing ProductivityArtifactReferenceSource is Space-scoped; standalone Sheet/Link/Replay must not fabricate a Space. A1 owns any compatible common reference/NodeGraph extension."
+    "openSeam": "Underlying item-kind/wire representation and revision token mapping need B/C4 ACK. Existing ProductivityArtifactReferenceSource is Space-scoped; standalone Sheet/Link/Replay must not fabricate a Space. A1 owns any compatible common reference/NodeGraph extension.",
+    "revisionMapping": "FilesRevisionId is canonical Guid identity, distinct from resumable change cursor. Hosted sequence/ETag transport requires authoritative same-service persisted mapping or an ACKed compatible contract extension; never fabricate per-client UUID/hash, reinterpret unrelated sequence or replace pinned history with latest bytes."
   },
   "nativeCoverageStatus": {
     "A1": "Seven groups with439candidate lines explicitly unmapped; not a requirement denominator or completed Home bootstrap.",
     "A2": "Full criterion/donor/platform decomposition still incomplete; component proofs are qualified.",
     "A4": "Exact34Terra groups/100nestingpairs/24Files acceptance bullets MISSING/BLOCKED; current6Files03 source-only facts; historical Files14 Linux only.",
     "A5": "Ten-group inventory includes all OS/device/install/boot/native gaps, not atomic exhaustive coverage.",
-    "A6": "Independent challenge retains these missing mappings and all mandatory native/provider/installed/cross-app failures in denominator. No defensible spec completion percentage."
+    "A6": "Independent challenge retains these missing mappings and all mandatory native/provider/installed/cross-app failures in denominator. No defensible spec completion percentage.",
+    "fullProductVerified": 0,
+    "currentA2ProcedureMap": {
+      "path": "/workspace/astra-source/worker3-team-a-a2-spec-derived-native-procedure-map02.json",
+      "bytes": 50240,
+      "sha256": "9a367f8b181a263959cf9f9a47a3d80a62e19d49945320821ee06d6390b624f3"
+    }
   },
   "originalEvidenceCapacityRequest": {
     "to": "Team C/C6",
     "state": "ACK_REQUESTED; NO_UNBUDGETED_DOWNLOAD_BY_TEAM_A",
-    "reason": "Fixed workspace943718400/tmp1073741824 floors; TeamA remaining slack~17MB, original payloads23\u201327MB cannot fit. Nine closed generated cuts retained byte-exact recovered18.9MB; all originalZIP/SDK/native/source/compiled inputs preserved.",
+    "reason": "Fixed workspace943718400/tmp1073741824 floors; current free~951.8MB workspace/~1079.2MBtmp after exact Forms/Graph isolated construction. Large originals still cannot fit; all current originals/source/native inputs preserved.",
     "firstRequestedOriginals": [
       {
         "component": "Home14 causal log fullbundle02",
@@ -294,6 +424,28 @@
         "bytes": 22969961,
         "sha256": "3ef17cecfecd855bc45bbcb98f21e3f15baf354f7ba354b2156225c852e9a1c0",
         "required": "Whole original against tiny index11279992656; complete receipt3895B/canvasTRX163857B/coreTRX21034B/10original drains/SDK full maps; class/source/log/compiled pairs partly in00, nativeSO spansboth. Do not infer full native fix."
+      },
+      {
+        "component": "Linux18 diagnostic fullbundle01",
+        "head": "e6ee0cb3af68ad508f8b53b46fa9135a977a4419",
+        "run": 37142222733,
+        "artifactID": 11281891198,
+        "bytes": 16800353,
+        "sha256": "23117686ed53a741f4789fdf6d3fc3e023f8aee17204aeee549f694b7ddd0e3c",
+        "innerBytes": 16800213,
+        "innerSha256": "a060a0adbb4966f597cc3bd7e6f0315459d7f7837fc9e3ac7562689ebd8729ee",
+        "tinyIndex": 11281926154,
+        "required": "Whole archive/custody check against454-descriptor index; verify original receipt/Home+OS TRX/build logs/original process drains. Causal diagnostic only; full native/compiler/source/compiled-package proof also requires00."
+      },
+      {
+        "component": "Linux18 full native/source bundle00",
+        "head": "e6ee0cb3af68ad508f8b53b46fa9135a977a4419",
+        "artifactID": 11281866192,
+        "bytes": 27280298,
+        "sha256": "c9fcf2fb0442263285b3a1c0903181acfb4576dc91d9daefac3bccbe8f4a7faf",
+        "innerBytes": 27280158,
+        "innerSha256": "2c11ce993575a100698a3da565561dba27d5b645991fc430d1a4b8a373d2e8a4",
+        "required": "All original native16 result/log/helper/source-built/compiled package and source bytes against same index; no native acceptance inferred from01 or wrapper."
       }
     ],
     "futureRemaining": [
