@@ -13,3 +13,5 @@ Release blockers include absent real provider credentials, deployment/configurat
 The default donor checker intentionally verifies committed recursive-checkout source pins. Its negative result must not be weakened to local-only success. Root verification only covers CUI/Home/Spaces plus preload/markup inventory; it cannot be described as a full-spec release suite. It also calls `powershell` while this environment exposes `pwsh`.
 
 No production source edits, charges, deployments or production route mutations performed. Coordinator alone owns integration and combined accepted-head index.
+
+Fresh canonical source reread delta is in `spec-change.json`; current source inventory now uses revision AHj4eMQy... and SHA256117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1. The prior summary is retained separately and previous source inventory remains in git history (531ef36). Line10002 now declares a Study App under O Yes; it remains included/unresolved, not implemented or silently exempted. This delta does not relabel previous test evidence as fresh full-spec acceptance.
