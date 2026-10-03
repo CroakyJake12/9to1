@@ -176,6 +176,98 @@ public sealed class HomeInstalledApplicationRegistryTests : IDisposable
     }
 
     [Fact]
+    public async Task Original_existing_read_never_discovers_or_initializes_missing_inventory()
+    {
+        var actors = new Actors(); var provider = new Provider();
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        Assert.Null(await registry.ReadExistingForActorAsync(actors.Current, default));
+        Assert.Equal(0, provider.Calls);
+        Assert.False(File.Exists(_path));
+    }
+
+    [Fact]
+    public async Task Original_existing_read_returns_detached_saved_metadata_without_reconciliation()
+    {
+        var actors = new Actors(); var provider = new Provider();
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        var saved = await registry.RefreshForActorAsync(actors.Current, default);
+        var before = await File.ReadAllBytesAsync(_path); var calls = provider.Calls;
+        provider.Switch = () => throw new InvalidOperationException("Read must not observe providers.");
+        var snapshot = Assert.IsType<InstalledApplicationReadSnapshot>(await registry.ReadExistingForActorAsync(actors.Current, default));
+        Assert.Equal(saved.ToArray(), snapshot.Applications.ToArray());
+        Assert.True(snapshot.RegistryRevision > 0);
+        Assert.StartsWith("home.installed-apps.", snapshot.RegistryRecordId);
+        Assert.Throws<NotSupportedException>(() => ((IList<InstalledApplicationReference>)snapshot.Applications).Clear());
+        Assert.Equal(calls, provider.Calls);
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    [Fact]
+    public async Task Original_existing_read_mismatch_denies_before_store_or_provider()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        actors.Current = original with { AuthenticationRevision = "retired" };
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.ReadExistingForActorAsync(original, default).AsTask());
+        Assert.Equal(0, provider.Calls); Assert.False(File.Exists(_path));
+    }
+
+    [Fact]
+    public async Task Original_existing_read_distinguishes_genuine_saved_empty_inventory()
+    {
+        var actors = new Actors(); var provider = new MutableProvider();
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        Assert.Empty(await registry.RefreshForActorAsync(actors.Current, default));
+        var before = await File.ReadAllBytesAsync(_path);
+        var snapshot = Assert.IsType<InstalledApplicationReadSnapshot>(await registry.ReadExistingForActorAsync(actors.Current, default));
+        Assert.Empty(snapshot.Applications); Assert.True(snapshot.RegistryRevision > 0);
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    [Fact]
+    public async Task Original_existing_read_retirement_after_actual_read_withholds_saved_metadata()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        var raw = new FileHomeCoreStateStore(_path);
+        await new HomeInstalledApplicationRegistry(raw, actors, [provider]).RefreshForActorAsync(original, default);
+        var before = await File.ReadAllBytesAsync(_path); var calls = provider.Calls;
+        var held = new HeldReadStore(raw);
+        var pending = new HomeInstalledApplicationRegistry(held, actors, [provider]).ReadExistingForActorAsync(original, default).AsTask();
+        try
+        {
+            await held.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(pending.IsCompleted);
+            actors.Current = original with { AuthenticationRevision = "retired-after-read" };
+            held.Release.TrySetResult();
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pending);
+            Assert.Equal(1, held.Reads); Assert.Equal(calls, provider.Calls);
+            Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+        }
+        finally
+        {
+            held.Release.TrySetResult();
+            try { await pending; } catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    private sealed class HeldReadStore(FileHomeCoreStateStore actual) : IHomeCoreStateStore
+    {
+        public int Reads;
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default)
+        {
+            var result = await actual.ReadAsync(ct); Reads++; Entered.TrySetResult();
+            await Release.Task.WaitAsync(ct); return result;
+        }
+        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long revision, CancellationToken ct = default) =>
+            throw new InvalidOperationException("Read fixture must never write.");
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long revision,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default) =>
+            throw new InvalidOperationException("Read fixture must never write.");
+    }
+
+    [Fact]
     public async Task Same_actual_inventory_refresh_and_launch_resolution_preserve_Home_bytes_without_guarded_publication()
     {
         var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
