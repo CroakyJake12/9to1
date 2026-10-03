@@ -1,0 +1,134 @@
+[
+  {
+    "path": "canvas-build.binlog",
+    "bytes": 1072605,
+    "sha256": "adb4c24475307e98a1ae18b98b624da65e4ec81221168a1d93fd62491cf3150f",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "bytes": 754176,
+    "sha256": "36ad13da30ca1087d75c113e92cd0730b70b9e08fdf313f15d15cd5b5722944d",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/Microsoft.Build.Framework.dll",
+    "bytes": 47848,
+    "sha256": "a7fbda5d26340af8443e388e57bfa5d0a3ebec904947ac2fcfd7a56a237a297b",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Mdb.dll",
+    "bytes": 39936,
+    "sha256": "28cb367972bdc1cd43e4006306af2fd96d37f4ed4b239ee90e1dc7237a93af7f",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Pdb.dll",
+    "bytes": 90112,
+    "sha256": "a332332633fbcb20e8d50e49b4db7bd1557721417122cf0c5f4c42f2332391d0",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Rocks.dll",
+    "bytes": 27136,
+    "sha256": "bf992f3dce364ebcc3200fa7832ef07e20b4e2dbc3a8a6213ce44e3d239db984",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.dll",
+    "bytes": 361472,
+    "sha256": "831dca77470d85cb6ffbea3072daa7a3df5b7c9fcfd9c3f43674a9be99d4bfcf",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/System.Numerics.Vectors.dll",
+    "bytes": 159496,
+    "sha256": "a87fc942c07846ca9b53119dc300a935d67f05578909987d19645f1d02764417",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/System.Threading.Thread.dll",
+    "bytes": 22400,
+    "sha256": "f3d77354a2b2c3b01cb24369c076b9568b95f52c28349541707741658aa173dd",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/avalonia-build-tasks/System.Threading.dll",
+    "bytes": 50016,
+    "sha256": "74e07f71df0cc4b67b6bf32f7dd6a10d3f82ae8b5feefa45759ceea78e6aa301",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/canvas/HavenOS.Canvas.Tests.dll",
+    "bytes": 359936,
+    "sha256": "f3fcca99b76ac5fbafbda53eefb1539d627ad6453102ae727b6c5b85937dfc5e",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/canvas/HavenOS.Canvas.Tests.pdb",
+    "bytes": 72928,
+    "sha256": "c3fcecea5fe5da034c4a3249132de1fa1f98d8cb3eaf61e79241bcd5f050c0b6",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/core/Haven.Core.Tests.dll",
+    "bytes": 1018368,
+    "sha256": "9d14496d9ca90642a485cd1cdbf6a649c2f2f08ebc47cb59ab0bb82363428260",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/core/Haven.Core.Tests.pdb",
+    "bytes": 199864,
+    "sha256": "5c38c08d1657a53d2ecbb51204d19b778f8b30bdc0656a60162786ff0ea52d75",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/files/HavenOS.Files.CUI.Tests.dll",
+    "bytes": 114688,
+    "sha256": "8c090e94689af0c5470ada6b026f9a6883fe4d18c9b7221ffa32daad747795e8",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/files/HavenOS.Files.CUI.Tests.pdb",
+    "bytes": 27380,
+    "sha256": "99090f6e3d48d7c7aaf5ad59c4fc13ee62d64ca59e117cc944979a87018dfe65",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/sdk-metadata-reader/ProviderMetadata",
+    "bytes": 78256,
+    "sha256": "4da331a4364a97e38a9f407f7bcbbac81beb96e5df584cf0b8d1687310b84fc6",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/sdk-metadata-reader/ProviderMetadata.dll",
+    "bytes": 8704,
+    "sha256": "35b163b73628c189cfe708e98fd1ea70036a779d2dfa92e481986c3dca6f7960",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "compiled/sdk-metadata-reader/ProviderMetadata.pdb",
+    "bytes": 12808,
+    "sha256": "9db720ef0be5ab0e2478503d6674fb22f05fd21aae9398f1fea28f30028eb41b",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "core-build.binlog",
+    "bytes": 955456,
+    "sha256": "d0a393d82f832666fd4be58dfa16954b2c250a556435ab457764139bd6090021",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "files-build.binlog",
+    "bytes": 487126,
+    "sha256": "421ef106941c9db72e459ad6b29fd3783b058687fac3e1ad204c9251afdd2f6a",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  },
+  {
+    "path": "native/libcakeos_canvas_rnote_poc.so",
+    "bytes": 14487248,
+    "sha256": "1a7105ae9f47df1e47587cc6450a7ba91fd5eadaedda257ba5aa4a709d93649c",
+    "reason": "Verified original compiled/native/archive bytes retained outside Git; never executed by C6"
+  }
+]
