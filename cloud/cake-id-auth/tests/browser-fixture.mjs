@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomBytes, createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createAuthClient } from "better-auth/client";
@@ -17,8 +17,8 @@ for (const method of ["equal", "notEqual", "ok", "match", "doesNotMatch", "rejec
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-if (process.platform === "win32" && process.arch === "arm64") {
-  console.error("SKIP: the installed Cloudflare Workerd runtime has no native Windows ARM64 build. Its x64-emulated Worker starts here, but D1 calls fail inside the runtime before auth flows run. No test secrets or database state were created. Run this integration suite on a supported native Workerd host.");
+if (process.platform !== "linux") {
+  console.error("SKIP: this custody-checked reusable fixture requires Linux /proc process-group inspection; no test secrets or database state created.");
   process.exit(77);
 }
 
@@ -47,6 +47,7 @@ mkdirSync(persistPath, { recursive: true, mode: 0o700 });
 writeFileSync(varsPath, devVars, { flag: "wx", mode: 0o600 });
 
 let worker;
+let workerStartupError;
 let release;
 const released = new Promise(resolve => { release = resolve; });
 process.once("SIGINT", release);
@@ -66,17 +67,37 @@ async function waitForWorkerExit(timeoutMs = 5000) {
 }
 
 async function stopWorker() {
-  if (!worker || worker.exitCode !== null) return;
-  worker.kill("SIGINT");
-  if (await waitForWorkerExit()) return;
-  if (process.platform === "win32" && worker.pid) {
-    const killer = spawn("taskkill", ["/PID", String(worker.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
-    await new Promise((resolve) => killer.once("exit", resolve));
-    await waitForWorkerExit();
-  } else {
-    worker.kill("SIGKILL");
-    await waitForWorkerExit();
+  if (!worker) return;
+  // POSIX detached launch creates a private process group containing Wrangler and its Workerd descendants.
+  // Never remove live D1/secret state unless that exact group and the original child are drained.
+  if (process.platform === "win32") throw new Error("Cleanup custody requires the supported POSIX fixture host; state retained");
+  if (!worker.pid) {
+    if (workerStartupError) return; // Spawn never created a child or descendants.
+    throw new Error("Worker identity unavailable; fixture state retained");
   }
+  const groupAlive = () => {
+    // Container PID 1 may retain exited zombie descendants. They cannot hold/use D1 or secrets.
+    // Inspect our private group/session; an unreadable process is a custody failure, never success.
+    for (const pid of readdirSync("/proc").filter(name => /^\d+$/.test(name))) {
+      let stat;
+      try { stat = readFileSync(`/proc/${pid}/stat`, "utf8"); }
+      catch (error) { if (error.code === "ENOENT" || error.code === "ESRCH") continue; throw error; }
+      const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
+      if (Number(fields[2]) !== worker.pid) continue;
+      if (Number(fields[3]) !== worker.pid) throw new Error("Unexpected fixture process session; state retained");
+      if (fields[0] !== "Z" && fields[0] !== "X") return true;
+    }
+    return false;
+  };
+  const signalGroup = signal => {
+    try { process.kill(-worker.pid, signal); }
+    catch (error) { if (error.code !== "ESRCH") throw error; }
+  };
+  signalGroup("SIGINT");
+  await waitForWorkerExit();
+  if (groupAlive()) signalGroup("SIGKILL");
+  for (let i = 0; i < 50 && groupAlive(); i++) await new Promise(resolve => setTimeout(resolve, 100));
+  if (groupAlive() || !(await waitForWorkerExit())) throw new Error("Original Wrangler/Workerd group did not drain; fixture state retained");
 }
 
 const browserLocation = {
@@ -118,6 +139,7 @@ const authClient = createAuthClient({ baseURL: `${baseURL}${authPath}`, plugins:
 
 async function waitForWorker() {
   for (let attempt = 0; attempt < 20; attempt++) {
+    if (workerStartupError) throw new Error("Wrangler spawn failed before readiness");
     if (worker.exitCode !== null) throw new Error(`Wrangler exited before readiness.\n${serverOutput.slice(-12000)}`);
     try {
       const response = await globalThis.fetch(`${baseURL}/__test/health`, { headers: { "x-local-test-key": testKey }, signal: AbortSignal.timeout(1500) });
@@ -175,7 +197,8 @@ try {
   const wrangler = path.join(root, "node_modules", "wrangler", "bin", "wrangler.js");
   worker = spawn(process.execPath, [wrangler, "dev", "--local", "--config", "wrangler.local.jsonc",
     "--ip", "127.0.0.1", "--port", "8798", "--persist-to", persistPath],
-    { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
+    { cwd: root, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+  worker.once("error", error => { workerStartupError = error; });
   worker.stdout.setEncoding("utf8").on("data", chunk => { serverOutput = (serverOutput + chunk).slice(-16000); });
   worker.stderr.setEncoding("utf8").on("data", chunk => { serverOutput = (serverOutput + chunk).slice(-16000); });
   await waitForWorker();
@@ -219,6 +242,7 @@ try {
   console.error(`Local browser fixture failed: ${error?.message ?? "unknown error"}`);
   process.exitCode = 1;
 } finally {
+  // A cleanup error deliberately skips all state removal and remains an observable nonzero failure.
   await stopWorker();
   globalThis.fetch = realFetch;
   delete globalThis.window;

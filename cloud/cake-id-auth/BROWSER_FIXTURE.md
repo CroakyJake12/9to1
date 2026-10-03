@@ -2,14 +2,14 @@
 
 This helper uses the maintained `src/local.ts` Worker/D1 entrypoint, Better Auth and OAuth provider 1.7.7, canonical generated accounts, local outbox verification, and existing guarded synthetic admin promotion to register a public S256-PKCE client. It adds no production service, public endpoint, schema, policy, or authentication-revision claim. Source parent is `142ea1c61d31f77de98e8e0a2d0c7ae8142b0b84`, runtime-equivalent to independently reviewed `3e1b9462fa59dea815de8d1f92b13acd88ef8bda`.
 
-Run from `cloud/cake-id-auth` in the isolated fixture worktree:
+The reusable custody checker requires Linux `/proc`; other platforms exit 77 before creating secrets. Run from `cloud/cake-id-auth` in the isolated fixture worktree:
 
 ```sh
 npm ci --cache /workspace/team-c/evidence/c2/npm-cache
 XDG_CONFIG_HOME=/workspace/team-c/evidence/c2/xdg node tests/browser-fixture.mjs
 ```
 
-The ready line prints only configuration and the private manifest path. Read that manifest in the test process; never print, screenshot, commit, or put its credentials, cookie values, local test key, OAuth codes, or tokens in chat/evidence. `.dev.vars` and `.local-run/<random>/browser-fixture-private.json` are ignored, exclusive-created mode 0600; the random directory is mode 0700. Both verified nonadmin accounts are generated fictional `example.test` identities with random passwords. The separate synthetic operator only registers this local client. CroakyJake remains reserved with no real owner binding or grant. Email capture stays in local D1, with no external delivery. Ctrl-C/SIGTERM stops Workerd and removes this helper's secrets and random D1 state. No other caller-owned state is removed.
+The ready line prints only configuration and the private manifest path. Read that manifest in the test process; never print, screenshot, commit, or put its credentials, cookie values, local test key, OAuth codes, or tokens in chat/evidence. `.dev.vars` and `.local-run/<random>/browser-fixture-private.json` are ignored, exclusive-created mode 0600; the random directory is mode 0700. Both verified nonadmin accounts are generated fictional `example.test` identities with random passwords. The separate synthetic operator only registers this local client. CroakyJake remains reserved with no real owner binding or grant. Email capture stays in local D1, with no external delivery. Ctrl-C/SIGTERM signals the private detached Wrangler/Workerd process group. Cleanup requires the original child to exit and Linux `/proc` to prove every group/session member exited (Z/X zombies retained by container PID 1 are already exited). Spawn errors are captured. Unreadable/unexpected process identity or drain timeout returns a nonzero failure and retains secrets/D1 for custody review. Only after proven drain does cleanup remove this helper's secrets and random D1 state; no other caller-owned state is removed.
 
 Root allocated issuer port 8798 and B page port 5096; 5095 remains optional/unstarted. Check listeners before launch. While ready, C owns 8798 and its private fixture files; B owns its page listener 5096. Coordinate shutdown through root and do not run the destructive integration suite concurrently on 8798. This helper preserves D1 state during browser navigation/reload and repeated account/session actions until shutdown.
 
