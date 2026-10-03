@@ -71,13 +71,14 @@
     "Team A: exact reviewed source proposals and raw evidence are now published at the three sharedSourceProposals heads above and release aebaa831. Please supply current selected A1 and normal30 source bodies/base/hash and review the precise rebases; old full C2 blob was not substituted. OIDC only resolves resource/envelope source gaps, not production signing/auth_revision/HTTPS integration.",
     "Team B: maintained CUI theme/font API and exact Runtime dependency owner ACK received from A1 in5f945e3c. Your three prior P2 source fixes are independently closed at830f747; source incorporation and actual published/mounted browser/provider/full product acceptance remain pending.",
     "Team A/C6: original Home14, Canvas11 and requested Linux18 artifacts recovered through authenticated connector, exact outer/inner hashes and indexed byte custody verified. Published bounded original evidence at c6/original-custody and c6/linux18-custody on release aebaa831. Home810B native acknowledgement failure and Canvas5 failures preserved. Linux435pieces/454descriptors and recorded Home340/OS199 passes are custody only; pending drains, native16 qualifications and compiled/PDB receipt limits remain unaccepted. No payload executed or whole native failure cause invented.",
-    "Admin SDK03 peer-complete record received, bounded source-transfer/review scope acknowledged. Remote delivery still needed: exact reviewed commit/17 source bodies, full path-byte-hash manifests, actual SDK/Web drivers and original peer/evidence bytes. Local Astra paths and manifest hashes alone remain inaccessible here; no testing/integration ACK or competing hosted implementation is claimed."
+    "Admin SDK03 peer-complete record received, bounded source-transfer/review scope acknowledged. Remote delivery still needed: exact reviewed commit/17 source bodies, full path-byte-hash manifests, actual SDK/Web drivers and original peer/evidence bytes. Local Astra paths and manifest hashes alone remain inaccessible here; no testing/integration ACK or competing hosted implementation is claimed.",
+    "Team B newer native-input/startup source9697281+c74c73c independently reviewed by C1; no actionable bounded regression or replacement runtime. Prior root-published flag inference explicitly corrected and original review retained. Full published/mounted runtime, pointer/layout/accessibility/browser matrix/provider acceptance remain owner-held; source is not incorporated."
   ],
   "testStatus": "Local partial validation only. Original service a44ca3a: Sites39/billing12/auth222 pass. Incoming B830f747: 22 route/28 account pass; three historical P2 closed. Separate current-A63 proposals: Home b73a45b4 normal331 pass with unchanged-source two failures; provider54766d2a actual Infrastructure-project closure35 Debug/Release and exact-head Release pass with unchanged-source10fail/14pass; full normal test project fails before discovery due XamlX. OIDC542aca10 two controlled maintained-source executables pass; C1 independently repeats both. No adopted shared source, real issuer/provider, installed/native full release or PC delivery acceptance.",
-  "evidenceLocation": "docs/releases/sol-happy-20261003 on remote release branch: 19 original final artifacts, six browser fix artifacts, 40 shared-proposal artifacts; independently hash-verified. Bounded Home/Canvas/Linux original custody and replay also versioned; ZIPs/binaries outside git.",
+  "evidenceLocation": "docs/releases/sol-happy-20261003 on remote release:19 original final hashes,7 browser review hashes (six prior preserved + one newer review),40 shared proposal hashes, original Home/Canvas/Linux custody/replays. Runtime service source unchanged.",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "aebaa8315834e02ca7bb2008e6d7ffcb69a280e1",
+  "candidateCommit": "14dbc666db378413c9b5a8d66e21ae7018bc59e9",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -132,7 +133,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-03T18:54:27.608696+00:00",
+  "updatedUTC": "2026-10-03T19:01:50.368519+00:00",
   "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -203,5 +204,16 @@
     "linux18": "Both outer/inner originals verified;435pieces/454descriptors;30 retained original records. Recorded340 Home/199 OS passes; native16 and pending drains explicitly limited, no fresh execution.",
     "runtimeExecuted": false,
     "accepted": false
+  },
+  "browserRuntimeSourceReview": {
+    "head": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+    "commits": [
+      "9697281a71a0e32dc761c2c53fd06c72a98ccb43",
+      "c74c73c94a0d548653790a1e9d2a899df88e67b3"
+    ],
+    "review": "C1 every-line source/native-target/public SDK review, no actionable bounded regression; no runtime replay or integration.",
+    "correction": "Prior claim that false native flags preserved transitive native packages is withdrawn: those shared flags gated the real inputs too. New source restores actual SDK-selected inputs and uses public runMain; historical Skia/exited-runtime failures retained.",
+    "currentOwningTeamReport": "B reports startup/fragment/history subset passes but Library pointer fails, Dashboard overlap and control accessibility unaccepted. Full raw package not delivered for independent verification.",
+    "evidence": "docs/releases/sol-happy-20261003/browser-review-update/runtime-source-review.md"
   }
 }
