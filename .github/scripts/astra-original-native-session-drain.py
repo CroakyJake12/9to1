@@ -5,6 +5,22 @@ while sampling, and drain() in finally. The policy wrapper checks every state
 record is drained before removing introduced profiles.
 """
 import os,pathlib,json,time,signal,ctypes
+from contextlib import contextmanager
+def raise_failures(primary, cleanup):
+ errors=([primary] if primary is not None else [])+cleanup
+ if len(errors)==1:raise errors[0]
+ if errors:raise BaseExceptionGroup('Original handle body and cleanup failures',errors)
+
+@contextmanager
+def captured_fd(fd):
+ primary=None;cleanup=[]
+ try:yield fd
+ except BaseException as error:primary=error
+ finally:
+  try:os.close(fd)
+  except BaseException as error:cleanup.append(error)
+  raise_failures(primary,cleanup)
+
 class OriginalSession:
  @staticmethod
  def enroll_subreaper():
@@ -65,12 +81,11 @@ class OriginalSession:
    if self.stat(pid)!=expected:continue
    try:fd=os.pidfd_open(pid,0)
    except ProcessLookupError:continue
-   try:
+   with captured_fd(fd):
     actual=self.stat(pid)
     if actual is None:continue
     if actual[1:4]!=expected[1:4]:raise RuntimeError('Session member identity changed before signal')
     signal.pidfd_send_signal(fd,sig,None,0)
-   finally:os.close(fd)
  def reap_owned_zombies(self,rows):
   self.require_subreaper()
   if self.stat(self.owner)[3]!=self.ownerBirth:raise RuntimeError('Original subreaper owner identity changed')
@@ -85,7 +100,7 @@ class OriginalSession:
    if actual[0]!=self.owner:continue
    if actual[4]!='Z':raise RuntimeError('Original zombie observation changed')
    fd=os.pidfd_open(pid,0)
-   try:
+   with captured_fd(fd):
     actual=self.stat(pid)
     if actual is None or actual[0]!=self.owner or actual[1:4]!=expected[1:4] or actual[4]!='Z':
      raise RuntimeError('Kernel-owned original child identity changed before wait')
@@ -94,7 +109,6 @@ class OriginalSession:
     self.reaped[pid]={'originalTuple':expected,'observedTuple':actual,'waitPid':result.si_pid,
       'waitCode':result.si_code,'waitStatus':result.si_status,'ownerPid':self.owner,'ownerStartTicks':self.ownerBirth}
     self.write(False)
-   finally:os.close(fd)
  def drain(self):
   for sig in (signal.SIGTERM,signal.SIGKILL):
    rows=self.observe();self.reap_owned_zombies(rows);rows=self.observe();self.send(rows,sig);deadline=time.monotonic()+5
