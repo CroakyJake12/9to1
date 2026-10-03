@@ -31,6 +31,7 @@ public sealed class SiteDeploymentService(
             }, cancellationToken).ConfigureAwait(false);
             if (context.project is null) return Failure("SiteNotFound", "The Sites project was not found.", request.SiteId.ToString());
             if (context.environment is null) return Failure("EnvironmentNotFound", "The deployment environment is not configured for this site.", request.EnvironmentId.ToString());
+            if (!context.environment.IsEnabled) return Failure("CapabilityUnavailable", "The deployment environment is disabled.", request.EnvironmentId.ToString());
 
             var provider = providers.Find(request.ProviderId);
             if (provider is null) return Failure("ProviderUnavailable", "The selected hosting provider is not connected or registered.", request.ProviderId, true);
@@ -71,7 +72,7 @@ public sealed class SiteDeploymentService(
 
             var artifact = await buildPipeline.BuildAndPackageAsync(
                 new SiteBuildRequest(deployment.SiteId, deployment.DeploymentId, source, context.environment.EnvironmentId),
-                (update, token) => SetStageAsync(deployment.DeploymentId, update.Stage, update.State, update.Code, update.Message, token),
+                (update, token) => new ValueTask(SetStageAsync(deployment.DeploymentId, update.Stage, update.State, update.Code, update.Message, token)),
                 cancellationToken).ConfigureAwait(false);
             if (artifact.ArtifactId == Guid.Empty || !string.Equals(artifact.SourceRevision, source.SourceRevision, StringComparison.Ordinal) ||
                 !string.Equals(artifact.ConfigurationRevision, source.ConfigurationRevision, StringComparison.Ordinal))
@@ -103,7 +104,8 @@ public sealed class SiteDeploymentService(
             if (context.environment.IsProduction)
             {
                 hostingState = await provider.PromoteAsync(candidate, deployment.SiteId, deployment.EnvironmentId, cancellationToken).ConfigureAwait(false);
-                if (!string.Equals(hostingState.ActiveSourceRevision, source.SourceRevision, StringComparison.Ordinal) || hostingState.ActiveDeploymentId != deployment.DeploymentId)
+                if (hostingState.SiteId != deployment.SiteId || hostingState.EnvironmentId != deployment.EnvironmentId || hostingState.ProviderId != provider.Descriptor.ProviderId ||
+                    !string.Equals(hostingState.ActiveSourceRevision, source.SourceRevision, StringComparison.Ordinal) || hostingState.ActiveDeploymentId != deployment.DeploymentId)
                     throw new SiteDeploymentException(new SiteApiError("PromotionFailed", "The provider did not confirm production routing to the verified deployment.", deployment.DeploymentId.ToString(), true));
             }
             else
@@ -125,7 +127,7 @@ public sealed class SiteDeploymentService(
         }
         catch (SiteDeploymentException ex)
         {
-            var failed = await FailDeploymentAsync(activeDeploymentId, ex.Error, cancellationToken).ConfigureAwait(false);
+            var failed = await FailDeploymentAsync(activeDeploymentId, ex.Error, CancellationToken.None).ConfigureAwait(false);
             return failed is null ? SiteApiResult<SiteDeployment>.Failure(ex.Error) : SiteApiResult<SiteDeployment>.Success(failed);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -159,11 +161,20 @@ public sealed class SiteDeploymentService(
             if (target is null) return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("DeploymentNotFound", "The deployment was not found.", deploymentId.ToString(), false));
             if (target.State != SiteDeploymentState.Succeeded || string.IsNullOrWhiteSpace(target.ArtifactId))
                 return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("RollbackUnavailable", "Rollback requires a previously successful deployment with a retained artifact.", deploymentId.ToString(), false));
-            var artifact = await artifactArchive.GetAsync(Guid.Parse(target.ArtifactId), cancellationToken).ConfigureAwait(false);
+            if (!Guid.TryParse(target.ArtifactId, out var retainedArtifactId) || retainedArtifactId == Guid.Empty)
+                return Failure("RollbackTargetInvalid", "The deployment has no valid retained artifact identity.", deploymentId.ToString());
+            var artifact = await artifactArchive.GetAsync(retainedArtifactId, cancellationToken).ConfigureAwait(false);
             if (artifact is null) return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("ArtifactUnavailable", "The deployment artifact is no longer available. Sites will not rebuild from the live website.", target.ArtifactId, false));
+            if (artifact.ArtifactId != retainedArtifactId || artifact.SourceRevision != target.SourceRevision || artifact.ConfigurationRevision != target.ConfigurationRevision)
+                return Failure("RollbackTargetInvalid", "The retained artifact does not match the successful deployment source and configuration.", deploymentId.ToString());
+            if (!artifact.SecretScanPassed)
+                return Failure("PrivateDataExposureBlocked", "The retained artifact did not pass secret and private-data checks; no rollback was attempted.", deploymentId.ToString());
+            var validation = await buildPipeline.ValidateArtifactAsync(artifact, cancellationToken).ConfigureAwait(false);
+            if (!validation.IsValid)
+                return SiteApiResult<SiteDeployment>.Failure(validation.Diagnostics.FirstOrDefault() ?? new SiteApiError("BuildValidationFailed", "The retained deployment artifact failed validation.", deploymentId.ToString(), false));
             var project = await store.ReadAsync(state => state.Projects.SingleOrDefault(candidate => candidate.SiteId == target.SiteId), cancellationToken).ConfigureAwait(false);
             var environment = project?.Environments.SingleOrDefault(candidate => candidate.EnvironmentId == target.EnvironmentId);
-            if (project is null || environment is null || !environment.IsProduction)
+            if (project is null || environment is null || !environment.IsProduction || !environment.IsEnabled)
                 return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("RollbackTargetInvalid", "The selected deployment is not bound to a configured production environment.", deploymentId.ToString(), false));
             var provider = providers.Find(target.ProviderId);
             if (provider is null || !provider.Descriptor.IsConnected)
@@ -184,19 +195,36 @@ public sealed class SiteDeploymentService(
             await SaveDeploymentAsync(rollback, cancellationToken).ConfigureAwait(false);
             try
             {
+                await SetStageAsync(rollback.DeploymentId, SiteDeploymentStageKind.Validate, SiteStageState.Succeeded, null, null, cancellationToken).ConfigureAwait(false);
+                await SetStageAsync(rollback.DeploymentId, SiteDeploymentStageKind.Deploy, SiteStageState.Running, null, null, cancellationToken).ConfigureAwait(false);
                 var candidate = await provider.UploadCandidateAsync(artifact, rollback.SiteId, rollback.EnvironmentId, rollback.DeploymentId, cancellationToken).ConfigureAwait(false);
+                if (candidate.ProviderDeploymentId == Guid.Empty || candidate.SourceRevision != target.SourceRevision ||
+                    candidate.ConfigurationRevision != target.ConfigurationRevision || candidate.ArtifactId != target.ArtifactId)
+                    throw new SiteDeploymentException(new SiteApiError("RollbackVerificationFailed", "The provider did not confirm the retained source, configuration and artifact identities.", rollback.DeploymentId.ToString(), false));
+                await SetStageAsync(rollback.DeploymentId, SiteDeploymentStageKind.Deploy, SiteStageState.Succeeded, null, null, cancellationToken).ConfigureAwait(false);
+                await SetStageAsync(rollback.DeploymentId, SiteDeploymentStageKind.Verify, SiteStageState.Running, null, null, cancellationToken).ConfigureAwait(false);
                 var verification = await provider.VerifyCandidateAsync(candidate, cancellationToken).ConfigureAwait(false);
                 if (!verification.IsReachable || !verification.ContentMatches || verification.SourceRevision != target.SourceRevision || verification.ArtifactId != artifact.ArtifactId.ToString("D"))
                     throw new SiteDeploymentException(verification.Diagnostics.FirstOrDefault() ?? new SiteApiError("RollbackVerificationFailed", "The retained deployment artifact did not verify.", deploymentId.ToString(), true));
+                await SetStageAsync(rollback.DeploymentId, SiteDeploymentStageKind.Verify, SiteStageState.Succeeded, null, null, cancellationToken).ConfigureAwait(false);
+                await SetStageAsync(rollback.DeploymentId, SiteDeploymentStageKind.Route, SiteStageState.Running, null, null, cancellationToken).ConfigureAwait(false);
                 var active = await provider.PromoteAsync(candidate, rollback.SiteId, rollback.EnvironmentId, cancellationToken).ConfigureAwait(false);
-                if (active.ActiveDeploymentId != rollback.DeploymentId || active.ActiveSourceRevision != target.SourceRevision)
+                if (active.SiteId != rollback.SiteId || active.EnvironmentId != rollback.EnvironmentId || active.ProviderId != target.ProviderId ||
+                    active.ActiveDeploymentId != rollback.DeploymentId || active.ActiveSourceRevision != target.SourceRevision)
                     throw new SiteDeploymentException(new SiteApiError("RollbackPromotionFailed", "The provider did not confirm production rollback.", rollback.DeploymentId.ToString(), true));
+                await SetStageAsync(rollback.DeploymentId, SiteDeploymentStageKind.Route, SiteStageState.Succeeded, null, null, cancellationToken).ConfigureAwait(false);
                 var succeeded = await CompleteDeploymentAsync(rollback.DeploymentId, current => current with { State = SiteDeploymentState.Succeeded, PublicUrl = active.ActiveUrl, UpdatedAt = DateTimeOffset.UtcNow }, cancellationToken).ConfigureAwait(false);
                 return SiteApiResult<SiteDeployment>.Success(succeeded);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                var error = new SiteApiError("Cancelled", "Rollback was cancelled. Check hosting state before relying on the active route.", rollback.DeploymentId.ToString(), true);
+                await FailDeploymentAsync(rollback.DeploymentId, error, CancellationToken.None, SiteDeploymentState.Cancelled).ConfigureAwait(false);
+                return SiteApiResult<SiteDeployment>.Failure(error);
+            }
             catch (SiteDeploymentException ex)
             {
-                var failed = await CompleteDeploymentAsync(rollback.DeploymentId, current => current with { State = SiteDeploymentState.Failed, FailureCode = ex.Error.Code, FailureMessage = ex.Error.Message, UpdatedAt = DateTimeOffset.UtcNow }, CancellationToken.None).ConfigureAwait(false);
+                await CompleteDeploymentAsync(rollback.DeploymentId, current => current with { State = SiteDeploymentState.Failed, FailureCode = ex.Error.Code, FailureMessage = ex.Error.Message, UpdatedAt = DateTimeOffset.UtcNow }, CancellationToken.None).ConfigureAwait(false);
                 return SiteApiResult<SiteDeployment>.Failure(ex.Error);
             }
             catch (Exception ex)
@@ -209,6 +237,8 @@ public sealed class SiteDeploymentService(
         catch (SiteOperationException ex) { return SiteApiResult<SiteDeployment>.Failure(ex.Error); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         { return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("Cancelled", "Rollback was cancelled. The previous active production route remains unchanged unless the provider reports otherwise.", deploymentId.ToString(), true)); }
+        catch (Exception ex) when (ex is IOException or HttpRequestException or TimeoutException)
+        { return Failure("ProviderUnavailable", "The retained artifact or deployment service is unavailable; retry after checking hosting state.", deploymentId.ToString(), true); }
     }
 
     private async Task<SiteApiResult<bool>> AuthorizeAsync(SiteProject project, SiteEnvironment environment, SiteCanonicalSource source, CancellationToken cancellationToken)
@@ -260,8 +290,17 @@ public sealed class SiteDeploymentService(
             if (index < 0) throw new SiteOperationException(new SiteApiError("DeploymentNotFound", "The deployment history entry was not found.", id.ToString(), false));
             var current = state.Deployments[index];
             var completed = update(current);
-            var allStages = completed.Stages.Select(stage => stage.State is SiteStageState.Pending or SiteStageState.Running
-                ? stage with { State = completed.State == SiteDeploymentState.Succeeded ? SiteStageState.Skipped : stage.State, CompletedAt = completed.State == SiteDeploymentState.Succeeded ? DateTimeOffset.UtcNow : stage.CompletedAt }
+            var isTerminal = completed.State is SiteDeploymentState.Succeeded or SiteDeploymentState.Failed or SiteDeploymentState.Cancelled;
+            var allStages = completed.Stages.Select(stage => isTerminal && stage.State is SiteStageState.Pending or SiteStageState.Running
+                ? stage with
+                {
+                    State = stage.State == SiteStageState.Pending || completed.State == SiteDeploymentState.Succeeded
+                        ? SiteStageState.Skipped
+                        : completed.State == SiteDeploymentState.Cancelled ? SiteStageState.Cancelled : SiteStageState.Failed,
+                    CompletedAt = DateTimeOffset.UtcNow,
+                    Code = stage.State == SiteStageState.Running ? completed.FailureCode : stage.Code,
+                    Message = stage.State == SiteStageState.Running ? completed.FailureMessage : stage.Message
+                }
                 : stage).ToArray();
             completed = completed with { Stages = allStages };
             var deployments = state.Deployments.ToArray();
