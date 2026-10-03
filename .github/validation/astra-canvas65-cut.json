@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "cb6c25f31de0528d0fc68a33eb6155d9ed13857b",
-  "programTree": "e4ab535b2a457b9da199869864a19d198165e995",
-  "currentNormalCommit": "24531d46f2179096e53556070f61edaa47c93955",
+  "baselineCommit": "dd6a60fac11b4dfb8045fd816d11aabad471b024",
+  "programTree": "d0d6a0d2b77cb6e7b9fabc2efcafe2008fa120e1",
+  "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/scripts/astra-canvas65-hosted-managed.py",
       "mode": "100644",
-      "object": "fd74bdd89a73791c400af569208c6d61c6b7018f",
-      "bytes": 48902,
-      "sha256": "9b63dc5697e4b4f57c1214954ede80a33f4cc4b2874db517074db22bd726b8ce"
+      "object": "f7a2006d798b4d88886d18cff7fd25fe43111d1c",
+      "bytes": 48985,
+      "sha256": "7f77f1264c85cc613d24a6acbf515668440f18312347871ce3ad56f45b62fb0e"
     },
     {
       "path": ".github/scripts/astra-canvas65-restore-evidence.py",
@@ -645,9 +645,9 @@
     {
       "path": "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
       "mode": "100644",
-      "object": "33ac373116fc9f45b0f5c05f3dac26f3848ea7b1",
-      "bytes": 8917,
-      "sha256": "d560666a859d9d8a7197017f5c63dc207a4cc59634e80e917174d1c05120b13d"
+      "object": "870029585fae19a18b4968105d010bd7d4aa4d70",
+      "bytes": 9081,
+      "sha256": "b88e8d1f8731e60357f1be61a0ec73bb98719f2ea5c4d43934bcc39b464d48cf"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenImeService.cs",
@@ -5398,9 +5398,9 @@
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/Cargo.toml",
       "mode": "100644",
-      "object": "c3442dbfad131c18dc9887d36afc4bdfce984291",
-      "bytes": 692,
-      "sha256": "733bab07adcfbd7d1708458cfd84afc3ad5bb71a45133a0e9c56d9ddcad2c402"
+      "object": "008fccf4148795fb2e613487065d63c6251bf7d5",
+      "bytes": 731,
+      "sha256": "d1ba23c987949d91c0263bd1b8144b3547800444eba2ffbd0b5323c9056225c5"
     },
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/PROVENANCE.md",
@@ -5433,9 +5433,9 @@
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/src/lib.rs",
       "mode": "100644",
-      "object": "7bbda18166db9d59180c82d52088dd46c9856abc",
-      "bytes": 78596,
-      "sha256": "9f7e3ce7c7da835daed0e844ab0b3e6af09ae0d6deae18f93f3dcc8375795e69"
+      "object": "cc13b61ffa296aaa7435a975229872776853cb4d",
+      "bytes": 82888,
+      "sha256": "ece13501b25fc65d7ceb99affc5b45941812fdbbf7217d2012a5e1bc7d830dae"
     },
     {
       "path": "9to1 Workspace/Canvas/tools/README.md",
@@ -28078,9 +28078,9 @@
     {
       "path": "9to1 Workspace/shared/src/Directory.Packages.props",
       "mode": "100644",
-      "object": "eafccb98196ed8ef72286845276487ece2fc7180",
-      "bytes": 1922,
-      "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
+      "object": "3d06cea5f9131680ed447fb423feebeba5f477e3",
+      "bytes": 1993,
+      "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Abstractions.cs",
@@ -29537,6 +29537,27 @@
       "object": "4e8bcb189b7e509e91451fd31c21859040e6dce0",
       "bytes": 8671,
       "sha256": "6713358b81002e8c762a659587169438abaa2a0c99685bfa2aabf4e642269d53"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+      "mode": "100644",
+      "object": "36b36dc1c7125e19730d6af26bc37855c7dc20d1",
+      "bytes": 2955,
+      "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+      "mode": "100644",
+      "object": "083b6d7e7b0a286deefabf0666777db73d004c75",
+      "bytes": 6875,
+      "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+      "mode": "100644",
+      "object": "4a5a4faf91adf7d8411cc48b154abe60c3d4891b",
+      "bytes": 985,
+      "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshAbstractions.cs",
@@ -31156,6 +31177,55 @@
       "sha256": "9cd8fa5b3a6ba95df6213101451c39fab370c2696d9ae397b5e0bf52d294848c"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+      "mode": "100644",
+      "object": "feb448bd1efb310a3c1b13a6080ec1b3d682e045",
+      "bytes": 2442,
+      "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphMarking.cs",
+      "mode": "100644",
+      "object": "fd9a98281150388e649d4efb8934921533244ed7",
+      "bytes": 4048,
+      "sha256": "a2b93dd4e16b062e3a796ac3b4363a7aba333bc14b82b84839b4dbd2b0af7097"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+      "mode": "100644",
+      "object": "d2dc5869041bb679ec660c8779d40e37f0357f4c",
+      "bytes": 713,
+      "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+      "mode": "100644",
+      "object": "447b4f5a3a7fa7bf6baabd25a5b9cfdee4c51385",
+      "bytes": 2387,
+      "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+      "mode": "100644",
+      "object": "d859f7dcef2ff9d83a1025a0e497f1ae7abc83e3",
+      "bytes": 1569,
+      "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathMarking.cs",
+      "mode": "100644",
+      "object": "87b5a049de93d4a158a829c0cf7ab5a313a9f111",
+      "bytes": 7479,
+      "sha256": "1f6eeeffd5a1b4e2b112ec960e8014b720076b641c6011266b69cd28ebcdde89"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "mode": "100644",
+      "object": "87785d51f086935fe1dbdec0490347c7d2534106",
+      "bytes": 14310,
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAssetReference.cs",
       "mode": "100644",
       "object": "22299dbd0ae4f2f34df4e5767b0e83fc0a6c4e8f",
@@ -32614,9 +32684,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
       "mode": "100644",
-      "object": "7449d5addf6d81685eb1132fc14e911293819bf8",
-      "bytes": 6066,
-      "sha256": "7e75751d1049a08da7eb14ef31dc46d319eab0bec86c860251c771f5cd4bf501"
+      "object": "60a07f89fbe75d944105b4e158625b90530b5aee",
+      "bytes": 6312,
+      "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaImageResolver.cs",
@@ -33240,6 +33310,34 @@
       "object": "45cd946e68f72bf05a5440391216dad871d22d92",
       "bytes": 2863,
       "sha256": "201868943d39896f42c28b6a83d7ce6661cba4b9fe60c7e9986b68c9aca2f133"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+      "mode": "100644",
+      "object": "e95474e1f7a0e8ebbfee0833c8efe56f655333c1",
+      "bytes": 1943,
+      "sha256": "1924346384b8943949b06c416be834f5f580a6bb1aebe25f12482e7d3178fb28"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+      "mode": "100644",
+      "object": "0e9e62652249a366082433a1b0390e473529637b",
+      "bytes": 4260,
+      "sha256": "a4ecc966757fe6d99fe0e2decd3cc96c5c75290d853efeb3eeddbaa23c78d7b1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+      "mode": "100644",
+      "object": "23907c9fb325b582408e59b191a70c3ff6e14e73",
+      "bytes": 8178,
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+      "mode": "100644",
+      "object": "9f7fedf9835b87c8a869109360fa24de7f3cd3ef",
+      "bytes": 9274,
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/NotesGlobalUsings.cs",
@@ -33912,6 +34010,27 @@
       "object": "f9934e5b7a7ae62cd6402e45bd4f9d96eb33e480",
       "bytes": 77993,
       "sha256": "54e479254465e596f864215cb1a80b0d35d770bf92b406230cb81efdf251a12b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/LICENSE.txt",
+      "mode": "100644",
+      "object": "cb177033a11de9529081995dad49bc207ec6b413",
+      "bytes": 1096,
+      "sha256": "d32218dd6fcc1e749bcbe2c193cb5703863724e58d1693aa9f278edefee69f7b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/NOTICES.txt",
+      "mode": "100644",
+      "object": "c3e3aad4003dd43ede60171e9aa63f5ee0c2debf",
+      "bytes": 20768,
+      "sha256": "35d4c7707199a9c30ae29879cda7d961ecbd9b5b9f22039701717f9040ee064b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+      "mode": "100644",
+      "object": "e24c61c11dfe39165bdc0868f15371557a789203",
+      "bytes": 8238,
+      "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/UiBatcher.cs",
@@ -39395,6 +39514,20 @@
       "sha256": "d4a715bf721edc0988b7f52c8c0d5daf802b17806f98c9cd0909825678da38f9"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs",
+      "mode": "100644",
+      "object": "59384325ca6f1fb09dc698cd73ab02c281bd82d0",
+      "bytes": 4503,
+      "sha256": "b1909c91396c66139f89ebb68be5c41abee969b47f80f29d6fe79e5b464c6476"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs",
+      "mode": "100644",
+      "object": "18366cbef4b8a319f44c7a246aeaf0caa41c5fbb",
+      "bytes": 10429,
+      "sha256": "0de78df0d34b6f772f93eb2502ee1cae3e2069b0e07008cb2c28ce4bdfc6d3b7"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ShelfCollectionOrderingTests.cs",
       "mode": "100644",
       "object": "4e28397ea936b9e05a5822910d5021fc8677ba96",
@@ -40961,6 +41094,20 @@
       "object": "efe51af577204bfdd6943bcbb2768622fc6c00ba",
       "bytes": 601,
       "sha256": "6f8f5ae83009b0ab5dfd87ace16dd49159390dd1a0a3363c720bc5bacb8b311e"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
+      "mode": "100644",
+      "object": "54b2065b863702384d635bed18417e9323d9483c",
+      "bytes": 7357,
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
+      "mode": "100644",
+      "object": "273d73db3f200994d4d716c34cbefb4f2f5a7376",
+      "bytes": 8938,
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
@@ -66259,7 +66406,7 @@
     },
     {
       "path": "9to1 Workspace/Canvas/Source/Rnote",
-      "commit": "1a728d6a85db3528f9c79dc0990700e91b22696f"
+      "commit": "53981d09b0cdcc7f12af9ee579c4c4bfb95d6821"
     },
     {
       "path": "9to1 Workspace/Connect/Source/element-web",
@@ -66348,7 +66495,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance. Preferred07 binds exact169 consumer serde_json float_roundtrip and failure-only bounded fallible numeric diagnostic, preserving all21 exact assertions and original panic. Parser causality is unverified until the fresh exact save/reopen run. Actual06 owning originals prove20/21 Rust passes and one exact SVG failure; actual06 regression/resource statuses SUCCESS have outstanding unadmitted raw original closure. No inferred whole-three/native acceptance. Coherent accepted normal27 Mail and normal26 Writer bytes retained; actual06 Native Files provider capture pair stays exact because removing only that pair gives complete normal27 bytes. Complete original95/12/36/native21, strict protected-root SDK155/full official archive/member/type/mode/source/VMR/provider/PDB/task/restores/old105 tuples/actual processes/drains remain mandatory and byte exact. Preferred08 is a failure-only diagnostic on actual07/current28. All21 exact native assertions, retained original19 IDs, whole95/12/36, strict SDK155 complete archive/source/provider/PE/PDB/task/restores and original process/drain caller bytes remain unchanged. Actual07 owns complete26-file original closure190 and still fails exact SVG20/21; its126 serialized bits are equal after maintained dp3 rounding and do not measure live geometry. Source193 adds read-only direct public BrushStroke raw f64 bits/exact start-equality evidence only. No production donor correction or parser/geometry cause claim. Actual07 regression/resource statuses are SUCCESS but their original archives remain unreviewed; this diagnostic does not claim their full original closure. Four source-reviewed, actual IMAP16 accepted normal28 Mail bytes are copied exactly; no other canonical source merge or runtime guard change.",
+  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance. Preferred07 binds exact169 consumer serde_json float_roundtrip and failure-only bounded fallible numeric diagnostic, preserving all21 exact assertions and original panic. Parser causality is unverified until the fresh exact save/reopen run. Actual06 owning originals prove20/21 Rust passes and one exact SVG failure; actual06 regression/resource statuses SUCCESS have outstanding unadmitted raw original closure. No inferred whole-three/native acceptance. Coherent accepted normal27 Mail and normal26 Writer bytes retained; actual06 Native Files provider capture pair stays exact because removing only that pair gives complete normal27 bytes. Complete original95/12/36/native21, strict protected-root SDK155/full official archive/member/type/mode/source/VMR/provider/PDB/task/restores/old105 tuples/actual processes/drains remain mandatory and byte exact. Preferred08 is a failure-only diagnostic on actual07/current28. All21 exact native assertions, retained original19 IDs, whole95/12/36, strict SDK155 complete archive/source/provider/PE/PDB/task/restores and original process/drain caller bytes remain unchanged. Actual07 owns complete26-file original closure190 and still fails exact SVG20/21; its126 serialized bits are equal after maintained dp3 rounding and do not measure live geometry. Source193 adds read-only direct public BrushStroke raw f64 bits/exact start-equality evidence only. No production donor correction or parser/geometry cause claim. Actual07 regression/resource statuses are SUCCESS but their original archives remain unreviewed; this diagnostic does not claim their full original closure. Four source-reviewed, actual IMAP16 accepted normal28 Mail bytes are copied exactly; no other canonical source merge or runtime guard change. Preferred09 on actual08/current30 consumes only the exact authenticated published Rnote successor53981d09/tree3cac017 (two opt-in compose files, upstream defaults/schema unchanged); every other21 Gitlink unchanged. Actual08 direct original live geometry proves72 bit drifts/8 renderer predicate changes across save; source213 adds one raw pressure/width/RGBA/path exact persistence test to old21=22 and preserves the exact SVG assertion. Caller changes only fixed donor literal and exact new Cargo Passed ID. Strict protected SDK155/full archive/member/source/provider, old105 tuples, whole95/12/36/native22/PDB/task/restores/native original-process/drains remain mandatory. Exact accepted Math23 and Android1 current30 source bytes are copied without merge; original selected Canvas49 files remain. Actual08 reg/resource original archives remain unreviewed despite success statuses; no full runtime/native fix acceptance until fresh original evidence.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/checkpoint22-publication-local.json",
@@ -66637,13 +66784,53 @@
     {
       "path": "/workspace/astra-source/worker5-canvas193-live-brush-geometry-maintained-api-source-peer01.json",
       "sha256": "a7fd8a850b7867840e7a6eebd78d4cfcb078565e17a706d43c20d38c426410fd"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas07-current28-direct-raw-geometry-full-diagnostic-corrective08/manifest.json",
+      "sha256": "1382876d004d8be3d76f89558044a0269e05dbb075ee984f34744b5d94773cce"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas08-opt-in-lossless-native-persistence-source213/manifest.json",
+      "sha256": "c5ded9c40a531a7d6c47b98c3a23c2c970c4de9da07ba3221042efe07eb63b84"
+    },
+    {
+      "path": "/workspace/astra-source/root-rnote-lossless-donor-api641.json",
+      "sha256": "e779d62d57ae217b3b027f6172233bae9a8209c46ff5d9fdad3e35a52f00c6a5"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint29-publication-local.json",
+      "sha256": "77429ce9dd285c10d48ece85d5d75b5c321e7952c4f0d70483c11b3c8edc5298"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint30-publication-local.json",
+      "sha256": "2c564108c0110315f8922efdd6a3ec572e89f17e88cf42a1f0b3f116b7099cc3"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas08-actual-owning-original-geometry-closure208/receipt.json",
+      "sha256": "d58f5c56bf2b555e99a32a9da85e9e721c1fa180820244225ed1ca782a11afc9"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas213-complete-maintained-default-api-inverse-source-peer01.json",
+      "sha256": "76bc0ccae8598e7102b5f14042d0f66bd2504ea4af505eac71a4228c958b3510"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-canvas213-lossless-feature-native-save-source-peer01.json",
+      "sha256": "882c9f13819e26d2b752477f3b199e17d564981c359bb38b998a394e6301fd6c"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas09-single-reviewed-rnote-gitlink-constructor-draft225/preparation.json",
+      "sha256": "a4dc120d94dc63080385588d0c488b8a3d6b290d3d26245ff03ab880444f3f6f"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-freeze-canvas09-current30-lossless226.py",
+      "sha256": "578b0e335d67bf628f4ee8345501cc1f1fc1af33a3d00f4d968346cd4b68f6d7"
     }
   ],
   "sharedCakeIdContract": null,
   "additionalMaterializedGitlinks": [
     {
       "path": "9to1 Workspace/Canvas/Source/Rnote",
-      "commit": "1a728d6a85db3528f9c79dc0990700e91b22696f"
+      "commit": "53981d09b0cdcc7f12af9ee579c4c4bfb95d6821"
     }
   ]
 }
