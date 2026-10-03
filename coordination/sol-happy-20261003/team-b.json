@@ -92,7 +92,7 @@
     "Team C acknowledge B-owned claims and confirmed candidate baseline; Team C remains sole release integrator.",
     "C4 publish acknowledged authenticated Files/Sites transport contracts, authoritative metadata/revision commit proofs and staging frontend/backend deployment identities; existing IFilesService lacks browser byte-reference transport.",
     "Team C publish authenticated session/account/permission/tenant/AI/job/billing service protocols and isolated test accounts; no staging or provider credentials configured here.",
-    "Team A provide tested desktop candidate for required browser\u2192desktop\u2192browser continuity; no desktop build may be inferred correct.",
+    "Team A provide tested desktop candidate for required browser→desktop→browser continuity; no desktop build may be inferred correct.",
     "Confirm supported browser versions/performance targets via explicit SH-13 decision; do not infer support from one Chromium result.",
     "Team A clarify/implement Write independent Continuous/Pages/Book viewing and Locked/Unlocked layout states: current Document.LayoutMode/SetLayout combines modes and cannot satisfy all six combinations; no browser-only schema fork.",
     "Team A/test owner review BrowserPrivateProfileManagerTests symbolic-link test return on unsupported setup: present Fact can report green without running security assertions. Keep skip/environment outcome separate from PASS.",
@@ -133,7 +133,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T20:15:12.301475+00:00",
+  "updatedUTC": "2026-10-03T20:48:26.862655+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -183,7 +183,7 @@
     "currentStatus": "Real isolated compile/publish and bounded local browser behavior pass. Parent A63 and global/native/full-product acceptance remain provisional."
   },
   "reviewHoldRepairs": {
-    "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2\u2192green2/2. Incorrect originalfixture revision1\u21922 corrected with acknowledged Worker SQL CAS and independent review.",
+    "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2→green2/2. Incorrect originalfixture revision1→2 corrected with acknowledged Worker SQL CAS and independent review.",
     "homeDispatch": "d4c1816: actual production selector now used by BrowserApplication prefers registeredowner for all canonicalHome routes; owner denial/error/unavailable never fallback. Originalpriorselector fails newownercontrol after16oldpass; fixed22/22/root+B6pass. SDK10 static asset sourcecontract/GL export wiring and sharedCUI primitives/fonts fixed; missing generatedJS actualtarget failure provesguard.",
     "acceptance": "LOCAL_SUBSET_ONLY; awaiting actualbuiltbrowser runtime; full services/deployment/crossclient/browsermatrix NOT_RUN/BLOCKED",
     "status": "THREE_ORIGINAL_P2_SOURCE_DEFECTS_C_INDEPENDENTLY_CLOSED_AT_830F747; ORIGINAL_FAILURES_PRESERVED",
@@ -292,9 +292,9 @@
     "sourceBase": "83c24b2f0033fb2828169921fc905a327120143b",
     "draftState": "Uncommitted browser-owned adapters under root review; no shared edits",
     "independentBaseline": "Unchanged actual 83 Chromium AX: eight cases, five absent-control failures and three dependent keyboard NOT_RUN; no startup error",
-    "localExecution": "B6 independently reproduced actual Write65 assertions (fresh seed23+verify40+subscriber2); Accounts13 scripted-transport/CUI parse reproduce. Files historical11 realprovider PASS with5 independent recovery corrections +1 subscriber control authored,17 current awaiting rerun. Canonical portable Waveengine10/10 PASS; native initialavailability17 PASS. Actual retained scene firstbuild failed MSB3755; exact owning buildtask ref corrected, revalidation pending.",
+    "localExecution": "Actual retained Write native scene22 assertions PASS; actual virtual peer3 PASS; IndexedDB real Chromium14/14 PASS includes browser restart, two-tab CAS, canonical recovery, exact Int64, recoverable trash, native quota rollback. Storage source-unit15 and Account factory6 PASS remain separately qualified. Wave canonical engine10 PASS; actual fresh browser Wave14 and unchanged Home AX8 next. No whole-app acceptance.",
     "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation",
-    "inProgress": "Real this-browser INotesRepository IndexedDB adapter over actual NotesDocument/validator with atomic CAS/history; retained Write scene; Wave actual browser persistent profile/media/CAS runner; canonical Sites workflow; independent source/lifecycle review."
+    "inProgress": "Reactive enabled-state public Avalonia priority diagnostic; common observer lifetime composition; sealed fresh actual Wave/accessibility browser candidate next; real Write device-local feature registration, canonical library recovery; Files17/Sites12 queued. Actual maintained Worker local fixture currently held before Workerd spawn, receiver HTTPS prerequisite ready."
   },
   "continuationRequests": [
     {
@@ -331,11 +331,23 @@
     },
     {
       "owner": "A1/CUI binding runtime",
-      "request": "Browser initial authored-enabled AND capability gating now consumes actual typed Action.Command alias. Actual owner OnBindingPropertyChanged\u2192ApplyObservedBinding\u2192IsEnabled assignment can later replace initial capability clamp; request acknowledged runtime binding coercion/policy hook, preserve declared authored state and live capability. Owner dispatcher still enforces authorization. Native exact-source failing reproduction being delivered."
+      "request": "Browser initial authored-enabled AND capability gating now consumes actual typed Action.Command alias. Actual owner OnBindingPropertyChanged→ApplyObservedBinding→IsEnabled assignment can later replace initial capability clamp; request acknowledged runtime binding coercion/policy hook, preserve declared authored state and live capability. Owner dispatcher still enforces authorization. Native exact-source failing reproduction being delivered."
     },
     {
       "owner": "A native Boards/Canvas",
       "request": "B2 inspected concrete filesystem-backed RichBoardSession/JsonFileHavenBoardStore constructor without injectable durable browser contract; request owner store seam instead of InMemory fallback. Canvas actual RnoteCanvasEngine uses cake_canvas native ABI; require owner-supported browser WASM donor ABI and canonical Files/native codec transport; legacy Notes Canvas model is not substitute."
+    },
+    {
+      "owner": "A2 Write retained renderer",
+      "request": "Actual retained native editor scene passes22 functional assertions, but PNG shows owner estimated run width wraps beta as bet/a and gamma as gam/ma at ample page width. Actual WriteDocumentSurface303/305/306 estimates text.Length*CharacterWidth; actual HavenSceneControl619/747/750 FormattedText uses that underestimated width. B2 exact actual glyph-width/height red probe authored, next SDK; no private width fudge/renderer fork. Request owner original run measurement/layout fix + same assertion and cross-client regression."
+    },
+    {
+      "owner": "A1/A2 Write semantic accessibility",
+      "request": "Actual WriteDocumentSurface AccessibilityRole.Input maps generic HavenElementAutomationPeer Edit with no IValueProvider/ITextProvider. Native Avalonia12 provider interfaces lack ITextProvider. Real browser bridge reports unsupported Edit, does not replace canvas with flattened donor/plaintext editor. Request actual owner text/selection/caret semantics/provider contract and assistive-technology acceptance."
+    },
+    {
+      "owner": "A native Boards",
+      "request": "Correction: RichBoardSession concrete Json store lacks browser seam, but actual BoardsWorkspaceService(INotesRepository) offers independent executable canonical Notes-backed board path. B now authors actual durable Boards fixture and browser consumption; do not classify all Boards blocked. Canvas actual Rnote donor/WASM ABI remains separate exact owner prerequisite."
     }
   ],
   "blockerClassification": {
@@ -379,5 +391,22 @@
     "evidencePath": "docs/releases/sol-happy-20261003/team-b-home-proposal",
     "scope": "Exact actual8-case canonical red and same-assertion green with two-line grouping; original immutable83 nativeAX failures, runner, screenshot and source/hash manifest delivered. No Home shared edit applied.",
     "request": "A1 review remotely fetchable precise Home proposal/test and provide bounded ACK or owner fix; B remains implementing owned real peer bridge."
+  },
+  "filesFolderWireAck": {
+    "scope": "B-owned browser consumption ACK only; conditional on A4 guarded real store mutation and C2 current session identity callback plus actual serializer regressions",
+    "reference": "release5be7afdf docs/releases/sol-happy-20261003/semantic/c4-files-folder-http-proposal.{md,json}",
+    "fields": "CreateFolder itemID/operationID/nullable parentID/name; Rename itemID/operationID/expectedRevisionID/name; Move/Delete/Restore exact proposal GUID fields. Actor/account/role/state/result revision/timestamps server only.",
+    "serializer": "Preserve actual default SerializeToElement PascalCase Value/Error/IsSuccess; FilesPage Items/NextPageToken; GUID wrappers {Value:guid}; numeric enum Committed=2. HTTP200 alone is not committed success.",
+    "receipt": "Bind original op/item/kind/base/destination + non-null ResultRevisionId and Committed; uncertain outcome retains original key. Rename/Delete/Restore destination must deterministically be null as omitted wire, captured source parent audit only.",
+    "conditions": "Guard actual original StoreID/current owner/location/authority inside actual atomic commit before old-operation replay; no forged actor/header or legacy actor substitute for future Worker mode.",
+    "notIncluded": "No shared provider/session/ACL patch ACK, byte transport or six FilesProject seams implementation ACK."
+  },
+  "localHttpsFixtureReadiness": {
+    "supportedCallback": "https://client.example.test:5096/callback",
+    "issuer": "http://127.0.0.1:8798/api/auth",
+    "apiResource": "http://127.0.0.1:8798",
+    "receiverPreparation": "Locally generated private certificate/key outside Git, SAN client.example.test; isolated Chromium host-resolver mapping to127.0.0.1 and per-certificate SPKI trust. No global TLS bypass, native-client relabel, provider validation bypass or production DNS/CA change.",
+    "request": "C2 deliver remotely fetchable full fixture head, supported startup/config/provisioning commands after current posix_spawn setsid repair and actual Workerd readiness. Receiver generates private fixture credentials locally; no credentials in coordination.",
+    "observedRemoteFixture": "team-c/sol-happy-c2-browser-fixture@2a7138afbb306a4445e738f37ce9cf5fc9877e39 held before Workerd spawn per current C record."
   }
 }
