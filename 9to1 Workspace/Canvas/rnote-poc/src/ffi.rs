@@ -1175,3 +1175,64 @@ mod split_tests {
         assert_eq!(before,save(engine.0));
     }
 }
+
+/// Optional additive real selector capability; core ABI stays version 3.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_selector_api_version() -> u32 { 1 }
+
+/// Owned little-endian u64 identities. Input must denote count initialized samples.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_preview_selection(handle: *const c_void, style: u32,
+    samples: *const CakeCanvasPointerSample, count: usize, out_keys: *mut CakeCanvasBuffer) -> CakeCanvasStatus {
+    guard_status(|| {
+        if out_keys.is_null() { return CakeCanvasStatus::InvalidArgument; }
+        unsafe { *out_keys = CakeCanvasBuffer::default(); }
+        if samples.is_null() || !(1..=8192).contains(&count) { return CakeCanvasStatus::InvalidArgument; }
+        let input = unsafe { std::slice::from_raw_parts(samples, count) };
+        let mut detached = Vec::with_capacity(count);
+        for sample in input {
+            if !(0.0..=1.0).contains(&sample.pressure) { return CakeCanvasStatus::InvalidArgument; }
+            let Some(point) = sample.into_internal() else { return CakeCanvasStatus::InvalidArgument; };
+            detached.push(point);
+        }
+        let Some(result) = with_engine(handle, |engine| futures::executor::block_on(engine.preview_native_selection(style, &detached))) else {
+            return CakeCanvasStatus::InvalidHandle;
+        };
+        match result {
+            Ok(keys) => { unsafe { *out_keys = owned_buffer(keys.iter().flat_map(|key| key.to_le_bytes()).collect()); } CakeCanvasStatus::Ok },
+            Err(_) => CakeCanvasStatus::InvalidArgument,
+        }
+    })
+}
+
+#[cfg(test)]
+mod selector_boundary_tests {
+    use super::*;
+    #[test]
+    fn genuine_selector_ffi_returns_owned_exact_keys_and_resets_rejected_output() {
+        struct Owned(*mut c_void);
+        impl Drop for Owned { fn drop(&mut self) { cake_canvas_engine_free(self.0); } }
+        let engine = Owned(cake_canvas_engine_new());
+        assert!(!engine.0.is_null());
+        assert_eq!(cake_canvas_selector_api_version(),1);
+        let point = CakeCanvasPointerSample {x:100.0,y:100.0,pressure:0.5,tilt_x:0.0,tilt_y:0.0};
+        assert_eq!(cake_canvas_begin_stroke(engine.0,point),CakeCanvasStatus::Ok);
+        assert_eq!(cake_canvas_end_stroke(engine.0,CakeCanvasPointerSample{x:300.0,..point}),CakeCanvasStatus::Ok);
+        let tap = CakeCanvasPointerSample{x:200.0,..point};
+        let mut selected = CakeCanvasBuffer::default();
+        assert_eq!(cake_canvas_preview_selection(engine.0,2,&tap,1,&mut selected),CakeCanvasStatus::Ok);
+        assert_eq!(selected.len,8);
+        assert!(!selected.data.is_null());
+        let key = u64::from_le_bytes(unsafe {std::slice::from_raw_parts(selected.data,selected.len)}.try_into().unwrap());
+        assert_ne!(key,0);
+        cake_canvas_buffer_release(&mut selected);
+        assert_eq!(selected.len,0);
+        assert!(selected.data.is_null());
+        selected.len=123;
+        assert_eq!(cake_canvas_preview_selection(engine.0,99,&tap,1,&mut selected),CakeCanvasStatus::InvalidArgument);
+        assert_eq!(selected.len,0); assert!(selected.data.is_null());
+        selected.len=123;
+        assert_eq!(cake_canvas_preview_selection(engine.0,2,std::ptr::null(),8193,&mut selected),CakeCanvasStatus::InvalidArgument);
+        assert_eq!(selected.len,0); assert!(selected.data.is_null());
+    }
+}

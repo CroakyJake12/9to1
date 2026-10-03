@@ -49,7 +49,7 @@ public sealed class RnoteCanvasEngine : IDisposable
     public void DrawStroke(IReadOnlyList<RnotePointerSample> samples, CanvasRnoteInkStyle? style = null)
         => DrawCapturedStroke(CaptureSamples(samples), style ?? CanvasRnoteInkStyle.Default);
 
-    internal static ImmutableArray<RnotePointerSample> CaptureSamples(IReadOnlyList<RnotePointerSample> samples)
+    public static ImmutableArray<RnotePointerSample> CaptureSamples(IReadOnlyList<RnotePointerSample> samples)
     {
         ArgumentNullException.ThrowIfNull(samples);
         var captured = ImmutableArray.CreateBuilder<RnotePointerSample>();
@@ -245,6 +245,41 @@ public sealed class RnoteCanvasEngine : IDisposable
             EnsureOpen();
             if (!SupportsStructuredStrokeMutation) throw new NotSupportedException("The donor does not expose keyed stroke edits.");
             Check(Native.TranslateStroke(_handle, key, deltaX, deltaY), "translate native stroke");
+        }
+    }
+
+    public bool SupportsNativeSelector
+    {
+        get { lock (_gate) { EnsureOpen(); try { return Native.SelectorApiVersion() == 1; }
+            catch (EntryPointNotFoundException) { return false; } } }
+    }
+
+    public ImmutableArray<ulong> PreviewSelection(CanvasSelectionStyle style, IEnumerable<RnotePointerSample> samples)
+    {
+        ArgumentNullException.ThrowIfNull(samples);
+        if (!Enum.IsDefined(style)) throw new ArgumentOutOfRangeException(nameof(style));
+        var points = new List<RnotePointerSample>();
+        foreach (var point in samples) { if (points.Count == 8192) throw new ArgumentException("Selection point budget exceeded.");
+            if (!double.IsFinite(point.X) || !double.IsFinite(point.Y) || !double.IsFinite(point.Pressure) || point.Pressure is < 0 or > 1)
+                throw new ArgumentException("Selection points must be finite and normalized."); points.Add(point); }
+        if (points.Count == 0 || (style is CanvasSelectionStyle.Polygon or CanvasSelectionStyle.IntersectingPath && points.Count < 3))
+            throw new ArgumentException("Selection has insufficient actual points.");
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsNativeSelector) throw new NotSupportedException("This native library does not expose the genuine selector.");
+            var buffer = new NativeBuffer();
+            try
+            {
+                Check(Native.PreviewSelection(_handle, (uint)style, points.ToArray(), (nuint)points.Count, out buffer), "preview genuine native selection");
+                if (buffer.Length == 0) return [];
+                if (buffer.Length % 8 != 0 || buffer.Length > 1024 * 8) throw new InvalidDataException("Native selection key budget/packing differs.");
+                var bytes = Copy(buffer.Data, buffer.Length); var result = ImmutableArray.CreateBuilder<ulong>(bytes.Length / 8);
+                for (var offset = 0; offset < bytes.Length; offset += 8) result.Add(BinaryPrimitives.ReadUInt64LittleEndian(bytes.AsSpan(offset,8)));
+                if (result.Any(key => key == 0) || result.Distinct().Count() != result.Count) throw new InvalidDataException("Native selection identities are empty/duplicated.");
+                return result.MoveToImmutable();
+            }
+            finally { Native.ReleaseBuffer(ref buffer); }
         }
     }
 
@@ -481,6 +516,8 @@ public sealed class RnoteCanvasEngine : IDisposable
         [DllImport(Library, EntryPoint = "cake_canvas_user_layer_rank_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint UserLayerRankApiVersion();
         [DllImport(Library, EntryPoint = "cake_canvas_assign_user_layer_ranks", CallingConvention = CallingConvention.Cdecl)] internal static extern int AssignUserLayerRanks(EngineHandle handle, ulong[] keys, uint[] ranks, nuint count);
         [DllImport(Library, EntryPoint = "cake_canvas_abi_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint AbiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_selector_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint SelectorApiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_preview_selection", CallingConvention = CallingConvention.Cdecl)] internal static extern int PreviewSelection(EngineHandle handle, uint style, RnotePointerSample[] samples, nuint count, out NativeBuffer keys);
         [DllImport(Library, EntryPoint = "cake_canvas_selection_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint SelectionApiVersion();
         [DllImport(Library, EntryPoint = "cake_canvas_stroke_keys", CallingConvention = CallingConvention.Cdecl)] internal static extern int StrokeKeys(EngineHandle handle, out NativeBuffer buffer);
         [DllImport(Library, EntryPoint = "cake_canvas_export_selected_strokes", CallingConvention = CallingConvention.Cdecl)] internal static extern int ExportSelected(EngineHandle handle, ulong[] keys, nuint count, out NativeBuffer buffer);

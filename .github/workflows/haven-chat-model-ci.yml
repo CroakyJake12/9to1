@@ -55,14 +55,15 @@ jobs:
         if: matrix.cohort == 'owning'
         run: |
           set -euo pipefail
-          sdk_root="$RUNNER_TEMP/astra-canvas-sdk-10.0.301"
+          sdk_root="/opt/astra-canvas-sdk-10.0.301-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           sdk_archive="$RUNNER_TEMP/astra-canvas-sdk-10.0.301.tar.gz"
           test ! -e "$sdk_root"
           test ! -e "$sdk_archive"
           curl --fail --location --proto '=https' --tlsv1.2 --max-time 300 'https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.301/dotnet-sdk-10.0.301-linux-x64.tar.gz' --output "$sdk_archive"
           printf '%s  %s\n' 'cfbeec3a3a1d3ad3e168e37a77c4cc26c23125acd84a86d014047da3ecffce4c368a9acac4d7c950a047fa3d98989ce8aea69f8e5842cb6d330e8911e1c335a7' "$sdk_archive" | sha512sum --check --strict
-          mkdir "$sdk_root"
-          tar --extract --gzip --file "$sdk_archive" --directory "$sdk_root" --same-permissions --no-same-owner
+          sudo -n mkdir "$sdk_root"
+          sudo -n tar --extract --gzip --file "$sdk_archive" --directory "$sdk_root" --same-permissions --no-same-owner
+          test ! -w "$sdk_root"
           echo "ASTRA_CANVAS_OFFICIAL_SDK_ROOT=$sdk_root" >> "$GITHUB_ENV"
           echo "ASTRA_CANVAS_OFFICIAL_SDK_ARCHIVE=$sdk_archive" >> "$GITHUB_ENV"
           echo "DOTNET_ROOT=$sdk_root" >> "$GITHUB_ENV"

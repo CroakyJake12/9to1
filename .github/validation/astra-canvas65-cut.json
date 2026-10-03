@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "77cea16a100b4c6b2eed25700d5b158406d85b12",
-  "programTree": "b1a65ead1e3c3fce847c13a4c70281500c8c728e",
-  "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
+  "baselineCommit": "e6e0187faf0c776ce129b1cff86adedf01a5acfa",
+  "programTree": "2845ef1f8d46143d8940b4e8155199d8e73efa68",
+  "currentNormalCommit": "ca9b0d1aa188468f4249a058fa7ac9215145f0e8",
   "kind": "corrective",
   "files": [
     {
@@ -36,9 +36,9 @@
     {
       "path": ".github/scripts/astra-canvas-sdk-archive-admission.py",
       "mode": "100644",
-      "object": "0cf3d485704fcb9d362f180c0573aa3389475f24",
-      "bytes": 9294,
-      "sha256": "12d2f8a3a33414d53a0df195539c86fe9f61175d41897c8c2dd206ac338236c8"
+      "object": "d9a1697d975fc3a28ae8130985706d74daaae40c",
+      "bytes": 11158,
+      "sha256": "5d7529cfb52d194ca014e4c663ec4d5cbcbb167e40a05531ace01d6e989deecb"
     },
     {
       "path": ".github/scripts/astra-canvas-sdk-provider-preflight.py",
@@ -57,9 +57,9 @@
     {
       "path": ".github/scripts/astra-canvas65-hosted-managed.py",
       "mode": "100644",
-      "object": "71a5323de7a807c2147fd7f881e219297fb2f340",
-      "bytes": 48552,
-      "sha256": "b5c1a73495ccb1e00a7cce04550eef6e554e20f7e52f87a34e4a4971fc3bceab"
+      "object": "fd74bdd89a73791c400af569208c6d61c6b7018f",
+      "bytes": 48902,
+      "sha256": "9b63dc5697e4b4f57c1214954ede80a33f4cc4b2874db517074db22bd726b8ce"
     },
     {
       "path": ".github/scripts/astra-canvas65-restore-evidence.py",
@@ -106,9 +106,9 @@
     {
       "path": ".github/validation/astra-canvas49-owning-case-declarations.json",
       "mode": "100644",
-      "object": "dff349141d701dc0deeaf9e2b9b17e220f0ff669",
-      "bytes": 30932,
-      "sha256": "df49eea109e36f86c97aab57a36f93f0680fd14c90e5613124e87931556b0147"
+      "object": "347d651ba4e14112d1115dd838a6affcf653b536",
+      "bytes": 33991,
+      "sha256": "0e04de443b7eaad435f261e2489d4ab4783a561799175106b6e6af33a2ea2caf"
     },
     {
       "path": ".github/validation/astra-canvas49-predecessor-passed-cases.json",
@@ -120,9 +120,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "d04906a64d5b82c6eea3b4ebdafb5c588cf52045",
-      "bytes": 27268,
-      "sha256": "c844b702763abccb17e56bc05ca14c028d4bcfe7481b5d402f457083b088d89f"
+      "object": "cbac15e52b17b5b860ae9b3aa75ead85474cd0e4",
+      "bytes": 28497,
+      "sha256": "fc6d9bc104b46ed40bedaac3e383d57e9f909df13b25cfcf96feab8f4e73502a"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -295,9 +295,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "8d2fb986707b9a7011d22d28998ac53d6143e844",
-      "bytes": 16933,
-      "sha256": "f646ef3d794d91dc73e33aade5136d214b5194b337f6b30ddaf2ba943bd373a0"
+      "object": "b379bd669c84f382ea4c21c4ec307216ec6d8d56",
+      "bytes": 17012,
+      "sha256": "a225cff2e49ae6fb7afd6e45b69564a298c8b239f6abb44c0b1d7ac81efddab0"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -4838,9 +4838,9 @@
     {
       "path": "9to1 Workspace/Canvas/CanvasRnoteDocument.cs",
       "mode": "100644",
-      "object": "607c42a67b3809d34a57c244fa3ce46377973994",
-      "bytes": 44501,
-      "sha256": "868fe2a1dc50e454daa971386a615164ead155c88d620934d2265e4e965715fe"
+      "object": "a31d51319e0a7b86ef3f9b62040fe6f5de18e7c3",
+      "bytes": 46891,
+      "sha256": "1f13c925ee7512ac37706922302b2badfb2bc79364d18f05ba46a008974c75c5"
     },
     {
       "path": "9to1 Workspace/Canvas/CanvasRnoteInkStyle.cs",
@@ -4855,6 +4855,13 @@
       "object": "3e80af9811044c1909e4b6ce1d0472e31a383cfb",
       "bytes": 17048,
       "sha256": "ece0f9c1b1a685eda23ab5a9a8f0ed9f8e4603206091e676d1f4d8bb06903dd4"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/CanvasSelectionStyle.cs",
+      "mode": "100644",
+      "object": "efa59af063f834b5ab6ff8563e4a28c6f8831ef4",
+      "bytes": 241,
+      "sha256": "ad3b781efbbb12d4247d8b5e73b160daa9ee06a639000c8c58928c4e2547af15"
     },
     {
       "path": "9to1 Workspace/Canvas/CanvasSplitErasePreview.cs",
@@ -4974,6 +4981,13 @@
       "object": "b35a3578c26ed181a9163870c28675a81f2ec483",
       "bytes": 17554,
       "sha256": "c62a1d8d5a7d518c100e2bd10544cfb5394a89a0860e407eddc0626b1b6290c7"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeInsertionDependencyTests.cs",
+      "mode": "100644",
+      "object": "1a81c9b813ab30782ce6a775c6b854e7a39e012e",
+      "bytes": 4472,
+      "sha256": "8ec91d10bd27ac75cb1c86f3686ff63a5dac668eff3f2003e5ced5ce100940b5"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeLayerKeyboardTests.cs",
@@ -5146,9 +5160,9 @@
     {
       "path": "9to1 Workspace/Canvas/RnoteCanvasEngine.cs",
       "mode": "100644",
-      "object": "2922e5e7f18dba665d7493552d8a809f7bc554ca",
-      "bytes": 29250,
-      "sha256": "7ac069e84e725a9b72b64b468cc6db8f2c316e3d3988de71912cbf3aa92c967f"
+      "object": "e2a850b977effdeb8a55a86279e0309fbe332163",
+      "bytes": 32053,
+      "sha256": "251d6a8d50c426ce30223841d8b41235c35a45d2bd3151ac849cd94645da8f8d"
     },
     {
       "path": "9to1 Workspace/Canvas/RnoteCapabilityInventory.json",
@@ -5405,23 +5419,23 @@
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/include/cakeos_canvas.h",
       "mode": "100644",
-      "object": "70da42d6979e6f13deadfbfdedbf48f5ad2076d5",
-      "bytes": 6487,
-      "sha256": "3901d6b1351f6f1b4a9fe6e89ba44d457d0eb8c884ccb43d12efeea3aafba805"
+      "object": "93dde5572fe443c79c0936f9cf0e53472e1dbb30",
+      "bytes": 6964,
+      "sha256": "71a1a2184b3d2491013a77656a26ed68e023c49de2a103166bcc09cce67bec45"
     },
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/src/ffi.rs",
       "mode": "100644",
-      "object": "ece4ec3ae5d72ec666aea922643e6479672b2a71",
-      "bytes": 43753,
-      "sha256": "43c4e8beb4bb6f7505ec438d4fb5a8ad6d14f5f4dc0d1b73876a39ce31cb1b45"
+      "object": "8bfa8400ebfdf6a9ef04a735e12a5d4128a28844",
+      "bytes": 47101,
+      "sha256": "2b48b184fac95feef532b2cbdd8f3067d0e603698176f2172f0532b19e02f5e7"
     },
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/src/lib.rs",
       "mode": "100644",
-      "object": "6b2e65b0d826f08bf2292cf2b9c25768aec957d1",
-      "bytes": 67979,
-      "sha256": "97250393709c0337914344b111d846e91f3a7351013d969548c664e308b4cbc3"
+      "object": "24372ab26c3be0ef329e20c019492fe3195980c7",
+      "bytes": 71984,
+      "sha256": "8b9c823a40df65d191b3b092ff93fd5f5fbfc78b0362e937a88949bcd66fbad2"
     },
     {
       "path": "9to1 Workspace/Canvas/tools/README.md",
@@ -6196,9 +6210,9 @@
     {
       "path": "9to1 Workspace/Files/NativeHost/NativeFilesWorkspaceService.cs",
       "mode": "100644",
-      "object": "84a6d90fc48a7896f0f90aa32eb688dddacae1c4",
-      "bytes": 21972,
-      "sha256": "57248c980869fda95aaa6a5b9d85bc49346d45d4e1cb4088a5a6591091f47295"
+      "object": "a42954f10e728483abca4976238f22e74ff240c9",
+      "bytes": 24105,
+      "sha256": "9420cf159a8960a0689cc286117ddd7fa927c70c047973ff11021fc63087f653"
     },
     {
       "path": "9to1 Workspace/Files/NativeUI/FilesNativeBrowserSurface.cs",
@@ -35799,9 +35813,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/NativeSpacesPage.cs",
       "mode": "100644",
-      "object": "a0cb2ac46cc63f6a6ebe5858625dc0abcab0d38b",
-      "bytes": 21664,
-      "sha256": "11187004d90ce5ad9e69be862a543d14bcd8d73b7865030c208a85bb92832617"
+      "object": "da24fe53e99c8f552fc92d23f482951be10f8977",
+      "bytes": 24500,
+      "sha256": "a2e5e42bde0910ad68f65c3baa4b0d2a9faea5ca6af3b9eb909ac2a6168a07d0"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/SpaceGeneratedSurfaceRenderer.cs",
@@ -40912,6 +40926,13 @@
       "object": "3f233a5ba90933ae82b6b0e4be9efebb071dac4d",
       "bytes": 11058,
       "sha256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+      "mode": "100644",
+      "object": "7b91b7b7961ded7e56b3fdec5ee26f03e047a7c1",
+      "bytes": 15943,
+      "sha256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
@@ -66194,7 +66215,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim.",
+  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/checkpoint22-publication-local.json",
@@ -66355,6 +66376,38 @@
     {
       "path": "/workspace/astra-source/worker4-canvas03-source122-minimal-corrective-peer01.json",
       "sha256": "1828120fc90b200db7850d01d55aab072a38a2f31c4e99719ca231c8612d28e0"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas03-actual77-namespace-sdk-diagnostic-full-corrective04/manifest.json",
+      "sha256": "652207c9df3f89cbc4f27c32d5bc108815f50a270e0e3c8abaf5086e01db5508"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas04-required-canonical-dependencies-source135/manifest.json",
+      "sha256": "5858f8c02c9c555e24b4f13bb3e3e2f2fce756c619835ff2ffca2215aace84d4"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas04-maintained-sdk-immutable-issued-install-source131/manifest.json",
+      "sha256": "c1335c91cdd11991f75f953c3fa2fef8221f76f64acf0a451f7933a232a7b242"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas04-full-three-original-failure-closure01.json",
+      "sha256": "5a4c4e05a5272443dbf9879dfc47e370bb48b9def02427d456e487abf9814e61"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas135-required-canonical-source-peer01.json",
+      "sha256": "48e5e025ce9facbec3887c07408d602e011c29a48b41ccece546e3b057d34488"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas04-sdk-immutable-candidate131-source-peer01.json",
+      "sha256": "951335f95387f440e565604bb14b0f36c0ba6bc160b6a674c70287e7fd413067"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint23-publication-local.json",
+      "sha256": "1c7ea89f97d6530b66bca3899a9a2e710c4819ac3ad28b69c6c032eb49d59183"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-canvas-source135-files-canonical-capture-source-peer01.json",
+      "sha256": "8fccfedb22bc1d139dcba196703f9bb5bf08f501a7c0d86501b89540890c8484"
     }
   ],
   "sharedCakeIdContract": null,

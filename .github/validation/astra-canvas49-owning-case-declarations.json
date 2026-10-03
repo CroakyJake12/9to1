@@ -689,7 +689,80 @@
           "hasActualPredecessorPassedMethod": false
         }
       ]
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeInsertionDependencyTests.cs",
+      "sourceSha256": "8ec91d10bd27ac75cb1c86f3686ff63a5dac668eff3f2003e5ced5ce100940b5",
+      "declaredRequiredMethods": [
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasNativeInsertionDependencyTests",
+          "method": "Genuine_selector_preserves_original_canonical_native_bytes_order_and_history",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasNativeInsertionDependencyTests",
+          "method": "Hidden_or_locked_selection_refuses_without_state_change",
+          "attribute": "Theory",
+          "parameters": "bool hidden,bool locked",
+          "inlineDataSource": [
+            "true,false",
+            "false,true"
+          ],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasNativeInsertionDependencyTests",
+          "method": "Stale_and_malformed_selector_input_never_changes_native_or_canonical_state",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "HavenOS.Apps.Canvas.Tests.CanvasNativeInsertionDependencyTests",
+          "method": "Exact_native_layer_dependencies_preserve_unrelated_empty_locked_layer_and_original_order",
+          "attribute": "Fact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+      "sourceSha256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a",
+      "declaredRequiredMethods": [
+        {
+          "class": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+          "method": "Returning_to_same_space_cannot_adopt_older_actual_conversation_read",
+          "attribute": "AvaloniaFact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        },
+        {
+          "class": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+          "method": "Deactivated_space_cannot_adopt_pending_actual_conversation_read",
+          "attribute": "AvaloniaFact",
+          "parameters": "",
+          "inlineDataSource": [],
+          "hasActualPredecessorPassedMethod": false
+        }
+      ]
     }
   ],
-  "qualification": "Every whole selected test source remains mandatory. For each authored Fact require actual Passed class/method; each authored Theory must preserve discovery/all exact InlineData cases, not merely one method outcome. Expected theory test display identities must be derived from actual discovery, not invented source counts. Actual predecessor all105 display tuples separately mandatory. This lexical inventory is not compile/discovery/outcome proof."
+  "qualification": "Every whole selected test source remains mandatory. For each authored Fact require actual Passed class/method; each authored Theory must preserve discovery/all exact InlineData cases, not merely one method outcome. Expected theory test display identities must be derived from actual discovery, not invented source counts. Actual predecessor all105 display tuples separately mandatory. This lexical inventory is not compile/discovery/outcome proof.",
+  "additiveCurrent23Dependencies": [
+    {
+      "path": "/workspace/astra-source/worker6-canvas04-required-canonical-dependencies-source135/manifest.json",
+      "sha256": "5858f8c02c9c555e24b4f13bb3e3e2f2fce756c619835ff2ffca2215aace84d4"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint23-publication-local.json",
+      "sha256": "1c7ea89f97d6530b66bca3899a9a2e710c4819ac3ad28b69c6c032eb49d59183"
+    }
+  ]
 }

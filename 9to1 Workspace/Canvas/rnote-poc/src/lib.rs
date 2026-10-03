@@ -523,6 +523,44 @@ impl HeadlessCanvasEngine {
         Ok((candidate.save_rnote().await?, receipt_bytes))
     }
 
+    /// Run Rnote's actual selector on a disposable donor candidate. Selection
+    /// changes donor chronology; the candidate is NEVER adopted or persisted.
+    /// Returned identities follow the original render order, not selected order.
+    pub async fn preview_native_selection(&self, style: u32, samples: &[CanvasPointerSample]) -> Result<Vec<u64>> {
+        use rnote_engine::pens::pensconfig::selectorconfig::SelectorStyle;
+        if self.stroke_active { anyhow::bail!("selection is unavailable during an active stroke"); }
+        let style = SelectorStyle::try_from(style)?;
+        if samples.is_empty() || samples.len() > 8192 { anyhow::bail!("selection needs 1..=8192 points"); }
+        if samples.iter().any(|p| !p.x.is_finite() || !p.y.is_finite() || !p.pressure.is_finite()
+            || !(0.0..=1.0).contains(&p.pressure)) { anyhow::bail!("selection points must be finite and normalized"); }
+        if matches!(style, SelectorStyle::Polygon | SelectorStyle::IntersectingPath) && samples.len() < 3 {
+            anyhow::bail!("polygon/path selection requires at least three points");
+        }
+        let original_order = self.rendered_stroke_keys()?;
+        let mut candidate = Self::from_rnote(self.save_rnote().await?).await?;
+        candidate.set_tool(CanvasTool::Selector)?;
+        candidate.config.write().pens_config.selector_config.style = style;
+        candidate.begin_stroke(samples[0])?;
+        for point in samples.iter().skip(1) { candidate.update_stroke(*point)?; }
+        candidate.end_stroke(*samples.last().unwrap())?;
+        let Some(content) = candidate.engine.extract_selection_content() else { return Ok(Vec::new()); };
+        if content.strokes.len() > 1024 { anyhow::bail!("selection exceeds the canonical transaction entry budget"); }
+        let snapshot = candidate.engine.take_snapshot();
+        let mut identities = std::collections::HashMap::with_capacity(snapshot.stroke_components.len());
+        for (key, stroke) in snapshot.stroke_components.iter() {
+            if identities.insert(Arc::as_ptr(stroke) as usize, key.data().as_ffi()).is_some() {
+                anyhow::bail!("donor entities share an ambiguous stroke allocation");
+            }
+        }
+        let original_set = original_order.iter().copied().collect::<HashSet<_>>();
+        let mut selected = HashSet::new();
+        for stroke in content.strokes {
+            let key = *identities.get(&(Arc::as_ptr(&stroke) as usize)).context("selected donor entity has no retained exact identity")?;
+            if !original_set.contains(&key) || !selected.insert(key) { anyhow::bail!("selected donor identity is missing or duplicated"); }
+        }
+        Ok(original_order.into_iter().filter(|key| selected.contains(key)).collect())
+    }
+
     /// Exact retained render chronology for canonical/native order validation.
     pub fn rendered_stroke_keys(&self) -> Result<Vec<u64>> {
         if self.stroke_active { anyhow::bail!("cannot resolve render order during an active stroke"); }
@@ -1433,4 +1471,26 @@ mod tests {
         });
     }
 
+}
+
+#[cfg(test)]
+mod native_selector_tests {
+    use super::*;
+#[test]
+fn genuine_selector_single_and_rectangle_are_read_only_with_exact_original_keys() {
+    futures::executor::block_on(async {
+        let mut canvas = HeadlessCanvasEngine::default();
+        canvas.set_viewport_size(1000.0, 1000.0).unwrap();
+        canvas.set_viewport_center(250.0, 250.0).unwrap();
+        canvas.begin_stroke(CanvasPointerSample::new(100.0,100.0,0.5)).unwrap();
+        canvas.end_stroke(CanvasPointerSample::new(300.0,100.0,0.5)).unwrap();
+        let key = canvas.stroke_keys()[0];
+        let bytes = canvas.save_rnote().await.unwrap();
+        assert_eq!(canvas.preview_native_selection(2, &[CanvasPointerSample::new(200.0,100.0,0.5)]).await.unwrap(), vec![key]);
+        assert_eq!(canvas.preview_native_selection(1, &[CanvasPointerSample::new(50.0,50.0,0.5),CanvasPointerSample::new(350.0,150.0,0.5)]).await.unwrap(), vec![key]);
+        assert!(canvas.preview_native_selection(2, &[CanvasPointerSample::new(200.0,300.0,0.5)]).await.unwrap().is_empty());
+        assert!(canvas.preview_native_selection(99, &[CanvasPointerSample::new(200.0,100.0,0.5)]).await.is_err());
+        assert_eq!(bytes, canvas.save_rnote().await.unwrap());
+    });
+}
 }

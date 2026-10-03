@@ -557,6 +557,18 @@
       "sha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f",
       "namespace": "HavenOS.Home.Tests",
       "class": "HomeClaimedResourceCommitFenceTests"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeInsertionDependencyTests.cs",
+      "class": "CanvasNativeInsertionDependencyTests",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "sha256": "8ec91d10bd27ac75cb1c86f3686ff63a5dac668eff3f2003e5ced5ce100940b5"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+      "class": "SpacesConversationRefreshTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a"
     }
   ],
   "dependencyPins": [
@@ -603,5 +615,15 @@
   ],
   "ownerManifestSha256": "745739ebbe5a465c798630ade82d0a3c552c73611a63e395f8a5a7c27c317f66",
   "status": "SOURCE_ONLY_CURRENT21_WHOLE_HOME_PLUS_ALL_PREVIOUS_CANVAS49_CLASS_PINS_NOT_EXECUTION_COUNT",
-  "qualification": "Whole current21 Home project unfiltered; test-bearing whole classes only. CollectionDefinition helper remains compiled/pinned through DenReadLifetimeTests same whole source file. 93 declarations are not runtime counts."
+  "qualification": "Whole current21 Home project unfiltered; test-bearing whole classes only. CollectionDefinition helper remains compiled/pinned through DenReadLifetimeTests same whole source file. 93 declarations are not runtime counts. Additive95 = every prior93 whole class plus the required five-case canonical native insertion dependency and exact accepted current23 two-case Spaces refresh class. Native21 preserves all prior19 plus exact genuine selector2.",
+  "additiveCurrent23Dependencies": [
+    {
+      "path": "/workspace/astra-source/worker6-canvas04-required-canonical-dependencies-source135/manifest.json",
+      "sha256": "5858f8c02c9c555e24b4f13bb3e3e2f2fce756c619835ff2ffca2215aace84d4"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint23-publication-local.json",
+      "sha256": "1c7ea89f97d6530b66bca3899a9a2e710c4819ac3ad28b69c6c032eb49d59183"
+    }
+  ]
 }

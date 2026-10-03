@@ -32,6 +32,22 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
         { AppFolders = configured.Configuration.AppFolders.ToFrozenDictionary(StringComparer.Ordinal) };
     }
 
+    // Exact actual original provider-linked record for a raw Home final fence. Metadata only, no authority.
+    internal async ValueTask<HomeCoreStateRecord> CaptureOriginalConfigurationRecordAsync(
+        NativeFilesWorkspace expected, CancellationToken ct)
+    {
+        var read = await home.ReadAsync(ct).ConfigureAwait(false);
+        var records = read.State?.Records.Where(item => item.RecordId == RecordId(expected.Actor.ProfileId)).Take(2).ToArray();
+        if (!read.IsSuccess || records is not { Length: 1 } || records[0] is not { } record ||
+            record.RecordType != "files.native-workspace" || record.SchemaVersion != 1 ||
+            record.Scope != HomeDataScope.DeviceLocal || record.Authority != HomeRecordAuthority.LocalCanonical ||
+            !_cache.TryGetValue((expected.Actor.ProfileId, record.Revision), out var cached) ||
+            !ReferenceEquals(cached.Provider, expected.Provider) || cached.Actor != expected.Actor ||
+            JsonSerializer.Serialize(record.Payload.Deserialize<NativeFilesWorkspaceConfiguration>()) != JsonSerializer.Serialize(expected.Configuration))
+            throw new UnauthorizedAccessException("The original Files provider configuration changed.");
+        return record with { Payload = record.Payload.Clone() };
+    }
+
     internal async ValueTask<Func<CancellationToken, ValueTask<bool>>> CaptureConfigurationCheckAsync(
         NativeFilesWorkspace expected, CancellationToken cancellationToken)
     {
@@ -209,6 +225,18 @@ public sealed class NativeFilesWorkspaceAuthority(NativeFilesWorkspaceService wo
             !Guid.TryParse(workspace.Actor.ProfileId, out var profile)) return null;
         var result = await workspace.Directories.ResolveProfileAsync(profile, appId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess && result.Value!.FolderId == folderId ? result.Value.DirectoryPath : null;
+    }
+
+    /// <summary>Detached ORIGINAL provider-bound configuration for the genuine raw Home final fence.
+    /// Never combine the old receipt/config callbacks with a held Home lease.</summary>
+    public async ValueTask<HomeCoreStateRecord> CaptureOriginalConfigurationRecordAsync(
+        NativeFilesWorkspace original, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        var current = await GetCurrentAsync(original.Configuration.StoreId, ct).ConfigureAwait(false);
+        if (current is null || current.Actor != original.Actor || !ReferenceEquals(current.Provider, original.Provider))
+            throw new UnauthorizedAccessException("The original Files provider changed.");
+        return await workspaces.CaptureOriginalConfigurationRecordAsync(original, ct).ConfigureAwait(false);
     }
 
     /// <summary>Capture outside a Files commit. The resulting final check reads only Home's binding receipt

@@ -159,6 +159,14 @@ CakeCanvasStatus cake_canvas_split_erase_candidate(const void *handle,
     const CakeCanvasPointerSample *samples, size_t count, double width,
     CakeCanvasBuffer *out_native, CakeCanvasBuffer *out_receipt);
 
+/* Optional selector capability. Styles: polygon0/rectangle1/single2/intersecting-path3.
+ * Result is an owned packed little-endian u64 buffer, released by buffer_release.
+ * Preview never adopts the selector candidate or changes the original document. */
+uint32_t cake_canvas_selector_api_version(void);
+CakeCanvasStatus cake_canvas_preview_selection(const void *handle, uint32_t style,
+    const CakeCanvasPointerSample *samples, size_t count, CakeCanvasBuffer *out_keys);
+
+
 #ifdef __cplusplus
 }
 #endif

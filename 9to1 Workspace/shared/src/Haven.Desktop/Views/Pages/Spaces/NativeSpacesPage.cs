@@ -31,6 +31,12 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     private IReadOnlyList<SpaceDefinition> _spaces = [];
     private Guid? _selectedId;
     private bool _disposed;
+    private long _selectionGeneration;
+    private long _conversationGeneration;
+    private long _conversationOpenGeneration;
+    private bool _conversationOpenActive = true;
+    internal Task PendingSelection { get; private set; } = Task.CompletedTask;
+    internal Task PendingConversationOpen { get; private set; } = Task.CompletedTask;
 
     public NativeSpacesPage(
         SpaceRegistry registry,
@@ -97,9 +103,16 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     public HavenSceneControl Scene { get; }
 
-    public Task ActivateAsync(CancellationToken cancellationToken) => RefreshAsync(cancellationToken);
+    public Task ActivateAsync(CancellationToken cancellationToken)
+    { _conversationOpenActive = true; return RefreshAsync(cancellationToken); }
 
-    public void Deactivate() => Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
+    public void Deactivate()
+    {
+        _conversationOpenActive = false;
+        Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
+        Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
+    }
 
     internal Task RefreshNowAsync(CancellationToken cancellationToken = default) => RefreshAsync(cancellationToken);
 
@@ -146,9 +159,13 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private async Task RefreshConversationsAsync(CancellationToken cancellationToken = default)
     {
-        if (_conversations is null || _selectedId is not { } spaceId)
+        var generation = Interlocked.Increment(ref _conversationGeneration);
+        var selection = _selectedId;
+        bool Current() => !_disposed && !cancellationToken.IsCancellationRequested &&
+            generation == Interlocked.Read(ref _conversationGeneration) && _selectedId == selection;
+        if (_conversations is null || selection is not { } spaceId)
         {
-            await Dispatcher.UIThread.InvokeAsync(() => _scene.SetConversations([]));
+            await Dispatcher.UIThread.InvokeAsync(() => { if (Current()) _scene.SetConversations([]); });
             return;
         }
 
@@ -158,7 +175,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         cancellationToken.ThrowIfCancellationRequested();
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            if (!_disposed && !cancellationToken.IsCancellationRequested && _selectedId == spaceId) _scene.SetConversations(conversations);
+            if (Current()) _scene.SetConversations(conversations);
         });
     }
     private void ApplySpaces(IReadOnlyList<SpaceDefinition> spaces)
@@ -189,12 +206,18 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private async void OnArchivedVisibilityChanged(object? sender, bool includeArchived) => await RefreshAsync();
 
-    private async void OnSpaceSelected(object? sender, Guid id)
+    private void OnSpaceSelected(object? sender, Guid id) => PendingSelection = SelectSpaceAsync(id);
+
+    private async Task SelectSpaceAsync(Guid id)
     {
+        if (_disposed) return;
+        var generation = Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
+        bool Current() => !_disposed && generation == Interlocked.Read(ref _selectionGeneration);
         try
         {
             await RequireCurrentAccessAsync(CancellationToken.None);
-            if (_disposed) return;
+            if (!Current()) return;
             _selectedId = id;
             _scene.SetSpaces(_spaces, id);
             var current = CurrentSpace();
@@ -205,21 +228,45 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         }
         catch (Exception exception) when (IsExpected(exception))
         {
+            if (!Current()) return;
             if (exception is UnauthorizedAccessException) ClearDeniedProjection();
             _scene.SetStatus($"Chats could not refresh: {exception.Message}");
         }
     }
 
-    private async void OnConversationSelected(object? sender, Guid id)
+    private void OnConversationSelected(object? sender, Guid id) => PendingConversationOpen = OpenOriginalConversationAsync(id);
+
+    private async Task OpenOriginalConversationAsync(Guid id)
     {
-        if (_conversations is null || _openConversation is null) return;
-        await RunMutationAsync(async () =>
+        if (_disposed || !_conversationOpenActive || _conversations is null || _openConversation is null || CurrentSpace() is not { } originalSpace) return;
+        var generation = Interlocked.Increment(ref _conversationOpenGeneration);
+        var selection = Interlocked.Read(ref _selectionGeneration);
+        bool Current() => !_disposed && _conversationOpenActive && generation == Interlocked.Read(ref _conversationOpenGeneration) &&
+            selection == Interlocked.Read(ref _selectionGeneration) && ReferenceEquals(CurrentSpace(), originalSpace);
+        try
         {
+            await RequireCurrentAccessAsync(CancellationToken.None);
+            if (!Current()) return;
             var conversation = await _conversations.GetAsync(id, CancellationToken.None);
+            if (!Current()) return;
             if (conversation is null) { await RefreshConversationsAsync(); return; }
             await RequireCurrentAccessAsync(CancellationToken.None);
+            if (!Current()) return;
+            if (conversation.SpaceId != originalSpace.Id)
+            {
+                _scene.SetStatus("This chat is no longer in the selected Space. Refresh its conversations.");
+                return;
+            }
+            // This permits invoking the original navigation only; it does not cancel
+            // a navigation already started or grant communication/transport access.
             await _openConversation(conversation);
-        }, "open Space chat");
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (!Current()) return;
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Could not open Space chat: {exception.Message}");
+        }
     }
 
     private async void OnNewConversationRequested(object? sender, Guid id)
@@ -461,6 +508,8 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private void ClearDeniedProjection()
     {
+        Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
         _spaces = []; _selectedId = null;
         _scene.SetSpaces([], null); _scene.SetSpace(null); _scene.SetConversations([]);
         RefreshGeneratedPreview(null);
@@ -473,6 +522,8 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     {
         if (_disposed) return;
         _disposed = true;
+        Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
         SizeChanged -= OnSizeChanged;
         Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
         _scene.SetGeneratedPreview(null, null);

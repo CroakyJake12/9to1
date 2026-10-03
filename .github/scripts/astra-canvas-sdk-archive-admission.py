@@ -1,5 +1,5 @@
 """Hosted-only admission of a fresh complete official SDK install and bundled VSTest lineage."""
-import hashlib,json,pathlib,tarfile,urllib.request,stat
+import hashlib,json,pathlib,tarfile,urllib.request,stat,os
 SDK_VERSION='10.0.301'
 SDK_URL='https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.301/dotnet-sdk-10.0.301-linux-x64.tar.gz'
 SDK_SHA512='cfbeec3a3a1d3ad3e168e37a77c4cc26c23125acd84a86d014047da3ecffce4c368a9acac4d7c950a047fa3d98989ce8aea69f8e5842cb6d330e8911e1c335a7'
@@ -7,7 +7,22 @@ VMR_COMMIT='96856fd726ffd058fb3dfef0851dbafc7ef3b011'
 VSTEST_COMMIT='778909789acae5b87b753b4daea984e4b23a1e4c'
 SOURCE_SHA256='f8c1fd1e5a09563257011cab551f688a7fe45e8f91b5ddb6fd468dd58da30231'
 
+def verify_write_isolation(installed_root):
+    run=os.environ.get('GITHUB_RUN_ID','');attempt=os.environ.get('GITHUB_RUN_ATTEMPT','')
+    if not run.isdigit() or not attempt.isdigit() or os.environ.get('GITHUB_ACTIONS')!='true' or os.environ.get('RUNNER_ENVIRONMENT')!='github-hosted':raise ValueError('Exact freshly issued hosted SDK lane required')
+    if os.getuid()!=os.geteuid() or os.geteuid()==0:raise ValueError('SDK caller must be ordinary nonroot runner')
+    expected=pathlib.Path('/opt')/('astra-canvas-sdk-'+SDK_VERSION+'-'+run+'-'+attempt)
+    root=pathlib.Path(installed_root)
+    if root!=expected or root.is_symlink() or root.resolve(strict=True)!=expected:raise ValueError('Exact original protected SDK issuance path required')
+    nodes=[]
+    for path in [*reversed(root.parents),root,*sorted(root.rglob('*'))]:
+        observed=path.lstat();mode=observed.st_mode
+        if not (stat.S_ISDIR(mode) or stat.S_ISREG(mode)) or observed.st_uid!=0 or observed.st_gid!=0 or os.access(path,os.W_OK):raise ValueError('SDK ancestor/descendant is not root-owned and nonwritable by actual runner: '+str(path))
+        nodes.append({'path':str(path),'type':'directory' if stat.S_ISDIR(mode) else 'regular','mode':stat.S_IMODE(mode),'installedUid':observed.st_uid,'installedGid':observed.st_gid,'writableByCaller':False})
+    return {'root':str(root),'runnerUid':os.getuid(),'runnerGid':os.getgid(),'allAncestorsAndDescendants':nodes,'qualification':'Observed original hosted root-owned SDK hierarchy nonwritable by ordinary runner. Archive bytes/modes are checked separately without installed/archive ownership equality. Sampled checks do not claim atomic leases or protection from another administrator.'}
+
 def verify_install(installed_root,archive_path,mismatch_output=None):
+    writeIsolation=verify_write_isolation(installed_root)
     root=pathlib.Path(installed_root).resolve(strict=True);archive=pathlib.Path(archive_path).resolve(strict=True)
     def digest(p):
         with pathlib.Path(p).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
@@ -60,7 +75,7 @@ def verify_install(installed_root,archive_path,mismatch_output=None):
             diagnosis={'status':'STRICT_COMPLETE_SDK_DIRECTORY_EQUALITY_REFUSED','root':str(root),'archivePath':str(archive),'archiveSha512':SDK_SHA512,'expectedDirectories':directories,'actualDirectories':actualDirectoryMetadata,'extraDirectories':sorted(actualDirectories-set(directories)),'missingDirectories':sorted(set(directories)-actualDirectories),'qualification':'Observed installed directory names, type, modes and entry-count/emptiness before the same strict refusal; a sampled inventory, not an atomic lease. No exception, lineage acceptance, or permission/ownership equivalence is inferred.'}
             destination.write_text(json.dumps(diagnosis,indent=2)+'\n')
         raise ValueError('Fresh SDK directory inventory differs from complete official archive')
-    return {'root':str(root),'archivePath':str(archive),'archiveSha512':SDK_SHA512,'sdkFiles':expected,'sdkLinks':links,'sdkDirectories':directories}
+    return {'root':str(root),'archivePath':str(archive),'archiveSha512':SDK_SHA512,'sdkFiles':expected,'sdkLinks':links,'sdkDirectories':directories,'sdkWriteIsolation':writeIsolation}
 
 def admit(installed_root,archive_path,metadata_record,output):
     out=pathlib.Path(output);out.mkdir(parents=True,exist_ok=True)
@@ -88,6 +103,6 @@ def admit(installed_root,archive_path,metadata_record,output):
     if not libraries:raise ValueError('SDK VSTest actual dependency version records absent')
     executable=root/'dotnet';record={'path':str(executable),'sha256':expected['dotnet']['sha256'],'sdkVersion':SDK_VERSION,'officialArchiveSha512':SDK_SHA512}
     if digest(executable)!=record['sha256'] or digest(provider)!=metadata_record['sha256']:raise ValueError('SDK producer changed during admission')
-    receipt={'sdkExecutable':record,'archivePath':str(archive),'archiveUrl':SDK_URL,'archiveSha512':SDK_SHA512,'sdkFiles':expected,'sdkLinks':links,'sdkDirectories':directories,'provider':metadata_record,'vmrCommit':VMR_COMMIT,'vstestCommit':VSTEST_COMMIT,'sourceSha256':SOURCE_SHA256,'sourceLineageAccepted':True,'depsSha256':digest(deps),'testPlatformLibraries':libraries,'qualification':'Complete official archive byte/type/permission/directory inventory and immutable source lineage; archive uid/gid retained as provenance, installed ownership not asserted equal. Sampled pre/post hashes are not an atomic file lease; caller must recheck before/after native execution.'}
+    receipt={'sdkWriteIsolation':verified['sdkWriteIsolation'],'sdkExecutable':record,'archivePath':str(archive),'archiveUrl':SDK_URL,'archiveSha512':SDK_SHA512,'sdkFiles':expected,'sdkLinks':links,'sdkDirectories':directories,'provider':metadata_record,'vmrCommit':VMR_COMMIT,'vstestCommit':VSTEST_COMMIT,'sourceSha256':SOURCE_SHA256,'sourceLineageAccepted':True,'depsSha256':digest(deps),'testPlatformLibraries':libraries,'qualification':'Complete official archive byte/type/permission/directory inventory and immutable source lineage; archive uid/gid retained as provenance, installed ownership not asserted equal. Sampled pre/post hashes are not an atomic file lease; caller must recheck before/after native execution.'}
     (out/'official-sdk-admission.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return record,receipt

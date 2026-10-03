@@ -264,6 +264,36 @@ public sealed class CanvasRnoteDocument : IDisposable
         }
     }
 
+    /// <summary>Actual detached donor selector mapped to canonical identities. No document/history adoption.</summary>
+    public IReadOnlyList<Guid> PreviewSelection(CanvasSelectionStyle style, IEnumerable<RnotePointerSample> samples, Guid expectedRevision)
+    {
+        lock (_gate)
+        {
+            EnsureOpen(); var artifact = _session.GetArtifactSnapshot();
+            if (expectedRevision == Guid.Empty || artifact.RevisionId != expectedRevision) throw new InvalidOperationException("Selection targets a stale canonical revision.");
+            if (artifact.Pages.Count != 1 || artifact.SharedResources.Count != 0 || artifact.Pages[0].Objects.Count != 0)
+                throw new NotSupportedException("This selector requires exact single-page canonical ink bindings.");
+            var page = artifact.Pages[0];
+            // Reuse selected49's complete persisted canonical/native layer-rank admission.
+            // An unrelated empty restricted layer cannot redirect or block original insertion.
+            ValidateUserLayerBindings(artifact, _engine, allowLegacySingleLayer: true);
+            var bindings = ReadPersistedState(artifact).NativeStrokeKeys;
+            if (bindings is null || page.StrokeOrder.Any(id => !bindings.ContainsKey(id)) ||
+                !_engine.ReadRenderedStrokeKeys().SequenceEqual(page.StrokeOrder.Select(id => bindings[id])))
+                throw new NotSupportedException("Selector canonical/native identity and render order require reconciliation.");
+            var reverse = bindings.ToDictionary(pair => pair.Value, pair => pair.Key);
+            var keys = _engine.PreviewSelection(style, samples);
+            if (keys.Any(key => !reverse.ContainsKey(key))) throw new InvalidDataException("Selected native entity has no canonical identity.");
+            var selected = keys.Select(key => reverse[key]).ToArray();
+            var strokes = page.Strokes.ToDictionary(stroke => stroke.StrokeId);
+            var layers = page.Layers.ToDictionary(layer => layer.LayerId);
+            if (selected.Any(id => !strokes.TryGetValue(id, out var stroke) || !layers.TryGetValue(stroke.LayerId, out var layer) ||
+                !layer.IsVisible || layer.IsLocked))
+                throw new InvalidOperationException("This editable selection cannot target hidden or locked canonical ink.");
+            return selected;
+        }
+    }
+
     /// <summary>Resolve one genuine topmost hit, without changing history or native bytes.
     /// Unsupported/unbound/locked top hits refuse; they never expose a lower neighbor.</summary>
     public Guid? PreviewQuickErase(double x, double y, Guid expectedRevision)
