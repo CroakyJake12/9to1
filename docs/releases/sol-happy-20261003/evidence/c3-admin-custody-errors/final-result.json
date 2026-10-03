@@ -1,0 +1,34 @@
+{
+  "head": "4e64e3576ba817bcff5a018c9dc031318b8c8f25",
+  "previousReviewedHead": "a56c7d48e2c02a7ed3d9d03612d5bfc4b4776a04",
+  "scope": "bounded tooling proposal; no adoption or SDK6 execution",
+  "controls": {
+    "discovered": 14,
+    "passed": 14,
+    "exitCode": 0,
+    "command": "ASTRA_SUBREAPER_TEST_EVIDENCE=/workspace/team-c/evidence/c3/admin-sdk03/custody-error-controls-attempt4 python3 .github/scripts/astra-original-session-subreaper-tests.py"
+  },
+  "sourceHashes": [
+    {
+      "path": ".github/scripts/astra-original-native-session-drain.py",
+      "bytes": 6932,
+      "sha256": "b64955841ac1c1cdaa7e8e3ed2d9d487c6b7faae7bd581fae626e37cae964329"
+    },
+    {
+      "path": ".github/scripts/astra-original-session-subreaper-tests.py",
+      "bytes": 14767,
+      "sha256": "c1dd0c7cee53614bd738ac3d92e7be8a23099328e6d9358b7caae7d67f792abe"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "5fe36890cf410cdb0557dcaf95b7ab1174c7cafde7a46f61c2a83d6363240fb7"
+    }
+  ],
+  "SDK6": "NOT_RUN; root external pin not issued",
+  "limitations": [
+    "source-owner review remains distinct from C5 peer review",
+    "all historical failed negatives and draft control cohorts retained",
+    "no provider/issuer/native/global acceptance"
+  ]
+}

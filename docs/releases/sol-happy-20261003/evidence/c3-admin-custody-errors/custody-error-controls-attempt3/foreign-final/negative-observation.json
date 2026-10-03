@@ -1,0 +1,9 @@
+{
+  "scenario": "foreign",
+  "launcherReleased": true,
+  "creatorWaitProven": true,
+  "primary": "None",
+  "cleanup": [],
+  "retainedData": "/tmp/original-custody-h4l1zvdr",
+  "sessionInitialized": true
+}

@@ -1,0 +1,9 @@
+{
+  "scenario": "birth-mismatch",
+  "launcherReleased": true,
+  "creatorWaitProven": true,
+  "primary": "None",
+  "cleanup": [],
+  "retainedData": "/tmp/original-custody-8tbwwmxh",
+  "sessionInitialized": true
+}
