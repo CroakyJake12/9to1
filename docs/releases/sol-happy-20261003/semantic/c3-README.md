@@ -19,13 +19,17 @@ this SH-09/SH-13 cohort is not a replacement for those criteria.
 
 ## Evidence boundaries
 
-- Accepted `origin/main`: `98a08827c9fbc486fe987da73f4aee8398120d31`.
+- Remote-main identity (`baseline_main`, full acceptance UNVERIFIED): `98a08827c9fbc486fe987da73f4aee8398120d31`.
+  This SHA identifies remote main only; it is not an accepted release.
   Inspected baseline has no Accounts domain or Stripe adapter. `state` describes
-  this accepted baseline: MISSING functionality or BLOCKED unresolved decisions.
+  this inspected remote-main baseline: MISSING functionality or BLOCKED unresolved decisions.
 - Unaccepted Astra draft: `a63d77fe5a9dfea56c938eaa85678a9e170368ec`.
   Existing Accounts domain owns subscription state, personal ledger, quotes,
   purchases, organisation billing, Dust pools, rollover and policy ports. Source
   evidence is IMPLEMENTED-UNVERIFIED, not acceptance or permission to import.
+  Team A handover is now acknowledged; coordinator reports C6 independently
+  passed 386/386 current draft core tests. That separate cohort result is not
+  provider/full-release acceptance and was not executed by this map pass.
   Records reference partial supporting files; this does not assert that each
   whole obligation is implemented. No draft tests were executed by this map pass.
 - Provisional C3 adapter: `cb4e1149f58f899c7f16c7f819a095cdb71af802`.
@@ -58,7 +62,7 @@ python3 -c 'import json; from pathlib import Path; rows=[json.loads(x) for x in 
 ```
 
 This integrity check verifies record syntax/uniqueness, not behavior. Integration
-must retain accepted-head versus draft/provisional evidence separately and rerun
+must retain remote-main identity, candidate acceptance and draft/provisional evidence separately and rerun
 provider/native/web acceptance against its exact final candidate. A single
 record may need several platform/provider cases; its test procedure is an
 execution contract, not an already discovered automated test.
