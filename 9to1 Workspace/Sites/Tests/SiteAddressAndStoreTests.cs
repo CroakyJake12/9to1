@@ -57,7 +57,7 @@ public sealed class SiteAddressAndStoreTests
         var second = ReserveAsync(store, Guid.NewGuid());
         var outcomes = await Task.WhenAll(first, second);
 
-        Assert.Single(outcomes.Where(outcome => outcome));
+        Assert.Single(outcomes, outcome => outcome);
         var saved = await store.ReadAsync(state => state.SlugReservations);
         Assert.Single(saved);
         Assert.Equal("studio", saved[0].Slug);
