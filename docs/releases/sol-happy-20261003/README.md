@@ -236,7 +236,11 @@ entries are not unique project or requirement counts. Actual retained evidence
 is 110,292,911 bytes within the original 256 MiB limit. Source, physical symbols,
 restore graph, output and final-tree gates ran unchanged. This is a controlled
 local SDK result; no global shared-source adoption, new whole-owner ACK or real
-issuer/provider/native/installed acceptance is inferred. No empty-input exemption,
+issuer/provider/native/installed acceptance is inferred. The
+[independent SDK7 audit](c6/sdk7-ae6ca7-publication-audit.json) verifies all 2,300
+published hashes and 7,223 external output hashes, 102 physical symbol pairs,
+source/document bindings, six unchanged restore pairs and original tree continuity.
+It reads originals without executing payloads. No empty-input exemption,
 invented source or source-hash waiver was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
 and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 

@@ -115,7 +115,7 @@
   "commercialStatus": "NOT_ENABLED",
   "mainMerged": false,
   "localPCDelivery": "DESTINATION_AND_ACTUAL_DELIVERY_NOT_VERIFIED",
-  "sharedSourceAdoption": "NONE; qualified proposals and exact owner receipts retained separately",
+  "sharedSourceAdoption": "Separately reviewed A63/eec Home/CUI/provider/OIDC/Admin proposals remain unadopted. Existing C-owned foundations and the reviewed public OAuth fix are in the release candidate.",
   "remainingGates": [
     "Current owner API catalogues and Files async session/read/publication authority",
     "Configured browser sign-in/disposal/focus/input/AX/Wave and whole product journeys",
@@ -124,5 +124,17 @@
     "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
     "Verified exact tested artifacts delivered to Jacob PC"
   ],
-  "qualification": "Local source/harness outcomes do not establish a combined accepted executable, deployment, full requirement denominator or final release acceptance. All prior failures and unissued4472/de683 cuts retained; SDK10.0.401 variance explicit."
+  "qualification": "Local source/harness outcomes do not establish a combined accepted executable, deployment, full requirement denominator or final release acceptance. All prior failures and unissued4472/de683 cuts retained; SDK10.0.401 variance explicit.",
+  "isolatedSDK7Audit": {
+    "commit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
+    "path": "c6/sdk7-ae6ca7-publication-audit.json",
+    "publicPayloadsVerified": 2300,
+    "externalOutputFilesVerified": 7223,
+    "physicalSymbolPairsVerified": 102,
+    "sourceDocumentOccurrencesVerified": 8770,
+    "compileInputOccurrencesVerified": 8354,
+    "restorePairsUnchanged": 6,
+    "errors": 0,
+    "payloadRerun": false
+  }
 }
