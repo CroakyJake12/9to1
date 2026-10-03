@@ -1,0 +1,128 @@
+{
+  "recordedUTC": "2026-10-03T23:02:29.218323+00:00",
+  "releaseStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
+  "acceptedHead": null,
+  "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
+  "pullRequestState": "OPEN_DRAFT",
+  "historicalServiceSource": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+  "adoptedPublicOAuth": {
+    "integrationCommit": "56fcaa4248a99c594e66ec267426ba42ffcd3d90",
+    "actualProductionTestSource": "04ff6067d212bb9e8547a5ff93b859d9fc473118",
+    "indexSha256": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+    "assertions": {
+      "publicPaths": 117,
+      "issuerOrigin": 27,
+      "maintainedIdentity": 222
+    },
+    "exitCodes": [
+      0,
+      0,
+      0
+    ],
+    "peerIssuerOriginAssertions": 27,
+    "qualification": "Actual local Workerd/D1/maintained library, Node transport; reviewed separate Linux custody adapter. Package/schema/provider/session code and original integration assertions unchanged. B browser journeys remain separate."
+  },
+  "isolatedSDK7": {
+    "head": "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+    "cutSha256": "9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d",
+    "outerExitCode": 0,
+    "completedCommands": 379,
+    "exitZeroCommands": 379,
+    "strictDrainsTrue": 379,
+    "executedWholeSuites": [
+      {
+        "name": "debug-whole-accounts",
+        "exitCode": 0
+      },
+      {
+        "name": "debug-whole-organisation-pools",
+        "exitCode": 0
+      },
+      {
+        "name": "debug-whole-web",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-accounts",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-organisation-pools",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-web",
+        "exitCode": 0
+      }
+    ],
+    "actualReceiptStatus": "ACTUAL_WHOLE_ACCOUNTS_ORGPOOLS_WEB_DEBUG_RELEASE_SDK_PASS",
+    "completedConfigurations": [
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Debug",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      },
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Release",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      }
+    ],
+    "acceptedEvidenceBytes": 110292911,
+    "primaryType": null,
+    "cleanupTypes": [],
+    "qualification": "Only actual original maintained local SDK/Web harness outcomes recorded. No genuine HTTPS issuer/provider/native/global release acceptance, no product key fix/global source adoption/new whole A3 owner ACK. SDK10.0.401 differs workflow10.0.301.",
+    "outerCommand": {
+      "cwd": "/workspace/team-c/c3-admin-symbol-errors-validation",
+      "argv": [
+        "python3",
+        ".github/scripts/astra-organisation-full-owning.py",
+        "--expected-commit",
+        "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+        "--manifest",
+        ".github/validation/astra-organisation-full-owning-cut.json",
+        "--manifest-sha",
+        "9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d"
+      ],
+      "environment": {
+        "PATHprepend": "/workspace/.tools/dotnet",
+        "DOTNET_ROOT": "/workspace/.tools/dotnet",
+        "DOTNET_CLI_HOME": "/workspace/team-c/evidence/c3/admin-sdk03/dotnet-home",
+        "NUGET_PACKAGES": "/workspace/team-c/evidence/c3/admin-sdk03/nuget"
+      },
+      "stdoutStderr": "/workspace/team-c/evidence/c3/admin-sdk03/original-driver-symbol-errors-attempt7.log"
+    }
+  },
+  "cloudflare": {
+    "skillsLoaded": 16,
+    "callableAccountTools": 0,
+    "oauthAndAccountAccess": "UNVERIFIED",
+    "readOnlyBrowserFallback": "UNAVAILABLE/MCP SSE HTTP404; no account page read"
+  },
+  "deploymentStatus": "NOT_DEPLOYED",
+  "commercialStatus": "NOT_ENABLED",
+  "mainMerged": false,
+  "localPCDelivery": "DESTINATION_AND_ACTUAL_DELIVERY_NOT_VERIFIED",
+  "sharedSourceAdoption": "NONE; qualified proposals and exact owner receipts retained separately",
+  "remainingGates": [
+    "Current owner API catalogues and Files async session/read/publication authority",
+    "Configured browser sign-in/disposal/focus/input/AX/Wave and whole product journeys",
+    "Genuine issuer/signing/auth_revision and real authenticated provider services",
+    "Full semantic/default-SHOULD/donor/platform/installed/security/recovery acceptance",
+    "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
+    "Verified exact tested artifacts delivered to Jacob PC"
+  ],
+  "qualification": "Local source/harness outcomes do not establish a combined accepted executable, deployment, full requirement denominator or final release acceptance. All prior failures and unissued4472/de683 cuts retained; SDK10.0.401 variance explicit."
+}

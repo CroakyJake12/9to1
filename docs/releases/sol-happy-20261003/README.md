@@ -228,8 +228,15 @@ four independent controls and prior symbol/Sites controls pass. Original failure
 remain retained. Root and C1 verify the fresh `d30253dd` complete cut, all 23
 original/received mappings and six controls. The
 [SDK7 external issuance](evidence/c3-admin-sdk07-issuance/issuance.json) authorizes
-only isolated full validation, now in progress. No global shared-source adoption
-or new whole-owner acknowledgement is inferred. No empty-input exemption,
+only isolated full validation. The [original SDK7 result](evidence/c3-admin-sdk-attempt7/result.json)
+now records driver exit 0, all 379 commands and strict drains passing, and all six
+original Accounts/OrgPools/Web suites passing across Debug and Release. Each
+configuration retains 51 compiled-project entries and source-built tasks; these
+entries are not unique project or requirement counts. Actual retained evidence
+is 110,292,911 bytes within the original 256 MiB limit. Source, physical symbols,
+restore graph, output and final-tree gates ran unchanged. This is a controlled
+local SDK result; no global shared-source adoption, new whole-owner ACK or real
+issuer/provider/native/installed acceptance is inferred. No empty-input exemption,
 invented source or source-hash waiver was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
 and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 
@@ -392,6 +399,13 @@ clears guarded-overload/source-delivery holds, preserving conditional B wire ACK
 Files mutation custody still requires the owner-defined async current-session
 lifetime, lease order and read/publication authority. All twelve transport
 procedures remain NOT_RUN.
+
+The [Cards owner-request review](C5-cards-owner-contract-request-review.md)
+verifies the exact delivered request and 14 source pins. Existing Notes string
+sides and embedded schedule do not establish structured Cards or private
+attributed reviews. Canonical Cards/Study schemas, data-preserving migration and
+versioned LE-12 operations remain owner dependencies; requested field names do
+not supply an approved contract or authorize a duplicate store.
 
 These clause counts are not requirement counts. The prior hosted scoped maps
 contain 228 semantic records and zero VERIFIED results; they overlap inherited
