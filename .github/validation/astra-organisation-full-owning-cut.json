@@ -46,16 +46,16 @@
     {
       "path": ".github/scripts/astra-home-portable-pdb.py",
       "mode": "100644",
-      "object": "fe8a99f1a63651eeeed063a6ee098a4af1180b7a",
-      "bytes": 9183,
-      "sha256": "0017b45750c739cbd5fc34d72e63357ec7ce22f04eb12d6b5991ef64e4f68b0b"
+      "object": "8d60ed0ad62a05ffd8cfc3ba599daa18479b79e8",
+      "bytes": 11248,
+      "sha256": "a861dd8270a368647ee96266120c3c264cad16841776765e513da658693f1caa"
     },
     {
       "path": ".github/scripts/astra-organisation-full-owning.py",
       "mode": "100644",
-      "object": "8d34a2c2b3f4c89fb8e9ba97561c4734221a4770",
-      "bytes": 30468,
-      "sha256": "97ba3ed8bbaf4a4ccd9c51e5eda6f0175f3757fc8d5f11e6a0152d045b0ef059"
+      "object": "4a22e146e95c6a031b96ffc8cd2578231b576c25",
+      "bytes": 30507,
+      "sha256": "c0fd3bc49319d3880e788d37df12fa860aa1a8094c18fa31c98c04db9298fd9b"
     },
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
@@ -72,6 +72,13 @@
       "sha256": "c1dd0c7cee53614bd738ac3d92e7be8a23099328e6d9358b7caae7d67f792abe"
     },
     {
+      "path": ".github/scripts/astra-source-owned-generated-context-tests.py",
+      "mode": "100644",
+      "object": "53ae28a72c514aba2b0b302de896f306ea056ebd",
+      "bytes": 4970,
+      "sha256": "129f8f279c890315db38e88f052248014ad880f86eb0b7666bd311a0e3965e8d"
+    },
+    {
       "path": ".github/scripts/haven-android-smoke.sh",
       "mode": "100644",
       "object": "a17f0247da08a499ae2193bc1f3c288af7d883e0",
@@ -81,9 +88,9 @@
     {
       "path": ".github/validation/astra-organisation-owning-sources.json",
       "mode": "100644",
-      "object": "493749667245ea70aae650731bb04a7acc596175",
-      "bytes": 6807,
-      "sha256": "5fe36890cf410cdb0557dcaf95b7ab1174c7cafde7a46f61c2a83d6363240fb7"
+      "object": "82c2db233a5b52609393466ff4b924d107489ca2",
+      "bytes": 6808,
+      "sha256": "6a6d1b3e51591f85e023b7aed3e183a422bc6da35bb45c696ea912b4eea7211d"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -65062,9 +65069,9 @@
     {
       "path": "handoff/team-a/admin-sdk03/receiving-validation-provenance.json",
       "mode": "100644",
-      "object": "89a3bd3016b4bbae5fab3e75a6797c570e3fb30d",
-      "bytes": 40695,
-      "sha256": "3ca02b086bb4a38966373163d9ce9d0bf27cd24db0d1a9e9e3a64eb9bcbbbd13"
+      "object": "25a30e1a32b11c99c8fb962a5242357282b5cc53",
+      "bytes": 46243,
+      "sha256": "a90f2463f7982ce1489eb261d4b8b8f693f5bfadd3751b90b9dba7948dad134d"
     },
     {
       "path": "handoff/team-a/reviewed-source-delivery-manifest.json",
