@@ -133,14 +133,14 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T20:56:00.700907+00:00",
+  "updatedUTC": "2026-10-03T21:24:52.744734+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "43669e20a267a2447458aaa5f081987f97d29b05",
-  "candidateStatus": "BOUNDED_WAVE_AX_ACCOUNTS_SOURCE_PUSHED; ACTUAL_PUBLISH_RUNNING; FULL_BROWSER_SCOPE_ACTIVE_UNVERIFIED",
+  "candidateCommit": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
+  "candidateStatus": "ACTUAL_BROWSER_AX_STRUCTURAL5PASS_WAVE_CREATE2PASS; KEYBOARD_INPUT_DEFECTS_UNDER_REPAIR; FULL_SCOPE_ACTIVE_UNVERIFIED",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -292,11 +292,12 @@
     "sourceBase": "83c24b2f0033fb2828169921fc905a327120143b",
     "draftState": "Reviewed bounded38-file source commit43669e20 pushed; Wave exact canonical source/realIDB/media and nativepeer projection+disposablepriority gate composed. Untracked Write/Files/Sites/Picture authored for subsequent reviewed commits; not included in first bounded browser candidate, scope not reduced.",
     "independentBaseline": "Unchanged actual 83 Chromium AX: eight cases, five absent-control failures and three dependent keyboard NOT_RUN; no startup error",
-    "localExecution": "Actual retained Write native scene22 assertions PASS; actual virtual peer3 PASS; IndexedDB real Chromium14/14 PASS includes browser restart, two-tab CAS, canonical recovery, exact Int64, recoverable trash, native quota rollback. Storage source-unit15 and Account factory6 PASS remain separately qualified. Wave canonical engine10 PASS; actual fresh browser Wave14 and unchanged Home AX8 next. No whole-app acceptance.",
+    "localExecution": "Historical Write65 actualfreshprocess and Scene22 retained. Current actualtoolbar48PASS +sameoriginalred11 precedingassertions; actualowner glyph-layout red beta assigned31.36 width/23.625lineheight actualFormattedText34.132 height. Storage17scripted unitPASS latest actualbrowser17queued, old real14PASS retained. CurrentFiles17PASS, Sites13PASS164assertions plus separatefreshprocessseed17assertions/reopen6assertions; successfulcohort4111sourcehashes unchanged. Allnarrowcounts distinctfromfullappcriteria.",
     "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation",
     "inProgress": "Reactive enabled-state public Avalonia priority diagnostic; common observer lifetime composition; sealed fresh actual Wave/accessibility browser candidate next; real Write device-local feature registration, canonical library recovery; Files17/Sites12 queued. Actual maintained Worker local fixture currently held before Workerd spawn, receiver HTTPS prerequisite ready.",
     "initialCompile": "Actual bounded Wave/AX/Accounts build exit0 20:51:42→20:52:20,10warnings retained (IL2026 serializer + native Win32 PInvoke); README changed during compile, no immutable acceptance. Actual exact43669e2 publish next, before/after committedsource hashes.",
-    "nativeAvailability": "Native disposable priority diagnostic10, live observer26, actualautomation17 PASS; three same26 controlled helper regressions fail as expected. Root owner lifetime source independentlyreviewed; freshactualbrowserAX remainsunrun."
+    "nativeAvailability": "Native disposable priority diagnostic10, live observer26, actualautomation17 PASS; three same26 controlled helper regressions fail as expected. Root owner lifetime source independentlyreviewed; freshactualbrowserAX remainsunrun.",
+    "actualBrowser": "Immutable43669 firstactualbrowser red JsonSerializerIsReflectionDisabled; sourcefix8b4f2a0 published with SDKreflection+actualowner metadata roots and SGpeer snapshot. Exactsealed8b4 publish222files40302332B SHAe9f5a46cb521f51cd4cc753383201150b6b4e8723c997eaf1db4762d7b177bd7 sourcebefore/afterunchanged. HomeactualAX5structuralPASS0errors, strict40Tab diagnostic provesMAINtrap; Enter/SpaceNOTRUN. Wave14current3executed2PASS1FAIL11NOTRUN,0runtimeerrors: actualcanonicalcreation+persistence passes, immediate0.5 input/import usesoldtimeline0 ratherthanexpected24000. No oracles weakened."
   },
   "continuationRequests": [
     {
@@ -333,7 +334,7 @@
     },
     {
       "owner": "A1/CUI binding runtime",
-      "request": "Browser initial authored-enabled AND capability gating now consumes actual typed Action.Command alias. Actual owner OnBindingPropertyChanged→ApplyObservedBinding→IsEnabled assignment can later replace initial capability clamp; request acknowledged runtime binding coercion/policy hook, preserve declared authored state and live capability. Owner dispatcher still enforces authorization. Native exact-source failing reproduction being delivered."
+      "request": "Prior requested generic capability hook superseded by B-owned public native Animation-priority disposable restriction. Native10+26+17 actualPASS and three same26 negatives. RealHomeAX structural5 nowPASS; browserkeyboardtrap is separate B-owned focus repair. No competingCUI/domain authority or sharedhookrequired forcurrentboundedclamp."
     },
     {
       "owner": "A native Boards/Canvas",
@@ -354,6 +355,14 @@
     {
       "owner": "C sole integrator",
       "request": "Fetch/review bounded source43669e20a267a2447458aaa5f081987f97d29b05 on team-b/astra-browser-validation-20261003. Includes actualdevice-local Wave engine/IDB/media, native automation-peer bridge/disposableavailabilityobserver, truthful unconfigured AccountSettings. Actualsealedpublish/runtime acceptance follows; allotherbrowserappscopeactive. Do not substitute compile/unit/bootstrap for completeuserjourneyacceptance."
+    },
+    {
+      "owner": "A1 shared CUI two-way input",
+      "request": "ActualpublishedWave imports atframe0 immediatelyafter nativevalue0.5 despite expected24000,0runtimeerrors, exact8b4candidate. Concrete shared race: CuiControlLoader.cs955 subscribes TextChanged; pinnedAvaloniaTextBox.cs2427–2442 setsText then synchronouslyTextChanging but postsTextChanged toNormal. Immediateaction setsBusy+Notify and restoresoldhostvalue before deferredwriteback. Please boundedOWNER_ACK one-line TextChanging subscription or provideownerfix preserving _applyingHostValues suppression/validation; exactnative same-turn setter→action red/green being prepared. B doesnoteditsharedRuntime withoutACK, no harnessdelay/lowerexpectation/duplicatebindingmodel."
+    },
+    {
+      "owner": "A2 shared Write retained renderer",
+      "request": "Actualnativeglyph-height red now executed: same fixture beta widths31.360000000000003/lineheight23.625000000000004 vs originalbackendFormattedText.Height34.132, Alphaheight17.066fits. Twelve precedingassertions thenexpectedexit134; sourcepinsunchanged/originalframepreserved. Needactualsharedmeasurement/layout/caretselectioncontractfix; B suppliesfurtherGitdelivery withcurrentWriteSourceintegration, nowidthfudge."
     }
   ],
   "blockerClassification": {
