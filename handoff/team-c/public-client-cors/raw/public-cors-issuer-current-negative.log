@@ -1,0 +1,7 @@
+{"status":"ready","fixtureOnly":true,"manifestPath":"/workspace/team-c/c2-public-cors/cloud/cake-id-auth/.local-run/e18e1c3921599b6f/browser-fixture-private.json","issuer":"http://127.0.0.1:8798/api/auth","apiResource":"http://127.0.0.1:8798","browserOrigin":"https://client.example.test:5096","redirectUri":"https://client.example.test:5096/callback","accounts":2,"credentials":"private file only; never print or commit","email":"local D1 capture only","port5095":"unused"}
+{"case":"issuer-origin-only-client-allowlist","actual":[{"withCookie":false,"status":403,"error":"origin_not_allowed","acao":null},{"withCookie":true,"status":403,"error":"origin_not_allowed","acao":null}]}
+Local browser fixture failed: same-origin request reaches maintained OAuth invalid-code validation
+
+403 !== 400
+
+{"status":"drained","custody":{"strictReaped":true,"originalsDisappeared":true,"reaped":[{"pid":89660,"birth":1943331,"code":1,"status":143},{"pid":89676,"birth":1943409,"code":2,"status":15},{"pid":89686,"birth":1943419,"code":2,"status":15},{"pid":89694,"birth":1943427,"code":2,"status":9},{"pid":89700,"birth":1943468,"code":2,"status":9}],"signals":[{"pid":89660,"birth":1943331,"signal":15},{"pid":89667,"birth":1943335,"signal":15},{"pid":89676,"birth":1943409,"signal":15},{"pid":89686,"birth":1943419,"signal":15},{"pid":89694,"birth":1943427,"signal":15},{"pid":89700,"birth":1943468,"signal":15}]}}

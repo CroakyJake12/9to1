@@ -26,17 +26,61 @@ function corsHeaders(request: Request, env: Env): Headers {
   return headers;
 }
 
+// Public browser OAuth transport only. Login/session-cookie routes retain the library's issuer-origin CSRF policy.
+function publicOAuthMethod(pathname: string): "GET" | "POST" | null {
+  if (pathname === `${AUTH_BASE_PATH}/.well-known/openid-configuration` || pathname === `${AUTH_BASE_PATH}/jwks`) return "GET";
+  return pathname === `${AUTH_BASE_PATH}/oauth2/token` ? "POST" : null;
+}
+
+function publicOAuthCors(request: Request, env: Env, method: "GET" | "POST"): Headers {
+  const headers = new Headers({ "vary": "Origin", "access-control-allow-methods": `${method}, OPTIONS`,
+    "access-control-allow-headers": "content-type" });
+  const origin = request.headers.get("origin");
+  const allowed = (env.ALLOWED_WEB_ORIGINS ?? "").split(",").map(value => value.trim()).filter(Boolean);
+  if (origin && allowed.includes(origin)) {
+    try {
+      const parsed = new URL(origin);
+      if (parsed.origin === origin && ["https:", "http:"].includes(parsed.protocol)) headers.set("access-control-allow-origin", origin);
+    } catch { /* Opaque, wildcard and malformed origins never receive a public grant. */ }
+  }
+  // Deliberately no Allow-Credentials: token requests use public-client PKCE, not cookie authority.
+  return headers;
+}
+
 function addCors(response: Response, headers: Headers): Response {
   const merged = new Headers(response.headers);
-  headers.forEach((value, key) => merged.set(key, value));
+  headers.forEach((value, key) => {
+    if (key === "vary") {
+      const values = [...(merged.get("vary") ?? "").split(","), ...value.split(",")].map(item => item.trim()).filter(Boolean);
+      merged.set(key, [...new Map(values.map(item => [item.toLowerCase(), item])).values()].join(", "));
+    } else merged.set(key, value);
+  });
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers: merged });
 }
 
 export async function fetchRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const url = new URL(request.url);
+  const publicMethod = publicOAuthMethod(url.pathname);
+  const publicCors = publicMethod ? publicOAuthCors(request, env, publicMethod) : null;
+  if (publicCors && request.method === "OPTIONS") {
+    const requestedHeaders = (request.headers.get("access-control-request-headers") ?? "")
+      .split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
+    if (!publicCors.has("access-control-allow-origin") || request.headers.get("access-control-request-method") !== publicMethod ||
+        requestedHeaders.some(value => value !== "content-type")) {
+      return addCors(json({ error: "origin_not_allowed" }, 403), publicCors);
+    }
+    return new Response(null, { status: 204, headers: publicCors });
+  }
+  if (publicMethod === "POST" && request.method === "POST" && request.headers.has("origin") && request.headers.get("origin") !== url.origin &&
+      !publicCors!.has("access-control-allow-origin")) {
+    return addCors(json({ error: "origin_not_allowed" }, 403), publicCors!);
+  }
   let auth;
   try { auth = createAuth(env); }
-  catch { return json({ error: "service_unavailable" }, 503); }
-  const url = new URL(request.url);
+  catch {
+    const unavailable = json({ error: "service_unavailable" }, 503);
+    return publicCors ? addCors(unavailable, publicCors) : unavailable;
+  }
 
   if (request.method === "GET" && url.pathname === "/assets/auth-ui.js") {
     return new Response(AUTH_UI, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
@@ -110,7 +154,8 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
     }
   }
 
-  return auth.handler(request);
+  const reply = await auth.handler(request);
+  return publicCors ? addCors(reply, publicCors) : reply;
 }
 
 const worker = {

@@ -1,0 +1,9 @@
+{"status":"ready","fixtureOnly":true,"manifestPath":"/workspace/team-c/c2-public-cors/cloud/cake-id-auth/.local-run/5600d50359683e9f/browser-fixture-private.json","issuer":"http://127.0.0.1:8798/api/auth","apiResource":"http://127.0.0.1:8798","browserOrigin":"https://client.example.test:5096","redirectUri":"https://client.example.test:5096/callback","accounts":2,"credentials":"private file only; never print or commit","email":"local D1 capture only","port5095":"unused"}
+{"case":"issuer-origin-only-client-allowlist","actual":[{"withCookie":false,"status":400,"error":"invalid_grant","acao":null},{"withCookie":true,"status":400,"error":"invalid_grant","acao":null}]}
+Local browser fixture failed: Expected values to be strictly equal:
++ actual - expected
+
++ undefined
+- '9d224622-9c3a-4a58-bd09-d41390b76b90'
+
+{"status":"drained","custody":{"strictReaped":true,"originalsDisappeared":true,"reaped":[{"pid":89812,"birth":1947399,"code":1,"status":143},{"pid":89828,"birth":1947472,"code":2,"status":15},{"pid":89837,"birth":1947482,"code":2,"status":15},{"pid":89845,"birth":1947491,"code":2,"status":9},{"pid":89851,"birth":1947529,"code":1,"status":0}],"signals":[{"pid":89812,"birth":1947399,"signal":15},{"pid":89819,"birth":1947403,"signal":15},{"pid":89828,"birth":1947472,"signal":15},{"pid":89837,"birth":1947482,"signal":15},{"pid":89845,"birth":1947491,"signal":15},{"pid":89851,"birth":1947529,"signal":15}]}}
