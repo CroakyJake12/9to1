@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
-  "programTree": "94be1c9b9ead3dd7b2fab34fe6bf34d6f32a4801",
+  "baselineCommit": "77cea16a100b4c6b2eed25700d5b158406d85b12",
+  "programTree": "b1a65ead1e3c3fce847c13a4c70281500c8c728e",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -36,9 +36,9 @@
     {
       "path": ".github/scripts/astra-canvas-sdk-archive-admission.py",
       "mode": "100644",
-      "object": "6bbeadb032491af82f610af3bc897050c42910e1",
-      "bytes": 7818,
-      "sha256": "d2906c8248aa1c66662330c6df4158512aa189fb6e4c9abacf4cd381e2a34b6a"
+      "object": "0cf3d485704fcb9d362f180c0573aa3389475f24",
+      "bytes": 9294,
+      "sha256": "12d2f8a3a33414d53a0df195539c86fe9f61175d41897c8c2dd206ac338236c8"
     },
     {
       "path": ".github/scripts/astra-canvas-sdk-provider-preflight.py",
@@ -5041,16 +5041,16 @@
     {
       "path": "9to1 Workspace/Canvas/NativeUI/CanvasHomeClaimedNativeInsertionStore.cs",
       "mode": "100644",
-      "object": "7d59595989af6d42f1be5fa1986b534a0b085448",
-      "bytes": 7985,
-      "sha256": "361b0af0b46ef000b4c753d9bd0f53e40222e22d1479edaed874fc87e2b5cc30"
+      "object": "1659c160c68338d3cc00751be5cc5d2503a8d23c",
+      "bytes": 8035,
+      "sha256": "8324f71feeb05759d107751f0214200fab23bcc4160b1a83ef809132828b0690"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI/CanvasHomeClaimedNativeLayerStore.cs",
       "mode": "100644",
-      "object": "c32beac5d76bbf34bf4f6cadfa6206ce3ddbcf18",
-      "bytes": 6495,
-      "sha256": "5152dc6c133401f1aa9498b6ebd7232691979d6baf9a9e3414942bad61a96f47"
+      "object": "63210229e2fe186d3cceb6cb1c8e0143d8bfbb8f",
+      "bytes": 6545,
+      "sha256": "47f6c3943568eb383a37c479447529f71ff158ed3e499ef46207fb5315d76201"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI/CanvasHomeNativeInsertionOperation.cs",
@@ -66339,6 +66339,22 @@
     {
       "path": "/workspace/astra-source/worker4-canvas49-current22-full-native-package02-accurate-scope/manifest.json",
       "sha256": "bc17e09a3c1a47e62648bbdf5372589f1b4a7afcc00921b2e68a740adbd758c6"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas49-current22-full-native-package03-exact-changed-paths/manifest.json",
+      "sha256": "84681b1210cab48e17bf5a8e6c45309818cb8848841929c3aea07fcb0c439d81"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas03-minimal-namespace-and-sdk-directory-diagnostic-source122/manifest.json",
+      "sha256": "62f1a011b279efcc862c79230f9a3f13604bdfc965318afc6c681043b57d1328"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas03-full-three-original-failure-closure120.json",
+      "sha256": "3c605c8f91650af93e37cf83cc5ff7db8392b7384f41b3c31d0264fd842ddb82"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas03-source122-minimal-corrective-peer01.json",
+      "sha256": "1828120fc90b200db7850d01d55aab072a38a2f31c4e99719ca231c8612d28e0"
     }
   ],
   "sharedCakeIdContract": null,

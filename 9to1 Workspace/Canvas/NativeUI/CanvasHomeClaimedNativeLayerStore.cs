@@ -1,6 +1,7 @@
 using Haven.Application;
 using HavenOS.Files;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 namespace HavenOS.Apps.Canvas;
 
 /// <summary>Explicit original display composition; no default host or ambient provider adoption.</summary>

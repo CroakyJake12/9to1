@@ -7,7 +7,7 @@ VMR_COMMIT='96856fd726ffd058fb3dfef0851dbafc7ef3b011'
 VSTEST_COMMIT='778909789acae5b87b753b4daea984e4b23a1e4c'
 SOURCE_SHA256='f8c1fd1e5a09563257011cab551f688a7fe45e8f91b5ddb6fd468dd58da30231'
 
-def verify_install(installed_root,archive_path):
+def verify_install(installed_root,archive_path,mismatch_output=None):
     root=pathlib.Path(installed_root).resolve(strict=True);archive=pathlib.Path(archive_path).resolve(strict=True)
     def digest(p):
         with pathlib.Path(p).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
@@ -42,20 +42,30 @@ def verify_install(installed_root,archive_path):
                 if stat.S_IMODE(path.lstat().st_mode)!=permission:raise ValueError('SDK symbolic member permissions differ')
                 links[key]={'target':member.linkname,'mode':permission,'archiveUid':member.uid,'archiveGid':member.gid}
             else:raise ValueError('Unadmitted SDK archive member kind')
-    actual=set();actualDirectories=set()
+    actual=set();actualDirectories=set();actualDirectoryMetadata={}
     for p in root.rglob('*'):
-        mode=p.lstat().st_mode;key=p.relative_to(root).as_posix()
+        current=p.lstat();mode=current.st_mode;key=p.relative_to(root).as_posix()
         if stat.S_ISREG(mode) or stat.S_ISLNK(mode):actual.add(key)
-        elif stat.S_ISDIR(mode):actualDirectories.add(key)
+        elif stat.S_ISDIR(mode):
+            actualDirectories.add(key);entryCount=sum(1 for _ in p.iterdir())
+            actualDirectoryMetadata[key]={'type':'directory','mode':stat.S_IMODE(current.st_mode),'installedUid':current.st_uid,'installedGid':current.st_gid,'entryCount':entryCount,'empty':entryCount==0}
         else:raise ValueError('Unexpected special node in SDK complete inventory: '+key)
     if actual!=set(expected)|set(links):raise ValueError('Fresh SDK installed payload differs from complete official inventory')
-    if '.' in directories:actualDirectories.add('.')
-    if actualDirectories!=set(directories):raise ValueError('Fresh SDK directory inventory differs from complete official archive')
+    if '.' in directories:
+        actualDirectories.add('.');current=root.lstat();entryCount=sum(1 for _ in root.iterdir())
+        actualDirectoryMetadata['.']={'type':'directory','mode':stat.S_IMODE(current.st_mode),'installedUid':current.st_uid,'installedGid':current.st_gid,'entryCount':entryCount,'empty':entryCount==0}
+    if actualDirectories!=set(directories):
+        if mismatch_output is not None:
+            destination=pathlib.Path(mismatch_output);destination.parent.mkdir(parents=True,exist_ok=True)
+            diagnosis={'status':'STRICT_COMPLETE_SDK_DIRECTORY_EQUALITY_REFUSED','root':str(root),'archivePath':str(archive),'archiveSha512':SDK_SHA512,'expectedDirectories':directories,'actualDirectories':actualDirectoryMetadata,'extraDirectories':sorted(actualDirectories-set(directories)),'missingDirectories':sorted(set(directories)-actualDirectories),'qualification':'Observed installed directory names, type, modes and entry-count/emptiness before the same strict refusal; a sampled inventory, not an atomic lease. No exception, lineage acceptance, or permission/ownership equivalence is inferred.'}
+            destination.write_text(json.dumps(diagnosis,indent=2)+'\n')
+        raise ValueError('Fresh SDK directory inventory differs from complete official archive')
     return {'root':str(root),'archivePath':str(archive),'archiveSha512':SDK_SHA512,'sdkFiles':expected,'sdkLinks':links,'sdkDirectories':directories}
 
 def admit(installed_root,archive_path,metadata_record,output):
-    verified=verify_install(installed_root,archive_path)
-    root=pathlib.Path(verified['root']);archive=pathlib.Path(verified['archivePath']);out=pathlib.Path(output);out.mkdir(parents=True,exist_ok=True)
+    out=pathlib.Path(output);out.mkdir(parents=True,exist_ok=True)
+    verified=verify_install(installed_root,archive_path,out/'sdk-directory-inventory-mismatch.json')
+    root=pathlib.Path(verified['root']);archive=pathlib.Path(verified['archivePath'])
     expected=verified['sdkFiles'];links=verified['sdkLinks'];directories=verified['sdkDirectories']
     def digest(p):
         with pathlib.Path(p).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()

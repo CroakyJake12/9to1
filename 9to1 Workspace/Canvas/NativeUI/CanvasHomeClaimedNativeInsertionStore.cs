@@ -3,6 +3,7 @@ using Haven.Application;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 namespace HavenOS.Apps.Canvas;
 
 public interface ICanvasHomeClaimedNativeInsertionStore
