@@ -8,12 +8,12 @@
   "baselineAcceptance": "UNVERIFIED; verified remote main identity, acceptedHead remains null",
   "specification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
-    "revision": "AHj4eMQl824SuBBKBvwCR6ZfrA4oyUVDhaRiEtMBoSr1lma7echZsZ8KYgIXSTJRAeRBcMwnv3T8eAAAwYWZXSiwEsRUy63_D_UB8ayC4dQ",
-    "modifiedTime": "2026-10-03T19:49:34.339Z",
-    "paragraphExtractionSha256": "312aa23a8398286c2a02a06ecc4a7c1581f0a29208a0b4d5db76535327790a50",
-    "readStartedUTC": "2026-10-03 19:51:00 UTC",
-    "readCompletedUTC": "2026-10-03 19:51:27 UTC",
-    "scope": "Fresh live paragraph extraction; no retroactive relabelling of historical acceptance evidence"
+    "revision": "ANLCKQkCrmbihNMCbeFRqzK0BaTxpPaEp3yoMQ2um7PE5n6qkvwD6w8z2AAmpnVW00R9fNA768H_J_jZkUioT16L8LKKop7lnL4Fx7TKS60",
+    "paragraphExtractionSha256": "5ab42a11451e05181196f3d205a7210106dd02ecba86f86fce06d5236c23bd39",
+    "readStartedUTC": "2026-10-03 20:48:47 UTC",
+    "readCompletedUTC": "2026-10-03 20:49:00 UTC",
+    "paragraphs": 8444,
+    "scope": "Live8444 extraction; independent semantic diff all8336 previously active records exactunchanged; new finishingPass beforeRelease obligations retained as outstanding, no automatic exemption or relabelling historical tests."
   },
   "modelAssignments": {
     "B1": "gpt-6.1-sol",
@@ -133,14 +133,14 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T20:48:26.862655+00:00",
+  "updatedUTC": "2026-10-03T20:56:00.700907+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "83c24b2f0033fb2828169921fc905a327120143b",
-  "candidateStatus": "RESUMED_EXECUTABLE_BROWSER_IMPLEMENTATION; FULL_PARITY_UNVERIFIED; NOT_GLOBAL_RELEASE",
+  "candidateCommit": "43669e20a267a2447458aaa5f081987f97d29b05",
+  "candidateStatus": "BOUNDED_WAVE_AX_ACCOUNTS_SOURCE_PUSHED; ACTUAL_PUBLISH_RUNNING; FULL_BROWSER_SCOPE_ACTIVE_UNVERIFIED",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -290,11 +290,13 @@
   "continuation": {
     "userScope": "Explicit full active browser scope resume; six existing workers recovered, no duplicate team; historical checkpoint preserved",
     "sourceBase": "83c24b2f0033fb2828169921fc905a327120143b",
-    "draftState": "Uncommitted browser-owned adapters under root review; no shared edits",
+    "draftState": "Reviewed bounded38-file source commit43669e20 pushed; Wave exact canonical source/realIDB/media and nativepeer projection+disposablepriority gate composed. Untracked Write/Files/Sites/Picture authored for subsequent reviewed commits; not included in first bounded browser candidate, scope not reduced.",
     "independentBaseline": "Unchanged actual 83 Chromium AX: eight cases, five absent-control failures and three dependent keyboard NOT_RUN; no startup error",
     "localExecution": "Actual retained Write native scene22 assertions PASS; actual virtual peer3 PASS; IndexedDB real Chromium14/14 PASS includes browser restart, two-tab CAS, canonical recovery, exact Int64, recoverable trash, native quota rollback. Storage source-unit15 and Account factory6 PASS remain separately qualified. Wave canonical engine10 PASS; actual fresh browser Wave14 and unchanged Home AX8 next. No whole-app acceptance.",
     "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation",
-    "inProgress": "Reactive enabled-state public Avalonia priority diagnostic; common observer lifetime composition; sealed fresh actual Wave/accessibility browser candidate next; real Write device-local feature registration, canonical library recovery; Files17/Sites12 queued. Actual maintained Worker local fixture currently held before Workerd spawn, receiver HTTPS prerequisite ready."
+    "inProgress": "Reactive enabled-state public Avalonia priority diagnostic; common observer lifetime composition; sealed fresh actual Wave/accessibility browser candidate next; real Write device-local feature registration, canonical library recovery; Files17/Sites12 queued. Actual maintained Worker local fixture currently held before Workerd spawn, receiver HTTPS prerequisite ready.",
+    "initialCompile": "Actual bounded Wave/AX/Accounts build exit0 20:51:42→20:52:20,10warnings retained (IL2026 serializer + native Win32 PInvoke); README changed during compile, no immutable acceptance. Actual exact43669e2 publish next, before/after committedsource hashes.",
+    "nativeAvailability": "Native disposable priority diagnostic10, live observer26, actualautomation17 PASS; three same26 controlled helper regressions fail as expected. Root owner lifetime source independentlyreviewed; freshactualbrowserAX remainsunrun."
   },
   "continuationRequests": [
     {
@@ -348,6 +350,10 @@
     {
       "owner": "A native Boards",
       "request": "Correction: RichBoardSession concrete Json store lacks browser seam, but actual BoardsWorkspaceService(INotesRepository) offers independent executable canonical Notes-backed board path. B now authors actual durable Boards fixture and browser consumption; do not classify all Boards blocked. Canvas actual Rnote donor/WASM ABI remains separate exact owner prerequisite."
+    },
+    {
+      "owner": "C sole integrator",
+      "request": "Fetch/review bounded source43669e20a267a2447458aaa5f081987f97d29b05 on team-b/astra-browser-validation-20261003. Includes actualdevice-local Wave engine/IDB/media, native automation-peer bridge/disposableavailabilityobserver, truthful unconfigured AccountSettings. Actualsealedpublish/runtime acceptance follows; allotherbrowserappscopeactive. Do not substitute compile/unit/bootstrap for completeuserjourneyacceptance."
     }
   ],
   "blockerClassification": {
