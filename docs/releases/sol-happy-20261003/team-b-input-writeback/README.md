@@ -1,0 +1,9 @@
+# Same-turn CUI input writeback owner proposal
+
+This evidence reproduces the actual native provider path used by the browser. Current shared CUI TextChanged writeback is queued; an immediate native invoke reads the previous owner value and owner refresh restores that old value. Canonical execution exits134 after2 of8 checks. The evidence-only single TextChanged-to-TextChanging change passes the same8 checks, exit0. This is an A1 ownership request, not a shipped shared-source change or browser acceptance.
+
+Source commit: 8b4f2a0c071b91be357e48a603e25fff3c6f14ff (shared runtime unchanged from a63d77fe5a9dfea56c938eaa85678a9e170368ec). The full original source identities and original logs are retained. The proposed loader differs by exactly the one line in synchronous-text-writeback.patch.
+
+The original driver absolute audit paths are retained. For reproduction in a different environment, copy these proof files to an isolated writable evidence directory and map /workspace/team-b-astra-browser-validation to the receiving exact source checkout, and /workspace/team-b-evidence/sol-happy-20261003/continuation/b1/input-writeback to that evidence directory in a separate copy of the three project files. Verify all canonical source hashes in executed-results.json before running; materialize the exact Avalonia/XamlX vendor gitlinks. Run each original project with .NET10.0.401, configuration Release, --disable-build-servers, -m:1, and preserve the unchanged SameTurnRegression.cs byte hash. Do not edit canonical shared source to run the proposed fixture: ProposedRuntime.csproj source-links the canonical runtime except for its evidence-only loader.
+
+Both projects share generated obj paths; run sequentially in fresh mapped copies, or clean only their evidence bin/obj between runs. No fixture secrets are present. Fresh native pass does not establish the previously failing real Wave timeline position; a newly sealed browser must rerun that exact criterion.

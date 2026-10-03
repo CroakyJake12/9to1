@@ -1,0 +1,61 @@
+{
+  "sourceCommit": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
+  "status": "OWNER_PROPOSAL_NOT_SHIPPED",
+  "files": [
+    {
+      "path": "CanonicalRed.csproj",
+      "bytes": 506,
+      "sha256": "ee2e80be5a94c62be6b9d9bd7b061b24ec52ed6be64fd04b271b2e235b7e0889"
+    },
+    {
+      "path": "CuiControlLoader.proposed.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    },
+    {
+      "path": "ProposalGreen.csproj",
+      "bytes": 516,
+      "sha256": "e0caeaefb641bfb97d7856be060cc13b2bc009d07c41be72c9374f35f00f904a"
+    },
+    {
+      "path": "ProposedRuntime.csproj",
+      "bytes": 2169,
+      "sha256": "3e66657815bb0239bf2a08fe04507797c0d38f55240113749d4ac5105f5e328c"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1972,
+      "sha256": "e7b4063b731b67f32547438cd7a236cff8a67cd4225b4db5f7faa73f60f37624"
+    },
+    {
+      "path": "SameTurnRegression.cs",
+      "bytes": 3548,
+      "sha256": "bbf16b48e1e63c5758277606c63a95489a62cec83051dbf4e5b4c2a8410a5ec5"
+    },
+    {
+      "path": "canonical-red.log",
+      "bytes": 1501,
+      "sha256": "0334027d46ae5a3733487919d0df9b74c81911bcc3cdf4807c56620bfa5507a2"
+    },
+    {
+      "path": "executed-results.json",
+      "bytes": 6070,
+      "sha256": "de72a1cbeb6ca9c286aba1a9afc7730170eee34fcd8026fbf8954177bf80f0cf"
+    },
+    {
+      "path": "proposal-green.log",
+      "bytes": 650,
+      "sha256": "57b9b52bf064a2981349b16a5eab0a2d58d90a340ae484d181c2e9f0ae30833f"
+    },
+    {
+      "path": "source-identities.json",
+      "bytes": 778,
+      "sha256": "12cabb748a954dc16da0e96aa2df896881f2ef572795a2f154f848692bb88378"
+    },
+    {
+      "path": "synchronous-text-writeback.patch",
+      "bytes": 261,
+      "sha256": "606a1c860014643282a5cbbdc66d6f691828e903ef108961eb8ef904ea305d65"
+    }
+  ]
+}
