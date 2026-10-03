@@ -37,18 +37,25 @@
       "sha256": "2aa9aa59ba8728d7a85e80d5df8383e93c31fbe04e11579ee612013663bdc998"
     },
     {
+      "path": ".github/scripts/astra-generated-context-tests.py",
+      "mode": "100644",
+      "object": "ceebf84133571b61fd9838fd19e8aad117a5c9a2",
+      "bytes": 3364,
+      "sha256": "8941d07eb9fb295ac91470e9735eeb6efca867332935c038a64bfaf4ceb760b4"
+    },
+    {
       "path": ".github/scripts/astra-home-portable-pdb.py",
       "mode": "100644",
-      "object": "9c32b792de31e9d6b5b9efd493639aa885c4dc77",
-      "bytes": 7571,
-      "sha256": "ec5248af05db98dc7b255be95d5656055cc4ec4c75fcae1300efb4b3f0577f17"
+      "object": "fe8a99f1a63651eeeed063a6ee098a4af1180b7a",
+      "bytes": 9183,
+      "sha256": "0017b45750c739cbd5fc34d72e63357ec7ce22f04eb12d6b5991ef64e4f68b0b"
     },
     {
       "path": ".github/scripts/astra-organisation-full-owning.py",
       "mode": "100644",
-      "object": "f83f0bdeba19287b196331a83da21286ec2cbcd1",
-      "bytes": 30666,
-      "sha256": "709875ca0b81d4ba9003c6b6ecf0a4b12a35e9f4d6702eaf71c1acd16d2e922f"
+      "object": "8d34a2c2b3f4c89fb8e9ba97561c4734221a4770",
+      "bytes": 30468,
+      "sha256": "97ba3ed8bbaf4a4ccd9c51e5eda6f0175f3757fc8d5f11e6a0152d045b0ef059"
     },
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
@@ -74,9 +81,9 @@
     {
       "path": ".github/validation/astra-organisation-owning-sources.json",
       "mode": "100644",
-      "object": "3e3db869cbc9f277dd952fb59a4b57c58b8039fd",
+      "object": "c2e6d90d6c2ca54aba90a2af6d6741d4ee0ef07b",
       "bytes": 6807,
-      "sha256": "f0dbc59748d19eb63fdab066946de721e05e23ecf88e0520f06ea45cf0436683"
+      "sha256": "e83228fd948c07c0ed170186e0c9fe994adad18cc2d3ca44664bcc967636a2a7"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -65055,9 +65062,9 @@
     {
       "path": "handoff/team-a/admin-sdk03/receiving-validation-provenance.json",
       "mode": "100644",
-      "object": "00b685a0fe1512e66dbfc5b1d837dd881aa71c3d",
-      "bytes": 30807,
-      "sha256": "0e1fa6d4d413b7f08b05abc1b1a56c4f063512072f93fbf470bb50f1b8ff595b"
+      "object": "63d28bd19a94da0e8fd0c786dcad58d5df08c719",
+      "bytes": 35567,
+      "sha256": "6a0ae527c098074d2f90bd4edaa9f50a175c58a1a7e181812f033919092d5964"
     },
     {
       "path": "handoff/team-a/reviewed-source-delivery-manifest.json",
