@@ -9,6 +9,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <WasmEnableThreads>false</WasmEnableThreads>
+    <!-- Existing canonical serializers own private reflection-based options.
+         Preserve their exact model metadata in this browser composition. -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <PinnedBrowserProject>$(MSBuildProjectDirectory)/../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser</PinnedBrowserProject>
   </PropertyGroup>
   <!-- Source project references do not import the adapter's packaged build contract. -->
@@ -24,6 +27,9 @@
     <ProjectReference Include="../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj" />
     <ProjectReference Include="../../9to1 Workspace/Home/HavenOS.Home.csproj" />
     <ProjectReference Include="Wave/Engine/NineToOne.Wave.BrowserEngine.csproj" />
+    <TrimmerRootAssembly Include="NineToOne.Web" />
+    <TrimmerRootAssembly Include="NineToOne.Wave.BrowserEngine" />
+    <TrimmerRootAssembly Include="Haven.Core" />
     <EmbeddedResource Include="../../9to1 Workspace/Home/UI/Home.cui" LogicalName="NineToOne.Web.Home.cui" />
     <EmbeddedResource Include="Wave/Wave.cui" LogicalName="NineToOne.Web.Wave.cui" />
     <EmbeddedResource Include="Accounts/Accounts.cui" LogicalName="NineToOne.Web.Accounts.cui" />

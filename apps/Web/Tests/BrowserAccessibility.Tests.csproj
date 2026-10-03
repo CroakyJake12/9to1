@@ -6,10 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BrowserAccessibilityRegression.cs" />
     <Compile Include="../BrowserAccessibilityBridge.cs" Link="Production/BrowserAccessibilityBridge.cs" />
+    <Compile Include="../BrowserAccessibilityJsonContext.cs" Link="Production/BrowserAccessibilityJsonContext.cs" />
     <Compile Include="../BrowserActionAvailability.cs" Link="Production/BrowserActionAvailability.cs" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
   </ItemGroup>

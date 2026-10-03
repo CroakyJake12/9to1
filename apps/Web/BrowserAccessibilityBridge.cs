@@ -15,7 +15,6 @@ internal sealed class BrowserAccessibilityBridge
     private int _nextId;
     private readonly Dictionary<AutomationPeer, string> _ids = new();
     private readonly Dictionary<string, ControlAutomationPeer> _peers = new(StringComparer.Ordinal);
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public void Bind(Control root)
     {
@@ -45,7 +44,8 @@ internal sealed class BrowserAccessibilityBridge
             _ids.Remove(_peers[id]);
             _peers.Remove(id);
         }
-        return JsonSerializer.Serialize(new { generation = _generation, elements, unsupported = unsupported.Order().ToArray() }, JsonOptions);
+        return JsonSerializer.Serialize(new Snapshot(_generation, elements.ToArray(), unsupported.Order().ToArray()),
+            BrowserAccessibilityJsonContext.Default.Snapshot);
 
         void Visit(AutomationPeer peer)
         {
@@ -116,6 +116,8 @@ internal sealed class BrowserAccessibilityBridge
         }
     }
 
-    private sealed record Element(string Id, string Role, string Name, string? AutomationId, bool Enabled,
+    internal sealed record Snapshot(long Generation, Element[] Elements, string[] Unsupported);
+
+    internal sealed record Element(string Id, string Role, string Name, string? AutomationId, bool Enabled,
         bool Focusable, string? Value, bool ReadOnly, string Help);
 }

@@ -58,6 +58,12 @@ owner assignment made while the effective value was already false. Each rendered
 surface owns this observer and disposes it before its loader. This does not grant
 an action permission; the owner dispatcher continues to enforce availability.
 
+The accessibility snapshot uses generated JSON metadata. Canonical Wave storage
+owns existing private reflection-based serializer options, so this browser host
+explicitly enables the SDK's reflection serialization contract and preserves the
+Web, Wave engine and Core assembly metadata during trimming. This consumes the
+unchanged owner codec; fresh published browser tests must verify the closure.
+
 The current composition registers a device-local Wave editor backed by real
 IndexedDB transactions and the unchanged canonical Wave project/edit/decoder
 sources. Its projects belong to this browser origin; they are not hosted Files
