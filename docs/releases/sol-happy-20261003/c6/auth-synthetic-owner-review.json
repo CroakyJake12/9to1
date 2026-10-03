@@ -1,0 +1,25 @@
+{
+  "commit": "3e1b9462fa59dea815de8d1f92b13acd88ef8bda",
+  "source_hashes": [
+    {
+      "path": "cloud/cake-id-auth/src/local.ts",
+      "sha256": "b92fe0bcdd82d243b4b00d15def21eac6e6198eee79d257eee7f7928a0423155"
+    },
+    {
+      "path": "cloud/cake-id-auth/src/auth.ts",
+      "sha256": "2a6c5baacb77ac4480e11f0ddcb86e0005ea627e569931ea6478cf1faf6f9576"
+    },
+    {
+      "path": "cloud/cake-id-auth/src/resource-api.ts",
+      "sha256": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/integration.mjs",
+      "sha256": "0ce6579e115e1879e8dc8d7595f4e0aa6a3146e8329517012c744b7c21077363"
+    },
+    {
+      "path": "cloud/cake-id-auth/wrangler.local.jsonc",
+      "sha256": "b4508e97ae649e1ceb1a9cf850d19d9dd1970f7d5e0e4ba27668b6f99b0564be"
+    }
+  ]
+}
