@@ -1,0 +1,100 @@
+# Transport only: preserves existing Auth29 jobs and original evidence unchanged.
+name: Astra Auth29 existing original archive transport only
+on:
+  push:
+    branches: [validation/astra-auth29-original-artifact-transport-current25-01]
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact reviewed transport commit
+        required: true
+        type: string
+      cut_manifest_sha256:
+        description: Exact reviewed transport cut SHA256
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  original-artifact-transport-only:
+    if: github.ref == 'refs/heads/validation/astra-auth29-original-artifact-transport-current25-01'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact transport caller
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_commit || github.sha }}
+          persist-credentials: false
+          submodules: false
+      - name: Verify existing immutable artifact and emit original-byte parts
+        env:
+          ASTRA_TRANSPORT_GITHUB_TOKEN: ${{ github.token }}
+          EXPECTED_COMMIT: ${{ inputs.expected_commit || github.sha }}
+          CUT_MANIFEST_SHA256: ${{ inputs.cut_manifest_sha256 || 'COMMITTED_GIT_OBJECT' }}
+        run: >-
+          python3 -B .github/scripts/astra-auth29-original-artifact-transport.py
+          --repo "$GITHUB_WORKSPACE"
+          --expected-commit "$EXPECTED_COMMIT"
+          --cut-sha256 "$CUT_MANIFEST_SHA256"
+          --output "$RUNNER_TEMP/astra-auth29-original-transport-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      - name: Retain full original transport index and verification receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-auth29-original-transport-index-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/index.json
+            ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/receipt.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain original-byte part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-auth29-original-transport-part-01-${{ github.sha }}
+          path: ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/parts/part-01.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain original-byte part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-auth29-original-transport-part-02-${{ github.sha }}
+          path: ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/parts/part-02.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain original-byte part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-auth29-original-transport-part-03-${{ github.sha }}
+          path: ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/parts/part-03.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain original-byte part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-auth29-original-transport-part-04-${{ github.sha }}
+          path: ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/parts/part-04.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain original-byte part 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-auth29-original-transport-part-05-${{ github.sha }}
+          path: ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/parts/part-05.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain bounded refusal or completed transport diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-auth29-original-transport-diagnostic-${{ github.sha }}
+          path: ${{ runner.temp }}/astra-auth29-original-transport-${{ github.run_id }}-${{ github.run_attempt }}/receipt.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 14

@@ -1,0 +1,4667 @@
+{
+  "status": "OFFICIAL_HEADLESS_ARCHIVE_COMPLETE_BEFORE_FIRST_EXECUTION",
+  "archive": {
+    "url": "https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip",
+    "actualFinalUrl": "https://storage.googleapis.com/chrome-for-testing-public/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip",
+    "bytes": 119809080,
+    "sha256": "a9da028861a0cf789ff25c2fed45f5f1aaf969ed9247835b6a7821a4f7af9d1d",
+    "sha512": "b37cbc822639669b45b7dec2a05abd03165413ce0432ac0bf92cd2f2e1f55adc54aef7dbe7496be7fc9ed47dd0b526eec6833758f9847625152f8665521b1e1a",
+    "responseHeaders": {
+      "Content-Type": "application/zip",
+      "Last-Modified": "Tue, 25 Aug 2026 22:30:09 GMT",
+      "ETag": "\"9a8eb6135b1cda56de8f547776291e35\"",
+      "Content-Length": "119809080"
+    },
+    "qualification": "Observed official HTTPS archive bytes and maintained source mapping; no independently published expected browser archive hash is asserted"
+  },
+  "archivePath": "/home/runner/work/9to1/9to1/artifacts/cake-auth-official-headless-original/chrome-headless-shell-linux64.zip",
+  "archiveRootIdentity": {
+    "device": 2049,
+    "inode": 8913142,
+    "mode": 448,
+    "type": 16384
+  },
+  "cachePath": "/home/runner/work/_temp/astra-auth-chromium",
+  "cacheIdentity": {
+    "device": 2049,
+    "inode": 8913141,
+    "mode": 448,
+    "type": 16384
+  },
+  "installedRoot": "/home/runner/work/_temp/astra-auth-chromium/chromium_headless_shell-1243",
+  "installedRootIdentity": {
+    "device": 2049,
+    "inode": 8913145,
+    "mode": 493,
+    "type": 16384
+  },
+  "descriptorSha256": "545d52f8382c391e605562c330e9c1c534a16045898203037a49bb8bd769a946",
+  "maintainedRegistrySourceSha256": "549070af3acabb3efcc4f55bfe6210f9f7c2fcf633cf7eaa59bfe60719969171",
+  "playwrightVersion": "1.63.0",
+  "browserVersion": "153.0.8010.12",
+  "browserRevision": "1243",
+  "archiveMembers": [
+    {
+      "path": "chrome-headless-shell-linux64/ABOUT",
+      "type": "file",
+      "mode": 420,
+      "bytes": 248,
+      "compressedBytes": 170,
+      "crc32": "38b06490",
+      "sha256": "34d078ce3003087a8374e7c6156fda374769b8047d6ddaf419d66414aa48edfb"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/LICENSE.headless_shell",
+      "type": "file",
+      "mode": 420,
+      "bytes": 2257005,
+      "compressedBytes": 412731,
+      "crc32": "04da8925",
+      "sha256": "b92247f7a44c14627ef5cbbe0aa6dcca4e4422b7c05e6f2c660054061a5e3da7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/chrome-headless-shell",
+      "type": "file",
+      "mode": 493,
+      "bytes": 197422408,
+      "compressedBytes": 90308979,
+      "crc32": "d783ffcc",
+      "sha256": "ded93a9c9a53a1ae040f08124badcca95c938e9d5015ff340c3b5538c41bf39e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/deb.deps",
+      "type": "file",
+      "mode": 384,
+      "bytes": 660,
+      "compressedBytes": 341,
+      "crc32": "c4c0627d",
+      "sha256": "a0d27c5efb2337bb3cdc9e5467419ba13f2a6a7137c849f1c000c347ca5d5c94"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/headless_command_resources.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 3033,
+      "compressedBytes": 3033,
+      "crc32": "77d859b3",
+      "sha256": "5dacfe683bbd88ab1c96dfbaa1f375b54821235772cb71dd71273350cdfec867"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/headless_lib_data.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 730171,
+      "compressedBytes": 716400,
+      "crc32": "eebe4019",
+      "sha256": "4519fcd2ddd1c185d22e9a5f8927a6427585d5b1fd7ae527706ccc8d8d48b0aa"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/headless_lib_strings.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 4210995,
+      "compressedBytes": 4054980,
+      "crc32": "f6c34b71",
+      "sha256": "d9307a1c47c4dc246091a6d441601da5b49fb25e24b14632239d6f9b47bc6c7d"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-af.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 72640,
+      "compressedBytes": 46518,
+      "crc32": "6136adf4",
+      "sha256": "5487ee44a4cd706d0086522e90c59c76cdf2ac68ce506fd3eae6054b9220c0cf"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-as.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 703,
+      "compressedBytes": 446,
+      "crc32": "a091d7c3",
+      "sha256": "c2784e33158a807135850f7125a7eaabe472b3cfc7afb82c74f02da69ea250fe"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-be.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 6098,
+      "compressedBytes": 2094,
+      "crc32": "cde05adc",
+      "sha256": "25b7cfa039f82ac92990e1789de40988d490db9b613852fb24036b38ff87893c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-bg.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 3467,
+      "compressedBytes": 775,
+      "crc32": "8c0dab45",
+      "sha256": "7593f0395081e3eeb2d8516d10746608afd826cffd4e7e37d53936993d200a13"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-bn.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 703,
+      "compressedBytes": 446,
+      "crc32": "a091d7c3",
+      "sha256": "c2784e33158a807135850f7125a7eaabe472b3cfc7afb82c74f02da69ea250fe"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-cs.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 64245,
+      "compressedBytes": 42112,
+      "crc32": "cd393ee9",
+      "sha256": "97a4755fe9e653a08969f1933e3db19c712078b227bd5aa6799093abc5a0edc3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-cu.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 52842,
+      "compressedBytes": 30367,
+      "crc32": "35c46fdd",
+      "sha256": "2baee19d5024ff87dcf3a1b9d0da1b3ac5a1e506adeead3b96a4de5395d0290e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-cy.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 35913,
+      "compressedBytes": 22694,
+      "crc32": "3bdc5394",
+      "sha256": "4d0569fe2f4b41b3164cf610310e1d996fd2c553cc39de6062e50f4e033cc207"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-da.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 6967,
+      "compressedBytes": 4080,
+      "crc32": "16f70818",
+      "sha256": "86fdfc8db62cdaa11f615dad3712da1f4708294e029a4aad0fc285d4ea16c4bd"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-de-1901.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 121393,
+      "compressedBytes": 80513,
+      "crc32": "fdfb5c9f",
+      "sha256": "8c5fa4b29519d17593e923bc6a9a284df7a6d07fac42f897110b8fb2e0baeef5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-de-1996.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 120412,
+      "compressedBytes": 79996,
+      "crc32": "b8b90e8b",
+      "sha256": "d673805547a0228d2f57a5ad551b8760cfcc521f38c49284ed3976e3515bca49"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-de-ch-1901.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 120218,
+      "compressedBytes": 79458,
+      "crc32": "136ea624",
+      "sha256": "8223a912160354e05735522fdb339dc59b353ad5d1e4f4cfa94898dc348e748f"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-el.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 4219,
+      "compressedBytes": 1439,
+      "crc32": "44c60c9d",
+      "sha256": "76ae3454fb0045adb83094832578aa4749ce4dc694c4edcf85b419c1e2d9bcd3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-en-gb.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 46607,
+      "compressedBytes": 30522,
+      "crc32": "2038a07b",
+      "sha256": "ae4b78009d18e849d87458677151ee3aad1608ad72ec050dfd2421d22e7d031f"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-en-us.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 59802,
+      "compressedBytes": 35429,
+      "crc32": "470460ec",
+      "sha256": "03727cd6f4aa71b203c4c74ca6987ac7d87f13037337ac6f4b6996c2a0dc5f8c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-es.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 14995,
+      "compressedBytes": 8208,
+      "crc32": "7ff56e80",
+      "sha256": "137461792537a2e56a6475e81e2b9ad7a2bdabf1f4738fae186dca3022357349"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-et.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 21421,
+      "compressedBytes": 13241,
+      "crc32": "e67497df",
+      "sha256": "10079c66014dd2e6abfef5a018e6553fd5a036afb96bd2a235440a188f88b15e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-eu.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 665,
+      "compressedBytes": 260,
+      "crc32": "c4bc0a7f",
+      "sha256": "e2778a4fc7b8f064a32b6a44bc29f10e264d9d6214b8edb8ebd1f5f6d68e2eb2"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-fr.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 8165,
+      "compressedBytes": 4925,
+      "crc32": "a6ac112c",
+      "sha256": "00bd8b2d398d77575da2bfbbc5ec641aad7f2a87d4a31186ec169e85a27de5b7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ga.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 35824,
+      "compressedBytes": 23431,
+      "crc32": "c7cbc580",
+      "sha256": "1e3043f395bfb2a4c43d0480ba2f168ed622881cc3482359ca6e99821e983be8"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-gl.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 9289,
+      "compressedBytes": 5174,
+      "crc32": "ab7d126f",
+      "sha256": "89d98eff14e2cf1c2314efdf392339e62d7e786f100202a7377bf7b22095a0c5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-gu.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 655,
+      "compressedBytes": 424,
+      "crc32": "1e65d438",
+      "sha256": "af0edb67c2219b803c3eb6c1dee6f2d41a3fe00468a9da8be8ef5056d701abf3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hi.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 687,
+      "compressedBytes": 445,
+      "crc32": "b0a4e033",
+      "sha256": "f4df224d459fd111698dd5a13613c5bbf0ed11f04278d60230d028010eac0c42"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hr.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 3031,
+      "compressedBytes": 1192,
+      "crc32": "06e700af",
+      "sha256": "d5f066a5657f1d7c39d053956df204b7926f40d2fe4f69573af09d909066e26c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hu.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 317251,
+      "compressedBytes": 196252,
+      "crc32": "316d6eef",
+      "sha256": "8b3a16268cc932b226c17ff405b3cfb6eb38a9511a2043d653dc03729efceac1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hy.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 605,
+      "compressedBytes": 254,
+      "crc32": "293d0d9e",
+      "sha256": "9b34dfca85cb27546829f104f137757efb274934c1e9d4991f55ad564962a76a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-it.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 2512,
+      "compressedBytes": 1319,
+      "crc32": "e536aab2",
+      "sha256": "f9c027d7fd44b01cd5e1cdf802e20c63560673098af18bea0930ba9af334e0f7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ka.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 9996,
+      "compressedBytes": 5356,
+      "crc32": "9480b913",
+      "sha256": "2472271c7955c67e9fdb86d0cd3c5d88f5e598da4f44b6741284b2bbcb2e4d52"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-kn.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 711,
+      "compressedBytes": 452,
+      "crc32": "88912b42",
+      "sha256": "2b999d0a152f804601aa8f38ff0d3a6e5949977bf1daa76fa888acae21526287"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-la.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1839,
+      "compressedBytes": 808,
+      "crc32": "432a0cfe",
+      "sha256": "fd4b6f36135cd3b932e350ec2017dfd89d2e36ac226f54e4c8f2e4bc6db0593d"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-lt.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 7774,
+      "compressedBytes": 4251,
+      "crc32": "26f27ce4",
+      "sha256": "6fe2da26a96834fb9aecbe586d40f728df0ef676a4f235450054e66841b9e2ca"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-lv.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 38602,
+      "compressedBytes": 16462,
+      "crc32": "bd78efbc",
+      "sha256": "65962ccb5055e4c693e5ac493d6affdc810ec168eb2942f5705b7f4e464f9993"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ml.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 776,
+      "compressedBytes": 497,
+      "crc32": "2d96d70d",
+      "sha256": "90572db8f49b01ec6a102732cdf14fc3f07d363cbe0d261103e583043164e888"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-mn-cyrl.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 5142,
+      "compressedBytes": 2457,
+      "crc32": "a9eba6d6",
+      "sha256": "0d2731f16aa2c90faec8e63260358cbccede403faf95e3af8c66bc2db0729ca0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-mr.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 687,
+      "compressedBytes": 445,
+      "crc32": "b0a4e033",
+      "sha256": "f4df224d459fd111698dd5a13613c5bbf0ed11f04278d60230d028010eac0c42"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-mul-ethi.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 3740,
+      "compressedBytes": 2376,
+      "crc32": "ef715b5b",
+      "sha256": "f2fac1bd069ffe5cd1112d94cc31137ed38a1b161093ecd74c9c1688428b688b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-nb.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 145263,
+      "compressedBytes": 99017,
+      "crc32": "63fed64b",
+      "sha256": "c2771fbb1bfff7db5e267dc7a4505a9675c6b98cfe7a8f7ae5686d7a5a2b3dd0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-nl.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 77080,
+      "compressedBytes": 56906,
+      "crc32": "e717cbdd",
+      "sha256": "5ebde398944b461cf940f0520c5a49c0882b6f36f9ac5cda0538c8c8b44fb7ca"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-nn.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 145263,
+      "compressedBytes": 99018,
+      "crc32": "a0f699e0",
+      "sha256": "5bcbb58eaf65f13f6d039244d942f37c127344e3a0a2e6c32d08236945132809"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-or.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 647,
+      "compressedBytes": 418,
+      "crc32": "3d5d45c7",
+      "sha256": "4e9cd302baffc4ea3e9652327ea24072ebf37b5c4fc0719292bdac10aaad665b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-pa.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 607,
+      "compressedBytes": 392,
+      "crc32": "4f686ad3",
+      "sha256": "470329d28faa484f945d78ffefb176dcb6f2032c753e25bc014106ad24b2c68a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-pt.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1414,
+      "compressedBytes": 469,
+      "crc32": "2287a896",
+      "sha256": "f6fbf1bcb260cc86256fc494f388f7b27d10865fbf8f61517dee25af4d58d6e8"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ru.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 19886,
+      "compressedBytes": 12010,
+      "crc32": "cba19a95",
+      "sha256": "336ce2048ffd31b7bcaf435e53badfaf0579e405042d49adbc0823f6be5f9614"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sk.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 64103,
+      "compressedBytes": 42022,
+      "crc32": "18487d36",
+      "sha256": "138c5990961da21993653f54a413ddacb8921d6d70b892b7ca154d6e8ad2028c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sl.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 6631,
+      "compressedBytes": 3902,
+      "crc32": "1b589a29",
+      "sha256": "ad746c68562603ac3b15e89da03c76e081c08e7d9c8d4c9f64763e53d696c77c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sq.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 2013,
+      "compressedBytes": 1197,
+      "crc32": "3aab132d",
+      "sha256": "bc29c9401ce952414cbaebc5c8ee1d27c1706c6f77807b5ff713e2124438b3ca"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sv.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 72119,
+      "compressedBytes": 51543,
+      "crc32": "47b4453c",
+      "sha256": "56642aa5a37625ff9d034761d16b034d4ba5be74090cbd825956bbce2775ecd1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ta.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 554,
+      "compressedBytes": 369,
+      "crc32": "7fb93023",
+      "sha256": "40fda94856a86f065de8baa6184ea63dcdb011ee4ca498a7c1fee44c99314c67"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-te.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 703,
+      "compressedBytes": 450,
+      "crc32": "90f19979",
+      "sha256": "516fa9654fa3aeaab480d40eaf6ad78fc039086bd8edc144be3d59525edcac29"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-tk.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 2712,
+      "compressedBytes": 890,
+      "crc32": "c91ebe7d",
+      "sha256": "77fdaed29bd842aaa976ab7ef81b617a15c0a2d1ebd1161c1bf26b79a108b5cd"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-uk.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 19417,
+      "compressedBytes": 10328,
+      "crc32": "ebdb913e",
+      "sha256": "1c626abe40d43f6d56a01b5b40305d7c7d6481f616eac00a3f3aaaaca8388786"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-und-ethi.hyb",
+      "type": "file",
+      "mode": 420,
+      "bytes": 3484,
+      "compressedBytes": 2187,
+      "crc32": "017b6602",
+      "sha256": "1de83cb787dfaf53fb7e6e8db3aae5008ad24ebdd28be02031306ea9e9f3e285"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/icudtl.dat",
+      "type": "file",
+      "mode": 420,
+      "bytes": 10823536,
+      "compressedBytes": 4913140,
+      "crc32": "73e8a1a6",
+      "sha256": "a3c6d7824935e87fed17e94c2d84b7683ef360ebc5c4ea92e2ca70f361bc9314"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libEGL.so",
+      "type": "file",
+      "mode": 493,
+      "bytes": 230712,
+      "compressedBytes": 96783,
+      "crc32": "4f282d7e",
+      "sha256": "532800b1f5882fb0034a72582233edaf50ed6433e3911c43f88cbcfcb24708d1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libGLESv2.so",
+      "type": "file",
+      "mode": 493,
+      "bytes": 230712,
+      "compressedBytes": 96786,
+      "crc32": "5b9d6cfe",
+      "sha256": "17370d7cc22d0bc4048cc851b7f8fdbb5e51c4f4b0f53d6c68b8770fb6a8ab00"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libvk_swiftshader.so",
+      "type": "file",
+      "mode": 493,
+      "bytes": 3980504,
+      "compressedBytes": 1705016,
+      "crc32": "606ab53f",
+      "sha256": "1d5d7ab9c4c1499041aa44ea7a2ae3da3ca9812cd8bda9b5ac920ae158adb163"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libvulkan.so.1",
+      "type": "file",
+      "mode": 493,
+      "bytes": 689840,
+      "compressedBytes": 265642,
+      "crc32": "09cf8389",
+      "sha256": "c53295a113b0bb075be6624ced1a5056acabefc4d49c2d2ff3fbbc76854880ea"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 617743,
+      "compressedBytes": 232828,
+      "crc32": "ef783b3c",
+      "sha256": "7ea612b3af533d2d6fd1f1752ec2e0b8ffdec5e4ff122751d6e9cbd3082ef8f1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1000682,
+      "compressedBytes": 331171,
+      "crc32": "15d4c94a",
+      "sha256": "5283ef8c0d8786638c0fb88896354ee296ef339a7527c6084a2de7e70c5f8586"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1114033,
+      "compressedBytes": 327603,
+      "crc32": "f99b3584",
+      "sha256": "b79432bc578e4601e088641b9d79d95657a17ea370395ef7b89bcc53af281836"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1147112,
+      "compressedBytes": 337895,
+      "crc32": "a53a7abb",
+      "sha256": "08555666a9a2d1e9412395f5d1ee84a7a8705053ae2c1cf70a53e2ad6311bb7a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1469562,
+      "compressedBytes": 386984,
+      "crc32": "670188c0",
+      "sha256": "48bd04390d8f8d5413851cf1777c132ff9d04303c170cdb2381bf1534a5e7f9b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 707486,
+      "compressedBytes": 253184,
+      "crc32": "f15a7009",
+      "sha256": "bc4caa6a7946a8b37eb1c33adc93f5b93a3de56112e93661bd735b4a4d09e7c9"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 727505,
+      "compressedBytes": 266823,
+      "crc32": "e4e8fab5",
+      "sha256": "5ea92c8302e7732a3a510691a5d0c1c0089840c137c5eed771b019cdc1cad62a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 654310,
+      "compressedBytes": 239772,
+      "crc32": "c2e654f0",
+      "sha256": "358b20a1a9a189f3a0017731712a259496b1d7a95ef52ca4353bb56290ca6319"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 709582,
+      "compressedBytes": 257987,
+      "crc32": "1d3cd3df",
+      "sha256": "feb1b29c21b6d47ff7ac80a0a4fdc4433e7d7da2bee18bcc8bd2cf13e55810b5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1260457,
+      "compressedBytes": 367634,
+      "crc32": "12b793a1",
+      "sha256": "80d55d99d451e07f83766899484bd1140eca94d858ba1107fd4e58c7f001b605"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 565748,
+      "compressedBytes": 217188,
+      "crc32": "49a14b9f",
+      "sha256": "8bfea8f4602b00c0cfdfc23abdf1832f3e4744b8fdfcb0e8c76739d2d09dfab8"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 573103,
+      "compressedBytes": 218417,
+      "crc32": "451cbb2a",
+      "sha256": "6c9279571de66fddf8e16ef6eadc9d245c8669cb1977bbd3ab13ad068c62a559"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 693321,
+      "compressedBytes": 250294,
+      "crc32": "5ca6ae06",
+      "sha256": "afb3d91b5da95f72f521610efb07d64cf19d6317fb0ef703cf33820ed1d3509c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 687636,
+      "compressedBytes": 248972,
+      "crc32": "3f292265",
+      "sha256": "e629298c553048dc49656e9e8e815811154d99862b4c1a673f64e34bd0919aba"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 629905,
+      "compressedBytes": 245433,
+      "crc32": "32a7cab9",
+      "sha256": "016e904e63b88de16a02e3c2750833b0f75fe52dff9d46e0af839f00d4fda169"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1037613,
+      "compressedBytes": 313979,
+      "crc32": "885c9577",
+      "sha256": "5062736d309f9422aa07e0e4765803e12d112a9a1f14b3150a5c669abf33415b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 640726,
+      "compressedBytes": 246479,
+      "crc32": "5a1a0cda",
+      "sha256": "0b4160572c8cbfb74990f99b74ad6b8f1d18e71604f8937f3ac4239f095642e3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 724122,
+      "compressedBytes": 250371,
+      "crc32": "e8bfb974",
+      "sha256": "118eeda29d90c94efc7e000ef6278c865b6ac757ea7f1e16e6c8aa1815dae55e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 752075,
+      "compressedBytes": 262437,
+      "crc32": "fbc9e73d",
+      "sha256": "8fb0c3752baf605ee53cd76ea0063590a63652cb2e61c29036c1ab99b21a595b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1456511,
+      "compressedBytes": 384522,
+      "crc32": "a352066f",
+      "sha256": "81f7216594781d164a8b32cb76628887932dbf58e1cd88519610fbd5ed76eeb7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 911484,
+      "compressedBytes": 283765,
+      "crc32": "d0c91356",
+      "sha256": "b754aa1688771b233e3d1dc828689a320da3178e214c5dbd6dd56461a44aef59"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1553080,
+      "compressedBytes": 407451,
+      "crc32": "d38baecb",
+      "sha256": "5185c35342276096feeb10c416d4448f115258a11492e0ee72e199ed7ff46c2c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 699563,
+      "compressedBytes": 256708,
+      "crc32": "60e87450",
+      "sha256": "f5d68d57f4440ece7cdd45a5edad4328261ca57184f4745646340695e75db899"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 748083,
+      "compressedBytes": 273773,
+      "crc32": "38773ec6",
+      "sha256": "a5034c491cd3b05da4ea9aeff706e4bb2b94e3d714b3e9f95c40dde081f08422"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 620804,
+      "compressedBytes": 224973,
+      "crc32": "059da98c",
+      "sha256": "7138eb6f5dad690db1345a35268c408ef3d645e71401c84a349bdb4bdb021b2a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 684469,
+      "compressedBytes": 247868,
+      "crc32": "bde00876",
+      "sha256": "71a8b5984695670365343bd40900d0878dc4f36e1f2b7c042bbd607ab6220490"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 828675,
+      "compressedBytes": 268176,
+      "crc32": "2f556546",
+      "sha256": "80fee3b0f1178fe2c264645921efdff7dfef37c87737a3fb9dfad280434ecf66"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1669615,
+      "compressedBytes": 412449,
+      "crc32": "a084c378",
+      "sha256": "647dd2248fc3a5880d8c03ab9225d6692de71aa690ab15064fc6bcbc4d3a86ab"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 705005,
+      "compressedBytes": 244010,
+      "crc32": "0ced0aa7",
+      "sha256": "1bb8254808f025f2aeccad9b83e48c70ff8dd9e78d7fce2e1a4214b6526d9859"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 762510,
+      "compressedBytes": 265732,
+      "crc32": "2ebfebb0",
+      "sha256": "01d8ca37923546e81ded11f674f74e70e33bac2b370c7990b4291d8ece168bf2"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 758544,
+      "compressedBytes": 268811,
+      "crc32": "eae5ce8a",
+      "sha256": "1ce89f01ecbd273d7c0a6405150c2d92b1cc292276f615e8993c82affd18562c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1713865,
+      "compressedBytes": 417972,
+      "crc32": "ce0de9c2",
+      "sha256": "ce8d3f6f62fc4d477a48324ec7694731fdd3d1d35bb7f17957951ab8b81e8f34"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1422955,
+      "compressedBytes": 381576,
+      "crc32": "d67198cc",
+      "sha256": "601af6800e420ae3b27c4a56d4f4955af8228db38aceac8c78f3807a276cec63"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 651020,
+      "compressedBytes": 229908,
+      "crc32": "7990e357",
+      "sha256": "bfb49cd07230d138087e85fe1f4bbe180247d3c4bb855ddda0768aed1ed7e695"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 623022,
+      "compressedBytes": 233670,
+      "crc32": "4c45327f",
+      "sha256": "3c5a5b812a353a98de33f724887f5cfb8bd4fc17a2c9d177dbe4667fc9579ce6"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 649714,
+      "compressedBytes": 239986,
+      "crc32": "773126ad",
+      "sha256": "4c185fbd18414413bada0c5a00e69207ef173449c87be003ff1c63af738b72d0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 726901,
+      "compressedBytes": 266091,
+      "crc32": "38635f70",
+      "sha256": "d41618a648260d8ca23fc02f4cb475d6fc90ff5ec0188e829511dc9d2f523cab"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 681132,
+      "compressedBytes": 247171,
+      "crc32": "e4e47de3",
+      "sha256": "db9cdab20fd1d9432a4e16d1580a931eeaa99f446662d2434889f5c2c2e0d5a0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 685207,
+      "compressedBytes": 246472,
+      "crc32": "67e53773",
+      "sha256": "2a53747c3938be5fa6e86919a11822c1e6f120f9462b80c6b1afa64dbfe81576"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 710077,
+      "compressedBytes": 254820,
+      "crc32": "41bf345e",
+      "sha256": "a8018217cb37dbb28685e556d7668f255e512fcb1ee5502e2b8502c48ab8f728"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1174099,
+      "compressedBytes": 344926,
+      "crc32": "52a184d6",
+      "sha256": "c6ce364a156703f7b3416d7dcdb08975744cfe180df4629839a8ec40027da374"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 739406,
+      "compressedBytes": 272453,
+      "crc32": "11846489",
+      "sha256": "12fd8b8c8480a0cd1ecc1dd3c7fbfed2c9ba077ced7cdd7060f4cd182662f901"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 706195,
+      "compressedBytes": 256580,
+      "crc32": "8237fc3a",
+      "sha256": "4e7fafc956b7bf78f474dc2617efc8f7b6c28800a69800db125953980e32ef7c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1084329,
+      "compressedBytes": 325712,
+      "crc32": "f32bcdc8",
+      "sha256": "3327697740e6de2a3efcf30d87104a84b31e7053cf619c4bfaa2b385be1e1cb7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 632990,
+      "compressedBytes": 235846,
+      "crc32": "432312c6",
+      "sha256": "4a7d52ee721aab6b4e31d5f738cb78ca02ca892f86dba8e20c614cfb25ce56ed"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 668510,
+      "compressedBytes": 242891,
+      "crc32": "d4c33e26",
+      "sha256": "cd61b593f23bea73a04b3123bad98cc46bf2a34574769947449127b6a078d394"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1707103,
+      "compressedBytes": 421144,
+      "crc32": "b21fbc92",
+      "sha256": "29c9e04f2c97a68afb1870ae09e75d0e8be418e559eef8f3f096f866ecf59bc6"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1581411,
+      "compressedBytes": 415902,
+      "crc32": "caeda8cb",
+      "sha256": "9cbd061904c114947c477097fd81563e0f9cc59c3b9f7c440f8bc010fcfd09de"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1324844,
+      "compressedBytes": 359323,
+      "crc32": "12fdcae2",
+      "sha256": "cd358e0182c2d8854de3c306bed3916185769cb311099402a87cd71f352914b0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 681678,
+      "compressedBytes": 248260,
+      "crc32": "eb75333e",
+      "sha256": "da01a4adcf95e3d001458b873c3360970737634001dc35868d11144281e393b9"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1182407,
+      "compressedBytes": 341290,
+      "crc32": "470b7378",
+      "sha256": "7865216af763f99834fe7b3f499931851d9982dc26e043d80996dd1589a9b48f"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 1014003,
+      "compressedBytes": 310370,
+      "crc32": "6be512be",
+      "sha256": "2763fc0f2827222de75bf26aebfd62e49e4a5fd3cf36c6d1764b55bbf168835d"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 809294,
+      "compressedBytes": 261939,
+      "crc32": "1ebf0206",
+      "sha256": "4c8aa0191fbfbff3d8a107760717b86e0a9bb1353ec461ecbb7cc2e1fa34e5ef"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 581548,
+      "compressedBytes": 227646,
+      "crc32": "7ff42d83",
+      "sha256": "0bb895c97a7dcf8ccc7d591acc11f366065ceb9ec4c85f1df472167b22e8b5e5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 574963,
+      "compressedBytes": 224019,
+      "crc32": "173c483a",
+      "sha256": "03e45f3ec5862973662f95354aa0b1b6da84ad8adb64eb6b5209412a4c6bd0f5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW_FEMININE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW_MASCULINE.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW_NEUTER.pak",
+      "type": "file",
+      "mode": 420,
+      "bytes": 18,
+      "compressedBytes": 12,
+      "crc32": "e4fed0c8",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/rpm.deps",
+      "type": "file",
+      "mode": 384,
+      "bytes": 2701,
+      "compressedBytes": 684,
+      "crc32": "cc947f91",
+      "sha256": "0eb43c7bda2773f5a7b0ce97581ef0a1140da863c33b7a33a4bcefbd74df238a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/v8_context_snapshot.bin",
+      "type": "file",
+      "mode": 420,
+      "bytes": 747232,
+      "compressedBytes": 240278,
+      "crc32": "9e473e07",
+      "sha256": "2c8872dd6615b15d192d9b49a6c9da63bcdc9649ee0b1b4a5d1e49b0151fa381"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/vk_swiftshader_icd.json",
+      "type": "file",
+      "mode": 420,
+      "bytes": 107,
+      "compressedBytes": 89,
+      "crc32": "063f6170",
+      "sha256": "c9eef28b6b984fec220ef0abfecc40b502d46946706e47bfe97707027cb818bd"
+    }
+  ],
+  "completeInstalledMap": [
+    {
+      "path": "chrome-headless-shell-linux64",
+      "mode": 493,
+      "type": "directory"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/ABOUT",
+      "mode": 420,
+      "type": "file",
+      "bytes": 248,
+      "sha256": "34d078ce3003087a8374e7c6156fda374769b8047d6ddaf419d66414aa48edfb"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/LICENSE.headless_shell",
+      "mode": 420,
+      "type": "file",
+      "bytes": 2257005,
+      "sha256": "b92247f7a44c14627ef5cbbe0aa6dcca4e4422b7c05e6f2c660054061a5e3da7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/chrome-headless-shell",
+      "mode": 493,
+      "type": "file",
+      "bytes": 197422408,
+      "sha256": "ded93a9c9a53a1ae040f08124badcca95c938e9d5015ff340c3b5538c41bf39e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/deb.deps",
+      "mode": 384,
+      "type": "file",
+      "bytes": 660,
+      "sha256": "a0d27c5efb2337bb3cdc9e5467419ba13f2a6a7137c849f1c000c347ca5d5c94"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/headless_command_resources.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 3033,
+      "sha256": "5dacfe683bbd88ab1c96dfbaa1f375b54821235772cb71dd71273350cdfec867"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/headless_lib_data.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 730171,
+      "sha256": "4519fcd2ddd1c185d22e9a5f8927a6427585d5b1fd7ae527706ccc8d8d48b0aa"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/headless_lib_strings.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 4210995,
+      "sha256": "d9307a1c47c4dc246091a6d441601da5b49fb25e24b14632239d6f9b47bc6c7d"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data",
+      "mode": 493,
+      "type": "directory"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-af.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 72640,
+      "sha256": "5487ee44a4cd706d0086522e90c59c76cdf2ac68ce506fd3eae6054b9220c0cf"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-as.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 703,
+      "sha256": "c2784e33158a807135850f7125a7eaabe472b3cfc7afb82c74f02da69ea250fe"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-be.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 6098,
+      "sha256": "25b7cfa039f82ac92990e1789de40988d490db9b613852fb24036b38ff87893c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-bg.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 3467,
+      "sha256": "7593f0395081e3eeb2d8516d10746608afd826cffd4e7e37d53936993d200a13"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-bn.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 703,
+      "sha256": "c2784e33158a807135850f7125a7eaabe472b3cfc7afb82c74f02da69ea250fe"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-cs.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 64245,
+      "sha256": "97a4755fe9e653a08969f1933e3db19c712078b227bd5aa6799093abc5a0edc3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-cu.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 52842,
+      "sha256": "2baee19d5024ff87dcf3a1b9d0da1b3ac5a1e506adeead3b96a4de5395d0290e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-cy.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 35913,
+      "sha256": "4d0569fe2f4b41b3164cf610310e1d996fd2c553cc39de6062e50f4e033cc207"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-da.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 6967,
+      "sha256": "86fdfc8db62cdaa11f615dad3712da1f4708294e029a4aad0fc285d4ea16c4bd"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-de-1901.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 121393,
+      "sha256": "8c5fa4b29519d17593e923bc6a9a284df7a6d07fac42f897110b8fb2e0baeef5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-de-1996.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 120412,
+      "sha256": "d673805547a0228d2f57a5ad551b8760cfcc521f38c49284ed3976e3515bca49"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-de-ch-1901.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 120218,
+      "sha256": "8223a912160354e05735522fdb339dc59b353ad5d1e4f4cfa94898dc348e748f"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-el.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 4219,
+      "sha256": "76ae3454fb0045adb83094832578aa4749ce4dc694c4edcf85b419c1e2d9bcd3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-en-gb.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 46607,
+      "sha256": "ae4b78009d18e849d87458677151ee3aad1608ad72ec050dfd2421d22e7d031f"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-en-us.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 59802,
+      "sha256": "03727cd6f4aa71b203c4c74ca6987ac7d87f13037337ac6f4b6996c2a0dc5f8c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-es.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 14995,
+      "sha256": "137461792537a2e56a6475e81e2b9ad7a2bdabf1f4738fae186dca3022357349"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-et.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 21421,
+      "sha256": "10079c66014dd2e6abfef5a018e6553fd5a036afb96bd2a235440a188f88b15e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-eu.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 665,
+      "sha256": "e2778a4fc7b8f064a32b6a44bc29f10e264d9d6214b8edb8ebd1f5f6d68e2eb2"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-fr.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 8165,
+      "sha256": "00bd8b2d398d77575da2bfbbc5ec641aad7f2a87d4a31186ec169e85a27de5b7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ga.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 35824,
+      "sha256": "1e3043f395bfb2a4c43d0480ba2f168ed622881cc3482359ca6e99821e983be8"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-gl.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 9289,
+      "sha256": "89d98eff14e2cf1c2314efdf392339e62d7e786f100202a7377bf7b22095a0c5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-gu.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 655,
+      "sha256": "af0edb67c2219b803c3eb6c1dee6f2d41a3fe00468a9da8be8ef5056d701abf3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hi.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 687,
+      "sha256": "f4df224d459fd111698dd5a13613c5bbf0ed11f04278d60230d028010eac0c42"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hr.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 3031,
+      "sha256": "d5f066a5657f1d7c39d053956df204b7926f40d2fe4f69573af09d909066e26c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hu.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 317251,
+      "sha256": "8b3a16268cc932b226c17ff405b3cfb6eb38a9511a2043d653dc03729efceac1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-hy.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 605,
+      "sha256": "9b34dfca85cb27546829f104f137757efb274934c1e9d4991f55ad564962a76a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-it.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 2512,
+      "sha256": "f9c027d7fd44b01cd5e1cdf802e20c63560673098af18bea0930ba9af334e0f7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ka.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 9996,
+      "sha256": "2472271c7955c67e9fdb86d0cd3c5d88f5e598da4f44b6741284b2bbcb2e4d52"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-kn.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 711,
+      "sha256": "2b999d0a152f804601aa8f38ff0d3a6e5949977bf1daa76fa888acae21526287"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-la.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1839,
+      "sha256": "fd4b6f36135cd3b932e350ec2017dfd89d2e36ac226f54e4c8f2e4bc6db0593d"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-lt.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 7774,
+      "sha256": "6fe2da26a96834fb9aecbe586d40f728df0ef676a4f235450054e66841b9e2ca"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-lv.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 38602,
+      "sha256": "65962ccb5055e4c693e5ac493d6affdc810ec168eb2942f5705b7f4e464f9993"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ml.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 776,
+      "sha256": "90572db8f49b01ec6a102732cdf14fc3f07d363cbe0d261103e583043164e888"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-mn-cyrl.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 5142,
+      "sha256": "0d2731f16aa2c90faec8e63260358cbccede403faf95e3af8c66bc2db0729ca0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-mr.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 687,
+      "sha256": "f4df224d459fd111698dd5a13613c5bbf0ed11f04278d60230d028010eac0c42"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-mul-ethi.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 3740,
+      "sha256": "f2fac1bd069ffe5cd1112d94cc31137ed38a1b161093ecd74c9c1688428b688b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-nb.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 145263,
+      "sha256": "c2771fbb1bfff7db5e267dc7a4505a9675c6b98cfe7a8f7ae5686d7a5a2b3dd0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-nl.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 77080,
+      "sha256": "5ebde398944b461cf940f0520c5a49c0882b6f36f9ac5cda0538c8c8b44fb7ca"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-nn.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 145263,
+      "sha256": "5bcbb58eaf65f13f6d039244d942f37c127344e3a0a2e6c32d08236945132809"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-or.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 647,
+      "sha256": "4e9cd302baffc4ea3e9652327ea24072ebf37b5c4fc0719292bdac10aaad665b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-pa.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 607,
+      "sha256": "470329d28faa484f945d78ffefb176dcb6f2032c753e25bc014106ad24b2c68a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-pt.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1414,
+      "sha256": "f6fbf1bcb260cc86256fc494f388f7b27d10865fbf8f61517dee25af4d58d6e8"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ru.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 19886,
+      "sha256": "336ce2048ffd31b7bcaf435e53badfaf0579e405042d49adbc0823f6be5f9614"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sk.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 64103,
+      "sha256": "138c5990961da21993653f54a413ddacb8921d6d70b892b7ca154d6e8ad2028c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sl.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 6631,
+      "sha256": "ad746c68562603ac3b15e89da03c76e081c08e7d9c8d4c9f64763e53d696c77c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sq.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 2013,
+      "sha256": "bc29c9401ce952414cbaebc5c8ee1d27c1706c6f77807b5ff713e2124438b3ca"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-sv.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 72119,
+      "sha256": "56642aa5a37625ff9d034761d16b034d4ba5be74090cbd825956bbce2775ecd1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-ta.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 554,
+      "sha256": "40fda94856a86f065de8baa6184ea63dcdb011ee4ca498a7c1fee44c99314c67"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-te.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 703,
+      "sha256": "516fa9654fa3aeaab480d40eaf6ad78fc039086bd8edc144be3d59525edcac29"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-tk.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 2712,
+      "sha256": "77fdaed29bd842aaa976ab7ef81b617a15c0a2d1ebd1161c1bf26b79a108b5cd"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-uk.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 19417,
+      "sha256": "1c626abe40d43f6d56a01b5b40305d7c7d6481f616eac00a3f3aaaaca8388786"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/hyphen-data/hyph-und-ethi.hyb",
+      "mode": 420,
+      "type": "file",
+      "bytes": 3484,
+      "sha256": "1de83cb787dfaf53fb7e6e8db3aae5008ad24ebdd28be02031306ea9e9f3e285"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/icudtl.dat",
+      "mode": 420,
+      "type": "file",
+      "bytes": 10823536,
+      "sha256": "a3c6d7824935e87fed17e94c2d84b7683ef360ebc5c4ea92e2ca70f361bc9314"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libEGL.so",
+      "mode": 493,
+      "type": "file",
+      "bytes": 230712,
+      "sha256": "532800b1f5882fb0034a72582233edaf50ed6433e3911c43f88cbcfcb24708d1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libGLESv2.so",
+      "mode": 493,
+      "type": "file",
+      "bytes": 230712,
+      "sha256": "17370d7cc22d0bc4048cc851b7f8fdbb5e51c4f4b0f53d6c68b8770fb6a8ab00"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libvk_swiftshader.so",
+      "mode": 493,
+      "type": "file",
+      "bytes": 3980504,
+      "sha256": "1d5d7ab9c4c1499041aa44ea7a2ae3da3ca9812cd8bda9b5ac920ae158adb163"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/libvulkan.so.1",
+      "mode": 493,
+      "type": "file",
+      "bytes": 689840,
+      "sha256": "c53295a113b0bb075be6624ced1a5056acabefc4d49c2d2ff3fbbc76854880ea"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales",
+      "mode": 493,
+      "type": "directory"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 617743,
+      "sha256": "7ea612b3af533d2d6fd1f1752ec2e0b8ffdec5e4ff122751d6e9cbd3082ef8f1"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/af_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1000682,
+      "sha256": "5283ef8c0d8786638c0fb88896354ee296ef339a7527c6084a2de7e70c5f8586"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/am_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1114033,
+      "sha256": "b79432bc578e4601e088641b9d79d95657a17ea370395ef7b89bcc53af281836"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ar_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1147112,
+      "sha256": "08555666a9a2d1e9412395f5d1ee84a7a8705053ae2c1cf70a53e2ad6311bb7a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bg_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1469562,
+      "sha256": "48bd04390d8f8d5413851cf1777c132ff9d04303c170cdb2381bf1534a5e7f9b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/bn_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 707486,
+      "sha256": "bc4caa6a7946a8b37eb1c33adc93f5b93a3de56112e93661bd735b4a4d09e7c9"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ca_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 727505,
+      "sha256": "5ea92c8302e7732a3a510691a5d0c1c0089840c137c5eed771b019cdc1cad62a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/cs_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 654310,
+      "sha256": "358b20a1a9a189f3a0017731712a259496b1d7a95ef52ca4353bb56290ca6319"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/da_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 709582,
+      "sha256": "feb1b29c21b6d47ff7ac80a0a4fdc4433e7d7da2bee18bcc8bd2cf13e55810b5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/de_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1260457,
+      "sha256": "80d55d99d451e07f83766899484bd1140eca94d858ba1107fd4e58c7f001b605"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/el_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 565748,
+      "sha256": "8bfea8f4602b00c0cfdfc23abdf1832f3e4744b8fdfcb0e8c76739d2d09dfab8"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-GB_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 573103,
+      "sha256": "6c9279571de66fddf8e16ef6eadc9d245c8669cb1977bbd3ab13ad068c62a559"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/en-US_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 693321,
+      "sha256": "afb3d91b5da95f72f521610efb07d64cf19d6317fb0ef703cf33820ed1d3509c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es-419_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 687636,
+      "sha256": "e629298c553048dc49656e9e8e815811154d99862b4c1a673f64e34bd0919aba"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/es_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 629905,
+      "sha256": "016e904e63b88de16a02e3c2750833b0f75fe52dff9d46e0af839f00d4fda169"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/et_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1037613,
+      "sha256": "5062736d309f9422aa07e0e4765803e12d112a9a1f14b3150a5c669abf33415b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fa_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 640726,
+      "sha256": "0b4160572c8cbfb74990f99b74ad6b8f1d18e71604f8937f3ac4239f095642e3"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fi_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 724122,
+      "sha256": "118eeda29d90c94efc7e000ef6278c865b6ac757ea7f1e16e6c8aa1815dae55e"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fil_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 752075,
+      "sha256": "8fb0c3752baf605ee53cd76ea0063590a63652cb2e61c29036c1ab99b21a595b"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/fr_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1456511,
+      "sha256": "81f7216594781d164a8b32cb76628887932dbf58e1cd88519610fbd5ed76eeb7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/gu_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 911484,
+      "sha256": "b754aa1688771b233e3d1dc828689a320da3178e214c5dbd6dd56461a44aef59"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/he_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1553080,
+      "sha256": "5185c35342276096feeb10c416d4448f115258a11492e0ee72e199ed7ff46c2c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hi_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 699563,
+      "sha256": "f5d68d57f4440ece7cdd45a5edad4328261ca57184f4745646340695e75db899"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hr_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 748083,
+      "sha256": "a5034c491cd3b05da4ea9aeff706e4bb2b94e3d714b3e9f95c40dde081f08422"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/hu_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 620804,
+      "sha256": "7138eb6f5dad690db1345a35268c408ef3d645e71401c84a349bdb4bdb021b2a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/id_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 684469,
+      "sha256": "71a8b5984695670365343bd40900d0878dc4f36e1f2b7c042bbd607ab6220490"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/it_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 828675,
+      "sha256": "80fee3b0f1178fe2c264645921efdff7dfef37c87737a3fb9dfad280434ecf66"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ja_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1669615,
+      "sha256": "647dd2248fc3a5880d8c03ab9225d6692de71aa690ab15064fc6bcbc4d3a86ab"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/kn_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 705005,
+      "sha256": "1bb8254808f025f2aeccad9b83e48c70ff8dd9e78d7fce2e1a4214b6526d9859"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ko_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 762510,
+      "sha256": "01d8ca37923546e81ded11f674f74e70e33bac2b370c7990b4291d8ece168bf2"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lt_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 758544,
+      "sha256": "1ce89f01ecbd273d7c0a6405150c2d92b1cc292276f615e8993c82affd18562c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/lv_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1713865,
+      "sha256": "ce8d3f6f62fc4d477a48324ec7694731fdd3d1d35bb7f17957951ab8b81e8f34"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ml_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1422955,
+      "sha256": "601af6800e420ae3b27c4a56d4f4955af8228db38aceac8c78f3807a276cec63"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/mr_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 651020,
+      "sha256": "bfb49cd07230d138087e85fe1f4bbe180247d3c4bb855ddda0768aed1ed7e695"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ms_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 623022,
+      "sha256": "3c5a5b812a353a98de33f724887f5cfb8bd4fc17a2c9d177dbe4667fc9579ce6"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nb_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 649714,
+      "sha256": "4c185fbd18414413bada0c5a00e69207ef173449c87be003ff1c63af738b72d0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/nl_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 726901,
+      "sha256": "d41618a648260d8ca23fc02f4cb475d6fc90ff5ec0188e829511dc9d2f523cab"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pl_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 681132,
+      "sha256": "db9cdab20fd1d9432a4e16d1580a931eeaa99f446662d2434889f5c2c2e0d5a0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-BR_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 685207,
+      "sha256": "2a53747c3938be5fa6e86919a11822c1e6f120f9462b80c6b1afa64dbfe81576"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/pt-PT_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 710077,
+      "sha256": "a8018217cb37dbb28685e556d7668f255e512fcb1ee5502e2b8502c48ab8f728"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ro_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1174099,
+      "sha256": "c6ce364a156703f7b3416d7dcdb08975744cfe180df4629839a8ec40027da374"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ru_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 739406,
+      "sha256": "12fd8b8c8480a0cd1ecc1dd3c7fbfed2c9ba077ced7cdd7060f4cd182662f901"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sk_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 706195,
+      "sha256": "4e7fafc956b7bf78f474dc2617efc8f7b6c28800a69800db125953980e32ef7c"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sl_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1084329,
+      "sha256": "3327697740e6de2a3efcf30d87104a84b31e7053cf619c4bfaa2b385be1e1cb7"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sr_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 632990,
+      "sha256": "4a7d52ee721aab6b4e31d5f738cb78ca02ca892f86dba8e20c614cfb25ce56ed"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sv_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 668510,
+      "sha256": "cd61b593f23bea73a04b3123bad98cc46bf2a34574769947449127b6a078d394"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/sw_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1707103,
+      "sha256": "29c9e04f2c97a68afb1870ae09e75d0e8be418e559eef8f3f096f866ecf59bc6"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ta_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1581411,
+      "sha256": "9cbd061904c114947c477097fd81563e0f9cc59c3b9f7c440f8bc010fcfd09de"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/te_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1324844,
+      "sha256": "cd358e0182c2d8854de3c306bed3916185769cb311099402a87cd71f352914b0"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/th_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 681678,
+      "sha256": "da01a4adcf95e3d001458b873c3360970737634001dc35868d11144281e393b9"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/tr_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1182407,
+      "sha256": "7865216af763f99834fe7b3f499931851d9982dc26e043d80996dd1589a9b48f"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/uk_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 1014003,
+      "sha256": "2763fc0f2827222de75bf26aebfd62e49e4a5fd3cf36c6d1764b55bbf168835d"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/ur_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 809294,
+      "sha256": "4c8aa0191fbfbff3d8a107760717b86e0a9bb1353ec461ecbb7cc2e1fa34e5ef"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/vi_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 581548,
+      "sha256": "0bb895c97a7dcf8ccc7d591acc11f366065ceb9ec4c85f1df472167b22e8b5e5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-CN_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 574963,
+      "sha256": "03e45f3ec5862973662f95354aa0b1b6da84ad8adb64eb6b5209412a4c6bd0f5"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW_FEMININE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW_MASCULINE.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/locales/zh-TW_NEUTER.pak",
+      "mode": 420,
+      "type": "file",
+      "bytes": 18,
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/rpm.deps",
+      "mode": 384,
+      "type": "file",
+      "bytes": 2701,
+      "sha256": "0eb43c7bda2773f5a7b0ce97581ef0a1140da863c33b7a33a4bcefbd74df238a"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/v8_context_snapshot.bin",
+      "mode": 420,
+      "type": "file",
+      "bytes": 747232,
+      "sha256": "2c8872dd6615b15d192d9b49a6c9da63bcdc9649ee0b1b4a5d1e49b0151fa381"
+    },
+    {
+      "path": "chrome-headless-shell-linux64/vk_swiftshader_icd.json",
+      "mode": 420,
+      "type": "file",
+      "bytes": 107,
+      "sha256": "c9eef28b6b984fec220ef0abfecc40b502d46946706e47bfe97707027cb818bd"
+    }
+  ],
+  "executable": "/home/runner/work/_temp/astra-auth-chromium/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell",
+  "executableSha256": "ded93a9c9a53a1ae040f08124badcca95c938e9d5015ff340c3b5538c41bf39e",
+  "executableIdentity": {
+    "device": 2049,
+    "inode": 8913151,
+    "mode": 493,
+    "type": 32768
+  },
+  "limits": {
+    "maximumArchiveBytes": 536870912,
+    "maximumExpandedBytes": 2147483648
+  },
+  "qualification": "Source-bound exact official archive retained separately with full ZIP member CRC/type/mode/bytes and complete extraction inventory before native execution. No browser launch, installed upstream archive expected hash, OS dependency installation or maintained-source change."
+}
