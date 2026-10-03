@@ -214,9 +214,15 @@ corrected isolated successor `4e64e357` preserves primary and cleanup exceptions
 including a failed final disappearance proof. C5 independently passes all 14
 actual Linux controls. Root and C1 verify the fresh `9b29cae7` complete receiving
 cut, all original/proposal mappings, dependencies and unchanged product inventory.
-Root issued its external pin for the complete original SDK6 attempt; execution
-is in progress. This grants isolated validation, with no global shared-source
-adoption or new owner acknowledgement inferred. No empty-input exemption,
+Root issued its external pin for the complete original SDK6 attempt. It then
+completed 103 commands, all exit 0 with strict drains, and both complete original
+Debug Accounts and OrgPools suites. Web source verification refused Sites
+because its tracked Directory.Build.props explicitly selects a project-local
+owner directory rather than the SDK default artifact directory. Web and Release
+remain NOT_RUN; no full configuration completed. The
+[original SDK6 evidence](evidence/c3-admin-sdk-attempt6/README.md) retains that
+refusal and all provenance. A separate source-bound tooling correction is under
+review; no global shared-source adoption or new owner acknowledgement is inferred. No empty-input exemption,
 invented source or source-hash waiver was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
 and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 
