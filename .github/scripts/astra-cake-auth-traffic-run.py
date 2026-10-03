@@ -84,12 +84,7 @@ auth_node_before=inventory(package/'node_modules');assert auth_node_before
 (out/'auth-dependencies-before.json').write_text(json.dumps({'authNodeModules':auth_node_before},indent=2)+'\n')
 try:
  result=state_wrapper.run_fixture(package,fixture,harness,out,sessions,sanitized,known_secrets)
- log=(out/'independent-auth-sanitized.log').read_text();decoder=json.JSONDecoder();markers=[]
- for match in re.finditer(r'\{',log):
-  try:value,_=decoder.raw_decode(log[match.start():])
-  except json.JSONDecodeError:continue
-  if isinstance(value,dict) and value.get('result')=='passed':markers.append(value)
- assert len(markers)==1;actual=markers[0]
+ actual=result['publicSuccessMarker']
  for key,value in {'phase':'traffic-only','browserExecuted':False,'directRequests':700,'durableWindowAttempts':8,'durableThrottleResponses':692,'durableLockSeconds':1800,'sameStoreRestart':True}.items():assert type(actual[key]) is type(value) and actual[key]==value
  for key in ['credentialErrorResponses','builtinThrottleResponses','throttleResponses']:assert type(actual[key]) is int
  assert 1<=actual['credentialErrorResponses']<=8 and 0<=actual['builtinThrottleResponses']<=7

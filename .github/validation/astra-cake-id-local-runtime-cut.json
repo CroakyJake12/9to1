@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "dfc0e84685d7217020e8cb7cbb6d5ad03767da2e",
+  "baselineCommit": "30c2328d6b3612a918d08476a9f1f4db271e2bc5",
   "programTree": "58f073ac3490f6f996ef974ba477a78f44a274f2",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
@@ -36,16 +36,16 @@
     {
       "path": ".github/scripts/astra-cake-auth-traffic-run.py",
       "mode": "100644",
-      "object": "ea74b7b54889ca42fbd92011ea0bf5d6429758d9",
-      "bytes": 8158,
-      "sha256": "db34be9ee061dcd8196cf7921b395fe3ed00c16c3684c2549564549b49217388"
+      "object": "e3909c66c3413bb5bf6a0556db6b249e82630a75",
+      "bytes": 7845,
+      "sha256": "6be9ade67af0e62fbb923ad9745ce12ca9a20ecde89dc3e5eeaad15630be7f57"
     },
     {
       "path": ".github/scripts/astra-cake-auth-traffic-state.py",
       "mode": "100644",
-      "object": "670e51f0470be99a70932bc4b77b0bd4c1801fe6",
-      "bytes": 8101,
-      "sha256": "8d29dceeb8c5d4f7e5f218755322ec22c95b8906e74cbc675a3930df2248c11e"
+      "object": "9d4b09c37b3b160bda3f5830089a54f25d36e60d",
+      "bytes": 10601,
+      "sha256": "8ce97d5e93d5303fd34f10abff7d79146454e0c0e24c85316514723de7bc8fc7"
     },
     {
       "path": ".github/scripts/astra-cake-id-local-runtime.py",
@@ -65529,7 +65529,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-cake-id-local-runtime-cut.json",
-  "limits": "Explicit separate traffic-only actual local Wrangler/D1 proof:700 sequential API requests, observed401 INVALID_EMAIL_OR_PASSWORD or exact maintained inner429 among first8, exact692 durable pre-handler429 including correct final password; actual D1 attempts8/1800s lock/no sessions/same-store restart. Response counts are measured separately and do not instrument hash calls. Maintained MINIFLARE_CACHE_DIR directs generated CF cache to fresh private mode0700 scope with original inode/device receipt; complete auth node_modules before/after equality retained. All29 owner inputs, original full6 OIDC, original combined browser fixture/state/runner/workflow and THREE required job predicates unchanged. No browser proof in traffic-only, cloud/deploy/existing users/email/.NETHTTPS/billed CPU/ingress cap or overall auth completion.",
+  "limits": "Actual fixture09/29 owner source and original full6 OIDC/combined browser/THREE required jobs remain unchanged. Correct only failed wrapper: extract exactly one source-bound typed public traffic record before blanket diagnostic redaction; reject duplicates, unknown fields/scopes, booleans as counters, wrong bounds or multiple markers. No arbitrary opaque/log redaction exemptions, raw log or secret/session/account records retained. Private Miniflare cache mode0700/inode custody, original strict session/drain, D1/vars cleanup and FULL node_modules equality remain byte exact. New runtime must independently repeat the full700 request/D1 eight-attempt/1800-lock/restart scenario; response counters do not count hashes, billable CPU, ingress charges or universal quotas. Original full6 OIDC and combined browser remain required and previously failed; no overall auth/deployment/user-transfer claim.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/root-cake-id-auth-owner-input109/immutable-owner-source-map-verified111.json",
@@ -65710,6 +65710,22 @@
     {
       "path": "/workspace/astra-source/worker4-cake-auth-traffic27-private-cache-source01/manifest.json",
       "sha256": "f1a13738b566915ebdbadd04e9471522991cb40fbb210320e1280ca046a02530"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-traffic27-full-caller-package06-layered-private-cache/manifest.json",
+      "sha256": "398b3f7f2abb8c8c08a45f51ad51753e0a6ffb21abc757d73c847b1d9a57dd15"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-traffic28-typed-public-marker-source01/manifest.json",
+      "sha256": "ccda3ed74b7337f83bda1948f306e942ceda9a36f09411258dc906cf48466a20"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-traffic28-typed-public-marker-source01/bounded-public-marker-verification.json",
+      "sha256": "7b2a4209fe9235d1d11ee5862fe780346a4daa5715d257db09338f71b8777e70"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth27-full-three-original-wrapper-redaction-failure-closure01.json",
+      "sha256": "ac8ef636d5c0742abc88328adf78e7cee9c10e953a9d822bf94d43b30013ae66"
     }
   ],
   "sharedCakeIdContract": null

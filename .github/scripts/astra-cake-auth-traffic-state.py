@@ -1,6 +1,31 @@
 """Explicit traffic-only synthetic auth fixture primitive; original OIDC contract remains separately required."""
 import pathlib,os,json,hashlib,subprocess,time,tempfile,secrets,stat,shutil
 
+def extract_public_success_marker(raw):
+ # Exact synthetic fixture09 public traffic record only. No arbitrary log string or secret is exempted from redaction.
+ fields=['result','phase','browserExecuted','directRequests','durableWindowAttempts','credentialErrorResponses','builtinThrottleResponses','durableThrottleResponses','throttleResponses','durableLockSeconds','sameStoreRestart']
+ scope='isolated local Wrangler/D1 direct API only; genuine browser still mandatory in combined phase; source-backed pre-handler ordering, no credential-call counter/elapsed CPU/ingress billing/universal quota/cloud/OIDC acceptance'
+ def unique_object(pairs):
+  result={}
+  for key,value in pairs:
+   if key in result:raise ValueError('Duplicate public success record field')
+   result[key]=value
+  return result
+ markers=[]
+ for line in raw.splitlines():
+  if not line.startswith(b'{"result":"passed",'):continue
+  if len(line)>4096:raise ValueError('Public success record exceeds exact bounded scope')
+  value=json.loads(line.decode('utf-8','strict'),object_pairs_hook=unique_object)
+  if not isinstance(value,dict) or set(value)!=set(fields+['scope']) or value['scope']!=scope:raise ValueError('Unexpected public success record fields/scope')
+  for key,expected in {'result':'passed','phase':'traffic-only','browserExecuted':False,'directRequests':700,'durableWindowAttempts':8,'durableThrottleResponses':692,'durableLockSeconds':1800,'sameStoreRestart':True}.items():
+   if type(value[key]) is not type(expected) or value[key]!=expected:raise ValueError('Public success record exact value/type mismatch')
+  for key in ['credentialErrorResponses','builtinThrottleResponses','throttleResponses']:
+   if type(value[key]) is not int:raise ValueError('Public response counter requires an actual integer')
+  if not 1<=value['credentialErrorResponses']<=8 or not 0<=value['builtinThrottleResponses']<=7 or value['credentialErrorResponses']+value['builtinThrottleResponses']!=8 or value['throttleResponses']!=value['builtinThrottleResponses']+692:raise ValueError('Public success record response bounds mismatch')
+  markers.append({key:value[key] for key in fields})
+ if len(markers)!=1:raise ValueError('Exactly one actual public traffic success record required')
+ return markers[0]
+
 def run_fixture(package,fixture,harness,out,session_module,sanitized,known_secrets):
  package=pathlib.Path(package).resolve(strict=True);fixture=pathlib.Path(fixture).resolve(strict=True);harness=pathlib.Path(harness).resolve(strict=True);out=pathlib.Path(out)
  state=package/'.local-run';vars_path=package/'.dev.vars'
@@ -16,7 +41,7 @@ def run_fixture(package,fixture,harness,out,session_module,sanitized,known_secre
  cache_record_path.write_text(json.dumps(cache_record,indent=2)+'\n')
  records=out/'independent-auth-original-session';records.mkdir(parents=True,exist_ok=False)
  seal=records/'expected-managed-launch.json';seal.write_text(json.dumps({'expectedManagedLaunch':True,'drained':False})+'\n')
- session=None;primary=None;drained=False;process=None;exit_code=None
+ session=None;primary=None;drained=False;process=None;exit_code=None;public_success=None
  env=dict(os.environ,CI='true',WRANGLER_SEND_METRICS='false',NO_COLOR='1')
  env['MINIFLARE_CACHE_DIR']=str(cache)
  for name in env:
@@ -57,6 +82,7 @@ def run_fixture(package,fixture,harness,out,session_module,sanitized,known_secre
     else:retained=(head.rsplit(b'\n',1)[0] if b'\n' in head else b'')+b'\n[BOUNDED LOG CUT]\n'+(tail.split(b'\n',1)[1] if b'\n' in tail else b'')
     (out/'independent-auth-sanitized.log').write_text(sanitized(retained))
     (out/'independent-auth-command.json').write_text(json.dumps({'exitCode':exit_code,'rawLogSha256':raw_digest.hexdigest(),'rawLogBytes':length,'rawLogRetained':False,'originalSessionDrained':drained})+'\n')
+    if exit_code==0 and drained:public_success=extract_public_success_marker(retained)
    except BaseException as error:
     cleanup_error=cleanup_error or error
    if drained and cleanup_error is None:
@@ -92,4 +118,5 @@ def run_fixture(package,fixture,harness,out,session_module,sanitized,known_secre
     if primary is None:primary=cleanup_error
     else:primary=BaseExceptionGroup('Actual auth fixture and cleanup both failed',[primary,cleanup_error])
   if primary is not None:raise primary
- return {'independentFixturePassed':True,'originalOidcContractPassed':False,'deployment':False}
+ if public_success is None:raise ValueError('Actual typed public success record absent')
+ return {'independentFixturePassed':True,'originalOidcContractPassed':False,'deployment':False,'publicSuccessMarker':public_success}
