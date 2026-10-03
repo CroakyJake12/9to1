@@ -22,9 +22,17 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
     private readonly Dictionary<Guid, JsonElement> _drafts = [];
     private readonly Dictionary<Guid, string> _fieldErrors = [];
     private readonly IFormDataReferenceLookupSource? _referenceLookup;
+    private readonly IFormNativeMathematicsProvider? _mathematics;
     private const string InvalidFieldMessage = "This answer could not be saved. Check its format and requirements.";
     private readonly List<FormNativeAnswerInput> _inputs = [];
     private readonly List<Action> _detachButtons = [];
+    private Task _lastButtonAction = Task.CompletedTask;
+
+    /// <summary>Read-only settlement of the last original native-button DispatchAsync task.
+    /// Existing busy admission serializes button actions. No accepted action means no pending
+    /// work; settlement alone does not prove Save/Submit success or grant authority.
+    /// Disposal never replaces an already accepted original task.</summary>
+    public Task WhenActionsIdleAsync() => _lastButtonAction;
     private StackPanel? _root;
     private bool _busy;
     private bool _conflicted;
@@ -33,13 +41,14 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
     public string? StatusCode { get; private set; }
     public int UnsavedAnswerCount => _drafts.Count;
 
-    private FormNativeResponseSurface(FormResponseSessionService sessions, FormResponseDefinitionResult loaded, IFormDataReferenceLookupSource? referenceLookup)
+    private FormNativeResponseSurface(FormResponseSessionService sessions, FormResponseDefinitionResult loaded, IFormDataReferenceLookupSource? referenceLookup,
+        IFormNativeMathematicsProvider? mathematics)
     {
-        _sessions = sessions; _referenceLookup = referenceLookup;
+        _sessions = sessions; _referenceLookup = referenceLookup; _mathematics = mathematics;
         _project = loaded.Presentation!;
         _scope = loaded.Scope!;
         Response = loaded.Response!;
-        FormNativePreview.RequireNativeLayout(_project.Fields, _project.Pages, _project.ComponentCount, _project.Theme, referenceLookup is not null);
+        FormNativePreview.RequireNativeLayout(_project.Fields, _project.Pages, _project.ComponentCount, _project.Theme, referenceLookup is not null, mathematics);
     }
 
     public static Task<FormNativeResponseOpenResult> OpenAsync(FormResponseSessionService sessions,
@@ -47,11 +56,12 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
         => OpenAsync(sessions, formID, responseID, token, null);
 
     public static async Task<FormNativeResponseOpenResult> OpenAsync(FormResponseSessionService sessions,
-        Guid formID, Guid responseID, CancellationToken token, IFormDataReferenceLookupSource? referenceLookup)
+        Guid formID, Guid responseID, CancellationToken token, IFormDataReferenceLookupSource? referenceLookup,
+        IFormNativeMathematicsProvider? mathematics = null)
     {
         var loaded = await sessions.ReadSessionAsync(formID, responseID, token);
         if (!loaded.Success) return new(false, loaded.Code, null);
-        try { return new(true, null, new(sessions, loaded, referenceLookup)); }
+        try { return new(true, null, new(sessions, loaded, referenceLookup, mathematics)); }
         catch (NotSupportedException) { return new(false, "CapabilityUnavailable", null); }
     }
 
@@ -111,7 +121,7 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                     _referenceLookup.OpenForOriginalResponseAsync(response.FormID, response.ResponseID,
                         field.FieldID, columnID, _scope.Actor,
                         () => !_disposed && !_conflicted && Response?.FormVersionID == response.FormVersionID
-                            && Response.State == FormResponseState.InProgress && inputAlive(), token));
+                            && Response.State == FormResponseState.InProgress && inputAlive(), token), _mathematics);
                 AutomationProperties.SetName(input.Control, field.Label);
                 AutomationProperties.SetHelpText(input.Control, string.Join(" ",
                     new[] { field.Required ? "Required." : null, field.Help, _fieldErrors.GetValueOrDefault(field.FieldID) }.Where(text => !string.IsNullOrWhiteSpace(text))));
@@ -144,7 +154,12 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
         var button = new Button { Content = label, IsEnabled = IsActionAvailable(action) == true };
         async void Click(object? sender, Avalonia.Interactivity.RoutedEventArgs args)
         {
-            if (button.IsEffectivelyEnabled && IsActionAvailable(action) == true) await DispatchAsync(action, null);
+            if (button.IsEffectivelyEnabled && IsActionAvailable(action) == true)
+            {
+                var original = DispatchAsync(action, null).AsTask();
+                _lastButtonAction = original;
+                await original;
+            }
         }
         button.Click += Click;
         _detachButtons.Add(() => { button.Click -= Click; button.IsEnabled = false; });
@@ -156,8 +171,8 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
             status.Text = StatusCode switch
             {
                 "UnsavedAnswers" => "Answers have not been saved.",
-                "RevisionConflict" => "This response changed elsewhere. Local edits are retained. Reload to continue.",
-                "ValidationFailed" or "InvalidAnswer" => "An answer could not be saved. Check your answers; local edits are retained.",
+                "RevisionConflict" or "MathAnswerIdentityConflict" => "This response changed elsewhere. Local edits are retained. Reload to continue.",
+                "ValidationFailed" or "InvalidAnswer" or "MathParseError" or "GraphResponseInvalid" => "An answer could not be saved. Check your answers; local edits are retained.",
                 null => Response?.State == FormResponseState.Submitted ? "Response submitted" : "Saved response",
                 "SaveOutcomeUnknownReloadRequired" => "The save could not be confirmed. Reload saved answers before continuing.",
                 "FormClosed" => "This form is closed. Local edits have not been saved.",
@@ -201,7 +216,7 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                 if (_disposed) return;
                 if (!saved.Success)
                 {
-                    if (saved.Code is "ValidationFailed" or "InvalidAnswer")
+                    if (saved.Code is "ValidationFailed" or "InvalidAnswer" or "MathParseError" or "GraphResponseInvalid")
                         _fieldErrors[field.FieldID] = InvalidFieldMessage;
                     HandleFailure(saved.Code); return;
                 }

@@ -7,7 +7,7 @@ namespace HavenOS.Forms;
 
 /// <summary>Publication capabilities of the actual owning native renderer and canonical runtime.
 /// Home authority remains independently mandatory; declared project policy never grants respondent access.</summary>
-public sealed class FormNativePublicationValidator : IFormProjectPublicationValidator
+public sealed class FormNativePublicationValidator(IFormNativeMathematicsProvider? mathematics = null) : IFormProjectPublicationValidator
 {
     public void Validate(Guid formID, JsonElement canonicalProject) => _ = Decode(formID, canonicalProject);
 
@@ -23,7 +23,7 @@ public sealed class FormNativePublicationValidator : IFormProjectPublicationVali
             throw new NotSupportedException("CapabilityUnavailable: a registered review or state release workflow is required.");
         // This invokes the same renderer admission and typed runtime used by interactive preview,
         // rather than maintaining a separate optimistic list of renderable fields.
-        using var preview = new FormNativePreview(project);
+        using var preview = mathematics is null ? new FormNativePreview(project) : new FormNativePreview(project, mathematics);
     }
 
     private static FormProject Decode(Guid formID, JsonElement canonicalProject)

@@ -32,6 +32,7 @@
         <TextBox text="{Binding Label, Mode=TwoWay}" is-enabled="{Binding CanEdit}" accessible-name="Question label" />
         <TextBox text="{Binding Help, Mode=TwoWay}" is-enabled="{Binding CanEdit}" accessible-name="Question help" />
         <Button action="9to1.Forms.SaveField" is-enabled="{Binding CanEdit}" content="Save question" />
+    <Button id="forms-edit-mathematics" action="9to1.Forms.EditMathematics" is-enabled="{Binding CanEditMathematics}" content="Edit mathematical question and marking" />
         <ComboBox ItemsSource="{Binding OptionNames}" SelectedIndex="{Binding SelectedOptionIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanEditChoice}" accessible-name="Choice option" />
         <TextBox text="{Binding OptionLabel, Mode=TwoWay}" is-enabled="{Binding CanEditChoice}" accessible-name="Choice label" />
         <Button action="9to1.Forms.UpdateChoice" is-enabled="{Binding CanEditChoice}" content="Save choice label" />

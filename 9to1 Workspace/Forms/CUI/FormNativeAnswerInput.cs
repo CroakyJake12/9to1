@@ -21,11 +21,18 @@ internal sealed class FormNativeAnswerInput(Control control, IReadOnlyList<Actio
         => Create(definition, answer, changed, null);
 
     public static FormNativeAnswerInput Create(FormField definition, JsonElement? answer, Action<JsonElement> changed,
-        Func<Guid, Func<bool>, CancellationToken, Task<IFormDataReferenceLookupSession?>>? referenceLookup)
+        Func<Guid, Func<bool>, CancellationToken, Task<IFormDataReferenceLookupSession?>>? referenceLookup,
+        IFormNativeMathematicsProvider? mathematics = null)
     {
         var detach = new List<Action>();
         Control input;
-        if (definition.Kind == FormFieldKind.Ranking)
+        if (definition.Kind is FormFieldKind.Mathematical or FormFieldKind.Graph)
+        {
+            var owned = mathematics?.Create(definition, answer, changed)
+                ?? throw new NotSupportedException("CapabilityUnavailable: native mathematics is not registered.");
+            detach.Add(owned.Dispose); input = owned.Control;
+        }
+        else if (definition.Kind == FormFieldKind.Ranking)
         {
             var ranking = new FormNativeRankingInput(definition, answer, value => changed(value));
             detach.Add(ranking.Dispose); input = ranking;

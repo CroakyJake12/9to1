@@ -74,7 +74,9 @@ public sealed partial class MainView
         {
             var workspace = new FormsCuiWorkspace(session.Publications, session.Authoring,
                 () => selectedForm, _ => hostIsCurrent(), host.ShowPreviewAsync,
-                responseSessions: session.Responses, showResponse: host.ShowResponseAsync);
+                responseSessions: session.Responses, showResponse: host.ShowResponseAsync,
+                referenceLookup: null, mathematics: services.GetService<IFormNativeMathematicsProvider>(),
+                showMathematicsEditor: host.ShowMathematicsEditorAsync);
             await host.MountAsync(workspace, token);
             if (selectedForm is not null) await workspace.DispatchAsync("9to1.Forms.Open", null, token);
             await host.RequireCurrentAsync(token);

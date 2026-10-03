@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Text;
+using Haven.Core.Mathematics;
 using System.Text.Json;
 
 namespace Haven.Core.Forms;
@@ -84,7 +86,7 @@ public sealed class FormResponseRuntime
                 throw new InvalidDataException("Invalid checkpoint answer or question progression.");
             _answers[field.FieldID] = answer.Value.Clone();
             if (field.Assessment is { } assessment)
-                _marks[field.FieldID] = FormMarking.Evaluate(answer.Value, assessment.Rules, assessment.MaximumPoints);
+                _marks[field.FieldID] = FormMathematics.Evaluate(field, answer.Value, assessment);
         }
         if (_revision < 1L + _answers.Count + _index + (_submitted is null ? 0 : 1)
             || _project.Fields.Any(field => field.Required && !_answers.ContainsKey(field.FieldID)
@@ -112,9 +114,14 @@ public sealed class FormResponseRuntime
                 return new(false, "IntegrityPolicyViolation", Snapshot());
             var error = FormAnswerValidation.Validate(field, captured);
             if (error is not null) return new(false, error, Snapshot());
+            if (_answers.TryGetValue(fieldID, out var previous))
+            {
+                error = FormMathematics.ValidateReplacement(field, previous, captured);
+                if (error is not null) return new(false, error, Snapshot());
+            }
             _answers[fieldID] = captured;
             if (field.Assessment is { } assessment)
-                _marks[fieldID] = FormMarking.Evaluate(captured, assessment.Rules, assessment.MaximumPoints);
+                _marks[fieldID] = FormMathematics.Evaluate(field, captured, assessment);
             _revision = checked(_revision + 1);
             return new(true, null, Snapshot());
         }
@@ -188,6 +195,15 @@ public static class FormAnswerValidation
 {
     public static void RequireSupported(FormField field)
     {
+        if (field.Kind is FormFieldKind.Mathematical or FormFieldKind.Graph)
+        {
+            if (field.ResponseSchema.EnumerateObject().Any())
+                throw new NotSupportedException("CapabilityUnavailable: mathematical response schema keyword.");
+            if (field.Kind == FormFieldKind.Mathematical && field.Mathematics is null ||
+                field.Kind == FormFieldKind.Graph && field.Graph is null)
+                throw new NotSupportedException("CapabilityUnavailable: canonical mathematical question is not configured.");
+            return;
+        }
         if (field.Kind is not (FormFieldKind.ShortText or FormFieldKind.LongText or FormFieldKind.Number
             or FormFieldKind.Decimal or FormFieldKind.Currency or FormFieldKind.Email or FormFieldKind.Phone
             or FormFieldKind.Date or FormFieldKind.Time or FormFieldKind.DateTime or FormFieldKind.Duration
@@ -222,6 +238,8 @@ public static class FormAnswerValidation
     {
         RequireSupported(field);
         if (value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined) return field.Required ? "ValidationFailed" : null;
+        if (field.Kind is FormFieldKind.Mathematical or FormFieldKind.Graph)
+            return FormMathematics.Validate(field, value);
         bool String() => value.ValueKind == JsonValueKind.String && value.GetString()!.Length <= 65536
             && (!field.Required || !string.IsNullOrWhiteSpace(value.GetString()));
         bool Choice(JsonElement item) => item.ValueKind == JsonValueKind.String && item.TryGetGuid(out var id)

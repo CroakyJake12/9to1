@@ -20,6 +20,7 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
 {
     private readonly FormProject _project;
     private readonly FormResponseRuntime _runtime;
+    private readonly IFormNativeMathematicsProvider? _mathematics;
     private readonly List<(Guid FieldID, Control Input)> _inputs = [];
     private readonly List<Action> _detach = [];
     private readonly Dictionary<Guid, string> _invalidDrafts = [];
@@ -35,12 +36,17 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     { FormPreviewViewportKind.Desktop => 1200, FormPreviewViewportKind.Tablet => 768, FormPreviewViewportKind.Mobile => 390, _ => 280 };
     public FormResponse Response => _runtime.Read();
 
-    public FormNativePreview(FormProject project, TimeProvider? clock = null) : this(project, null, clock) { }
-    public FormNativePreview(FormProject project, FormResponseRuntime runtime) : this(project, runtime, null) { }
-    private FormNativePreview(FormProject project, FormResponseRuntime? runtime, TimeProvider? clock)
+    public FormNativePreview(FormProject project, TimeProvider? clock = null) : this(project, null, clock, null) { }
+    public FormNativePreview(FormProject project, FormResponseRuntime runtime) : this(project, runtime, null, null) { }
+    public FormNativePreview(FormProject project, IFormNativeMathematicsProvider mathematics)
+        : this(project, null, null, mathematics) { }
+    public FormNativePreview(FormProject project, FormResponseRuntime runtime, IFormNativeMathematicsProvider mathematics)
+        : this(project, runtime, null, mathematics) { }
+    private FormNativePreview(FormProject project, FormResponseRuntime? runtime, TimeProvider? clock,
+        IFormNativeMathematicsProvider? mathematics = null)
     {
-        _project = FormProjectCodec.Capture(project);
-        RequireNativeLayout(_project.Fields, _project.Pages, _project.Components.Count, _project.Theme);
+        _project = FormProjectCodec.Capture(project); _mathematics = mathematics;
+        RequireNativeLayout(_project.Fields, _project.Pages, _project.Components.Count, _project.Theme, mathematics: mathematics);
         _runtime = runtime ?? new(_project, Guid.NewGuid(), clock);
         var response = _runtime.Read();
         if (response.FormID != _project.FormID || response.ProjectRevision != _project.Revision)
@@ -48,9 +54,10 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     }
 
     internal static void RequireNativeLayout(IReadOnlyList<FormField> fields, IReadOnlyList<FormPage> pages,
-        int componentCount, FormThemeReference theme, bool originalReferenceProviderAvailable = false)
+        int componentCount, FormThemeReference theme, bool originalReferenceProviderAvailable = false,
+        IFormNativeMathematicsProvider? mathematics = null)
     {
-        if (componentCount != 0 || fields.Any(field => !CanRender(field.Kind)
+        if (componentCount != 0 || fields.Any(field => !(CanRender(field.Kind) || mathematics?.Supports(field) == true)
                 || !originalReferenceProviderAvailable && field.Table?.Columns.Any(column => column.Type == FormTableCellType.Reference) == true)
             || fields.Any(field => field.Layout.Columns != 1)
             || theme.ThemeID != "default" || theme.StyleAssetID is not null)
@@ -142,7 +149,7 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
         var definition = _project.Fields.Single(item => item.FieldID == fieldID);
         var response = Response;
         var answer = response.Answers.SingleOrDefault(item => item.FieldID == fieldID)?.Value;
-        var ownedInput = FormNativeAnswerInput.Create(definition, answer, value => Answer(fieldID, value));
+        var ownedInput = FormNativeAnswerInput.Create(definition, answer, value => Answer(fieldID, value), null, _mathematics);
         var input = ownedInput.Control;
         _detach.Add(ownedInput.Dispose);
         AutomationProperties.SetName(input, definition.Label);

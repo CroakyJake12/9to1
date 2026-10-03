@@ -1,0 +1,12 @@
+<Project>
+  <!-- Imported only by the branch caller's distinct native build context.
+       The exact original Desktop project alone selects the observed entry;
+       application libraries and netstandard tools keep their normal entry. -->
+  <PropertyGroup>
+    <AstraOriginalFormsDesktopPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj'))</AstraOriginalFormsDesktopPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectFullPath)' == '$(AstraOriginalFormsDesktopPath)'">
+    <DefineConstants>$(DefineConstants);ASTRA_FORMS_NATIVE_PROBE</DefineConstants>
+    <StartupObject>Haven.Desktop.Validation.FormsMathematicsNativeActivationProbe</StartupObject>
+  </PropertyGroup>
+</Project>

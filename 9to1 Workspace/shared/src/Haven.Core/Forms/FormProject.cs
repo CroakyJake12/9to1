@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Haven.Core.Mathematics;
 using System.Text.Json.Serialization;
 using System.Diagnostics.CodeAnalysis;
 
@@ -26,12 +27,14 @@ public sealed record FormPage(Guid PageID, string Title, IReadOnlyList<FormChild
     FormLayout Layout, long Revision = 1, Guid? VisibilityNodeID = null);
 public sealed record FormChoiceOption(Guid OptionID, string Label);
 public sealed record FormFieldAssessment(decimal MaximumPoints, decimal Weight,
-    IReadOnlyList<FormMarkingRule> Rules, FormResultRelease Release = FormResultRelease.AfterSubmission);
+    IReadOnlyList<FormMarkingRule> Rules, FormResultRelease Release = FormResultRelease.AfterSubmission,
+    MathNumericRule? Mathematics = null, GraphCoordinateMarkingRule? Graph = null, GraphDefinition? ExpectedGraph = null);
 public sealed record FormField(Guid FieldID, FormFieldKind Kind, string Label, string? Help,
     JsonElement ResponseSchema, bool Required, FormLayout Layout, long Revision = 1,
     IReadOnlyList<FormChoiceOption>? Options = null, FormFieldAssessment? Assessment = null,
     FormTableInputDefinition? Table = null, IReadOnlyList<Guid>? RepeatedFieldIDs = null,
-    Guid? ValidationNodeID = null, Guid? DataBindingID = null);
+    Guid? ValidationNodeID = null, Guid? DataBindingID = null,
+    MathExpression? Mathematics = null, GraphDefinition? Graph = null);
 /// <summary>Content assets and reusable children retain canonical identity; configuration belongs to the registered CUI component schema.</summary>
 public sealed record FormComponent(Guid ComponentID, FormComponentKind Kind, FormLayout Layout,
     IReadOnlyList<Guid> ChildFieldIDs, JsonElement Configuration, long Revision = 1, Guid? AssetID = null);
@@ -136,10 +139,37 @@ public static class FormProjectCodec
                 FormTableInput.ValidateDefinition(field.Table!);
             }
             else Require(field.Table is null, "Table definition belongs only to table input fields.");
+            if (field.Mathematics is { } expression)
+            {
+                Require(field.Kind == FormFieldKind.Mathematical, "Math expression belongs only to mathematical fields.");
+                MathObjectCodec.Validate(expression);
+            }
+            if (field.Graph is { } graph)
+            {
+                Require(field.Kind == FormFieldKind.Graph, "Graph belongs only to graph fields.");
+                MathObjectCodec.Validate(graph);
+            }
             if (field.Assessment is { } marking)
             {
                 Require(marking.Weight is > 0 and <= 1000 && marking.MaximumPoints >= 0 && marking.MaximumPoints <= decimal.MaxValue / 4096 / 1000 && Enum.IsDefined(marking.Release), "Invalid field marking.");
                 _ = FormMarking.Evaluate(JsonSerializer.SerializeToElement<object?>(null), marking.Rules, marking.MaximumPoints);
+                Require(!(marking.Mathematics is not null && marking.Graph is not null)
+                    && (marking.Mathematics is null && marking.Graph is null || marking.Rules.Count == 0),
+                    "Typed mathematical marking must have one authoritative policy.");
+                if (marking.Mathematics is { } numericRule)
+                {
+                    Require(field.Kind == FormFieldKind.Mathematical && field.Mathematics is not null,
+                        "Numeric mathematics marking requires its canonical question.");
+                    _ = MathMarking.Evaluate(new(Guid.NewGuid(), 1, new NumericMathAnswer("0")), numericRule);
+                }
+                if (marking.Graph is { } graphRule)
+                {
+                    Require(field.Kind == FormFieldKind.Graph && field.Graph is not null && marking.ExpectedGraph is not null,
+                        "Graph marking requires canonical question and private expected graph.");
+                    MathObjectCodec.Validate(marking.ExpectedGraph!);
+                    GraphMarking.ValidatePolicy(field.Graph!, marking.ExpectedGraph!, graphRule);
+                }
+                else Require(marking.ExpectedGraph is null, "Expected graph belongs only to graph marking.");
             }
         }
         var fieldIDs = project.Fields.Select(field => field.FieldID).ToHashSet();

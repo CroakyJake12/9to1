@@ -8,6 +8,7 @@ using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Core.Forms;
+using Haven.Core.Mathematics;
 
 namespace HavenOS.Forms;
 
@@ -18,7 +19,9 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
     Func<FormNativePreview, CancellationToken, Task>? showPreview,
     FormResponseSessionService? responseSessions,
     Func<FormNativeResponseSurface, CancellationToken, Task>? showResponse,
-    IFormDataReferenceLookupSource? referenceLookup) : ICuiWritableBindingContext,
+    IFormDataReferenceLookupSource? referenceLookup,
+    IFormNativeMathematicsProvider? mathematics = null,
+    Func<FormField, CancellationToken, Task<FormField?>>? showMathematicsEditor = null) : ICuiWritableBindingContext,
     ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     public FormsCuiWorkspace(FormPublicationService publications, FormAuthoringService authoring,
@@ -48,7 +51,8 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
         (FormFieldKind.Time, "Time"), (FormFieldKind.DateTime, "Date and time"), (FormFieldKind.Duration, "Duration"),
         (FormFieldKind.SingleChoice, "Single choice"), (FormFieldKind.MultipleChoice, "Multiple choice"),
         (FormFieldKind.Dropdown, "Dropdown"), (FormFieldKind.CheckboxSet, "Checkbox set"), (FormFieldKind.Rating, "Rating"),
-        (FormFieldKind.TableInput, "Table input"), (FormFieldKind.Ranking, "Ranking")
+        (FormFieldKind.TableInput, "Table input"), (FormFieldKind.Ranking, "Ranking"),
+        (FormFieldKind.Mathematical, "Mathematical number"), (FormFieldKind.Graph, "Graph point")
     ];
     private string _title = "Untitled form", _label = "Question", _help = "";
     private string _status = "Create a form or open a selected form";
@@ -123,6 +127,7 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
             "RegexMatchModes" => new[] { "Full match", "Partial match" }, "RegexMatchMode" => _regexMatchMode,
             "RegexCaseModes" => new[] { "Case sensitive", "Ignore case" }, "RegexCaseMode" => _regexCaseMode,
             "CanTestRegex" => IsActionAvailable("9to1.Forms.SaveField"),
+            "CanEditMathematics" => IsActionAvailable("9to1.Forms.EditMathematics"),
             "PaletteNames" => Palette.Select(item => item.Label).ToArray(), "SelectedPaletteIndex" => _paletteIndex,
             "OptionNames" => Field?.Options?.Select(option => option.Label).ToArray() ?? [],
             "SelectedOptionIndex" => Field?.Options?.ToList().FindIndex(option => option.OptionID == _optionID) ?? -1,
@@ -173,7 +178,7 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
             or "ColumnTypeNames" or "SelectedColumnTypeIndex" or "CanAddColumn" or "CanEditColumn" or "CanRemoveColumn"
             or "CanDiscard" or "CanAddField" or "CanAddChoice" or "CanEditChoice" or "Title" or "Label" or "Help" or "Status" or "PreviewLabel" or "Page" or "Field" or "FieldType" or "Required"
             or "Contents" or "PageNames" or "FieldNames" or "SelectedPageIndex" or "SelectedFieldIndex"
-            or "CanCreate" or "CanOpen" or "CanAdd" or "CanEdit" or "CanSelectPage" or "CanSelectField" or "CanPreview" or "CanPublish" or "CanClose" or "CanRespond" or "CanNewResponse" or "CanMoveEarlier" or "CanMoveLater";
+            or "CanCreate" or "CanOpen" or "CanAdd" or "CanEdit" or "CanSelectPage" or "CanSelectField" or "CanPreview" or "CanPublish" or "CanClose" or "CanRespond" or "CanNewResponse" or "CanMoveEarlier" or "CanMoveLater" or "CanEditMathematics";
     }
 
     public bool TrySetValue(string path, object? value)
@@ -267,6 +272,8 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
         "9to1.Forms.RemoveColumn" => Column is not null && Field!.Table!.Columns.Count > 1
             && !(Field.Table.UniqueColumnIDs?.Contains(Column.ColumnID) ?? false),
         "9to1.Forms.SaveField" or "9to1.Forms.ToggleRequired" or "9to1.Forms.MoveToPage" => Field is not null,
+        "9to1.Forms.EditMathematics" => Field is { Kind: FormFieldKind.Mathematical or FormFieldKind.Graph }
+            && showMathematicsEditor is not null && !HasDirtyInspector,
         _ => false
     });
 
@@ -301,7 +308,9 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
                     var addedFieldID = Guid.NewGuid();
                     var addedField = new FormField(addedFieldID, kind, "Question", null,
                         JsonSerializer.SerializeToElement(new { }), false, new(), Options: options,
-                        Table: kind == FormFieldKind.TableInput ? new(addedFieldID, [new(Guid.NewGuid(), "Column 1", FormTableCellType.Text)]) : null);
+                        Table: kind == FormFieldKind.TableInput ? new(addedFieldID, [new(Guid.NewGuid(), "Column 1", FormTableCellType.Text)]) : null,
+                        Mathematics: kind == FormFieldKind.Mathematical ? new(Guid.NewGuid(), 1, "x") : null,
+                        Graph: kind == FormFieldKind.Graph ? new(Guid.NewGuid(), 1, new(-10, 10, -10, 10), [], [], [GraphResponseTool.PlacePoint]) : null);
                     result = await authoring.AddFieldAsync(opened!.FormID, opened.Revision, page!.PageID, addedField, cancellationToken);
                     if (result.Success) _fieldID = addedField.FieldID;
                     break;
@@ -362,6 +371,13 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
                         field! with { Table = field!.Table! with { Columns = field.Table!.Columns.Where(item => item.ColumnID != column!.ColumnID).ToArray() } }, cancellationToken);
                     if (result.Success) { _columnDrafts.Remove(column!.ColumnID); _columnID = null; }
                     break;
+                case "9to1.Forms.EditMathematics":
+                    var candidate = await showMathematicsEditor!(field!, cancellationToken);
+                    if (candidate is null) { _status = "Question edit cancelled"; return; }
+                    if (candidate.FieldID != field!.FieldID || candidate.Revision != field.Revision || candidate.Kind != field.Kind)
+                        throw new InvalidOperationException("RevisionConflict");
+                    result = await authoring.UpdateFieldAsync(opened!.FormID, opened.Revision, candidate, cancellationToken);
+                    break;
                 case "9to1.Forms.SaveField":
                     result = await authoring.UpdateFieldAsync(opened!.FormID, opened.Revision, field! with { Label = label, Help = help }, cancellationToken);
                     if (result.Success) _fieldDrafts.Remove(field!.FieldID);
@@ -380,7 +396,7 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
                     var runtime = await authoring.PreviewAsync(opened!.FormID, opened.Revision, cancellationToken);
                     if (showPreview is not null)
                     {
-                        using var preview = new FormNativePreview(project!, runtime);
+                        using var preview = mathematics is null ? new FormNativePreview(project!, runtime) : new FormNativePreview(project!, runtime, mathematics);
                         await showPreview(preview, cancellationToken);
                         _status = $"Preview closed at revision {opened.Revision}";
                     }
@@ -396,7 +412,7 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
                         if (!started.Success) throw new InvalidOperationException(started.Code);
                         responseID = started.Response!.ResponseID; _responseIDs[opened.FormID] = responseID;
                     }
-                    var responseOpen = await FormNativeResponseSurface.OpenAsync(responseSessions!, opened.FormID, responseID, cancellationToken, referenceLookup);
+                    var responseOpen = await FormNativeResponseSurface.OpenAsync(responseSessions!, opened.FormID, responseID, cancellationToken, referenceLookup, mathematics);
                     if (!responseOpen.Success) throw new InvalidOperationException(responseOpen.Code);
                     using (var responseSurface = responseOpen.Surface!) await showResponse!(responseSurface, cancellationToken);
                     _status = "Response closed; its saved answers remain in the published version.";

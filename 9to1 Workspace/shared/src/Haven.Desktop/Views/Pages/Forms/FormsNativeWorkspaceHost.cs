@@ -4,6 +4,8 @@ using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using HavenOS.Forms;
+using Haven.Core.Forms;
+using Haven.Desktop.Mathematics;
 
 namespace Haven.Desktop.Views.Pages.Forms;
 
@@ -68,6 +70,27 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
 
     public Task ShowResponseAsync(FormNativeResponseSurface response, CancellationToken token) =>
         ShowAsync("Form response", response, response, response.Register, response.CreateDocument(), token);
+
+    public async Task<FormField?> ShowMathematicsEditorAsync(FormField field, CancellationToken token)
+    {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
+        await RequireCurrentAsync(linked.Token);
+        var owner = _owner() ?? throw new InvalidOperationException("Forms requires a live native owner window.");
+        using var editor = new FormMathematicsAuthoringControl(field);
+        var window = new Window { Title = "Mathematical question", Width = 800, Height = 760,
+            Content = new ScrollViewer { Content = editor } };
+        void Complete(object? sender, EventArgs args) => window.Close();
+        editor.Completed += Complete; _children.Add(window);
+        using var cancellation = linked.Token.Register(() => Dispatcher.UIThread.Post(window.Close));
+        try
+        {
+            await window.ShowDialog(owner);
+            linked.Token.ThrowIfCancellationRequested();
+            await RequireCurrentAsync(linked.Token);
+            return editor.Result;
+        }
+        finally { editor.Completed -= Complete; _children.Remove(window); window.Close(); window.Content = null; }
+    }
 
     private async Task ShowAsync(string title, ICuiBindingContext bindings, ICuiActionDispatcher actions,
         Action<CuiControlRegistry> register, CuiDocument document, CancellationToken token)

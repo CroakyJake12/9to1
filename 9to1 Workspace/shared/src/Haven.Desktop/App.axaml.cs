@@ -71,9 +71,12 @@ public sealed partial class App : Avalonia.Application
         collection.AddHavenInfrastructure();
         collection.AddHavenPlannerInfrastructure();
         collection.AddHavenDesktopCallServices();
+        collection.AddSingleton<HavenOS.Home.Core.IHomeApprovalPromptPresenter>(provider => new NativeHomeApprovalPromptPresenter(provider));
         collection.AddSingleton<SpaceRegistry>();
         collection.AddFilesNativeHost();
-        collection.AddHavenFormsPublication(new HavenOS.Forms.FormNativePublicationValidator());
+        var formsMathematics = new Haven.Desktop.Mathematics.FormNativeMathematicsProvider();
+        collection.AddSingleton<HavenOS.Forms.IFormNativeMathematicsProvider>(formsMathematics);
+        collection.AddHavenFormsPublication(new HavenOS.Forms.FormNativePublicationValidator(formsMathematics));
         HavenOS.Apps.Terminal.TerminalNativeComposition.AddTerminalNativeActions(collection);
         collection.AddSingleton<HavenOS.Apps.Sites.Application.ISiteNativeWorkspaceAuthority, SitesNativeWorkspaceAuthority>();
         collection.AddSingleton<ICanonicalResourceAccessResolver, HavenOS.Apps.Sites.Application.SiteNativeProjectAccessResolver>();
@@ -315,6 +318,15 @@ public sealed partial class App : Avalonia.Application
 
     private async void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
+        var originalShutdown = OnDesktopExitAsync(sender, e);
+#if ASTRA_HOME_NATIVE_PROBE || ASTRA_FORMS_NATIVE_PROBE
+        Haven.Desktop.Validation.NativeProbeOriginalDesktopShutdown.BindOriginalTask(originalShutdown);
+#endif
+        await originalShutdown;
+    }
+
+    private async Task OnDesktopExitAsync(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
         var services = _services;
         var recovery = _startupRecovery;
         try
@@ -336,6 +348,9 @@ public sealed partial class App : Avalonia.Application
         }
         catch (Exception ex)
         {
+#if ASTRA_HOME_NATIVE_PROBE || ASTRA_FORMS_NATIVE_PROBE
+            Haven.Desktop.Validation.NativeProbeOriginalDesktopShutdown.RecordOriginalCaughtFailure(ex);
+#endif
             System.Diagnostics.Debug.WriteLine("[Haven shutdown] " + ex);
         }
         finally

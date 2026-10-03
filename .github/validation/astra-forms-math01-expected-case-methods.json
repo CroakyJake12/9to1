@@ -1,0 +1,515 @@
+{
+  "status": "Complete selected original Math and coherent Forms/Home source method names; actual Passed outcomes required",
+  "suites": {
+    "owning/core": [
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Typed_numeric_answer_keeps_literal_identity_and_marking_after_checkpoint_restore"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Repeated_graph_answer_edits_bind_original_question_and_reopen_without_fabricated_targets"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Existing_plain_form_bytes_decode_without_new_math_properties_and_keep_original_response_shape"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Private_graph_grading_admits_only_the_exact_question_and_explicit_manipulation_target"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Private_expected_definition_configuration_changes_advance_only_its_own_revision_atomically"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Point_then_manipulation_preserves_canonical_ID_and_captured_arrays_without_aliasing"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Stale_foreign_undeclared_and_partially_invalid_operations_leave_entire_graph_unchanged"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Graph_expression_references_require_exact_revisions_and_conflicts_are_atomic"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "All_eleven_typed_answers_round_trip_stable_identity_revision_and_representation"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Strict_codec_rejects_future_schema_unknown_fields_duplicate_properties_and_unknown_union"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Capture_detaches_mutable_payloads_and_bounds_full_use_of_configured_arrays"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Exact_numeric_rules_use_actual_value_without_discarding_the_submitted_literal"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Precision_units_percentage_and_absolute_tolerance_have_explicit_boundaries"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Unsupported_numeric_precision_or_representation_is_refused_instead_of_rounded"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Graph_marking_compares_typed_coordinates_and_refuses_unavailable_equivalence"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Graph_manipulation_marking_requires_actual_graded_target_identity_and_type"
+      }
+    ],
+    "owning/infrastructure": [],
+    "owning/desktop": [
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_authoring_dialog_edits_shared_expression_and_home_save_reopens_same_typed_question"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Real_native_numeric_and_graph_answers_save_reopen_mark_and_disable_retired_or_submitted_inputs"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_authoring_factory_refuses_unsupported_existing_grading_without_changing_the_question_or_policy"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_graph_authoring_save_and_reopen_keep_independent_question_and_expected_graph_identities"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Authored_numeric_textbox_preserves_a_maximum_revision_answer_and_reports_the_refused_draft"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Native_explicit_point_button_refuses_maximum_response_revision_without_losing_the_coordinate_draft"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Optional_native_number_can_be_cleared_saved_and_reopened_while_nonblank_invalid_drafts_are_preserved"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_existing_graph_authoring_save_without_policy_edits_preserves_tolerance_reversal_and_private_target_versions"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomeApprovalCuiSurfaceTests",
+        "method": "Exact_native_prompt_is_audited_only_after_visible_mount_and_hidden_button_cannot_approve"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomeApprovalCuiSurfaceTests",
+        "method": "Actual_native_Cui_button_decides_real_OS_profile_request_without_granting_extra_trust"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomeApprovalCuiSurfaceTests",
+        "method": "Missing_actual_permissions_service_mounts_repair_state_without_decision_controls"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomePromptHostCompositionTests",
+        "method": "Actual_native_assembly_embeds_the_exact_reviewed_Home_approval_Cui_document"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomePromptHostCompositionTests",
+        "method": "Actual_normal_App_presenter_without_a_window_retains_the_real_pending_request_and_cannot_begin_execution"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+        "method": "Authored_visual_and_LaTeX_controls_edit_same_ID_real_layout_and_recover_invalid_input"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+        "method": "Maintained_parser_and_editor_enforce_real_source_limits_stale_revision_and_no_registry_mutation"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+        "method": "Maintained_native_graph_renders_structured_ids_and_actual_pointer_edits_exact_graph_version"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+        "method": "Undeclared_tools_invalid_coordinates_and_unavailable_symbolic_plotting_preserve_canonical_graph"
+      }
+    ],
+    "owning/studio": [],
+    "owning/ai": [],
+    "owning/home": [
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Original_snapshot_change_during_authorization_returns_conflict_without_data"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Unchanged_authorized_snapshot_returns_one_revision_and_original_service_value"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Configured_original_profile_change_or_loss_denies_after_authorization"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Missing_current_profile_never_calls_authorization_or_returns_state"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Authority_denial_or_failure_returns_no_data_even_when_runtime_changes"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Cancellation_while_authorization_waits_is_preserved_without_success"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Default_runtime_authority_and_unverified_metadata_never_grant_service_data"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Native_catalogue_operates_without_model_session_and_duplicate_owner_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Local_only_home_factory_never_discovers_remote_catalogue"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Exact_original_completion_recovers_audit_without_execution_replay"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Actual_ai_bridge_without_presenter_returns_required_and_never_begins_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Creation_is_request_received_only_and_exact_display_ack_is_idempotent_without_approval"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Missing_or_terminal_request_never_records_display"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Unavailable_or_closed_presenter_keeps_actual_request_pending_without_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Display_only_observation_cannot_grant_or_dispatch_the_action"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Only_actual_broker_decision_returns_allowed_or_denied_and_flow_does_not_begin_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Presenter_ignoring_cancellation_cannot_return_a_successful_decision"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Unknown_request_never_opens_a_prompt_or_creates_a_request"
+      }
+    ],
+    "owning/runtime": [],
+    "owning/forms-cui-full": [],
+    "resource/data-core": [
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Typed_numeric_answer_keeps_literal_identity_and_marking_after_checkpoint_restore"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Repeated_graph_answer_edits_bind_original_question_and_reopen_without_fabricated_targets"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Existing_plain_form_bytes_decode_without_new_math_properties_and_keep_original_response_shape"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Private_graph_grading_admits_only_the_exact_question_and_explicit_manipulation_target"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.FormCanonicalMathematicsTests",
+        "method": "Private_expected_definition_configuration_changes_advance_only_its_own_revision_atomically"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Point_then_manipulation_preserves_canonical_ID_and_captured_arrays_without_aliasing"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Stale_foreign_undeclared_and_partially_invalid_operations_leave_entire_graph_unchanged"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Graph_expression_references_require_exact_revisions_and_conflicts_are_atomic"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "All_eleven_typed_answers_round_trip_stable_identity_revision_and_representation"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Strict_codec_rejects_future_schema_unknown_fields_duplicate_properties_and_unknown_union"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Capture_detaches_mutable_payloads_and_bounds_full_use_of_configured_arrays"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Exact_numeric_rules_use_actual_value_without_discarding_the_submitted_literal"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Precision_units_percentage_and_absolute_tolerance_have_explicit_boundaries"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Unsupported_numeric_precision_or_representation_is_refused_instead_of_rounded"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Graph_marking_compares_typed_coordinates_and_refuses_unavailable_equivalence"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Graph_manipulation_marking_requires_actual_graded_target_identity_and_type"
+      }
+    ],
+    "resource/data-infrastructure": [],
+    "resource/forms-cui-full": [],
+    "resource/desktop-owning": [
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_authoring_dialog_edits_shared_expression_and_home_save_reopens_same_typed_question"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Real_native_numeric_and_graph_answers_save_reopen_mark_and_disable_retired_or_submitted_inputs"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_authoring_factory_refuses_unsupported_existing_grading_without_changing_the_question_or_policy"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_graph_authoring_save_and_reopen_keep_independent_question_and_expected_graph_identities"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Authored_numeric_textbox_preserves_a_maximum_revision_answer_and_reports_the_refused_draft"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Native_explicit_point_button_refuses_maximum_response_revision_without_losing_the_coordinate_draft"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Optional_native_number_can_be_cleared_saved_and_reopened_while_nonblank_invalid_drafts_are_preserved"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FormsCanonicalMathematicsNativeTests",
+        "method": "Actual_existing_graph_authoring_save_without_policy_edits_preserves_tolerance_reversal_and_private_target_versions"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomeApprovalCuiSurfaceTests",
+        "method": "Exact_native_prompt_is_audited_only_after_visible_mount_and_hidden_button_cannot_approve"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomeApprovalCuiSurfaceTests",
+        "method": "Actual_native_Cui_button_decides_real_OS_profile_request_without_granting_extra_trust"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomeApprovalCuiSurfaceTests",
+        "method": "Missing_actual_permissions_service_mounts_repair_state_without_decision_controls"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomePromptHostCompositionTests",
+        "method": "Actual_native_assembly_embeds_the_exact_reviewed_Home_approval_Cui_document"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HomePromptHostCompositionTests",
+        "method": "Actual_normal_App_presenter_without_a_window_retains_the_real_pending_request_and_cannot_begin_execution"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+        "method": "Authored_visual_and_LaTeX_controls_edit_same_ID_real_layout_and_recover_invalid_input"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+        "method": "Maintained_parser_and_editor_enforce_real_source_limits_stale_revision_and_no_registry_mutation"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+        "method": "Maintained_native_graph_renders_structured_ids_and_actual_pointer_edits_exact_graph_version"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+        "method": "Undeclared_tools_invalid_coordinates_and_unavailable_symbolic_plotting_preserve_canonical_graph"
+      }
+    ],
+    "resource/os-package": [],
+    "resource/shelf-forms-coupled": [],
+    "resource/shelf-maps-native": [],
+    "resource/home-read-composition": [
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Original_snapshot_change_during_authorization_returns_conflict_without_data"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Unchanged_authorized_snapshot_returns_one_revision_and_original_service_value"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Configured_original_profile_change_or_loss_denies_after_authorization"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Missing_current_profile_never_calls_authorization_or_returns_state"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Authority_denial_or_failure_returns_no_data_even_when_runtime_changes"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Cancellation_while_authorization_waits_is_preserved_without_success"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Default_runtime_authority_and_unverified_metadata_never_grant_service_data"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Native_catalogue_operates_without_model_session_and_duplicate_owner_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Local_only_home_factory_never_discovers_remote_catalogue"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Exact_original_completion_recovers_audit_without_execution_replay"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Actual_ai_bridge_without_presenter_returns_required_and_never_begins_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Creation_is_request_received_only_and_exact_display_ack_is_idempotent_without_approval"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Missing_or_terminal_request_never_records_display"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Unavailable_or_closed_presenter_keeps_actual_request_pending_without_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Display_only_observation_cannot_grant_or_dispatch_the_action"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Only_actual_broker_decision_returns_allowed_or_denied_and_flow_does_not_begin_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Presenter_ignoring_cancellation_cannot_return_a_successful_decision"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Unknown_request_never_opens_a_prompt_or_creates_a_request"
+      }
+    ],
+    "regression/core": [],
+    "regression/infrastructure": [],
+    "regression/desktop": [],
+    "regression/studio": [],
+    "regression/ai": [],
+    "regression/home": [
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Original_snapshot_change_during_authorization_returns_conflict_without_data"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Unchanged_authorized_snapshot_returns_one_revision_and_original_service_value"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Configured_original_profile_change_or_loss_denies_after_authorization"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Missing_current_profile_never_calls_authorization_or_returns_state"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Authority_denial_or_failure_returns_no_data_even_when_runtime_changes"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Cancellation_while_authorization_waits_is_preserved_without_success"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreApiSnapshotFenceTests",
+        "method": "Default_runtime_authority_and_unverified_metadata_never_grant_service_data"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Native_catalogue_operates_without_model_session_and_duplicate_owner_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Local_only_home_factory_never_discovers_remote_catalogue"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Exact_original_completion_recovers_audit_without_execution_replay"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Actual_ai_bridge_without_presenter_returns_required_and_never_begins_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Creation_is_request_received_only_and_exact_display_ack_is_idempotent_without_approval"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Missing_or_terminal_request_never_records_display"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Unavailable_or_closed_presenter_keeps_actual_request_pending_without_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Display_only_observation_cannot_grant_or_dispatch_the_action"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Only_actual_broker_decision_returns_allowed_or_denied_and_flow_does_not_begin_execution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Presenter_ignoring_cancellation_cannot_return_a_successful_decision"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionPromptDisplayTests",
+        "method": "Unknown_request_never_opens_a_prompt_or_creates_a_request"
+      }
+    ],
+    "regression/runtime": []
+  }
+}
