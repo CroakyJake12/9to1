@@ -1,0 +1,14 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-generated-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+    "MSBuildProjectName": "Avalonia.Build.Tasks",
+    "MSBuildProjectFile": "Avalonia.Build.Tasks.csproj",
+    "Configuration": "Debug",
+    "Platform": "AnyCPU",
+    "TargetFramework": "netstandard2.0",
+    "RuntimeIdentifier": "",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-generated-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-generated-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/project.assets.json",
+    "RestoreOutputPath": "/workspace/team-c/c3-admin-generated-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/"
+  }
+}
