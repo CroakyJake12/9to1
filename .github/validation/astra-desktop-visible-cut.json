@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "c6cb55f5f5ef6fbbbd55f8d18969b1e891c84c75",
-  "programTree": "23e65f602d3786c5d03cb046781b5082d8a137fb",
+  "baselineCommit": "eabc8ff699a8b22d1430c2c624c9dc5021082b67",
+  "programTree": "5c1143cbbb740c405dbdb5a12f42db804643a853",
   "currentNormalCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
   "kind": "corrective",
   "files": [
@@ -85,9 +85,9 @@
     {
       "path": ".github/scripts/astra-home-prompt-compiled-sources.py",
       "mode": "100644",
-      "object": "a11652ac7d7d525c5f7b1bd1a44e178ced2cfe24",
-      "bytes": 4354,
-      "sha256": "054885f82bb00a80d1a729d41c5b6dce5dd756df84311f3d0325487a084dd31c"
+      "object": "2e264971aa8dba2c7f7bc38ff412e8a3e6596fb7",
+      "bytes": 4492,
+      "sha256": "2fd9467cfa71be3f88ce960f4dae13dd61fc7d13bb936c25f41dda31c1161277"
     },
     {
       "path": ".github/scripts/astra-mail-local-crl-server.py",
@@ -106,9 +106,9 @@
     {
       "path": ".github/scripts/astra-sites-compiled-sources.py",
       "mode": "100644",
-      "object": "0102b3a52308d3aeb748dbb8c3f6153d700c81a8",
-      "bytes": 3430,
-      "sha256": "1009df6b42db2b4bca1af968daf2db5e895c15968725c1b88e07897e1d53d9dc"
+      "object": "e1a15c4e95152eb2a396ac8784df6984440faa27",
+      "bytes": 3556,
+      "sha256": "2ca73bef21b47af09eba8138b8f89c212e7928976ce0a666be8844588a6b98ce"
     },
     {
       "path": ".github/scripts/astra_mail_original_caller_session.py",
@@ -35701,9 +35701,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Sites/NativeSitesPage.cs",
       "mode": "100644",
-      "object": "fe593d737df7bb56a0d9d6ac1281da634041c20b",
-      "bytes": 17098,
-      "sha256": "33cf2173d9cebf7ee34a91b4181ae28f00313f3d3269ef713c4282299124fcc9"
+      "object": "ed974a3a7db72ee62da074128436caefdc226407",
+      "bytes": 17130,
+      "sha256": "5feab97a2ea02d3e4f168efe48909fa4f0d65206836ab2e587afa56eb65cda85"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Sites/SitesHavenScene.cs",
@@ -66174,7 +66174,10 @@
     "Joined unaccepted exact Home prompt02/API01/host200 predecessor plus every canonical Sites8/preview1/consumer1 class=>210 owning,44 resource,12 regression. No old source/action/assertion/method/native/TLS/drain/restore/task/PDB guard removed.",
     "Sites.Tests unfiltered independent restore/build/compiled target closure and PE/PDB exact full Sites producer/test documents required; actual mounted native consumer emits14 real CUI/canonical/Home cases. Recording HTML adapter verifies issued canonical output; actual native browser DOM/visible human prompt/classic lifecycle remain unverified.",
     "Retained preview and component draft/error state are bound to full original actor/authentication/folder/project/source/page and current read permission. No cache grant, no model/free/local/access/pricing policy change, no shared credential/Worker authority edit or deployment.",
-    "Root seeds a dedicated corrective branch from the successful Mail11 c6 candidate, then alone reviews/constructs/pushes/dispatches. This package is source-only; existing full Mail acceptance does not imply joined Home/Sites runtime acceptance."
+    "Root seeds a dedicated corrective branch from the successful Mail11 c6 candidate, then alone reviews/constructs/pushes/dispatches. This package is source-only; existing full Mail acceptance does not imply joined Home/Sites runtime acceptance.",
+    "Actual full Sites210 three-family failure reviewed: missing canonical IActivatablePage namespace in NativeSitesPage; all available originals retained and same full210/44/12 acceptance required.",
+    "Minimal corrective03 imports only that namespace and selects independently reviewed Home/Sites physical Haven.dll/Haven.pdb producer lookup; logical source identity/all full PE/PDB/source/copy guards remain. Every other product/source/class/method/runtime/TLS/native/Java/CRL/task/restore/drain/workflow byte comes from exact actual eabc failure.",
+    "This is an unexecuted full corrective candidate. Native browser DOM/classic visible lifecycle and full joined Home/Sites acceptance remain unproven until the actual whole cohorts pass."
   ],
   "inputManifests": [
     {
@@ -66396,6 +66399,30 @@
     {
       "path": "/workspace/astra-source/checkpoint26-publication-local.json",
       "sha256": "3f37533c2d4fbb384287dfbfe81f1b757fd240c5ba11aca2f3c7fa335ffaeb10"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites-home-current27-full-native-caller-package02-current-home-ledger/manifest.json",
+      "sha256": "c4a1feea5eca50ab1a8e218b3df2239b1e39dada56dacfb699d928a57fc395fd"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites210-full-three-original-failure-closure01/receipt.json",
+      "sha256": "9b9354f8d8aec3168d4748ef8df7d16082a3bc7c57520ca0f769dc50b9ef66aa"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-compiled-pair-physical-name-source01/manifest.json",
+      "sha256": "2de151e2cd79621c67ef1848b1e5992d2c4ab953c3cb97253c472aed8394e699"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites-compiled-pair-physical-name-source01/manifest.json",
+      "sha256": "4fe133a0d72f983ba0a206b1163e6ee59a9d8c8ec631e5ee2c02356fe1bc3baf"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-home-sites-physical-pair-source-peer179.json",
+      "sha256": "be508fd534bf362d37a3868324996c1cce07a46b140cb9aac2bd817d3b54a151"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites210-lifecycle-namespace-corrective-source07/manifest.json",
+      "sha256": "df5038d3e6efa483fdc8b8cde171e56129915b195651cc3cf9aefca064520208"
     }
   ],
   "sharedCakeIdContract": null

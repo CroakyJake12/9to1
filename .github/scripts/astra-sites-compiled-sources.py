@@ -12,7 +12,8 @@ def verify(root,out,target,suite,cut_paths,digest):
  spec=importlib.util.spec_from_file_location('sites_portable_pdb',root/'.github/scripts/astra-home-portable-pdb.py');parser=importlib.util.module_from_spec(spec);spec.loader.exec_module(parser)
  retained=pathlib.Path(out)/'sites-source-pairs'/suite;retained.mkdir(parents=True,exist_ok=False);records=[]
  for assembly,paths in assemblies.items():
-  dll=target.parent/(assembly+'.dll');pdb=target.parent/(assembly+'.pdb')
+  physical_assembly='Haven' if assembly=='Haven.Desktop' else assembly
+  dll=target.parent/(physical_assembly+'.dll');pdb=target.parent/(physical_assembly+'.pdb')
   if any(not f.is_file() or f.is_symlink() for f in (dll,pdb)):raise ValueError('Missing actual compiled Sites pair: '+assembly)
   dll_bytes,pdb_bytes=dll.read_bytes(),pdb.read_bytes();pair=parser.assert_actual_pair(dll_bytes,pdb_bytes);documents=parser.pdb_documents(pdb_bytes);rows=[]
   for path in paths:
@@ -26,5 +27,5 @@ def verify(root,out,target,suite,cut_paths,digest):
   for file in (dll,pdb):
    dest=retained/file.name;shutil.copyfile(file,dest)
    if digest(dest)!=digest(file):raise ValueError('Retained original Sites pair differs')
-  records.append({'assembly':assembly,'dllSha256':digest(dll),'pdbSha256':digest(pdb),'identity':pair,'sources':rows})
+  records.append({'assembly':assembly,'physicalAssembly':physical_assembly,'dllSha256':digest(dll),'pdbSha256':digest(pdb),'identity':pair,'sources':rows})
  (retained/'receipt.json').write_text(json.dumps({'status':'ACTUAL_COMPLETE_REVIEWED_SITES_SOURCE_DOCUMENTS_MATCH_COMPILED_PAIRS','suite':suite,'pairs':records,'qualification':'Compiled source identity only; whole original Sites/host/native/runtime results and actual browser DOM rendering remain separate.'},indent=2)+'\n')

@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
+using Haven.Desktop.ViewModels;
 using Haven.UI;
 using HavenOS.Apps.Sites.Application;
 using HavenOS.Apps.Sites.Domain;
