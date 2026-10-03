@@ -1,0 +1,232 @@
+{
+  "publicationHead": "ae6ca7c7af9a28dfd44d7105afcb737676109cb7",
+  "sourceHead": "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+  "cutSha256": "9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d",
+  "cutBytes": 2842277,
+  "rootIssuanceVerified": true,
+  "outerArgv": {
+    "cwd": "/workspace/team-c/c3-admin-symbol-errors-validation",
+    "argv": [
+      "python3",
+      ".github/scripts/astra-organisation-full-owning.py",
+      "--expected-commit",
+      "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+      "--manifest",
+      ".github/validation/astra-organisation-full-owning-cut.json",
+      "--manifest-sha",
+      "9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d"
+    ],
+    "environment": {
+      "PATHprepend": "/workspace/.tools/dotnet",
+      "DOTNET_ROOT": "/workspace/.tools/dotnet",
+      "DOTNET_CLI_HOME": "/workspace/team-c/evidence/c3/admin-sdk03/dotnet-home",
+      "NUGET_PACKAGES": "/workspace/team-c/evidence/c3/admin-sdk03/nuget"
+    },
+    "stdoutStderr": "/workspace/team-c/evidence/c3/admin-sdk03/original-driver-symbol-errors-attempt7.log"
+  },
+  "indexedPayloads": 2300,
+  "indexedHashErrors": [],
+  "rawOriginalDirectComparisons": 2292,
+  "publicationMetadataOrAliases": [
+    ".gitattributes",
+    "README.md",
+    "admin-sdk03-root-symbol-errors-cut-issuance.json",
+    "admin-sdk03-root-symbol-errors-cut-verification.json",
+    "external-all-output-inventory.json",
+    "external-binary-inventory.json",
+    "outer-driver.log",
+    "result.json"
+  ],
+  "recursiveBinaryFiles": [],
+  "credentialOrSignedQueryDetections": [],
+  "externalOutputInventory": {
+    "files": 7223,
+    "bytes": 1085678118,
+    "originalRoot": "/workspace/team-c/c3-admin-symbol-errors-validation",
+    "hashErrors": [],
+    "excludedBinaryFiles": 206,
+    "excludedPathsTracked": []
+  },
+  "originalCommands": {
+    "observed": 379,
+    "exitZero": 379,
+    "strictDrainsTrue": 379,
+    "logHashErrors": [],
+    "wholeSuites": [
+      {
+        "name": "debug-whole-accounts",
+        "exitCode": 0
+      },
+      {
+        "name": "debug-whole-organisation-pools",
+        "exitCode": 0
+      },
+      {
+        "name": "debug-whole-web",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-accounts",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-organisation-pools",
+        "exitCode": 0
+      },
+      {
+        "name": "release-whole-web",
+        "exitCode": 0
+      }
+    ],
+    "configurations": [
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Debug",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      },
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Release",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      }
+    ],
+    "outerExit": 0,
+    "completedConfigurations": [
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Debug",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      },
+      {
+        "allOriginalSuitesExitedZero": true,
+        "completeCompiledProjects": 51,
+        "configuration": "Release",
+        "sourceBuiltTasksRetained": true,
+        "wholeSuites": [
+          "accounts",
+          "organisation-pools",
+          "web"
+        ]
+      }
+    ]
+  },
+  "finalStatus": "ACTUAL_WHOLE_ACCOUNTS_ORGPOOLS_WEB_DEBUG_RELEASE_SDK_PASS",
+  "actualReceiptStatus": "ACTUAL_WHOLE_ACCOUNTS_ORGPOOLS_WEB_DEBUG_RELEASE_SDK_PASS",
+  "qualification": "Only actual original maintained local SDK/Web harness outcomes recorded. No genuine HTTPS issuer/provider/native/global release acceptance, no product key fix/global source adoption/new whole A3 owner ACK. SDK10.0.401 differs workflow10.0.301.",
+  "C6Scope": "Read-only immutable publication/raw custody/source-cut binding review only. No tests or payload reruns. Exact issued SDK7 tooling source only; previous failures and unissued4472/de683 remain historical. No product keyfix/shared global adoption/new whole A3 ACK/provider/native/installed/full release acceptance.",
+  "errors": [],
+  "passivePEPdbSourceVerification": {
+    "configurations": [
+      {
+        "configuration": "debug",
+        "compiledProjects": 51,
+        "physicalPECodeViewPortablePdbIdentitiesVerified": 51,
+        "allPhysicalSourceDocumentHashesVerified": true
+      },
+      {
+        "configuration": "release",
+        "compiledProjects": 51,
+        "physicalPECodeViewPortablePdbIdentitiesVerified": 51,
+        "allPhysicalSourceDocumentHashesVerified": true
+      }
+    ],
+    "physicalPairs": 102,
+    "physicalDocumentOccurrences": 8770,
+    "compileInputOccurrences": 8354,
+    "errors": [],
+    "payloadExecution": false,
+    "compileInputHashesVerified": 8354
+  },
+  "restores": [
+    {
+      "config": "debug",
+      "suite": "accounts",
+      "beforeAfterBytesIdentical": true
+    },
+    {
+      "config": "debug",
+      "suite": "organisation-pools",
+      "beforeAfterBytesIdentical": true
+    },
+    {
+      "config": "debug",
+      "suite": "web",
+      "beforeAfterBytesIdentical": true
+    },
+    {
+      "config": "release",
+      "suite": "accounts",
+      "beforeAfterBytesIdentical": true
+    },
+    {
+      "config": "release",
+      "suite": "organisation-pools",
+      "beforeAfterBytesIdentical": true
+    },
+    {
+      "config": "release",
+      "suite": "web",
+      "beforeAfterBytesIdentical": true
+    }
+  ],
+  "sourceTreeContinuity": {
+    "beforeDebugReleaseTreeBytesIdentical": true,
+    "beforeDebugReleaseHeads": [
+      "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+      "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+      "d30253dd94c1d9978367adb80acfd4c4f74c2931"
+    ]
+  },
+  "rawWhitespacePreservation": {
+    "exactRules": 439,
+    "onlyOriginalWhitespacePaths": true,
+    "byteComparisonsAlreadyVerified": true,
+    "scope": "Evidence snapshots only; no original byte edits/runtime/test suppression."
+  },
+  "finalReceipt": {
+    "status": "ACTUAL_WHOLE_ACCOUNTS_ORGPOOLS_WEB_DEBUG_RELEASE_SDK_PASS",
+    "primaryType": null,
+    "cleanupTypes": [],
+    "acceptedEvidenceBytes": 110292911,
+    "originalBudgetBytes": 268435456,
+    "underBudget": true
+  },
+  "historicalQualifications": [
+    "Previous actual SDK1-6 failures retained; only this exact issued d302 SDK7 pass",
+    "Unissued4472/de683 preparatory sources not relabelled as executed",
+    "SDK10.0.401 differs workflow10.0.301",
+    "No product keyfix/shared global source adoption/new wholeA3 ACK/provider/native/installed/full release acceptance"
+  ],
+  "ack": "Bounded original SDK7 publication/raw custody/source-and-physical-symbol integrity ACK; exact scoped local SDK pass recorded, not global release acceptance.",
+  "passiveReader": {
+    "path": "docs/releases/sol-happy-20261003/c6/sdk7-passive-pe-pdb-reader.py",
+    "sha256": "21dff015adadeff3899f2484b28f173794a023f0fd10b7dc86356a421ecf8d87",
+    "operation": "Reads physical originals only; no executable payload loaded or tests run. Python standard-library PE debug/PDBID parse and source hash comparison."
+  },
+  "physicalRootCutAudit": {
+    "files": 9459,
+    "gitlinks": 22,
+    "cleanMaterializedGitlinks": 3,
+    "physicalSourceGitBlobModeBytesShaErrors": [],
+    "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "qualification": "Exact physical source/Git object cut verification; provisional A63 source, not main/global owner acceptance."
+  }
+}
