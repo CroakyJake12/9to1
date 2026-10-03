@@ -154,9 +154,9 @@ public sealed class SitePublicIdentityService(
                 var binding = new DomainBinding(Guid.NewGuid(), request.SiteId, request.EnvironmentId, normalized.AsciiName, normalized.DisplayName, false, SiteDomainVerificationState.Pending, nameState, SiteTlsState.Unknown,
                     [new SiteDnsRequirement("TXT", SiteAddressRules.DomainChallengeRecordName(normalized.AsciiName), "", "Ownership verification", true)], 1, now, now);
                 var projectIndex = IndexOf(state.Projects, project => project.SiteId == request.SiteId);
-                var project = state.Projects[projectIndex] with { DomainBindingIds = [.. state.Projects[projectIndex].DomainBindingIds, binding.DomainBindingId], Revision = checked(state.Projects[projectIndex].Revision + 1), UpdatedAt = now };
+                var updatedProject = state.Projects[projectIndex] with { DomainBindingIds = [.. state.Projects[projectIndex].DomainBindingIds, binding.DomainBindingId], Revision = checked(state.Projects[projectIndex].Revision + 1), UpdatedAt = now };
                 var projects = state.Projects.ToArray();
-                projects[projectIndex] = project;
+                projects[projectIndex] = updatedProject;
                 return (state with { Projects = projects, Domains = [.. state.Domains, binding] }, binding);
             }, cancellationToken).ConfigureAwait(false);
             return SiteApiResult<DomainBinding>.Success(domain);
@@ -222,7 +222,8 @@ public sealed class SitePublicIdentityService(
         var now = DateTimeOffset.UtcNow;
         if (challenge.ExpiresAt <= now)
         {
-            await SetDomainStateAsync(domainBindingId, SiteDomainVerificationState.Expired, cancellationToken).ConfigureAwait(false);
+            var stateError = await SetDomainStateAsync(challenge, SiteDomainVerificationState.Expired, cancellationToken).ConfigureAwait(false);
+            if (stateError is not null) return SiteApiResult<DomainBinding>.Failure(stateError);
             return SiteApiResult<DomainBinding>.Failure(new SiteApiError("DomainVerificationExpired", "The DNS challenge expired. Generate a new challenge and update the TXT record.", domainBindingId.ToString(), true));
         }
 
@@ -238,7 +239,8 @@ public sealed class SitePublicIdentityService(
             Convert.FromHexString(challenge.TokenHash)));
         if (!found)
         {
-            await SetDomainStateAsync(domainBindingId, SiteDomainVerificationState.Pending, cancellationToken).ConfigureAwait(false);
+            var stateError = await SetDomainStateAsync(challenge, SiteDomainVerificationState.Pending, cancellationToken).ConfigureAwait(false);
+            if (stateError is not null) return SiteApiResult<DomainBinding>.Failure(stateError);
             return SiteApiResult<DomainBinding>.Failure(new SiteApiError("DomainVerificationPending", "The required TXT challenge was not found yet. Check the record and retry after DNS propagation.", domainBindingId.ToString(), true, TimeSpan.FromMinutes(1)));
         }
 
@@ -250,7 +252,8 @@ public sealed class SitePublicIdentityService(
                 if (index < 0) throw new SiteOperationException(new SiteApiError("DomainBindingNotFound", "The domain binding was removed during verification.", domainBindingId.ToString(), false));
                 var current = state.Domains[index];
                 var currentChallenge = state.DomainChallenges.SingleOrDefault(candidate => candidate.ChallengeId == challenge.ChallengeId);
-                if (currentChallenge is null || currentChallenge.ExpiresAt <= DateTimeOffset.UtcNow || currentChallenge.TokenHash != challenge.TokenHash)
+                if (currentChallenge is null || currentChallenge.VerifiedAt is not null || currentChallenge.ExpiresAt <= DateTimeOffset.UtcNow || currentChallenge.TokenHash != challenge.TokenHash ||
+                    state.DomainChallenges.Any(candidate => candidate.DomainBindingId == domainBindingId && candidate.Generation > currentChallenge.Generation))
                     throw new SiteOperationException(new SiteApiError("DomainVerificationExpired", "The domain challenge changed or expired during DNS verification. Start a new challenge.", domainBindingId.ToString(), true));
                 var duplicate = state.Domains.FirstOrDefault(candidate => candidate.DomainBindingId != domainBindingId && candidate.SiteId != current.SiteId &&
                     candidate.OwnershipState == SiteDomainVerificationState.Verified && string.Equals(candidate.HostnameAscii, current.HostnameAscii, StringComparison.Ordinal));
@@ -291,15 +294,26 @@ public sealed class SitePublicIdentityService(
         return result is null ? SiteApiResult<SiteProject>.Failure(new SiteApiError("SiteNotFound", "The Sites project was not found.", id.ToString(), false)) : SiteApiResult<SiteProject>.Success(result);
     }
 
-    private async Task SetDomainStateAsync(Guid id, SiteDomainVerificationState state, CancellationToken cancellationToken)
+    private async Task<SiteApiError?> SetDomainStateAsync(DomainOwnershipChallenge challenge, SiteDomainVerificationState state, CancellationToken cancellationToken)
     {
-        await store.MutateAsync(snapshot =>
+        try
         {
-            var domains = snapshot.Domains.Select(candidate => candidate.DomainBindingId == id
-                ? candidate with { OwnershipState = state, Revision = checked(candidate.Revision + 1), UpdatedAt = DateTimeOffset.UtcNow }
-                : candidate).ToArray();
-            return (snapshot with { Domains = domains }, true);
-        }, cancellationToken).ConfigureAwait(false);
+            await store.MutateAsync(snapshot =>
+            {
+                var currentChallenge = snapshot.DomainChallenges.SingleOrDefault(candidate => candidate.ChallengeId == challenge.ChallengeId);
+                if (currentChallenge is null || currentChallenge.VerifiedAt is not null || currentChallenge.TokenHash != challenge.TokenHash ||
+                    snapshot.DomainChallenges.Any(candidate => candidate.DomainBindingId == challenge.DomainBindingId && candidate.Generation > currentChallenge.Generation))
+                    throw new SiteOperationException(new SiteApiError("DomainVerificationExpired", "The domain challenge changed during DNS verification. Retry with the current challenge.", challenge.DomainBindingId.ToString(), true));
+                if (!snapshot.Domains.Any(candidate => candidate.DomainBindingId == challenge.DomainBindingId))
+                    throw new SiteOperationException(new SiteApiError("DomainBindingNotFound", "The domain binding was removed during verification.", challenge.DomainBindingId.ToString(), false));
+                var domains = snapshot.Domains.Select(candidate => candidate.DomainBindingId == challenge.DomainBindingId
+                    ? candidate with { OwnershipState = state, Revision = checked(candidate.Revision + 1), UpdatedAt = DateTimeOffset.UtcNow }
+                    : candidate).ToArray();
+                return (snapshot with { Domains = domains }, true);
+            }, cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+        catch (SiteOperationException ex) { return ex.Error; }
     }
 
     private async Task<SiteApiResult<bool>> AuthorizeAsync(string actionId, string impact, IReadOnlyList<string> objectIds, IReadOnlyList<string> scopes, CancellationToken cancellationToken)
