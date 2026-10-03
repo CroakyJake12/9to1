@@ -1,50 +1,71 @@
-# FILE DOCUMENTATION
-# Where: .github/workflows/haven-chat-model-ci.yml in the GitHub automation configuration used by continuous integration.
-# What: This file automates or configures the repository operation described by its commands and keys.
-# How: Read from top to bottom: inputs and environment first, validation/processing next, and explicit success or failure output last.
-# Why: The file keeps one cohesive responsibility in a predictable location so callers can find and replace it without unrelated changes.
-name: Haven Chat and Model Pass
-
+name: Astra shared mathematics whole owning regression resource
 on:
   workflow_dispatch:
-
+    inputs:
+      expected_commit:
+        required: true
+        type: string
+      cut_manifest_sha256:
+        required: true
+        type: string
 permissions:
   contents: read
-
 jobs:
   validate:
-    runs-on: windows-latest
-    timeout-minutes: 45
+    if: startsWith(github.ref, 'refs/heads/validation/astra-shared-math01-')
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: [owning, regression, resource]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      AVALONIA_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
+      MSBUILDDISABLENODEREUSE: '1'
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Materialize only three exact source dependencies
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
+      - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-
-      - name: Restore
-        run: dotnet restore "9to1 Workspace/shared/Haven.sln"
-
-      - name: Build Debug
-        run: dotnet build "9to1 Workspace/shared/Haven.sln" -c Debug --no-restore
-
-      - name: Test Debug
-        run: dotnet test "9to1 Workspace/shared/Haven.sln" -c Debug --no-build
-
-      - name: Build automation worker
-        run: dotnet build "9to1 Workspace/shared/src/Haven.AutomationWorker/Haven.AutomationWorker.csproj" -c Debug --no-restore
-
-      - name: Upload source snapshot
+      - name: Validate identical joined program
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+          COHORT: ${{ matrix.cohort }}
+        run: |
+          set -euo pipefail
+          if [ "$COHORT" = owning ]; then
+            mkdir -p artifacts/desktop-visible-owning
+            command -v Xvfb > artifacts/desktop-visible-owning/actual-xvfb-path.txt
+            command -v xvfb-run > artifacts/desktop-visible-owning/actual-xvfb-run-path.txt
+            command -v xauth > artifacts/desktop-visible-owning/actual-xauth-path.txt
+            dpkg-query -W -f='${binary:Package} ${Version} ${Status}\n' xvfb xauth > artifacts/desktop-visible-owning/actual-display-package-provenance.txt
+            sha256sum "$(command -v Xvfb)" "$(command -v xvfb-run)" "$(command -v xauth)" > artifacts/desktop-visible-owning/actual-display-executable-sha256.txt
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24 -nolisten tcp' bash -c '
+              test -n "$DISPLAY"
+              printf "%s\n" "$DISPLAY" > artifacts/desktop-visible-owning/actual-display.txt
+              python3 ".github/scripts/astra-shared-math01-owning.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-shared-math01-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+            '
+          else
+            python3 ".github/scripts/astra-shared-math01-${COHORT}.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-shared-math01-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+          fi
+      - name: Retain actual evidence including failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: haven-source-snapshot
-          path: |
-            .
-            !**/bin/**
-            !**/obj/**
-            !.git/**
-          include-hidden-files: true
-          retention-days: 3
+          name: astra-shared-math01-${{ matrix.cohort }}-${{ github.sha }}
+          path: artifacts/desktop-visible-${{ matrix.cohort }}
+          if-no-files-found: error
+          retention-days: 14
