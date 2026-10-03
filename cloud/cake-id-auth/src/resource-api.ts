@@ -1,6 +1,6 @@
 import { oauthProviderResourceClient } from "@better-auth/oauth-provider/resource-client";
 import type { createAuth } from "./auth";
-import type { CakeScope } from "./contract";
+import { AUTH_BASE_PATH, type CakeScope } from "./contract";
 import type { Env } from "./env";
 import { json } from "./pages";
 
@@ -22,7 +22,7 @@ async function authorize(request: Request, env: Env, auth: Auth, scope: CakeScop
     let claims: Claims;
     try {
       claims = await oauthProviderResourceClient(auth).getActions().verifyAccessTokenRequest(request, {
-        verifyOptions: { audience: env.API_RESOURCE, issuer: env.AUTH_BASE_URL },
+        verifyOptions: { audience: env.API_RESOURCE, issuer: `${env.AUTH_BASE_URL.replace(/\/$/, "")}${AUTH_BASE_PATH}` },
         requiredScopes: [scope],
       }) as Claims;
     } catch {

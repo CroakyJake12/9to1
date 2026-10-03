@@ -9,6 +9,12 @@ import { oauthProviderResourceClient } from "@better-auth/oauth-provider/resourc
 import { oauthProviderClient } from "@better-auth/oauth-provider/client";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
+let assertionCount = 0;
+for (const method of ["equal", "notEqual", "ok", "match", "doesNotMatch", "rejects"]) {
+  const check = assert[method];
+  assert[method] = (...args) => { assertionCount++; return check(...args); };
+}
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 if (process.platform === "win32" && process.arch === "arm64") {
@@ -40,6 +46,7 @@ let worker;
 let serverOutput = "";
 let activeURL = new URL(baseURL);
 const cookies = new Map();
+let syntheticSource = 0;
 const realFetch = globalThis.fetch.bind(globalThis);
 
 async function waitForWorkerExit(timeoutMs = 5000) {
@@ -91,6 +98,7 @@ globalThis.fetch = async (input, init = {}) => {
   if (new URL(incoming.url).origin === baseURL) {
     if (cookies.size) headers.set("cookie", [...cookies].map(([name, value]) => `${name}=${value}`).join("; "));
     headers.set("origin", baseURL);
+    headers.set("cf-connecting-ip", `192.0.2.${syntheticSource || 1}`);
   }
   const request = new Request(incoming, { ...init, headers, redirect: "manual" });
   const response = await realFetch(request);
@@ -129,6 +137,7 @@ async function jsonRequest(pathname, method, body, headers = {}) {
 }
 
 async function createSyntheticAccount(prefix, username, password) {
+  syntheticSource++;
   const email = `${prefix}-${runId}@example.test`;
   const result = await authClient.$fetch("/sign-up/email", {
     method: "POST",
@@ -168,7 +177,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
   authorizeURL.search = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    redirect_uri: "http://127.0.0.1:5096/callback",
+    redirect_uri: "https://client.example.test/callback",
     scope: scopes,
     state,
     nonce,
@@ -178,8 +187,14 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
   }).toString();
 
   if (!useSessionCookie) cookies.clear();
-  const authorizeResponse = await globalThis.fetch(authorizeURL, { redirect: "manual" });
-  const redirectLocation = authorizeResponse.headers.get("location");
+  const authorizeResponse = await globalThis.fetch(authorizeURL, { redirect: "manual", headers: { accept: "text/html", "sec-fetch-mode": "navigate" } });
+  let redirectLocation = authorizeResponse.headers.get("location");
+  if (!redirectLocation && authorizeResponse.status === 200) {
+    const navigation = await authorizeResponse.json();
+    assert.equal(navigation.redirect, true, "OAuth fetch response declares navigation");
+    assert.equal(typeof navigation.url, "string", "OAuth fetch response returns a navigation URL");
+    redirectLocation = navigation.url;
+  }
   assert.ok(redirectLocation, `authorization endpoint should redirect to login/consent, received ${authorizeResponse.status}`);
   activeURL = new URL(redirectLocation, baseURL);
 
@@ -196,13 +211,19 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
     }
   }
 
+  if (activeURL.origin === "https://client.example.test") {
+    assert.equal(activeURL.pathname, "/callback", "remembered consent uses the registered callback");
+    assert.equal(activeURL.searchParams.get("state"), state, "remembered consent preserves OAuth state");
+    assert.ok(activeURL.searchParams.get("code"), "remembered consent returns an authorization code");
+    return { code: activeURL.searchParams.get("code"), verifier, state, nonce, callbackURL: "https://client.example.test/callback" };
+  }
   if (activeURL.pathname !== "/consent") {
-    const continuation = await globalThis.fetch(activeURL, { redirect: "manual" });
+    const continuation = await globalThis.fetch(activeURL, { redirect: "manual", headers: { accept: "text/html", "sec-fetch-mode": "navigate" } });
     const next = continuation.headers.get("location");
     if (next) activeURL = new URL(next, baseURL);
   }
   assert.equal(activeURL.pathname, "/consent", `authorization flow should arrive at the consent screen; got ${activeURL.pathname}`);
-  const consentPage = await globalThis.fetch(activeURL, { redirect: "manual" });
+  const consentPage = await globalThis.fetch(activeURL, { redirect: "manual", headers: { accept: "text/html", "sec-fetch-mode": "navigate" } });
   assert.equal(consentPage.status, 200, "consent screen verifies the signed OAuth query");
   const consentHtml = await consentPage.text();
   assert.match(consentHtml, /Authorize application/);
@@ -211,23 +232,23 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
   assert.equal(consent.error, null, `OAuth consent failed: ${JSON.stringify(consent.error)}`);
   if (consent.data?.url) activeURL = new URL(consent.data.url, baseURL);
   else if (consent.data?.redirect && activeURL.pathname === "/consent") {
-    const consentResponse = await globalThis.fetch(activeURL, { redirect: "manual" });
+    const consentResponse = await globalThis.fetch(activeURL, { redirect: "manual", headers: { accept: "text/html", "sec-fetch-mode": "navigate" } });
     const location = consentResponse.headers.get("location");
     if (location) activeURL = new URL(location, baseURL);
   }
 
   const callback = activeURL;
-  assert.equal(callback.origin, "http://127.0.0.1:5096", "successful consent redirects to the registered callback");
+  assert.equal(callback.origin, "https://client.example.test", "successful consent redirects to the registered callback");
   assert.equal(callback.searchParams.get("state"), state, "OAuth state is returned unchanged");
   assert.ok(callback.searchParams.get("code"), "authorization code is returned");
-  return { code: callback.searchParams.get("code"), verifier, state, nonce, callbackURL: "http://127.0.0.1:5096/callback" };
+  return { code: callback.searchParams.get("code"), verifier, state, nonce, callbackURL: "https://client.example.test/callback" };
 }
 
 async function exchangeCode(discovery, clientId, code, verifier, expectedStatus = 200) {
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     code,
-    redirect_uri: "http://127.0.0.1:5096/callback",
+    redirect_uri: "https://client.example.test/callback",
     client_id: clientId,
     code_verifier: verifier,
     resource,
@@ -284,7 +305,14 @@ try {
   const resetMessage = resetOutbox.messages.find((message) => message.subject.includes("Reset"));
   assert.ok(resetMessage, "password reset callback wrote to the local capture sink");
   const resetURL = new URL(resetMessage.body.match(/https?:\/\/[^\s]+/)?.[0]);
-  const resetToken = resetURL.searchParams.get("token");
+  const resetCallback = await globalThis.fetch(resetURL, { redirect: "manual" });
+  assert.equal(resetCallback.status, 302, "recovery email link validates its token and redirects to the approved reset screen");
+  const resetLocation = resetCallback.headers.get("location");
+  assert.ok(resetLocation, "recovery callback returns a reset screen location");
+  const resetScreenURL = new URL(resetLocation, baseURL);
+  assert.equal(resetScreenURL.origin, baseURL, "recovery returns to the trusted issuer origin");
+  assert.equal(resetScreenURL.pathname, "/reset-password", "recovery returns to the configured reset screen");
+  const resetToken = resetScreenURL.searchParams.get("token");
   assert.ok(resetToken, "reset message carries a single-use token");
   const resetResponse = await jsonRequest(`${authPath}/reset-password`, "POST", { token: resetToken, newPassword: "New-test-passphrase-8!LocallyVerified" });
   assert.equal(resetResponse.status, 200, `password reset accepted: ${await resetResponse.clone().text()}`);
@@ -293,9 +321,12 @@ try {
   durationMs.passwordResetAndLogin = Math.round(performance.now() - startHash);
   testAccount.password = "New-test-passphrase-8!LocallyVerified";
 
-  const clientResponse = await jsonRequest(`${authPath}/admin/oauth2/create-client`, "POST", {
+  const privateSession = await (await response(`${authPath}/get-session`)).json();
+  assert.equal(privateSession.user.role, undefined, "privileged role stays out of user/session output");
+
+  const clientResponse = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
     client_name: "9to1 local integration test",
-    redirect_uris: ["http://127.0.0.1:5096/callback"],
+    redirect_uris: ["https://client.example.test/callback"],
     token_endpoint_auth_method: "none",
     application_type: "web",
     grant_types: ["authorization_code", "refresh_token"],
@@ -316,16 +347,25 @@ try {
   // Exercise Better Auth's client hook from the unauthenticated authorization redirect.
   const profileFlow = await authorizationCode(discovery, client.client_id, "openid profile email cake:account:read cake:profile:read", false);
   const startedExchange = performance.now();
-  const wrongVerifier = await exchangeCode(discovery, client.client_id, profileFlow.code, randomBytes(32).toString("base64url"), 400);
+  const wrongVerifier = await exchangeCode(discovery, client.client_id, profileFlow.code, randomBytes(32).toString("base64url"), 401);
   assert.ok(wrongVerifier.error, "wrong PKCE verifier is rejected");
-  const profileToken = await exchangeCode(discovery, client.client_id, profileFlow.code, profileFlow.verifier);
+  const consumedCode = await exchangeCode(discovery, client.client_id, profileFlow.code, profileFlow.verifier, 400);
+  assert.equal(consumedCode.error, "invalid_grant", "failed PKCE attempt consumes the authorization code");
+  const validProfileFlow = await authorizationCode(discovery, client.client_id, "openid profile email cake:account:read cake:profile:read", true);
+  const profileToken = await exchangeCode(discovery, client.client_id, validProfileFlow.code, validProfileFlow.verifier);
   durationMs.passwordLoginAndTokenExchange = Math.round(performance.now() - startedExchange);
   assert.ok(profileToken.access_token && profileToken.id_token, "authorization code produced OIDC and API tokens");
 
   const jwks = createRemoteJWKSet(new URL(discovery.jwks_uri));
   const { payload: idClaims } = await jwtVerify(profileToken.id_token, jwks, { issuer: discovery.issuer, audience: client.client_id });
   assert.match(String(idClaims.sub), /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i, "ID token subject is canonical UUID");
-  assert.ok(typeof idClaims.sid === "string" && idClaims.sid !== idClaims.sub, "ID token sid is an independent session identifier");
+  // OIDC sid is emitted only for registered end-session/backchannel clients.
+  // The resource token's independent sid below remains mandatory for API revocation.
+  if (idClaims.sid !== undefined) {
+    assert.equal(typeof idClaims.sid, "string", "optional OIDC session identifier is a string");
+    assert.notEqual(idClaims.sid, idClaims.sub, "optional OIDC session identifier is independent of account identity");
+  }
+  assert.equal(idClaims.nonce, validProfileFlow.nonce, "ID token binds the exact authorization nonce");
   const { payload: accessClaims } = await jwtVerify(profileToken.access_token, jwks, { issuer: discovery.issuer, audience: resource });
   assert.equal(accessClaims.sub, idClaims.sub, "API token identifies the same account");
   assert.ok(typeof accessClaims.sid === "string" && accessClaims.sid.length > 0, "API token has an independent session id");
@@ -364,6 +404,24 @@ try {
 
   const sessionsFlow = await authorizationCode(discovery, client.client_id, "openid profile cake:sessions:read cake:sessions:revoke", true);
   const sessionToken = await exchangeCode(discovery, client.client_id, sessionsFlow.code, sessionsFlow.verifier);
+  const otherAccount = await createSyntheticAccount("auth-other", `other_${runId}`, "Test-passphrase-9!NoSharedAccount");
+  const otherLogin = await authClient.signIn.email({ email: otherAccount.email, password: otherAccount.password });
+  assert.equal(otherLogin.error, null, "independent account signs in without inherited authority");
+  const otherSession = await (await response(`${authPath}/get-session`)).json();
+  assert.equal(otherSession.user.id, otherAccount.id, "new cookie context belongs to the second account");
+  const otherCurrent = await (await response("/api/account/current")).json();
+  assert.equal(otherCurrent.accountId, otherAccount.id, "account lookup never exposes previous cookie context");
+  const deniedRegistration = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
+    client_name: "unauthorized synthetic client", redirect_uris: ["https://client.example.test/callback"],
+    token_endpoint_auth_method: "none", application_type: "web",
+  });
+  assert.equal(deniedRegistration.status, 401, "ordinary account cannot register a privileged public client");
+  const crossAccountRevoke = await response(`/api/account/sessions/${otherSession.session.id}`, {
+    method: "DELETE", headers: { authorization: `Bearer ${sessionToken.access_token}` },
+  });
+  assert.equal(crossAccountRevoke.status, 404, "even privileged first account cannot revoke another account session");
+  assert.equal((await response("/api/account/current")).status, 200, "cross-account denial preserves the other live session");
+
   const sessions = await response("/api/account/sessions", { headers: { authorization: `Bearer ${sessionToken.access_token}` } });
   assert.equal(sessions.status, 200, `session listing checks its scope: ${await sessions.clone().text()}`);
   const listed = await sessions.json();
@@ -379,13 +437,22 @@ try {
   // A mismatched resource is rejected by the OAuth authorization layer before token issuance.
   const wrongResourceURL = new URL(discovery.authorization_endpoint);
   wrongResourceURL.search = new URLSearchParams({
-    response_type: "code", client_id: client.client_id, redirect_uri: "http://127.0.0.1:5096/callback",
+    response_type: "code", client_id: client.client_id, redirect_uri: "https://client.example.test/callback",
     scope: "openid cake:profile:read", state: randomBytes(16).toString("base64url"),
     code_challenge: createHash("sha256").update(randomBytes(32).toString("base64url")).digest("base64url"),
     code_challenge_method: "S256", resource: "https://wrong.example/api",
   }).toString();
   const wrongResource = await globalThis.fetch(wrongResourceURL, { redirect: "manual" });
-  assert.ok(!wrongResource.headers.get("location")?.startsWith("http://127.0.0.1:5096/callback?code="), "unregistered resource receives no authorization code");
+  let deniedNavigation = wrongResource.headers.get("location");
+  if (!deniedNavigation && wrongResource.headers.get("content-type")?.includes("application/json")) {
+    const deniedBody = await wrongResource.json();
+    if (deniedBody.redirect === true) deniedNavigation = deniedBody.url;
+    else assert.ok(deniedBody.error, "invalid resource returns a structured error");
+  }
+  if (deniedNavigation) {
+    const deniedURL = new URL(deniedNavigation, baseURL);
+    assert.equal(deniedURL.searchParams.has("code"), false, "unregistered resource cannot mint an authorization code via header or JSON navigation");
+  } else assert.ok(wrongResource.status >= 400, "invalid resource fails without navigation");
 
   const limited = await createSyntheticAccount("auth-limit", `limit_${runId}`, "Test-passphrase-9!NoSharedAccount");
   for (let attempt = 1; attempt <= 8; attempt++) {
@@ -406,13 +473,14 @@ try {
 
   console.log(JSON.stringify({
     result: "passed",
+    assertionsExecuted: assertionCount,
     environment: "local Wrangler Workerd + local D1 only",
     issuer: discovery.issuer,
     authorizationEndpoint: discovery.authorization_endpoint,
     tokenEndpoint: discovery.token_endpoint,
     jwksUri: discovery.jwks_uri,
     publicClientRegistration: "synthetic and local only; client id intentionally not printed",
-    redirectUri: "http://127.0.0.1:5096/callback (synthetic test only)",
+    redirectUri: "https://client.example.test/callback (synthetic test only)",
     passwordResetAndLoginMs: durationMs.passwordResetAndLogin,
     passwordLoginAndTokenExchangeMs: durationMs.passwordLoginAndTokenExchange,
     externalEmailDelivery: "not tested; messages captured in local D1 outbox",
@@ -420,6 +488,7 @@ try {
   }, null, 2));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
+  if (error?.cause?.code) console.error(`failure cause code: ${error.cause.code}`);
   process.exitCode = 1;
 } finally {
   globalThis.fetch = realFetch;

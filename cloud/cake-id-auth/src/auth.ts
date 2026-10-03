@@ -41,6 +41,14 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
   assertSafeServiceUrl(baseURL, "AUTH_BASE_URL", localOnly);
   assertSafeServiceUrl(apiResource, "API_RESOURCE", localOnly);
   const db = env.DB;
+  // Private role fields are intentionally omitted from session/user API output.
+  // Evaluate privileged administration from the canonical server row instead.
+  const isAdministrator = async (user: { id: string } | null | undefined): Promise<boolean> => {
+    if (!user?.id) return false;
+    const account = await db.prepare("SELECT 1 FROM user WHERE id = ? AND role = 'admin' LIMIT 1")
+      .bind(user.id).first();
+    return account !== null;
+  };
 
   return {
     appName: "CAKE ID",
@@ -51,6 +59,7 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
     trustedOrigins: [baseURL],
     advanced: {
       database: { generateId: "uuid" },
+      ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
     },
     session: {
       expiresIn: 60 * 60 * 24 * 30,
@@ -96,6 +105,9 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
       enabled: true,
       window: 60,
       max: 100,
+      // index.ts applies the durable identifier/source D1 policy before auth.
+      // Avoid a second process-local login counter with incompatible thresholds.
+      customRules: { "/sign-in/email": false, "/sign-in/username": false },
     },
     plugins: [
       username({
@@ -113,7 +125,7 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
       jwt(),
       oauthProvider({
         scopes: [...AUTHORIZATION_SCOPES],
-        resources: [{ identifier: apiResource, accessTokenTtl: ACCESS_TOKEN_SECONDS, allowedScopes: [...AUTHORIZATION_SCOPES.filter((scope) => scope.startsWith("cake:"))] }],
+        resources: [{ identifier: apiResource, accessTokenTtl: ACCESS_TOKEN_SECONDS, allowedScopes: [...AUTHORIZATION_SCOPES] }],
         resourceSeedMode: "insertOnly",
         enforcePerClientResources: true,
         clientRegistrationDefaultResources: [apiResource],
@@ -123,8 +135,8 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
         idTokenExpiresIn: ACCESS_TOKEN_SECONDS,
         loginPage: "/sign-in",
         consentPage: "/consent",
-        clientPrivileges: ({ user }) => user?.role === "admin",
-        resourcePrivileges: ({ user }) => user?.role === "admin",
+        clientPrivileges: ({ user }) => isAdministrator(user),
+        resourcePrivileges: ({ user }) => isAdministrator(user),
       }),
     ],
   };
