@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "7236b58fbdfa45bac720b249ddffea6212cce41e",
+  "candidateHead": "7a7dc8b44d04fe6f6e23e78df6e5d4a48d04f894",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
