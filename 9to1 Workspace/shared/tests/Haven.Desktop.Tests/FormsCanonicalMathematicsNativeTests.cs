@@ -29,7 +29,7 @@ public sealed class FormsCanonicalMathematicsNativeTests
         {
             await using var graph = Services(root);
             var settings = graph.GetRequiredService<IVersionedSettingsStore>();
-            var identity = await graph.GetRequiredService<IResourceStoreIdentitySource>().GetStoreIdentityAsync(token);
+            var identity = await Assert.IsAssignableFrom<IResourceStoreIdentitySource>(graph.GetRequiredService<IVersionedSettingsStore>()).GetStoreIdentityAsync(token);
             var publications = graph.GetRequiredService<FormPublicationService>();
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Math authoring", FormModeKind.Form, now);
@@ -113,7 +113,7 @@ public sealed class FormsCanonicalMathematicsNativeTests
         {
             await using var graph = Services(root);
             var provider = graph.GetRequiredService<IFormNativeMathematicsProvider>();
-            var identities = graph.GetRequiredService<IResourceStoreIdentitySource>();
+            var identities = Assert.IsAssignableFrom<IResourceStoreIdentitySource>(graph.GetRequiredService<IVersionedSettingsStore>());
             var identity = await identities.GetStoreIdentityAsync(token);
             await graph.GetRequiredService<HomeLocalStoreOwnership>().BindNewEmptyAsync("forms", identity.StoreId.ToString("D"), token);
             var actor = (await graph.GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token))!;
@@ -222,7 +222,7 @@ public sealed class FormsCanonicalMathematicsNativeTests
         try
         {
             await using var graph = Services(root);
-            var identity = await graph.GetRequiredService<IResourceStoreIdentitySource>().GetStoreIdentityAsync(token);
+            var identity = await Assert.IsAssignableFrom<IResourceStoreIdentitySource>(graph.GetRequiredService<IVersionedSettingsStore>()).GetStoreIdentityAsync(token);
             await graph.GetRequiredService<HomeLocalStoreOwnership>().BindNewEmptyAsync("forms", identity.StoreId.ToString("D"), token);
             var actor = (await graph.GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token))!;
             var session = await graph.GetRequiredService<FormPublicationService>().OpenHostSessionAsync(actor, token);
@@ -271,7 +271,7 @@ public sealed class FormsCanonicalMathematicsNativeTests
         try
         {
             await using var graph = Services(root);
-            var identity = await graph.GetRequiredService<IResourceStoreIdentitySource>().GetStoreIdentityAsync(token);
+            var identity = await Assert.IsAssignableFrom<IResourceStoreIdentitySource>(graph.GetRequiredService<IVersionedSettingsStore>()).GetStoreIdentityAsync(token);
             await graph.GetRequiredService<HomeLocalStoreOwnership>().BindNewEmptyAsync("forms", identity.StoreId.ToString("D"), token);
             var actor = (await graph.GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token))!;
             var session = await graph.GetRequiredService<FormPublicationService>().OpenHostSessionAsync(actor, token);
@@ -404,7 +404,7 @@ public sealed class FormsCanonicalMathematicsNativeTests
         try
         {
             await using var graph = Services(root);
-            var identity = await graph.GetRequiredService<IResourceStoreIdentitySource>().GetStoreIdentityAsync(token);
+            var identity = await Assert.IsAssignableFrom<IResourceStoreIdentitySource>(graph.GetRequiredService<IVersionedSettingsStore>()).GetStoreIdentityAsync(token);
             await graph.GetRequiredService<HomeLocalStoreOwnership>().BindNewEmptyAsync("forms", identity.StoreId.ToString("D"), token);
             var actor = (await graph.GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token))!;
             var session = await graph.GetRequiredService<FormPublicationService>().OpenHostSessionAsync(actor, token);
@@ -467,7 +467,7 @@ public sealed class FormsCanonicalMathematicsNativeTests
         try
         {
             await using var graph = Services(root);
-            var identity = await graph.GetRequiredService<IResourceStoreIdentitySource>().GetStoreIdentityAsync(token);
+            var identity = await Assert.IsAssignableFrom<IResourceStoreIdentitySource>(graph.GetRequiredService<IVersionedSettingsStore>()).GetStoreIdentityAsync(token);
             await graph.GetRequiredService<HomeLocalStoreOwnership>().BindNewEmptyAsync("forms", identity.StoreId.ToString("D"), token);
             var actor = (await graph.GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token))!;
             using var session = await graph.GetRequiredService<FormPublicationService>().OpenHostSessionAsync(actor, token);
