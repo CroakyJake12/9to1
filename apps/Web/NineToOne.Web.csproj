@@ -22,7 +22,7 @@
     <NativeFileReference Remove="@(NativeFileReference->WithMetadataValue('DefiningProjectName', 'Avalonia.Browser'))" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="**/Tests/**/*.cs;**/obj/**/*.cs;**/bin/**/*.cs;Wave/Engine/**/*.cs;Write/Scene/**/*.cs;Files/**/*.cs;Sites/**/*.cs;Picture/**/*.cs;Cards/**/*.cs;Forms/**/*.cs;Productivity/**/*.cs;Media/BrowserPictureMedia.cs;Media/IPictureBrowserMedia.cs" />
+    <Compile Remove="**/Tests/**/*.cs;**/obj/**/*.cs;**/bin/**/*.cs;Wave/Engine/**/*.cs;Write/Scene/**/*.cs;Files/**/*.cs;Sites/**/*.cs;Picture/**/*.cs;Cards/**/*.cs;Forms/**/*.cs;Productivity/**/*.cs;AI/**/*.cs;Media/BrowserPictureMedia.cs;Media/IPictureBrowserMedia.cs" />
     <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj" />
     <ProjectReference Include="../../9to1 Workspace/Home/HavenOS.Home.csproj" />
