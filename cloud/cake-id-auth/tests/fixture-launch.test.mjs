@@ -29,8 +29,7 @@ finally {
   await finishIntegrationCleanup(primaryFailure,async()=>{
     if(worker) {
       worker.stdin.end('stop\n');
-      const timer=setTimeout(()=>{},15000);timer.unref();
-      try { assert.equal(await exited,0); } finally { clearTimeout(timer); }
+      assert.equal(await exited,0);
       const proof=JSON.parse(receipt);
       assert.equal(proof.strictReaped,true);assert.equal(proof.originalsDisappeared,true);
       assert.deepEqual(JSON.parse(readFileSync(path.join(folder,'real-child.json'),'utf8')),proof);
