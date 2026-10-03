@@ -1,0 +1,91 @@
+{
+  "reviewer": "C5",
+  "proposal": "8d51ead744baabe33949987f55d0b474f62aa9f1",
+  "parent": "ae1d14c6b307913d046318e74a17cbbe94f46f90",
+  "ack": "No actionable bounded source regression found; symbol-origin tooling proposal only",
+  "reviewed": "Every changed line in four files, complete portable-symbol helper, full driver and catalogue",
+  "bounds_and_identity": [
+    "16MiB default limit applies to debug directory, compressed payload and declared extracted bytes",
+    "Physical section bounds and debug RVA/pointer equality required",
+    "Raw deflate output limited to declared+1; exact declared size, EOF, no unused data or unconsumed tail required",
+    "Missing, foreign identity or ambiguous embedded/external symbols refused",
+    "Existing actual RSDS GUID/stamp and portable #Pdb identity assertion retained",
+    "Exact extracted symbols retained with kind, same physical PE/debug-record hashes and symbol SHA; no fabricated adjacent PDB",
+    "Full evaluated Compile/PDB document path/hash gates remain unchanged"
+  ],
+  "independent_controls": {
+    "command": "ASTRA_SYMBOL_RECEIVING_ROOT=/workspace/team-c/c3-admin-subreaper-validation python3 .github/scripts/astra-embedded-symbol-tests.py",
+    "cwd": "/workspace/team-c/c3-admin-embedded-symbol-proposal",
+    "exit": 0,
+    "discovered": 11,
+    "passed": 11,
+    "failed": 0,
+    "scope": "Actual retained producer symbols and malformed variants; no SDK build or suite rerun"
+  },
+  "independent_physical_verification": {
+    "physicalPE": "/workspace/team-c/c3-admin-subreaper-validation/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "sha256": "94159352dee6f99f4a3abe9b8ea7f931debc3734aa83aaee5ac66883c5609d78",
+    "symbols_sha256": "0fc84e64047ee6888b9f1a4c390105bf77be8e8ae43622d7f4a1e0b4ba56a445",
+    "symbols_bytes": 293880,
+    "exact_extracted_file_equal": true,
+    "actual_identity_matches_C3_result": true,
+    "documents": 221,
+    "existing_actual_source_hashes_verified": 219,
+    "missing": [
+      "/workspace/team-c/c3-admin-subreaper-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/debug/DevGenerators/DevGenerators.CompilerDynamicDependenciesGenerator/CompilerDynamicDependenciesAttribute.generated.cs",
+      "/workspace/team-c/c3-admin-subreaper-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/debug/DevGenerators/DevGenerators.EnumMemberDictionaryGenerator/globalAvalonia.Media.KnownColors.cs"
+    ],
+    "gate": "BLOCKED actual missing generated source documents"
+  },
+  "unchanged_inventory": "All17product source rows and whole suites unchanged; helper catalogue pins independently checked",
+  "holds": [
+    "Two missing generated documents block full source/PDB acceptance",
+    "Fresh root external source/cut pin required before any full successor run",
+    "No full SDK runtime acceptance, global adoption, provider or production claim",
+    "Earlier attempt1 all-document failure retained; missing documents never count as verified"
+  ],
+  "changed_source_hashes": [
+    {
+      "path": ".github/scripts/astra-embedded-symbol-tests.py",
+      "bytes": 3933,
+      "sha256": "fcfdab460d3fd249eb39c07b761f3fb13c1a3bfcd2bc0fc664d27b668f10b4b2"
+    },
+    {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "bytes": 6664,
+      "sha256": "57f5f2e343bcc2768b4a6bdf81160164224d4c47d52bcc08cc93f22fe6a8dc11"
+    },
+    {
+      "path": ".github/scripts/astra-organisation-full-owning.py",
+      "bytes": 29950,
+      "sha256": "c3ed7ba1e61828a2fd9f482facb15b59241f0a70726394e24dc01d98622fbbb9"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "67be198d5c7b19fe16862abd2cf02e8795be8b2500078363023fbb1126cc7e6a"
+    }
+  ],
+  "evidence_hashes": [
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/embedded-symbol-proposal-result.json",
+      "sha256": "762d2e617cd0021e54dd1a2bd0469941fc3675fc6754e9f93fb44307189395a6"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/embedded-symbol-controls-attempt1.log",
+      "sha256": "4113e8c848217138de31ed555176f5daf44d07bf7ce65a3bde3b5187c01699cd"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/embedded-symbol-controls-attempt2.log",
+      "sha256": "6910f368b95188c183fe8b4b153326ef0b5f2771dd156218f859118e44ac2a77"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/actual-task-extracted.portable-pdb",
+      "sha256": "0fc84e64047ee6888b9f1a4c390105bf77be8e8ae43622d7f4a1e0b4ba56a445"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/embedded-symbol-8d51-review.log",
+      "sha256": "2a1131a2f88fd8699fd91380f3d6bfcc09c7f57dc964930c6ea6b9b9d621ffce"
+    }
+  ]
+}
