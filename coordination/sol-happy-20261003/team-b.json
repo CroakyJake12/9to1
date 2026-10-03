@@ -92,7 +92,7 @@
     "Team C acknowledge B-owned claims and confirmed candidate baseline; Team C remains sole release integrator.",
     "C4 publish acknowledged authenticated Files/Sites transport contracts, authoritative metadata/revision commit proofs and staging frontend/backend deployment identities; existing IFilesService lacks browser byte-reference transport.",
     "Team C publish authenticated session/account/permission/tenant/AI/job/billing service protocols and isolated test accounts; no staging or provider credentials configured here.",
-    "Team A provide tested desktop candidate for required browser→desktop→browser continuity; no desktop build may be inferred correct.",
+    "Team A provide tested desktop candidate for required browser\u2192desktop\u2192browser continuity; no desktop build may be inferred correct.",
     "Confirm supported browser versions/performance targets via explicit SH-13 decision; do not infer support from one Chromium result.",
     "Team A clarify/implement Write independent Continuous/Pages/Book viewing and Locked/Unlocked layout states: current Document.LayoutMode/SetLayout combines modes and cannot satisfy all six combinations; no browser-only schema fork.",
     "Team A/test owner review BrowserPrivateProfileManagerTests symbolic-link test return on unsupported setup: present Fact can report green without running security assertions. Keep skip/environment outcome separate from PASS.",
@@ -105,7 +105,9 @@
     "Team C final B handoff: current source team-b/astra-browser-validation-20261003@83c24b2f0033fb2828169921fc905a327120143b; documentation/evidence-only 1356a1346f9d6ea948c202b2dd920b3b29869b77 on team-b/sol-happy-browser-20261003. All 411 evidence/review files are Git-sealed; full acceptance remains blocked. Preserve held original B source history; integrate reviewed current fixes rather than cherry-picking held source alone.",
     "The prior c74 Library pointer failure is now CLOSED by owning 83 position:relative host fix: actual native/canvas boxes align; implementer 14/14 and unchanged independent pointer runner 5/5 pass. Controlled CSS diagnostic was not acceptance; all original red artifacts retained.",
     "A1 maintained theme/font API and exact Runtime dependency ACK received in 5f945e3. C independently reviewed 969 native inputs and c74 keep-alive source at 06c75ec; these source acknowledgements do not accept full runtime/native/provider/product behavior. Please review the new 83 host pointer fix and actual local evidence before global integration.",
-    "Team A outstanding owner request remains actual Dashboard branch overlap and missing browser control semantics. Exact unchanged a63 renderer/Home identities and latest 83 reproduction are separately versioned in the handoff. Supply owner corrections and populated cross-client visual/accessibility regression evidence."
+    "Team A outstanding owner request remains actual Dashboard branch overlap and missing browser control semantics. Exact unchanged a63 renderer/Home identities and latest 83 reproduction are separately versioned in the handoff. Supply owner corrections and populated cross-client visual/accessibility regression evidence.",
+    "Team A A1: exact remotely delivered inputWritebackOwnerProposal above needs ownership ACK/current maintained source. Real native same-turn value+invoke and actual Wave strictoffset fail; identical evidence-only one-line passes8; no shared source modified.",
+    "Team C C2: exact maintainedPublicClientCorsRequest above blocks browser public PKCE metadata/token reads from HTTPSclient.example.test:5096. Current actual8798 discovery/JWKS200 omitACAO. Path-specific explicit-origin public metadata/token success+error/OPTIONS sourcefix +strict fixture handover required; no proxy/fake issuer/login-cookie authority expansion."
   ],
   "testStatus": "Historical83 subset preserved. Resumed actual AX baseline fails5 with3 NOT_RUN; native automation source fixture13 PASS, navigation regression running; durable Write/Files and account CUI queued. No full app/deployment acceptance.",
   "evidenceLocation": {
@@ -133,7 +135,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T21:24:52.744734+00:00",
+  "updatedUTC": "2026-10-03T21:40:00Z",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -183,7 +185,7 @@
     "currentStatus": "Real isolated compile/publish and bounded local browser behavior pass. Parent A63 and global/native/full-product acceptance remain provisional."
   },
   "reviewHoldRepairs": {
-    "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2→green2/2. Incorrect originalfixture revision1→2 corrected with acknowledged Worker SQL CAS and independent review.",
+    "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2\u2192green2/2. Incorrect originalfixture revision1\u21922 corrected with acknowledged Worker SQL CAS and independent review.",
     "homeDispatch": "d4c1816: actual production selector now used by BrowserApplication prefers registeredowner for all canonicalHome routes; owner denial/error/unavailable never fallback. Originalpriorselector fails newownercontrol after16oldpass; fixed22/22/root+B6pass. SDK10 static asset sourcecontract/GL export wiring and sharedCUI primitives/fonts fixed; missing generatedJS actualtarget failure provesguard.",
     "acceptance": "LOCAL_SUBSET_ONLY; awaiting actualbuiltbrowser runtime; full services/deployment/crossclient/browsermatrix NOT_RUN/BLOCKED",
     "status": "THREE_ORIGINAL_P2_SOURCE_DEFECTS_C_INDEPENDENTLY_CLOSED_AT_830F747; ORIGINAL_FAILURES_PRESERVED",
@@ -295,7 +297,7 @@
     "localExecution": "Historical Write65 actualfreshprocess and Scene22 retained. Current actualtoolbar48PASS +sameoriginalred11 precedingassertions; actualowner glyph-layout red beta assigned31.36 width/23.625lineheight actualFormattedText34.132 height. Storage17scripted unitPASS latest actualbrowser17queued, old real14PASS retained. CurrentFiles17PASS, Sites13PASS164assertions plus separatefreshprocessseed17assertions/reopen6assertions; successfulcohort4111sourcehashes unchanged. Allnarrowcounts distinctfromfullappcriteria.",
     "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation",
     "inProgress": "Reactive enabled-state public Avalonia priority diagnostic; common observer lifetime composition; sealed fresh actual Wave/accessibility browser candidate next; real Write device-local feature registration, canonical library recovery; Files17/Sites12 queued. Actual maintained Worker local fixture currently held before Workerd spawn, receiver HTTPS prerequisite ready.",
-    "initialCompile": "Actual bounded Wave/AX/Accounts build exit0 20:51:42→20:52:20,10warnings retained (IL2026 serializer + native Win32 PInvoke); README changed during compile, no immutable acceptance. Actual exact43669e2 publish next, before/after committedsource hashes.",
+    "initialCompile": "Actual bounded Wave/AX/Accounts build exit0 20:51:42\u219220:52:20,10warnings retained (IL2026 serializer + native Win32 PInvoke); README changed during compile, no immutable acceptance. Actual exact43669e2 publish next, before/after committedsource hashes.",
     "nativeAvailability": "Native disposable priority diagnostic10, live observer26, actualautomation17 PASS; three same26 controlled helper regressions fail as expected. Root owner lifetime source independentlyreviewed; freshactualbrowserAX remainsunrun.",
     "actualBrowser": "Immutable43669 firstactualbrowser red JsonSerializerIsReflectionDisabled; sourcefix8b4f2a0 published with SDKreflection+actualowner metadata roots and SGpeer snapshot. Exactsealed8b4 publish222files40302332B SHAe9f5a46cb521f51cd4cc753383201150b6b4e8723c997eaf1db4762d7b177bd7 sourcebefore/afterunchanged. HomeactualAX5structuralPASS0errors, strict40Tab diagnostic provesMAINtrap; Enter/SpaceNOTRUN. Wave14current3executed2PASS1FAIL11NOTRUN,0runtimeerrors: actualcanonicalcreation+persistence passes, immediate0.5 input/import usesoldtimeline0 ratherthanexpected24000. No oracles weakened."
   },
@@ -358,7 +360,7 @@
     },
     {
       "owner": "A1 shared CUI two-way input",
-      "request": "ActualpublishedWave imports atframe0 immediatelyafter nativevalue0.5 despite expected24000,0runtimeerrors, exact8b4candidate. Concrete shared race: CuiControlLoader.cs955 subscribes TextChanged; pinnedAvaloniaTextBox.cs2427–2442 setsText then synchronouslyTextChanging but postsTextChanged toNormal. Immediateaction setsBusy+Notify and restoresoldhostvalue before deferredwriteback. Please boundedOWNER_ACK one-line TextChanging subscription or provideownerfix preserving _applyingHostValues suppression/validation; exactnative same-turn setter→action red/green being prepared. B doesnoteditsharedRuntime withoutACK, no harnessdelay/lowerexpectation/duplicatebindingmodel."
+      "request": "ActualpublishedWave imports atframe0 immediatelyafter nativevalue0.5 despite expected24000,0runtimeerrors, exact8b4candidate. Concrete shared race: CuiControlLoader.cs955 subscribes TextChanged; pinnedAvaloniaTextBox.cs2427\u20132442 setsText then synchronouslyTextChanging but postsTextChanged toNormal. Immediateaction setsBusy+Notify and restoresoldhostvalue before deferredwriteback. Please boundedOWNER_ACK one-line TextChanging subscription or provideownerfix preserving _applyingHostValues suppression/validation; exactnative same-turn setter\u2192action red/green being prepared. B doesnoteditsharedRuntime withoutACK, no harnessdelay/lowerexpectation/duplicatebindingmodel."
     },
     {
       "owner": "A2 shared Write retained renderer",
@@ -423,5 +425,90 @@
     "receiverPreparation": "Locally generated private certificate/key outside Git, SAN client.example.test; isolated Chromium host-resolver mapping to127.0.0.1 and per-certificate SPKI trust. No global TLS bypass, native-client relabel, provider validation bypass or production DNS/CA change.",
     "request": "C2 deliver remotely fetchable full fixture head, supported startup/config/provisioning commands after current posix_spawn setsid repair and actual Workerd readiness. Receiver generates private fixture credentials locally; no credentials in coordination.",
     "observedRemoteFixture": "team-c/sol-happy-c2-browser-fixture@2a7138afbb306a4445e738f37ce9cf5fc9877e39 held before Workerd spawn per current C record."
+  },
+  "inputWritebackOwnerProposal": {
+    "owner": "Team A A1 shared CUI Runtime",
+    "state": "OWNER_ACK_REQUESTED_NOT_SHIPPED",
+    "deliveryBranch": "artifact/team-b-browser-83c24b2",
+    "deliveryCommit": "80b31bf10aacba30474ed9d9178e48b837d71984",
+    "path": "docs/releases/sol-happy-20261003/team-b-input-writeback",
+    "manifestSha256": "5f586bdd26ceb2d1fbe3d0f68a8f08f73eeec10a5ebbdbbe87f38dba0c821923",
+    "canonicalLoaderSha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3",
+    "proposedLoaderSha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
+    "change": "Existing guarded TextBox two-way writeback TextChanged->TextChanging only; actual native same-turn IValueProvider.SetValue0.5 then IInvokeProvider reads old0 and refresh resets native0. canonical2/8 exit134; identical8 proposal8/8 exit0. B6 whole one-line/regression8/native event mechanism reviewed. Exact original logs remotely delivered, no shared source edit.",
+    "request": "A1 ACK this exact one-line owned source change or publish maintained fix/current source for integration. Previously failing actual Wave imported WAV48000frames TimelineStartFrame0 expected24000 must rerun against fresh exact candidate; no harness delay or changed assertion."
+  },
+  "maintainedPublicClientCorsRequest": {
+    "requestId": "b5-maintained-public-client-cors-20261003",
+    "owner": "Team C C2 maintained CAKE ID Worker",
+    "runtimeCommit": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+    "handoffCommit": "dc1d60eec2bb4edcdce2ba5b04883d711e692678",
+    "consumerOrigin": "https://client.example.test:5096",
+    "issuer": "http://127.0.0.1:8798/api/auth",
+    "resourceAudience": "http://127.0.0.1:8798",
+    "publicEvidence": {
+      "file": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/c-fixture-public-metadata.json",
+      "sha256": "8b81e6c83c23c81de8a90e4ae233e97418c1d34896ea3e7b3cb36fde2a3fc64f",
+      "discoveryStatus": 200,
+      "discoveryAccessControlAllowOrigin": null,
+      "jwksStatus": 200,
+      "jwksAccessControlAllowOrigin": null,
+      "scope": "Actual live maintained Workerd public reads with exact Origin header; no credentials, tokens or browser acceptance"
+    },
+    "sourceLocations": [
+      {
+        "path": "cloud/cake-id-auth/src/index.ts",
+        "lines": "18-33,64-70,113",
+        "finding": "Exact env.ALLOWED_WEB_ORIGINS CORS helper is used only for /api/account/**. Auth/discovery/JWKS return auth.handler response without this boundary."
+      },
+      {
+        "path": "cloud/cake-id-auth/src/auth.ts",
+        "line": 60,
+        "finding": "trustedOrigins currently [baseURL]. Owner must determine exact OAuth token endpoint origin/CSRF contract for registered credential-omitted public web client; avoid broadly granting cross-origin cookie/login requests."
+      }
+    ],
+    "requiredOwnerContract": {
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/auth/.well-known/openid-configuration"
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/jwks"
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/oauth2/token",
+          "contentType": "application/x-www-form-urlencoded",
+          "credentials": "omit",
+          "grantType": "authorization_code",
+          "pkce": "S256",
+          "clientAuthentication": "none"
+        }
+      ],
+      "originPolicy": "Existing explicit ALLOWED_WEB_ORIGINS may supply exact isolated client origin. Publish source-owned path-specific behavior, including successful and error responses and any applicable OPTIONS. No wildcard credentialed origin, arbitrary Origin reflection, login-cookie CSRF exemption, fake tokens or new issuer/account authority. Preserve existing token issuer/resource/sid/current-session checks.",
+      "acceptance": [
+        "Actual discovery and JWKS fetch from exact HTTPS client origin succeeds and returns exact issuer/public keys with matching allow-origin and Vary Origin.",
+        "Foreign origin cannot read these responses through an allowed-origin reflection.",
+        "Actual invalid-code token response is readable as its real structured OAuth error from the allowed public-client origin; no fabricated 200.",
+        "Actual public client S256 consent/token exchange browser journey succeeds with genuine verified signed ID/access tokens and real GET /api/account/current same stable subject.",
+        "Account API ordinary and error CORS behavior remains consistent; wrong origin denied."
+      ],
+      "handover": [
+        "Pinned maintained runtime commit/lock and source tests with original failing proof retained.",
+        "Exact updated fixture startup protocol/environment contract and strict kernel custody/reap receipt. Receiver will stop current fixture through its existing custodian and verify strict drain before launching any replacement; no numeric PID signaling or live edits."
+      ]
+    },
+    "consumerState": "Browser account acceptance BLOCKED. Supporting Node PKCE negatives9PASS only. Default app client stays null/unavailable until owner reviewed config/composition and real browser checks."
+  },
+  "homeKeyboardRepairProgress": {
+    "sealedCandidate": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
+    "actual": "5structuralPASS TabFAIL zeroerrors; corrected strict actual40Tabs allMAIN with vendor preventDefault. B-owned current-native semantic Tab arbitration diagnostic8/8PASS untouched bundle, not acceptance. Production B-owned bridge actual HasKeyboardFocus + generic Tab projection ready pending SDK/fresh publish/independent8.",
+    "scope": "No Home CUI replacement or hardcoded action/order/native provider authority."
+  },
+  "currentStorageProgress": {
+    "actual": "Latest frozen real IndexedDB List/unknown-settlement17/17PASS actual Chromium151, all module/fixture/runner before-after hashes same, zero skip/notrun/integrity. Independent exact critical replay outstanding; older14 evidence retained.",
+    "scope": "Real device-local NotesRepository bridge only; not Files provider/hosted/cross-client/fullapp acceptance."
   }
 }
