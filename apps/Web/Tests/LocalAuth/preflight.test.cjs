@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
-const { verifyPublicBinding, readOwnedFixture, withoutCredentialDiagnostics } = require('./run-local-auth-current.cjs');
+const { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, withoutCredentialDiagnostics, classifyFormError, probeNativeFetchReceiver, installPublicStatusObserver } = require('./run-local-auth-current.cjs');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const contract = JSON.parse(fs.readFileSync(path.join(__dirname, 'source-contract.json')));
 const repo = path.resolve(__dirname, '../../../..');
@@ -24,6 +24,19 @@ const fixtures = contract.requiredFixtureSource.map(row => {
 });
 const dependencyRoot = path.join(sandbox, 'public-dependency-preflight-only'); fs.mkdirSync(dependencyRoot);
 fs.symlinkSync(dependencyRoot, path.join(fixtureRoot, 'node_modules'));
+const git = (checkout, args) => {
+  const result = spawnSync('git', ['-C', checkout, ...args], { encoding: 'utf8', env: withoutCredentialDiagnostics(process.env) });
+  assert.equal(result.status, 0); return result.stdout.trim();
+};
+git(fixtureCheckout, ['init', '--quiet']);
+git(fixtureCheckout, ['add', '--', ...contract.requiredFixtureSource.map(row => 'cloud/cake-id-auth/' + row.path)]);
+git(fixtureCheckout, ['-c', 'user.name=Public preflight control', '-c', 'user.email=preflight@example.test', 'commit', '--quiet', '-m', 'Public preflight source only']);
+const fixtureCommit = git(fixtureCheckout, ['rev-parse', 'HEAD']);
+const testCommit = git(repo, ['rev-parse', 'HEAD']);
+const testSourcePins = ['README.md', 'preflight.test.cjs', 'preparation_test.py', 'prepare-local-auth-plan.py', 'run-local-auth-current.cjs', 'source-contract.json'].map(name => {
+  const file = path.join(__dirname, name), bytes = fs.readFileSync(file);
+  return { path: 'apps/Web/Tests/LocalAuth/' + name, bytes: bytes.length, sha256: sha(bytes) };
+}).concat(contract.requiredSource);
 fs.writeFileSync(path.join(bundle, 'index.html'), '<!-- preflight toy asset, never launched -->');
 fs.writeFileSync(path.join(bundle, 'main.js'), '// preflight toy asset, no authentication simulation');
 const manifestPath = path.join(sandbox, 'manifest.json');
@@ -40,7 +53,7 @@ const zipResult = spawnSync('python3', ['-B', '-c', 'import pathlib,sys,zipfile\
 assert.equal(zipResult.status, 0);
 const originalSeal = { sourceCommit: commit, receiptSha256: sha(fs.readFileSync(manifestPath)), zipSha256: sha(fs.readFileSync(archivePath)), zipBytes: fs.statSync(archivePath).size, fileCount: 2 };
 fs.writeFileSync(sealPath, JSON.stringify(originalSeal));
-const originalBinding = { sourceCommit: commit, manifestPath, manifestSha256: sha(fs.readFileSync(manifestPath)), originalManifestPath: manifestPath, originalManifestSha256: sha(fs.readFileSync(manifestPath)), originalSealPath: sealPath, originalSealSha256: sha(fs.readFileSync(sealPath)), originalArchivePath: archivePath, originalArchiveSha256: sha(fs.readFileSync(archivePath)), fileCount: 2, sourceCatalogPath: catalogPath, sourceCatalogAfterPath: afterPath, sourceCatalogSha256: sha(fs.readFileSync(catalogPath)), sourceCatalogAfterSha256: sha(fs.readFileSync(afterPath)), runnerSha256: sha(fs.readFileSync(path.join(__dirname, 'run-local-auth-current.cjs'))), hostSha256: sha(fs.readFileSync(path.join(__dirname, '../ci/sealed-browser-replay/sealed-https-host-explicit-binding.cjs'))), contractSha256: sha(fs.readFileSync(path.join(__dirname, 'source-contract.json'))), fixtureSourceCommit: commit, fixtureCheckout, fixtureSourcePins: fixtures, fixtureDependencyRoot: dependencyRoot, fixtureDependencyLinks: [] };
+const originalBinding = { sourceCommit: commit, manifestPath, manifestSha256: sha(fs.readFileSync(manifestPath)), originalManifestPath: manifestPath, originalManifestSha256: sha(fs.readFileSync(manifestPath)), originalSealPath: sealPath, originalSealSha256: sha(fs.readFileSync(sealPath)), originalArchivePath: archivePath, originalArchiveSha256: sha(fs.readFileSync(archivePath)), fileCount: 2, sourceCatalogPath: catalogPath, sourceCatalogAfterPath: afterPath, sourceCatalogSha256: sha(fs.readFileSync(catalogPath)), sourceCatalogAfterSha256: sha(fs.readFileSync(afterPath)), runnerSha256: sha(fs.readFileSync(path.join(__dirname, 'run-local-auth-current.cjs'))), hostSha256: sha(fs.readFileSync(path.join(__dirname, '../ci/sealed-browser-replay/sealed-https-host-explicit-binding.cjs'))), contractSha256: sha(fs.readFileSync(path.join(__dirname, 'source-contract.json'))), testSourceCommit: testCommit, testCheckout: repo, testSourcePins, fixtureSourceCommit: fixtureCommit, fixtureCheckout, fixtureSourcePins: fixtures, fixtureDependencyRoot: dependencyRoot, fixtureDependencyLinks: [] };
 const writeBinding = change => fs.writeFileSync(bindingPath, JSON.stringify({ ...originalBinding, ...change }));
 const gate = change => { writeBinding(change); return verifyPublicBinding(bindingPath, commit); };
 test.after(() => fs.rmSync(sandbox, { recursive: true }));
@@ -76,6 +89,72 @@ test('mismatched candidate and publication receipt hash refuse', () => {
 test('unreviewed runner or source contract refuses', () => {
   assert.throws(() => gate({ runnerSha256: '0'.repeat(64) }));
   assert.throws(() => gate({ contractSha256: '0'.repeat(64) }));
+});
+test('separate actual test and fixture HEADs refuse a caller-invented label', () => {
+  assert.throws(() => gate({ testSourceCommit: 'b'.repeat(40) }));
+  assert.throws(() => gate({ fixtureSourceCommit: 'b'.repeat(40) }));
+});
+test('all exact105 source bodies remain required despite separate source identities', () => {
+  assert.throws(() => gate({ testSourcePins: testSourcePins.slice(1) }));
+  const changed = structuredClone(testSourcePins); changed.at(-1).sha256 = '0'.repeat(64);
+  assert.throws(() => gate({ testSourcePins: changed }));
+});
+test('actual Git body check refuses rehashed working-tree edits', () => {
+  const row = contract.requiredFixtureSource.find(row => row.path === 'tests/browser-fixture.mjs');
+  const file = path.join(fixtureRoot, row.path), bytes = fs.readFileSync(file);
+  fs.appendFileSync(file, '\n// alternate current body\n');
+  try { assert.throws(() => verifyCheckoutSource(fixtureCheckout, fixtureCommit, [{ path: 'cloud/cake-id-auth/' + row.path, bytes: fs.statSync(file).size, sha256: sha(fs.readFileSync(file)) }])); }
+  finally { fs.writeFileSync(file, bytes); }
+});
+test('redirected selected source refuses before any target contents are read', () => {
+  const row = contract.requiredFixtureSource.find(row => row.path === 'tests/browser-fixture.mjs');
+  const file = path.join(fixtureRoot, row.path), bytes = fs.readFileSync(file), redirected = path.join(sandbox, 'redirected-public-control.js');
+  fs.writeFileSync(redirected, 'Synthetic redirected control only; no private material.');
+  fs.rmSync(file); fs.symlinkSync(redirected, file);
+  const original = fs.readFileSync; let selectedReads = 0;
+  fs.readFileSync = (...args) => { if (args[0] === file || args[0] === redirected) selectedReads++; return original(...args); };
+  try {
+    assert.throws(() => verifyCheckoutSource(fixtureCheckout, fixtureCommit, [{ ...row, path: 'cloud/cake-id-auth/' + row.path }]));
+    assert.equal(selectedReads, 0);
+  } finally { fs.readFileSync = original; fs.rmSync(file); fs.writeFileSync(file, bytes); fs.rmSync(redirected); }
+});
+test('form errors produce fixed categories only, even with credential-bearing text or getters', () => {
+  const marker = 'PRIVATE_TRIPWIRE_NOT_FOR_OUTPUT';
+  assert.equal(classifyFormError(new Error('Target page, context or browser has been closed ' + marker)), 'TARGET_CLOSED');
+  assert.equal(classifyFormError(Object.assign(new Error(marker), { name: 'TimeoutError' })), 'TIMEOUT');
+  assert.equal(classifyFormError(new Error(marker)), 'OTHER');
+  assert.equal(classifyFormError({ get message() { throw new Error(marker); } }), 'OTHER');
+});
+test('fetch receiver probe uses only an invalid absolute URL and redacts both error boundaries', async () => {
+  const vm = require('node:vm'); const marker = 'PRIVATE_TRIPWIRE_NOT_FOR_OUTPUT'; let calls = 0;
+  const scope = { URL, isWindowReceiver: true, fetch: function (value) {
+    calls++; assert.equal(value, 'http://['); assert.throws(() => new URL(value));
+    if (!this?.isWindowReceiver) throw new TypeError('Illegal invocation ' + marker);
+    return Promise.reject(new TypeError('Failed to parse URL ' + marker));
+  } };
+  const observed = await vm.runInNewContext('(' + probeNativeFetchReceiver.toString() + ')()', scope);
+  assert.equal(calls, 2); assert.equal(observed.invalidURLRejected, true);
+  assert.equal(observed.window.classification, 'INVALID_URL'); assert.equal(observed.window.returnedPromise, true);
+  assert.equal(observed.other.classification, 'ILLEGAL_INVOCATION'); assert.equal(observed.other.synchronousThrow, true);
+  assert(!JSON.stringify(observed).includes(marker));
+});
+test('fetch receiver probe refuses a supposedly parseable URL before calling any fetch', async () => {
+  const vm = require('node:vm'); let calls = 0;
+  const observed = await vm.runInNewContext('(' + probeNativeFetchReceiver.toString() + ')()', { URL: class {}, fetch() { calls++; throw new Error('Unexpected request'); } });
+  assert.equal(observed.invalidURLRejected, false); assert.equal(observed.window, null); assert.equal(observed.other, null); assert.equal(calls, 0);
+});
+test('read-only public status observer excludes unknown text and bounds its history', () => {
+  const vm = require('node:vm'); let capture;
+  const current = { dataset: { code: 'Loading' } }, win = {};
+  const scope = { location: { origin: 'https://client.example.test:5096' }, window: win, document: { querySelector: () => current }, MutationObserver: class { constructor(callback) { capture = callback; } observe() {} } };
+  vm.runInNewContext('(' + installPublicStatusObserver.toString() + ')({origin:"https://client.example.test:5096"})', scope);
+  current.dataset.code = 'PRIVATE_TRIPWIRE_NOT_FOR_OUTPUT'; capture();
+  for (let index = 0; index < 40; index++) { current.dataset.code = index % 2 ? 'Ready' : 'PermissionRequired'; capture(); }
+  const state = win.__teamCLocalAuthPublicStatus;
+  assert.equal(state.codes.length, 32); assert.equal(state.truncated, true); assert(state.codes.includes('OTHER'));
+  assert(!JSON.stringify(state).includes('PRIVATE_TRIPWIRE'));
+  const foreign = {}; vm.runInNewContext('(' + installPublicStatusObserver.toString() + ')({origin:"https://client.example.test:5096"})', { ...scope, location: { origin: 'http://127.0.0.1:8799' }, window: foreign });
+  assert.equal(foreign.__teamCLocalAuthPublicStatus, undefined);
 });
 test('changed receiving critical source refuses even if caller rehashes both catalogs', () => {
   const changed = structuredClone(contract.requiredSource); changed[0].sha256 = '0'.repeat(64);

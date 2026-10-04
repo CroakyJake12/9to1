@@ -4,7 +4,15 @@ This is a new bounded test of the existing browser-WASM JOSE broker and actual n
 
 The driver reuses the delivered complete `sealed-https-host-explicit-binding.cjs` and `run-owned-account-replay01.py`/`owned-kernel-child-proof01.py` unchanged. The browser custodian's original **unconfigured** caption remains in its raw receipt. Its kernel/held-child proof applies to the newly issued Node/Chromium family only; it never grants custody of the separate issuer fixture. Root alone holds the fresh issuer's original execution session, starts it, sends its known `stop\n`, and verifies strict drain. Original B8798 and B8799 held sessions are separate and remain untouched.
 
-`source-contract.json` pins the complete current bodies of thirteen actual public broker/bootstrap/CUI owner/consumer files and all92 tracked maintained local issuer files. They come from receiving source `a9dc1a80499b7ddfd925ac7f816633abfb523b0e`; all thirteen consumer bodies were independently compared with current Web producer source `7ded080066ec4b066519c2fb1848fec5c66fba06` and match. Candidate commit and every original artifact hash must be supplied explicitly. Current7ded's successful publisher omitted public artifact upload, so its diagnostics alone cannot execute this test. The separate reviewed C4 retention proposal preserves the next necessary producer's original public ZIP/manifest/seal; source catalogs remain in its existing diagnostics upload.
+The first actual execution of driver73b0b8c against the retained df547b5c publication is preserved: two PASS, one FAIL at `actual-issuer-signin-form` (`Error`,411ms), four dependent NOT_RUN. Browser startup and immutable normal closure passed. Discovery/JWKS counters incremented only HTTP200, so their zero values do not establish that no request was attempted. The redacted failure does not establish an implementation cause. The original popup, fixture and browser are not reused by this diagnostic successor.
+
+This successor adds only observation: a fixed form-error category (`TARGET_CLOSED`, `TIMEOUT`, `OTHER`), popup close phase and navigation-origin categories, discovery attempt/finish/failure counts and all numeric HTTP status counts, plus at most32 fixed public `#browser-status` code transitions. Unknown codes become `OTHER`; no DOM text or raw error/URL is retained. A read-only MutationObserver observes the existing status element and never overrides product exports, broker callbacks, network responses, rendering or authentication. All seven assertions and successful-protocol counters stay unchanged. These diagnostics can distinguish a pre-discovery failure from rejected metadata; they do not establish authentication success.
+
+An additional actual-browser receiver control calls native `fetch` with the guaranteed malformed absolute URL `http://[` using the Window receiver and a separate plain-object receiver. URL parsing must reject that string before either call; an unexpectedly parseable URL refuses both calls. The control has no usable endpoint, network request, credentials, token or broker hook. It reports only whether the function looks native, synchronous throw versus rejected promise, and fixed `ILLEGAL_INVOCATION`/`INVALID_URL`/`OTHER` classifications. This can establish native function receiver behavior separately from the integration failure; it does not preclaim the broker's actual failure cause.
+
+Original unrun diagnostic9e4769a3 is retained. Its source verifier read a selected path before its regular/no-symlink/realpath guard. This successor moves that guard before the read and uses it for the six test-body reads. A synthetic redirected-source read counter proves refusal before target contents; no real private target is used.
+
+`source-contract.json` pins the complete current bodies of thirteen actual public broker/bootstrap/CUI owner/consumer files and all92 tracked maintained local issuer files. They come from receiving source `a9dc1a80499b7ddfd925ac7f816633abfb523b0e`; all105 bodies are conserved in the retained df547b5c producer. The publication candidate, test-driver checkout and fixture checkout have separate explicit commit arguments. Actual Git HEAD and every selected working-tree body must equal the supplied commit's Git body. The thirteen public bodies remain bound to the original producer catalogs as well as the current test checkout; all92 fixture bodies remain bound to their own original contract. The six complete test files are pinned to the actual test checkout HEAD and into the browser custodian's before/after inventory. A newer test commit never relabels the original df publication or changes its receipt. No Web rebuild is needed when all105 bodies match this contract.
 
 ## Gates before execution
 
@@ -25,6 +33,8 @@ Run the second command through a **fresh `exec_command(tty:true)`**, save that r
 ```sh
 python3 -B apps/Web/Tests/LocalAuth/prepare-local-auth-plan.py \
   --candidate '<actual-new-producer-40-hex-commit>' \
+  --test-source-commit '<actual-reviewed-diagnostic-test-checkout-40-hex-commit>' \
+  --fixture-source-commit '<actual-fresh-fixture-checkout-40-hex-commit>' \
   --manifest '<received>/publish-manifest.json' --manifest-sha '<actual-original-receipt-SHA256>' \
   --seal '<received>/seal.json' --seal-sha '<actual-original-seal-SHA256>' \
   --archive '<received>/wwwroot.zip' --archive-sha '<actual-original-ZIP-SHA256>' \
@@ -72,4 +82,4 @@ node --test apps/Web/Tests/LocalAuth/preflight.test.cjs
 python3 -B apps/Web/Tests/LocalAuth/preparation_test.py
 ```
 
-These are refusal/inventory/privacy guards, not simulated sign-in or browser acceptance. Actual seven-case execution remains **NOT_RUN** until Root binds the new published bodies and starts its own fresh issuer.
+These are refusal/inventory/privacy guards, not simulated sign-in or browser acceptance. The diagnostic successor's actual seven-case execution remains **NOT_RUN** until Root binds the conserved original published bodies to this independently reviewed test commit and starts another own fresh issuer. The first73b0b8c failure and both original custody closures remain historical evidence.

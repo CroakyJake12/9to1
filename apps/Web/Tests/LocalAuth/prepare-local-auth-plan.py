@@ -40,6 +40,28 @@ def regular(file):
     return {'path': str(file), 'bytes': file.stat().st_size, 'sha256': sha(file)}
 
 
+def reviewed_checkout(checkout, expected_commit, rows):
+    if not isinstance(expected_commit, str) or not re.fullmatch('[0-9a-f]{40}', expected_commit):
+        raise RuntimeError('Explicit separate source identity required')
+    actual = command(['git', 'rev-parse', 'HEAD'], checkout).decode().strip()
+    if actual != expected_commit:
+        raise RuntimeError('Explicit source checkout HEAD differs')
+    selected = set()
+    pins = []
+    for row in rows:
+        name = row['path']
+        if not isinstance(name, str) or not name or name.startswith('/') or '\\' in name or any(part in ['', '.', '..'] for part in name.split('/')) or name in selected:
+            raise RuntimeError('Unique exact reviewed source path required')
+        selected.add(name)
+        file = checkout / name
+        pin = regular(file)
+        original = command(['git', 'show', expected_commit + ':' + name], checkout)
+        if file.read_bytes() != original or pin['bytes'] != row['bytes'] or pin['sha256'] != row['sha256']:
+            raise RuntimeError('Reviewed source body differs from actual Git identity')
+        pins.append(pin)
+    return pins
+
+
 def receive_public_archive(archive_path, manifest, destination):
     # Exact received producer bodies only; no guessed files, patches or extraction shortcuts.
     rows = manifest['publishFiles']
@@ -74,7 +96,7 @@ def receive_public_archive(archive_path, manifest, destination):
 
 
 def prepare(args):
-    if not re.fullmatch('[0-9a-f]{40}', args.candidate) or any(not re.fullmatch('[0-9a-f]{64}', value) for value in [args.manifest_sha, args.seal_sha, args.archive_sha]):
+    if any(not re.fullmatch('[0-9a-f]{40}', value) for value in [args.candidate, args.test_source_commit, args.fixture_source_commit]) or any(not re.fullmatch('[0-9a-f]{64}', value) for value in [args.manifest_sha, args.seal_sha, args.archive_sha]):
         raise RuntimeError('Explicit immutable candidate and manifest hash required')
     execution = Path(args.execution_root).absolute()
     if execution.exists():
@@ -86,9 +108,14 @@ def prepare(args):
         raise RuntimeError('Existing pinned Playwright1.62.0 required; do not install')
     checkout = Path(args.fixture_checkout).resolve(strict=True)
     fixture = checkout / 'cloud/cake-id-auth'
-    fixture_head = command(['git', 'rev-parse', 'HEAD'], checkout).decode().strip()
-    if not re.fullmatch('[0-9a-f]{40}', fixture_head):
-        raise RuntimeError('Actual fixture checkout identity absent')
+    fixture_head = args.fixture_source_commit
+    test_checkout = Path(command(['git', 'rev-parse', '--show-toplevel'], HERE).decode().strip()).resolve(strict=True)
+    contract = json.loads((HERE / 'source-contract.json').read_text())
+    test_files = ['README.md', 'preflight.test.cjs', 'preparation_test.py', 'prepare-local-auth-plan.py', 'run-local-auth-current.cjs', 'source-contract.json']
+    test_rows = [{**regular(HERE / name), 'path': 'apps/Web/Tests/LocalAuth/' + name} for name in test_files] + contract['requiredSource']
+    test_pins = reviewed_checkout(test_checkout, args.test_source_commit, test_rows)
+    fixture_rows = [{**row, 'path': 'cloud/cake-id-auth/' + row['path']} for row in contract['requiredFixtureSource']]
+    reviewed_checkout(checkout, fixture_head, fixture_rows)
     command(['git', 'diff', '--exit-code', 'HEAD', '--', 'cloud/cake-id-auth'], checkout)
     expected_packages = {'wrangler': '4.146.0', 'better-auth': '1.7.7', '@better-auth/oauth-provider': '1.7.7', 'jose': '6.2.12'}
     dependency_pins = []
@@ -140,6 +167,7 @@ def prepare(args):
                'sourceCatalogAfterPath': str(after), 'sourceCatalogAfterSha256': sha(after),
                'runnerSha256': sha(HERE / 'run-local-auth-current.cjs'), 'hostSha256': sha(REPLAY / 'sealed-https-host-explicit-binding.cjs'),
                'contractSha256': sha(HERE / 'source-contract.json'), 'fixtureSourceCommit': fixture_head,
+               'testSourceCommit': args.test_source_commit, 'testCheckout': str(test_checkout), 'testSourcePins': test_rows,
                'fixtureCheckout': str(checkout), 'fixtureSourcePins': source_pins,
                'fixtureDependencyRoot': str(dependency_root), 'fixtureDependencyLinks': dependency_links}
     binding_path = execution / 'public-binding.json'
@@ -176,7 +204,7 @@ def prepare(args):
                 raise RuntimeError('Public tool symlink inventory requires explicit review')
             if file.is_file():
                 pins.append(regular(file))
-    pins += source_pins + dependency_pins
+    pins += source_pins + dependency_pins + test_pins
     pins = list({row['path']: row for row in pins}.values())
     plan = {'output': str(execution / 'results'), 'control': str(execution / 'control'), 'tmpdir': str(execution / 'tmp'),
             'cache': str(execution / 'cache'), 'resourceRoot': str(execution), 'browserExecutable': str(browser),
@@ -190,7 +218,7 @@ def prepare(args):
                    'CHROMIUM_EXECUTABLE': str(browser), 'B5_CLIENT_TLS_ROOT': str(tls), 'B5_CLIENT_TLS_CERT': str(cert),
                    'B5_CLIENT_TLS_KEY': str(key), 'B5_CLIENT_TLS_SPKI': spki})
     invocation = {'scope': 'PREPARED only: fresh root-owned issuer original TTY remains separate; existing browser custodian reused unchanged. Its legacy unconfigured caption is retained and conveys browser-family custody only.',
-                  'candidateSourceCommit': args.candidate, 'fixtureSourceCommit': fixture_head, 'bindingSha256': sha(binding_path),
+                  'candidateSourceCommit': args.candidate, 'testSourceCommit': args.test_source_commit, 'fixtureSourceCommit': fixture_head, 'bindingSha256': sha(binding_path),
                   'planSha256': sha(plan_path), 'planPath': str(plan_path), 'environment': environment,
                   'argv': ['python3', '-B', str(REPLAY / 'run-owned-account-replay01.py'), str(plan_path), sha(plan_path)],
                   'keyMetadata': {'path': str(key), 'mode': stat.st_mode & 0o777, 'bytes': stat.st_size, 'dev': stat.st_dev, 'ino': stat.st_ino, 'mtimeNs': stat.st_mtime_ns},
@@ -202,7 +230,7 @@ def prepare(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ['manifest', 'manifest-sha', 'seal', 'seal-sha', 'archive', 'archive-sha', 'candidate', 'source-catalog', 'source-catalog-after', 'fixture-checkout', 'fixture-manifest', 'execution-root', 'node', 'playwright-module', 'chromium']:
+    for name in ['manifest', 'manifest-sha', 'seal', 'seal-sha', 'archive', 'archive-sha', 'candidate', 'test-source-commit', 'fixture-source-commit', 'source-catalog', 'source-catalog-after', 'fixture-checkout', 'fixture-manifest', 'execution-root', 'node', 'playwright-module', 'chromium']:
         parser.add_argument('--' + name, required=True)
     try:
         prepare(parser.parse_args())

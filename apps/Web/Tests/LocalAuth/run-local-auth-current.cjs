@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const net = require('node:net');
+const { execFileSync } = require('node:child_process');
 const hostPath = path.resolve(__dirname, '../ci/sealed-browser-replay/sealed-https-host-explicit-binding.cjs');
 const { verifySeal, startSealedHost, sha } = require(hostPath);
 const origin = 'https://client.example.test:5096';
@@ -19,6 +20,74 @@ const contractPath = path.join(__dirname, 'source-contract.json');
 const privateNames = ['Profile name', 'Canonical account ID', 'Canonical session ID', 'Current profile revision', 'Session change confirmation'];
 const privateAbsent = snapshot => !snapshot.elements.some(peer => privateNames.includes(peer.name));
 const withoutCredentialDiagnostics = environment => ({ ...environment, DEBUG: '', PWDEBUG: '', NODE_DEBUG: '', NODE_OPTIONS: '' });
+const testFiles = ['README.md', 'preflight.test.cjs', 'preparation_test.py', 'prepare-local-auth-plan.py', 'run-local-auth-current.cjs', 'source-contract.json'];
+function readRegularPublicSource(file) {
+  const stat = fs.lstatSync(file);
+  fixed(!stat.isSymbolicLink() && stat.isFile() && fs.realpathSync(file) === file);
+  return fs.readFileSync(file);
+}
+function verifyCheckoutSource(checkout, expectedCommit, rows) {
+  fixed(validCommit(expectedCommit) && path.isAbsolute(checkout || '') && fs.realpathSync(checkout) === checkout);
+  const git = args => execFileSync('git', ['-C', checkout, ...args], { stdio: ['ignore', 'pipe', 'pipe'], env: withoutCredentialDiagnostics(process.env), timeout: 15000, maxBuffer: 8 * 1024 * 1024 });
+  fixed(git(['rev-parse', 'HEAD']).toString().trim() === expectedCommit);
+  fixed(Array.isArray(rows) && rows.length > 0);
+  const selected = new Set();
+  for (const row of rows) {
+    fixed(typeof row.path === 'string' && row.path && !row.path.includes('\\') && !path.isAbsolute(row.path) && row.path.split('/').every(part => part && part !== '.' && part !== '..') && !selected.has(row.path));
+    selected.add(row.path);
+    const file = path.join(checkout, row.path), bytes = readRegularPublicSource(file), original = git(['show', expectedCommit + ':' + row.path]);
+    fixed(bytes.equals(original) && bytes.length === row.bytes && sha(bytes) === row.sha256);
+  }
+}
+function classifyFormError(error) {
+  // Examine only known Playwright signatures in memory; never retain any message.
+  try {
+    if (error?.name === 'TimeoutError') return 'TIMEOUT';
+    if (typeof error?.message === 'string' && error.message.includes('Target page, context or browser has been closed')) return 'TARGET_CLOSED';
+  } catch {}
+  return 'OTHER';
+}
+async function probeNativeFetchReceiver() {
+  // A malformed absolute URL is rejected locally before any request. Never
+  // pass auth configuration, credentials or a usable endpoint to this probe.
+  const invalid = 'http://[';
+  try { new URL(invalid); return { invalidURLRejected: false, nativeFunction: false, window: null, other: null }; } catch {}
+  const classify = error => {
+    try {
+      if (typeof error?.message === 'string' && error.message.includes('Illegal invocation')) return 'ILLEGAL_INVOCATION';
+      if (typeof error?.message === 'string' && /(?:Failed to parse URL|Invalid URL)/.test(error.message)) return 'INVALID_URL';
+    } catch {}
+    return 'OTHER';
+  };
+  const observe = async invoke => {
+    let result;
+    try { result = invoke(); }
+    catch (error) { return { synchronousThrow: true, returnedPromise: false, rejected: true, classification: classify(error) }; }
+    const promise = typeof result?.then === 'function';
+    if (!promise) return { synchronousThrow: false, returnedPromise: false, rejected: false, classification: 'OTHER' };
+    try { await result; return { synchronousThrow: false, returnedPromise: true, rejected: false, classification: 'OTHER' }; }
+    catch (error) { return { synchronousThrow: false, returnedPromise: true, rejected: true, classification: classify(error) }; }
+  };
+  return { invalidURLRejected: true, nativeFunction: Function.prototype.toString.call(globalThis.fetch).includes('[native code]'),
+    window: await observe(() => Reflect.apply(globalThis.fetch, globalThis, [invalid])),
+    other: await observe(() => { const holder = { fetch: globalThis.fetch }; return holder.fetch(invalid); }) };
+}
+function installPublicStatusObserver({ origin }) {
+  if (location.origin !== origin) return;
+  const known = new Set(['Loading', 'Ready', 'PermissionRequired', 'AuthenticationRequired', 'PrivateContextCleanupFailed', 'BrowserRuntimeUnavailable', 'BrowserCapabilityUnavailable']);
+  const state = { codes: [], truncated: false };
+  Object.defineProperty(window, '__teamCLocalAuthPublicStatus', { value: state });
+  const capture = () => {
+    const value = document.querySelector('#browser-status')?.dataset.code;
+    if (value === undefined) return;
+    const code = known.has(value) ? value : 'OTHER';
+    if (state.codes.at(-1) === code) return;
+    if (state.codes.length === 32) { state.truncated = true; return; }
+    state.codes.push(code);
+  };
+  new MutationObserver(capture).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-code'] });
+  capture();
+}
 
 function verifyPublicBinding(bindingPath, expectedCommit) {
   // These complete public gates precede private-file reads, Playwright import, listeners and network.
@@ -45,6 +114,17 @@ function verifyPublicBinding(bindingPath, expectedCommit) {
     const actual = indexed.get(row.path);
     fixed(actual && actual.sha256 === row.sha256 && actual.bytes === row.bytes);
   }
+  fixed(Array.isArray(binding.testSourcePins) && binding.testSourcePins.length === testFiles.length + contract.requiredSource.length);
+  const testRows = new Map(binding.testSourcePins.map(row => [row.path, row]));
+  fixed(testRows.size === binding.testSourcePins.length);
+  for (const row of contract.requiredSource) fixed(testRows.get(row.path)?.sha256 === row.sha256 && testRows.get(row.path)?.bytes === row.bytes);
+  for (const name of testFiles) {
+    const row = testRows.get('apps/Web/Tests/LocalAuth/' + name), file = path.join(__dirname, name);
+    const bytes = readRegularPublicSource(file);
+    fixed(row && sha(bytes) === row.sha256 && bytes.length === row.bytes);
+  }
+  fixed(path.resolve(binding.testCheckout || '', 'apps/Web/Tests/LocalAuth') === __dirname);
+  verifyCheckoutSource(binding.testCheckout, binding.testSourceCommit, binding.testSourcePins);
   fixed(validCommit(binding.fixtureSourceCommit) && path.isAbsolute(binding.fixtureCheckout || ''));
   fixed(Array.isArray(binding.fixtureSourcePins) && binding.fixtureSourcePins.length > 0);
   const fixtureRoot = path.join(fs.realpathSync(binding.fixtureCheckout), 'cloud/cake-id-auth');
@@ -64,6 +144,7 @@ function verifyPublicBinding(bindingPath, expectedCommit) {
     const actual = fixturePins.get(row.path);
     fixed(actual && actual.sha256 === row.sha256 && actual.bytes === row.bytes);
   }
+  verifyCheckoutSource(binding.fixtureCheckout, binding.fixtureSourceCommit, contract.requiredFixtureSource.map(row => ({ ...row, path: 'cloud/cake-id-auth/' + row.path })));
   fixed(path.isAbsolute(binding.fixtureDependencyRoot || '') && fs.realpathSync(path.join(fixtureRoot, 'node_modules')) === binding.fixtureDependencyRoot);
   fixed(Array.isArray(binding.fixtureDependencyLinks));
   for (const row of binding.fixtureDependencyLinks) {
@@ -120,6 +201,17 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
   const mark = stage => { substep = stage; };
   const safeError = error => ({ stage: active, substep, type: ['Error', 'TypeError', 'AssertionError', 'TimeoutError'].includes(error?.name) ? error.name : 'Error', elapsedMs: Math.min(240000, Math.max(0, Date.now() - started)) });
   const observed = { discovery: 0, jwks: 0, authorize: 0, callback: 0, token: 0, current: 0, profile: 0, sessions: 0, signout: 0, apiRequests: 0, protocolValid: true, sameSubject: true };
+  const diagnostic = { formError: null, fetchReceiver: null, popupOpened: false, popupClosed: false, popupClosePhase: 'NOT_OBSERVED', popupNavigations: { blank: 0, issuer: 0, client: 0, other: 0 }, discoveryRequests: 0, discoveryResponses: 0, discoveryStatusCounts: {}, discoveryFinished: 0, discoveryFailed: 0, publicStatusCodes: [], publicStatusTruncated: false, publicStatusReadFailed: false };
+  const popupPhases = new Set(['actual-issuer-signin-form', 'actual-issuer-consent', 'actual-callback-exchange-and-broker-close']);
+  async function capturePublicStatus() {
+    if (!page || page.isClosed()) { diagnostic.publicStatusReadFailed = true; return; }
+    try {
+      const state = await page.evaluate(() => { const state = window.__teamCLocalAuthPublicStatus; return state ? { codes: [...state.codes], truncated: state.truncated } : null; });
+      fixed(state && Array.isArray(state.codes) && state.codes.length <= 32 && typeof state.truncated === 'boolean');
+      fixed(state.codes.every(code => ['Loading', 'Ready', 'PermissionRequired', 'AuthenticationRequired', 'PrivateContextCleanupFailed', 'BrowserRuntimeUnavailable', 'BrowserCapabilityUnavailable', 'OTHER'].includes(code)));
+      diagnostic.publicStatusCodes = state.codes; diagnostic.publicStatusTruncated = state.truncated;
+    } catch { diagnostic.publicStatusReadFailed = true; }
+  }
   const pending = new Set();
   let state, nonce, challenge, callbackCode;
   async function drainObservations() { while (pending.size) await Promise.all([...pending]); }
@@ -155,7 +247,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     fixed(!fs.existsSync(output)); fs.mkdirSync(output, { mode: 0o700 });
     active = 'owned-fixture-preflight'; owned = readOwnedFixture(manifestPath, runRoot, gate);
     const fixture = owned.fixture;
-    report.sourceCommit = expectedCommit; report.fixtureSourceCommit = gate.binding.fixtureSourceCommit; report.bindingSha256 = gate.bindingSha256;
+    report.sourceCommit = expectedCommit; report.testSourceCommit = gate.binding.testSourceCommit; report.fixtureSourceCommit = gate.binding.fixtureSourceCommit; report.bindingSha256 = gate.bindingSha256;
     report.seal = { sourceCommit: gate.seal.sourceCommit, manifestSha256: gate.seal.manifestSha256, fileCount: gate.seal.fileCount };
     const configuration = { issuer: fixture.issuer, apiResource: fixture.apiResource, clientId: fixture.clientId, redirectUri: fixture.redirectUri, scopes: fixture.scopes, allowLoopbackForIsolatedTests: true };
     const { chromium } = require(process.env.PLAYWRIGHT_MODULE);
@@ -169,12 +261,16 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     context = await browser.newContext({ viewport: { width: 1440, height: 2200 }, serviceWorkers: 'block' });
     // Public host configuration only. No credentials, native export/function override, fake state or asset edits.
     await context.addInitScript(({ configuration, origin }) => { if (location.origin === origin) window.nineToOneBrowserConfiguration = { account: configuration }; }, { configuration, origin });
+    await context.addInitScript(installPublicStatusObserver, { origin });
     await context.route('**/*', async route => { let allowed = false; try { allowed = [origin, issuerOrigin].includes(new URL(route.request().url()).origin); } catch {} if (allowed) await route.continue(); else { report.unexpected.foreignRequest++; await route.abort('blockedbyclient'); } });
     context.on('page', opened => { opened.on('pageerror', () => report.unexpected.pageError++); opened.on('console', message => { if (message.type() === 'error') report.unexpected.consoleError++; }); });
-    context.on('requestfailed', () => report.unexpected.requestFailed++);
+    const discoveryRequest = request => request.method() === 'GET' && request.url() === fixture.issuer + '/.well-known/openid-configuration';
+    context.on('requestfailed', request => { report.unexpected.requestFailed++; if (discoveryRequest(request)) diagnostic.discoveryFailed++; });
+    context.on('requestfinished', request => { if (discoveryRequest(request)) diagnostic.discoveryFinished++; });
     context.on('request', request => {
       try {
         const url = new URL(request.url());
+        if (discoveryRequest(request)) diagnostic.discoveryRequests++;
         if (url.origin === issuerOrigin && url.pathname.startsWith('/api/account/')) observed.apiRequests++;
         if (url.href.split('?')[0] === fixture.discovery.authorization_endpoint) {
           observed.authorize++; observed.protocolValid &&= request.method() === 'GET';
@@ -201,6 +297,11 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     context.on('response', response => {
       const observation = (async () => {
         const url = new URL(response.url()), method = response.request().method();
+        if (discoveryRequest(response.request())) {
+          diagnostic.discoveryResponses++;
+          const status = response.status(); const key = Number.isInteger(status) && status >= 100 && status <= 599 ? String(status) : 'OTHER';
+          diagnostic.discoveryStatusCounts[key] = (diagnostic.discoveryStatusCounts[key] || 0) + 1;
+        }
         if (method === 'GET' && url.href === fixture.issuer + '/.well-known/openid-configuration' && response.status() === 200) observed.discovery++;
         if (method === 'GET' && url.href === fixture.discovery.jwks_uri && response.status() === 200) observed.jwks++;
         if (method === 'POST' && url.href === fixture.discovery.token_endpoint && response.status() === 200) observed.token++;
@@ -221,6 +322,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
       await wait(() => page.evaluate(() => document.querySelector('#browser-status')?.dataset.code === 'Ready'), Math.max(1, deadline - Date.now()));
       const current = await snapshot(), signs = current.elements.filter(peer => peer.name === 'Open trusted CAKE ID sign-in' && peer.role === 'button');
       fixed(signs.length === 1 && signs[0].enabled && privateAbsent(current));
+      diagnostic.fetchReceiver = await page.evaluate(probeNativeFetchReceiver);
       return { actualNativeReady: true, privateDataAbsent: true, actualConfiguredSignInEnabled: true };
     });
     await test(names[1], async () => {
@@ -229,13 +331,27 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
       popupPromise.catch(() => {}); // A failed physical click must not leave an unhandled URL-bearing timeout.
       await physical('Open trusted CAKE ID sign-in'); const popup = await popupPromise;
       mark('actual-issuer-signin-form');
-      await popup.locator('#sign-in-form').waitFor({ state: 'visible', timeout: 20000 }); fixed(new URL(popup.url()).origin === issuerOrigin);
+      diagnostic.popupOpened = true;
+      const closed = () => { diagnostic.popupClosed = true; diagnostic.popupClosePhase = popupPhases.has(substep) ? substep : 'OTHER'; };
+      popup.on('close', closed);
+      const navigation = frame => {
+        if (frame !== popup.mainFrame()) return;
+        let category = 'other';
+        try { const url = new URL(frame.url()); category = url.href === 'about:blank' ? 'blank' : url.origin === issuerOrigin ? 'issuer' : url.origin === origin ? 'client' : 'other'; } catch {}
+        diagnostic.popupNavigations[category]++;
+      };
+      popup.on('framenavigated', navigation);
+      if (popup.isClosed()) { diagnostic.popupClosed = true; diagnostic.popupClosePhase = 'CLOSED_BEFORE_OBSERVATION'; }
+      else navigation(popup.mainFrame());
+      try { await popup.locator('#sign-in-form').waitFor({ state: 'visible', timeout: 20000 }); }
+      catch (error) { diagnostic.formError = classifyFormError(error); diagnostic.popupClosed ||= popup.isClosed(); throw error; }
+      fixed(new URL(popup.url()).origin === issuerOrigin);
       await popup.locator('#email').fill(fixture.accounts[0].email); await popup.locator('#password').fill(fixture.accounts[0].password);
       await popup.locator('#sign-in-form button[type=submit]').click();
       mark('actual-issuer-consent');
       await popup.locator('#consent').waitFor({ state: 'visible', timeout: 20000 }); fixed(new URL(popup.url()).origin === issuerOrigin);
-      const closed = popup.waitForEvent('close', { timeout: 30000 }); closed.catch(() => {}); await popup.locator('#allow').click();
-      mark('actual-callback-exchange-and-broker-close'); await closed;
+      const closeReceipt = popup.waitForEvent('close', { timeout: 30000 }); closeReceipt.catch(() => {}); await popup.locator('#allow').click();
+      mark('actual-callback-exchange-and-broker-close'); await closeReceipt;
       await wait(async () => { await drainObservations(); return observed.token > 0 && observed.current > 0; });
       fixed(observed.protocolValid && observed.sameSubject && observed.authorize > 0 && observed.callback === 1 && observed.discovery > 0 && observed.jwks > 0 && observed.token === 1);
       return { physicalNativeSignIn: true, genuineIssuerUIAndConsent: true, freshS256StateNonceAndCodeBinding: true, realTokenExchangeAndJOSEConsumer: true, realSelfVerification: true };
@@ -270,6 +386,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     if (active.endsWith('preflight')) report.setupFailure = safeError(error);
     process.exitCode = 1;
   } finally {
+    await capturePublicStatus();
     active = names[6]; const failures = [];
     for (const [name, close] of [['context', () => context?.close()], ['browser', () => browser?.close()], ['server', () => server ? new Promise((yes, no) => server.close(error => error ? no(error) : yes())) : null]]) try { await close(); } catch { failures.push(name); }
     try { await drainObservations(); } catch { failures.push('observations'); }
@@ -280,6 +397,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     const clean = !!browser && !failures.length && Object.values(report.unexpected).every(value => value === 0);
     report.outcomes[names[6]] = { status: clean ? 'PASS' : 'FAIL', observed: { exactAssetsAndNormalBrowserClose: clean, issuerCustodyOwnedBySeparateOriginalRootTTY: true } };
     report.protocolAndReadCounts = observed; // Counts/booleans only, never credentials, tokens, IDs, URLs or bodies.
+    report.diagnostic = diagnostic; // Fixed enums/status numbers/counts only; no broker hooks or raw messages.
     report.counts = { discovered: names.length, executed: Object.values(report.outcomes).filter(item => item.status !== 'NOT_RUN').length, passed: Object.values(report.outcomes).filter(item => item.status === 'PASS').length, failed: Object.values(report.outcomes).filter(item => item.status === 'FAIL').length, notRun: Object.values(report.outcomes).filter(item => item.status === 'NOT_RUN').length };
     if (report.counts.passed !== names.length) process.exitCode = 1;
     if (fs.existsSync(output)) write();
@@ -287,5 +405,5 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     state = nonce = challenge = callbackCode = null;
   }
 }
-module.exports = { verifyPublicBinding, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics };
+module.exports = { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics, classifyFormError, probeNativeFetchReceiver, installPublicStatusObserver };
 if (require.main === module) run(...process.argv.slice(2)).catch(() => { console.log(JSON.stringify({ status: 'FAIL', stage: 'bounded-runner' })); process.exitCode = 1; });
