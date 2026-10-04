@@ -22,7 +22,10 @@ No remote billing, Stripe consumer or entitlement activation is claimed.
 
 The [canonical website inputs](cloudflare/README.md) retain seven actual published
 WordPress pages. Independent fresh packaging and a tampered-HTML refusal verify
-the retained bytes. These inputs still need the actual Files/session binding,
+the retained bytes. The corrected packaging utility also rejects tampered HTML
+and duplicate page IDs with Python optimization enabled, before writing output;
+[independent receipts](c6/import-guard-96c95-audit/audit.json) preserve the earlier
+utility's failing controls. These inputs still need the actual Files/session binding,
 editable theme/editor mapping, source snapshot export and manifest/per-file hosted
 composition. Minimal wrappers must not overwrite the existing preview.
 

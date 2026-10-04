@@ -406,11 +406,14 @@
     "qualification": "Exact both requests read/hashed; missing bodies in both declared baseline and delivered source prevent complete adapter ACK. No new approved C-owned executable contract, implementation or runtime acceptance."
   },
   "currentCanonicalSitePreparation": {
-    "source": "cc0cb0de",
+    "source": "96c95bafb10de706fdaeb6797ec78a8059629243",
+    "inputSource": "cc0cb0de24a90a0cd870b8ed8c15d0da7889aea2",
     "inputs": "cloudflare/canonical-wordpress-import-input.json",
     "ownerRequest": "cloudflare/canonical-sites-owner-request.json +semantic/c4-canonical-hosted-composition-ports.json",
-    "audit": "c6/canonical-import-d7cf-audit.json",
-    "state": "SOURCE_CAPTURE_AND_PACKAGING_VERIFIED_CANONICAL_AUTHORITY_PARITY_UNBOUND",
-    "qualification": "Seven exact public page bodies; trusted ordinary python3 utility only, assert/-O and duplicate-ID limitations retained. No canonical identities/editable theme/full asset/runtime build/activation inferred."
+    "audit": "c6/import-guard-96c95-audit/audit.json",
+    "historicalOrdinaryAudit": "c6/canonical-import-d7cf-audit.json",
+    "sourceSHA256": "232e07d75975ceb29ef479d4b7e34fced32da30a801d6ba3ac9fa9d6fbf1ecb3",
+    "state": "SOURCE_CAPTURE_AND_OPTIMIZED_GUARDS_VERIFIED_CANONICAL_AUTHORITY_PARITY_UNBOUND",
+    "qualification": "Seven exact public page bodies preserved. Independent optimized tamper and duplicate-ID refusals occur before output; original utility failures retained as negative controls. No canonical identities/editable theme/full asset/runtime build/activation inferred."
   }
 }
