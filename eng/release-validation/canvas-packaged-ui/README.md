@@ -188,3 +188,26 @@ contains current binding booleans/role/PID plus bounded32768-character value/
 expected lengths/SHA/equality, never either text or private paths. Real async
 input/value timing is a hypothesis pending actual observation; new native success
 still requires all original package/setup/approval/stroke/durability/reopen gates.
+
+Original c434 run 37229251228 records 71 passing checks followed by the unchanged
+20-second typed-value observation timeout. All binding fields are true except
+the documented instance Equals identity comparison; no private Value was read.
+The retained and focused editor HWND/runtime identity relation remains unobserved.
+Actual Windows PowerShell 5.1 setup-only run 37231042749 passes 25 controlled CLR
+signature checks without reproducing wrapping, including both faithful original
+argument shapes and the separate explicit PSObject shape. These controlled copies
+do not execute installed UIA methods or establish the original Canvas failure cause.
+
+This diagnostic successor preserves the c434 identity guard, 20-second wait,
+single CtrlL/TypeText, exact Value criterion, original failure/catch and all native
+approval/stroke/durable/reopen/cleanup criteria. Only the failure diagnostic reads
+the SAME captured editor/focus objects and current structures: their real native
+HWND/kernel PID/child/class flags/bounds, actual kernel focus, typed public UIA
+comparison and runtime-ID length/SHA/equality. Runtime IDs are never exported;
+hashing/output admits at most 32 observed integers and uses int32 little-endian
+encoding. This bounds retained/hash input, not the underlying UIA allocation.
+Null/empty/oversized/runtime-read failures remain explicit unobserved/refusal
+metadata. No value, name, path, private profile or raw exception text is emitted.
+The original false identity remains a refusal even if typed diagnostics differ;
+no replacement editor, identity-API fallback, retyping or acceptance inference is
+introduced. Actual native diagnostics remain NOT_RUN until reviewed invocation.

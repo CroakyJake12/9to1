@@ -381,9 +381,58 @@ function Read-BoundedPickerValueWitness([string]$Value,[string]$Expected,[bool]$
     }
     return $s
 }
+function Read-BoundedRuntimeIdWitness([int[]]$Id) {
+    $w=[ordered]@{observed=$null -ne $Id;length=$null;bounded=$false;sha256=$null;hashFormat='int32-little-endian';readRefusal=$null}
+    if($null -eq $Id){return $w}
+    $w.length=$Id.Length
+    if($Id.Length -eq 0 -or $Id.Length -gt 32){$w.readRefusal='RuntimeIdLengthRefusal';return $w}
+    $bytes=New-Object byte[] ($Id.Length*4)
+    for($i=0;$i -lt $Id.Length;$i++){$part=[BitConverter]::GetBytes($Id[$i]);if(-not [BitConverter]::IsLittleEndian){[Array]::Reverse($part)};[Array]::Copy($part,0,$bytes,$i*4,4)}
+    $sha=[Security.Cryptography.SHA256]::Create()
+    try{$w.sha256=([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+    $w.bounded=$true
+    return $w
+}
+function Read-CapturedPickerIdentityWitness($Editor,$Focus,$EditorCurrent,$FocusCurrent,$Dialog,[IntPtr]$PickerHandle,[bool]$OriginalEquals) {
+    $w=[ordered]@{readPhase='owner-admission';completed=$false;originalInstanceEquals=$OriginalEquals;editorIsActualAutomationElement=$null;focusIsActualAutomationElement=$null;ownedCapturedPair=$false;editorNativeWindowHandle=$null;focusNativeWindowHandle=$null;sameNonzeroNativeHandle=$null;editorBounds=$null;focusBounds=$null;editorKernelProcessId=$null;focusKernelProcessId=$null;editorNativeIsPickerChild=$null;focusNativeIsPickerChild=$null;editorNativeClassIsEdit=$null;focusNativeClassIsEdit=$null;focusInDialog=$null;kernelFocusHandle=$null;kernelFocusProcessId=$null;kernelFocusIsPickerChild=$null;kernelFocusClassIsEdit=$null;kernelFocusMatchesEditor=$null;kernelFocusMatchesFocus=$null;typedCompareObserved=$false;typedCompareResult=$null;typedCompareFailureType=$null;editorRuntimeId=$null;focusRuntimeId=$null;runtimeCompareObserved=$false;runtimeIdsEqual=$null;readRefusal=$null;readFailureType=$null}
+    try{
+        $w.editorIsActualAutomationElement=$Editor -is [System.Windows.Automation.AutomationElement]
+        $w.focusIsActualAutomationElement=$Focus -is [System.Windows.Automation.AutomationElement]
+        $w.ownedCapturedPair=$w.editorIsActualAutomationElement -and $w.focusIsActualAutomationElement -and $EditorCurrent.ProcessId -eq $process.Id -and $FocusCurrent.ProcessId -eq $process.Id -and $EditorCurrent.ControlType.ProgrammaticName -ceq 'ControlType.Edit' -and $FocusCurrent.ControlType.ProgrammaticName -ceq 'ControlType.Edit' -and -not $process.HasExited -and $PickerHandle -ne [IntPtr]::Zero -and [CanvasPackageInput]::ForegroundMatches($PickerHandle) -and [CanvasPackageInput]::WindowPid($PickerHandle) -eq $process.Id
+        if(-not $w.ownedCapturedPair){$w.readRefusal='CapturedPairOwnerOrRoleRefusal';return $w}
+        # These are the SAME current structures and focus peer captured by the
+        # original observation, not a replacement editor or fresh focus query.
+        $w.readPhase='captured-native-metadata'
+        $editorHandle=[IntPtr]$EditorCurrent.NativeWindowHandle;$focusHandle=[IntPtr]$FocusCurrent.NativeWindowHandle
+        $w.editorNativeWindowHandle=$editorHandle.ToInt64();$w.focusNativeWindowHandle=$focusHandle.ToInt64()
+        $w.sameNonzeroNativeHandle=$editorHandle -ne [IntPtr]::Zero -and $editorHandle -eq $focusHandle
+        $er=$EditorCurrent.BoundingRectangle;$fr=$FocusCurrent.BoundingRectangle
+        $w.editorBounds=[ordered]@{x=$er.X;y=$er.Y;width=$er.Width;height=$er.Height};$w.focusBounds=[ordered]@{x=$fr.X;y=$fr.Y;width=$fr.Width;height=$fr.Height}
+        foreach($pair in @(@{prefix='editor';handle=$editorHandle},@{prefix='focus';handle=$focusHandle})){
+            if($pair.handle -ne [IntPtr]::Zero){
+                $nativePid=[CanvasPackageInput]::WindowPid($pair.handle);$w[$pair.prefix+'KernelProcessId']=$nativePid
+                if($nativePid -eq $process.Id){$w[$pair.prefix+'NativeIsPickerChild']=[CanvasPackageInput]::IsChild($PickerHandle,$pair.handle);$w[$pair.prefix+'NativeClassIsEdit']=[CanvasPackageInput]::WindowClass($pair.handle) -ceq 'Edit'}
+            }
+        }
+        $w.focusInDialog=Is-InSurface $Focus $Dialog
+        $kernelFocus=[CanvasPackageInput]::FocusHandle($PickerHandle,$process.Id);$w.kernelFocusHandle=$kernelFocus.ToInt64()
+        if($kernelFocus -ne [IntPtr]::Zero){
+            $w.kernelFocusProcessId=[CanvasPackageInput]::WindowPid($kernelFocus)
+            if($w.kernelFocusProcessId -eq $process.Id){$w.kernelFocusIsPickerChild=[CanvasPackageInput]::IsChild($PickerHandle,$kernelFocus);$w.kernelFocusClassIsEdit=[CanvasPackageInput]::WindowClass($kernelFocus) -ceq 'Edit';$w.kernelFocusMatchesEditor=$kernelFocus -eq $editorHandle;$w.kernelFocusMatchesFocus=$kernelFocus -eq $focusHandle}
+        }
+        $w.readPhase='typed-public-uia-compare'
+        try{$w.typedCompareResult=[System.Windows.Automation.Automation]::Compare($Editor,$Focus);$w.typedCompareObserved=$true}catch{$w.typedCompareFailureType=$_.Exception.GetType().FullName}
+        $w.readPhase='editor-runtime-id';[int[]]$editorId=$Editor.GetRuntimeId();$w.editorRuntimeId=Read-BoundedRuntimeIdWitness $editorId
+        $w.readPhase='focus-runtime-id';[int[]]$focusId=$Focus.GetRuntimeId();$w.focusRuntimeId=Read-BoundedRuntimeIdWitness $focusId
+        if($w.editorRuntimeId.bounded -and $w.focusRuntimeId.bounded){$w.readPhase='typed-public-runtime-id-compare';$w.runtimeIdsEqual=[System.Windows.Automation.Automation]::Compare($editorId,$focusId);$w.runtimeCompareObserved=$true}
+        $w.readPhase='completed';$w.completed=$true
+    }catch{$w.readFailureType=$_.Exception.GetType().FullName}
+    return $w
+}
 function Read-OwnedPickerValueObservation($Editor,$Dialog,[IntPtr]$PickerHandle,[string]$Expected,[bool]$Diagnostics=$false) {
     $c=$Editor.Current;$focus=[System.Windows.Automation.AutomationElement]::FocusedElement;$f=$focus.Current;$r=$c.BoundingRectangle;$dc=$Dialog.Current
     $s=[ordered]@{editorProcessId=$c.ProcessId;focusProcessId=$f.ProcessId;editorRole=$c.ControlType.ProgrammaticName;focusRole=$f.ControlType.ProgrammaticName;editorEnabled=$c.IsEnabled;editorOffscreen=$c.IsOffscreen;editorWidth=$r.Width;editorHeight=$r.Height;focusSameEditor=$Editor.Equals($focus);editorInDialog=(Is-InSurface $Editor $Dialog);foregroundIsOwnedPicker=([CanvasPackageInput]::ForegroundMatches($PickerHandle) -and [CanvasPackageInput]::WindowPid($PickerHandle) -eq $process.Id);processLive=-not $process.HasExited;pickerProcessId=$dc.ProcessId;pickerRole=$dc.ControlType.ProgrammaticName;pickerHandleMatchesExpected=$PickerHandle -ne [IntPtr]::Zero -and [IntPtr]$dc.NativeWindowHandle -eq $PickerHandle;bindingAdmitted=$false;exactValue=$false;valueLength=$null;expectedLength=$null;valueSha256=$null;expectedSha256=$null;readRefusal=$null}
+    if($Diagnostics){$s.identityWitness=Read-CapturedPickerIdentityWitness $Editor $focus $c $f $Dialog $PickerHandle $s.focusSameEditor}
     if(-not(Test-OwnedPickerValueBinding $s)){return $s}
     $s.bindingAdmitted=$true
     $value=$Editor.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value
