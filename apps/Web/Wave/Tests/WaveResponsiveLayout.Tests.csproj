@@ -6,7 +6,8 @@
     <BrowserSurfaceRegistrySource Condition="'$(BrowserSurfaceRegistrySource)' == ''">$(MSBuildThisFileDirectory)../../BrowserSurfaceRegistry.cs</BrowserSurfaceRegistrySource>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="WaveResponsiveLayoutControls.cs;../../Tests/BrowserRenderPlatformShims.cs" />
+    <Compile Include="WaveResponsiveLayoutControls.cs;WaveNativePaintCriteria.cs;WaveNativePaintCriterionControls.cs;../../Tests/BrowserRenderPlatformShims.cs" />
+    <Compile Include="../WaveNativePresentation.cs" Link="Production/WaveNativePresentation.cs" />
     <Compile Include="$(BrowserApplicationSource)" Link="Production/BrowserApplication.cs" />
     <Compile Include="$(BrowserSurfaceRegistrySource)" Link="Production/BrowserSurfaceRegistry.cs" />
     <Compile Include="../../BrowserRouteCodec.cs;../../BrowserRouteDispatcher.cs;../../BrowserHomeContext.cs;../../BrowserActionAvailability.cs;../../BrowserAccessibilityBridge.cs;../../BrowserAccessibilityJsonContext.cs" Link="Production/%(Filename)%(Extension)" />

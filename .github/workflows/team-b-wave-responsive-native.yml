@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [original, proposed]
+        variant: [original, d93-unrepaired, proposed]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:

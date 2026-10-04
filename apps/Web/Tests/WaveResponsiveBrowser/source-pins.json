@@ -22,12 +22,12 @@
       "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
     },
     "apps/Web/Wave/WaveBrowserFeature.cs": {
-      "bytes": 4821,
-      "sha256": "e6569d58d34b14664a607df83b0da7df1fedf4f9ac622ea1065a31270c951fa2"
+      "bytes": 4898,
+      "sha256": "23cc46b999b2acd4e45f320d3d20f043f8e82a4d6b9eb01aaf5d182b3f76400d"
     },
     "apps/Web/Wave/Wave.cui": {
-      "bytes": 14376,
-      "sha256": "833732f152351b5807b026a341982064722d60d56ab6887b307aad3ad72b2f04"
+      "bytes": 14523,
+      "sha256": "bec928a6a3e5ee2ae9f1edcbd2765ea01952718b362f5e5de4600889ea1cac59"
     },
     "apps/Web/Tests/ci/run-ordinary-native.py": {
       "bytes": 19584,
@@ -68,6 +68,10 @@
     "apps/Web/BrowserAccessibilityBridge.cs": {
       "bytes": 6998,
       "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+    },
+    "apps/Web/Wave/WaveNativePresentation.cs": {
+      "bytes": 980,
+      "sha256": "cc3ce88eb1b4847f149b2fcf2633011fb897d92745027d7bafc8908dc44f96f3"
     }
   },
   "qualification": "Whole fresh git HEAD/tree/clean plus maintained publisher full source-beforeafter and full asset inventory required. Pins include exact proposed production bodies, not current adoption claim."

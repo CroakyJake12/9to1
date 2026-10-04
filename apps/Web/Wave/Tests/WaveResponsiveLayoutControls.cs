@@ -9,6 +9,8 @@ using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using NineToOne.Web;
+using NineToOne.Web.Wave;
+using NineToOne.Web.Wave.Tests;
 
 // Geometry UNIT only: actual production Render, owner CUI/parser/templates/fonts and
 // glyph layout; scripted public binding projection, no media/storage/action success.
@@ -40,6 +42,8 @@ var failures = await session.Dispatch(() =>
     var parameters = constructor.GetParameters();
     var arguments = parameters.Select(p => p.HasDefaultValue ? p.DefaultValue : null).ToArray();
     arguments[0] = document; arguments[1] = projection; arguments[2] = projection;
+    if (parameters.Length <= 4 || parameters[4].Name != "ControlRegistry") throw new InvalidOperationException("Actual public registry constructor port missing.");
+    arguments[4] = WaveNativePresentation.CreateControlRegistry();
     var policyIndex = Array.FindIndex(parameters, p => p.Name == "ConstrainHorizontalLayout");
     if (policyIndex >= 0) arguments[policyIndex] = optIn;
     var surface = (BrowserCuiSurface)constructor.Invoke(arguments);
@@ -127,6 +131,9 @@ var failures = await session.Dispatch(() =>
                 children = children.Select(child => new { child.Name, type = child.GetType().FullName,
                     bounds = Box(child.Bounds), inContent = RelativeBoxData(child, content), inRoot = RelativeBoxData(child, root) }).ToArray() };
         }).ToArray();
+        var referenceCaption = controls.OfType<TextBlock>().Single(c => c.Text == "Import WAV");
+        var actualBaseFont = fonts.Single(f => ReferenceEquals(f.Control, referenceCaption)).Before;
+        var criterionControls = WaveNativePaintCriterionControls.Run(referenceCaption, actualBaseFont);
         var texts = controls.OfType<TextBlock>().Where(c => c.IsEffectivelyVisible && !string.IsNullOrEmpty(c.Text)).Select(c => new {
             text = c.Text!, bounds = InRoot(c), width = c.Bounds.Width, height = c.Bounds.Height,
             valid = c.IsMeasureValid && c.IsArrangeValid, complete = c.TextLayout.TextLines.Sum(l => l.Length),
@@ -144,6 +151,7 @@ var failures = await session.Dispatch(() =>
                     ? c.Text!.Substring(l.FirstTextSourceIndex, l.Length) : null
             }).ToArray(),
             glyphs = c.TextLayout.HitTestTextRange(0, c.Text!.Length).ToArray(), padding = c.Padding,
+            paint = WaveNativePaintCriteria.Inspect(c, root),
             paintFrame = FrameData(c),
             nearestButton = c.GetVisualAncestors().OfType<Button>().FirstOrDefault() is Button captionButton ? FrameData(captionButton) : null,
             controlAncestors = c.GetVisualAncestors().OfType<Control>().Select(FrameData).ToArray() }).ToArray();
@@ -154,9 +162,9 @@ var failures = await session.Dispatch(() =>
             Check("Wave native outer extent fits viewport", scroll.Extent.Width <= scroll.Viewport.Width + 0.1 && root.Bounds.Width <= scroll.Viewport.Width + 0.1);
             Check("Every actual Wave button fits horizontally", buttons.Length == 32 && buttons.All(b => b.Tag is string action && GeometryProjection.Commands.Contains(action)) && buttons.All(Fit));
             Check("Every actual Wave input fits horizontally", inputs.Length >= 13 && inputs.All(Fit));
-            Check("Every full native Wave glyph range is retained", texts.Length > 25 && texts.All(t => t.valid && t.glyphs.Length > 0 && t.complete >= t.text.Length));
-            Check("Every full native Wave glyph fits assigned bounds", texts.All(t => t.glyphs.All(g => g.X >= -0.1 && g.Y >= -0.1 && g.Right + t.padding.Left <= t.width + 0.1 && g.Bottom + t.padding.Top <= t.height + 0.1)));
-            Check("Every full native Wave text stays inside root", texts.All(t => t.glyphs.All(g => t.bounds.X + t.padding.Left + g.X >= -0.1 && t.bounds.X + t.padding.Left + g.Right <= root.Bounds.Width + 0.1)));
+            Check("Every full native Wave glyph range is retained", texts.Length > 25 && texts.All(t => t.valid && t.glyphs.Length > 0 && t.paint.Supported && t.paint.SourceComplete));
+            Check("Every full native Wave glyph fits assigned bounds", texts.All(t => t.paint.OwnPaintFits));
+            Check("Every full native Wave text stays inside root", texts.All(t => t.paint.RootAndAncestorPaintFits));
             var wrapPanels = controls.OfType<WrapPanel>().Where(c => c.IsEffectivelyVisible).ToArray();
             Check("Actual wrapped siblings never overlap", wrapPanels.Length >= 8 && wrapPanels.All(panel => {
                 var items = panel.Children.Where(c => c.IsEffectivelyVisible).ToArray();
@@ -171,9 +179,14 @@ var failures = await session.Dispatch(() =>
             Check("Deliberate waveform keeps local horizontal scrolling", localScrolls.Length == 1 && Fit(localScrolls[0]) && localScrolls[0].Extent.Width > localScrolls[0].Viewport.Width);
         }
         else Check("Default owner host behavior is unchanged", scroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto);
+        var preservedSelectionAdvancePredicates = new {
+            retained = texts.Length > 25 && texts.All(t => t.valid && t.glyphs.Length > 0 && t.complete >= t.text.Length),
+            assigned = texts.All(t => t.glyphs.All(g => g.X >= -0.1 && g.Y >= -0.1 && g.Right + t.padding.Left <= t.width + 0.1 && g.Bottom + t.padding.Top <= t.height + 0.1)),
+            root = texts.All(t => t.glyphs.All(g => t.bounds.X + t.padding.Left + g.X >= -0.1 && t.bounds.X + t.padding.Left + g.Right <= root.Bounds.Width + 0.1)) };
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         File.WriteAllText(output, JsonSerializer.Serialize(new { scope = "Native geometry/font enlargement UNIT; scripted public projection only; no Wave action/storage/audio/browser/zoom acceptance", width, height, fontFactor, nativeFonts = fonts.Select(f => new { f.Control.Name, before = f.Before, actual = f.Read() }), optIn, policyPresent = policyIndex >= 0, checks, failures = failed,
             nativeClient = window.ClientSize, extent = scroll.Extent, viewport = scroll.Viewport, root = root.Bounds,
+            criterionVersion = "public-ink-source-clipping-v2", criterionControls, preservedSelectionAdvancePredicates,
             localScrollDiagnostics, texts, buttons = buttons.Select(b => new { b.Name, bounds = InRoot(b), b.IsEnabled }), inputs = inputs.Select(c => new { c.Name, bounds = InRoot(c) }) }, new JsonSerializerOptions { WriteIndented = true }));
         return failed;
     }

@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 COMMANDS_SHA256 = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
-LEDGER_SHA256 = "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75"
+LEDGER_SHA256 = "6db28523474f997e8880df3c429863e23f0e005ad39fce0c09dd95f85cdec971"
 DIRECTORY = "apps/Web/Wave/Tests"
 PROJECT = DIRECTORY + "/WaveResponsiveLayout.Tests.csproj"
 LEDGER = DIRECTORY + "/responsive-source-pins.json"
@@ -67,13 +67,29 @@ def native_result(native, group, variant, record, log):
             or any(type(item["passed"]) is not bool for item in checks)
             or native["width"] != width or native["height"] != height
             or native["fontFactor"] != factor or native["optIn"] != (mode == "wave-opt-in")
-            or native["policyPresent"] != (variant == "proposed")):
+            or native["policyPresent"] != (variant != "original")):
         raise RuntimeError("Native case inputs/names/policy/completion differ: " + name)
     failed = sum(not item["passed"] for item in checks)
     actual_exit = 1 if failed else 0
     if native["failures"] != failed or not normal(record, actual_exit):
         raise RuntimeError("Native outcome/custody disagrees with completed checks: " + name)
-    if log.splitlines() != [("PASS: " if item["passed"] else "FAIL: ") + item["name"] for item in checks]:
+    unit_names = ["real-production-factory-font1-padding-allocation", "real-production-factory-font2-padding-allocation",
+                  "real-native-font1-padding0-nonblank-clip-rejected", "real-native-own-height-nonblank-clip-rejected",
+                  "real-native-trailing-space-advance-is-not-ink-clipping", "unsupported-render-transform-fails-closed",
+                  "unsupported-nonrectangular-clip-fails-closed"]
+    units = []
+    check_lines = []
+    for line in log.splitlines():
+        if line.startswith("CRITERION_UNIT: "):
+            units.append(json.loads(line[len("CRITERION_UNIT: "):]))
+        else:
+            check_lines.append(line)
+    if (native.get("criterionVersion") != "public-ink-source-clipping-v2"
+            or units != native.get("criterionControls")
+            or [row.get("name") for row in units] != unit_names
+            or any(row.get("passed") is not True for row in units)):
+        raise RuntimeError("Actual separate native criterion UNIT prerequisites differ: " + name)
+    if check_lines != [("PASS: " if item["passed"] else "FAIL: ") + item["name"] for item in checks]:
         raise RuntimeError("Actual native completion log differs: " + name)
     fonts = native["nativeFonts"]
     if not fonts or any(not math.isfinite(row["before"]) or row["before"] <= 0
@@ -95,7 +111,7 @@ def binaries(artifacts):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--variant", choices=("original", "proposed"), required=True)
+    parser.add_argument("--variant", choices=("original", "d93-unrepaired", "proposed"), required=True)
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -150,9 +166,10 @@ def main():
         props = ["-p:SelfContained=false", "-p:UseSharedCompilation=false", "-p:AvaloniaBuildTasksLocation=" + str(owner_task),
                  "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false", "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
                  "-p:CreateHardLinksForCopyLocalIfPossible=false", "-p:CreateHardLinksForPublishFilesIfPossible=false"]
-        if args.variant == "original":
-            props += ["-p:BrowserApplicationSource=" + str(root / DIRECTORY / "Fixtures/Original/BrowserApplication.cs"),
-                      "-p:BrowserSurfaceRegistrySource=" + str(root / DIRECTORY / "Fixtures/Original/BrowserSurfaceRegistry.cs")]
+        fixture_folder = {"original": "Fixtures/Original", "d93-unrepaired": "Fixtures/D93Unrepaired"}.get(args.variant)
+        if fixture_folder is not None:
+            props += ["-p:BrowserApplicationSource=" + str(root / DIRECTORY / fixture_folder / "BrowserApplication.cs"),
+                      "-p:BrowserSurfaceRegistrySource=" + str(root / DIRECTORY / fixture_folder / "BrowserSurfaceRegistry.cs")]
         commands.run("restore", ["dotnet", "restore", PROJECT, "--artifacts-path", str(artifacts), "-r", "linux-x64",
                      "--configfile", str(root / "NuGet.Config"), "--disable-build-servers", "-p:Configuration=Release",
                      "-m:1", "-nodeReuse:false"] + props, 600)
@@ -164,8 +181,8 @@ def main():
                      "-getProperty:TargetPath,TargetFramework,RuntimeIdentifier,UseAppHost,AvaloniaBuildTasksLocation,BrowserApplicationSource,BrowserSurfaceRegistrySource"] + props, 30))
         target = Path(evaluated["TargetPath"]).resolve()
         apphost = target.with_suffix("")
-        expected_app = root / (DIRECTORY + "/Fixtures/Original/BrowserApplication.cs" if args.variant == "original" else "apps/Web/BrowserApplication.cs")
-        expected_registry = root / (DIRECTORY + "/Fixtures/Original/BrowserSurfaceRegistry.cs" if args.variant == "original" else "apps/Web/BrowserSurfaceRegistry.cs")
+        expected_app = root / (DIRECTORY + "/" + fixture_folder + "/BrowserApplication.cs" if fixture_folder is not None else "apps/Web/BrowserApplication.cs")
+        expected_registry = root / (DIRECTORY + "/" + fixture_folder + "/BrowserSurfaceRegistry.cs" if fixture_folder is not None else "apps/Web/BrowserSurfaceRegistry.cs")
         if (evaluated["TargetFramework"] != "net10.0" or evaluated["RuntimeIdentifier"] != "linux-x64"
                 or evaluated["UseAppHost"].lower() != "true" or not target.is_relative_to(artifacts)
                 or not target.is_file() or not apphost.is_file() or not os.access(apphost, os.X_OK)
@@ -184,7 +201,7 @@ def main():
         write_json(diagnostics / "selected-native-binary-before.json", binary_before)
         result.update(sourceLedgerSHA256=LEDGER_SHA256, driverSHA256=driver_before,
                       entrySHA256=digest(target), apphostSHA256=digest(apphost))
-        markup = root / (DIRECTORY + "/Fixtures/Original/Wave.cui" if args.variant == "original" else "apps/Web/Wave/Wave.cui")
+        markup = root / (DIRECTORY + "/" + fixture_folder + "/Wave.cui" if fixture_folder is not None else "apps/Web/Wave/Wave.cui")
         for group in GROUPS:
             name, width, height, mode, factor = group
             report = diagnostics / (name + "-native.json")
@@ -225,6 +242,22 @@ def main():
             if states["Wave native outer extent fits viewport"] is not False:
                 raise RuntimeError("Original390 did not demonstrate the actual required clipping negative")
             result["status"] = "ORIGINAL_LAYOUT_RED_CONTROL_OBSERVED"
+        elif args.variant == "d93-unrepaired":
+            if any(group["failed"] for group in result["groups"] if group["name"].startswith("default-")):
+                raise RuntimeError("D93 default policy prerequisites failed")
+            narrow = json.loads((diagnostics / "narrow-native.json").read_text())
+            wide = json.loads((diagnostics / "wide-native.json").read_text())
+            caption = next(row for row in narrow["texts"] if row["text"] == "Import WAV")
+            paint = caption["paint"]
+            local = wide["localScrollDiagnostics"]
+            if (not paint["Supported"] or not paint["SourceComplete"] or paint["OwnPaintFits"] is not False
+                    or caption["paintFrame"]["ClipToBounds"] is not True
+                    or not any(ink["Right"] > caption["width"] + 0.1 for ink in paint["InkInText"])
+                    or len(local) != 1 or local[0]["finiteAggregate"]["bounds"]["Width"] != 1799
+                    or local[0]["extent"]["Width"] != 700
+                    or local[0]["viewport"]["Width"] <= local[0]["extent"]["Width"]):
+                raise RuntimeError("D93 same-source caption/tail negatives not genuinely demonstrated")
+            result["status"] = "D93_UNREPAIRED_PAINT_AND_SCROLL_RED_OBSERVED"
         elif result["passed"] == 64 and result["failed"] == 0:
             result["status"] = "PROPOSED_NATIVE_LAYOUT_PASS"
         else:
@@ -257,7 +290,7 @@ def main():
                 result.update(status="FAIL", sourceCustodyError=repr(error))
         write_json(diagnostics / "result.json", result)
     print(json.dumps(result, indent=2))
-    return 0 if result["status"] in ("ORIGINAL_LAYOUT_RED_CONTROL_OBSERVED", "PROPOSED_NATIVE_LAYOUT_PASS") else 1
+    return 0 if result["status"] in ("ORIGINAL_LAYOUT_RED_CONTROL_OBSERVED", "D93_UNREPAIRED_PAINT_AND_SCROLL_RED_OBSERVED", "PROPOSED_NATIVE_LAYOUT_PASS") else 1
 
 
 if __name__ == "__main__":
