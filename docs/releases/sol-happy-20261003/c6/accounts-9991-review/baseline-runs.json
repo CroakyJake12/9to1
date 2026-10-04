@@ -1,0 +1,26 @@
+[
+  {
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+      "--configuration",
+      "Debug"
+    ],
+    "exit": 134,
+    "log": "OrgPools-baseline.log"
+  },
+  {
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "9to1 Workspace/CancellationProbe/Probe.csproj",
+      "--configuration",
+      "Debug"
+    ],
+    "exit": 134,
+    "log": "Probe-baseline.log"
+  }
+]

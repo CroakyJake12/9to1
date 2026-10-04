@@ -1,0 +1,396 @@
+{
+  "sourceCommit": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+  "baselineCommit": "042dde8d6d76f3f534eb6287d7a9d4d360d77129",
+  "publicationCommit": "9c9b473ed9e1abc545c1ac34ace0ba0ed0630ac2",
+  "publicationPayloadsVerified": 47,
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Accounts/AccountContractJson.cs",
+      "bytes": 1035,
+      "sha256": "e34f1f521f63efeaf161b8bfab8c74bafc22ad94e4ae692932d58d0e4955d279"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/AccountLedger.cs",
+      "bytes": 8618,
+      "sha256": "92c3125e66653b5237d077ff2dabc21921f98071085294ff033381924394a117"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Authentication.cs",
+      "bytes": 8923,
+      "sha256": "b4314c8274f73c55a433dd99f48b8d25cfc75d24bf3130fbc5280494110a541f"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/DurableState.cs",
+      "bytes": 2549,
+      "sha256": "ec8bdd3835205ac06f413e3effc43c24960d8ba730dc950b351e8f44eb5eef09"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/NineToOne.Accounts.csproj",
+      "bytes": 159,
+      "sha256": "96d22c24d1d62f349318ad83614eef885c38ea2613219a4b548c6b0eb731922e"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
+      "bytes": 23792,
+      "sha256": "990e08a53d7e5728e46d9033aa6275c94419566bca7114b8164b885e337a92d9"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
+      "bytes": 6941,
+      "sha256": "530dbbc5a38f63037e13be662f2745edadff2be5852cf348b002927aa666a44c"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdministration.cs",
+      "bytes": 5636,
+      "sha256": "8bb5ce52f01b896a5dba257ef5bd132d2bf66f3a9fe6a5b1b1ef812c96d131bd"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
+      "bytes": 459,
+      "sha256": "1dbb6e282e601e814261b04945f67102267206388586cc6dc4375176d59cc88b"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationBilling.cs",
+      "bytes": 5438,
+      "sha256": "2b90b0b16c4c7a60c7c9ac27f128a0f58e4000f9d6e6b165a04ad1191c96a629"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationContracts.cs",
+      "bytes": 5141,
+      "sha256": "22e003cc311d0545297a24e287afd93b48d0a89b93c7db21b715fd2354456298"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationDustPools.cs",
+      "bytes": 28950,
+      "sha256": "2e87be6fa8832c6a86d6634de0c4b9b5639d8b4013f5a710556eef767b72b573"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "bytes": 15783,
+      "sha256": "5930c9b1c23d668d820f62006fb64a2bfcae64b1665bb64ecd2053c1a44d0c4b"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
+      "bytes": 6601,
+      "sha256": "2928309de1932eb19121a20dcc5471c34e7f2e588728ed93c648eeebeae6d8e1"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
+      "bytes": 7894,
+      "sha256": "892eaa144d8e182089c263413ec17d0ff5175e3a8021888186f712ffd81f26bd"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationRollover.cs",
+      "bytes": 15799,
+      "sha256": "47985c539689c3c911118487b74cd50be44f0ccc1609d91bb4998396da712a04"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationService.cs",
+      "bytes": 19263,
+      "sha256": "59ba0ab354893fe62c9e59db3eee0e72ac04fd72962782b998f640580a378c5c"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationUsageContracts.cs",
+      "bytes": 2778,
+      "sha256": "cc4119aa05a80fb78acd997493a712cbb57bf342cb021bdfdfdc4eba1e770f35"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationUsageReports.cs",
+      "bytes": 2872,
+      "sha256": "03335140d982ad518e98d09d2839c484d02e1959ef7f4963aaafd41b1e666580"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Profiles.cs",
+      "bytes": 4179,
+      "sha256": "d49d45a9b447a02ac57187d2b9e932ea6389a71f5233bce1fe36f24f4ec76af9"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Subscription.cs",
+      "bytes": 3252,
+      "sha256": "f21034da612966113bc0b3edf7ee8515e52075318d25e5c36a8a01016b084736"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/SubscriptionBuilder.cs",
+      "bytes": 11281,
+      "sha256": "c106647472a1f522815c4d3125eb87ac236951ecbf278c71189f9f2198067b52"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/SubscriptionPurchases.cs",
+      "bytes": 8935,
+      "sha256": "fa32580d216a882513c7a7b07b3cfb5df7c5f28ec3af3dd2693ea3ac936b7984"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/SubscriptionQuotes.cs",
+      "bytes": 1539,
+      "sha256": "67d553bf585f30f225734d5f74f90d124018996028667c00c0efa0d054aff70c"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+      "bytes": 223,
+      "sha256": "65df3a2677258e2c57506d107b1abc5f014d79beae620b977af3ffdbded42abc"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+      "bytes": 290,
+      "sha256": "ea35dd98036baa10265033f0381385f651fd1139dff687fb793c470cfd665ce4"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrgPoolsProgram.cs",
+      "bytes": 27300,
+      "sha256": "340f4de5b37933ea8b237521e3f2c54097697758bc5fbf421ae588c9f80fd8e4"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
+      "bytes": 11526,
+      "sha256": "eb27113b66e660fe9d3d02eb3008539d40daa3254a022a5735e29dd765c1f1c7"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
+      "bytes": 33395,
+      "sha256": "bb8b1d66e1932bea01c50f18dcefe1e08823b08d4cc85013f3b133ce3acc5e35"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "bytes": 25566,
+      "sha256": "de448725144f7eceaf1637dae53b8b52286b643c47dc6355fe2f3f1afbbf2d72"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/Program.cs",
+      "bytes": 33408,
+      "sha256": "9b54905018e32d6ab64e554faa2db600f151bf268aa78d694f43785bfcd3f863"
+    },
+    {
+      "path": "global.json",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "bytes": 2253,
+      "sha256": "4750aeb7e35c246cf3adabea231feaa5d21cd241bd0756ccb5b0b805c4ba13d4"
+    }
+  ],
+  "runs": [
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "exit": 0,
+      "log": "Accounts-Debug.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "exit": 0,
+      "log": "OrgPools-Debug.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/CancellationProbe/Probe.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "exit": 134,
+      "log": "Probe-Debug.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+        "--configuration",
+        "Release"
+      ],
+      "exit": 0,
+      "log": "Accounts-Release.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+        "--configuration",
+        "Release"
+      ],
+      "exit": 0,
+      "log": "OrgPools-Release.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/CancellationProbe/Probe.csproj",
+        "--configuration",
+        "Release"
+      ],
+      "exit": 134,
+      "log": "Probe-Release.log"
+    }
+  ],
+  "correctedProbe": [
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/CancellationProbe/Probe.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "exit": 0,
+      "log": "Probe-corrected-Debug.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/CancellationProbe/Probe.csproj",
+        "--configuration",
+        "Release"
+      ],
+      "exit": 0,
+      "log": "Probe-corrected-Release.log"
+    }
+  ],
+  "negativeControls": [
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "exit": 134,
+      "log": "OrgPools-baseline.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/CancellationProbe/Probe.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "exit": 134,
+      "log": "Probe-baseline.log"
+    }
+  ],
+  "sourceReview": "Six checks: post-authority await, under canonical pool lease and immediately before Write, for each of FundAsync and ReserveAsync. No signatures/model/policy delta.",
+  "outcome": "BOUNDED_CANCELLATION_FIX_VERIFIED",
+  "limitations": [
+    "Initial adapted probe repeated TaskCompletionSource.SetResult during seed and exited134 twice; preserved logs/source; corrected only own fixture to TrySetResult.",
+    "Four maintained whole programs pass (Accounts/OrgPools Debug/Release); corrected independent funding/reserve no-effects OCE probe both pass.",
+    "Baseline production file with unchanged maintained tests yields all four False/False controls and exit134; independent probe exits134 on cancelled funding completed.",
+    "Concurrent cancellation after last check and atomic commit is not a transaction rollback promise.",
+    "No owner ACK inferred, provider/hosted/fullSDK/native/global acceptance remains separate.",
+    "All compiled binaries and source snapshot outside Git; SDK10.0.401."
+  ],
+  "artifacts": [
+    {
+      "path": "Accounts-Debug.log",
+      "bytes": 554,
+      "sha256": "02ab8e1b64cab2db5b61bff455c2b93ae205dbc2159132faa2cf7f8be7381a03"
+    },
+    {
+      "path": "Accounts-Release.log",
+      "bytes": 554,
+      "sha256": "02ab8e1b64cab2db5b61bff455c2b93ae205dbc2159132faa2cf7f8be7381a03"
+    },
+    {
+      "path": "OrgPools-Debug.log",
+      "bytes": 596,
+      "sha256": "c3a4c38e2b5ed167731dd0a86d6a8889c5497991ba5b178227460887ac691137"
+    },
+    {
+      "path": "OrgPools-Release.log",
+      "bytes": 596,
+      "sha256": "c3a4c38e2b5ed167731dd0a86d6a8889c5497991ba5b178227460887ac691137"
+    },
+    {
+      "path": "OrgPools-baseline.log",
+      "bytes": 1156,
+      "sha256": "770eb074a850e15cd8a003a6558520469f6b879f4ef422616901c4e7bbc14177"
+    },
+    {
+      "path": "Probe-Debug.log",
+      "bytes": 868,
+      "sha256": "440cb0a0591aa4866129a40ad86d126c2fddfcbdfd227d282e1290d10e76dfff"
+    },
+    {
+      "path": "Probe-Release.log",
+      "bytes": 868,
+      "sha256": "440cb0a0591aa4866129a40ad86d126c2fddfcbdfd227d282e1290d10e76dfff"
+    },
+    {
+      "path": "Probe-baseline.log",
+      "bytes": 246,
+      "sha256": "ac4972bc14cf8f770cdb3e25c17e8f911bcc1937e309130de1039a633803f3b8"
+    },
+    {
+      "path": "Probe-corrected-Debug.log",
+      "bytes": 80,
+      "sha256": "b8f14c5e65d805a7678fcab3f32cb4b579f7c22f26eb8701dfb386144281886d"
+    },
+    {
+      "path": "Probe-corrected-Release.log",
+      "bytes": 80,
+      "sha256": "b8f14c5e65d805a7678fcab3f32cb4b579f7c22f26eb8701dfb386144281886d"
+    },
+    {
+      "path": "Probe-corrected.cs",
+      "bytes": 3735,
+      "sha256": "e997d1faf651e0dd20a8bb142c83cd7245ba3e1cd1cf5f9d39a480f4cba37998"
+    },
+    {
+      "path": "Probe-initial.cs",
+      "bytes": 3729,
+      "sha256": "db024a49278c0a3ff5c6aca7da2c149aeedee393b847272f6da03c55aab9f778"
+    },
+    {
+      "path": "baseline-runs.json",
+      "bytes": 510,
+      "sha256": "c08bf1bcc4dff2d419281d490a1e70045e93d80f31607db67d1a8002c6e2873c"
+    },
+    {
+      "path": "probe-corrected-runs.json",
+      "bytes": 515,
+      "sha256": "f86efd8e47ee06d35de128730a3b625c05d8230315ff8f7b78d54afddfa74dc2"
+    },
+    {
+      "path": "runs.json",
+      "bytes": 1519,
+      "sha256": "a29cbb718153d9d79800d1e027a05621faf6e621a28cbcbc4461c0f963fef080"
+    }
+  ]
+}
