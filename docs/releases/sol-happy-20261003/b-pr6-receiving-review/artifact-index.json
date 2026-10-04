@@ -23,8 +23,8 @@
     "isolatedPortablePluginTempCorrection": "4544d1157afaeb3a50f2042ee6dcc0be78b2d945",
     "actualScopedFullOrdinary434": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2"
   },
-  "payloadCount": 546,
-  "totalBytes": 84048687,
+  "payloadCount": 549,
+  "totalBytes": 84054416,
   "entries": [
     {
       "path": "README.md",
@@ -1321,6 +1321,11 @@
       "sha256": "d49332c7a2b67c09a28493635dd905dee031f2d7430c918dc6c969f37e936ef0"
     },
     {
+      "path": "motion-original-a975/c6-independent-actual-review.json",
+      "bytes": 2425,
+      "sha256": "6653560925a41d529c7d227fd948dd528bae3ef6d9fd34e81b2c7b830a52b235"
+    },
+    {
       "path": "motion-original-a975/native/diagnostics/actual-package-folders.json",
       "bytes": 103,
       "sha256": "ff1a0ea16e89d6ba4a6425d64a46f8cff6125833c57f2fe7c6050f59968f434a"
@@ -1546,6 +1551,16 @@
       "path": "motion-original-a975/selected-verification.json",
       "bytes": 922,
       "sha256": "f29163a111ded3635e81d0ec2d277060738956ba5a5eb040b43af07c3537305d"
+    },
+    {
+      "path": "normal-infrastructure-434-plugin-temp/c6-full434-runtime-review.json",
+      "bytes": 2202,
+      "sha256": "dbbfff4152893bd3ff77c50b84a9a235e8d1a4badf385419959fa9315d13169e"
+    },
+    {
+      "path": "normal-infrastructure-434-plugin-temp/c6-original-class-runtime-review.json",
+      "bytes": 1102,
+      "sha256": "c6ac3bbd0f87b228a3aa9b38e0400a5c3b6b67930e640c871d7841d126558382"
     },
     {
       "path": "normal-infrastructure-434-plugin-temp/c6-source-review.json",
@@ -3181,6 +3196,6 @@
       "sha256": "948853f28cc96fea3d04ed532ded3ccb56f1bebe4ab9eff287dcc04fe4554272"
     }
   ],
-  "previousImmutableEvidenceCommit": "c32c46405452ac9be10eafcf54757177e2c10b35",
-  "previousImmutableIndexSHA256": "1d3156237e538efd4f4ef624688148eec0a7ce78a628083a7196e7e472babd1e"
+  "previousImmutableEvidenceCommit": "df49174f70836947a362a78c898091138950f278",
+  "previousImmutableIndexSHA256": "26273c552396a08bad2893a9431f8de3fa44b4016b1fa2aa9e2570be83c74000"
 }
