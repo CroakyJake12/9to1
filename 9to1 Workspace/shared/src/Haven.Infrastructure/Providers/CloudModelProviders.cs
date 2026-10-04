@@ -150,16 +150,22 @@ public abstract class OpenAiCompatibleModelProviderBase(
         var started = System.Diagnostics.Stopwatch.GetTimestamp();
         try
         {
-            using var client = await CreateClientAsync(cancellationToken).ConfigureAwait(false);
-            using var response = await client.GetAsync("models", cancellationToken).ConfigureAwait(false);
-            await ProviderHttp.EnsureSuccessAsync(response, DisplayName, cancellationToken).ConfigureAwait(false);
+            var configuration = await ProviderHttp.RequireEnabledAsync(configurations, Id, DefaultEndpoint, cancellationToken).ConfigureAwait(false);
+            using var client = await CreateClientAsync(configuration, cancellationToken).ConfigureAwait(false);
+            if (IsWorkersAiEndpoint(configuration.Endpoint))
+                await ReadWorkersAiModelsAsync(client, cancellationToken).ConfigureAwait(false);
+            else
+            {
+                using var response = await client.GetAsync("models", cancellationToken).ConfigureAwait(false);
+                await ProviderHttp.EnsureSuccessAsync(response, DisplayName, cancellationToken).ConfigureAwait(false);
+            }
             return new(Id, true, $"Connected to {DisplayName}.", System.Diagnostics.Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
-        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException or JsonException)
         {
             return new(Id, false, ex.Message, System.Diagnostics.Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
         }
@@ -174,6 +180,8 @@ public abstract class OpenAiCompatibleModelProviderBase(
         try { configuration = await ProviderHttp.RequireEnabledAsync(configurations, Id, DefaultEndpoint, cancellationToken).ConfigureAwait(false); }
         catch (InvalidOperationException) { return []; }
         using var client = await CreateClientAsync(configuration, cancellationToken).ConfigureAwait(false);
+        if (IsWorkersAiEndpoint(configuration.Endpoint))
+            return await ReadWorkersAiModelsAsync(client, cancellationToken).ConfigureAwait(false);
         using var response = await client.GetAsync("models", cancellationToken).ConfigureAwait(false);
         await ProviderHttp.EnsureSuccessAsync(response, DisplayName, cancellationToken).ConfigureAwait(false);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
@@ -190,6 +198,62 @@ public abstract class OpenAiCompatibleModelProviderBase(
                 context, name));
         }
         return result;
+    }
+
+    // Workers AI's native catalogue differs from its OpenAI-compatible inference API.
+    // Recognise only the exact configured custom-provider endpoint, never another host.
+    private bool IsWorkersAiEndpoint(string endpoint)
+    {
+        if (Id != "openai-compatible" || !Uri.TryCreate(endpoint, UriKind.Absolute, out var uri)
+            || uri.Scheme != "https" || uri.Host != "api.cloudflare.com" || !uri.IsDefaultPort
+            || uri.UserInfo.Length != 0 || uri.Query.Length != 0 || uri.Fragment.Length != 0) return false;
+        var parts = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 6 && parts[0] == "client" && parts[1] == "v4" && parts[2] == "accounts"
+            && parts[3].Length == 32 && parts[3].All(char.IsAsciiHexDigit) && parts[4] == "ai" && parts[5] == "v1"
+            && uri.AbsolutePath == $"/client/v4/accounts/{parts[3]}/ai/v1/";
+    }
+
+    private async Task<IReadOnlyList<ProviderModelDescriptor>> ReadWorkersAiModelsAsync(HttpClient client, CancellationToken token)
+    {
+        const int pageSize = 100;
+        var result = new List<ProviderModelDescriptor>();
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        for (var page = 1; page <= 32; page++)
+        {
+            using var response = await client.GetAsync($"../models/search?task=Text%20Generation&hide_experimental=true&include_deprecated=false&per_page={pageSize}&page={page}", token).ConfigureAwait(false);
+            await ProviderHttp.EnsureSuccessAsync(response, DisplayName, token).ConfigureAwait(false);
+            using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token).ConfigureAwait(false));
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("success", out var success)
+                || success.ValueKind != JsonValueKind.True || !root.TryGetProperty("result", out var models)
+                || models.ValueKind != JsonValueKind.Array)
+                throw new InvalidOperationException("Workers AI model catalogue was not confirmed.");
+            foreach (var item in models.EnumerateArray())
+            {
+                token.ThrowIfCancellationRequested();
+                if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("name", out var id)
+                    || id.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(id.GetString()))
+                    throw new InvalidOperationException("Workers AI model catalogue identity was invalid.");
+                var name = id.GetString()!;
+                if (!names.Add(name)) continue;
+                int? context = null;
+                if (item.TryGetProperty("properties", out var properties) && properties.ValueKind == JsonValueKind.Array)
+                    foreach (var property in properties.EnumerateArray())
+                        if (property.ValueKind == JsonValueKind.Object && property.TryGetProperty("property_id", out var key)
+                            && key.ValueKind == JsonValueKind.String && key.GetString() == "context_window"
+                            && property.TryGetProperty("value", out var value)
+                            && int.TryParse(value.ValueKind == JsonValueKind.String ? value.GetString() : value.GetRawText(),
+                                System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var count)
+                            && count > 0) context = count;
+                // Catalogue visibility is not evidence for tools, vision, stream usage or paid entitlement.
+                IReadOnlySet<ToolCapability> capabilities = new HashSet<ToolCapability> { ToolCapability.Text };
+                result.Add(new(Id, false, new ModelDescriptor(name, 0, DisplayName, string.Empty, string.Empty,
+                    capabilities, DateTimeOffset.UtcNow), context, name));
+            }
+            // total_count describes the whole catalogue even for filtered searches; use actual page length.
+            if (models.GetArrayLength() < pageSize) return result;
+        }
+        throw new InvalidOperationException("Workers AI model catalogue exceeded the bounded page limit.");
     }
 
     /// <summary>

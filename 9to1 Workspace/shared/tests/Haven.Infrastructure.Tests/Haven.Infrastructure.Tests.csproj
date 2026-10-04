@@ -12,6 +12,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Fixtures/cloudflare-workers-ai-catalogue-20261004.json" />
     <ProjectReference Include="..\..\src\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Haven.Browser\Haven.Browser.csproj" />
     <ProjectReference Include="../Haven.PluginFixture/Haven.PluginFixture.csproj" />
