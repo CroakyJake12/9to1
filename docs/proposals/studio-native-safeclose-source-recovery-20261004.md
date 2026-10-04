@@ -9,3 +9,5 @@ The Home Windows public startup/connection ports are separately reviewed in the 
 No compilation, test, workflow, package, native or local process invocation is part of these source checkpoints. Full A1 and A6 reviews must close before selection. Larger historical Startup source remains a distinct graph, with its fixture cleanup acquisition hold; it is not a drop-in replacement for this native leaf.
 
 Checkpoint two also retains the actual preview control notification and timer/Advance callback tasks, exposes a coalesced asynchronous closer and keeps synchronous Dispose request-only. Its owning Window renderer and teardown have not yet been migrated, so this intermediate source remains incomplete and unselected. Existing original tests remain byte exact and no runtime behavior has been verified.
+
+Checkpoint 3 fences acquisition reentry before further native constructor writes and preserves every body cancellation as an original failure. Only a cancellation directly produced by the callback owner's pre-body check may be classified as its own retirement. No body-token matching inference or runtime result is claimed.

@@ -28,7 +28,13 @@ public sealed class AgentAvatarPreviewControl : Image, IDisposable, IAsyncDispos
         _preview = preview;
         // The native owning renderer captures this SAME acquired control before notifications.
         originalAcquired?.Invoke(this);
-        Stretch = Stretch.Uniform; Width = 160; Height = 160;
+        RequireLive(CancellationToken.None);
+        Stretch = Stretch.Uniform;
+        RequireLive(CancellationToken.None);
+        Width = 160;
+        RequireLive(CancellationToken.None);
+        Height = 160;
+        RequireLive(CancellationToken.None);
         _preview.Changed += OnChanged;
         _animation.Tick += OnAnimationTick;
         DetachedFromVisualTree += OnDetachedVisual;
@@ -82,7 +88,7 @@ public sealed class AgentAvatarPreviewControl : Image, IDisposable, IAsyncDispos
             RequireLive(token);
             _bitmap = acquired; acquired = null;
             Source = _bitmap;
-            if (_disposed || _callbacks.IsClosing || token.IsCancellationRequested) return;
+            // Do not bypass independent cleanup failures after a notifying setter retires us.
         }
         catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
         finally

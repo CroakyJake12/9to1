@@ -62,7 +62,14 @@ internal sealed class StudioOriginalCallbackLifetime
             if (original.Errors.Count != 0) Throw(original.Errors);
             linked = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token, original.Caller);
             original.Token = linked.Token;
-            original.Token.ThrowIfCancellationRequested();
+            try { original.Token.ThrowIfCancellationRequested(); }
+            catch (OperationCanceledException cancellation)
+            {
+                // This is our own pre-body token check, not an inference about a body exception.
+                if (_lifetime.IsCancellationRequested && !original.Caller.IsCancellationRequested)
+                    original.OwnRetirementCancellation = cancellation;
+                throw;
+            }
             original.BodyInvoked = true;
             original.Body = body(original.Token)
                 ?? throw new InvalidOperationException("The original callback returned no task.");
@@ -70,10 +77,8 @@ internal sealed class StudioOriginalCallbackLifetime
         }
         catch (Exception error)
         {
-            if (error is OperationCanceledException cancelled && linked is not null &&
-                cancelled.CancellationToken == original.Token && _lifetime.IsCancellationRequested &&
-                !original.Caller.IsCancellationRequested)
-                original.OwnRetirementCancellation = error;
+            // A matching body token cannot establish who produced an earlier cancellation.
+            // Preserve every actual body failure, even if owner retirement is observed later.
             Add(original.Errors, error);
         }
         finally
