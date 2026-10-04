@@ -456,6 +456,7 @@
     "nativeFocusSeconds": 5,
     "nativeShutdownSeconds": 45,
     "automaticAggregateDiskGrowthOrRSSMonitor": false,
-    "forcedShutdownPermitted": false
+    "forcedShutdownPermitted": false,
+    "nativeOutputDrainSeconds": 5
   }
 }

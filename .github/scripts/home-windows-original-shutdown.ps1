@@ -115,11 +115,12 @@ public static class HomeOriginalNativeInput {
 '@
 function Invoke-OriginalNativeQuit([string]$Label, [string]$Exe) {
     $stdout = Join-Path $diagnostics ($Label + '-stdout.log'); $stderr = Join-Path $diagnostics ($Label + '-stderr.log')
-    $observed = [ordered]@{ cohort = $Label; pid = $null; sessionId = $null; windowVisible = $false; ownHWND = $false; foregroundVerified = $false; inputEventsSent = 0; exited = $false; exitCode = $null; forcedCleanup = $false; processSignals = @(); outputDrained = $false; originalCuiRootReported = $false; error = $null }
+    $observed = [ordered]@{ cohort = $Label; pid = $null; sessionId = $null; windowVisible = $false; ownHWND = $false; foregroundVerified = $false; inputEventsSent = 0; exited = $false; exitCode = $null; forcedCleanup = $false; processSignals = @(); outputDrained = $false; originalCuiRootReported = $false; phase = 'launch'; errorType = $null }
     $nativeProcess = $null
     try {
         $nativeProcess = Start-Process -FilePath $Exe -WorkingDirectory ([IO.Path]::GetDirectoryName($Exe)) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
         $observed.pid = $nativeProcess.Id; $observed.sessionId = $nativeProcess.SessionId; $observed.startedUTC = [DateTime]::UtcNow.ToString('o')
+        $observed.phase = 'visible-own-window'
         $until = [DateTime]::UtcNow.AddSeconds(45)
         $window = [IntPtr]::Zero
         do {
@@ -134,6 +135,7 @@ function Invoke-OriginalNativeQuit([string]$Label, [string]$Exe) {
         [void][HomeOriginalNativeInput]::GetWindowThreadProcessId($window, [ref]$ownerPid)
         if ($ownerPid -ne $nativeProcess.Id) { throw 'Native HWND does not belong to this exact launched process.' }
         $observed.windowVisible = $true; $observed.ownHWND = $true; $observed.windowTitle = $nativeProcess.MainWindowTitle
+        $observed.phase = 'own-window-focus'
         [void][HomeOriginalNativeInput]::ShowWindow($window, 9)
         [void][HomeOriginalNativeInput]::SetForegroundWindow($window)
         $until = [DateTime]::UtcNow.AddSeconds(5)
@@ -141,25 +143,34 @@ function Invoke-OriginalNativeQuit([string]$Label, [string]$Exe) {
         if ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window) { throw 'Actual own window foreground could not be verified; no keyboard event sent.' }
         $observed.foregroundVerified = $true
         foreach ($key in @(0x10,0x11,0x12)) { if (([HomeOriginalNativeInput]::GetAsyncKeyState($key) -band 0x8000) -ne 0) { throw 'Existing modifier key is held; do not alter unrelated desktop input.' } }
+        $observed.phase = 'owned-input'
+        if ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window -or -not [HomeOriginalNativeInput]::IsWindowVisible($window)) { throw 'Own visible foreground changed before original input; no key event sent.' }
         try { $observed.inputEventsSent = [HomeOriginalNativeInput]::QuitChord() }
         finally { $observed.releaseEventsSent = [HomeOriginalNativeInput]::ReleaseChordKeys() }
+        if ($observed.releaseEventsSent -ne 3) { throw 'Win32 did not admit all owned modifier release events.' }
         if ($observed.inputEventsSent -ne 6) { throw 'Win32 did not admit all original Ctrl+Shift+Q key events.' }
+        $observed.phase = 'original-process-exit'
         if (-not $nativeProcess.WaitForExit(45000)) { throw 'Original explicit shutdown did not exit within observation bound; no kill/timeout success is allowed.' }
-        $nativeProcess.WaitForExit()
         $nativeProcess.Refresh(); $observed.exited = $true; $observed.exitCode = $nativeProcess.ExitCode; $observed.endedUTC = [DateTime]::UtcNow.ToString('o')
+        $observed.phase = 'bounded-original-output-drain'
+        $drainDeadline = [DateTime]::UtcNow.AddSeconds(5)
         foreach ($log in @($stdout,$stderr)) {
             if ((Get-Item -LiteralPath $log).Length -gt 8MB) { throw 'Native output exceeded declared 8MiB bound.' }
-            $stream = [IO.File]::Open($log, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
-            $stream.Dispose()
+            while ($true) {
+                try { $stream = [IO.File]::Open($log, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None); $stream.Dispose(); break }
+                catch [IO.IOException] { if ([DateTime]::UtcNow -ge $drainDeadline) { throw }; Start-Sleep -Milliseconds 100 }
+            }
         }
         $observed.outputDrained = $true
+        $observed.phase = 'original-cui-root-outcome'
         $text = Get-Content -LiteralPath $stdout -Raw
         $observed.originalCuiRootReported = $text -match '\[9-1 Home\] Root: .+ — CUI loaded into window'
         if ($observed.exitCode -ne 0) { throw 'Actual original process returned a nonzero shutdown outcome.' }
         if (-not $observed.originalCuiRootReported) { throw 'Original process did not report its canonical CUI root; a window title is insufficient.' }
+        $observed.phase = 'complete'
         return $observed
     } catch {
-        $observed.error = $_.Exception.Message
+        $observed.errorType = $_.Exception.GetType().Name
         if ($nativeProcess -and $nativeProcess.HasExited) { $observed.exited = $true; $observed.exitCode = $nativeProcess.ExitCode }
         throw
     } finally {
@@ -251,6 +262,7 @@ try {
     $result.package = [ordered]@{ sourceCommit = $ExpectedCommit; files = $runtimeBefore.Count; zipBytes = $zipItem.Length; zipSHA256 = $zipSHA; authenticodeStatus = (Get-AuthenticodeSignature -LiteralPath (Join-Path $publish 'AvaloniaHome.exe')).Status.ToString(); installedIdentity = 'NOT_SUPPLIED'; donorOrCleanPcAcceptance = $false }
     Write-Json (Join-Path $publication 'publish-manifest.json') ([ordered]@{ sourceCommit = $ExpectedCommit; publishRoot = $publish; files = $runtimeBefore; archiveBytes = $zipItem.Length; archiveSHA256 = $zipSHA; scope = $result.qualification })
     Write-Json (Join-Path $publication 'seal.json') ([ordered]@{ sourceCommit = $ExpectedCommit; manifestSHA256 = (Get-FileHash -LiteralPath (Join-Path $publication 'publish-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant(); archiveSHA256 = $zipSHA; archiveBytes = $zipItem.Length })
+    if ($env:GITHUB_OUTPUT) { Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'package_ready=true' }
     $parts = Join-Path $output 'public-parts'; New-Item -ItemType Directory -Path $parts | Out-Null
     $partLimit = 19MB; $partCount = [int][Math]::Ceiling($zipItem.Length / $partLimit)
     if ($partCount -gt 8) { throw 'Original package exceeds the declared eight-part transport bound; retain whole artifact and report failure.' }
@@ -304,14 +316,14 @@ try {
     if (-not (Same-Catalog $runtimeBefore $runtimeAfter)) { throw 'Original extracted runtime files changed across native controls.' }
     $result.status = 'PASS_ORIGINAL_HOME_MANAGED_SIX_AND_VISIBLE_EXPLICIT_NATIVE_QUIT_SCOPED'
 } catch {
-    $result.status = 'FAIL_OR_INCOMPLETE'; $result.failure = $_.Exception.Message
-    Write-Error -Message $_.Exception.Message -ErrorAction Continue
+    $result.status = 'FAIL_OR_INCOMPLETE'; $result.failureType = $_.Exception.GetType().Name
+    Write-Error -Message ("Original Home validation failed at {0}: {1}; controlled phase and original logs retained." -f $result.stage, $result.failureType) -ErrorAction Continue
 } finally {
     try {
         $after = @(Get-TreeSnapshot); Write-Json (Join-Path $diagnostics 'source-after.json') $after
         if ($null -ne $before) { $result.sourceAfterUnchanged = Same-Catalog $before $after; if (-not $result.sourceAfterUnchanged) { throw 'Actual source bodies changed during original execution.' } }
         if (@(& git status --porcelain).Count -ne 0) { throw 'Source checkout was modified during original execution.' }
-    } catch { $result.status = 'FAIL_OR_INCOMPLETE'; $result.finalCustodyFailure = $_.Exception.Message }
+    } catch { $result.status = 'FAIL_OR_INCOMPLETE'; $result.finalCustodyFailureType = $_.Exception.GetType().Name }
     $result.acceptedNativeShutdownScope = $result.status -ceq 'PASS_ORIGINAL_HOME_MANAGED_SIX_AND_VISIBLE_EXPLICIT_NATIVE_QUIT_SCOPED' -and $result.sourceAfterUnchanged
     Save-Result
 }

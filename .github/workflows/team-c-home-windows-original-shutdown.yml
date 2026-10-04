@@ -60,7 +60,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Retain the actual complete sealed package
-        if: always() && steps.probe.outputs.publication_ready == 'true'
+        if: always() && steps.probe.outputs.package_ready == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: team-c-home-original-package-${{ github.sha }}-${{ github.run_attempt }}
