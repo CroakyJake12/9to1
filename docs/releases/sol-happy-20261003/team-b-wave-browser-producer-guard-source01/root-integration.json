@@ -151,5 +151,78 @@
     "runtimeResultAcceptance": false,
     "allReadersClosed": true,
     "noLocalFileImportRuntimeWatchRestartOrSourceMutation": true
-  }
+  },
+  "newSeparateSource01RecoveryFullACK": {
+    "state": "B6_SEVEN_PRODUCER_GUARD_SOURCE01_PERMANENT_FULLACK_READERS_CLOSED",
+    "UTC": "2026-10-04T22:24:42.796972+00:00",
+    "branch": "artifact/team-b-wave-browser-producer-guard-source01-20261004",
+    "head": "ef1333e6b0d618a17ac9f508377cc48864e29f62",
+    "parent": "d345e72bfeaecaaf82d3c719d1d442a578b8322c",
+    "prefix": "docs/releases/sol-happy-20261003/team-b-wave-browser-producer-guard-source01/",
+    "allSevenFullBodiesGitSHA1SHA256Tree100644": true,
+    "onlyRootIntegrationChangedVersusParentAll9756LeafPathsAndOtherSHAsConserved": true,
+    "manifestFiveBodyPinsAndSixIntegrationSavedSourcePinsExact": true,
+    "reconstructionManifestBindingExact": true,
+    "controlled14Cases22AssertionsRecordedNotReexecuted": true,
+    "historicalProductSource": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "historicalIndependentAdoptionProofPreservedExact": true,
+    "currentProductRefEqualityRequired": false,
+    "browser17RuntimeAcceptance": false,
+    "allReadersClosed": true,
+    "noLocalSourceArchiveReadsFilesImportsControlsExecutionSDKNodeWatchRestartOrUnlink": true,
+    "analystCorrection": "Initial parent-delta assertion wrongly expected seven additions; parent already contains all seven. Corrected to exact single integration update before ACK.",
+    "pins": [
+      [
+        "RECONSTRUCTION.json",
+        "60fc40ea4c6ae70ad72bd400c7bb2544ab91cb58",
+        848,
+        "fcd8f65fd5585526d4657b5e23463edddcd072fcbb798d871becd607e3a7592a"
+      ],
+      [
+        "controls-results.json",
+        "da0d408d794a366c50095d621e939d3b4fac96cd",
+        1691,
+        "0ef566f93e39a300b1517092c22103e9ccb9b746f7fda8aaad6c1dfb1b0e4d64"
+      ],
+      [
+        "manifest.json",
+        "1023bb53c3aaaf9536919a0c8d019587eb1fb226",
+        5490,
+        "51c7fc6ec2d06cb47fa48327c2120210d6f271d5bf952dd343a991816fbb493a"
+      ],
+      [
+        "producer-guard-controls.py",
+        "511322345685cbefc7546f724b0b61c41b704f83",
+        8422,
+        "969c824e5edb4073da942fa0ff05b0e86d8d170f6570f3427e2994ff4cd926ef"
+      ],
+      [
+        "proposal.patch",
+        "6869d08b1121d0b1f97321a29056f2e6d9046446",
+        9624,
+        "15a635c873bdee43617fe69d081a315b1650a67c38b239594b0e074839050eb7"
+      ],
+      [
+        "root-integration.json",
+        "5d8814f67b972648abd9990c0a1cc3c511f36344",
+        5603,
+        "a15e460cdc111f250f60075104e31e638866e8970cf8de008791ec9a67b3755e"
+      ],
+      [
+        "run-wave-responsive-browser.py",
+        "1f617d0c5f80a79c3e4bfff74a0d9829d12b5cc7",
+        14913,
+        "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026"
+      ]
+    ],
+    "releasedDuplicateNames": [
+      "RECONSTRUCTION.json",
+      "controls-results.json",
+      "manifest.json",
+      "producer-guard-controls.py",
+      "proposal.patch",
+      "run-wave-responsive-browser.py"
+    ]
+  },
+  "newSeparateSource01RecoveryCustodianRelease": "B3 explicitly released only six newly generated pinned regular nonsymlink duplicates and thenemptynewdir, all B3/B4/readers closed; originals/archives/prior other paths excluded"
 }
