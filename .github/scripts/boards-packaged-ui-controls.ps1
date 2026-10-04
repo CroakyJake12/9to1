@@ -102,11 +102,13 @@ function Find-NamedButton([System.Windows.Automation.AutomationElement]$Window, 
     if ($matches.Count -eq 0) { return $null }
     return $matches[0]
 }
-function Observe-NamedButton([string]$Name) {
-    $button = Wait-Observed { Find-NamedButton $window $Name } "Actual named native button: $Name"
+function Observe-NamedButton([string]$ButtonName) {
+    # Wait-Observed has its own diagnostic $Name. Keep the actual lookup value
+    # distinct because PowerShell scriptblock invocation uses dynamic scope.
+    $button = Wait-Observed { Find-NamedButton $window $ButtonName } "Actual named native button: $ButtonName"
     $c = $button.Current
-    Check ($c.ProcessId -eq $process.Id -and $c.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $c.Name -ceq $Name) "Exact process-bound native Button: $Name"
-    Check ($c.IsEnabled -and -not $c.IsOffscreen -and $c.BoundingRectangle.Width -gt 0 -and $c.BoundingRectangle.Height -gt 0) "Enabled visible native Button: $Name"
+    Check ($c.ProcessId -eq $process.Id -and $c.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $c.Name -ceq $ButtonName) "Exact process-bound native Button: $ButtonName"
+    Check ($c.IsEnabled -and -not $c.IsOffscreen -and $c.BoundingRectangle.Width -gt 0 -and $c.BoundingRectangle.Height -gt 0) "Enabled visible native Button: $ButtonName"
     return $button
 }
 function Native-BoldIs([bool]$Expected) {
