@@ -147,7 +147,7 @@ public sealed class ExtensionPluginEndToEndTests
         Assert.False(File.Exists(deniedMarker));
         var deniedEvents = await WaitForEventsAsync(executionRepository, deniedExecution, 2);
         Assert.Equal(new[] { ExecutionActionStatus.Running, ExecutionActionStatus.Failed }, deniedEvents.Select(item => item.Status).ToArray());
-        Assert.DoesNotContain(deniedEvents, item => item.Output?.Contains("must-not-run", StringComparison.Ordinal) == true);
+        Assert.False(JsonSerializer.Serialize(deniedEvents).Contains("must-not-run", StringComparison.Ordinal));
 
         const string rawSecret = "worker28-input-secret-123";
         var successMarker = NewMarker();

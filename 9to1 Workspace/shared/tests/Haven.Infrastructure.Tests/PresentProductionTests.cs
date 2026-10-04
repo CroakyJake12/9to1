@@ -317,7 +317,7 @@ public sealed class PresentProductionTests : IDisposable
         using var archive = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: false);
         Assert.NotNull(archive.GetEntry("manifest.json"));
         Assert.NotNull(archive.GetEntry("presentation.json"));
-        Assert.Single(archive.Entries.Where(entry => entry.FullName.StartsWith("assets/", StringComparison.Ordinal)));
+        Assert.Single(archive.Entries, entry => entry.FullName.StartsWith("assets/", StringComparison.Ordinal));
 
         var imported = await new PresentPptxImportService(_paths).ImportAsync(destination, CancellationToken.None);
         Assert.NotEqual(document.Id, imported.Id);
