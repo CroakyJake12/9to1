@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T21:27:59.293330+00:00",
+  "updatedUTC": "2026-10-04T21:35:36.729548+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -3776,7 +3776,7 @@
     },
     "ownership": "Root sole B source/artifact/coordination integrator. A native/shared/canonical authority; C sole main/release/acceptedHead/index/combined WorkerLogs integrator. This commit changes only B JSON and preserves every existing checkpoint. No full app/31/LE/platform/provider/release acceptance."
   },
-  "currentBOnlyCheckpointRef": "reviewedCriticalBrowserFixAndDrain_20261004T212759.293330+0000",
+  "currentBOnlyCheckpointRef": "actualTerminalResponsiveFailureRootReceiveRequest_20261004T213536.729548+0000",
   "engineeringRecoveryRequest_20261004T205121.948495+0000": {
     "UTC": "2026-10-04T20:51:21.948495+00:00",
     "authority": "Actual latest receiving-root user messages read: stop routine questions to Jacob, coordinate engineering decisions with receiving root, pre-empt blockers; corrected deadline 10:30 interpreted by explicit current delegation as22:30 Europe/London4October. Full acceptance/security/donor scope preserved.",
@@ -4144,5 +4144,49 @@
     "deadlineUTC": "2026-10-04T21:30:00Z",
     "deadlineNotAcceptanceWaiver": true,
     "fullAcceptance": "NOT_ACCEPTED"
-  }
+  },
+  "actualTerminalResponsiveFailureRootReceiveRequest_20261004T213536.729548+0000": {
+    "UTC": "2026-10-04T21:35:36.729548+00:00",
+    "deadline": "21:30UTC/22:30EuropeLondon passed without fullcriticalacceptance; clockdoesnotPASS orauthorisepoweroffbeforecompletion/drain.",
+    "source": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "actualTerminal": {
+      "run": 37235516659,
+      "job": 111534527139,
+      "state": "FAILURE",
+      "terminalUTC": "2026-10-04T21:28:48Z",
+      "nativeProposed": "Actual64PASS0FAIL0NOT_RUN; original48PASS16FAILqualifiednegative.",
+      "originalBrowser14": "ACTUAL14/14PASS0errors usingunchanged8c8 runner; newsourcepublisher passed; source/producer/proofafter guardrepair worked.",
+      "responsive3": "Commandnaturalexit1. Underlyingcasecounts/productcauseNOTYETRAWREAD; neverclaim3FAIL/all3executed or3PASS.",
+      "finalization": "No finalizationError. allCommandFamiliesNormalClosed falseincludesnonzero testexit; cannot inferprocessleak fromthisaggregate.",
+      "resource": "Actualfinalowned64119113B/free86987956224; original192MiBbound unchanged."
+    },
+    "exactFailedOriginal": {
+      "artifact": 11315935797,
+      "bytes": 2002238,
+      "sha256": "9a2ca854cc3370e00b8410e238c4e378230962d7bc3dfd3ad4a304af46abde55",
+      "run": 37235516659,
+      "head": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+      "expired": false
+    },
+    "urgentReceivingRootAction": "Useexistingroomierreceivinglane toreceive thisimmutablePUBLIC2,002,238B wholeoriginal now; verifyfullSHA/allCRC and return exact wr-run/raw/results.json, wr-run/diagnostics/wave-responsive-real-browser.log, wr-run/diagnostics/commands.json and original14results ifpresent. B remains product/driver sourceowner; no duplicate sourcewrites. Fullarchive atBlocalfloors inadmissible; rootBprepares ONE boundedread-only existing-original selected3 exporter32Kdecoded/64Kwire withwholefixedSHA+allCRC beforeselection, notanapp rerun orhealthyrestart. Ordinaryrootengineeringdecision, notJacobquestion.",
+    "observabilityCaution": "CurrentoriginalCJS catch recordsfailure.active/step/type/elapsed, omitsmessage/stack/currentviewport; Nodeprintsno reportstdout. Rawmayidentify stepbutnotmeasurement/cause. Do notinventplatformlimit orweakenoracle; retaincurrentfailure/rawscreenshots/observations.",
+    "nativeOriginalArtifacts": [
+      {
+        "variant": "proposed",
+        "artifact": 11315352180,
+        "bytes": 1113703,
+        "sha256": "2dce921911d2c88433563fe39468801663d70424df525414a6fb1e25416c2a22"
+      },
+      {
+        "variant": "original",
+        "artifact": 11315965054,
+        "bytes": 959959,
+        "sha256": "86a5d2ca3d06adeeed210a8453d777e7cf65c15e9efa6662e75457c7a5394741"
+      }
+    ],
+    "sourceAndEvidenceReceivable": "PR6 current0c4e. Fullyreviewedguard source/control/inverse handoff ef1333e6b0d618a17ac9f508377cc48864e29f62; originalpreflightfailureselectedraw+FULLACK81e990ec650aa0a7c1e9c1733d844e4a5a57f994. Allolderfailedruns retained.",
+    "safeLocalDrain": "AllBlocalprocesses/readers/ownedsourcecontrolfixturesclosed; idlewatcher17020recordedcontrolledHOLD/exit2zeroAPI/zeroFragments/noRestart. Sourcefreezeprotecteddirtysaved; noJacobPC dependency here. Thisbrowsercloudjobterminal; preserveotherhealthyautoCI to normalterminal.",
+    "stillRequired": "Responsive3 actualcause/repair/unchangedrerun; fullrawsource/runtime/familyproof; A/C receivingNotesRepositorycrossprocessCAS repair+original65+two-processregression; sharedSpaceadoption; full31/LE/installed/signing/cleanPC/provideracceptance remainsopen. No fullacceptanceclaim."
+  },
+  "currentResponsiveFailureRootReceiveRequestRef": "actualTerminalResponsiveFailureRootReceiveRequest_20261004T213536.729548+0000"
 }
