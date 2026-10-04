@@ -591,48 +591,83 @@ def main():
                     if not target.is_relative_to(root):
                         raise RuntimeError('Complete actual first-party project physical PE outside root: ' + project)
                     pair, identity, documents, symbol_storage = physical_symbols(target, values['DebugType'], pdb)
-                    inputs = []
-                    for item in evaluated.get('Items', {}).get('Compile', []):
-                        source = P(item.get('FullPath', ''))
-                        if not source.is_absolute(): source = (root / project).parent / item['Identity']
-                        source = source.resolve()
-                        if not source.is_relative_to(root) or source.is_symlink() or not source.is_file():
-                            raise RuntimeError('Actual evaluated compile source unavailable/foreign')
-                        relative = str(source.relative_to(root)); matches = [key for key in documents if key.replace('\\', '/').endswith('/' + relative)]
-                        row = {'path': relative, 'bytes': source.stat().st_size, 'sha256': digest(source), 'pdbDocument': matches}
-                        if relative in paths and row['sha256'] != paths[relative]['sha256']:
-                            raise RuntimeError('Actual evaluated tracked source differs')
-                        if relative in {f['path'] for f in catalog['sources']} and relative not in catalog['typeOnlyPdbExceptions'] and not matches:
-                            raise RuntimeError('Selected behavioural source must appear in actual original PDB: ' + relative)
-                        if relative not in paths: row['retainedOriginalSource'] = retained(source, out / phase / 'original-generated-or-materialized-sources')
-                        inputs.append(row)
-                        selected_compile_sources.add(relative)
-                    proof_docs = []
-                    for name_in_pdb, row in documents.items():
-                        source = P(name_in_pdb.replace('\\', '/'))
-                        if not source.is_absolute(): source = root / source
-                        source = source.resolve()
-                        # Deterministic source paths may use a mapped root. Bind to
-                        # exactly one full evaluated original path, never a basename.
-                        if not source.is_relative_to(root) or not source.is_file():
-                            matches = [root / item['path'] for item in inputs
-                                if name_in_pdb.replace('\\', '/').endswith('/' + item['path'])]
-                            if len(matches) != 1: raise RuntimeError('Mapped actual PDB document ambiguous/missing')
-                            source = matches[0]
-                        if not source.is_relative_to(root) or source.is_symlink() or not source.is_file() or hashlib.new(row['hashName'], source.read_bytes()).hexdigest() != row['digest']:
-                            raise RuntimeError('Complete actual PDB document missing/different/foreign: ' + name_in_pdb)
-                        relative = str(source.relative_to(root))
-                        owned_pdb_sources.add(relative)
-                        source_pin = None if relative in paths else retained(source, out / phase / 'original-generated-or-materialized-sources')
-                        proof_docs.append({'document': name_in_pdb, 'source': relative, 'retainedOriginalSource': source_pin, **row})
-                    if not inputs or not proof_docs: raise RuntimeError('Actual complete source/PDB evidence empty')
-                    original_pairs = [retained(file, out / phase / 'compiled') for file in pair]
-                    retained_identity = [{'path': str(root / row['path']), 'bytes': row['bytes'], 'sha256': row['sha256']} for row in original_pairs]
-                    if retained_identity != symbol_storage['physicalFiles']:
-                        raise RuntimeError('Retained original physical PE/symbol bytes differ from parsed originals')
-                    compiled.append({'suite': suite['name'], 'project': project, 'evaluated': evaluated,
-                        'physicalAssembly': values['AssemblyName'], 'identity': identity, 'pairs': original_pairs,
-                        'symbolStorage': symbol_storage, 'compileInputs': inputs, 'allPdbDocuments': proof_docs})
+                    original_pairs = []
+                    symbol_primary = None; symbol_cleanup = []
+                    inputs = []; proof_docs = []
+                    symbol_diagnostic = {'suite': suite['name'], 'project': project,
+                        'configuration': configuration, 'actualEvaluation': evaluated,
+                        'actualPhysicalAssembly': values['AssemblyName'], 'identity': identity,
+                        'symbolStorage': symbol_storage,
+                        'allParsedPortablePdbDocuments': [{'document': document, **row} for document, row in documents.items()],
+                        'originalPhysicalPairs': original_pairs, 'compileInputs': [],
+                        'documentProof': 'NOT_ACCEPTED_BEFORE_ALL_ORIGINAL_GUARDS',
+                        'qualification': 'Original compiled producer observations only; retention is not source availability or successful PDB mapping proof.'}
+                    for file in pair:
+                        retained_row = collect(symbol_cleanup, lambda file=file: retained(file, out / phase / 'compiled'))
+                        if retained_row is not None: original_pairs.append(retained_row)
+                    def compare_original_physical_pairs():
+                        retained_identity = [{'path': str(root / row['path']), 'bytes': row['bytes'], 'sha256': row['sha256']} for row in original_pairs]
+                        if retained_identity != symbol_storage['physicalFiles']:
+                            raise RuntimeError('Retained original physical PE/symbol bytes differ from parsed originals')
+                    collect(symbol_cleanup, compare_original_physical_pairs)
+                    diagnostic_path = out / phase / (suite['name'] + '-original-physical-' + str(len(seen)))
+                    collect(symbol_cleanup, lambda: save(diagnostic_path.with_suffix('.before-document-mapping.json'), symbol_diagnostic))
+                    try:
+                        inputs = []
+                        for item in evaluated.get('Items', {}).get('Compile', []):
+                            source = P(item.get('FullPath', ''))
+                            if not source.is_absolute(): source = (root / project).parent / item['Identity']
+                            source = source.resolve()
+                            if not source.is_relative_to(root) or source.is_symlink() or not source.is_file():
+                                raise RuntimeError('Actual evaluated compile source unavailable/foreign')
+                            relative = str(source.relative_to(root)); matches = [key for key in documents if key.replace('\\', '/').endswith('/' + relative)]
+                            row = {'path': relative, 'bytes': source.stat().st_size, 'sha256': digest(source), 'pdbDocument': matches}
+                            if relative in paths and row['sha256'] != paths[relative]['sha256']:
+                                raise RuntimeError('Actual evaluated tracked source differs')
+                            if relative in {f['path'] for f in catalog['sources']} and relative not in catalog['typeOnlyPdbExceptions'] and not matches:
+                                raise RuntimeError('Selected behavioural source must appear in actual original PDB: ' + relative)
+                            if relative not in paths: row['retainedOriginalSource'] = retained(source, out / phase / 'original-generated-or-materialized-sources')
+                            inputs.append(row)
+                            selected_compile_sources.add(relative)
+                        proof_docs = []
+                        for name_in_pdb, row in documents.items():
+                            source = P(name_in_pdb.replace('\\', '/'))
+                            if not source.is_absolute(): source = root / source
+                            source = source.resolve()
+                            # Deterministic source paths may use a mapped root. Bind to
+                            # exactly one full evaluated original path, never a basename.
+                            mapping_attempt = {'document': name_in_pdb, 'pdbDocument': row,
+                                'directResolvedPath': str(source), 'evaluatedCompileSuffixCandidates': [],
+                                'qualification': 'Strict actual mapping candidates only; no select-first, alias, generated-source waiver or document proof.'}
+                            symbol_diagnostic['lastMappingAttempt'] = mapping_attempt
+                            if not source.is_relative_to(root) or not source.is_file():
+                                matches = [root / item['path'] for item in inputs
+                                    if name_in_pdb.replace('\\', '/').endswith('/' + item['path'])]
+                                mapping_attempt['evaluatedCompileSuffixCandidates'] = [str(candidate) for candidate in matches]
+                                if len(matches) != 1: raise RuntimeError('Mapped actual PDB document ambiguous/missing')
+                                source = matches[0]
+                            mapping_attempt['selectedStrictPath'] = str(source)
+                            if not source.is_relative_to(root) or source.is_symlink() or not source.is_file() or hashlib.new(row['hashName'], source.read_bytes()).hexdigest() != row['digest']:
+                                raise RuntimeError('Complete actual PDB document missing/different/foreign: ' + name_in_pdb)
+                            relative = str(source.relative_to(root))
+                            owned_pdb_sources.add(relative)
+                            source_pin = None if relative in paths else retained(source, out / phase / 'original-generated-or-materialized-sources')
+                            proof_docs.append({'document': name_in_pdb, 'source': relative, 'retainedOriginalSource': source_pin, **row})
+                        if not inputs or not proof_docs: raise RuntimeError('Actual complete source/PDB evidence empty')
+                        compiled.append({'suite': suite['name'], 'project': project, 'evaluated': evaluated,
+                            'physicalAssembly': values['AssemblyName'], 'identity': identity, 'pairs': original_pairs,
+                            'symbolStorage': symbol_storage, 'compileInputs': inputs, 'allPdbDocuments': proof_docs})
+                    except BaseException as error: symbol_primary = error
+                    finally:
+                        symbol_diagnostic['compileInputs'] = inputs
+                        symbol_diagnostic['completedDocumentProofRows'] = proof_docs
+                        symbol_diagnostic['primaryType'] = None if symbol_primary is None else type(symbol_primary).__name__
+                        symbol_diagnostic['primaryText'] = None if symbol_primary is None else collect(symbol_cleanup, lambda: str(symbol_primary))
+                        symbol_diagnostic['independentFailureTypesBeforeFinalSave'] = [type(error).__name__ for error in symbol_cleanup]
+                        collect(symbol_cleanup, lambda: save(diagnostic_path.with_suffix('.document-mapping-outcome.json'), symbol_diagnostic))
+                        collect(symbol_cleanup, protect_selected)
+                        collect(symbol_cleanup, budget)
+                    fail(symbol_primary, symbol_cleanup)
                 suite_evaluated = query(suite['project'], [*managed_props, '-p:TargetFramework=net10.0'], name + '-entry', True)
                 values = suite_evaluated['Properties']
                 if str(values.get('IsTestProject','')).lower() != 'true' or values['TargetFramework'] != 'net10.0' or values['LangVersion'] not in ('14','14.0'):

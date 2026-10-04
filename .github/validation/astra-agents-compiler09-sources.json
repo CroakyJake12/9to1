@@ -2944,8 +2944,8 @@
     ],
     "caller": {
       "path": ".github/scripts/astra-agents-compiler09-caller.py",
-      "bytes": 13881,
-      "sha256": "ea112d95b491b557dad796048db54a5bb5742b75c7c2dba699c796ad4d00434c"
+      "bytes": 13954,
+      "sha256": "0d6a848b125d573c6a42d39a76bd9f1f1a51ccd84b35c6023e586210836a88b4"
     },
     "lanes": [
       {
@@ -2990,8 +2990,8 @@
       "status": "SOURCE_ONLY_CONTEXT_ADAPTER_UNRUN",
       "driver": {
         "path": ".github/scripts/astra-agents-compiler09-original.py",
-        "bytes": 50589,
-        "sha256": "2d234c87f674975feaed9bd92eccf0eb2bdb8c84ed4cf13ea4a87f93aaaa5eeb"
+        "bytes": 53891,
+        "sha256": "9283e268bb04c80198ed5230a339afdcc02430641d49f69722a3a9c9a3068ebb"
       },
       "unchangedOriginalHelper": {
         "path": ".github/scripts/astra-joint-sdk-restore-evidence.py",
@@ -3016,6 +3016,61 @@
         "status": "SOURCE_ONLY_UNINVOKED"
       },
       "qualification": "Original corrected-v3 Debug compiler command succeeded before this post-build context guard refused. This correction does not establish later restore/reference/physical PE-PDB/all-document or sibling compiler acceptance."
+    },
+    "physicalDocumentDiagnostics": {
+      "status": "SOURCE_ONLY_ORIGINAL_PHYSICAL_DOCUMENT_DIAGNOSTICS_UNCONSTRUCTED_UNRUN",
+      "actualParent": {
+        "commit": "fdcf8d1e21b051d983d07375ccaca9ffbe0ea256",
+        "tree": "99e688192054c735e710e0a31d9ba996ce2f49cc",
+        "programTree": "a1495094b0e463f0bfdeb591d6faf4a85c940f3f",
+        "cutSha256": "43009274f1944b2dde3ce30ca2700e768ef196b24d6cb929b2ca9a93df2efbca"
+      },
+      "driver": {
+        "path": ".github/scripts/astra-agents-compiler09-original.py",
+        "bytes": 53891,
+        "sha256": "9283e268bb04c80198ed5230a339afdcc02430641d49f69722a3a9c9a3068ebb"
+      },
+      "selectedLane": {
+        "comparison": "corrected",
+        "branch": "v3",
+        "configuration": "Debug"
+      },
+      "inheritedSixLaneInventoryUnchanged": true,
+      "capture": "Immediately after the SAME physical_symbols producer observation, retain every original physical PE/symbol file independently and verify retained byte identities; save complete actual evaluation, symbol-storage identity and EVERY parsed document row before the unchanged original mapping loop.",
+      "refusal": "Record the exact last original document, direct resolved path and original evaluated-Compile suffix candidate set. Preserve strict cardinality, containment, regular-file and whole-hash guards with no alias, select-first, missing-source/generated-source waiver or symbol exception.",
+      "settlement": "Original mapping/source fault remains primary. Independent physical retention, diagnostic save, error formatting, source pin/currentness and budget faults survive in the exact original collectors. Failed retention never becomes source proof. Snapshot JSON need not list its own late persistence failure; the original exception group retains it.",
+      "controls": {
+        "count": 9,
+        "source": {
+          "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source06-original-physical-document-diagnostics/original-physical-document-memory-controls.py",
+          "bytes": 10501,
+          "sha256": "f0ea0cbe6f75831fbbb0291ba24ce805d61a18116bbf70d5cd62894bed42f7ea"
+        },
+        "status": "SOURCE_BOUND_MEMORY_CONTROLS_UNINVOKED"
+      },
+      "qualification": "Only one fresh corrected-v3 Debug diagnostic lane is selected. Existing six lanes remain unchanged historical inventory; this does not rerun or infer the other five causes, tests, native or full SDK acceptance.",
+      "originalCallerAdmission": {
+        "status": "SOURCE_ONLY_EXACT_TWO_BRANCH_ADMISSION_UNRUN",
+        "caller": {
+          "path": ".github/scripts/astra-agents-compiler09-caller.py",
+          "bytes": 13954,
+          "sha256": "0d6a848b125d573c6a42d39a76bd9f1f1a51ccd84b35c6023e586210836a88b4"
+        },
+        "exactBranches": [
+          "refs/heads/validation/astra-agents-compiler09-isolated-original-20261004",
+          "refs/heads/validation/astra-agents-physical-documents-20261004"
+        ],
+        "controls": {
+          "source": {
+            "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source07-exact-original-two-branch-admission/original-caller-exact-branch-memory-controls.py",
+            "bytes": 2512,
+            "sha256": "35ccabebd7a1de2ec1c0a1976594b31b6f8ecae60f52909023b3d8f1bcc3adc3"
+          },
+          "count": 6,
+          "status": "SOURCE_BOUND_MEMORY_ONLY_UNINVOKED"
+        },
+        "qualification": "Sole GITHUB_REF exact-value predicate extends to both explicitly issued branches. Repository/event/argv/lane/guarded child/session/pidfd/whole command/caller drain predicates are byte exact. No prefix admission, CI or compiler acceptance."
+      }
     }
   }
 }

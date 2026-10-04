@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "1bebfe91deace76f88df1cd2d3a350cc833ed3fc",
+  "baselineCommit": "fdcf8d1e21b051d983d07375ccaca9ffbe0ea256",
   "programTree": "a1495094b0e463f0bfdeb591d6faf4a85c940f3f",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
@@ -22,16 +22,16 @@
     {
       "path": ".github/scripts/astra-agents-compiler09-caller.py",
       "mode": "100644",
-      "object": "dd41751d7dd87cafcc23981232eba0f20efcee6e",
-      "bytes": 13881,
-      "sha256": "ea112d95b491b557dad796048db54a5bb5742b75c7c2dba699c796ad4d00434c"
+      "object": "0c9d32fc3f824fd54a4d75f06bc89f744e49d9fd",
+      "bytes": 13954,
+      "sha256": "0d6a848b125d573c6a42d39a76bd9f1f1a51ccd84b35c6023e586210836a88b4"
     },
     {
       "path": ".github/scripts/astra-agents-compiler09-original.py",
       "mode": "100644",
-      "object": "1e61cacf82fd966318837bfe6844bbdf7eee6d29",
-      "bytes": 50589,
-      "sha256": "2d234c87f674975feaed9bd92eccf0eb2bdb8c84ed4cf13ea4a87f93aaaa5eeb"
+      "object": "c6f3d086887bd2a1b6067ba9a2c19dfa6f627c0d",
+      "bytes": 53891,
+      "sha256": "9283e268bb04c80198ed5230a339afdcc02430641d49f69722a3a9c9a3068ebb"
     },
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
@@ -218,9 +218,9 @@
     {
       "path": ".github/validation/astra-agents-compiler09-sources.json",
       "mode": "100644",
-      "object": "d04ebd875a2b3d5b206a4d56ec82fa661352874e",
-      "bytes": 117644,
-      "sha256": "c276e893a8e40f22f8e3f42f9d07e57b0dc84d3884e76b65ced4a81230b93e04"
+      "object": "54985791c61d905faedc2bef4f3fb4c25ead1d28",
+      "bytes": 121351,
+      "sha256": "ea5ee79233a98196661fb852e9649354f59c784a4305cb2a4efb3add317275b8"
     },
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
@@ -414,9 +414,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "23464488ef782b219b0d33aca7bbf73b8c8c15db",
-      "bytes": 29688,
-      "sha256": "50c56d25904dfd275e7ad67e883482fa8824ae8f3fab9059806ac3d989eac4aa"
+      "object": "2fa6c0319893d21f8ca85fcfaf8d8295fc30cb5f",
+      "bytes": 40363,
+      "sha256": "bec6fe67624d1bde36adf9ec8fe0dbc365de2d50abcce738a56a26acefedc568"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -66895,8 +66895,8 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Root alone may seed the unique isolated branch to exact actual4f parent after all source/config/workflow/control and custody peers, using unchanged strong54ac constructor and643 launcher. No owner Git/build/test/restore/network/SDK invocation.",
-    "Six independent compiler-only lanes: unchanged actual4f sibling v2 Debug/Release baseline in its own checkout/output/task context, corrected v3 Debug/Release and corrected v2 Debug/Release. No tests/native or full SDK acceptance; old jobs/guards/215-12-48 cohort callers stay byte-exact and skip this isolated branch.",
+    "Root alone may seed the unique diagnostic branch to exact actualfdcf parent after all source/config/workflow/control and custody peers, then invoke unchanged strong54ac constructor and643 launcher. No owner Git/build/test/restore/network/SDK invocation.",
+    "Only one new corrected-v3 Debug original compiler/document diagnostic lane is selected. The whole prior six independent baseline/corrected v2/v3 Debug/Release jobs remain byte-exact and skip the diagnostic branch. Their outcomes are not inferred or rerun. No tests/native or full SDK acceptance; old jobs/guards/215-12-48 cohort callers stay byte-exact.",
     "Seven cause-specific Agents targets only: five current fixture source bodies, v3-only DefineConstants marker and new conditional maintained-context accessor. Exactly51 analyzer sites16+14+11+8+2; explicit None/owned/retired cancellation assertions preserved, no warnings suppression or framework migration.",
     "Full later joint catalogue106 source rows/31 fixtures/204 methods251 authored minima and38 prerequisites preserved as source-only inventory. Four new explicit inherited rows add14 existing cases; zero new methods or test cases. This job compiles only actual selected v2/v3 dependency graph, not all106 sources or11 suites.",
     "Before and after whole issued corrective/source cuts,22 Gitlinks/three exact materialized source dependencies, all tracked source/blob bytes and selected source/owner pins must match. Unchanged baseline helper must be genuinely absent; actual4f sourcecut/catalogue exact. Separate immutable baseline does not receive any correction or prepared HintPath alias.",
@@ -66907,7 +66907,9 @@
     "Full eventual joint Debug/Release16 xUnit+2 Files console+4 product executable and original215/12/48 native cohorts remain independent mandatory gates. Original owning26 Home failures and regression causes are not treated as corrected or retested by this compiler verification.",
     "No production association/privacy/Cloud/destination/export/bootstrap/installed actor/provider/OS225/Terra or unrelated source activation.",
     "Actual1beb corrected-v3 Debug original compiler command exited0 with0 warnings/errors, then unchanged restore helper rejected isolated lane evidence_output. Only a canonical same-checkout restore-diagnostic adapter is selected; helper/managed/host/task/current graph/package/source/doc/drain guards remain exact.",
-    "Four owning driver spans only: fresh helper output, bounded pre/post complete original diagnostics with truthful inherited-row distinction, and before/after call adaptation. Canonical helper context is distinct from caller lane output; no helper predicate/COHORT/source-path/alias relaxation. Same primary and independent retention/post-pin/budget errors preserved."
+    "Exact Compiler05 canonical restore context adapter stays byte-exact within the driver except one downstream diagnostic span. Immediately after physical_symbols retain SAME actual PE/PDB and full parsed document observations before unchanged strict source mapping; record exact refused document/candidates without alias/waiver/select-first. Original mapping primary plus all independent retained/body/close/save/currentness/budget faults remain.",
+    "Catalogue106/31/204/251/38 and original six lanes remain historical source inventory only. A single selected corrected-v3 Debug diagnostic compile does not establish all catalogue sources or sibling compatibility. Actual generated source availability/PDB identity/restores/strict command and caller drains remain mandatory.",
+    "Sole original caller GITHUB_REF admission is an exact two-value old-isolated/new-diagnostic allowlist; repository/workflow_dispatch and every original conservative prefix/tuple/PIDfd/session/inner command/drain guard remain byte-exact. No broad startsWith/prefix/foreign ref admission. One diagnostic lane only; old6 jobs remain unchanged and skipped."
   ],
   "inputManifests": [
     {
@@ -67204,6 +67206,71 @@
       "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/original-restore-context-memory-controls.py",
       "bytes": 12708,
       "sha256": "2b583583021b659f2e6e46c9e9106282d79dce3ad8e16831003ab73320ab553b"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/manifest.json",
+      "bytes": 49512,
+      "sha256": "71f00abafbc79f263596f8b678d7349d2d722584208aee7e34a8b020e0ebaf1d"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/config.json",
+      "bytes": 80506,
+      "sha256": "81d7be9b484834733fdf0ec798043d86bda062303316538adbd2b731e46e0e37"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/astra-agents-compiler09-sources.json",
+      "bytes": 117644,
+      "sha256": "c276e893a8e40f22f8e3f42f9d07e57b0dc84d3884e76b65ced4a81230b93e04"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/astra-agents-compiler09-original.py",
+      "bytes": 50589,
+      "sha256": "2d234c87f674975feaed9bd92eccf0eb2bdb8c84ed4cf13ea4a87f93aaaa5eeb"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/whole-compiler03-driver-restore-context-and-metadata-inverse.json",
+      "bytes": 81809,
+      "sha256": "bd2c995f7b1818f9d70abad167e13c064a84f2f46760d37a5f48ef5ab1dd6bf9"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source06-original-physical-document-diagnostics/original-physical-document-memory-controls.py",
+      "bytes": 10501,
+      "sha256": "f0ea0cbe6f75831fbbb0291ba24ce805d61a18116bbf70d5cd62894bed42f7ea"
+    },
+    {
+      "path": "/workspace/astra-source/root-compiler05-complete-original-custody-proof992.json",
+      "bytes": 4239,
+      "sha256": "569a09d0fb9367b4e8b912b4a101513dbf6cd36377150fe8f217627ad8dd4186"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source06-original-physical-document-diagnostics/manifest.json",
+      "bytes": 52497,
+      "sha256": "3a1c732fa0af61963a6f1ae30d4a10ec68d8e33b482de37a268ba402af969f83"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source06-original-physical-document-diagnostics/config.json",
+      "bytes": 83254,
+      "sha256": "a888291f63754235e3b3bb0324c7f58f465243de9b91cbdd288db7ba562e1315"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source06-original-physical-document-diagnostics/astra-agents-compiler09-sources.json",
+      "bytes": 120119,
+      "sha256": "f671efd11ca778e3f20bf960a5082eb339b93827f976036340808bbed16031e8"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source03-exact-original-false-marker-schema/astra-agents-compiler09-caller.py",
+      "bytes": 13881,
+      "sha256": "ea112d95b491b557dad796048db54a5bb5742b75c7c2dba699c796ad4d00434c"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source07-exact-original-two-branch-admission/original-caller-exact-branch-memory-controls.py",
+      "bytes": 2512,
+      "sha256": "35ccabebd7a1de2ec1c0a1976594b31b6f8ecae60f52909023b3d8f1bcc3adc3"
+    },
+    {
+      "path": "/workspace/astra-source/root-compiler06-exact-physical-document-memory-controls995.json",
+      "bytes": 3558,
+      "sha256": "628e17052d6f6d108bde64e8832f9f4387389a1991ad7472bc3829d27fa8ca7c"
     }
   ],
   "sharedCakeIdContract": null

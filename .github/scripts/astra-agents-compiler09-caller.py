@@ -182,7 +182,7 @@ if __name__=='__main__':
  parser=argparse.ArgumentParser()
  for flag in ('expected-commit','manifest','manifest-sha','configuration','compiler-branch','comparison','comparison-root'):parser.add_argument('--'+flag,required=True)
  args=parser.parse_args()
- if os.environ.get('GITHUB_REPOSITORY')!='CroakyJake12/9to1' or os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or os.environ.get('GITHUB_REF')!='refs/heads/validation/astra-agents-compiler09-isolated-original-20261004':raise RuntimeError('Exact isolated compiler workflow required')
+ if os.environ.get('GITHUB_REPOSITORY')!='CroakyJake12/9to1' or os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or os.environ.get('GITHUB_REF') not in ('refs/heads/validation/astra-agents-compiler09-isolated-original-20261004','refs/heads/validation/astra-agents-physical-documents-20261004'):raise RuntimeError('Exact isolated compiler workflow required')
  root=P.cwd().resolve()
  lane=args.comparison+'-'+args.compiler_branch+'-'+args.configuration.lower()
  if not re.fullmatch('(baseline-v2|corrected-v[23])-(debug|release)',lane):raise RuntimeError('Exact six compiler lanes required')
