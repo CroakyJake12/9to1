@@ -235,11 +235,14 @@ public sealed class HomeHostOriginalLifetimeTests
             Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => original));
         }
         var acquired = false;
-        Assert.Throws<InvalidOperationException>(() => lifetime.TryRunOriginal(() =>
+        Assert.Throws<InvalidOperationException>(() =>
         {
-            acquired = true;
-            return Task.CompletedTask;
-        }));
+            _ = lifetime.TryRunOriginal(() =>
+            {
+                acquired = true;
+                return Task.CompletedTask;
+            });
+        });
         Assert.False(acquired);
         var close = lifetime.RequestShutdownAsync();
         var combined = await Assert.ThrowsAsync<AggregateException>(() => close);

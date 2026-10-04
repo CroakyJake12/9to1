@@ -262,6 +262,9 @@ internal sealed class HomeApp : Application
 
     private void ApplySnapshot(HomeDashboardSnapshot snapshot)
     {
+        _viewModel.Set(nameof(HomeCuiSurface.IsDashboard), _controller.Surface.IsDashboard);
+        _viewModel.Set(nameof(HomeCuiSurface.IsLibrary), _controller.Surface.IsLibrary);
+        _viewModel.Set(nameof(HomeCuiSurface.IsEvents), _controller.Surface.IsEvents);
         _viewModel.Set("CatalogSummary", snapshot.Catalog.Status.Message);
         _viewModel.Set("RuntimeSummary", snapshot.Runtime.Runtime.Message);
         _viewModel.Set("EventsSummary", "An events provider is not configured in this host.");
