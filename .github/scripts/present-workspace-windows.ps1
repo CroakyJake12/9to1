@@ -78,7 +78,7 @@ function Run-OriginalCases([string]$Label, [string]$Project, [int]$ExpectedCases
     try {
         [void](Invoke-DotNet ($Label+'-restore') (@('restore',$Project,'--configfile','NuGet.Config','--disable-parallel','-p:Configuration=Release',$taskFlag) + $flags))
         [void](Invoke-DotNet ($Label+'-build-release') (@('build',$Project,'--no-restore','-c','Release',$taskFlag) + $flags))
-        $assembly = (Invoke-DotNet ($Label+'-target-path') @('msbuild',$Project,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",$taskFlag,'-getProperty:TargetPath')).Trim()
+        $assembly = (Invoke-DotNet ($Label+'-target-path') @('msbuild',$Project,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",$taskFlag,$avaloniaTaskFlag,'-getProperty:TargetPath')).Trim()
         if (-not (Test-Path -LiteralPath $assembly -PathType Leaf)) { throw 'Original owning assembly is absent.' }
         $runtime = [IO.Path]::GetDirectoryName($assembly); $runtimeBefore = @(Get-FileCatalog $runtime); Write-Json (Join-Path $diagnostics ($Label+'-runtime-before.json')) $runtimeBefore
         $control.assemblySHA256 = (Get-FileHash -LiteralPath $assembly -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -123,6 +123,17 @@ try {
     $taskProperties = Invoke-DotNet 'tasks-properties' @('msbuild',$tasksProject,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",'-getProperty:TargetPath,TargetFramework') | ConvertFrom-Json
     $tasks = $taskProperties.Properties.TargetPath; if (-not (Test-Path -LiteralPath $tasks -PathType Leaf)) { throw 'Actual source-built Task DLL is absent.' }
     $result.taskAssemblySHA256 = (Get-FileHash -LiteralPath $tasks -Algorithm SHA256).Hash.ToLowerInvariant(); $taskFlag = "-p:CuiBuildTasksLocation=$tasks"
+    $result.stage = 'current-source-avalonia-tasks'
+    $avaloniaTasksProject = 'framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
+    $avaloniaTaskProperties = Invoke-DotNet 'avalonia-tasks-target-properties' @('msbuild',$avaloniaTasksProject,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",$taskFlag,'-getProperty:TargetPath,TargetFramework') | ConvertFrom-Json
+    $avaloniaTasks = $avaloniaTaskProperties.Properties.TargetPath
+    if (-not [IO.Path]::IsPathFullyQualified($avaloniaTasks) -or -not $avaloniaTasks.StartsWith($artifacts + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Actual evaluated Avalonia task must be within owned artifacts.' }
+    [void](Invoke-DotNet 'avalonia-tasks-release' (@('build',$avaloniaTasksProject,'-c','Release',$taskFlag,'--nologo') + $flags))
+    if (-not (Test-Path -LiteralPath $avaloniaTasks -PathType Leaf)) { throw 'Actual source-built Avalonia task DLL is absent.' }
+    $result.avaloniaBuildTaskPath = $avaloniaTasks
+    $result.avaloniaBuildTaskSHA256 = (Get-FileHash -LiteralPath $avaloniaTasks -Algorithm SHA256).Hash.ToLowerInvariant()
+    $avaloniaTaskFlag = "-p:AvaloniaBuildTasksLocation=$avaloniaTasks"
+    $flags += $avaloniaTaskFlag
     $result.stage = 'ordinary-owning15-and-shared7'
     Run-OriginalCases 'owning' $catalog.owningProject ([int]$catalog.owningCases) ''
     Run-OriginalCases 'shared' $catalog.sharedProject ([int]$catalog.sharedCases) $catalog.sharedFilter
