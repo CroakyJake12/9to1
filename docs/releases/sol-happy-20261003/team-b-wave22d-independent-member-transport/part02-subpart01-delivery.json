@@ -1,0 +1,138 @@
+{
+  "state": "EXACT_FIRST_SUBPART_AND_ORIGINAL_SPLIT_DIAGNOSTIC_PERMANENT_FULLBODY_ROOT_READBACK_INDEPENDENT_PEER_PENDING",
+  "UTC": "2026-10-04T17:49:22.537016+00:00",
+  "branch": "artifact/team-b-independent-wave22d-member-transport-20261004",
+  "base": "6c970e11623c32821d27b11daccdd269f348fc67",
+  "archives": [
+    {
+      "subpart": 1,
+      "id": 11310228861,
+      "bytes": 9969553,
+      "sha256": "c7c4cad17423575ef91c6ece0af0926d05533aa86daf8180177d133ff7a056f5",
+      "name": "independent-wave-existing-part02-subpart01.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-independent-member-transport/part02-subpart01.zip",
+      "gitBlob": "b813af6dd0b34caa90b7ba21ac94c5471c76a17d",
+      "temporarySourcePath": "/workspace/attachments/87f952a7-3e87-46ea-94d9-1ba04a34d226/independent-wave-existing-part02-subpart01.zip",
+      "temporaryRetired": false,
+      "fullRemoteBodyReadback": true,
+      "members": [
+        {
+          "path": "extracted-members.zip.part02.subpart",
+          "bytes": 9961472,
+          "sha256": "733c2af2c33340ae063e1f8de9c18fd694830d3d704d6a312174639bff6d5015",
+          "crc": 3435934679,
+          "mode": 33188
+        },
+        {
+          "path": "subpart-manifest.json",
+          "bytes": 1709,
+          "sha256": "e3161bc8437fd88bcf66763eaa13d13f04da5e42cc935d04e5c514c7355f8531",
+          "crc": 2685350990,
+          "mode": 33188
+        },
+        {
+          "path": "transport-manifest.json",
+          "bytes": 5914,
+          "sha256": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd",
+          "crc": 1111476243,
+          "mode": 33188
+        }
+      ]
+    },
+    {
+      "diagnostic": true,
+      "id": 11310283679,
+      "bytes": 1140,
+      "sha256": "749deb2b51fde4319fd61ffcad5611fa029d8059bb5d42e7d23bda376bc4a9ef",
+      "name": "independent-wave-existing-part02-split-diagnostics.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-independent-member-transport/part02-subtransport-original-diagnostics.zip",
+      "gitBlob": "200475671fbb91577dc6f921c6cc3f70a5f6e226",
+      "temporarySourcePath": "/workspace/attachments/1e897b51-f8f9-48cd-acc3-21b194b2d26a/independent-wave-existing-part02-split-diagnostics.zip",
+      "temporaryRetired": false,
+      "fullRemoteBodyReadback": true,
+      "members": [
+        {
+          "path": "subtransport-receipt.json",
+          "bytes": 2725,
+          "sha256": "f162bca3d1c9b1d9b4846a2ad37ef56a3332593bf9314432eaa4a4160c9ccf4e",
+          "crc": 3150218134,
+          "mode": 33188
+        }
+      ]
+    }
+  ],
+  "actualSplitReceipt": {
+    "status": "PASS",
+    "sourceExporterRun": 37213508315,
+    "sourcePart02Artifact": 11307686670,
+    "sourcePart02ArtifactName": "team-b-independent-existing-wave-member-part02-11306648191-1a8cea03534e2b2767ec806f91dd2c454de94281",
+    "sourcePart02OuterMetadataBytes": 19929162,
+    "sourcePart02OuterMetadataSha256": "7cae57acf2b6030bc8f06532e78b75811be6a0e67daab9e550c5f33763f7576c",
+    "sourcePart02OuterWholeArchiveReadHere": false,
+    "originalSourceRun": 37212388505,
+    "originalSourceArtifact": 11306648191,
+    "originalDiagnosticOuterWholeArchiveReadHere": false,
+    "scope": "Only new exact subtransport of existing official PART02 extracted bodies; no browser rerun or product/source authority. Full original26/container/member/IDB/WAV reread remains a later independent operation.",
+    "before": {
+      "extracted-members.zip.part": {
+        "bytes": 19922944,
+        "sha256": "4dc73ed75c558ce71480d27b195f7196b48c38f7d410965d0fd08b2074048b4b"
+      },
+      "transport-manifest.json": {
+        "bytes": 5914,
+        "sha256": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd"
+      }
+    },
+    "after": {
+      "extracted-members.zip.part": {
+        "bytes": 19922944,
+        "sha256": "4dc73ed75c558ce71480d27b195f7196b48c38f7d410965d0fd08b2074048b4b"
+      },
+      "transport-manifest.json": {
+        "bytes": 5914,
+        "sha256": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd"
+      }
+    },
+    "exporterBefore": {
+      "bytes": 12695,
+      "sha256": "a54a7f3207dd6936090f88d28301d8bd221bb4571b8ac424479553c3be7b1794"
+    },
+    "subparts": [
+      {
+        "subpart": 1,
+        "offsetWithinPart02": 0,
+        "offsetWithinContainer": 19922944,
+        "bytes": 9961472,
+        "sha256": "733c2af2c33340ae063e1f8de9c18fd694830d3d704d6a312174639bff6d5015",
+        "path": "subpart01/extracted-members.zip.part02.subpart"
+      },
+      {
+        "subpart": 2,
+        "offsetWithinPart02": 9961472,
+        "offsetWithinContainer": 29884416,
+        "bytes": 9961472,
+        "sha256": "10a16bfa63d4c7e321b820085c425e7d5290b10e67260042c5f22da253b3f64c",
+        "path": "subpart02/extracted-members.zip.part02.subpart"
+      }
+    ],
+    "freeBefore": 92215746560,
+    "expectedManifestBefore": {
+      "bytes": 5914,
+      "sha256": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd"
+    },
+    "fullOriginalManifestEqual": true,
+    "orderedWrittenSubpartsReconstructOriginalPart02": true,
+    "exporterAfter": {
+      "bytes": 12695,
+      "sha256": "a54a7f3207dd6936090f88d28301d8bd221bb4571b8ac424479553c3be7b1794"
+    },
+    "expectedManifestAfter": {
+      "bytes": 5914,
+      "sha256": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd"
+    },
+    "ownedLogicalBytesBeforeReceipt": 19938190,
+    "freeAfterBeforeReceipt": 92195786752
+  },
+  "originalTransportManifestSHA": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd",
+  "qualification": "OriginalfullActions44MBouter andpart02originalouter19.9MB metadataonly; actualread-only existingpart02 bodies byteequal beforeafter; rootfirsthalfwholeofficialZIP/all3innerfullbody nowverified. Full26container/criticalIDB/WAV NOT yetreassembled; sourceapp14 notrerun."
+}
