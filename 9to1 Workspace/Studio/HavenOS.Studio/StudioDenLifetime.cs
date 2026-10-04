@@ -13,26 +13,49 @@ public sealed class StudioDenLifetime(
     private readonly SemaphoreSlim _changes = new(1, 1);
     private readonly SemaphoreSlim _evidence = new(1, 1);
     private HomeDenStoreEvidenceProvider? _provider;
-    private bool _disposed;
+    private readonly StudioOriginalCallbackLifetime _originals = new();
+    private readonly object _closeSync = new();
+    private readonly List<ProviderOriginal> _acquiredProviders = [];
+    private bool _disposed, _closing;
+    private Task? _close;
+    public Task? OriginalCloseTask { get { lock (_closeSync) return _close; } }
     private string? _pendingImport;
     private string? _pendingImportAudit;
     public string ResourceKind => "den";
 
-    public async Task<string> SelectAsync(string nativeSelectedRoot, bool createNew, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    public Task<string> SelectAsync(string nativeSelectedRoot, bool createNew, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nativeSelectedRoot);
+        ObjectDisposedException.ThrowIf(_closing, this);
+        var capturedRoot = nativeSelectedRoot; var capturedOwnership = ownership; var capturedCreate = createNew;
+        return _originals.RunResult(token => SelectOriginalAsync(capturedRoot, capturedCreate, capturedOwnership, token), ct);
+    }
+    private async Task<string> SelectOriginalAsync(string nativeSelectedRoot, bool createNew, HomeLocalStoreOwnership ownership, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(nativeSelectedRoot);
         await _changes.WaitAsync(ct);
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+            ObjectDisposedException.ThrowIf(_closing, this);
+            _acquiredProviders.RemoveAll(item => item.Close is { IsCompletedSuccessfully: true } &&
+                item.ActualClose is { IsCompletedSuccessfully: true });
+            if (_acquiredProviders.Count >= 64)
+                throw new InvalidOperationException("Original Den provider custody is full; failures remain retained.");
             // Opening is an observation. Even an existing empty Den is never marked newly created.
             var candidate = createNew
                 ? await HomeDenStoreEvidenceProvider.CreateAsync(nativeSelectedRoot, actors, ct)
                 : await HomeDenStoreEvidenceProvider.OpenAsync(nativeSelectedRoot, actors, ct);
+            var acquired = new ProviderOriginal(candidate);
+            _acquiredProviders.Add(acquired);
+            List<Exception> acquisitionErrors = [];
             try
             {
                 // The old bitmap/decoder/agent lease must retire before a replacement is visible.
-                await retirePresentation(ct);
+                var actualRetirement = retirePresentation(ct)
+                    ?? throw new InvalidOperationException("The original presentation supplied no retirement task.");
+                await actualRetirement;
+                ObjectDisposedException.ThrowIf(_closing, this);
                 await _evidence.WaitAsync(ct);
                 try
                 {
@@ -40,11 +63,18 @@ public sealed class StudioDenLifetime(
                     _provider = candidate;
                     _pendingImport = null; _pendingImportAudit = null;
                     candidate = null!;
-                    if (previous is not null) await previous.DisposeAsync();
+                    if (previous is not null) await CloseAcquiredProviderAsync(FindOriginalProvider(previous));
                 }
                 finally { _evidence.Release(); }
             }
-            finally { if (candidate is not null) await candidate.DisposeAsync(); }
+            catch (Exception error) { StudioOriginalCallbackLifetime.Add(acquisitionErrors, error); }
+            finally
+            {
+                if (candidate is not null)
+                    try { await CloseAcquiredProviderAsync(acquired); }
+                    catch (Exception error) { StudioOriginalCallbackLifetime.Add(acquisitionErrors, error); }
+            }
+            StudioOriginalCallbackLifetime.Throw(acquisitionErrors);
             var selected = _provider!;
             if (createNew)
                 await ownership.BindNewEmptyAsync(ResourceKind, selected.Store.Manifest.DenId, ct);
@@ -53,7 +83,12 @@ public sealed class StudioDenLifetime(
         finally { _changes.Release(); }
     }
 
-    public async Task<HomePermissionAuthorization> RequestExistingImportAsync(HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    public Task<HomePermissionAuthorization> RequestExistingImportAsync(HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    {
+        ObjectDisposedException.ThrowIf(_closing, this);
+        return _originals.RunResult(token => RequestExistingImportOriginalAsync(ownership, token), ct);
+    }
+    private async Task<HomePermissionAuthorization> RequestExistingImportOriginalAsync(HomeLocalStoreOwnership ownership, CancellationToken ct)
     {
         await _changes.WaitAsync(ct);
         try
@@ -69,7 +104,12 @@ public sealed class StudioDenLifetime(
         finally { _changes.Release(); }
     }
 
-    public async Task CompleteExistingImportAsync(string displayedRequestId, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    public Task CompleteExistingImportAsync(string displayedRequestId, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    {
+        ObjectDisposedException.ThrowIf(_closing, this);
+        return _originals.Run(token => CompleteExistingImportOriginalAsync(displayedRequestId, ownership, token), ct);
+    }
+    private async Task CompleteExistingImportOriginalAsync(string displayedRequestId, HomeLocalStoreOwnership ownership, CancellationToken ct)
     {
         await _changes.WaitAsync(ct);
         try
@@ -95,7 +135,12 @@ public sealed class StudioDenLifetime(
         finally { _changes.Release(); }
     }
 
-    public async Task RetryExistingImportAuditAsync(string displayedRequestId, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    public Task RetryExistingImportAuditAsync(string displayedRequestId, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    {
+        ObjectDisposedException.ThrowIf(_closing, this);
+        return _originals.Run(token => RetryExistingImportAuditOriginalAsync(displayedRequestId, ownership, token), ct);
+    }
+    private async Task RetryExistingImportAuditOriginalAsync(string displayedRequestId, HomeLocalStoreOwnership ownership, CancellationToken ct)
     {
         await _changes.WaitAsync(ct);
         try
@@ -112,7 +157,12 @@ public sealed class StudioDenLifetime(
         finally { _changes.Release(); }
     }
 
-    public async Task<HomePersonalDenSession> OpenBoundSessionAsync(IResourceStoreOwnershipReceiptAuthority receipts, CancellationToken ct = default)
+    public Task<HomePersonalDenSession> OpenBoundSessionAsync(IResourceStoreOwnershipReceiptAuthority receipts, CancellationToken ct = default)
+    {
+        ObjectDisposedException.ThrowIf(_closing, this);
+        return _originals.RunResult(token => OpenBoundSessionOriginalAsync(receipts, token), ct);
+    }
+    private async Task<HomePersonalDenSession> OpenBoundSessionOriginalAsync(IResourceStoreOwnershipReceiptAuthority receipts, CancellationToken ct)
     {
         await _changes.WaitAsync(ct);
         try
@@ -124,30 +174,102 @@ public sealed class StudioDenLifetime(
         finally { _changes.Release(); }
     }
 
-    public async ValueTask<HomeLocalStoreEvidence?> ReadAsync(string storeId, CancellationToken ct)
+    public ValueTask<HomeLocalStoreEvidence?> ReadAsync(string storeId, CancellationToken ct)
+    {
+        ObjectDisposedException.ThrowIf(_closing, this);
+        return new(_originals.RunResult(token => ReadOriginalAsync(storeId, token), ct));
+    }
+    private async Task<HomeLocalStoreEvidence?> ReadOriginalAsync(string storeId, CancellationToken ct)
     {
         await _evidence.WaitAsync(ct);
         try { return _disposed || _provider is null ? null : await _provider.ReadAsync(storeId, ct); }
         finally { _evidence.Release(); }
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+
+    public Task CloseAndDrainAsync()
     {
+        lock (_closeSync)
+        {
+            if (_close is not null) return _close;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _close = CloseOriginalAsync(start.Task);
+            _closing = true;
+            start.SetResult();
+            return _close;
+        }
+    }
+
+    private async Task CloseOriginalAsync(Task start)
+    {
+        await start;
+        List<Exception> errors = [];
+        Task? actualCallbacks = null, actualRetirement = null;
+        try { actualCallbacks = _originals.CloseAndDrainAsync(); }
+        catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
+        try
+        {
+            actualRetirement = retirePresentation(CancellationToken.None)
+                ?? throw new InvalidOperationException("The original presentation supplied no close task.");
+        }
+        catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
+        if (actualCallbacks is not null)
+            try { await actualCallbacks; }
+            catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
+        if (actualRetirement is not null)
+            try { await actualRetirement; }
+            catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
+        if (actualCallbacks is null || !_originals.OriginalsCapturedAndSettled ||
+            actualRetirement is not { IsCompletedSuccessfully: true })
+            StudioOriginalCallbackLifetime.Add(errors, new InvalidOperationException("Actual Den/presentation settlement is missing."));
+        // A missing or failed presentation close cannot authorize shared provider retirement.
+        StudioOriginalCallbackLifetime.Throw(errors);
         await _changes.WaitAsync();
         try
         {
-            if (_disposed) return;
-            await retirePresentation(CancellationToken.None);
             await _evidence.WaitAsync();
             try
             {
-                _disposed = true;
-                var previous = _provider;
-                _provider = null;
-                if (previous is not null) await previous.DisposeAsync();
+                foreach (var acquired in _acquiredProviders.ToArray())
+                    try { await CloseAcquiredProviderAsync(acquired); }
+                    catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
+                if (errors.Count == 0)
+                {
+                    _provider = null; _disposed = true; _acquiredProviders.Clear();
+                }
             }
             finally { _evidence.Release(); }
         }
         finally { _changes.Release(); }
+        StudioOriginalCallbackLifetime.Throw(errors);
+    }
+
+    private ProviderOriginal FindOriginalProvider(HomeDenStoreEvidenceProvider provider) =>
+        _acquiredProviders.SingleOrDefault(item => ReferenceEquals(item.Provider, provider))
+        ?? throw new InvalidOperationException("Actual acquired Den provider custody is missing.");
+
+    private Task CloseAcquiredProviderAsync(ProviderOriginal acquired)
+    {
+        if (acquired.Close is not null) return acquired.Close;
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        acquired.Close = CloseOriginalProviderAsync(start.Task, acquired);
+        start.SetResult();
+        return acquired.Close;
+    }
+
+    private static async Task CloseOriginalProviderAsync(Task start, ProviderOriginal acquired)
+    {
+        await start;
+        acquired.ActualClose = acquired.Provider.DisposeAsync().AsTask();
+        if (acquired.ActualClose is null)
+            throw new InvalidOperationException("The original Den provider supplied no close task.");
+        await acquired.ActualClose;
+    }
+
+    private sealed class ProviderOriginal(HomeDenStoreEvidenceProvider provider)
+    {
+        internal HomeDenStoreEvidenceProvider Provider { get; } = provider;
+        internal Task? Close, ActualClose;
     }
 }

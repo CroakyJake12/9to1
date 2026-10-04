@@ -51,6 +51,71 @@ internal sealed class StudioOriginalCallbackLifetime
         }
     }
 
+    internal Task<T> RunResult<T>(Func<CancellationToken, Task<T>> body, CancellationToken caller = default,
+        Action<Task<T>>? originalPublished = null)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        caller.ThrowIfCancellationRequested();
+        lock (_sync)
+        {
+            ObjectDisposedException.ThrowIf(_closing, this);
+            _originals.RemoveAll(item => item.Task.IsCompletedSuccessfully && item.LinkedDisposed);
+            if (_originals.Count >= MaximumRetainedOriginals)
+            {
+                _closing = true;
+                throw new InvalidOperationException("Original callback custody is full; retained failures were preserved.");
+            }
+            var original = new Original(this, caller);
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var actualReturned = ExecuteOriginalResultAsync(start.Task, original, body);
+            original.Task = actualReturned;
+            _originals.Add(original);
+            try { originalPublished?.Invoke(actualReturned); }
+            catch (Exception error) { Add(original.Errors, error); }
+            finally { start.SetResult(); }
+            return actualReturned;
+        }
+    }
+
+    private async Task<T> ExecuteOriginalResultAsync<T>(Task start, Original original,
+        Func<CancellationToken, Task<T>> body)
+    {
+        await start;
+        var previous = _executing.Value;
+        CancellationTokenSource? linked = null;
+        T result = default!;
+        try
+        {
+            _executing.Value = original;
+            if (original.Errors.Count != 0) Throw(original.Errors);
+            linked = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token, original.Caller);
+            original.Token = linked.Token;
+            try { original.Token.ThrowIfCancellationRequested(); }
+            catch (OperationCanceledException cancellation)
+            {
+                if (_lifetime.IsCancellationRequested && !original.Caller.IsCancellationRequested)
+                    original.OwnRetirementCancellation = cancellation;
+                throw;
+            }
+            original.BodyInvoked = true;
+            var actualBody = body(original.Token)
+                ?? throw new InvalidOperationException("The original typed callback returned no task.");
+            original.Body = actualBody;
+            result = await actualBody;
+        }
+        catch (Exception error) { Add(original.Errors, error); }
+        finally
+        {
+            if (original.Body is not null)
+                try { await original.Body; } catch (Exception error) { Add(original.Errors, error); }
+            try { linked?.Dispose(); original.LinkedDisposed = true; }
+            catch (Exception error) { Add(original.Errors, error); }
+            _executing.Value = previous;
+        }
+        Throw(original.Errors);
+        return result;
+    }
+
     private async Task ExecuteOriginalAsync(Task start, Original original, Func<CancellationToken, Task> body)
     {
         await start;
