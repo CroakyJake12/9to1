@@ -47,3 +47,18 @@ with tempfile.TemporaryDirectory() as tmp:
  with sqlite3.connect(invalid) as d:d.execute('CREATE TABLE invented (id TEXT)')
  denied('schema-corruption',invalid,dict(receipt,sha256=recovery.digest(invalid)))
  print(json.dumps({'status':'PASS','controls':controls,'canonicalSchemaObjects':35,'providerRestoration':'NOT_RUN','realSigningKeyAcceptance':'NOT_CLAIMED'}))
+# Sealed-image controls: row counts alone must never authorize changed data.
+with tempfile.TemporaryDirectory() as tmp:
+ root=Path(tmp);original=root/'original.db';d=sqlite3.connect(original)
+ for p in sorted(migrations.glob('*.sql')):d.executescript(p.read_text())
+ d.commit();d.close();image=root/'backup.db';receipt=recovery.backup(original,image,migrations)
+ for name,hook in [('same-count-value-tamper',False),('changed-source-before-seal',True)]:
+  candidate=root/(name+'-source.db');candidate.write_bytes(image.read_bytes());output=root/(name+'-output.db')
+  def change():
+   with sqlite3.connect(candidate) as live:live.execute("UPDATE cake_reserved_usernames SET reason='fictional changed value'")
+  if not hook:change()
+  try:recovery.restore(candidate,output,migrations,receipt,before_seal=change if hook else None)
+  except ValueError:pass
+  else:raise RuntimeError('changed image accepted')
+  if output.exists():raise RuntimeError('changed image published')
+ print(json.dumps({'status':'PASS','sealedImageControls':2,'privateValuesPrinted':False}))

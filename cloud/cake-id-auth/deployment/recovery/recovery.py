@@ -1,6 +1,6 @@
 """Private local SQLite recovery validation; never calls Cloudflare or reads credentials."""
 import hashlib,json,os,sqlite3,tempfile
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 from pathlib import Path
 
 def digest(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -27,7 +27,7 @@ def backup(source,destination,migrations):
  try:
   with connect(source) as src:
    validate(src,migrations)
-   with sqlite3.connect(destination) as target: src.backup(target);validate(target,migrations)
+   with closing(sqlite3.connect(destination)) as target: src.backup(target);validate(target,migrations)
   with destination.open('rb') as f:os.fsync(f.fileno())
   fd=os.open(destination.parent,os.O_RDONLY)
   try:os.fsync(fd)
@@ -42,17 +42,22 @@ def counts(p):
   names=[r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != '_cf_KV'")]
   return {n:db.execute('SELECT COUNT(*) FROM "'+n.replace('"','""')+'"').fetchone()[0] for n in names}
 
-def restore(source,destination,migrations,receipt,before_publish=None):
+def restore(source,destination,migrations,receipt,before_publish=None,before_seal=None):
  destination=Path(destination)
  if destination.exists() or destination.is_symlink():raise ValueError('restore destination must be new')
- if digest(source)!=receipt['sha256']:raise ValueError('backup hash mismatch')
  current={p.name:digest(p) for p in sorted(Path(migrations).glob('*.sql'))}
  if current!=receipt['migrationHashes']:raise ValueError('migration provenance mismatch')
- fd,temp=tempfile.mkstemp(prefix='.restore-',dir=destination.parent);os.close(fd)
+ fd,temp=tempfile.mkstemp(prefix='.restore-',dir=destination.parent)
  try:
-  with connect(source) as src:
-   validate(src,migrations)
-   with sqlite3.connect(temp) as target:src.backup(target);validate(target,migrations)
+  if before_seal:before_seal()
+  # Consume only the sealed, receipt-matching image, never the live path.
+  h=hashlib.sha256()
+  with os.fdopen(fd,'wb') as staged, open(source,'rb') as original:
+   while chunk:=original.read(1024*1024):
+    staged.write(chunk);h.update(chunk)
+   staged.flush();os.fsync(staged.fileno())
+  if h.hexdigest()!=receipt['sha256']:raise ValueError('backup hash mismatch')
+  with connect(temp) as sealed:validate(sealed,migrations)
   if counts(temp)!=receipt['counts']:raise ValueError('row count mismatch')
   with open(temp,'rb') as f:os.fsync(f.fileno())
   if before_publish:before_publish()
@@ -73,5 +78,8 @@ if __name__=='__main__':
   result=backup(a.source,a.destination,a.migrations)
   fd=os.open(a.receipt,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
   with os.fdopen(fd,'w') as f:json.dump(result,f);f.flush();os.fsync(f.fileno())
+  fd=os.open(Path(a.receipt).parent,os.O_RDONLY)
+  try:os.fsync(fd)
+  finally:os.close(fd)
  else:result=restore(a.source,a.destination,a.migrations,json.loads(Path(a.receipt).read_text()))
  print(json.dumps({'status':'LOCAL_VALIDATED','schemaObjects':result['schemaObjects'],'counts':result['counts']}))
