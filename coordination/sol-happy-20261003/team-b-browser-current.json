@@ -1,6 +1,6 @@
 {
   "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_2",
-  "recordedAtUTC": "2026-10-04 23:12 UTC",
+  "recordedAtUTC": "2026-10-04 23:15:27 UTC",
   "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
   "run": 37241408354,
   "browserJob": 111551453106,
@@ -19,8 +19,11 @@
   },
   "responsive": {
     "commandExit": 1,
-    "counts": "PENDING_EXACT_RAW_READ",
-    "precisePendingOperation": "PENDING_EXACT_RAW_READ"
+    "discovered": 3,
+    "executed": 1,
+    "passed": 0,
+    "failed": 1,
+    "notRun": 2
   },
   "originalArtifact": {
     "id": 11317921211,
@@ -94,7 +97,7 @@
       "native49BodiesSelected": false
     }
   },
-  "nextAction": "Read fixed-tuple, unchanged-cap diagnostic export of the current original artifact. Repair only the demonstrated cause; preserve failures and original assertions.",
+  "nextAction": "Wave owner traces and repairs the native Import-button focus loss after completed import. Preserve all original cases, focus predicates, assertions and deadlines; re-run the actual affected gate only after reviewed product source changes.",
   "receivingActions": [
     "Receive and preserve complete current original artifact. Current command-family closure is pending exact raw verification.",
     "Provide the actual typed backend indeterminate-commit fault or typed transport code and the receiver-owned composition constructor path/ref. Existing browser composition already maps its actual IndexedDB NotesCommitOutcomeUnknownException through the existing Func<Exception,bool> seam; no guessed string or all-IOException classifier will be activated.",
@@ -106,7 +109,7 @@
   "readOnlyDiagnosticExport": {
     "source": "cba114b1521e745a28748be6a28fc0619b6ae82a",
     "branch": "custody/team-b-wave-browser-c49eec-responsive-diagnostics-20261004",
-    "state": "PUBLISHED_PENDING_RUN",
+    "state": "SUCCESS",
     "pythonBytes": 12509,
     "pythonSHA256": "6851c80af32233a7a1f706a71c9b146ff4807ddc542a27d610d71ba11e092816",
     "workflowBytes": 1502,
@@ -116,7 +119,18 @@
     "inheritedHelpersUnchanged": 12,
     "decodedCapBytes": 32768,
     "wireCapBytes": 65536,
-    "applicationExecution": false
+    "applicationExecution": false,
+    "run": 37242853334,
+    "job": 111554841138,
+    "artifact": 11318110993,
+    "bytes": 9353,
+    "sha256": "1708a2e1a1f32496fee931212e39c42c30b2d5032f70ac4345af425b48a15e3a",
+    "memberCount": 52,
+    "memberMapSHA256": "d51354d378c556bb9cae6234d7ee0b3edf9ced49d2a936602e81983544a9ae70",
+    "selectedDecodedBytes": 17010,
+    "rootAndIndependentFullSelectedBodyReview": true,
+    "wholeOriginalLocallyReceived": false,
+    "wholeSelectedZIPLocallyReceived": false
   },
   "writeUnknownComposition": {
     "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
@@ -143,8 +157,118 @@
     "localJobs": "NONE",
     "localReaders": "CLOSED",
     "cloudProductJob": "TERMINAL",
-    "cloudReadOnlyExport": "PENDING_SEPARATE_RUNNER",
+    "cloudReadOnlyExport": "TERMINAL_SUCCESS",
     "userComputerDependency": false,
     "shutdownOwner": "EXISTING_RECEIVING_OWNER_ONLY_AFTER_CONDITION_COMPLETION_AND_SAFE_DRAIN"
+  },
+  "failure": {
+    "case": "real-populated-390-canvas-fit",
+    "step": "physical-mouse",
+    "message": "Actual operation deadline",
+    "elapsedMs": 16220,
+    "precisePendingOperation": "Wait until a native element has automationId wave-import and focused true",
+    "lastNative": {
+      "viewport": {
+        "width": 390,
+        "height": 757
+      },
+      "totalElements": 71,
+      "focusedCount": 0,
+      "importEnabled": true,
+      "importFocused": false,
+      "importBounds": {
+        "x": 16,
+        "y": 561,
+        "width": 98,
+        "height": 32
+      },
+      "status": "Saved in this browser · revision 1"
+    },
+    "lastReadonlyDurable": {
+      "rows": 1,
+      "revision": 1,
+      "projectJsonBytes": 1220
+    },
+    "fileChooser": "FULFILLED",
+    "rootCause": "PENDING_OWNER_SOURCE_REVIEW",
+    "runtimeErrorsAllZero": true,
+    "screenshots": [],
+    "zoom": "NOT_RUN",
+    "portRebind": true
+  },
+  "strictConsumerStatusBeforeAndAfterBytes": 0,
+  "commandClosure": {
+    "families": 11,
+    "births": 57,
+    "allNaturalClosed": true,
+    "signals": [],
+    "commands": [
+      {
+        "name": "git-head",
+        "exit": 0,
+        "seconds": 0.052,
+        "births": 1
+      },
+      {
+        "name": "clean-before",
+        "exit": 0,
+        "seconds": 0.324,
+        "births": 1
+      },
+      {
+        "name": "status-before",
+        "exit": 0,
+        "seconds": 0.347,
+        "births": 1
+      },
+      {
+        "name": "tree",
+        "exit": 0,
+        "seconds": 0.16,
+        "births": 1
+      },
+      {
+        "name": "playwright-version",
+        "exit": 0,
+        "seconds": 0.056,
+        "births": 1
+      },
+      {
+        "name": "chromium-path",
+        "exit": 0,
+        "seconds": 0.344,
+        "births": 1
+      },
+      {
+        "name": "unchanged-original-wave14",
+        "exit": 0,
+        "seconds": 37.542,
+        "births": 36
+      },
+      {
+        "name": "wave-responsive-real-browser",
+        "exit": 1,
+        "seconds": 20.63,
+        "births": 12
+      },
+      {
+        "name": "head-after",
+        "exit": 0,
+        "seconds": 0.052,
+        "births": 1
+      },
+      {
+        "name": "clean-after",
+        "exit": 0,
+        "seconds": 0.051,
+        "births": 1
+      },
+      {
+        "name": "status-after",
+        "exit": 0,
+        "seconds": 0.068,
+        "births": 1
+      }
+    ]
   }
 }
