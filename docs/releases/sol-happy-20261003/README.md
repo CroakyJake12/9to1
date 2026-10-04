@@ -3,7 +3,8 @@
 This branch contains reviewed hosted-service repairs, an actual closed isolated
 CAKE ID deployment and retained evidence. Full service journeys, an accepted
 release, installed product and delivery to Jacob's PC remain unverified. The
-combined accepted-head pointer remains null; the Cloudflare pass is active.
+combined accepted-head pointer remains null. Further live execution is blocked by
+the Worker hostname allowance and the exact owner integration requirements below.
 
 The approved new Worker and D1 database are `cake-id-release-validation`. Both
 schema migrations and the exact reviewed two-module identity upload succeeded.
@@ -525,7 +526,12 @@ omit publication authority. No real R2 or full Sites acceptance is claimed.
 
 The latest [Workers AI owner ACK](workers-ai-current-owner-ack.json) permits only
 the exact metadata rebase onto the current provider body. It requires preserving
-the current project references and newer endpoint tests. Inference, trusted
+the current project references and newer endpoint tests. The exact owner-body
+rebase now passes independent real Infrastructure-reference 32-case Debug and
+Release checks, including DI redirect protection; its original-provider negative
+control fails 11 of 31 cases. The current normal test-project body remains
+undelivered, so executable adoption is held. [Raw peer evidence](c6/ai-65f-review/audit.json)
+preserves those bounds. Inference, trusted
 pricing, funding and paid activation remain unresolved. Exact
 [source handoff requests](current-source-owner-integration-requests.json) and
 [evidence custody](current-bounded-evidence-custody.json) separate these proposals

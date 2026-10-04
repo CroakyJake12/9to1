@@ -1,13 +1,13 @@
 {
-  "recordedUTC": "2026-10-04T10:01:44.500Z",
+  "recordedUTC": "2026-10-04T10:12:52.152Z",
   "workerHost": "cake-id-release-validation.jcbailey008.workers.dev",
   "state": "HTTPS_NOT_RUN_HOST_ABSENT_FROM_ENFORCED_ALLOWLIST",
   "observation": {
     "environment_id": "ccarenv_b64_Y2NhcmVudl9kZDA0M2RjZWNhMzA4MTkxOWE0YzE2N2ZkYzg3ODFhOQ",
     "source_config_id": "467f0c48-9ccf-40cd-996e-0175446d11c3~cecfg_6abc704046bc8199aded61f34613d5fe",
     "source_config_version_id": "467f0c48-9ccf-40cd-996e-0175446d11c3~cecfgver_6abc8d3fed348199a8a77692dbeb5ac7",
-    "spec_revision": "20",
-    "observed_spec_revision": "20",
+    "spec_revision": "21",
+    "observed_spec_revision": "21",
     "observations_current": true,
     "provider": "cloud",
     "desired_phase": "running",
@@ -34,5 +34,6 @@
     "runtime_variables": [],
     "outbound_identities": []
   },
-  "qualification": "Provider connector control-plane operations succeeded separately. No network bypass, public endpoint enablement or service response assertion. Previously retained CONNECT403 evidence remains historical."
+  "previousObservedSpecRevision": "20",
+  "qualification": "Latest current enforced network status still omits Worker hostname. Provider connector control-plane operations succeeded separately. No network bypass, public endpoint enablement or service response assertion. Prior revision20 and CONNECT403 evidence remain historical."
 }

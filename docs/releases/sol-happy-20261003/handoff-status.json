@@ -1,6 +1,6 @@
 {
-  "recordedUTC": "2026-10-04T10:04:40.433436+00:00",
-  "releaseStatus": "FULL_ACCEPTANCE_PENDING_ACTIVE_CLOUDFLARE_PASS",
+  "recordedUTC": "2026-10-04T10:12:28.352704+00:00",
+  "releaseStatus": "BLOCKED_PENDING_FULL_REQUIRED_ACCEPTANCE",
   "acceptedHead": null,
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "OPEN_DRAFT",
@@ -141,7 +141,7 @@
     "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
     "Verified exact tested artifacts delivered to Jacob PC"
   ],
-  "qualification": "Actual isolated identity deployment and recovery verified; local source/harness outcomes remain bounded and source-bound. No combined accepted executable, full requirement denominator or final release acceptance. Prior failures/unissued4472/de683 cuts and SDK10.0.401 variance retained.",
+  "qualification": "Actual isolated identity control-plane deployment/migrations/closed rollback/restoration verified; current scoped source proposals and raw independent tests published. HTTPS blocked by current enforced network policy; exact owner currentsource adoption/project custody and native import/authority bridges open. Full mandatory/defaultSHOULD/donor/platform acceptance and tested PC delivery not established. No background job or accepted global executable; historical failures retained.",
   "isolatedSDK7Audit": {
     "commit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
     "path": "c6/sdk7-ae6ca7-publication-audit.json",
@@ -252,7 +252,7 @@
       "qualification": "Async original-session/revocation/disposal/lease order and read/publication suppression ports remain missing; LE07 needs paid entitlement plus allocation >10,000,000,000B and separate quota/admission ports. All12 transport procedures NOT_RUN."
     }
   },
-  "executionStatus": "ACTIVE",
+  "executionStatus": "BLOCKED_EXTERNAL_DEPENDENCIES_REVIEWABLE_HANDOFF_PUBLISHED",
   "historicalCloudflareReadOnly": {
     "skillsLoaded": 16,
     "cloudflareToolsExposed": 3,
