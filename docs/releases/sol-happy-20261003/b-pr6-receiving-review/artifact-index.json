@@ -14,10 +14,11 @@
     "globalCIBase": "da5466c5a4b37268d841a50120e4838170416dbd",
     "globalCIProposal": "03f64aa6feaff7203de251f9d919fe3220119e38",
     "firstHostedWebFailure": "ce50dacc7189a91ad6c589904610a0cfcd0445e5",
-    "actualHostedWebAndBrowserNine": "7ded080066ec4b066519c2fb1848fec5c66fba06"
+    "actualHostedWebAndBrowserNine": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+    "actualOriginalMailLocalDurable": "89cd4e4641e482658a0e24be9b90e0a8324fd4a7"
   },
-  "payloadCount": 285,
-  "totalBytes": 45899212,
+  "payloadCount": 320,
+  "totalBytes": 47172572,
   "entries": [
     {
       "path": "README.md",
@@ -635,6 +636,184 @@
       "path": "hosted-web-7ded-success/verify-original-hosted-evidence.py",
       "bytes": 8868,
       "sha256": "fc4b6d600db4dc8d90d8b93a4879e1178923c097094cc803ec86c599fe4eed40"
+    },
+    {
+      "path": "mail-original-89cd/c1-source-proposal.json",
+      "bytes": 494670,
+      "sha256": "e11d5c7eb2401b59e4f8a1a9f17891a2cea8a8589ff8ae1e7717e0d64b8cbc8f"
+    },
+    {
+      "path": "mail-original-89cd/c6-pre-invocation.json",
+      "bytes": 4358,
+      "sha256": "b355e36c0058bc34b5881f95f0b47bcd71edef184f991427a399e598e12a77ec"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/build-probe.log",
+      "bytes": 602,
+      "sha256": "2d3a805317b02b939bdf8573dcfa4dc00cf8febe415771782ba60772b38fb29d"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/build.log",
+      "bytes": 605,
+      "sha256": "b774b0c5d9b6fc25c708315a0a3559d373b6e03905128d7de8d024bc46464073"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/commands.json",
+      "bytes": 11358,
+      "sha256": "f82451767d28331d6deb19f62d684d65712f79741b3c3fac37e0b62c82e82bf7"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/discovery-gate.json",
+      "bytes": 309,
+      "sha256": "92f1a79621b6c0cebd4e3601c934456eec080aa4891950f9dfa66306cc29ae92"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/discovery.log",
+      "bytes": 304,
+      "sha256": "be085362951a27ede96afea99cb4d5777fbf4c94a71498bbf1fceaac2b91957a"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/dotnet-info.log",
+      "bytes": 1420,
+      "sha256": "14f0720f64c0ce9d6fea2a0743b1b5c131e5fa57220f6ab9dd0e425b0461f7f7"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/git-head.log",
+      "bytes": 41,
+      "sha256": "9b6715ac1e229fa929772c5c233e1e3fe16e96c0214fef2b1c264276927617bb"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/native-seed.log",
+      "bytes": 171,
+      "sha256": "3768724e7b9daeff86a8b9709a67d99777f25338d5d0d3935ce7130229369c4b"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/native-verify.log",
+      "bytes": 171,
+      "sha256": "3768724e7b9daeff86a8b9709a67d99777f25338d5d0d3935ce7130229369c4b"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/original-mail-draft-fact.log",
+      "bytes": 469,
+      "sha256": "6d713f3b6dd7def4b7576a4c1c66c45061e19bf4e5514338b814226566cdf1d9"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/original-trx-gate.json",
+      "bytes": 1399,
+      "sha256": "044152f272dc4f1f2f15ba345f2eda80ab154d11488e7642daef7e46df6c7ebe"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/owned-files-tracked.log",
+      "bytes": 360,
+      "sha256": "2e217470472e0e9144e11051d0318f819bddaef87c723f3522f3ec037f863bbd"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/restore-probe.log",
+      "bytes": 214,
+      "sha256": "41e85dbdc6676f90ca6c684baf16a2e227efd1849a51cf36cbb5d5b1b4ee7de4"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/restore.log",
+      "bytes": 535,
+      "sha256": "878780e694fc511c09ed6daf76b25c79715a2b5d3e7e1fbdce9f68b36ffa2650"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/result.json",
+      "bytes": 2757,
+      "sha256": "f1f6876af8b16570ab4a0a8401681de33fee1dc76e2cdcf168374585757bcfe7"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/runtime-after.json",
+      "bytes": 1705,
+      "sha256": "40f03d1ecf17e4d92264f8c1aef3521389bd21ad3999d25c51a567dac9cf228f"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/runtime-before.json",
+      "bytes": 1705,
+      "sha256": "40f03d1ecf17e4d92264f8c1aef3521389bd21ad3999d25c51a567dac9cf228f"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/seed-results.json",
+      "bytes": 538,
+      "sha256": "9d5bc76db3c74d5635f613d85361c8a1252e076ca0e6bb4bb2c93d4f6ab80337"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/source-pins-after.json",
+      "bytes": 96861,
+      "sha256": "4c9cf1d703fcd6e439ff8e32c0f56d94ea6f9d1dcce3579fa80739cd81070f41"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/source-pins-before.json",
+      "bytes": 96861,
+      "sha256": "4c9cf1d703fcd6e439ff8e32c0f56d94ea6f9d1dcce3579fa80739cd81070f41"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/source-tree-pins.log.gz",
+      "originalBytes": 2600273,
+      "originalSha256": "6c5d3d3bbae8284366c5d19ecdff303d99b1d091eb058c74e7edb986ca420497",
+      "encoding": "gzip; original body hash/bytes retained, source tree metadata unmodified",
+      "bytes": 536590,
+      "sha256": "2a45e7bb2638a5d1a92c127c2d2588988fe5e2147a2c9bd9c18587eda5e515b1"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/target-properties.json",
+      "bytes": 369,
+      "sha256": "ea71c804e510e7f9faa4885b50bb37308046fb495fdae14908a16e4393b8cab4"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/target-properties.log",
+      "bytes": 401,
+      "sha256": "01f6937586c32c925a504c6b76cfc644cf8c000008be738763ca26bf3c79678a"
+    },
+    {
+      "path": "mail-original-89cd/diagnostics/verify-results.json",
+      "bytes": 540,
+      "sha256": "e4d89235c3e74d771641892ec9b84dae7ad7a720c1c35074f2d08256fb15709d"
+    },
+    {
+      "path": "mail-original-89cd/driver.log",
+      "bytes": 2757,
+      "sha256": "f1f6876af8b16570ab4a0a8401681de33fee1dc76e2cdcf168374585757bcfe7"
+    },
+    {
+      "path": "mail-original-89cd/invocation.json",
+      "bytes": 1656,
+      "sha256": "e536f83f4191c1819ebd84e38ec7b136d2e84f4f04db759f6fb02b8d12f101f6"
+    },
+    {
+      "path": "mail-original-89cd/mail-summary.json",
+      "bytes": 2122,
+      "sha256": "aad58a3afdcec7f87e8e1fe61a48cd09d287cd2b31a6069b9ca784f4bf39fc73"
+    },
+    {
+      "path": "mail-original-89cd/test-results/mail-original-draft.trx",
+      "bytes": 3008,
+      "sha256": "c5bc69c0c53928587d66a36629ccb4242ac1a6d80fc3e4a76eae1dada7b41d5f"
+    },
+    {
+      "path": "mail-original-89cd/verification.json",
+      "bytes": 2130,
+      "sha256": "9c8e0ce88843189c219dfcd733b573ac9189017ae8dfa7a3b8a8e6e0f45f1165"
+    },
+    {
+      "path": "mail-original-89cd/verify-original-mail-evidence.py",
+      "bytes": 6365,
+      "sha256": "351977d0085795dc53cab32f1307f9f22b1b6aa1c7441b25ae2f11c6a5e44000"
     },
     {
       "path": "peer/c2-cui-approval-binding.json",
@@ -1788,6 +1967,6 @@
       "sha256": "948853f28cc96fea3d04ed532ded3ccb56f1bebe4ab9eff287dcc04fe4554272"
     }
   ],
-  "previousImmutableEvidenceCommit": "5ce6be7c6b1bce0306d62e4c1fe16cb41cca54d5",
-  "previousImmutableIndexSHA256": "540c302edd611330897b646e2b34e15124646d5eecc6478c75795d0f5a4b7829"
+  "previousImmutableEvidenceCommit": "7e3c8018fb8cbfe58fc232013611cf1700f5a8ab",
+  "previousImmutableIndexSHA256": "bf6905a90e460756598308bea3f9d4f27265eae1c6457978403854d2caad2d26"
 }

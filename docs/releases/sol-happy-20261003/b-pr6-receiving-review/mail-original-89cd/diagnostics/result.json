@@ -1,0 +1,101 @@
+{
+  "status": "PASS",
+  "selectedExpected": 1,
+  "discoveredExpected": 1,
+  "nativeScenarioExpected": 3,
+  "nativePhaseExecutionsExpected": 6,
+  "scope": "Original rich semantic Mail draft Fact plus actual file-backed owner update/delete/error/cold-process controls only; no provider/send/browser/conflict-CAS/authority acceptance",
+  "sourceCommit": "89cd4e4641e482658a0e24be9b90e0a8324fd4a7",
+  "executed": 1,
+  "preservedHistory": "Original Space-key FAIL and held renderer/owner factory requests remain unchanged. This persisted-domain gate does not replace them.",
+  "discovered": 1,
+  "nativeStarted": true,
+  "originalFact": {
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "distinctNativeScenarios": 3,
+  "nativePhaseExecutions": 6,
+  "phases": {
+    "seed": {
+      "mode": "seed",
+      "declared": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 16,
+      "outcomes": [
+        {
+          "name": "rich-semantic-drafts-and-attachment-identities-restart",
+          "state": "PASS",
+          "assertions": 4
+        },
+        {
+          "name": "same-id-update-and-denied-input-preserve-bytes",
+          "state": "PASS",
+          "assertions": 7
+        },
+        {
+          "name": "durable-delete-and-unreadable-draft-preserved-restart",
+          "state": "PASS",
+          "assertions": 5
+        }
+      ],
+      "exitCode": 0
+    },
+    "verify": {
+      "mode": "verify",
+      "declared": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 18,
+      "outcomes": [
+        {
+          "name": "rich-semantic-drafts-and-attachment-identities-restart",
+          "state": "PASS",
+          "assertions": 5
+        },
+        {
+          "name": "same-id-update-and-denied-input-preserve-bytes",
+          "state": "PASS",
+          "assertions": 8
+        },
+        {
+          "name": "durable-delete-and-unreadable-draft-preserved-restart",
+          "state": "PASS",
+          "assertions": 5
+        }
+      ],
+      "exitCode": 0
+    }
+  },
+  "actualTrxCounters": {
+    "total": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "error": 0,
+    "timeout": 0,
+    "aborted": 0,
+    "inconclusive": 0,
+    "passedButRunAborted": 0,
+    "notRunnable": 0,
+    "notExecuted": 0,
+    "disconnected": 0,
+    "warning": 0,
+    "completed": 0,
+    "inProgress": 0,
+    "pending": 0
+  },
+  "allCommandFamiliesNormalClosed": true,
+  "accepted": true,
+  "custodyQualification": "Full native runtime/source hash metadata only; runtime/package/draft bytes and identity receipt are not uploaded. No provider/conflict/backend-authority/browser parity."
+}
