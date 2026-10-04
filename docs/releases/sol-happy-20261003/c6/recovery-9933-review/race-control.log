@@ -1,0 +1,2 @@
+{"source": "original", "sameCountMutationAtFirstSQLiteRead": true, "restoredReceiptOriginalValues": false, "published": true}
+{"source": "fixed", "sameCountMutationAtFirstSQLiteRead": true, "restoredReceiptOriginalValues": true, "published": true}

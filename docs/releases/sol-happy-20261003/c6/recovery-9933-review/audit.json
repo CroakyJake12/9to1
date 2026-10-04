@@ -1,0 +1,33 @@
+{
+  "sourceCommit": "9933a139fed23a6727b63231cd7634a012941e0d",
+  "pins": [
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/recovery.py",
+      "sha256": "64b3f43bdbeb03ef5bbef559126b3e02a05cfe501024ca811644e0e5e40e7350",
+      "bytes": 4486
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+      "sha256": "747d8ec0bd6438e36ccc47e1acb93a8061a3ea7408655b0ff1dc50e40b8dd074",
+      "bytes": 5545
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/README.md",
+      "sha256": "733d292735f659e422fb4cf435bb4e6de8b620206983bd564e9ef4870dc6fb9f",
+      "bytes": 2465
+    }
+  ],
+  "canonicalMigrations": "/workspace/team-c/c2-hosted-package/cloud/cake-id-auth/migrations",
+  "exits": {
+    "maintainedControls": 0,
+    "independentRaceControl": 0
+  },
+  "review": "Fullsource/tests/README read. Restore copies+hashes private stagedimage, comparesreceipt beforeopening SQLite, validates onlystagedimage/schema/integrity/FK/counts; samecountvalues cannot bypass hash. Exclusive hardlink preventsdestination overwrite; private0600 stage, data+parent fsync; handles explicitlyclosed. Originalfcace hash/liveSQLite TOCTOU retained.",
+  "independentRace": "AtfirstSQLite read mutate original image samecount reserved reason: oldfcace publisheschangedvalue; fixed9933 publishesoriginal receipt-matching value. Control exit0 means expected originaldefect+fixedpreservation observed, not oldacceptance.",
+  "limitations": "Localoperator-private SQLite only; opaque fictional JWKS bytes not realkey acceptance; no D1/export/providerrestore/fullSH11 acceptance. Failed or ambiguous publication/fsync may retainprivatepartialstate, no absence guarantee. Arbitrary maliciousoperator mutation of stagedfile/parent is outside this trustedprivate-file procedure.",
+  "artifacts": {
+    "race-control.log": "f043cb8a3ecf24d0804e9e56f685d03727bc1a5f6f959ae6be3ec81872ae8e7a",
+    "race-control.py": "91dcdb0bd7af12add21470b8eb885e06b48f15b37223b169509eb4725e553832",
+    "run.log": "bc6ddc264550a7b47d376a91f80b2f6697c780e3747606f2ef1de376b0d5710f"
+  }
+}
