@@ -18,6 +18,11 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
 {
     internal bool IsBoundToPermissions(HomePermissionTrustService candidate) => ReferenceEquals(permissions, candidate);
 
+    /// <summary>Exact composition identities only; no permission, read or execution is granted.</summary>
+    public bool IsBoundToOriginalComposition(ResourceAuthorizationService expectedResources,
+        HomePermissionTrustService expectedPermissions)
+        => ReferenceEquals(resources, expectedResources) && ReferenceEquals(permissions, expectedPermissions);
+
     private sealed record Binding(AuthenticatedResourceActor Actor, string TargetAppId, string ActionId, ResourceScope[] Scopes, string Digest,
         HomePermissionRequestSubmission? OriginalSubmission = null, HomePermissionActionPolicy? OriginalPolicy = null);
     private readonly ConcurrentDictionary<HomeResourceExecutionCapability, Binding> _executions = new();

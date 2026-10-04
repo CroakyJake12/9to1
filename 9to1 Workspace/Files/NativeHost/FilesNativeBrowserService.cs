@@ -22,6 +22,14 @@ public sealed partial class FilesNativeBrowserService(NativeFilesWorkspaceAuthor
     private readonly FilesOriginalChildFolderReadSource? _originalFolders;
     private ResourceAuthorizationService OriginalMailResources => resources;
 
+    /// <summary>Identity observation only; canonical read methods still authorize every operation.</summary>
+    public bool IsBoundToOriginalComposition(NativeFilesWorkspaceAuthority expectedWorkspaces,
+        IAuthenticatedResourceActorSource expectedActors, ResourceAuthorizationService expectedResources,
+        ICompatibilityPackageContentSource expectedPackages)
+        => ReferenceEquals(workspaces, expectedWorkspaces) && ReferenceEquals(actors, expectedActors)
+            && ReferenceEquals(resources, expectedResources) && ReferenceEquals(packages, expectedPackages);
+
+
     public FilesNativeBrowserService(NativeFilesWorkspaceAuthority workspaces, IAuthenticatedResourceActorSource actors,
         ResourceAuthorizationService resources, ICompatibilityPackageContentSource packages,
         FilesOriginalChildFolderReadSource originalFolders) : this(workspaces, actors, resources, packages)
@@ -91,6 +99,37 @@ public sealed partial class FilesNativeBrowserService(NativeFilesWorkspaceAuthor
             page.NextPageToken is { } next ? new(before.StoreId, before.Revision, parentID, search, next, originalActor) : null);
         _originalPages.Add(issued, new(workspace, originalActor));
         return issued;
+    }
+
+    /// <summary>Retain the SAME privately issued page's Home/configuration observation.
+    /// This callback grants no access and never resolves a replacement Files workspace.</summary>
+    public async ValueTask<Func<CancellationToken, ValueTask<bool>>> CaptureOriginalPageReadCheckAsync(
+        FilesNativeBrowserPage originalPage, AuthenticatedResourceActor originalActor,
+        Func<bool> originalLifetime, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(originalPage);
+        ArgumentNullException.ThrowIfNull(originalActor);
+        ArgumentNullException.ThrowIfNull(originalLifetime);
+        if (!_originalPages.TryGetValue(originalPage, out var retained) ||
+            retained.Actor != originalActor ||
+            retained.Workspace.Configuration.StoreId != originalPage.StoreID)
+            throw new UnauthorizedAccessException("Retain the SAME privately issued original Files page.");
+        bool Paired()
+        {
+            try
+            {
+                return originalLifetime() && _originalPages.TryGetValue(originalPage, out var current) &&
+                    ReferenceEquals(current, retained) && current.Actor == originalActor &&
+                    current.Workspace.Configuration.StoreId == originalPage.StoreID;
+            }
+            catch { return false; }
+        }
+        if (!Paired()) throw new UnauthorizedAccessException("The original Files page retired.");
+        var check = await workspaces.CaptureOriginalReadCheckAsync(retained.Workspace, Paired, token)
+            .ConfigureAwait(false);
+        if (!Paired() || !await check(token).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The original Files Home binding retired.");
+        return async currentToken => Paired() && await check(currentToken).ConfigureAwait(false) && Paired();
     }
 
     /// <summary>Resolve the canonical parent of the original current folder; names never determine identity.</summary>
