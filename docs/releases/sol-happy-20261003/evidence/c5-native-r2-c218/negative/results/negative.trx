@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="ef600847-36b0-4b5c-8898-fc8b359fa560" name="@5f26f397bc73 2026-10-04 09:26:30" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T09:26:30.1655470+00:00" queuing="2026-10-04T09:26:30.1655471+00:00" start="2026-10-04T09:26:29.5052378+00:00" finish="2026-10-04T09:26:30.2059102+00:00" />
+  <TestSettings name="default" id="86ec31e8-692c-491c-9085-0a0b158eee09">
+    <Deployment runDeploymentRoot="_5f26f397bc73_2026-10-04_09_26_30" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="685413ee-4f35-436e-a0dc-b265dd016052" testId="80c64854-12d0-ce83-3c1a-95d603d3176f" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;unmapped&quot;)" computerName="5f26f397bc73" duration="00:00:00.0001866" startTime="2026-10-04T09:26:30.1000592+00:00" endTime="2026-10-04T09:26:30.1001197+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="685413ee-4f35-436e-a0dc-b265dd016052" />
+    <UnitTestResult executionId="d55fb12a-7c29-4b1b-9ac1-c20e9538a65c" testId="99d89b27-ddbb-5719-f55b-0c046ae2c3da" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;unscanned&quot;)" computerName="5f26f397bc73" duration="00:00:00.0027778" startTime="2026-10-04T09:26:30.0984971+00:00" endTime="2026-10-04T09:26:30.0985648+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d55fb12a-7c29-4b1b-9ac1-c20e9538a65c" />
+    <UnitTestResult executionId="f527ee4c-9140-4fb4-bf0c-61a29629f8e9" testId="657ab3e3-87c8-0947-dc35-3b1032f6d8dd" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;corrupt-manifest&quot;)" computerName="5f26f397bc73" duration="00:00:00.0010884" startTime="2026-10-04T09:26:30.0987547+00:00" endTime="2026-10-04T09:26:30.0988112+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f527ee4c-9140-4fb4-bf0c-61a29629f8e9">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.InvalidDataException)
+Actual:   typeof(System.Text.Json.JsonException)
+---- System.Text.Json.JsonException : '0x00' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0.
+-------- System.Text.Json.JsonReaderException : '0x00' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.</Message>
+          <StackTrace>   at HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(String mode) in /workspace/team-c/evidence/c5/native-r2-peer/negative/R2NativeSiteArtifactReaderTests.cs:line 52
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack&amp; state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader&amp; reader, ReadStack&amp; state)
+   at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+   at HavenOS.Apps.Sites.Hosting.R2NativeSiteArtifactReader.VerifyAsync(SiteBuildArtifact artifact, Guid siteId, Guid projectId, Int64 projectRevision, CancellationToken cancellationToken) in /workspace/team-c/evidence/c5/native-r2-peer/negative/R2NativeSiteArtifactReader.cs:line 42
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c28ca850-b0cc-4231-9374-9f4f21391271" testId="72b91c28-d57c-d540-d62f-27fd83471599" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;unsafe&quot;)" computerName="5f26f397bc73" duration="00:00:00.0000831" startTime="2026-10-04T09:26:30.0982915+00:00" endTime="2026-10-04T09:26:30.0983375+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c28ca850-b0cc-4231-9374-9f4f21391271" />
+    <UnitTestResult executionId="348514c2-ec5d-40f1-84cd-4c0cbbff4fc7" testId="aeb931f2-3312-3483-c6eb-b13722ab91ff" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-source&quot;)" computerName="5f26f397bc73" duration="00:00:00.0001167" startTime="2026-10-04T09:26:30.0986249+00:00" endTime="2026-10-04T09:26:30.0986995+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="348514c2-ec5d-40f1-84cd-4c0cbbff4fc7" />
+    <UnitTestResult executionId="416d0207-4b14-408d-b707-ce31282da22d" testId="5c612e41-9f79-bca0-16e5-d0a02c044207" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-total&quot;)" computerName="5f26f397bc73" duration="00:00:00.0001095" startTime="2026-10-04T09:26:30.1305523+00:00" endTime="2026-10-04T09:26:30.1306225+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="416d0207-4b14-408d-b707-ce31282da22d" />
+    <UnitTestResult executionId="87cb3706-48ee-43a2-9e6b-8c9efbc8fe08" testId="0e162230-29ab-6e4f-e442-b665384c281c" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-revision&quot;)" computerName="5f26f397bc73" duration="00:00:00.0001443" startTime="2026-10-04T09:26:30.1310369+00:00" endTime="2026-10-04T09:26:30.1311059+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="87cb3706-48ee-43a2-9e6b-8c9efbc8fe08" />
+    <UnitTestResult executionId="ee3dd122-107c-4ad7-9fdf-703c65cb39e2" testId="0a34af9a-cb8d-0d47-89b2-0ec8eb398f01" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;corrupt-output&quot;)" computerName="5f26f397bc73" duration="00:00:00.0496382" startTime="2026-10-04T09:26:30.0141098+00:00" endTime="2026-10-04T09:26:30.0796206+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ee3dd122-107c-4ad7-9fdf-703c65cb39e2">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)</Message>
+          <StackTrace>   at HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(String mode) in /workspace/team-c/evidence/c5/native-r2-peer/negative/R2NativeSiteArtifactReaderTests.cs:line 52
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="58508e17-43bc-44c1-b8eb-963a508f5c3a" testId="ed964d6a-bfba-8efb-d8e4-32710c64ee33" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;duplicate&quot;)" computerName="5f26f397bc73" duration="00:00:00.0008538" startTime="2026-10-04T09:26:30.0963618+00:00" endTime="2026-10-04T09:26:30.0967344+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="58508e17-43bc-44c1-b8eb-963a508f5c3a" />
+    <UnitTestResult executionId="cd68977a-64c7-49b8-bbf4-291a8a230deb" testId="3ce9088d-b6dd-5643-a09c-efb677862b8d" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;valid&quot;)" computerName="5f26f397bc73" duration="00:00:00.0053576" startTime="2026-10-04T09:26:30.1308880+00:00" endTime="2026-10-04T09:26:30.1309618+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cd68977a-64c7-49b8-bbf4-291a8a230deb" />
+    <UnitTestResult executionId="010ab8a4-b7e5-4e70-8303-792b84c85dba" testId="ff1b4e75-002e-7e2e-28ee-b68810226f39" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-project&quot;)" computerName="5f26f397bc73" duration="00:00:00.0001023" startTime="2026-10-04T09:26:30.0980501+00:00" endTime="2026-10-04T09:26:30.0980984+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="010ab8a4-b7e5-4e70-8303-792b84c85dba" />
+    <UnitTestResult executionId="5a4e826f-4fc6-4ab5-8f7a-9c15c016bd21" testId="1e5c7359-47d4-a0df-2416-ae02e1a711e7" testName="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;missing-output&quot;)" computerName="5f26f397bc73" duration="00:00:00.0001490" startTime="2026-10-04T09:26:30.0984059+00:00" endTime="2026-10-04T09:26:30.0984387+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5a4e826f-4fc6-4ab5-8f7a-9c15c016bd21" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;valid&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="3ce9088d-b6dd-5643-a09c-efb677862b8d">
+      <Execution id="cd68977a-64c7-49b8-bbf4-291a8a230deb" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;unsafe&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="72b91c28-d57c-d540-d62f-27fd83471599">
+      <Execution id="c28ca850-b0cc-4231-9374-9f4f21391271" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;unscanned&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="99d89b27-ddbb-5719-f55b-0c046ae2c3da">
+      <Execution id="d55fb12a-7c29-4b1b-9ac1-c20e9538a65c" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-source&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="aeb931f2-3312-3483-c6eb-b13722ab91ff">
+      <Execution id="348514c2-ec5d-40f1-84cd-4c0cbbff4fc7" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;unmapped&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="80c64854-12d0-ce83-3c1a-95d603d3176f">
+      <Execution id="685413ee-4f35-436e-a0dc-b265dd016052" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;corrupt-output&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="0a34af9a-cb8d-0d47-89b2-0ec8eb398f01">
+      <Execution id="ee3dd122-107c-4ad7-9fdf-703c65cb39e2" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;missing-output&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="1e5c7359-47d4-a0df-2416-ae02e1a711e7">
+      <Execution id="5a4e826f-4fc6-4ab5-8f7a-9c15c016bd21" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-project&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="ff1b4e75-002e-7e2e-28ee-b68810226f39">
+      <Execution id="010ab8a4-b7e5-4e70-8303-792b84c85dba" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-revision&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="0e162230-29ab-6e4f-e442-b665384c281c">
+      <Execution id="87cb3706-48ee-43a2-9e6b-8c9efbc8fe08" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;corrupt-manifest&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="657ab3e3-87c8-0947-dc35-3b1032f6d8dd">
+      <Execution id="f527ee4c-9140-4fb4-bf0c-61a29629f8e9" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;duplicate&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="ed964d6a-bfba-8efb-d8e4-32710c64ee33">
+      <Execution id="58508e17-43bc-44c1-b8eb-963a508f5c3a" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: &quot;wrong-total&quot;)" storage="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/debug/net10.0/actualnativer2.tests.dll" id="5c612e41-9f79-bca0-16e5-d0a02c044207">
+      <Execution id="416d0207-4b14-408d-b707-ce31282da22d" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/native-r2-peer/negative/bin/Debug/net10.0/ActualNativeR2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests" name="VerifiesNativeManifestSemanticsAndRefusesChangedObjects" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="80c64854-12d0-ce83-3c1a-95d603d3176f" executionId="685413ee-4f35-436e-a0dc-b265dd016052" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="99d89b27-ddbb-5719-f55b-0c046ae2c3da" executionId="d55fb12a-7c29-4b1b-9ac1-c20e9538a65c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="657ab3e3-87c8-0947-dc35-3b1032f6d8dd" executionId="f527ee4c-9140-4fb4-bf0c-61a29629f8e9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="72b91c28-d57c-d540-d62f-27fd83471599" executionId="c28ca850-b0cc-4231-9374-9f4f21391271" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aeb931f2-3312-3483-c6eb-b13722ab91ff" executionId="348514c2-ec5d-40f1-84cd-4c0cbbff4fc7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5c612e41-9f79-bca0-16e5-d0a02c044207" executionId="416d0207-4b14-408d-b707-ce31282da22d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0e162230-29ab-6e4f-e442-b665384c281c" executionId="87cb3706-48ee-43a2-9e6b-8c9efbc8fe08" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0a34af9a-cb8d-0d47-89b2-0ec8eb398f01" executionId="ee3dd122-107c-4ad7-9fdf-703c65cb39e2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ed964d6a-bfba-8efb-d8e4-32710c64ee33" executionId="58508e17-43bc-44c1-b8eb-963a508f5c3a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ce9088d-b6dd-5643-a09c-efb677862b8d" executionId="cd68977a-64c7-49b8-bbf4-291a8a230deb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff1b4e75-002e-7e2e-28ee-b68810226f39" executionId="010ab8a4-b7e5-4e70-8303-792b84c85dba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1e5c7359-47d4-a0df-2416-ae02e1a711e7" executionId="5a4e826f-4fc6-4ab5-8f7a-9c15c016bd21" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="12" executed="12" passed="10" failed="2" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.07]   Discovering: ActualNativeR2.Tests
+[xUnit.net 00:00:00.13]   Discovered:  ActualNativeR2.Tests
+[xUnit.net 00:00:00.15]   Starting:    ActualNativeR2.Tests
+[xUnit.net 00:00:00.25]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.25]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:00.25]       Stack Trace:
+[xUnit.net 00:00:00.25]         /workspace/team-c/evidence/c5/native-r2-peer/negative/R2NativeSiteArtifactReaderTests.cs(52,0): at HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(String mode)
+[xUnit.net 00:00:00.25]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:00.26]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:00.26]       Actual:   typeof(System.Text.Json.JsonException)
+[xUnit.net 00:00:00.26]       ---- System.Text.Json.JsonException : '0x00' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0.
+[xUnit.net 00:00:00.26]       -------- System.Text.Json.JsonReaderException : '0x00' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/evidence/c5/native-r2-peer/negative/R2NativeSiteArtifactReaderTests.cs(52,0): at HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(String mode)
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:00.26]            at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack&amp; state, JsonReaderException ex)
+[xUnit.net 00:00:00.26]            at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)
+[xUnit.net 00:00:00.26]            at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader&amp; reader, ReadStack&amp; state)
+[xUnit.net 00:00:00.26]            at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+[xUnit.net 00:00:00.26]         /workspace/team-c/evidence/c5/native-r2-peer/negative/R2NativeSiteArtifactReader.cs(42,0): at HavenOS.Apps.Sites.Hosting.R2NativeSiteArtifactReader.VerifyAsync(SiteBuildArtifact artifact, Guid siteId, Guid projectId, Int64 projectRevision, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.26]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:00.26]            at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+[xUnit.net 00:00:00.26]            at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+[xUnit.net 00:00:00.26]            at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+[xUnit.net 00:00:00.26]            at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+[xUnit.net 00:00:00.26]            at System.Text.Json.Utf8JsonReader.Read()
+[xUnit.net 00:00:00.26]            at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)
+[xUnit.net 00:00:00.31]   Finished:    ActualNativeR2.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T09:26:30.0830442+00:00">
+        <Text>[xUnit.net 00:00:00.25]     HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: "corrupt-output") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T09:26:30.0995590+00:00">
+        <Text>[xUnit.net 00:00:00.26]     HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: "corrupt-manifest") [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
