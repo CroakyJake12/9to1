@@ -1,0 +1,33 @@
+    [Fact]
+    public async Task Actual_pinned_transport_does_not_follow_redirect_to_another_origin()
+    {
+        using var source = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        using var destination = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        source.Start(); destination.Start();
+        var sourcePort = ((System.Net.IPEndPoint)source.LocalEndpoint).Port;
+        var destinationPort = ((System.Net.IPEndPoint)destination.LocalEndpoint).Port;
+        var response = Task.Run(async () =>
+        {
+            using var socket = await source.AcceptTcpClientAsync();
+            await using var stream = socket.GetStream();
+            using var reader = new StreamReader(stream, System.Text.Encoding.ASCII, false, 1024, leaveOpen: true);
+            var headerLength = 0;
+            while (await reader.ReadLineAsync() is { Length: > 0 } line)
+            {
+                headerLength += line.Length;
+                if (headerLength > 16384) throw new InvalidDataException("Fixture request headers exceeded the bound.");
+            }
+            var headers = System.Text.Encoding.ASCII.GetBytes($"HTTP/1.1 307 Temporary Redirect\r\nLocation: http://127.0.0.1:{destinationPort}/remote\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+            await stream.WriteAsync(headers);
+        });
+        await using var services = new ServiceCollection().AddHavenInfrastructure().BuildServiceProvider();
+        var pinned = services.GetRequiredService<OllamaClient>();
+        Assert.Equal(pinned.TransportEndpoint!.IsLoopback && pinned.TransportEndpoint.Scheme is "http" or "https" &&
+            string.IsNullOrEmpty(pinned.TransportEndpoint.UserInfo), pinned.IsDeviceLocalTransportVerified);
+        using var http = services.GetRequiredService<IHttpClientFactory>().CreateClient("Haven.Ollama");
+        using var received = await http.GetAsync($"http://127.0.0.1:{sourcePort}/api/tags");
+        await response;
+        Assert.Equal(System.Net.HttpStatusCode.TemporaryRedirect, received.StatusCode);
+        Assert.False(destination.Pending());
+    }
+
