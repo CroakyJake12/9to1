@@ -92,7 +92,8 @@ def collect_public(output, source_commit, secret, fixture_summary):
     secrets = (secret,) if isinstance(secret, str) else tuple(secret)
     if public.exists() or not secrets or any(not isinstance(value, str) or not value for value in secrets) or raw.is_symlink() or not raw.is_dir():
         raise RuntimeError("Fresh declared public diagnostics required")
-    exact = {"normal-mail72-result.json", "source-before.json", "source-after.json", "commands.json", "restore-assets.json", "runtime-before.json", "runtime-after.json", "evaluated-inputs.json", "whole-discovery.json", "whole-trx-readback.json", "mail-actual-strict-tls-readiness.json", "mail-maintained-server-producer.json", "mail-java-version.txt", "mail-original-public-crl-distribution.json", "mail-maintained-release-tag.json"}
+    public_signatures = {"mail-owned-public-ca.pem", "mail-owned-public-server.pem", "mail-owned-public-crl.pem", "mail-owned-public-crl.der"}
+    exact = {"normal-mail72-result.json", "source-before.json", "source-after.json", "commands.json", "restore-assets.json", "runtime-before.json", "runtime-after.json", "evaluated-inputs.json", "whole-discovery.json", "whole-trx-readback.json", "mail-actual-strict-tls-readiness.json", "mail-maintained-server-producer.json", "mail-java-version.txt", "mail-original-public-crl-distribution.json", "mail-maintained-release-tag.json"} | public_signatures
     logs = {"sdk-version.log", "restore.log", "build.log", "whole-discovery.log", "whole-unfiltered-mail72.log"}
     rows = []
     bodies = []
@@ -110,6 +111,8 @@ def collect_public(output, source_commit, secret, fixture_summary):
             raise RuntimeError("Private credential or key bytes refuse public diagnostics")
         rows.append({"path": relative, "bytes": len(data), "sha256": digest(data)})
         bodies.append((path, relative, data))
+    if fixture_summary.get("fullScopedPass") and not public_signatures <= {row["path"] for row in rows}:
+        raise RuntimeError("Full scoped pass requires original public certificate and CRL signature bodies")
     if sum(row["bytes"] for row in rows) > 24 * 1024 * 1024:
         raise RuntimeError("Declared public original diagnostic budget exceeded")
     public.mkdir(mode=0o700)

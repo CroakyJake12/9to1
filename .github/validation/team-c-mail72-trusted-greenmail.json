@@ -51,9 +51,9 @@
     {
       "path": ".github/scripts/team_c_mail72_source_guard.py",
       "mode": "100644",
-      "gitBlob": "ecb7f9ac34137c95bafa6b417478d5c633ba961d",
-      "bytes": 7880,
-      "sha256": "f9f682b48de7bce553bca1bd22e077f784b1cb742f0421ffd24ab5b5944f769b"
+      "gitBlob": "60fd705ff5b35afa11434dd51866ff7e3f4bfc19",
+      "bytes": 8257,
+      "sha256": "177a7745cbe17ad05e09cee7ba873ce06187028abf942e7d26e34750b03ba713"
     },
     {
       "path": ".github/workflows/team-c-mail72-trusted-greenmail.yml",
@@ -240,9 +240,9 @@
     {
       "path": "eng/release-validation/mail72-trusted-greenmail/README.md",
       "mode": "100644",
-      "gitBlob": "dba674d95876a608e42dd92108a893c246632795",
-      "bytes": 3516,
-      "sha256": "3061d5f023256389365f9748ef8680ae3d00e988193eed690123837f2477be3e"
+      "gitBlob": "ebc402d870f86a89fd22342e7d19e35cc3ed449e",
+      "bytes": 3729,
+      "sha256": "a8be28e4328b4b3ecc64958f670deeb68af1f55b92c4ddf62dda1a649ecf24ca"
     },
     {
       "path": "framework/CUI/AI/ActionJsonSchemaValidator.cs",
