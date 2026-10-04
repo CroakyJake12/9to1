@@ -234,3 +234,19 @@ TypeText/existing same-editor guard/exact private Value check and all original
 navigation/one-request approval/stroke/durable/close/reopen criteria. No hardcoded
 ID/coordinate, replacement after typing, API swap, fallback or repeated input is
 introduced. New actual workflow acceptance remains NOT_RUN before invocation.
+
+### Protected Home readback variable correction
+
+Original run 37234364549 at 9534 retains 75 passing checks, actual changed
+address focus and the exact typed fixture value. The real folder choice closes
+the picker before a SessionStateUnauthorizedAccessException stops the workflow.
+The next top-level source assignment uses `$home`, which PowerShell resolves to
+the protected automatic `$HOME` variable. Read-CurrentCanvas uses the same
+protected variable later. Original failure metadata and screenshot are preserved;
+the exception message and private profile JSON remain withheld.
+
+This successor renames only those readback locals and their existing consumers
+to `$observedHomeState`. The operating system profile variables are never set or
+repurposed. Original read-only JSON acquisition, profile/principal/configuration
+checks and all GUI/approval/durable/reopen/cleanup criteria stay unchanged. The
+new receiving native workflow remains NOT_RUN before its single invocation.
