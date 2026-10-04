@@ -149,3 +149,19 @@ capture and framework calls remain under the existing3minutejob bound. The same
 setup-only route extracts eight exact source functions; package/app/profile/
 input/state operations remain absent. A successful setup still does not prove
 restored Edit/Button capability or native workflow/full-app acceptance.
+
+
+Actual typed257 setup-only run37226194641 now observes28PASS, genuine public API
+registrationCompleted=true and compiled NoInlining metadata=true. Its actual
+client/provider GAC identities/locations/SHA snapshots exactly match failed986.
+The original NullReference throw method remains unobserved; the changed ordinary
+caller resolves the setup gate without retries. No app/package/profile/input/
+state was executed by that setup diagnostic. This separate native-workflow
+successor restores the exact reviewed f5a3 original-package workflow, changing
+only its branch trigger. The complete reviewed typed257 script/catalog remains
+byte exact. There are no input, picker, Home, stroke, model, approval, geometry,
+timeout, save/reopen, cleanup, source/package/artifact or acceptance changes.
+Independent C6 reviewed setup success is necessary groundwork, not proof that
+actual Edit/Value/Button/Invoke or the owning native workflow now succeeds. The
+same original immutable package and all original criteria must be observed in
+one new real Windows run after source peer review/root sole invocation.
