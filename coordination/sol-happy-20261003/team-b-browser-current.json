@@ -1,62 +1,96 @@
 {
-  "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_1",
-  "recordedAtUTC": "2026-10-04 22:40:21 UTC",
-  "source": "0dde967d9266b483f6d91483f0573c25497762fe",
-  "run": 37239104685,
-  "browserJob": 111544806101,
+  "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_2",
+  "recordedAtUTC": "2026-10-04 23:06 UTC",
+  "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
+  "run": 37241408354,
+  "browserJob": 111551453106,
   "conclusion": "FAILURE",
   "nativeGeometry": {
     "proposed": "64PASS",
     "original": "48PASS16FAIL_EXPECTED_NEGATIVE",
     "independentFullNative49RawReview": "PENDING"
   },
-  "originalBrowser14": "14PASS",
+  "originalBrowser14": {
+    "discovered": 14,
+    "executed": 14,
+    "passed": 14,
+    "failed": 0,
+    "notRun": 0
+  },
   "responsive": {
-    "discovered": 3,
-    "executed": 1,
-    "passed": 0,
-    "failed": 1,
-    "notRun": 2
+    "commandExit": 1,
+    "counts": "PENDING_EXACT_RAW_READ",
+    "precisePendingOperation": "PENDING_EXACT_RAW_READ"
   },
-  "failure": {
-    "case": "real-populated-390-canvas-fit",
-    "step": "physical-mouse",
-    "message": "Actual operation deadline",
-    "precisePendingOperation": "UNESTABLISHED"
-  },
-  "fileChooser": "FULFILLED",
-  "runtimeErrorsAllZero": true,
-  "screenshots": [],
-  "zoom": "NOT_RUN",
-  "strictConsumerStatusBeforeAndAfterBytes": 0,
   "originalArtifact": {
-    "id": 11317575196,
-    "bytes": 2049318,
-    "sha256": "99bfa28605e73bfd305b237b1cb5840e2f3df88b47689ca97912b3b152088952"
+    "id": 11317921211,
+    "bytes": 2047241,
+    "sha256": "71f8d7fb0f1e22838656f91ccff7bd025420832ec7bdd4d19842609c7467c132"
   },
-  "readOnlyDiagnosticExport": {
-    "source": "6c43eeeb77d819af1929662542c64a8bc2eaeeb1",
-    "run": 37240303483,
-    "job": 111547515405,
-    "artifact": 11317161846,
-    "bytes": 7601,
-    "sha256": "2fa2b811fd4c267b268e648e42893eb0b597a165787c5dd9607dd3ac7515f807",
-    "memberCount": 52,
-    "selectedDecodedBytes": 11000,
-    "memberMapSHA256": "3dcc70d9c39f210d8dde9753399cbe57cf2167296839c893fa5bd6382de47e58"
+  "currentChange": {
+    "purpose": "Observe existing pending operations only",
+    "cjsSHA256": "8e7d960b62f14ba5e10f36d0c553ada0f65c841ab82f948891c4b0a83ae4e7a9",
+    "ledgerSHA256": "2e1ddc69be505a445a64e68c73836e28fe9d99a89ee0268ec3aa8525faa57d4f",
+    "driverSHA256": "dc5c50be62622ced1dd3eb508af1714395e94ef9ef2b8fc70286a6593f030c9b",
+    "entireThreeCaseBlocksUnchanged": true,
+    "caseBlockBytes": 4841,
+    "caseBlockSHA256": "093530240e556fbe7d4eb858dc6a1c8ecb552966b846a71f0a8b9d89147545f2",
+    "deadlinesUnchanged": true,
+    "noAddedProductReadsOrMutations": true,
+    "observationCapBytes": 12288
   },
-  "commandClosure": {
-    "families": 11,
-    "births": 57,
-    "allNormalEOFAndECHILDAndFamilyClosed": true,
-    "allBirthsGone": true,
-    "signals": [],
-    "responsiveExit": 1,
-    "original14Exit": 0,
-    "portRebind": true
+  "previousVerifiedFailure": {
+    "source": "0dde967d9266b483f6d91483f0573c25497762fe",
+    "run": 37239104685,
+    "browserJob": 111544806101,
+    "originalBrowser14": "14PASS",
+    "responsive": {
+      "discovered": 3,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "notRun": 2
+    },
+    "failure": {
+      "case": "real-populated-390-canvas-fit",
+      "step": "physical-mouse",
+      "message": "Actual operation deadline",
+      "precisePendingOperation": "UNESTABLISHED"
+    },
+    "strictConsumerStatusBeforeAndAfterBytes": 0,
+    "originalArtifact": {
+      "id": 11317575196,
+      "bytes": 2049318,
+      "sha256": "99bfa28605e73bfd305b237b1cb5840e2f3df88b47689ca97912b3b152088952"
+    },
+    "readOnlyDiagnosticExport": {
+      "source": "6c43eeeb77d819af1929662542c64a8bc2eaeeb1",
+      "run": 37240303483,
+      "job": 111547515405,
+      "artifact": 11317161846,
+      "bytes": 7601,
+      "sha256": "2fa2b811fd4c267b268e648e42893eb0b597a165787c5dd9607dd3ac7515f807",
+      "memberCount": 52,
+      "selectedDecodedBytes": 11000,
+      "memberMapSHA256": "3dcc70d9c39f210d8dde9753399cbe57cf2167296839c893fa5bd6382de47e58"
+    },
+    "commandClosure": {
+      "families": 11,
+      "births": 57,
+      "allNormalEOFAndECHILDAndFamilyClosed": true,
+      "allBirthsGone": true,
+      "signals": [],
+      "responsiveExit": 1,
+      "original14Exit": 0,
+      "portRebind": true
+    }
   },
-  "nextAction": "Instrument existing helpers to identify the actual pending operation and retain bounded last-observed native and readonly IndexedDB state. Preserve the three entire case blocks, all assertions and15s/45s/70s deadlines; add no reads or domain mutations.",
-  "receivingAction": "Receive and preserve the complete exact failed original artifact and independently review raw results and command closure. Preserve all original failures. Repair the observed product cause after diagnostic evidence identifies it.",
+  "nextAction": "Read fixed-tuple, unchanged-cap diagnostic export of the current original artifact. Repair only the demonstrated cause; preserve failures and original assertions.",
+  "receivingActions": [
+    "Receive and preserve complete current original artifact. Current command-family closure is pending exact raw verification.",
+    "Provide the actual typed backend indeterminate-commit fault or typed transport code and the receiver-owned composition constructor path/ref. Existing browser composition already maps its actual IndexedDB NotesCommitOutcomeUnknownException through the existing Func<Exception,bool> seam; no guessed string or all-IOException classifier will be activated.",
+    "Preserve exclusive backend ownership and the stale-winner revision-CAS contract. Backend guard alone does not close pending-commit UI acceptance."
+  ],
   "acceptance": "INCOMPLETE",
   "deadline": "22:30 Europe/London 2026-10-04 MISSED; no verification waiver",
   "installedSigningCleanWindowsAcceptance": "NOT_ESTABLISHED"
