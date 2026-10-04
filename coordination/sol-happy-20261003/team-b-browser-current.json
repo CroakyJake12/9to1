@@ -1,6 +1,6 @@
 {
   "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_2",
-  "recordedAtUTC": "2026-10-04 23:15:27 UTC",
+  "recordedAtUTC": "2026-10-04 23:32:54 UTC",
   "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
   "run": 37241408354,
   "browserJob": 111551453106,
@@ -130,7 +130,9 @@
     "selectedDecodedBytes": 17010,
     "rootAndIndependentFullSelectedBodyReview": true,
     "wholeOriginalLocallyReceived": false,
-    "wholeSelectedZIPLocallyReceived": false
+    "wholeSelectedZIPLocallyReceived": false,
+    "independentReviewer": "FULL_SELECTED_STDOUT_REVIEW_CLEAR",
+    "observationTiming": "Last existing snapshot finished 7ms after the first recorded deadline; it had begun before failure. No atomic pre-failure snapshot claim."
   },
   "writeUnknownComposition": {
     "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
@@ -190,7 +192,7 @@
       "projectJsonBytes": 1220
     },
     "fileChooser": "FULFILLED",
-    "rootCause": "PENDING_OWNER_SOURCE_REVIEW",
+    "rootCause": "Owner-source chain: busy disables the focused native Import button; native disable clears focus; Wave has no corresponding guarded restoration. Repair is source-only and under ownership/API review.",
     "runtimeErrorsAllZero": true,
     "screenshots": [],
     "zoom": "NOT_RUN",
@@ -270,5 +272,29 @@
         "births": 1
       }
     ]
+  },
+  "repairPreparation": {
+    "state": "OWNER_RAM_PROPOSAL_IN_PROGRESS",
+    "productPaths": [
+      "apps/Web/Wave/WaveNativePresentation.cs",
+      "apps/Web/Wave/WaveBrowserFeature.cs",
+      "apps/Web/Wave/Wave.cui",
+      "apps/Web/Media/BrowserWaveMedia.cs",
+      "apps/Web/Media/wave-browser.js"
+    ],
+    "nativeGraph": "Optional capture/validate delegates default DENY, so the unchanged native fixture adds no browser source dependency or stub.",
+    "browserGraph": "Existing named Wave module supplies actual synchronous imports; host claim stamp must reject blur, hidden state, off-app focus or later input. No shared main/platform changes.",
+    "runtime": "NOT_RUN"
+  },
+  "originalCustodyAcquisition": {
+    "officialGitHubOriginalArtifactStillRetained": true,
+    "authenticatedConnectorReusableOriginalAndExportReferencesReceived": true,
+    "originalCompleteBytesIndependentlyReadHere": false,
+    "exactSelectedRawBytesIndependentlyRead": true,
+    "directInMemoryOriginalRead": "BLOCKED_PROXY_TUNNEL_403_ZERO_ZIP_BYTES",
+    "privateCopy": "NOT_COMPLETED",
+    "nativeUploadEndpoint": "Requires a local file path; the returned connector reference was rejected as nonexistent path before a successful upload.",
+    "localAdmission": "Full original ZIP not admitted under the current workspace resource floor; no original or protected source was deleted.",
+    "boundedReceivingAction": "Use the existing independent receiving environment to download original artifact11317921211 and export11318110993, verify exact sealed lengths/SHA256/CRC, and preserve in the existing private evidence folder. Public source note includes no private folder or file-reference identifiers."
   }
 }
