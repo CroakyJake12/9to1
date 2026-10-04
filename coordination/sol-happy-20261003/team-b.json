@@ -155,13 +155,13 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T12:25:38.818892+00:00",
+  "updatedUTC": "2026-10-04T13:07:29.238021+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "45eb0685621259e1a2e16c007f896acee0a88345",
+  "candidateCommit": "8ff617c3afc3b2327726081dd66d5f8e4b94d8f9",
   "candidateStatus": "CONTINUING_FULL_ACTIVE_SCOPE_NO_GLOBAL_ACCEPTANCE",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -1288,14 +1288,17 @@
     "owners": "LatestA03:40 record815a13bf preserves historicalACKfields byimmutable5e153eb; no newexact193c/742/35c/Glyph/PictureACK. C23:48 no newhostedports. NewA CardsStudy32/sourcecontracts remainunrun/unpublished; no fabricatedfrontendBank/Burrows. RootsoleBwriter Csoleglobalrelease unchanged."
   },
   "currentExecutableCheckpoint": {
-    "UTC": "2026-10-04T12:25:38.818892+00:00",
-    "EuropeLondon": "2026-10-04 13:25 BST",
-    "sourceHead": "45eb0685621259e1a2e16c007f896acee0a88345",
-    "state": "CONTINUING_ACTUAL_APP_IMPLEMENTATION_AND_NORMAL_CI",
-    "native98": "PASS qualified63unit35durableowner",
-    "publicAnonymousBFcache6": "ROOT6PASS+B6independent6PASS old8041",
-    "Planner": "ActualnormalCIpassfreshselected1 fullreviewinprogress",
-    "nextExecutable": "RootadoptPicture/fullnewWASMpublisher; meaningfulChat10old/new; originalWrite15+durable65; lifecycle14 normalbackend; integrateexactA/Cdependencieswhendelivered. No globalcompletion."
+    "UTC": "2026-10-04T13:07:29.238021+00:00",
+    "sourceHead": "8ff617c3afc3b2327726081dd66d5f8e4b94d8f9",
+    "state": "CONTINUING_ACTUAL_APP_WORKFLOWS_AND_INDEPENDENT_VALIDATION",
+    "WebPublication": "Actual normal pipeline SUCCESS at8ff; full diagnostic/source/asset seal review inprogress, publicouterZIP35,793,619B remote because32MiBdownload_filelimit; genuinefreshbrowserCI remains executable",
+    "Chat": "Actual original/current twojob workflowSUCCESS; full recorded assertion/source/process review inprogress; no provider/browser acceptance",
+    "PictureNative": "Actual8ffproduction-original FAILURE; dependentadmission01/current NOT_RUN; full artifact11303732527 diagnosisinprogress; first9f89namespace compilationfailurepreserved",
+    "PictureBrowser9": "Source reviewed real PNG/nativeCUI/canonicalIDBCAS/save-close-reopen/download-pixels/browserprocessrestart source; explicitpublisherced867 binding02 rootadoption then ordinaryCI next, all9NOT_RUN",
+    "Write": "Actual65durable assertionsPASS; originalSpace15 actual10PASS1FAIL4NOT_RUN with naturalSIGABRT; sharedInputRouterexactACKmissing",
+    "Planner": "ActualselectedoriginalSQLite1PASS; B2+B6fullrecordedreviewcomplete",
+    "FilesSitesLifecycle": "Source03/current14/original01-02exactfailurecontrols07/thinsharedimport08 independentlyCLEAR; rootfulladoption inprogress then normalCI; actualissuerportsstillBLOCKED",
+    "completion": "Fullactive31criteria outstanding; no fullparity/deployed/acceptedhead claim"
   },
   "executableCheckpointHistory": [
     {
@@ -1966,6 +1969,16 @@
         "Real Files/Sites lifecycle participation source work; exact held issuer revoke/drain owner port still missing",
         "Planner official acquisition remains resource-held; other independent apps continue"
       ]
+    },
+    {
+      "UTC": "2026-10-04T12:25:38.818892+00:00",
+      "EuropeLondon": "2026-10-04 13:25 BST",
+      "sourceHead": "45eb0685621259e1a2e16c007f896acee0a88345",
+      "state": "CONTINUING_ACTUAL_APP_IMPLEMENTATION_AND_NORMAL_CI",
+      "native98": "PASS qualified63unit35durableowner",
+      "publicAnonymousBFcache6": "ROOT6PASS+B6independent6PASS old8041",
+      "Planner": "ActualnormalCIpassfreshselected1 fullreviewinprogress",
+      "nextExecutable": "RootadoptPicture/fullnewWASMpublisher; meaningfulChat10old/new; originalWrite15+durable65; lifecycle14 normalbackend; integrateexactA/Cdependencieswhendelivered. No globalcompletion."
     }
   ],
   "previousSpecificationMetadataRecheck": {
@@ -2331,13 +2344,19 @@
   "currentPlannerOriginalSQLiteCI": {
     "sourceCommit": "45eb0685621259e1a2e16c007f896acee0a88345",
     "workflowRun": "https://github.com/CroakyJake12/9to1/actions/runs/37201604294",
-    "status": "ACTUAL_CI_SUCCESS_RECORDED_FULL_REVIEW_IN_PROGRESS",
+    "status": "ACTUAL_SELECTED_ORIGINAL_SQLITE_PASS_B2_B6_RECORDED_REVIEW_CLOSED",
     "artifactID": 11301849928,
     "artifactBytes": 335071,
     "discovery": 2,
     "selectedFreshTRXPassed": 1,
     "skipped": 0,
-    "scope": "Unchanged original same-process two realSQLite repositories CAS/outbox/delete/rejectedresurrection/restoreIDrev4. Not browser/crossprocess/StudyBank/Burrows/authgrant acceptance."
+    "scope": "Unchanged original same-process two realSQLite repositories CAS/outbox/delete/rejectedresurrection/restoreIDrev4. Not browser/crossprocess/StudyBank/Burrows/authgrant acceptance.",
+    "artifactSHA256": "cfc0742dc8e8f8eb0a64781db77f96b114119c3478d406b67d9967ecbd25967c",
+    "B2ReviewSHA256": "238ffa0b1c0e47c6007a6c7b24eeb408f60080d8340d2bc6b0ed7555757914b0",
+    "B6ReviewSHA256": "e9a8564513823cb8056ef623e02124530b00ce1d06b9c53c186b74f0b4a72436",
+    "normalCommands": 11,
+    "recordedBirths": 19,
+    "qualifiedCase": "Real two SQLite repositories same-process CAS one winner revision2/outbox2, delete3/rejectedresurrection/outbox3, explicitrestore sameIDrevision4; no browser/crossprocess/fullPlanneracceptance"
   },
   "currentSourcePreparedExecutableQueue": {
     "commonCommandsSHA256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
@@ -2359,7 +2378,8 @@
       "Existing exactHome742hero+finiteHomeopt-in dualoriginal20 and joint40PASS request remains; genericHome437source diagnostics do notacknowledge exactBchange. SharedgenericSpaceguard request remains; currentnegative Write15 willpreserve meaningfulRED. Forms typedrootloss privateclear remains. Picture nativeGPSPreserve exactmetadata failure remains.",
       "Deliver existing Data originalpublicguardedauthoringfactory/lifecycle+canonicalcodec/validator and actualguardedbrowserprovider consumingexistingmodel/storeID/revision authority; actualunguarded DataPage.Save/import paths identified. Packetrequests/Data-guarded-browser-authoring.json full31pins + exactaffectedtests.",
       "TerraForm maintain realPrototype/appkind publication/execution adapter +tenFiles organisationtypes/IDs/versionhistory/no parallelGraphmodel. ExistingPrepare permitsONLY Automations/reusable-task; Home native donor is supporting only. Packetrequests/TerraForm-real-owner-readiness.json.",
-      "Chat actual maintainedDen/read/store+authorisedinitialisation receipt/CUI factory/sharedgovernedmodelinventory/turnexecution ports; B-owned sourceprojectionfixedindependently."
+      "Chat actual maintainedDen/read/store+authorisedinitialisation receipt/CUI factory/sharedgovernedmodelinventory/turnexecution ports; B-owned sourceprojectionfixedindependently.",
+      "NEW actual original Write Space regression at556034: run37202417337 artifact11302943956 exactZIP334895B SHA c0cd28452809ce4aaf2f8791a16bca0b9dcb4707e3c3a42d10308fd7547a03c1. Actual10PASS then original11th per-character Write spaces ASSERT fails naturalSIGABRT, 4NOT_RUN; original Alpha beta gamma unchanged. Please acknowledge exact genericTextInputTarget Space fallback fix in sharedCuiInputRouter then deliver source for original rerun. B doesnotmodifyshared or weakenexpectedtext."
     ],
     "C": [
       "Nominate exactintegratedbrowserbaseline/source+dependency closure: PR4 isolated against8041, currentC release has noWebsource. Do not broadmerge unrelated60ahead256behind. Csolecandidate/index/main owner.",
@@ -2377,5 +2397,69 @@
     "WindowsVerifiedApps": "UNKNOWN_DENOMINATOR_NOT_B_ACCEPTANCE_CLAIM",
     "WindowsPackagedDeliveredApps": "UNKNOWN_NOT_B_DELIVERY_CLAIM",
     "protectedActions": "No mainmerge/provideractivation/spend/charges/productioncutover authorisedbythisreceipt."
+  },
+  "currentWriteOriginalCIActual": {
+    "sourceCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+    "run": "https://github.com/CroakyJake12/9to1/actions/runs/37202417337",
+    "durable": {
+      "artifactID": 11303850457,
+      "zipBytes": 336781,
+      "sha256": "51420539234bffa417509360cbbd12297182760c1e616d1c6f7755508e389bda",
+      "actualAssertions": 65,
+      "seed": 23,
+      "freshRealApphostVerify": 40,
+      "subscriber": 2,
+      "commands": 13,
+      "recordedBirths": 19,
+      "result": "PASS",
+      "scope": "Actual canonical NotesRepository filesystem/codecs/history/reopen/CAS/dirtyclose/error-retry/listener-failure; not65xunitcases/fullWrite/provider/browseracceptance"
+    },
+    "Space": {
+      "artifactID": 11302943956,
+      "zipBytes": 334895,
+      "sha256": "c0cd28452809ce4aaf2f8791a16bca0b9dcb4707e3c3a42d10308fd7547a03c1",
+      "passed": 10,
+      "failed": 1,
+      "notRun": 4,
+      "exit": -6,
+      "exitQualification": "Natural native SIGABRT after assertion, no forcedsignals; allcommandfamilies EOF/closed/ECHILD",
+      "failingOriginalAssertion": "Actual per-character native Write input preserves all spaces",
+      "requiredOriginalLiteral": "Alpha beta gamma",
+      "wrongActualString": "NOT_OBSERVED_IN_UPLOADED_RAW_DIAGNOSTICS",
+      "requiredOwner": "Team A shared framework/CUI/Controls/CuiInputRouter.cs Spacefallback guard for TextInputTarget; exactsourceACKrequired; no Bpatch/workaround/oraclechange"
+    },
+    "B2ReviewSHA256": "70ad1798fc40a24c88c5d6d65f0d3dd6641f36416b7d4267e82d66872ed74b14",
+    "independentRecordedReview": "B6 IN_PROGRESS",
+    "originalFailuresRetained": true
+  },
+  "currentRootReviewedSource8ff": {
+    "sourceCommit": "8ff617c3afc3b2327726081dd66d5f8e4b94d8f9",
+    "precedingPictureCommit": "9f89d53f8c2047a70b46d76da41c9b2f120ceb2c",
+    "publisherSHA256": "ced8679e0c587a3e0077d84db084ec171af12fc40b63ffd1ff5fa7303241dabb",
+    "commonCommandsUnchangedSHA256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+    "productChanges": [
+      "Canonical Picture raster localbrowser integration/Sessionadmission04, actualowner3links, WeakSetfaultbrand",
+      "Chat hides priorcanonicalConversation/Draft/Recent when actualowner deniedrefresh"
+    ],
+    "nativePictureRepair": "ONLY27B using CakeOS.Cui.Language added tobothharnesses; original assertions/control snapshots unchanged",
+    "actualRuns": {
+      "WebPublish": 37203684503,
+      "ChatOriginalCurrent": 37203684570,
+      "PictureNative": 37203684488,
+      "Native6": 37203684491
+    },
+    "reviewScope": "B1publisherSOURCE02+B6fullsource/firstfailures; B2ChatthinCI02+rootfullsource; B3Pictureintegration+root and independentpeers; native6successstatus no newrawcount attribution"
+  },
+  "latestTeamCIntegrationReceived1315": {
+    "coordCommit": "a7fed780d8fd8b3b6087d29bb0636d831deca42b",
+    "CUpdatedUTC": "2026-10-04T13:00:22.156618+00:00",
+    "provisionalIntegrationHead": "4db960ea",
+    "CClaim": "161 exact TeamB apps/Web additions from aef50b9b including8041baseline composed; newreceivingFiles17/Sites18 lane started",
+    "rootReceivingVerification": "NOT_RUN/Cownreportedsourcecomposition only; Bawaitexactreceivingbytes and acceptance",
+    "newBSourceHeadForNextBoundedReview": "8ff617c3afc3b2327726081dd66d5f8e4b94d8f9",
+    "CRelease": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+    "acceptedHead": null,
+    "mainMerged": false,
+    "remaining": "New9f89Picture +8ffChat source and normalCI additions not claimed integrated; Csoleintegrator. Auth0f6 exactCproviderprotocol and Baccountbridge/preprovisioned testcontext review underway; no authorizationdefaults or authbypass."
   }
 }
