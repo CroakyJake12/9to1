@@ -40,7 +40,26 @@ public sealed partial class HomeResourceOperationBroker
 
     public HomeResourcePreparedReview PrepareReviewForActor(AuthenticatedResourceActor originalActor,
         string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
-        string preview, string? backupId, string sessionId)
+        string preview, string? backupId, string sessionId) =>
+        PrepareReviewCore(originalActor, targetAppId, actionId, scopes, arguments, preview, backupId, sessionId,
+            () => new HomePermissionCallerIdentity(originalActor.ActorId, originalActor.ActorId,
+                originalActor.ProfileId, originalActor.AuthenticationRevision, true).Validate());
+
+    /// <summary>Internal original-session composition only. Detached caller fields cannot issue this proof.</summary>
+    internal HomeResourcePreparedReview PrepareReviewForOriginalInstalledCaller(
+        HomeNativeCoreApiSessions.Session.OriginalPackageCaller original,
+        string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
+        string preview, string? backupId)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        original.RequireRetained();
+        return PrepareReviewCore(original.Actor, targetAppId, actionId, scopes, arguments, preview, backupId,
+            original.SessionId, () => { original.RequireRetained(); return original.PermissionCaller; });
+    }
+
+    private HomeResourcePreparedReview PrepareReviewCore(AuthenticatedResourceActor originalActor,
+        string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
+        string preview, string? backupId, string sessionId, Func<HomePermissionCallerIdentity> originalCaller)
     {
         ArgumentNullException.ThrowIfNull(originalActor); ArgumentNullException.ThrowIfNull(scopes);
         if (string.IsNullOrWhiteSpace(sessionId)) throw new ArgumentException("Original session required.", nameof(sessionId));
@@ -54,8 +73,7 @@ public sealed partial class HomeResourceOperationBroker
         if (detached.Count == 0) throw new ArgumentException("Explicit owner scope required.", nameof(scopes));
         var snapshot = detached.ToArray(); var captured = arguments.Clone();
         var objects = snapshot.Select(scope => new HomeObjectReference(scope.Kind, scope.Id)).ToArray();
-        var caller = new HomePermissionCallerIdentity(originalActor.ActorId, originalActor.ActorId,
-            originalActor.ProfileId, originalActor.AuthenticationRevision, true).Validate();
+        var caller = originalCaller();
         var submission = new HomePermissionRequestSubmission(Guid.NewGuid().ToString("N"), caller, sessionId.Trim(),
             new HomePermissionScope(targetAppId, actionId, objects).Validate(),
             new HomePermissionImpactPreview(objects.Select(item => item.ObjectType).Distinct().ToArray(), objects.Length,
