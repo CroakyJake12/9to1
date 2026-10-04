@@ -150,19 +150,16 @@ function Invoke-NativeHistory([string]$Name) {
 }
 function Find-SaveLabel([string]$StatusPrefix, [bool]$Exact) {
     $work = [Windows.Forms.Screen]::FromHandle($process.MainWindowHandle).WorkingArea
-    foreach ($regionId in @('TopBarRight', 'FooterBar')) {
-        $region = Find-Control $window $regionId
-        if ($null -eq $region) { continue }
-        $condition = New-Object System.Windows.Automation.AndCondition(
-            (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.Id)),
-            (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Text)))
-        foreach ($text in $region.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)) {
-            $c = $text.Current; $r = $c.BoundingRectangle
-            $matchesStatus = if ($Exact) { $c.Name -ceq $StatusPrefix } else { $c.Name.StartsWith($StatusPrefix, [StringComparison]::Ordinal) }
-            if ($matchesStatus -and $c.IsEnabled -and -not $c.IsOffscreen -and $r.Width -gt 0 -and $r.Height -gt 0 -and
-                $r.Left -ge $work.Left -and $r.Top -ge $work.Top -and $r.Right -le $work.Right -and $r.Bottom -le $work.Bottom) {
-                return @{ element = $text; region = $regionId }
-            }
+    # Real Windows UIA omits the native layout panels; observe their actual Text peers.
+    $condition = New-Object System.Windows.Automation.AndCondition(
+        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.Id)),
+        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Text)))
+    foreach ($text in $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)) {
+        $c = $text.Current; $r = $c.BoundingRectangle
+        $matchesStatus = if ($Exact) { $c.Name -ceq $StatusPrefix } else { $c.Name.StartsWith($StatusPrefix, [StringComparison]::Ordinal) }
+        if ($matchesStatus -and $c.IsEnabled -and -not $c.IsOffscreen -and $r.Width -gt 0 -and $r.Height -gt 0 -and
+            $r.Left -ge $work.Left -and $r.Top -ge $work.Top -and $r.Right -le $work.Right -and $r.Bottom -le $work.Bottom) {
+            return @{ element = $text; region = 'OwnedWindowText' }
         }
     }
     return $null
@@ -183,8 +180,8 @@ function Observe-SaveLabel([string]$StatusPrefix, [bool]$Exact = $true) {
                 workingArea = @($work.X, $work.Y, $work.Width, $work.Height)
                 maxTextPeersPerRegion = 32; maxNameCharacters = 256; regions = @()
             }
-            foreach ($regionId in @('TopBarRight', 'FooterBar')) {
-                $region = Find-Control $window $regionId
+            foreach ($regionId in @('TopBarRight', 'FooterBar', 'OwnedWindowText')) {
+                $region = if ($regionId -ceq 'OwnedWindowText') { $window } else { Find-Control $window $regionId }
                 $regionObservation = [ordered]@{ automationId = $regionId; found = $null -ne $region; texts = @() }
                 if ($null -ne $region) {
                     if ($region.Current.ProcessId -ne $process.Id) { throw 'Status diagnostic region belongs to another process.' }

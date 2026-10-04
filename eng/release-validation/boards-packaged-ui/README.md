@@ -57,7 +57,7 @@ The actual application creates the exclusive fixture, whose real NTFS primary
 file attributes and saved bytes are recorded. The harness changes only that
 file's ReadOnly attribute; no document JSON, model, fake store, account authority
 or ACL is changed. Native paragraph input and focused Ctrl+S must be followed by
-visible native `Save failed` text in the existing TopBarRight/FooterBar regions.
+visible native `Save failed` Text peers in the exact owned application window.
 The primary must retain its exact saved bytes while ReadOnly remains asserted,
 and the current native paragraph must retain the pending edit.
 
@@ -85,3 +85,12 @@ existing status region, bounded names, their visibility/enabled state and actual
 rectangles, plus the real window/monitor work area and foreground screenshot.
 It then rethrows the original refusal; diagnostics grant no storage success and
 do not change UI state, document bytes, attributes or timeout thresholds.
+
+The diagnostic run `37216711750` at `f46cfcd8da1ddee62987645092475a80a1da5738`
+preserved the same initial timeout, with an original screenshot showing both
+visible Saved labels. Its actual UIA witness shows TopBarRight and FooterBar
+layout panels are absent from that automation tree. The corrected locator
+queries actual Text descendants of the exact owned window directly, preserving
+the original text, process, visibility, geometry and wait criteria. Bounded
+refusal diagnostics also inspect that owned Text scope. No group automation
+provider is invented, and a missing actual status Text peer still fails.
