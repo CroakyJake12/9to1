@@ -168,7 +168,44 @@ function Find-SaveLabel([string]$StatusPrefix, [bool]$Exact) {
     return $null
 }
 function Observe-SaveLabel([string]$StatusPrefix, [bool]$Exact = $true) {
-    $observed = Wait-Observed { Find-SaveLabel $StatusPrefix $Exact } "Visible native save text: $StatusPrefix"
+    try {
+        $observed = Wait-Observed { Find-SaveLabel $StatusPrefix $Exact } "Visible native save text: $StatusPrefix"
+    } catch {
+        $statusObservationFailure = $_
+        # Read-only diagnostics retain the original lookup refusal and all its criteria.
+        try {
+            if ($process.HasExited -or $window.Current.ProcessId -ne $process.Id) { throw 'Status diagnostic requires the exact live app window.' }
+            $work = [Windows.Forms.Screen]::FromHandle($process.MainWindowHandle).WorkingArea
+            $r = $window.Current.BoundingRectangle
+            $diagnostic = [ordered]@{
+                expectedPrefix = $StatusPrefix; exactMatch = $Exact; processId = $process.Id
+                windowRectangle = @($r.X, $r.Y, $r.Width, $r.Height)
+                workingArea = @($work.X, $work.Y, $work.Width, $work.Height)
+                maxTextPeersPerRegion = 32; maxNameCharacters = 256; regions = @()
+            }
+            foreach ($regionId in @('TopBarRight', 'FooterBar')) {
+                $region = Find-Control $window $regionId
+                $regionObservation = [ordered]@{ automationId = $regionId; found = $null -ne $region; texts = @() }
+                if ($null -ne $region) {
+                    if ($region.Current.ProcessId -ne $process.Id) { throw 'Status diagnostic region belongs to another process.' }
+                    $condition = New-Object System.Windows.Automation.AndCondition(
+                        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.Id)),
+                        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Text)))
+                    $texts = $region.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+                    $regionObservation.totalTextPeers = $texts.Count
+                    for ($i = 0; $i -lt [Math]::Min(32, $texts.Count); $i++) {
+                        $c = $texts[$i].Current; $r = $c.BoundingRectangle; $name = [string]$c.Name
+                        $regionObservation.texts += [ordered]@{ name = $name.Substring(0, [Math]::Min(256, $name.Length)); processId = $c.ProcessId; controlType = $c.ControlType.ProgrammaticName; enabled = $c.IsEnabled; offscreen = $c.IsOffscreen; rectangle = @($r.X, $r.Y, $r.Width, $r.Height) }
+                    }
+                }
+                $diagnostic.regions += $regionObservation
+            }
+            $result.storageStatusFailureDiagnostic = $diagnostic
+            Capture-Window 'storage-status-diagnostic-window.png'
+        } catch { $result.storageStatusDiagnosticFailure = [ordered]@{ type = $_.Exception.GetType().FullName; message = $_.Exception.Message } }
+        Write-Result
+        throw $statusObservationFailure
+    }
     Check (-not $process.HasExited -and $observed.element.Current.ProcessId -eq $process.Id) 'Observed save-state text belongs to the exact live packaged app'
     $result.storageStatusObservations += [ordered]@{ text = $observed.element.Current.Name; region = $observed.region; processId = $process.Id; controlType = 'Text'; observedAtUtc = [DateTimeOffset]::UtcNow.ToString('o') }
     Write-Result

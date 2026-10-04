@@ -75,3 +75,13 @@ inside the actual monitor work area; observed save text must fit completely.
 No unobserved UIA Window/Transform provider is assumed. Missing OS geometry or
 native status peers remains an actual failure. The completed 67/85 workflows
 and indices remain unchanged; only this new scenario is dispatched.
+
+The original storage run `37215349177` at `88bbc69d8c22cbf9095ddfc8282460dfc7841d07`
+timed out observing the initial visible Saved label, before any ReadOnly fault
+or pending storage edit. Its original result/artifact remain preserved. A
+diagnostic-only continuation retains the exact lookup, wait and failure criteria.
+On lookup refusal it records at most 32 current owned-process Text peers per
+existing status region, bounded names, their visibility/enabled state and actual
+rectangles, plus the real window/monitor work area and foreground screenshot.
+It then rethrows the original refusal; diagnostics grant no storage success and
+do not change UI state, document bytes, attributes or timeout thresholds.
