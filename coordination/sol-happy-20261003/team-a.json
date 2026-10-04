@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-04T02:01:37.546501+00:00",
+  "updatedUTC": "2026-10-04T02:39:11.829495+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -154,12 +154,11 @@
   "commercialStatus": "NOT_ENABLED",
   "coordinationProtocol": "Only Team A records updated through current-parent non-force push and exact remote readback. Team C alone owns index and accepted-head.",
   "previousRecord": {
-    "path": "/workspace/astra-source/teamA-coordination-record920.json",
-    "bytes": 129038,
-    "sha256": "ecd26cfc21e3f700bd519fc38b55a936d8b1149747693a825dade5d82d92f44a",
-    "remoteCommit": "a13ffd86db7294db6c98ecac8000cddfb51edb19",
-    "remotePath": "coordination/sol-happy-20261003/team-a.json",
-    "qualification": "Wholepreviousrecord preserved immutably; current successor changes only actualstatus/evidence and qualifies previousrequests bythatrecord."
+    "commit": "59b3ec162046da495ee59e13b5c0209ba0da3c39",
+    "path": "coordination/sol-happy-20261003/team-a.json",
+    "localPath": "/workspace/astra-source/teamA-coordination-record925.json",
+    "bytes": 129862,
+    "sha256": "f122e42e14b48e0edddc28726108cae5cf1b697d79f8db0710b75268e8a0c791"
   },
   "sharedPatchAcknowledgements": {
     "C2": {
@@ -611,9 +610,19 @@
     },
     "qualification": "A6 closedreaders; two generatedSDKhashinventories20139024B dedupgzip2192247 wholebytes/metadata. NoSDK/source/native/binary/originalZIP removed; floorsunchanged.",
     "currentReader": {
-      "path": "/workspace/astra-source/root-read-closed-evidence903.py",
-      "bytes": 7984,
-      "sha256": "78bc2512ae5183fdabe2e1a6f3fcb22157b071016bb99217160ac192e07680fb"
+      "reader": "/workspace/astra-source/root-read-closed-evidence927.py",
+      "bytes": 9714,
+      "sha256": "8efcc7f380f3565838af7d1e1e99ba559c33beb622180e18eb729bc8a5bdf5ec",
+      "groups": 73,
+      "index": "/workspace/astra-source/ready-artifacts/root-retained-forms13-sdk08-closed-git-cuts-927/restoration-index.json",
+      "indexSha256": "919521f243f3a1d2f8f1908e8c9a661528f4b0773ebf6a27dc78b3cd7b3ff6b1",
+      "closedGeneratedRawBytes": 5778405,
+      "qualifiedComplete": true,
+      "durableLocalRefs": [
+        "refs/astra-evidence/forms13-root-20261004",
+        "refs/astra-evidence/sdk08-root-20261004"
+      ],
+      "qualification": "A3 entire adapter/driver/Git source peer CLEAR; whole bytes replayed before/after unlink, original config/fd/maps/path/inode/fsync/protection/floors guarded. Only closed generated metadata loose copies removed. Source/native/SDK/binaries/original ZIPs unchanged."
     },
     "additionalClosedCuts": "69 complete lossless groups now includes ownerclosed Graph04/Canvas03/SDK07 generatedcuts only. Actualfullbytes equal original immutableGit selfmanifests; wholeprotocol/dependency/FD/mode/fsync/readback/protection/floors. Every original ZIP/source/native/SDK/binary retained; allfailures/guards unchanged."
   },
@@ -624,8 +633,8 @@
     "gitBlob": "2d988c7531d3d1122443bd89bbc6e53e3d9b23f4",
     "candidate": "4d2cbba252cb4c827985e679ba177ad30394ba50",
     "accepted": null,
-    "qualification": "Final C partialhandoff/draftPR3 read; SDK7/C identity results remain attributed separateheads, no Astra/native/PC/mainmerge/deploy acceptance. Own89930e newrequests notyetacknowledged.",
-    "rootLatestReadUTC": "2026-10-04T01:39:09.453993+00:00"
+    "qualification": "Freshreadunchanged69539B/d8c14d77 atOct3 23:48; candidate4d2cb/acceptednull. Finalpartialhandoff lacks genuineHomeStudio installedrelease declarations; ownrequest925 remains. C soleaccepted/main/release.",
+    "rootLatestReadUTC": "2026-10-04T02:39:11.829495+00:00"
   },
   "sdk04CompilerCause": {
     "path": "/workspace/astra-source/root-sdk04-original-small-compiler-cause-source-binding878.json",
@@ -649,102 +658,16 @@
     "actualSDKReconciliation": "9006Appold7ccc24477B vs3a52App05dac24566B sole89B originalExecutionAdmissions providerGetService forwarding. A1old3filecorrectorhistorical/unselectableon3a52; preferredsuccessor applies SAME3presenter edits to actual3a52 preservingwholebridge. ExistingSDKApprow71 repinned; onlycanonicalinterface addsnewselectedsource. Source-onlycorrectors neither executed nor adopted."
   },
   "sdk05SourcePreparation": {
-    "HomeCompilerCallerManifest": {
-      "path": "/workspace/astra-source/worker1-joint-sdk04-actual-home-compiler-source01-original-actor-prerequisite/manifest.json",
-      "bytes": 12437,
-      "sha256": "e98fadd3ada6fbd68af6357ebfd17aa78bd0b44becb4a8faf622d32d57e532ae"
+    "status": "SUPERSEDED_HISTORICAL_COMPLETE_FACTS_PRESERVED",
+    "fullImmutableRecord": {
+      "commit": "59b3ec162046da495ee59e13b5c0209ba0da3c39",
+      "path": "coordination/sol-happy-20261003/team-a.json",
+      "localPath": "/workspace/astra-source/teamA-coordination-record925.json",
+      "bytes": 129862,
+      "sha256": "f122e42e14b48e0edddc28726108cae5cf1b697d79f8db0710b75268e8a0c791"
     },
-    "validatorManifest": {
-      "path": "/workspace/astra-source/worker4-joint-sdk04-den-validator-actual-empty-set-source03/manifest.json",
-      "bytes": 3781,
-      "sha256": "b92671ee21c1c3e9b6f01f747f513ee1a441ee0d35a831b9b656379060e748b9"
-    },
-    "validatorCompletePeers": {
-      "path": "/workspace/astra-source/worker4-validator03-complete-attributed-independent-source-api-inverse-peers01.json",
-      "bytes": 3647,
-      "sha256": "9f69dab0a2bcacb10b7ec472bc35de568f6e6a7e768428c00df6e8088bea4eb8"
-    },
-    "state": "ActualSDK07 allfourfailed. Complete source/inverse guards remain; original childcause custody precedes any sourcecorrector/retry. SDK05/06 historical sourceholds unchanged; no native/fullSDK acceptance.",
-    "AppManifest": {
-      "path": "/workspace/astra-source/worker1-home14-native-presenter-root-provider-source02-preserve-actual-sdk-bridge/manifest.json",
-      "bytes": 5241,
-      "sha256": "f65960b5b74388e8bfe3ff1d6ed8104bf14deee95b1f929ee89a389d3856ad5e"
-    },
-    "WorkManifest": {
-      "path": "/workspace/astra-source/worker1-home-original-work-source02-retain-earlier-caller-cancellation/manifest.json",
-      "bytes": 6121,
-      "sha256": "8f33d36c6ff5b230340939d19ec3e03b2f0d6437d2ad1de553b9798c7ab33491"
-    },
-    "AppCompleteA3Peer": {
-      "path": "/workspace/astra-source/worker4-app02-complete-actual-root-provider-chat-bridge-source-api-peer01.json",
-      "bytes": 3664,
-      "sha256": "c1dac75a507639be43916d02c9a17be51e142db779859f11d190e5d95745970e"
-    },
-    "AppCompleteA6Peer": {
-      "path": "/workspace/astra-source/worker6-home14-app02-actual-root-provider-source-custody-independent-peer312.json",
-      "bytes": 4090,
-      "sha256": "3bfc2ff97fe6bbe3db32a3e5c30483a5b7fd355362983064b75badeff5c6b156"
-    },
-    "HomeCompleteA3Peer": {
-      "path": "/workspace/astra-source/worker4-home-sdk04-compiler-original-caller-complete-component-source-peer01.json",
-      "bytes": 3693,
-      "sha256": "33399300bc4f3ec14570dec3dee4503c0c0125e6c84dc7efac52583e632c31e3"
-    },
-    "HomeCompleteA6Peer": {
-      "path": "/workspace/astra-source/worker6-home-compiler-caller-source01-complete-independent-peer311.json",
-      "bytes": 3617,
-      "sha256": "7ef14202ebd7fff31dc435bcb8449f7b82aeadec3da6c43ab419ab39b394d516"
-    },
-    "SDK05Manifest": {
-      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package05-actual3a52-corrective/manifest.json",
-      "bytes": 28951,
-      "sha256": "cd41f66858b5223e3c43e1a31b8c48289ec8f61ef21513d5c84806c5b87731fd"
-    },
-    "WorkCompleteA3A4A6RamClearAttributed": true,
-    "originalCausalAdmission": {
-      "path": "/workspace/astra-source/ready-artifacts/root-sdk04-linux19-c-original-causal-records887/admission.json",
-      "bytes": 20597,
-      "sha256": "4a38a914834debaa0ae56cd71863f92398b90a2463ef8c4e40229930e9817225"
-    },
-    "originalCustodyRelease": "e70c36f1f74f47f7ef430998b07ce006b723894a",
-    "originalCause": {
-      "jointCommands": 98,
-      "jointExit0": 97,
-      "failedCommand": "debug-build-entry-00",
-      "allJointRecordedDrainsProven": true,
-      "owningExpectedManagedLaunchDrained": false,
-      "owningMarkerHasPidOrBirth": false,
-      "jointProfileCleanupCause": {
-        "qualification": "Definite actual original record/schema mismatch; independent of five compile errors. Root/A6 full source+records read, no reexecution.",
-        "sourceCommit": "3a52c431368fee3aa03b2a0f8303fb6cfbb49224",
-        "source": {
-          ".github/scripts/astra-joint-sdk-ephemeral-profile.py": {
-            "bytes": 8631,
-            "sha256": "64ff4aca1aba22f20941fecdb4867c4e07c69abe9c362d52d8ec9ecfa87447c7"
-          },
-          ".github/scripts/astra_joint_sdk_profile_caller.py": {
-            "bytes": 7900,
-            "sha256": "4cd2e8c2a0f7d7db215eb8c0fb1ec15817aa39711deecc6b724039f1db432c18"
-          },
-          ".github/scripts/astra_mail_original_caller_session.py": {
-            "bytes": 3859,
-            "sha256": "e28bda6ebcc9c46aeabf8d29cbf1e310b6cba0d6887ee749540fd6e3cfa460ae"
-          }
-        },
-        "originalDelegation": {
-          "path": "/workspace/astra-source/ready-artifacts/root-sdk04-linux19-c-original-causal-records887/joint/profile-correction/original-native-session-drain/inner-native-delegation.json",
-          "bytes": 2847,
-          "sha256": "5660d19d4c79fa09da4243d1862c409effbc47d729ceaa02c468953829e64094"
-        },
-        "cause": "Immediate profile scan requires drained==True on every JSON. Original delegation has allInnerRecordedDrainsProven=True but no drained field, so this middle record alone causes refusal; both other records true.",
-        "preferredCorrection": "Additive owned JointCallerSession.write override after unchanged super.write: preserve original record fields/currentness/tuple proofs, append drained only for SAME final original caller true AND whole inner true. False observations remain false. Independent persistence body/close faults. Shared Mail helper and profile consumer unchanged. RAM only, full peers/quote required; owning false/noPID marker remains separate."
-      }
-    },
-    "completeA3Peer": {
-      "path": "/workspace/astra-source/worker4-sdk05-complete-source-metadata-preservation-embedded-task-held-peer01.json",
-      "bytes": 3991,
-      "sha256": "0422a8cc76bbb4eefe93e0a38374d421f6080eab298f68b7c0d35dafa73f40e7"
-    }
+    "field": "sdk05SourcePreparation",
+    "qualification": "Prior source/count/guard facts retained complete in immutable925; actual SDK07/08 govern current work."
   },
   "historicalSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -1311,6 +1234,27 @@
       },
       "state": "ALL_FULL14_SOURCE_PLUS_NARROW15_METADATA_PEERS_CLEAR_QUALIFIED_UNRUN",
       "qualification": "Sole stale currentTests descriptor corrected652/d0f947ee with562 explicitlineage/whole14inverse; allsource/19inverses/20methods22outcomes/currentnativehistory/pressure guards retained. Fullactualruntime stillpending."
+    },
+    "Platform02": {
+      "state": "FROZEN_FULL_A1_A3_A6_CLEAR_QUALIFIED_UNSELECTED_UNRUN",
+      "manifestSha256": "f65dece949c469264ffa5e3e1158858b2a5bcd6e35a86bc124f1504554e4b455",
+      "qualification": "Only entry4363/de4e and fixture48384/f929; seven predecessor bodies byref, all100 assertions/14methods19cases preserved, same original task/borrowed socket/administrator acquisition cleanup independently collected, explicit Linux guards, currentf877 service inherited; whole2source+MF inverses exact. Prospective OS225 not current selectedOS222.",
+      "remaining": "PhysicalmoduleCompile/PE-PDB/native/defaultroot/installed/Csignedrelease declarationsOPEN."
+    },
+    "Attachment01": {
+      "state": "FROZEN_FULL_A4_A6_CLEAR_UNRUN",
+      "manifestSha256": "895c97553ca72e656120bd1580cdb489865a5a3c19e8f45b709e623656560434",
+      "qualification": "SAME opaque attachment request/private issuer/full16fieldSQLite observation; physicalbytes/genuineFilesproductionrelation/export/destinationACK/DI/native stillneeded. No Cloud grant."
+    },
+    "SpacesCatalogue01": {
+      "state": "FROZEN_A1_FULL_CLEAR_A6_PENDING_UNRUN",
+      "manifestSha256": "3d972c0d1f96696c0a88215ab844a17fc75e8858d19c8af6d22a94e6b8e1bf6c",
+      "qualification": "Ten stableLE12 names Blocked/null applicability with exact missingownerCAS/replay/target evidence; metadata only4tests, no feature runtime/grant."
+    },
+    "DenRegistration01": {
+      "state": "EXACT_FOUR_FILE_FREEZE_COMPLETE_A4_A6_FULL_PEERS_PENDING_UNRUN",
+      "manifestSha256": "188dbb06",
+      "qualification": "Explicit actual original HomeDenStoreEvidenceProvider overload preserves Coreonly preferredbody; sameopenedprovider/no duplicate/conflicting registration, actualownerSQL tests3Facts3UNRUN. Genuine Home nativeproducer/host-before-providerdisposal/defaultrealAgentroute gates open."
     }
   },
   "historicalActualEvidence": {
@@ -1373,7 +1317,8 @@
         "state": "SUCCESS"
       }
     },
-    "qualification": "Actual ownFAIL/reg+resSUCCESS; no childcause inference. Exact39724B owningindex11289907568/12172275 locallyverifiedfullCRC/sole273274Bmanifest/551originalfiles507pieces/twoinnerbundles. A6boundedremoteoriginalreplay sourcequote underway;47.8MBpartsnotdownloaded. Fulloriginalroot34137B50f10b2a/123986BTRX andpending/expected/processreceipts required. Native/startuppredicate stillUNKNOWN."
+    "qualification": "Actual ownFAIL/reg+resSUCCESS; no childcause inference. Exact39724B owningindex11289907568/12172275 locallyverifiedfullCRC/sole273274Bmanifest/551originalfiles507pieces/twoinnerbundles. A6boundedremoteoriginalreplay sourcequote underway;47.8MBpartsnotdownloaded. Fulloriginalroot34137B50f10b2a/123986BTRX andpending/expected/processreceipts required. Native/startuppredicate stillUNKNOWN.",
+    "readerPreparation": "Frozen fixedactualaa03 original551/507 reader+190complete causal selector fullA4A5CLEAR. Pure33controls926PASS/zerooriginalIO. Rootpublisher928 fullpeer pending; full532textremote retained. No localcompressedfit/cause/nativeclaim."
   },
   "currentFilesGuardAvailable": {
     "commit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
@@ -1397,12 +1342,12 @@
     "cut": "a865a55212a8eed45596cc4b6e8423eb582064c95bd5abe3dbd41ea7a279733e",
     "run": 37169483364,
     "jobs": {
-      "jointNativeSdk": 111339329354,
-      "resource": 111339329411,
-      "owning": 111339329448,
-      "regression": 111339329496
+      "joint111339329354": "FAILURE",
+      "resource111339329411": "SUCCESS",
+      "owning111339329448": "FAILURE",
+      "regression111339329496": "FAILURE"
     },
-    "state": "ALL_FOUR_ACTUAL_JOBS_IN_PROGRESS",
+    "state": "COMPLETE_JOINT_OWNING_REGRESSION_FAILED_RESOURCE_PASSED_ORIGINAL_CAUSE_UNKNOWN",
     "manifest": {
       "path": "/workspace/astra-source/worker2-joint05-sdk-native-package08-actuale0c-compiler-corrective/manifest.json",
       "bytes": 41840,
@@ -1413,6 +1358,49 @@
       "bytes": 2694,
       "sha256": "60043fb5423dfb7869cd80e0dfabcf5e0fa7b9c9d4492ccde90d936c4e6e7452"
     },
-    "qualification": "CompleteA3+A6metadata/sourcepeersCLEARqualified; unchanged643/54acrootconstruction+push+dispatch. Onlyfour exactcausal source products/catalog changed, old190/237/cohorts2151248/fullDebugRelease16tests2console4builds/sourcePDB/Compile/task/native/restores/originaldrains retained. No acceptance or OS222/platform/attachment/Terra selection."
+    "qualification": "CompleteA3+A6metadata/sourcepeersCLEARqualified; unchanged643/54acrootconstruction+push+dispatch. Onlyfour exactcausal source products/catalog changed, old190/237/cohorts2151248/fullDebugRelease16tests2console4builds/sourcePDB/Compile/task/native/restores/originaldrains retained. No acceptance or OS222/platform/attachment/Terra selection.",
+    "cause": "UNKNOWN. Whole outer joint155465B/59dcf8 and regression22090B/61e99e logs do not expose original childcause. No source retry from generic exit.",
+    "index": {
+      "path": "/workspace/attachments/b53ed422-c9ad-43c9-8d37-44cd7269eb1d/sdk08-original-index-11290996681.zip",
+      "bytes": 22238,
+      "sha256": "0a8cb57c5050f68176834fa38a77a19b5b09ab0cdcb05b70c7aac237b9c5d078",
+      "files": 384,
+      "pieces": 343,
+      "fullFileBytes": 49108754,
+      "totalAllocatedBytes": 57344,
+      "originalPartsAcquired": 0
+    },
+    "next": "Frozen178846B fixedactual4f/run reader3originalartifacts/all384replay/all370text plus330wholecausal upload fullA4A5peer pending. No localcompressedfit/cause/drain/nativeclaim."
+  },
+  "currentForms13": {
+    "actual": "fafb9b5a9889975ae252eb13b3b6877378b020d2",
+    "run": 37168818529,
+    "jobs": {
+      "owning111337361003": "FAILURE",
+      "resource111337361170": "SUCCESS",
+      "regression111337361521": "SUCCESS"
+    },
+    "cause": "Positive actual restored graph/package payload equality guard failed. Outer22909B/f7a823\u2026 line names guard; actual full metadata bytes/producer/writer cause UNKNOWN.",
+    "owningArtifact": {
+      "id": 11290689956,
+      "bytes": 8013708,
+      "sha256": "cb63caf2cc555236f041f17827c2fe5d2e4a6f0bca039b48889b62bce1c95ab8",
+      "acquired": false
+    },
+    "ramEndpoint": {
+      "path": "/workspace/astra-source/worker3-forms13-owning-ram-original-review01/endpoint-refusal.json",
+      "bytes": 1099,
+      "sha256": "f1f8a9ab625931387772ab0b0c95eca15c3f570001517698666d7dca806ad89b",
+      "category": "URLError",
+      "httpStatus": null,
+      "originalAcquired": false,
+      "qualification": "One exact authorized RAM endpoint attempt did not obtain response; no ZIP/CRC/body proof. Connector alternate and exact localspace admission continue."
+    },
+    "next": "Connector actualoriginalacquisition after lossless oldmetadata retention + unchangedfloor/reserve; no guard waiver/retry."
+  },
+  "currentRootCheckpoint": {
+    "path": "/workspace/astra-source/root-teamA-current-continuation929.json",
+    "bytes": 49214,
+    "sha256": "b9e736d0ec14aa8ec7f102726effb175597340f83739e5f8f7ec808d67222e52"
   }
 }
