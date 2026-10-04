@@ -9,7 +9,8 @@
     ".github/workflows/team-c-present-workspace-windows.yml",
     "eng/release-validation/present-workspace-windows/README.md",
     "9to1 Workspace/Present/Tests/PresentWorkspaceCompositionTests.cs",
-    "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj"
+    "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Freeform.cs"
   ],
   "sourcePins": [
     {
@@ -678,6 +679,13 @@
       "gitBlob": "eafccb98196ed8ef72286845276487ece2fc7180"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.cs",
+      "bytes": 20685,
+      "sha256": "dfd7c06bafecbe30d301511d4afa76d8b67c3dc0459e7644cc5d4524219b9303",
+      "gitMode": "100644",
+      "gitBlob": "dbf6375985fedc28034e346dd9b01df11e4a3a43"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
       "bytes": 700,
       "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d",
@@ -746,6 +754,20 @@
       "sha256": "b109d2333a07ebca06da23e882af803c246f5306326c02d3663ea12c3d2c8af5",
       "gitMode": "100644",
       "gitBlob": "c1c05cda80df221195f006aa76494d30aad548db"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Freeform.cs",
+      "bytes": 7622,
+      "sha256": "66643478f6d414a4428f032801c833efe7fe10ab15f7b189d3e19c9496cf452b",
+      "gitMode": "100644",
+      "gitBlob": "e74a5e01f7947c8eb2a40b2e8830001cf3fd4ba4"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.cs",
+      "bytes": 17371,
+      "sha256": "12aa12a13dd5acba044e58aa2dea31265ca1b9265006bfb7e908e719bc1430b6",
+      "gitMode": "100644",
+      "gitBlob": "83946858a901c9a6c628abb1c6c35a4ffd2b1b36"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Phase2.cs",
@@ -1428,5 +1450,26 @@
     "DIAndAuthorization": "UNCHANGED",
     "owning15Shared7AndOriginalNativeUiCriteria": "UNCHANGED",
     "qualification": "Available original typed owner source closure; actual compilation/runtime still required."
+  },
+  "retainedOriginalBoardsCompilerNegative": {
+    "runId": 37229062327,
+    "head": "1e8744f4529327052328cb94a63c88534aee3a8d",
+    "artifactId": 11313093463,
+    "custodyArtifactId": 11313237975,
+    "originalSitesClosure": "Existing Sites and Files.NativeHost actual modules compiled; previous four CS0246 resolved",
+    "originalRemainingCause": "CS0103 existing BoardsPageLayoutMode in BoardsPage.Freeform.cs lines25/56: missing file-local Haven.Application import",
+    "owningCasesExecuted": 0,
+    "sharedCasesExecuted": 0,
+    "packageProduced": false,
+    "nativeUiExecuted": false,
+    "sourceAfterUnchanged": true
+  },
+  "reviewedOriginalBoardsImport": {
+    "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Freeform.cs",
+    "addition": "using Haven.Application;",
+    "owningEnumSource": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.cs",
+    "maintainedMainPartialImportSource": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.cs",
+    "scope": "One existing namespace import only; no enum/lock/authority/placement/persistence/UI policy/test change.",
+    "qualification": "Actual receiving whole-source compile/15/shared7/newpackage/native UI still required."
   }
 }
