@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "b1beba064b238455a15702d35660a240a9767e2f",
+  "candidateHead": "2eacceb7b087db68fdd4feb876e17fdabacba270",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -152,7 +152,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T10:14:49.867788+00:00",
+  "updatedUTC": "2026-10-04T10:35:03.463731+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
@@ -161,7 +161,7 @@
     "browser": "Post-restart available connector MCP SSE HTTP404; no DOM control",
     "qualification": "No write/CLI/deployment/paid entitlement/allocation/quota/service journey/fullrelease acceptance; resources unchanged"
   },
-  "executionStatus": "BLOCKED_EXTERNAL_DEPENDENCIES_REVIEWABLE_HANDOFF_PUBLISHED",
+  "executionStatus": "WAITING_PUBLISHED_HOST_ALLOWANCE_ANONYMOUS_HTTPS_DRIVER_READY",
   "currentOwnerRequests": {
     "workersAiMetadata": {
       "owner": "Team A maintained provider and current test-project closure",

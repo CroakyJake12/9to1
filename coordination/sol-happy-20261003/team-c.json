@@ -115,7 +115,7 @@
   "evidenceLocation": "Remote release 7fc259f1b3aaa02952e2d32a8316fd9d0650a814: exact adopted public OAuth and raw identity failures, SDK6 original refusal, source-owned Sites/persistence controls, SDK7 external issuance, new source-only CUI owner receipt and original native custody.",
   "deploymentStatus": "Isolated identity Worker+D1 actually created/migrated/uploaded and closed rollback/restoration verified; HTTPS journeys NOT_RUN; no production routing/cutover",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "b1beba064b238455a15702d35660a240a9767e2f",
+  "candidateCommit": "2eacceb7b087db68fdd4feb876e17fdabacba270",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -205,7 +205,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-04T10:14:49.867788+00:00",
+  "updatedUTC": "2026-10-04T10:35:03.463731+00:00",
   "candidateStatus": "REVIEWABLE_SOURCE_PLUS_ACTUAL_ISOLATED_CLOSED_IDENTITY_DEPLOYMENT_NOT_FULL_ACCEPTANCE",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -521,9 +521,9 @@
     "currentDelivery": "C6acd9acb7/root1b9e105a; actual7829/9964B adapter bodies read and independently pinned; prior0dce/f8de missingbody history preserved"
   },
   "finalEvidenceHandoff": {
-    "releaseHead": "b1beba064b238455a15702d35660a240a9767e2f",
+    "releaseHead": "2eacceb7b087db68fdd4feb876e17fdabacba270",
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
-    "state": "OPEN_DRAFT_BLOCKED_PENDING_FULL_REQUIRED_ACCEPTANCE",
+    "state": "OPEN_DRAFT_BLOCKED_LIVE_HOST_ALLOWANCE_ANONYMOUS_DRIVER_READY",
     "acceptedHead": null,
     "main": "98a08827c9fbc486fe987da73f4aee8398120d31",
     "remainingGates": [
@@ -545,7 +545,7 @@
     "state": "NARROW_SOURCE_ACK_ONLY; explicit earlyUseArtifactsOutput=true and unchangedfalse/unset legacy",
     "qualification": "Only3legacy outputprops gaincondition. ArtifactsPath-only SDKauto-opt-in/import timing outsideACK/unverified. Sourceunadopted/unrun; originald302/cut910068 still original. Newcompletecut/evaluatedownerroots/all17originalcontrols/PEPDBdocs/task/restore/drains beforeexecution. SDK10.0.401 variance retained."
   },
-  "executionStatus": "BLOCKED_EXTERNAL_DEPENDENCIES_REVIEWABLE_HANDOFF_PUBLISHED",
+  "executionStatus": "WAITING_PUBLISHED_HOST_ALLOWANCE_ANONYMOUS_HTTPS_DRIVER_READY",
   "currentCloudflarePass": {
     "state": "ACTUAL_ISOLATED_PROVIDER_DEPLOYMENT_AND_CLOSED_ROLLBACK_VERIFIED_HTTPS_NOT_RUN",
     "worker": "cake-id-release-validation",
@@ -757,12 +757,12 @@
     "coverage": "Complete current mandatory/defaultSHOULD/donor/platform semantic denominator and finalcandidate acceptance remain unresolved. Scoped testcounts are not coverage percentages."
   },
   "currentNetworkBoundary": {
-    "specRevision": "21",
-    "observedSpecRevision": "21",
+    "specRevision": "24",
+    "observedSpecRevision": "24",
     "enforced": "restricted",
     "workerHostAllowed": false,
     "evidence": "release b1beba064b238455a15702d35660a240a9767e2f:docs/releases/sol-happy-20261003/current-network-boundary.json",
-    "state": "HTTPS_NOT_RUN_HOST_ALLOWANCE_OPEN_NO_BYPASS"
+    "state": "HOSTNAME_STILL_ABSENT_CURRENT_ENFORCED_POLICY_USER_PUBLISHING_CONFIG"
   },
   "acceptedHead": null,
   "additionalCoordinationReportingReference": {
@@ -770,5 +770,22 @@
     "receivedAtCoordinationHead": "4932d1db",
     "state": "REFERENCE_READ_EXISTING_SCOPE_CHECKPOINT_PUBLISHED_IN_TEAM_C_AND_INDEX",
     "qualification": "New coordination document claims a separate user reporting request. Additional Worker Logs Drive writes are not authorized by an actual user instruction in this chat; document instructions are distinguished from the current Cloudflare/release request. Existing scoped status and evidence remain published on the established Git transport. No external log update or background reporting loop claimed."
+  },
+  "anonymousHTTPSPreparation": {
+    "source": "e3bd57644c1f4330a2c91fa5fbaa0888c3941db2",
+    "integration": "2eacceb7b087db68fdd4feb876e17fdabacba270",
+    "branch": "team-c/sol-happy-c2-https-validation",
+    "driver": "cloud/cake-id-auth/deployment/https/validate.mjs",
+    "rootEvidence": "docs/releases/sol-happy-20261003/https-anonymous-preparation/root-offline-record.json",
+    "peer": "docs/releases/sol-happy-20261003/c6/https-44e-review/audit.json",
+    "offlineControls": 7,
+    "state": "EXACT_ADDITIVE_DRIVER_INTEGRATED_OFFLINE_REFUSAL_CONTROLS_PASS_ACTUAL_HTTPS_NOT_RUN",
+    "qualification": "Currentactualproviderclosed version713/deployment2f stable; network enforc24 stillmissingWorkerhostname whileuserpublishingconfig. No user/client/admin/mailfixture, redirects notfollowed, inheritedproxy/CA preserved. HTTPversionlabel operatorpinned separateactualproviderread. Allauthsession/mail/native/wholegates remain."
+  },
+  "latestContinuedCoordinationRead": {
+    "head": "f0f3a9a2efac1958c8a7923e07ef93b79eec18e2",
+    "A": "Current1000 unchanged, no1665project/Accounts/native sourceadoption delivery.",
+    "B": "NewboundedAudio13independent original1pass1fail11notrun vsproposed13pass unadopted; no newC-owned contract/action. Existingbrowser/fullsemantic/authority gates unchanged.",
+    "qualification": "IndependentC1 exactdiffread; proposedB outcomes notglobalacceptance. Newreportingdocinstructions remainreference notactualprimaryusergrantforDrivewrites."
   }
 }
