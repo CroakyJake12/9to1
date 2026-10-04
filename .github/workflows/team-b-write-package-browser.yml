@@ -1,0 +1,94 @@
+name: Team B actual Write native package browser workflow
+on:
+  push:
+    branches: ["team-b/**"]
+    paths:
+      - "apps/Web/**"
+      - "9to1 Workspace/shared/src/**"
+      - "framework/CUI/**"
+      - ".github/workflows/team-b-write-package-browser.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-package-workflow:
+    if: startsWith(github.ref, 'refs/heads/team-b/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Initialize real native build gitlinks
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Publish real current browser source
+        run: >-
+          python3 apps/Web/Tests/ci/run-ordinary-web-publish.py
+          --expected-commit '${{ github.sha }}'
+          --output "$RUNNER_TEMP/write-package-publish"
+      - name: Install maintained Playwright and Chromium
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/write-package-tools/node_modules/playwright
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/write-package-tools/browsers
+        run: |
+          npm install --prefix "$RUNNER_TEMP/write-package-tools" --ignore-scripts --no-package-lock --no-audit --no-fund playwright@1.62.0
+          node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium
+      - name: Native source fixture then real Write browser and original codec readback
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/write-package-tools/node_modules/playwright
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/write-package-tools/browsers
+        run: >-
+          python3 apps/Web/Write/Tests/ci/run-write-package-browser.py
+          --expected-commit '${{ github.sha }}'
+          --publication "$RUNNER_TEMP/write-package-publish"
+          --output "$RUNNER_TEMP/write-package-run"
+      - name: Preserve original failures and explicit synthetic package bytes only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-native-package-browser-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/write-package-run/diagnostics
+            ${{ runner.temp }}/write-package-run/raw/results.json
+            ${{ runner.temp }}/write-package-run/raw/saved-storage.json
+            ${{ runner.temp }}/write-package-run/raw/reopened-native.png
+            ${{ runner.temp }}/write-package-run/raw/first-process.zip
+            ${{ runner.temp }}/write-package-run/raw/second-process.zip
+            ${{ runner.temp }}/write-package-run/raw/failed-process.zip
+            ${{ runner.temp }}/write-package-run/fixture/source.9to1w
+            ${{ runner.temp }}/write-package-run/fixture/tampered.9to1w
+            ${{ runner.temp }}/write-package-run/fixture/downloaded.9to1w
+            ${{ runner.temp }}/write-package-run/fixture/expected-canonical.json
+            ${{ runner.temp }}/write-package-run/fixture/native-seed.json
+            ${{ runner.temp }}/write-package-run/fixture/native-seed-results.json
+            ${{ runner.temp }}/write-package-run/fixture/native-verify-results.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Preserve genuine publisher evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-native-package-publisher-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/write-package-publish/diagnostics
+            ${{ runner.temp }}/write-package-publish/public-artifact
+          if-no-files-found: warn
+          retention-days: 7
