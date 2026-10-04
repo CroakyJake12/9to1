@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "repository": "CroakyJake12/9to1",
+  "head": "8252cfe22696c218479fbf7a0f88e52ea4047b5c",
+  "tree": "ce521464467ef5bb90eb099c70f99a7ac74b0d74",
+  "runId": 37197248753,
+  "runAttempt": 1,
+  "sourceBranch": "validation/astra-forms-math01-24531d46",
+  "artifacts": [
+    {
+      "lane": "forms-owning",
+      "role": "direct-zip",
+      "id": 11302440759,
+      "name": "astra-forms-math01-owning-8252cfe22696c218479fbf7a0f88e52ea4047b5c",
+      "bytes": 28517533,
+      "sha256": "e638b47a90e7715031b4f2ba289cdb420f664d0590d249c82df0f4eebfff5921",
+      "uploaderClaimedFileCount": 639,
+      "originalJobId": 111421559258
+    },
+    {
+      "lane": "forms-resource",
+      "role": "direct-zip",
+      "id": 11301975476,
+      "name": "astra-forms-math01-resource-8252cfe22696c218479fbf7a0f88e52ea4047b5c",
+      "bytes": 5671614,
+      "sha256": "98b6fcedc24f3d1261ccad59e2dd9ffa70af5c4a372ddabae9ffa8b346c022fa",
+      "uploaderClaimedFileCount": 192,
+      "originalJobId": 111421559204
+    }
+  ],
+  "limits": {
+    "archiveAttemptBytes": 34189147,
+    "expandedAttemptBytes": 134217728,
+    "ramWorkingSetBytes": 536870912,
+    "ramAvailableFloorBytes": 536870912,
+    "filesystemFreeFloorBytes": 943718400,
+    "outputAttemptBytes": 67108864,
+    "outputAllocationReservationBytes": 83886080,
+    "maxOutputFiles": 1540,
+    "apiBodyBytes": 131072,
+    "apiAttempts": 16,
+    "pdbExpandedBytes": 16777216,
+    "reportSlotBytes": 2097152,
+    "diagnosticSlotBytes": 262144,
+    "maxArchiveMembers": 768,
+    "maxMemberBytes": 67108864,
+    "inventorySlotBytes": 524288
+  },
+  "downloadHosts": {
+    "regex": "^productionresultssa[0-9]{1,3}\\.blob\\.core\\.windows\\.net$",
+    "pathPrefix": "/actions-results/",
+    "redirectsAllowed": 1,
+    "authorizationForwarded": false
+  },
+  "selection": {
+    "wholeSuffixes": [
+      ".log",
+      ".json",
+      ".stdout",
+      ".stderr",
+      ".txt",
+      ".xml",
+      ".trx",
+      ".py",
+      ".cs",
+      ".props",
+      ".targets",
+      ".yml",
+      ".yaml",
+      ".pem",
+      ".metadata"
+    ],
+    "wholePrefixes": [
+      "forms-original-native-process-drain/",
+      "ordinary-process-drain/",
+      "sites-isolated-added-query-process-drain/",
+      "forms-original-native-sites-metadata/",
+      "sites-isolated-after-original-query-evidence/"
+    ],
+    "binarySuffixesNotPublished": [
+      ".dll",
+      ".pdb",
+      ".so",
+      ".a",
+      ".der",
+      ".exe",
+      ".zip"
+    ],
+    "qualification": "Every authenticated Forms17 owning/resource monolithic archive member is fully read and CRC/SHA hashed before ANY original text publication. Family identity is (lane,path); whole selected UTF-8 includes all original .metadata and ordinary dgspec/cache bytes. Both actual archive layouts/member counts/index presence/text counts/bytes are UNKNOWN before whole admission; uploader 639/192 are claims only. Unselected binaries remain remote with complete derived hashes; no invented original index/task/Compile/drain/native witness."
+  },
+  "taskEvidence": {
+    "project": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+    "beforeSnapshot": "avalonia-build-tasks-compiled-before.json",
+    "retainedPe": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "retainedPdb": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.pdb"
+  },
+  "originalEvent": "workflow_dispatch",
+  "originalWorkflowId": 362661383,
+  "originalWorkflowPath": ".github/workflows/haven-chat-model-ci.yml"
+}
