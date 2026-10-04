@@ -1,0 +1,58 @@
+# Original packaged Canvas native workflow controls
+
+This isolated provisional harness reuses original producer run37203799923/source
+e2effba426353978b11fc1c0f2fc8e3e533318e4. The101,349,818-byte inner package
+SHA256dd24a1082fa6ac571068d3b0bcf941bbb497c4d7f07a67eb78752a15f711ef0a
+and all418 original extracted manifest members must match before launching
+HavenOS.Canvas.Host.exe. Original binary wrapper11304710012 and read-only
+inspector manifest artifact11303769280 are independently pinned to their actual
+producer/inspector run/head tuples. The inspector did not execute another app.
+The harness does not rebuild the app, repeat old normal tests or use a model API.
+
+The actual default OS profile must start without an existing Home state or
+backup. Source-declared HomeLocalProfileIdentity creates its canonical local
+profile from the actual OS principal through the guarded real store. The harness
+passes no identity/environment override and reports only a hash of this private
+profile identity. Existing state refuses the workflow and is preserved.
+
+Actual Set up Canvases invokes the app's native folder picker. Standard Ctrl+L
+and keyboard input enter an exclusively owned empty fixture directory. Actual
+OS address navigation and its default accessible button must be observed before
+choice. Unsupported OS automation refuses instead of injecting a picker result,
+Files configuration, actor, owner grant or capability. The app's existing Files
+setup creates and binds that chosen empty workspace; root-directory identity is
+read back from owner-produced Home state and never supplied as app authority.
+
+The real native name editor and Create canvas command submit a canonical Home
+request. The trusted embedded native Home surface must show the exact bounded
+create preview, one pending request and zero trust grants. Accept once then
+Finish approved request invoke the existing digest/actor/one-shot owner path.
+This grants no extended trust. A baseline canonical Files/app document is read
+only from the app-produced current revision and its declared physical reference.
+
+Actual Pen selection and bounded mouse input inside the current owned native
+canvas-surface submit a second exact stroke request. Every gesture point uses
+real screen geometry, owning process, foreground and UIA ancestor hit-test guards;
+mouse transitions also recheck current cursor/foreground PID. Before approval,
+the committed Files revision must remain the blank baseline. The second native
+Accept once/Finish must produce a new durable Files/app revision, one generated
+canonical stroke/path, matching native stroke binding and a visible screenshot.
+The stroke transaction is the actual durable save operation. No Ctrl+S or Flush
+operation is invented: the existing host has no owning generic Flush dispatcher.
+
+Normal zero-exit close, bounded stdout/stderr drains and a second real package
+launch use the same actual private OS profile/workspace. Refresh Canvases/Open
+selected must recover the native display and exact canonical current revision,
+identity/hash/one-stroke data. No fixture/model/provider file is rewritten by the
+harness. Uncertain requests are not resubmitted; absent native controls, picker,
+Home readiness, geometry, DLL rendering or other failures stay original failures.
+Only the two task-launched processes may be cleaned up; forced cleanup, unresolved
+mouse release or stream/cleanup failure blocks success.
+
+Only bounded JSON observations, original process logs and actual foreground
+screenshots are uploaded. Profile/provider/model payloads, package binaries and
+credentials are excluded. This is an SDK-present standalone local-profile Files
+and embedded same-process Home workflow. Installed cross-app Home handshake,
+account/ACL authority, clean-PC/signing, donor breadth and full-app/source-owner
+acceptance remain unaccepted. Independent C6 review and root sole push/invocation
+are required before actual Windows runtime claims.
