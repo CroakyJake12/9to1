@@ -1,0 +1,8 @@
+{
+  "frozenSource": "10eff17d6341fe36093bbb6622a0f68e076c55ca",
+  "parent": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
+  "soleChangedPath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Worker02BackgroundLearningTests.cs",
+  "sourceSha256": "824b3bf7cbb13fb5c1a1d604f0d518f3c4dc1de8ad94aeae818a7e27ffbd6c74",
+  "sourceBytes": 31204,
+  "review": "Original actual numbered migration17alreadycreates legacytables; redundantCREATE removed; originalINSERTand5assertions preserved plus7newcolumnabsence/presence,metadata,reopen/idempotentrow/schema checks. No productionmigration/service edits."
+}

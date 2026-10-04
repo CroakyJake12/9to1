@@ -1,0 +1,17 @@
+{
+  "peCount": 359,
+  "portablePdbCount": 271,
+  "pdbCount": 271,
+  "entryDLL": {
+    "path": "bin/FilesBrowser.Tests/release_linux-x64/FilesBrowser.Tests.dll",
+    "sha256": "1a26fd6e8ae7dd50314c23f9f60cd42d9d2d75f3bfe09f808581cc3d5559af87"
+  },
+  "apphost": {
+    "path": "bin/FilesBrowser.Tests/release_linux-x64/FilesBrowser.Tests",
+    "sha256": "8a142284f93dbb2c1414a713131c9796cb67a5b94e9c6df420d077cc2197c2d2"
+  },
+  "ownerBuildTask": {
+    "sha256": "76f54b6927e90bf73f564b60fde22d6cc50307d995df381506f3863c8c248e81",
+    "bytes": 754176
+  }
+}

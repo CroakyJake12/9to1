@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "scope": "ACK exact3 additive actual EEC CompileIncludes for ordinary maintained WriteScene; preserve2 differentexisting bodies",
+  "ownerCommit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "receivingCommit": "c8783e049fd03efd7f1798e47d6bc7806fb30844",
+  "comparedItems": 31,
+  "stateCounts": {
+    "same": 25,
+    "differentExisting": 2,
+    "missingReceiving": 4
+  },
+  "missingCompileInputs": [
+    {
+      "kind": "Compile",
+      "pattern": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ChatComposerController.cs",
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ChatComposerController.cs",
+      "owner": {
+        "gitBlob": "85a53e4d93a64c1388222a6a8fab37e38248385a",
+        "bytes": 8129,
+        "sha256": "b4bf7954d1a7a16fd0add1dd6811a5b1d1b806da8120920cb78d5dd204f63612",
+        "mode": "100644"
+      },
+      "receiving": null,
+      "state": "missingReceiving"
+    },
+    {
+      "kind": "Compile",
+      "pattern": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ComposerEmojiCatalogue.cs",
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ComposerEmojiCatalogue.cs",
+      "owner": {
+        "gitBlob": "0f9c9a428058fa45df66b99ae0f5e84d2d41a5b5",
+        "bytes": 1967,
+        "sha256": "5b749c15a76da1d5fa7f871362962dcf4b6927b954f832a562188a9cb6beb436",
+        "mode": "100644"
+      },
+      "receiving": null,
+      "state": "missingReceiving"
+    },
+    {
+      "kind": "Compile",
+      "pattern": "9to1 Workspace/shared/src/Haven.Infrastructure/Preferences/LocalMotionPreferencesService.cs",
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Preferences/LocalMotionPreferencesService.cs",
+      "owner": {
+        "gitBlob": "37c9aee3ae6a2a4410862d8ddfa3ac1f9124bb74",
+        "bytes": 6820,
+        "sha256": "80eb1fad1628e0ecd7e13fb2a9133bb51e1146d893e5eda4aeef4075294abb28",
+        "mode": "100644"
+      },
+      "receiving": null,
+      "state": "missingReceiving"
+    }
+  ],
+  "existingDifferingBodiesPreserved": [
+    "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/MotionPreferencesService.cs"
+  ],
+  "sourceAudit": "PASS all31 old/newmode/blob/SHA/size presence",
+  "runtimeEmojiResource": "UNVALIDATED existing Scene project has no EmbeddedResource logicalHaven.Desktop.Resources.emoji-test-17.0.txt; fullHome/Writeemoji acceptance remainsblocked",
+  "functionalAcceptance": "NOT_RUN new receivingadditioncandidate must run unchangednavigation5normaldriver",
+  "missingRuntimeResource": [
+    {
+      "kind": "runtimeResourceOrPinnedOwnerTheme",
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/emoji-test-17.0.txt",
+      "owner": {
+        "gitBlob": "e42fdef494399d2a05b9b75930a3231fe81b2436",
+        "bytes": 669326,
+        "sha256": "1d8a944f88d7952f7ef7c5167fef3c67995bcae24543949710231b03a201acda"
+      },
+      "receiving": null,
+      "state": "missingReceiving"
+    }
+  ]
+}

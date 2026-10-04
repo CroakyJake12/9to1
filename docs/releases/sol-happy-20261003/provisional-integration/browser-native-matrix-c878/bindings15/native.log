@@ -1,0 +1,16 @@
+PASS canonical CUI markup parses without errors
+PASS unavailable service exposes no account data and cannot edit
+PASS trusted sign-in callback alone cannot grant account or edit access
+PASS sign-in survives its own private view cleanup without stale refresh or presentation
+PASS explicit caller cancellation still cancels sign-in after private view cleanup
+PASS profile edits save changed fields and exact original revision only
+PASS required Name and Username reject whitespace before API dispatch
+PASS conflict retains original draft/revision and requires explicit reload
+PASS HTTP permission denial clears all prior private state
+PASS session selection requires current exact server ID and confirmation
+PASS session mutation survives disposal caused by its own private cleanup
+PASS closing private view cancels pending reads and discards late account data
+PASS cross-account profile observation clears prior private data
+PASS malformed service reply is unavailable and clears private state
+PASS presentation exception in finally releases the command gate
+Discovered=15 Executed=15 Passed=15 Failed=0 Skipped=0

@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "sourceCommit": "c8783e049fd03efd7f1798e47d6bc7806fb30844",
+  "summarySha256": "8b22fbc202423ec7f3b2d19b15c227bf25c5a12d83ad5d10918a6469cf404207",
+  "indexedSafeFiles": 29,
+  "actualSafeFilesIncludingSummary": 30,
+  "sourcePinsVerified": 19,
+  "exactRawReceiptCopies": true,
+  "secretPatternScan": "CLEAR",
+  "qualification": "Safe nativecase evidence only; fixture/privateprofile/oracle bodies excluded; originalfailures and browser/provider/Windows/fullacceptance limitations preserved"
+}
