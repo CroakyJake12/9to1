@@ -1,6 +1,6 @@
 {
   "schema": "9to1-mail-goal-coordination-request/v1",
-  "status": "REQUESTED_NOT_ACKNOWLEDGED",
+  "status": "REVIEWED_DRAFT_PUBLISHED_OWNER_WINDOWS_GATES_BLOCKED",
   "requestedAtUTC": "2026-10-04T16:30:00Z",
   "userAuthorization": "User explicitly replied Yes, coordinate with Team A/C in this Mail chat.",
   "recipients": [
@@ -32,8 +32,8 @@
     "sdk": "Linux .NET 10.0.401",
     "originalMailRelease": "Final intact Mail Release suite: 69 passed, 3 failed, 0 skipped, 72 total. Three required real TLS tests still fail HAVEN_MAIL_FIXTURE_HOST configuration. Original assertions unchanged.",
     "package": "Mail project is a library; no accepted installed graphical entrypoint or Mail package supplied.",
-    "proposalWork": "Send/currentness and encrypted-store repairs frozen. UI mutation acknowledgement work continues through real binding review. Detailed provider findings retained in workspace pending publication authorization.",
-    "graphBoundary": "Bounded synthetic-token provider regression reproduced. Detailed findings remain in the Mail workspace pending specific public-repository publication authorization.",
+    "proposalWork": "Final reviewed source and additive tests published in draft PR #8. Exact source/criteria/evidence preserved in local handoff. Full Windows goal blocked on named owner/provider/installed runtime/package/delivery gates.",
+    "graphBoundary": "Public publication of Graph fix/tests explicitly approved by Jacob; included in draft PR #8.",
     "releaseWinX64Build": "PASS zero warnings/errors; HavenOS.Mail.dll only, no graphical executable or package.",
     "localIndependentReview": "Non-author review and separate Linux reproduction of 56 new domain/store regressions plus bounded provider controls passed. No Team A reviewer appointment/adoption or Windows acceptance claimed.",
     "candidateCheckpoint1730London": "MISSED: no accepted Mail entrypoint/Home tuple/package supplied."
@@ -44,5 +44,39 @@
     "No authorized connected-provider fixture",
     "No independently reviewed Windows acceptance/delivery"
   ],
-  "updatedUTC": "2026-10-04T16:46:58.312386+00:00"
+  "updatedUTC": "2026-10-04T17:05:26.108467+00:00",
+  "proposal": {
+    "pullRequest": "https://github.com/CroakyJake12/9to1/pull/8",
+    "publicHead": "a431e3ca9d3002c74fc90f98377253120d0dfd48",
+    "baseline": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "sourceTree": "ed692ccee1f9cccb0b37fd633da83cd6a06e7979",
+    "changedFiles": 10,
+    "state": "DRAFT_UNADOPTED_NO_OWNER_HANDOVER_ACK",
+    "review": "Local separate non-author source review/reproduction complete; no canonical Team A reviewer appointment claimed",
+    "results": {
+      "MailRelease": {
+        "passed": 69,
+        "failed": 3,
+        "skipped": 0,
+        "cause": "Original required real-TLS fixture unavailable"
+      },
+      "InfrastructureSelectedRelease": {
+        "passed": 10,
+        "failed": 0
+      },
+      "DesktopSelectedDebugAndReleaseEach": {
+        "passed": 73,
+        "failed": 0,
+        "skipped": 0
+      },
+      "WinX64LibraryBuild": "zero warnings/errors; no executable/package"
+    },
+    "localHandoff": "/workspace/mail-evidence-20261004/handoff/README.md",
+    "localReviewArchive": {
+      "path": "/workspace/mail-evidence-20261004/mail-repair-review.zip",
+      "bytes": 310476,
+      "sha256": "51a7f6d72e237b673771608c498b28e2e50571621eed0aa0d6eb877c98e355cf",
+      "kind": "SOURCE_REVIEW_EVIDENCE_NOT_APP_PACKAGE"
+    }
+  }
 }
