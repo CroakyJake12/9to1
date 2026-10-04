@@ -74,7 +74,9 @@ public sealed class HomeUnixCoreTransportTests
                 await rig.Permissions.ReadRequestObservationAsync(requestId!, rig.Token));
             Assert.True(original.Caller.IsVerified);
             Assert.Equal("9to1.Home." + operation, original.Scope.ActionName);
-            Assert.Equal(rig.Actors.Current.ProfileId, Assert.Single(original.Scope.Objects).ObjectId);
+            var scopedObject = Assert.Single(original.Scope.Objects);
+            Assert.Equal(operation == "GetService" ? "home.service" : "home.service-registry", scopedObject.ObjectType);
+            Assert.Equal(operation == "GetService" ? "home.core" : rig.Actors.Current.ProfileId, scopedObject.ObjectId);
             Assert.Equal(HomePermissionRequestState.PendingApproval, original.State);
             Assert.Equal(0, rig.Api.Reads);
         });

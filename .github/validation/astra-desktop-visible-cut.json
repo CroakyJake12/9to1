@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
-  "programTree": "27f0642a657dc45a098731e783ab1df286858ced",
+  "baselineCommit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+  "programTree": "a195bc888c2a02ba1be35c3a3aed5559bdad6352",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -109,6 +109,20 @@
       "object": "2e264971aa8dba2c7f7bc38ff412e8a3e6596fb7",
       "bytes": 4492,
       "sha256": "2fd9467cfa71be3f88ce960f4dae13dd61fc7d13bb936c25f41dda31c1161277"
+    },
+    {
+      "path": ".github/scripts/astra-home437-caller.py",
+      "mode": "100644",
+      "object": "5862a889f4c41243a5376e7fa641be95cea2b3a1",
+      "bytes": 13426,
+      "sha256": "796dee048c7be831b3e0d918f696f9d65a5194d1aafff52b179e9fffe0af4f9b"
+    },
+    {
+      "path": ".github/scripts/astra-home437-original.py",
+      "mode": "100644",
+      "object": "7df558eea8f41df9df8b212ea69264c05da82c4e",
+      "bytes": 60274,
+      "sha256": "a6751025f51bcc1d17148c908a7f568c673d24f4b2641ac52941eb6facc21e14"
     },
     {
       "path": ".github/scripts/astra-joint-native-sdk01-owning.py",
@@ -235,6 +249,13 @@
       "object": "9254781dc901f366e2669446c4586efcfdf101bc",
       "bytes": 44010,
       "sha256": "85c24284b8f28af728bafd0c4375cad223f6dff2623aba23c62072a659a78a57"
+    },
+    {
+      "path": ".github/validation/astra-home437-sources.json",
+      "mode": "100644",
+      "object": "f3f4b29a3d393875fb15be721ae846bb94a726d5",
+      "bytes": 235430,
+      "sha256": "70a0d908eeabd06c708d71751d52618de797fd8f11e0fa0a1e0383c6eeb7a151"
     },
     {
       "path": ".github/validation/astra-joint-native-sdk01-sources.json",
@@ -393,9 +414,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "7725883cc0b1bfa3b98995c4f0ee39d7a86bb58a",
-      "bytes": 18602,
-      "sha256": "c6212457040ee98e0772bd5560ebe1b15d86f8d1e905390c64453ece401b72ab"
+      "object": "230efe4e41e310c90ac2b39d395800eef96e54c6",
+      "bytes": 26994,
+      "sha256": "0c4b809f0d40e8be19538706a09ed08d56f76c1f9973a29170ca2aff220e4074"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -23563,9 +23584,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionAdmissions.cs",
       "mode": "100644",
-      "object": "f4fd81642f0d4c6c1bdc5b89186793bfa83a647c",
-      "bytes": 72664,
-      "sha256": "abb0a1ff6e3909855097763d56d205d76bcb4b55d2dd203486d0cf301f0cd788"
+      "object": "214eec8ed019139d91d17c9551111256b3fba1ab",
+      "bytes": 72475,
+      "sha256": "1898e68b092e8cf31166d405dd91bf846a3c82f847378fd3f624267f6d3d2b77"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionHost.cs",
@@ -23878,9 +23899,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomePersonalDenFactory.cs",
       "mode": "100644",
-      "object": "84db8ad216fd1c6e1504adf6d188eb00dee8e258",
-      "bytes": 5730,
-      "sha256": "c46b433847aedeb2c2ea904353e0526a547c4ab8a8a9bb2d6413827096a0da0c"
+      "object": "3d68cd51548a3c15496dd5ddab5cae4dfc2eebf7",
+      "bytes": 8615,
+      "sha256": "98301af6debb0889c6117d658f5a36c57c01ad4e282b842feeb8bf8c761a8953"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomePersonalModelRoutes.cs",
@@ -24478,6 +24499,13 @@
       "sha256": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb"
     },
     {
+      "path": "9to1 Workspace/Home/Tests/HomePersonalDenOriginalSessionTests.cs",
+      "mode": "100644",
+      "object": "1e6ef604d6bc97d5066e8f19b0075a9dc76b68d1",
+      "bytes": 12781,
+      "sha256": "0c438b2eb9234d2caf424f3670d98332d2e6533e5e14105f0e30a6e1f6ae0ae2"
+    },
+    {
       "path": "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
       "mode": "100644",
       "object": "b9e006bcbf3209f601df728712ea7fdf182345ec",
@@ -24578,9 +24606,9 @@
     {
       "path": "9to1 Workspace/Home/Tests/HomeUnixCoreTransportTests.cs",
       "mode": "100644",
-      "object": "d3c37999b0318a6971d52748fe7e55c11f348433",
-      "bytes": 35918,
-      "sha256": "ccf732fa1b5c66083377db85ec8009ee064165b74114cc677a356ee64d0df13d"
+      "object": "0046b201a55ce64140da629f0a938a867e810eb8",
+      "bytes": 36126,
+      "sha256": "4c0d610d3b7b23417098c05567393005fd8e8eb5098ea756fdb5999e0f32d383"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
@@ -66867,19 +66895,17 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Root selects exact failed SDK07 e0c0310e parent/tree and current semantic program tree only after complete source/custody/package peers; unchanged54ac constructor and643 launcher. No owner Git, build, SDK or native invocation.",
-    "Four actual compiler-cause product paths only: restore approved exact prompt display acknowledgement atop current C2 grant/identity service; actual IReadOnlyList/DenPermission/collection assertions; fourteen+two current xUnit3 tokens. Entire actual e0c source inverses and all original fixture bodies/assertions required.",
-    "All102 canonical source targets/29 source fixture files/190 methods/237 authored minima and38 prerequisites remain; four source hashes and three fixture hashes only change. Source minima are not executed results; all188/235 historical SDK04 minima remain mandatory.",
-    "Original215 owning/12 regression/48 resource class tables/callers/method/native/TLS/CRL/Java/task/compiled/PDB/restores/profile/shutdown/drains stay byte exact. These four product targets intersect none of the three original cohort class-source tables.",
-    "Mandatory evaluated Debug and Release matrix:22 entry restores,16 full xUnit runs,2 full original Files console executions,4 product executable builds plus source-built tasks/analyzers/full graph builds and discovery. Original22 default-configuration command templates stay exact historical recipes.",
-    "Physical actual TargetPath/AssemblyName/PE plus actual embedded-or-external Portable PDB CodeView/#Pdb identity and EVERY document hash/evaluated Compile/source byte required. Exact five pure type-only declarations retain only existing narrow exceptions with Compile/hash/full owning PE proof.",
-    "Current SDK07 task PE physical witness contains221 documents with217 evaluated Compile items, two SDK generated and two DevGenerator documents. Actual generated physical-file availability was not measured before consumer build refusal; no missing-file outcome, C counts, producer flag edit or document waiver is inferred.",
-    "Entire source-built Avalonia task target/output closure, generated/materialized source retention and independent actual restored graph/NuGet physical hash/metadata closure remain equal before/after. Original guarded creator PID/pidfd/session/strict all-command ledgers plus primary/close/persistence/post-pin errors retained.",
-    "SDK07 complete original causal archive independently validates572 safeCRC members,604 family+path file rows,537 piece descriptors and568 locally reproduced full evidence bodies. Thirty-six binary/nontext rows and221 task symbol documents are original custody-reader witnesses rather than separate local raw-part/binary replay.",
-    "Actual SDK07 joint99 original commands:98 exit0 and Home build exit1,all99 recorded seals true plus59 observed inner attempts/profile restoration. Distinct owning16 Application analyzer errors prevent later native probe; preallocated future-native marker remains false although real managed Mail caller5862 is drained.",
-    "256MiB retained evidence,16MiB command log,1200s per original command and180min SDK job remain acceptance bounds. Whole original indexed multipart transport has26MiB payload/29MiB inner/<32MiB outer/at most12 parts; no filtering or fabricated external PDB.",
-    "Every discovered full actual case/no skips plus original native outcomes remain mandatory. No ordinary installed Home/bootstrap/current actor/provider/Agent route/native UI/Dulche/Files receipt/Windows/macOS/Android/iOS acceptance from source or compiler correction.",
-    "No OS222/module lifecycle, new privacy/attachment policy, Terra pass-start, hosted/Cloud/paid-provider activation or unrelated product scope is selected by this corrective recipe."
+    "Root alone selects/constructs/pushes/dispatches unique isolated Home branch from exact actual4f/tree de2e/programTree27f with unchanged54ac constructor/643 launcher. No source owner tool/build/runtime invocation.",
+    "Exactly four preferred Home26 product targets; three entire actual4f inverse source bodies and one newfixture. All existing source/cohort/native helpers and original workflow prefix remain pinned, no Den lock/timeouts/protocol/trust guard relaxation.",
+    "Two independent fresh Debug/Release checkouts/output/task contexts execute full unfiltered Home project: all432 original exact display/class/method cases plusfive new meaningful outcomes;71 sources334 methods437 cases, allPassed/no skips. Original330 methods remain exact.",
+    "Inherited selected source catalogue104 rows/30fixture files194methods242minima preserves entire102/29/190/237 base,38 prerequisites,11 entry projects,22 default command templates. It is a source inventory; only actual Home graph is claimed compiled by this lane.",
+    "Full evaluated Compile/ReferencePath/DefineConstants/DebugType/source-built task/restored NuGet/output closure and physical PE/actual embedded-or-external Portable PDB CodeView/#Pdb/all-document hash proof required before/after whole tests. No absent/generated-file waiver or producer flags.",
+    "Same original guarded G child/creator PIDfd/session/strict all-existing-command ledger and SDK-only same proof delegation required. Marker is exact two-field False prefix with UTF8 bytes; all final identity/member/inner predicates unchanged.",
+    "Every original primary,independent body-close/persistence/post-pin/caller drain fault stays retained. Periodic256MiB evidence/16MiB log checks and1200s command deadlines are acceptance/refusal bounds, not a hard kernel allocation guarantee;180min lane caller bound.",
+    "Whole lane byte/piece manifest plus12 conditional bounded artifact parts:26MiB payload/29MiB inner/<32MiB outer/max12, no filtered evidence or fictitious external PDB.",
+    "Original215 owning/12 regression/48 resource cohort tables/callers/native probe/TLS/CRL/Java/profile/restore/task/PDB/drains and fullSDK16+2+4 matrix remain separately mandatory and are not executed/promoted by isolated Home results.",
+    "Truthful current semantic product map has131 differences: actual4f already129 including three inherited Desktop diagnostic source witnesses previously omitted from126, plus preferred Factory and newfixture. All three diagnostics stay byte-exact.",
+    "No Agents51/OS225/platform module/privacy/attachment/Cloud/Terra product sources or test additions selected. No fullSDK/native/installed/ACK/once/default provider/authority acceptance."
   ],
   "inputManifests": [
     {
@@ -67091,6 +67117,46 @@
       "path": "/workspace/astra-source/worker2-joint05-sdk-native-package07-exact-caller-catalog-descriptor/manifest.json",
       "bytes": 41681,
       "sha256": "c21472d90db8b6b7d4076bc8e035cb18282b8ce586a187d5e2d5e83a9afa0d25"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/manifest.json",
+      "bytes": 49512,
+      "sha256": "71f00abafbc79f263596f8b678d7349d2d722584208aee7e34a8b020e0ebaf1d"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-owning-home26-source02-public-original-den-writer-fixture-api/manifest.json",
+      "bytes": 30595,
+      "sha256": "15f6e4f22c7555a85fd1f1d2ca1985a564028c90b40bc745f6d90dcca2c83866"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-owning-home26-original-den-currentness-source01/manifest.json",
+      "bytes": 28930,
+      "sha256": "1f3ef7a9b16e59662e56ccaa7300f7f9dd4eb056b3cfb82ba04b0356d83eeefc"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package08-actuale0c-compiler-corrective/manifest.json",
+      "bytes": 41840,
+      "sha256": "e135c3c20780dfe789693c9fd91f05bdb39a184dfef22835b1e625f73c9fc844"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/manifest.json",
+      "bytes": 27085,
+      "sha256": "089e85829a70ad72833b07c40b63c42daa9da4c0a639de59c7096e2dcb2e6506"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source02-original-marker-utf8/manifest.json",
+      "bytes": 32050,
+      "sha256": "29829a9160f09691eb2d73c21672b75e5fb1167e687557cec14016bba3666f7f"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source03-exact-original-false-marker-schema/manifest.json",
+      "bytes": 34327,
+      "sha256": "65ca080a3df9273a7983650c0e7c0715a8777e38586352d282b5a2016a74f129"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source04-main-marker-control-scope/manifest.json",
+      "bytes": 36786,
+      "sha256": "1645d76887f607420c0d386b34fb7c29a69b2bde7509268824d1d7dd4992c147"
     }
   ],
   "sharedCakeIdContract": null

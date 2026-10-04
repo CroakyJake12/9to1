@@ -568,19 +568,18 @@ public sealed class HomeAgentExecutionAdmissions : IAgentPermissionBroker, IChat
         if (_nativeConnection is not null) await _nativeConnection.DemandCurrentAsync(token).ConfigureAwait(false);
         if (!_lease.IsHeld || string.IsNullOrWhiteSpace(reference.DenId) || string.IsNullOrWhiteSpace(reference.NamespaceId) ||
             !Guid.TryParseExact(reference.AgentId, "D", out var id) || id == Guid.Empty || reference.AgentId != id.ToString("D") || reference.DefinitionRevision < 1) throw Refused();
-        var session = await _dens.OpenAsync(token).ConfigureAwait(false);
-        if (session.Actor.ProfileId != _lease.ProfileId || session.Actor.AccountId is not null || session.Actor.OrganisationId is not null ||
-            session.DenId != reference.DenId || expected is not null &&
-            (session.Actor != expected.Actor || session.DenId != expected.DenId || !ReferenceEquals(session.Den.Store, expected.Den.Store))) throw Refused();
+        var session = expected ?? await _dens.OpenAsync(token).ConfigureAwait(false);
+        if (!await _dens.IsCurrentOriginalAsync(session, token).ConfigureAwait(false) ||
+            session.Actor.ProfileId != _lease.ProfileId || session.Actor.AccountId is not null || session.Actor.OrganisationId is not null ||
+            session.DenId != reference.DenId) throw Refused();
         var definition = await session.Den.GetAsync<AgentDefinitionRecord>(reference.NamespaceId, reference.AgentId, token).ConfigureAwait(false);
         if (definition is null || definition.Revision != reference.DefinitionRevision || requireEnabled && !definition.Enabled ||
             definition.AllowedPermissions.Any(string.IsNullOrWhiteSpace)) throw Refused();
-        var current = await _dens.OpenAsync(token).ConfigureAwait(false);
-        if (!_lease.IsHeld || current.Actor != session.Actor || current.DenId != session.DenId ||
-            !ReferenceEquals(current.Den.Store, session.Den.Store) || await _actors.GetCurrentAsync(token).ConfigureAwait(false) != session.Actor) throw Refused();
+        if (!_lease.IsHeld || !await _dens.IsCurrentOriginalAsync(session, token).ConfigureAwait(false) ||
+            await _actors.GetCurrentAsync(token).ConfigureAwait(false) != session.Actor) throw Refused();
         if (_nativeConnection is not null) await _nativeConnection.DemandCurrentAsync(token).ConfigureAwait(false);
         definition = DenAgentAuthoringFields.Capture(definition, cancellationToken: token);
-        token.ThrowIfCancellationRequested(); return (current, definition);
+        token.ThrowIfCancellationRequested(); return (session, definition);
     }
     private async Task RequireInvocationAsync(Invocation invocation, CancellationToken token)
     {

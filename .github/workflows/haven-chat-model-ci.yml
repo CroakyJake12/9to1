@@ -353,3 +353,165 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           retention-days: 14
+
+  home437-original-owning-validation:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-home437-original-owning-20261004')
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      AVALONIA_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
+      MSBUILDDISABLENODEREUSE: '1'
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: corrective
+          ref: ${{ github.sha }}
+          submodules: false
+          persist-credentials: false
+      - name: Materialize exactly the same three corrective source dependencies
+        working-directory: corrective
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: corrective/global.json
+      - name: Execute the complete original Home project and all 437 cases with strict caller custody
+        working-directory: corrective
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+          HOME_CONFIGURATION: ${{ matrix.configuration }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/astra-home437-caller.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-desktop-visible-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA" --configuration "$HOME_CONFIGURATION"
+      - name: Freeze every original Home and caller evidence byte into bounded indexed parts
+        id: home437-bundles
+        if: ${{ always() }}
+        working-directory: corrective
+        run: python3 .github/scripts/astra-files-artifact-parts.py --input artifacts/home437-validation --output artifacts/home437-parts
+      - name: Retain complete Home lane fullfile and piece index
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-manifest-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/manifest.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 00
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 0 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-00-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-00.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 01
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 1 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-01-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-01.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 02
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 2 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-02-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-02.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 03
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 3 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-03-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-03.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 04
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 4 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-04-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-04.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 05
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 5 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-05-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-05.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 06
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 6 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-06-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-06.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 07
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 7 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-07-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-07.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 08
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 8 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-08-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-08.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 09
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 9 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-09-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-09.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 10
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 10 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-10-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-10.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independent original Home lane part 11
+        if: ${{ always() && steps.home437-bundles.outputs.count != '' && fromJSON(steps.home437-bundles.outputs.count) > 11 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-home437-${{ matrix.configuration }}-bundle-11-${{ github.sha }}
+          path: corrective/artifacts/home437-parts/bundle-11.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
