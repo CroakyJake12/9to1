@@ -50,7 +50,7 @@ export async function validate({request=fetch,output}={}) {
     const rejection=await invalid.json();ok(['invalid_client','invalid_grant','invalid_request'].includes(rejection.error),'Maintained OAuth error denies an unregistered client/invalid code');ok(!rejection.access_token&&!rejection.refresh_token&&!rejection.id_token);
     // Schema validation rejects before reset-token consumption, password changes or delivery.
     const reset=await get('/api/auth/reset-password',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'});equal(reset.status,400);
-    const result={result:'passed',assertions,observations,issuer,deploymentVersion:'713c1695-7e21-489b-bc97-906450972cfa',qualification:'Anonymous deployed HTTPS phase only. No users/client provisioning, email delivery, valid OAuth tokens, session journeys or native interoperability accepted.'};
+    const result={result:'passed',assertions,observations,issuer,operatorPinnedDeploymentVersion:'713c1695-7e21-489b-bc97-906450972cfa',qualification:'Anonymous deployed HTTPS phase only; deployment version is operator-pinned, not observed by HTTP. Root must bind same-time provider readback. No users/client provisioning, email delivery, valid OAuth tokens, session journeys or native interoperability accepted.'};
     if(output) await writeFile(output,JSON.stringify(result,null,2)+'\n',{flag:'wx'});
     return result;
   } catch(error) {
