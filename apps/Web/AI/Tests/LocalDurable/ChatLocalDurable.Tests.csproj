@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><AssemblyName>NineToOne.Chat.LocalDurable.Tests</AssemblyName><EnableDefaultCompileItems>false</EnableDefaultCompileItems><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors><UseAppHost>true</UseAppHost></PropertyGroup>
+ <ItemGroup>
+  <Compile Include="ChatLocalDurableControls.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteDatabase.cs" Link="ActualOwner/Database/SqliteDatabase.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteMapping.cs" Link="ActualOwner/Database/SqliteMapping.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteProviderBootstrap.cs" Link="ActualOwner/Database/SqliteProviderBootstrap.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/DatabaseInitializer.cs" Link="ActualOwner/Database/DatabaseInitializer.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/PlannerMigration.cs" Link="ActualOwner/Database/Migrations/PlannerMigration.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/FeatureMigration.cs" Link="ActualOwner/Database/Migrations/FeatureMigration.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/PlannerRichEntitiesMigration.cs" Link="ActualOwner/Database/Migrations/PlannerRichEntitiesMigration.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/AutomationOwnerStateMigration.cs" Link="ActualOwner/Database/Migrations/AutomationOwnerStateMigration.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ConversationRepository.cs" Link="ActualOwner/Persistence/SQLite/ConversationRepository.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ConversationRepository.SpaceCommit.cs" Link="ActualOwner/Persistence/SQLite/ConversationRepository.SpaceCommit.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ConversationBranchRepository.cs" Link="ActualOwner/Persistence/SQLite/ConversationBranchRepository.cs" />
+  <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/SafeConversationBranchRepository.cs" Link="ActualOwner/Persistence/SQLite/SafeConversationBranchRepository.cs" />
+  <ProjectReference Include="../../../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+  <ProjectReference Include="../../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
+  <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.9" />
+  <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+  <PackageReference Include="SQLitePCLRaw.provider.winsqlite3" Version="3.0.3" />
+ </ItemGroup>
+</Project>

@@ -1,0 +1,48 @@
+name: Chat original local durable owner three
+on:
+  workflow_dispatch:
+  push:
+    branches: [team-b/astra-browser-validation-20261003]
+    paths:
+      - .github/workflows/team-b-chat-local-durable.yml
+      - apps/Web/AI/Tests/LocalDurable/**
+      - apps/Web/Tests/ci/run-ordinary-native.py
+      - 9to1 Workspace/shared/src/Haven.Core/**
+      - 9to1 Workspace/shared/src/Haven.Application/**
+      - 9to1 Workspace/shared/src/Haven.Infrastructure/Database/**
+      - 9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ConversationRepository*.cs
+      - 9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ConversationBranchRepository.cs
+      - 9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/SafeConversationBranchRepository.cs
+      - framework/CUI/AI/**
+      - NuGet.Config
+      - global.json
+permissions:
+  contents: read
+jobs:
+  original-owner:
+    if: github.ref == 'refs/heads/team-b/astra-browser-validation-20261003'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Build unchanged owners and run actual seed then fresh-process verification
+        env:
+          CHAT_SOURCE_COMMIT: ${{ github.sha }}
+        run: >-
+          python3 apps/Web/AI/Tests/LocalDurable/ci/run-chat-local-durable.py
+          --expected-commit "$CHAT_SOURCE_COMMIT"
+          --output "$RUNNER_TEMP/chat-local-durable"
+      - name: Preserve complete first failure and bounded metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-local-durable-${{ github.sha }}
+          path: ${{ runner.temp }}/chat-local-durable/diagnostics/
+          if-no-files-found: error
+          retention-days: 14
