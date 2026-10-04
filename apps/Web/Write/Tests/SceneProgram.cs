@@ -92,6 +92,13 @@ var checks = await headless.Dispatch(async () =>
             focusWindow.KeyTextInput("Delta echo");
             Check(Text(secondDocument) == "Delta echo",
                 "initial-focus renewed actual owner router accepts native text after busy roundtrip");
+            focusHost.SetInputAllowed(false); sentinel.Focus();
+            focusHost.SetInputAllowed(true);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), sentinel),
+                "initial-focus toolbar focus acquired during busy is not stolen on enable");
+            focusWindow.KeyTextInput(" ignored while toolbar focused");
+            Check(Text(secondDocument) == "Delta echo",
+                "initial-focus toolbar-focused native text after busy leaves canonical editor unchanged");
             sentinel.Focus(); focusHost.SetInputAllowed(false);
             focusHost.SetEditor(new WriteDocumentEditor(NotesDocument.Create("Disposed pending focus")));
             focusHost.Dispose();

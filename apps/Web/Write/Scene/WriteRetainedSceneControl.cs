@@ -20,6 +20,7 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
     private WriteDocumentEditor? _editor;
     private bool _inputAllowed;
     private bool _focusInitialEditorOnEnable;
+    private bool _restoreEditorFocusOnEnable;
     private bool _disposed;
 
     public WriteRetainedSceneControl(Func<bool> reduceMotion)
@@ -48,6 +49,7 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
         if (_editor is not null) _editor.Changed -= OnEditorChanged;
         _editor = editor;
         _focusInitialEditorOnEnable = false;
+        _restoreEditorFocusOnEnable = false;
         _scene.Root = null;
         _surface = null;
         if (editor is null) return;
@@ -66,6 +68,9 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_inputAllowed == allowed) return;
         _inputAllowed = allowed;
+        // Actual Avalonia disabling clears native focus. Capture the same
+        // editor's focus before that transition, not after it is already lost.
+        if (!allowed) _restoreEditorFocusOnEnable = _scene.IsFocused;
         _scene.IsEnabled = allowed;
         if (_surface is null) return;
         _surface.SetValue(HavenProperties.Enabled, allowed);
@@ -78,15 +83,21 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
             _scene.Root = null;
             _scene.Root = _surface;
         }
-        else if (_focusInitialEditorOnEnable || _scene.IsFocused)
+        else
         {
-            // Consume one pending initial attach, or restore the renewed owner's
-            // router only when this actual native scene already has focus.
-            // The owner's same-element Avalonia Focus has no focus-change event.
-            // A toolbar-focused Save never enters this branch, preserving its
-            // real focus and viewport without a competing input implementation.
-            _focusInitialEditorOnEnable = false;
-            _scene.FocusElement(_surface);
+            var focusManager = TopLevel.GetTopLevel(_scene)?.FocusManager;
+            var focused = focusManager?.GetFocusedElement();
+            var restoreEditorFocus = _restoreEditorFocusOnEnable && focusManager is not null
+                && (focused is null || ReferenceEquals(focused, _scene));
+            _restoreEditorFocusOnEnable = false;
+            // Initial attachment is a separate one-time request. A later busy
+            // transition restores only this editor's captured native focus,
+            // never focus another actual control acquired during that transition.
+            if (_focusInitialEditorOnEnable || _scene.IsFocused || restoreEditorFocus)
+            {
+                _focusInitialEditorOnEnable = false;
+                _scene.FocusElement(_surface);
+            }
         }
     }
 
@@ -102,6 +113,7 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
         _scene.Root = null;
         _editor = null;
         _focusInitialEditorOnEnable = false;
+        _restoreEditorFocusOnEnable = false;
         _surface = null;
         _disposed = true;
     }
