@@ -3,6 +3,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Haven.Application;
 using Haven.Core;
 using AvaloniaCanvas = Avalonia.Controls.Canvas;
 
