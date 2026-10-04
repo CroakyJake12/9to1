@@ -1,4 +1,4 @@
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
 var encoder = new TextEncoder();
 var decoder = new TextDecoder();
 var strictDecoder = new TextDecoder("utf-8", { fatal: true });
@@ -40,7 +40,7 @@ function decodeBase64(encoded, url = false) {
   return bytes;
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
 var JOSEError = class extends Error {
   static code = "ERR_JOSE_GENERIC";
   code = "ERR_JOSE_GENERIC";
@@ -119,7 +119,7 @@ var JWSSignatureVerificationFailed = class extends JOSEError {
   }
 };
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
 var invalid = "The input to be decoded is not correctly encoded.";
 function decode(input) {
   try {
@@ -129,7 +129,7 @@ function decode(input) {
   }
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
 function isObject(input) {
   if (typeof input != "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]")
     return false;
@@ -209,7 +209,7 @@ function validateB64(protectedHeader, extensions) {
   return true;
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
 var tag = (key) => key[Symbol.toStringTag];
 var jwkMatchesOp = (entry, key, usage) => {
   const { alg } = entry;
@@ -340,7 +340,7 @@ async function rawKey(key, expected, usage, extractable = false) {
   return key instanceof Uint8Array && (key = await crypto.subtle.importKey("raw", key, expected, extractable, [usage])), checkCryptoKey(key, expected, usage), key;
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
 function table(entries) {
   const out = { __proto__: null };
   for (const alg in entries)
@@ -348,7 +348,7 @@ function table(entries) {
   return out;
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
 var sig = [["verify"], ["sign"]];
 function hmac(bits) {
   const subtle = { name: "HMAC", hash: `SHA-${bits}` };
@@ -418,7 +418,7 @@ function jwsAlgorithm(alg) {
   return entry;
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
 function prepareVerify(options) {
   return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
 }
@@ -470,7 +470,7 @@ async function verifyCompact(jws, shared, key) {
   return verifySignature({ payload, protected: protectedHeader, signature }, shared, key, encodeCompactUnencodedPayload);
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
 var epoch = (date2) => Math.floor(date2.getTime() / 1e3);
 var multipliers = {
   s: 1,
@@ -556,7 +556,7 @@ function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
   return payload;
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
 async function jwtVerify(jwt, key, options) {
   const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key);
   if (!b64)
@@ -565,7 +565,7 @@ async function jwtVerify(jwt, key, options) {
   return { ...verified, payload };
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
 function isUsableJWK(jwk, entry, alg, kid) {
   const { kty, key_ops: keyOps, ext, kid: jwkKid, alg: jwkAlg, use, crv } = jwk;
   return (ext === void 0 || typeof ext == "boolean") && (keyOps === void 0 || Array.isArray(keyOps) && keyOps.every((operation, index) => typeof operation == "string" && keyOps.indexOf(operation) === index) && keyOps.includes("verify")) && entry.kty.includes(kty) && (kid === void 0 || typeof kid == "string" && kid === jwkKid) && (jwkAlg === void 0 ? kty !== "AKP" : alg === jwkAlg) && (use === void 0 || use === "sig") && (!entry.crv || crv === entry.crv);
@@ -619,7 +619,7 @@ function createLocalJWKSet(jwks) {
   });
 }
 
-// ../team-b-c2-fixture/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
+// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
 function isCloudflareWorkers() {
   return typeof WebSocketPair < "u" || typeof navigator < "u" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime < "u" && EdgeRuntime === "vercel";
 }
@@ -776,6 +776,10 @@ var BrowserPublicClient = class {
   #signInFailed;
   #expired;
   #failure;
+  #issued = /* @__PURE__ */ new Set();
+  #cleanupErrors = [];
+  #cleanupTask;
+  #beginExpiry;
   #token = null;
   #expires = 0;
   #timer;
@@ -794,9 +798,12 @@ var BrowserPublicClient = class {
     onVerifiedIdentity,
     onSignInFailed,
     onTokenExpired,
-    onFailure
+    onFailure,
+    beginTokenExpiryInvalidation = void 0
   }) {
     if (!win || typeof transport !== "function" || !crypto2?.subtle || typeof onBeforeSignIn !== "function" || typeof verifyCurrentAccount !== "function" || typeof onVerifiedIdentity !== "function" || typeof onSignInFailed !== "function" || typeof onTokenExpired !== "function" || typeof onFailure !== "function") throw problem("InvalidConfiguration");
+    if (beginTokenExpiryInvalidation !== void 0 && typeof beginTokenExpiryInvalidation !== "function") throw problem("InvalidConfiguration");
+    this.#beginExpiry = beginTokenExpiryInvalidation;
     this.#config = validatePublicClientConfiguration(configuration, win.location.origin);
     this.#window = win;
     this.#fetch = transport;
@@ -893,7 +900,7 @@ var BrowserPublicClient = class {
     this.#token = tokens.access_token;
     this.#expires = access.exp * 1e3;
     try {
-      await this.#verifyAccount(id.sub, pending.controller.signal);
+      await pending.callbacks.verifyAccount(id.sub, pending.controller.signal);
     } catch {
       if (pending.generation === this.#generation) this.clearToken({ cancelPending: false });
       throw problem("CurrentAccountVerificationFailed");
@@ -903,31 +910,103 @@ var BrowserPublicClient = class {
       throw problem("SessionContextChanged");
     }
     try {
-      await this.#verified();
+      await pending.callbacks.verified();
     } catch {
       if (pending.generation === this.#generation) this.clearToken({ cancelPending: false });
       throw problem("PrivateContextCleanupFailed");
     }
     if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem("SessionContextChanged");
+    const tokenGeneration = this.#generation;
     this.#timer = setTimeout(() => {
-      this.clearToken();
-      Promise.resolve(this.#expired()).catch(() => this.#failure("PrivateContextCleanupFailed"));
+      if (this.#disposed || tokenGeneration !== this.#generation) return;
+      const expired = this.#expired, failure = this.#failure, begin = this.#beginExpiry;
+      this.#issue("expiry", async () => {
+        try {
+          this.clearToken({ cancelPending: false });
+          if (begin !== void 0) {
+            try {
+              const acknowledgement = begin("token_expired");
+              if (acknowledgement !== void 0) {
+                if (acknowledgement && typeof acknowledgement.then === "function") Promise.resolve(acknowledgement).catch(() => {
+                });
+                throw problem("PrivateContextCleanupFailed");
+              }
+            } finally {
+              this.#pending?.controller.abort();
+            }
+          } else this.clearToken();
+          await expired();
+        } catch (error) {
+          this.#cleanupErrors.push(error);
+          try {
+            failure("PrivateContextCleanupFailed");
+          } catch (observerError) {
+            this.#cleanupErrors.push(observerError);
+          }
+          throw error;
+        }
+      }).catch(() => {
+      });
     }, Math.min(this.#expires - Date.now(), 2147483647));
   }
-  async signIn({ signal } = {}) {
+  #issue(action, factory) {
+    if (this.#disposed) return Promise.reject(problem("ServiceUnavailable"));
+    let settle;
+    const completion = new Promise((resolve) => {
+      settle = resolve;
+    });
+    const entry = { action, completion };
+    this.#issued.add(entry);
+    let actual;
+    try {
+      actual = Promise.resolve(factory());
+    } catch (error) {
+      actual = Promise.reject(error);
+    }
+    actual.then(() => {
+      this.#issued.delete(entry);
+      settle();
+    }, (error) => {
+      if (error?.code === "PrivateContextCleanupFailed") this.#cleanupErrors.push(error);
+      this.#issued.delete(entry);
+      settle();
+    });
+    return actual;
+  }
+  async joinIssuedWork() {
+    while (this.#issued.size) await Promise.all([...this.#issued].map((entry) => entry.completion));
+    if (this.#cleanupErrors.length) throw new AggregateError([...this.#cleanupErrors], "Broker lifecycle cleanup failed.");
+  }
+  hasOutstandingWork() {
+    return this.#issued.size !== 0;
+  }
+  signIn(options = {}) {
+    if (this.#disposed) return Promise.reject(problem("ServiceUnavailable"));
+    if (this.#issued.size) return Promise.reject(problem("SignInInProgress"));
+    return this.#issue("sign-in", () => this.#signInCore(options));
+  }
+  async #signInCore({ signal } = {}) {
     if (this.#disposed) throw problem("ServiceUnavailable");
     if (this.#pending) throw problem("SignInInProgress");
     if (signal?.aborted) throw problem("Cancelled");
+    const callbacks = { before: this.#before, verifyAccount: this.#verifyAccount, verified: this.#verified, signInFailed: this.#signInFailed, failure: this.#failure };
     const popup = this.#window.open("about:blank", `nine-to-one-${base64url(this.#crypto.getRandomValues(new Uint8Array(16)))}`, "popup,width=520,height=720");
     if (!popup) throw problem("PopupUnavailable");
+    if (this.#disposed || signal?.aborted) {
+      try {
+        popup.close();
+      } catch {
+      }
+      throw problem("Cancelled");
+    }
     const controller = new AbortController();
     const abort = () => controller.abort();
     signal?.addEventListener("abort", abort, { once: true });
-    const pending = { popup, controller, generation: null, state: null, nonce: null, verifier: null, claimed: false };
+    const pending = { popup, controller, generation: null, state: null, nonce: null, verifier: null, claimed: false, callbacks };
     this.#pending = pending;
     let listener, poll;
     try {
-      await this.#before(controller.signal);
+      await callbacks.before(controller.signal);
       if (controller.signal.aborted || this.#disposed) throw problem("Cancelled");
       pending.generation = this.#generation;
       pending.state = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
@@ -940,7 +1019,7 @@ var BrowserPublicClient = class {
         listener = (event) => {
           if (event.origin !== new URL(this.#config.redirectUri).origin || event.source !== popup || event.data?.type !== "nineToOne.oauth.callback" || pending.claimed) return;
           pending.claimed = true;
-          this.#exchange(pending, event.data.callbackUri, discovery).then(resolve, reject);
+          this.#issue("exchange", () => this.#exchange(pending, event.data.callbackUri, discovery)).then(resolve, reject);
         };
         this.#window.addEventListener("message", listener);
         controller.signal.addEventListener("abort", () => reject(problem("Cancelled")), { once: true });
@@ -966,11 +1045,16 @@ var BrowserPublicClient = class {
       this.clearToken({ cancelPending: false });
       let code = controller.signal.aborted ? "Cancelled" : typeof error?.code === "string" ? error.code : "ProviderUnavailable";
       try {
-        await this.#signInFailed();
+        await callbacks.signInFailed();
       } catch {
         code = "PrivateContextCleanupFailed";
       }
-      this.#failure(code);
+      try {
+        callbacks.failure(code);
+      } catch (error2) {
+        this.#cleanupErrors.push(error2);
+        throw error2;
+      }
       throw problem(code);
     } finally {
       signal?.removeEventListener("abort", abort);
@@ -984,12 +1068,48 @@ var BrowserPublicClient = class {
       pending.verifier = null;
       pending.nonce = null;
       pending.state = null;
+      pending.callbacks = null;
     }
   }
-  dispose() {
+  revokePrivateContext() {
     this.#disposed = true;
-    this.clearToken();
+    this.clearToken({ cancelPending: false });
+    if (this.#pending) {
+      this.#pending.verifier = null;
+      this.#pending.nonce = null;
+      this.#pending.state = null;
+    }
+    this.#before = null;
+    this.#verifyAccount = null;
+    this.#verified = null;
+    this.#signInFailed = null;
+    this.#expired = null;
+    this.#failure = null;
+    this.#beginExpiry = void 0;
+    this.#discovery = void 0;
+    this.#jwks = void 0;
   }
+  disposeAsync() {
+    if (this.#cleanupTask) return this.#cleanupTask;
+    this.revokePrivateContext();
+    let resolve, reject;
+    this.#cleanupTask = new Promise((a, b) => {
+      resolve = a;
+      reject = b;
+    });
+    try {
+      this.#pending?.controller.abort();
+    } catch (error) {
+      this.#cleanupErrors.push(error);
+    }
+    this.joinIssuedWork().then(resolve, reject);
+    return this.#cleanupTask;
+  }
+  dispose() {
+    this.disposeAsync().catch(() => {
+    });
+  }
+  // Legacy caller gets no full-drain receipt.
 };
 
 // apps/Web/Auth/account-api-client.js
@@ -1008,12 +1128,14 @@ var AccountApiClient = class {
   #token;
   #fetch;
   #clear;
+  #beginPrivate;
   #generation = 0;
   #pending = /* @__PURE__ */ new Set();
   constructor({
     apiResource,
     getAccessToken,
     onPrivateContextInvalidated,
+    beginPrivateContextInvalidation = void 0,
     fetch: transport = globalThis.fetch,
     allowLoopbackForIsolatedTests = false
   }) {
@@ -1025,21 +1147,46 @@ var AccountApiClient = class {
     if (typeof getAccessToken !== "function" || typeof onPrivateContextInvalidated !== "function" || typeof transport !== "function") {
       throw new TypeError("A token supplier, private-context invalidator and fetch transport are required.");
     }
+    if (beginPrivateContextInvalidation !== void 0 && typeof beginPrivateContextInvalidation !== "function") throw new TypeError("A synchronous private fence is required when supplied.");
+    this.#beginPrivate = beginPrivateContextInvalidation;
     this.#origin = resource.origin;
     this.#token = getAccessToken;
     this.#clear = onPrivateContextInvalidated;
     this.#fetch = transport;
   }
   /** Call before switching account/session/organisation; await cleanup before opening new private surfaces. */
+  // Explicit sync begin receipt only; caller MUST separately await its owning
+  // full cleanup join before admitting new private surfaces. No wire authority.
+  beginPrivateContextInvalidation(reason = "context_changed") {
+    this.#fenceAndAbort(reason, null);
+  }
   async invalidatePrivateContext(reason = "context_changed") {
     await this.#invalidate(reason);
   }
   async #invalidate(reason, settledTransport = null) {
-    this.#generation++;
-    for (const controller of this.#pending) {
-      if (controller !== settledTransport) controller.abort();
-    }
+    this.#fenceAndAbort(reason, settledTransport);
     await this.#clear(reason);
+  }
+  #fenceAndAbort(reason, settledTransport) {
+    this.#generation++;
+    try {
+      if (this.#beginPrivate !== void 0) {
+        const acknowledgement = this.#beginPrivate(reason);
+        if (acknowledgement !== void 0) {
+          if (acknowledgement && typeof acknowledgement.then === "function") Promise.resolve(acknowledgement).catch(() => {
+          });
+          throw new TypeError("Private fencing must synchronously return void.");
+        }
+      }
+    } finally {
+      for (const controller of this.#pending) if (controller !== settledTransport) controller.abort();
+    }
+  }
+  // Only INTERNAL request authentication failures can acknowledge the fence
+  // without awaiting their own owner drain. They remain owned until they settle.
+  async #invalidateFromRequest(reason, settledTransport = null) {
+    if (this.#beginPrivate === void 0) return this.#invalidate(reason, settledTransport);
+    this.#fenceAndAbort(reason, settledTransport);
   }
   getCurrent({ signal } = {}) {
     return this.#request(
@@ -1159,7 +1306,7 @@ var AccountApiClient = class {
       if (controller.signal.aborted) return failed("Cancelled", action);
       if (typeof token !== "string" || !token || /\s/.test(token)) {
         try {
-          await this.invalidatePrivateContext("authentication_required");
+          await this.#invalidateFromRequest("authentication_required");
         } catch {
           return failed("PrivateContextCleanupFailed", action);
         }
@@ -1184,7 +1331,7 @@ var AccountApiClient = class {
       if (response.status === 401) {
         expectedGeneration = generation + 1;
         try {
-          await this.#invalidate("session_invalidated", controller);
+          await this.#invalidateFromRequest("session_invalidated", controller);
         } catch {
           return failed("PrivateContextCleanupFailed", action, response.status);
         }
@@ -1238,17 +1385,45 @@ var AccountApiClient = class {
 // apps/Web/Services/account-service.js
 function createAccountModule(client = null) {
   const pending = /* @__PURE__ */ new Map();
-  let disposed = false;
+  const issued = /* @__PURE__ */ new Set();
+  let disposed = false, cleanupTask;
   const failure = (code) => JSON.stringify({ ok: false, status: null, error: { code, action: "AccountSurface", body: null } });
+  const revokePrivateContext = () => {
+    disposed = true;
+    client = null;
+  };
+  const drain = async () => {
+    while (issued.size) await Promise.all([...issued].map((entry) => entry.completion));
+  };
+  const disposeAsync = () => {
+    if (cleanupTask) return cleanupTask;
+    revokePrivateContext();
+    let resolve, reject;
+    cleanupTask = new Promise((a, b) => {
+      resolve = a;
+      reject = b;
+    });
+    const errors = [];
+    for (const entry of pending.values()) try {
+      entry.controller.abort();
+    } catch (error) {
+      errors.push(error);
+    }
+    drain().then(() => {
+      if (errors.length) reject(new AggregateError(errors, "Account module cleanup failed."));
+      else resolve();
+    }, reject);
+    return cleanupTask;
+  };
   return {
-    async invoke(requestId, action, argumentsJson) {
-      if (!client || disposed) return failure("ServiceUnavailable");
-      if (typeof requestId !== "string" || !requestId || pending.has(requestId)) return failure("InvalidArgument");
+    invoke(requestId, action, argumentsJson) {
+      if (!client || disposed) return Promise.resolve(failure("ServiceUnavailable"));
+      if (typeof requestId !== "string" || !requestId || pending.has(requestId)) return Promise.resolve(failure("InvalidArgument"));
       let args;
       try {
         args = JSON.parse(argumentsJson);
       } catch {
-        return failure("InvalidArgument");
+        return Promise.resolve(failure("InvalidArgument"));
       }
       const controller = new AbortController();
       const options = { signal: controller.signal };
@@ -1261,25 +1436,47 @@ function createAccountModule(client = null) {
         RevokeSession: () => client.revokeSession(args?.sessionId, options),
         RevokeAllOtherSessions: () => client.revokeAllOtherSessions(options)
       };
-      if (!Object.hasOwn(operations, action)) return failure("InvalidArgument");
-      pending.set(requestId, controller);
-      try {
-        const reply = await operations[action]();
-        return controller.signal.aborted ? failure("Cancelled") : JSON.stringify(reply);
-      } catch {
-        return failure(controller.signal.aborted ? "Cancelled" : "TransportUnavailable");
-      } finally {
+      if (!Object.hasOwn(operations, action)) return Promise.resolve(failure("InvalidArgument"));
+      let settle;
+      const completion = new Promise((resolve) => {
+        settle = resolve;
+      });
+      const entry = { controller, completion };
+      pending.set(requestId, entry);
+      issued.add(entry);
+      const actual = (async () => {
+        try {
+          const reply = await operations[action]();
+          return controller.signal.aborted ? failure("Cancelled") : JSON.stringify(reply);
+        } catch {
+          return failure(controller.signal.aborted ? "Cancelled" : "TransportUnavailable");
+        }
+      })();
+      actual.then(() => {
         pending.delete(requestId);
-      }
+        issued.delete(entry);
+        settle();
+      }, () => {
+        pending.delete(requestId);
+        issued.delete(entry);
+        settle();
+      });
+      return actual;
     },
     cancel(requestId) {
-      pending.get(requestId)?.abort();
+      pending.get(requestId)?.controller.abort();
+    },
+    revokePrivateContext,
+    joinIssuedWork: drain,
+    hasOutstandingWork() {
+      return issued.size !== 0;
     },
     dispose() {
-      disposed = true;
-      for (const controller of pending.values()) controller.abort();
-      pending.clear();
-    }
+      disposeAsync().catch(() => {
+      });
+    },
+    // Legacy immediate return is NOT a drained receipt.
+    disposeAsync
   };
 }
 
@@ -1291,14 +1488,58 @@ function createConfiguredAccounts({
   crypto: crypto2 = globalThis.crypto,
   onPrivateContextInvalidated,
   onVerifiedIdentity,
-  onFailure
+  onFailure,
+  beginPrivateContextInvalidation = void 0
 }) {
   if (typeof onPrivateContextInvalidated !== "function" || typeof onVerifiedIdentity !== "function" || typeof onFailure !== "function") throw new TypeError("Private context callbacks are required.");
-  let broker, api, disposed = false, prepared = false;
-  const signIns = /* @__PURE__ */ new Map();
+  if (beginPrivateContextInvalidation !== void 0 && typeof beginPrivateContextInvalidation !== "function") throw new TypeError("A synchronous root private fence is required when supplied.");
+  let broker, api, disposed = false, prepared = false, cleanupTask, module;
+  const signIns = /* @__PURE__ */ new Map(), issued = /* @__PURE__ */ new Set(), cleanupErrors = [];
+  const issue = (action, factory) => {
+    if (disposed) return Promise.reject(new Error("ServiceUnavailable"));
+    let settle;
+    const completion = new Promise((resolve) => {
+      settle = resolve;
+    });
+    const entry = { action, completion };
+    issued.add(entry);
+    let actual;
+    try {
+      actual = Promise.resolve(factory());
+    } catch (error) {
+      actual = Promise.reject(error);
+    }
+    actual.then(() => {
+      issued.delete(entry);
+      settle();
+    }, (error) => {
+      if (action === "prepare" || action === "invalidate") cleanupErrors.push(error);
+      issued.delete(entry);
+      settle();
+    });
+    return actual;
+  };
+  const joinIssued = async () => {
+    while (issued.size) await Promise.all([...issued].map((e) => e.completion));
+    if (cleanupErrors.length) throw new AggregateError([...cleanupErrors], "Configured lifecycle cleanup failed.");
+  };
   const base = configuration === null ? createAccountModule() : (() => {
+    const begin = (reason) => {
+      broker?.clearToken({ cancelPending: false });
+      try {
+        const acknowledgement = beginPrivateContextInvalidation(reason);
+        if (acknowledgement !== void 0) {
+          if (acknowledgement && typeof acknowledgement.then === "function") Promise.resolve(acknowledgement).catch(() => {
+          });
+          throw new TypeError("Root private fencing must synchronously return void.");
+        }
+      } finally {
+        if (reason !== "sign_in_started") broker?.clearToken();
+      }
+    };
     const clear = async (reason) => {
-      broker?.clearToken({ cancelPending: reason !== "sign_in_started" });
+      if (beginPrivateContextInvalidation === void 0)
+        broker?.clearToken({ cancelPending: reason !== "sign_in_started" });
       await onPrivateContextInvalidated(reason);
     };
     broker = new BrowserPublicClient({
@@ -1313,63 +1554,111 @@ function createConfiguredAccounts({
       },
       onVerifiedIdentity,
       onSignInFailed: () => api.invalidatePrivateContext("sign_in_failed"),
-      onTokenExpired: () => api.invalidatePrivateContext("token_expired"),
+      onTokenExpired: () => beginPrivateContextInvalidation === void 0 ? api.invalidatePrivateContext("token_expired") : onPrivateContextInvalidated("token_expired"),
+      beginTokenExpiryInvalidation: beginPrivateContextInvalidation === void 0 ? void 0 : () => api.beginPrivateContextInvalidation("token_expired"),
       onFailure
     });
     api = new AccountApiClient({
       apiResource: broker.configuration.apiResource,
       getAccessToken: () => broker.getAccessToken(),
       onPrivateContextInvalidated: clear,
+      beginPrivateContextInvalidation: beginPrivateContextInvalidation === void 0 ? void 0 : begin,
       fetch: fetch2,
       allowLoopbackForIsolatedTests: broker.configuration.allowLoopbackForIsolatedTests
     });
     return createAccountModule(api);
   })();
-  return {
-    async invalidatePrivateContext(reason) {
-      if (broker) await api.invalidatePrivateContext(reason);
-      else await onPrivateContextInvalidated(reason);
+  return module = {
+    invalidatePrivateContext(reason) {
+      return issue("invalidate", async () => {
+        if (broker) await api.invalidatePrivateContext(reason);
+        else {
+          if (beginPrivateContextInvalidation !== void 0) {
+            const acknowledgement = beginPrivateContextInvalidation(reason);
+            if (acknowledgement !== void 0) {
+              if (acknowledgement && typeof acknowledgement.then === "function") Promise.resolve(acknowledgement).catch(() => {
+              });
+              throw new TypeError("Private fencing must synchronously return void.");
+            }
+          }
+          await onPrivateContextInvalidated(reason);
+        }
+      });
     },
-    async prepare() {
-      if (disposed) throw new Error("ServiceUnavailable");
-      if (broker && !prepared) {
-        await api.invalidatePrivateContext("configuration_prepared");
-        prepared = true;
-      }
+    prepare() {
+      return issue("prepare", async () => {
+        if (disposed) throw new Error("ServiceUnavailable");
+        if (broker && !prepared) {
+          await api.invalidatePrivateContext("configuration_prepared");
+          prepared = true;
+        }
+      });
     },
-    async invoke(id, action, args) {
-      if (broker && !disposed && !broker.getAccessToken()) {
-        if (!prepared) return JSON.stringify({ ok: false, status: null, error: { code: "PrivateContextNotPrepared", action, body: null } });
-        return JSON.stringify({ ok: false, status: null, error: { code: "AuthenticationRequired", action, body: null } });
-      }
-      return base.invoke(id, action, args);
+    invoke(id, action, args) {
+      if (disposed) return Promise.resolve(JSON.stringify({ ok: false, status: null, error: { code: "ServiceUnavailable", action, body: null } }));
+      return issue("invoke", async () => {
+        if (broker && !disposed && !broker.getAccessToken()) {
+          if (!prepared) return JSON.stringify({ ok: false, status: null, error: { code: "PrivateContextNotPrepared", action, body: null } });
+          return JSON.stringify({ ok: false, status: null, error: { code: "AuthenticationRequired", action, body: null } });
+        }
+        return base.invoke(id, action, args);
+      });
     },
     signInAvailable() {
       return Boolean(broker && prepared && !disposed);
     },
-    async requestSignIn(id) {
-      if (!broker || !prepared || disposed) return JSON.stringify({ ok: false, error: { code: "ServiceUnavailable" } });
-      if (typeof id !== "string" || !id || signIns.has(id)) return JSON.stringify({ ok: false, error: { code: "InvalidArgument" } });
-      const controller = new AbortController();
-      signIns.set(id, controller);
-      try {
-        await broker.signIn({ signal: controller.signal });
-        return JSON.stringify({ ok: true });
-      } catch (error) {
-        return JSON.stringify({ ok: false, error: { code: typeof error?.code === "string" ? error.code : "ProviderUnavailable" } });
-      } finally {
-        signIns.delete(id);
-      }
+    requestSignIn(id) {
+      if (disposed) return Promise.resolve(JSON.stringify({ ok: false, error: { code: "ServiceUnavailable" } }));
+      return issue("sign-in", async () => {
+        if (!broker || !prepared || disposed) return JSON.stringify({ ok: false, error: { code: "ServiceUnavailable" } });
+        if (typeof id !== "string" || !id || signIns.has(id)) return JSON.stringify({ ok: false, error: { code: "InvalidArgument" } });
+        const controller = new AbortController();
+        signIns.set(id, controller);
+        try {
+          await broker.signIn({ signal: controller.signal });
+          return JSON.stringify({ ok: true });
+        } catch (error) {
+          return JSON.stringify({ ok: false, error: { code: typeof error?.code === "string" ? error.code : "ProviderUnavailable" } });
+        } finally {
+          signIns.delete(id);
+        }
+      });
     },
     cancel(id) {
       base.cancel(id);
       signIns.get(id)?.abort();
     },
-    dispose() {
+    revokePrivateContext() {
       disposed = true;
-      for (const controller of signIns.values()) controller.abort();
-      base.dispose();
-      broker?.dispose();
+      broker?.revokePrivateContext();
+      base.revokePrivateContext();
+    },
+    disposeAsync() {
+      if (cleanupTask) return cleanupTask;
+      disposed = true;
+      broker?.revokePrivateContext();
+      base.revokePrivateContext();
+      let resolve, reject;
+      cleanupTask = new Promise((a, b) => {
+        resolve = a;
+        reject = b;
+      });
+      const errors = [];
+      for (const controller of signIns.values()) try {
+        controller.abort();
+      } catch (error) {
+        errors.push(error);
+      }
+      Promise.allSettled([base.disposeAsync(), broker?.disposeAsync() ?? Promise.resolve(), joinIssued()]).then((results) => {
+        errors.push(...results.filter((r) => r.status === "rejected").map((r) => r.reason));
+        if (errors.length) reject(new AggregateError(errors, "Configured account cleanup failed."));
+        else resolve();
+      }, reject);
+      return cleanupTask;
+    },
+    dispose() {
+      module.disposeAsync().catch(() => {
+      });
     }
   };
 }

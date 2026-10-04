@@ -36,7 +36,12 @@ public static partial class Program
     public static void LocationChanged(string fragment) => Application?.QueueNavigation(fragment);
 
     [JSExport]
-    public static async Task<bool> CloseShell() => Application is null || await Application.CloseAsync();
+    public static async Task<bool> CloseShell()
+    {
+        if (Application is { } application && !await application.CloseAsync()) return false;
+        await ReleasePrivateAccountContext();
+        return true;
+    }
 
     [JSExport]
     public static bool HasUnsavedChanges() => Application?.HasUnsavedChanges == true;
@@ -48,14 +53,17 @@ public static partial class Program
     public static bool PerformAccessibility(string id, string operation, string? value) => Application?.PerformAccessibility(id, operation, value) == true;
 
     [JSExport]
-    public static void PrivateContextInvalidated()
+    public static async Task PrivateContextInvalidated()
     {
-        Application?.ReplacePrivateAccountSettings();
+        if (Application is { } application) await application.ReplacePrivateAccountSettingsAsync();
         ShowStatus("PermissionRequired", "Sign in before reopening private content.");
     }
 
     [JSExport]
-    public static void OwnedAccountContextChanged() => Application?.ReplacePrivateAccountSettings();
+    public static Task OwnedAccountContextChanged() => Application?.ReplacePrivateAccountSettingsAsync() ?? Task.CompletedTask;
+
+    [JSExport]
+    public static Task RevokePrivateContext() => Application?.ResetPrivateContextAsync() ?? Task.CompletedTask;
 
     [JSImport("readFragment", "nineToOneBrowser")]
     internal static partial string ReadFragment();
@@ -68,4 +76,7 @@ public static partial class Program
 
     [JSImport("reduceMotion", "nineToOneBrowser")]
     internal static partial bool ReduceMotion();
+
+    [JSImport("releasePrivateAccountContext", "nineToOneBrowser")]
+    internal static partial Task ReleasePrivateAccountContext();
 }

@@ -4,6 +4,7 @@ import * as waveBrowser from './wave-browser.js';
 import { createConfiguredAccounts, handleOAuthPopupCallback } from './configured-accounts.bundle.js';
 import { createNotesModule } from './notes-indexeddb.js';
 import * as writePackages from './write-packages.js';
+import { createPrivateContextLifecycle } from './browser-private-context.js';
 
 const platform = createBrowserPlatform(window, document);
 let accessibility;
@@ -11,6 +12,60 @@ let unsubscribe;
 let accounts;
 let owner;
 let notes;
+let released = false;
+let releaseTask;
+const verifiedOwnerChange = Symbol('verified owner change');
+const terminalRelease = Symbol('terminal private release');
+const cleanupFailed = () => platform.showStatus('PrivateContextCleanupFailed',
+    'Private content closed, but cleanup did not complete. Reload before signing in.');
+const lifecycle = createPrivateContextLifecycle({
+    beginOwnerReset: operation => operation === terminalRelease ? owner.RevokePrivateContext()
+        : operation === verifiedOwnerChange ? owner.OwnedAccountContextChanged() : owner.PrivateContextInvalidated(),
+    clearPresentation: () => { accessibility?.clear(); },
+    onFailure: cleanupFailed,
+});
+
+// Terminal release is externally owned. Request-originated invalidation joins
+// only native reset work, so it cannot wait on its own JS/native request cycle.
+function releasePrivateAccountContext() {
+    if (releaseTask) return releaseTask;
+    let resolve, reject;
+    releaseTask = new Promise((yes, no) => { resolve = yes; reject = no; });
+    releaseTask.catch(() => {});
+    released = true; // Prevent new private replacement before any callback.
+    const errors = [];
+    try { lifecycle.begin(terminalRelease); } catch (error) { errors.push(error); }
+    for (const cleanup of [() => accessibility?.dispose(), () => unsubscribe?.()]) {
+        try { cleanup(); } catch (error) { lifecycle.holdFailure(error); errors.push(error); }
+    }
+    let accountDrain;
+    try {
+        accountDrain = accounts.disposeAsync();
+        if (typeof accountDrain?.then !== 'function') throw new TypeError('Actual account disposal must return its drain task.');
+    } catch (error) { lifecycle.holdFailure(error); errors.push(error); }
+    Promise.allSettled([lifecycle.join(), accountDrain]).then(async settled => {
+        for (const result of settled) if (result.status === 'rejected') errors.push(result.reason);
+        // A real broker continuation may issue another native reset after the
+        // first join settles. Join it once all broker work has truly settled.
+        try { await lifecycle.join(); } catch (error) { errors.push(error); }
+        if (errors.length) {
+            for (const error of errors) lifecycle.holdFailure(error);
+            reject(new AggregateError(errors, 'Terminal private cleanup failed.'));
+        }
+        else resolve();
+    });
+    return releaseTask;
+}
+
+async function replaceVerifiedOwner() {
+    const version = lifecycle.version;
+    await lifecycle.join();
+    if (released || version !== lifecycle.version) throw new DOMException('Private context changed.', 'AbortError');
+    const expectedVersion = version + 1;
+    lifecycle.begin(verifiedOwnerChange);
+    await lifecycle.join();
+    if (released || expectedVersion !== lifecycle.version) throw new DOMException('Private context changed.', 'AbortError');
+}
 const isCompatible = typeof WebAssembly === 'object' && typeof WebAssembly.instantiate === 'function'
     && typeof BigInt === 'function' && typeof globalThis.fetch === 'function'
     && typeof globalThis.ResizeObserver === 'function';
@@ -21,14 +76,15 @@ try {
     const accountConfiguration = window.nineToOneBrowserConfiguration?.account ?? null;
     if (!handleOAuthPopupCallback(accountConfiguration)) {
         accounts = createConfiguredAccounts({ configuration: accountConfiguration, window,
-            onPrivateContextInvalidated: () => { accessibility?.clear(); owner?.PrivateContextInvalidated(); },
-            onVerifiedIdentity: () => owner?.OwnedAccountContextChanged(),
+            beginPrivateContextInvalidation: reason => lifecycle.begin(released ? terminalRelease : reason),
+            onPrivateContextInvalidated: () => lifecycle.join(),
+            onVerifiedIdentity: replaceVerifiedOwner,
             onFailure: () => platform.showStatus('AuthenticationRequired', 'Sign-in did not complete. Try signing in again.') });
         notes = createNotesModule();
         if (!isCompatible) throw new Error('BrowserCapabilityUnavailable');
         const { dotnet } = await import('./_framework/dotnet.js');
         const runtime = await dotnet.create();
-        runtime.setModuleImports('nineToOneBrowser', platform);
+        runtime.setModuleImports('nineToOneBrowser', { ...platform, releasePrivateAccountContext });
         runtime.setModuleImports('nineToOneWave', waveBrowser);
         runtime.setModuleImports('nineToOneAccounts', accounts);
         runtime.setModuleImports('nineToOneNotes', notes);
@@ -39,17 +95,17 @@ try {
         await accounts.prepare();
         accessibility = createBrowserAccessibility(window, document, owner);
         unsubscribe = platform.subscribe(owner.LocationChanged,
-            () => { accessibility.dispose(); unsubscribe(); accounts.dispose(); owner.PrivateContextInvalidated(); },
-            () => { accessibility.clear(); accounts.invalidatePrivateContext('page_restored').catch(() => {
-                owner.PrivateContextInvalidated();
-                platform.showStatus('PermissionRequired', 'Sign in before reopening private content.');
+            () => { releasePrivateAccountContext().catch(cleanupFailed); },
+            () => { accounts.invalidatePrivateContext('page_restored').catch(() => {
+                cleanupFailed();
             }); }, owner.HasUnsavedChanges);
         await runtime.runMain(config.mainAssemblyName, []);
     }
 } catch (error) {
-    accessibility?.dispose();
-    unsubscribe?.();
-    accounts?.dispose();
+    if (accounts) {
+        try { await releasePrivateAccountContext(); }
+        catch { cleanupFailed(); }
+    }
     console.error('9to1 browser startup failed.', error);
     platform.showStatus(isCompatible ? 'BrowserRuntimeUnavailable' : 'BrowserCapabilityUnavailable',
         isCompatible ? '9to1 could not start. Check your connection and reload the page.'

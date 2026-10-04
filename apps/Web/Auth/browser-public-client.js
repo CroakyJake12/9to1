@@ -45,11 +45,14 @@ export function handleOAuthPopupCallback(configuration, win = globalThis.window)
 
 export class BrowserPublicClient {
   #config; #window; #fetch; #crypto; #before; #verifyAccount; #verified; #signInFailed; #expired; #failure;
+  #issued = new Set(); #cleanupErrors = []; #cleanupTask; #beginExpiry;
   #token = null; #expires = 0; #timer; #pending = null; #generation = 0; #disposed = false; #discovery; #jwks;
   constructor({ configuration, window: win = globalThis.window, fetch: transport = globalThis.fetch,
-    crypto = globalThis.crypto, onBeforeSignIn, verifyCurrentAccount, onVerifiedIdentity, onSignInFailed, onTokenExpired, onFailure }) {
+    crypto = globalThis.crypto, onBeforeSignIn, verifyCurrentAccount, onVerifiedIdentity, onSignInFailed, onTokenExpired, onFailure, beginTokenExpiryInvalidation = undefined }) {
     if (!win || typeof transport !== 'function' || !crypto?.subtle || typeof onBeforeSignIn !== 'function' ||
         typeof verifyCurrentAccount !== 'function' || typeof onVerifiedIdentity !== 'function' || typeof onSignInFailed !== 'function' || typeof onTokenExpired !== 'function' || typeof onFailure !== 'function') throw problem('InvalidConfiguration');
+    if(beginTokenExpiryInvalidation !== undefined && typeof beginTokenExpiryInvalidation !== 'function') throw problem('InvalidConfiguration');
+    this.#beginExpiry = beginTokenExpiryInvalidation;
     this.#config = validatePublicClientConfiguration(configuration, win.location.origin);
     this.#window = win; this.#fetch = transport; this.#crypto = crypto; this.#before = onBeforeSignIn;
     this.#verifyAccount = verifyCurrentAccount; this.#verified = onVerifiedIdentity; this.#signInFailed = onSignInFailed; this.#expired = onTokenExpired; this.#failure = onFailure;
@@ -105,33 +108,77 @@ export class BrowserPublicClient {
         !Number.isSafeInteger(access.exp) || access.exp * 1000 <= Date.now()) throw problem('TokenBindingMismatch');
     if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem('SessionContextChanged');
     this.#token = tokens.access_token; this.#expires = access.exp * 1000;
-    try { await this.#verifyAccount(id.sub, pending.controller.signal); }
+    try { await pending.callbacks.verifyAccount(id.sub, pending.controller.signal); }
     catch { if (pending.generation === this.#generation) this.clearToken({ cancelPending: false }); throw problem('CurrentAccountVerificationFailed'); }
     if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) {
       if (pending.generation === this.#generation) this.clearToken({ cancelPending: false }); throw problem('SessionContextChanged');
     }
-    try { await this.#verified(); }
+    try { await pending.callbacks.verified(); }
     catch { if (pending.generation === this.#generation) this.clearToken({ cancelPending: false }); throw problem('PrivateContextCleanupFailed'); }
     if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem('SessionContextChanged');
+    const tokenGeneration = this.#generation;
     this.#timer = setTimeout(() => {
-      this.clearToken();
-      Promise.resolve(this.#expired()).catch(() => this.#failure('PrivateContextCleanupFailed'));
+      if(this.#disposed || tokenGeneration !== this.#generation) return;
+      const expired=this.#expired, failure=this.#failure, begin=this.#beginExpiry;
+      this.#issue('expiry',async()=>{
+        try {
+          this.clearToken({cancelPending:false}); // Credential/generation fence without callbacks.
+          if(begin !== undefined) {
+            try {
+              const acknowledgement=begin('token_expired');
+              if(acknowledgement !== undefined) {
+                if(acknowledgement && typeof acknowledgement.then === 'function') Promise.resolve(acknowledgement).catch(()=>{});
+                throw problem('PrivateContextCleanupFailed');
+              }
+            } finally { this.#pending?.controller.abort(); } // Actual native fence first.
+          } else this.clearToken(); // Legacy default remains qualified; no synchronous owner fence claimed.
+          await expired(); // Explicit composition supplies native JOIN only; never joins own broker task.
+        } catch(error) {
+          this.#cleanupErrors.push(error);
+          try{failure('PrivateContextCleanupFailed');}catch(observerError){this.#cleanupErrors.push(observerError);}
+          throw error;
+        }
+      }).catch(()=>{}); // Retained cleanup failure remains observable through async disposal/join.
     }, Math.min(this.#expires - Date.now(), 2_147_483_647));
     // Refresh tokens are deliberately not retained. Current identity/API access remains server-authoritative.
   }
-  async signIn({ signal } = {}) {
+  #issue(action, factory) {
+    if(this.#disposed) return Promise.reject(problem('ServiceUnavailable'));
+    let settle; const completion = new Promise(resolve => { settle = resolve; });
+    const entry = { action, completion }; this.#issued.add(entry); // Before callback/fetch/window.open.
+    let actual; try { actual = Promise.resolve(factory()); } catch (error) { actual = Promise.reject(error); }
+    actual.then(() => { this.#issued.delete(entry); settle(); }, error => {
+      if(error?.code === 'PrivateContextCleanupFailed') this.#cleanupErrors.push(error);
+      this.#issued.delete(entry); settle();
+    });
+    return actual;
+  }
+  async joinIssuedWork() {
+    while(this.#issued.size) await Promise.all([...this.#issued].map(entry=>entry.completion));
+    if(this.#cleanupErrors.length) throw new AggregateError([...this.#cleanupErrors], 'Broker lifecycle cleanup failed.');
+  }
+  hasOutstandingWork() { return this.#issued.size !== 0; }
+  signIn(options = {}) {
+    if(this.#disposed) return Promise.reject(problem('ServiceUnavailable'));
+    // Actual prior exchange may outlive cancelled outer sign-in; preserve original single-sign-in intent.
+    if(this.#issued.size) return Promise.reject(problem('SignInInProgress'));
+    return this.#issue('sign-in',()=>this.#signInCore(options));
+  }
+  async #signInCore({ signal } = {}) {
     if (this.#disposed) throw problem('ServiceUnavailable');
     if (this.#pending) throw problem('SignInInProgress');
     if (signal?.aborted) throw problem('Cancelled');
+    const callbacks = { before:this.#before, verifyAccount:this.#verifyAccount, verified:this.#verified, signInFailed:this.#signInFailed, failure:this.#failure };
     const popup = this.#window.open('about:blank', `nine-to-one-${base64url(this.#crypto.getRandomValues(new Uint8Array(16)))}`, 'popup,width=520,height=720');
     if (!popup) throw problem('PopupUnavailable');
+    if(this.#disposed || signal?.aborted) { try{popup.close();}catch{} throw problem('Cancelled'); }
     const controller = new AbortController(); const abort = () => controller.abort();
     signal?.addEventListener('abort', abort, { once: true });
-    const pending = { popup, controller, generation: null, state: null, nonce: null, verifier: null, claimed: false };
+    const pending = { popup, controller, generation: null, state: null, nonce: null, verifier: null, claimed: false, callbacks };
     this.#pending = pending;
     let listener, poll;
     try {
-      await this.#before(controller.signal);
+      await callbacks.before(controller.signal);
       if (controller.signal.aborted || this.#disposed) throw problem('Cancelled');
       pending.generation = this.#generation;
       pending.state = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
@@ -144,7 +191,7 @@ export class BrowserPublicClient {
         listener = event => {
           if (event.origin !== new URL(this.#config.redirectUri).origin || event.source !== popup || event.data?.type !== 'nineToOne.oauth.callback' || pending.claimed) return;
           pending.claimed = true;
-          this.#exchange(pending, event.data.callbackUri, discovery).then(resolve, reject);
+          this.#issue('exchange',()=>this.#exchange(pending, event.data.callbackUri, discovery)).then(resolve, reject);
         };
         this.#window.addEventListener('message', listener);
         controller.signal.addEventListener('abort', () => reject(problem('Cancelled')), { once: true });
@@ -158,14 +205,28 @@ export class BrowserPublicClient {
     } catch (error) {
       this.clearToken({ cancelPending: false });
       let code = controller.signal.aborted ? 'Cancelled' : typeof error?.code === 'string' ? error.code : 'ProviderUnavailable';
-      try { await this.#signInFailed(); } catch { code = 'PrivateContextCleanupFailed'; }
-      this.#failure(code); throw problem(code);
+      try { await callbacks.signInFailed(); } catch { code = 'PrivateContextCleanupFailed'; }
+      try{callbacks.failure(code);}catch(error){this.#cleanupErrors.push(error);throw error;} throw problem(code);
     } finally {
       signal?.removeEventListener('abort', abort); this.#window.removeEventListener('message', listener); clearInterval(poll);
       try { popup.close(); } catch {}
       if (this.#pending === pending) this.#pending = null;
-      pending.verifier = null; pending.nonce = null; pending.state = null;
+      pending.verifier = null; pending.nonce = null; pending.state = null; pending.callbacks = null;
     }
   }
-  dispose() { this.#disposed = true; this.clearToken(); }
+  revokePrivateContext() {
+    this.#disposed=true; this.clearToken({cancelPending:false});
+    if(this.#pending) { this.#pending.verifier=null; this.#pending.nonce=null; this.#pending.state=null; }
+    this.#before=null;this.#verifyAccount=null;this.#verified=null;this.#signInFailed=null;
+    this.#expired=null;this.#failure=null;this.#beginExpiry=undefined;
+    this.#discovery=undefined;this.#jwks=undefined;
+  }
+  disposeAsync() {
+    if(this.#cleanupTask) return this.#cleanupTask;
+    this.revokePrivateContext(); // Root MUST have synchronously revoked native owners before cancellation.
+    let resolve,reject;this.#cleanupTask=new Promise((a,b)=>{resolve=a;reject=b;}); // Before abort reentrancy.
+    try{this.#pending?.controller.abort();}catch(error){this.#cleanupErrors.push(error);}
+    this.joinIssuedWork().then(resolve,reject);return this.#cleanupTask;
+  }
+  dispose() { this.disposeAsync().catch(()=>{}); } // Legacy caller gets no full-drain receipt.
 }

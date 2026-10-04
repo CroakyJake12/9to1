@@ -26,6 +26,11 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     private long _navigationVersion;
     private bool _disposed;
     private bool _closing;
+    private int _privateContextResets;
+    private long _privateContextVersion;
+    private TaskCompletionSource? _closeCompletion;
+    private readonly object _privateResetTaskGate = new();
+    private readonly HashSet<Task> _privateResetTasks = [];
     private Exception? _presentationCleanupError;
 
     /// <summary>Registration is supplied by the composition root after obtaining real authenticated owner adapters.</summary>
@@ -39,7 +44,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     }
     internal bool PerformAccessibility(string id, string operation, string? value)
     {
-        if (_disposed || _closing) return false;
+        if (_disposed || _closing || _privateContextResets != 0) return false;
         _availability?.Refresh();
         return _accessibility.Perform(id, operation, value);
     }
@@ -76,7 +81,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
 
     public async Task OpenFragmentAsync(string fragment)
     {
-        if (_disposed || _closing) return;
+        if (_disposed || _closing || _privateContextResets != 0) return;
         _navigationCancellation?.Cancel();
         _navigationCancellation?.Dispose();
         _navigationCancellation = new();
@@ -250,6 +255,59 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     /// <summary>Account/session/organisation changes must clear prior private presentation before new adapters load.</summary>
     public void ResetPrivateContext()
     {
+        if (!_surfaces.CanResetPrivateContextSynchronously || _privateContextResets != 0)
+            throw new InvalidOperationException("Private asynchronous owners require awaited ResetPrivateContextAsync.");
+        ResetPrivateContextAsync().GetAwaiter().GetResult();
+    }
+
+    public Task ResetPrivateContextAsync()
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (_privateResetTaskGate) _privateResetTasks.Add(completion.Task);
+        _ = CompletePrivateContextResetAsync(completion);
+        return completion.Task;
+    }
+
+    private async Task CompletePrivateContextResetAsync(TaskCompletionSource completion)
+    {
+        Exception? failure = null;
+        try { await ResetPrivateContextCoreAsync(); }
+        catch (Exception error) { failure = error; }
+        if (failure is null)
+        {
+            completion.TrySetResult();
+            lock (_privateResetTaskGate) _privateResetTasks.Remove(completion.Task);
+        }
+        else
+        {
+            _surfaces.HoldPrivateContextFailure(failure);
+            completion.TrySetException(failure);
+        }
+    }
+
+    private async Task DrainPrivateContextResetTasksAsync()
+    {
+        List<Exception>? errors = null;
+        var observed = new HashSet<Task>();
+        while (true)
+        {
+            Task[] tasks;
+            lock (_privateResetTaskGate) tasks = _privateResetTasks.Where(task => observed.Add(task)).ToArray();
+            if (tasks.Length == 0) break;
+            try { await Task.WhenAll(tasks); }
+            catch
+            {
+                foreach (var task in tasks)
+                    if (task.Exception is { } failure) (errors ??= []).AddRange(failure.InnerExceptions);
+            }
+        }
+        if (errors is not null) throw new AggregateException("Issued private presentation resets failed.", errors);
+    }
+
+    private async Task ResetPrivateContextCoreAsync()
+    {
+        ++_privateContextResets;
+        ++_privateContextVersion;
         ++_navigationVersion;
         var loader = _loader;
         var lifetime = _surfaceLifetime;
@@ -263,13 +321,20 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         _scrollOffsets.Clear();
         _currentAddress = null;
         List<Exception>? errors = null;
-        Remove(() => _navigationCancellation?.Cancel());
+        // Every route and original authority is revoked before cancellation or
+        // presentation cleanup can execute user/provider callbacks.
+        var reset = _surfaces.BeginPrivateContextReset();
         Remove(_accessibility.Clear);
         Remove(() => _view.Content = null);
+        Remove(() => _navigationCancellation?.Cancel());
         Remove(() => availability?.Dispose());
         Remove(() => loader?.Dispose());
         Remove(() => lifetime?.Dispose());
-        Remove(_surfaces.ClearPrivateContext);
+        try { await reset.DrainAsync(); }
+        catch (Exception error) { (errors ??= []).Add(error); }
+        try { await _surfaces.DrainPrivateContextResetsAsync(); }
+        catch (Exception error) { (errors ??= []).Add(error); }
+        finally { --_privateContextResets; }
         if (errors is not null) throw new AggregateException("Private browser presentation was removed with teardown failures.", errors);
 
         void Remove(Action cleanup)
@@ -283,10 +348,12 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     {
         if (_disposed) return true;
         if (_closing) return false;
+        _closeCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
         _closing = true;
         try
         {
             _view.IsEnabled = false;
+            await DrainPrivateContextResetTasksAsync();
             ++_navigationVersion;
             _navigationCancellation?.Cancel();
             var closed = await _surfaces.ClearAsync(cancellationToken);
@@ -296,7 +363,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 return false;
             }
             _disposed = true;
-            ResetPrivateContext();
+            await ResetPrivateContextAsync();
             return true;
         }
         catch
@@ -306,19 +373,31 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             if (_surfaces.AvailableRoutes.Count == 0)
             {
                 _disposed = true;
-                ResetPrivateContext();
+                await ResetPrivateContextAsync();
             }
             throw;
         }
         finally
         {
-            _closing = false;
-            if (_disposed)
+            try { await DrainPrivateContextResetTasksAsync(); }
+            finally
             {
-                _navigationCancellation?.Dispose();
-                _navigationCancellation = null;
+                _closing = false;
+                try
+                {
+                    if (_disposed)
+                    {
+                        _navigationCancellation?.Dispose();
+                        _navigationCancellation = null;
+                    }
+                    else _view.IsEnabled = true;
+                }
+                finally
+                {
+                    _closeCompletion?.TrySetResult();
+                    _closeCompletion = null;
+                }
             }
-            else _view.IsEnabled = true;
         }
     }
 
@@ -327,10 +406,15 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         if (!await CloseAsync()) throw new InvalidOperationException("Browser owners could not close. Their drafts remain open.");
     }
 
-    internal void ReplacePrivateAccountSettings()
+    internal async Task ReplacePrivateAccountSettingsAsync()
     {
-        ResetPrivateContext();
-        if (_disposed || _closing) return;
+        var reset = ResetPrivateContextAsync();
+        var version = _privateContextVersion;
+        await reset;
+        await DrainPrivateContextResetTasksAsync();
+        if (_closeCompletion is { } closing) await closing.Task;
+        await DrainPrivateContextResetTasksAsync();
+        if (_disposed || _closing || version != _privateContextVersion || _privateContextResets != 0) return;
         BrowserFeatureComposition.RegisterPrivateAccountSettings(_surfaces);
         QueueNavigation(Program.ReadFragment());
     }

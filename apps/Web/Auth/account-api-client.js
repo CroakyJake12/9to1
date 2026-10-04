@@ -22,10 +22,11 @@ export class AccountApiClient {
   #token;
   #fetch;
   #clear;
+  #beginPrivate;
   #generation = 0;
   #pending = new Set();
 
-  constructor({ apiResource, getAccessToken, onPrivateContextInvalidated, fetch: transport = globalThis.fetch,
+  constructor({ apiResource, getAccessToken, onPrivateContextInvalidated, beginPrivateContextInvalidation = undefined, fetch: transport = globalThis.fetch,
     allowLoopbackForIsolatedTests = false }) {
     const resource = new URL(apiResource);
     const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(resource.hostname);
@@ -36,6 +37,8 @@ export class AccountApiClient {
     if (typeof getAccessToken !== 'function' || typeof onPrivateContextInvalidated !== 'function' || typeof transport !== 'function') {
       throw new TypeError('A token supplier, private-context invalidator and fetch transport are required.');
     }
+    if (beginPrivateContextInvalidation !== undefined && typeof beginPrivateContextInvalidation !== 'function') throw new TypeError('A synchronous private fence is required when supplied.');
+    this.#beginPrivate = beginPrivateContextInvalidation;
     this.#origin = resource.origin;
     this.#token = getAccessToken;
     this.#clear = onPrivateContextInvalidated;
@@ -43,16 +46,46 @@ export class AccountApiClient {
   }
 
   /** Call before switching account/session/organisation; await cleanup before opening new private surfaces. */
+  // Explicit sync begin receipt only; caller MUST separately await its owning
+  // full cleanup join before admitting new private surfaces. No wire authority.
+  beginPrivateContextInvalidation(reason = 'context_changed') {
+    this.#fenceAndAbort(reason, null);
+  }
+
   async invalidatePrivateContext(reason = 'context_changed') {
     await this.#invalidate(reason);
   }
 
   async #invalidate(reason, settledTransport = null) {
-    this.#generation++;
-    for (const controller of this.#pending) {
-      if (controller !== settledTransport) controller.abort();
-    }
+    this.#fenceAndAbort(reason, settledTransport);
+    // Default callback still means original full awaited cleanup. Explicit
+    // two-phase composition installs its full JOIN callback here.
     await this.#clear(reason);
+  }
+
+  #fenceAndAbort(reason, settledTransport) {
+    this.#generation++;
+    try {
+      if (this.#beginPrivate !== undefined) {
+        const acknowledgement = this.#beginPrivate(reason);
+        if (acknowledgement !== undefined) {
+          // An async/nonvoid callback NEVER qualifies as a native fence receipt.
+          if (acknowledgement && typeof acknowledgement.then === 'function') Promise.resolve(acknowledgement).catch(() => {});
+          throw new TypeError('Private fencing must synchronously return void.');
+        }
+      }
+    } finally {
+      // With explicit begin installed, credential/native owner fences precede
+      // all API cancellation callbacks. Undefined mode preserves old behavior.
+      for (const controller of this.#pending) if (controller !== settledTransport) controller.abort();
+    }
+  }
+
+  // Only INTERNAL request authentication failures can acknowledge the fence
+  // without awaiting their own owner drain. They remain owned until they settle.
+  async #invalidateFromRequest(reason, settledTransport = null) {
+    if (this.#beginPrivate === undefined) return this.#invalidate(reason, settledTransport);
+    this.#fenceAndAbort(reason, settledTransport);
   }
 
   getCurrent({ signal } = {}) {
@@ -154,7 +187,7 @@ export class AccountApiClient {
       if (generation !== this.#generation) return failed('SessionContextChanged', action);
       if (controller.signal.aborted) return failed('Cancelled', action);
       if (typeof token !== 'string' || !token || /\s/.test(token)) {
-        try { await this.invalidatePrivateContext('authentication_required'); }
+        try { await this.#invalidateFromRequest('authentication_required'); }
         catch { return failed('PrivateContextCleanupFailed', action); }
         return failed('AuthenticationRequired', action);
       }
@@ -173,7 +206,7 @@ export class AccountApiClient {
         // Headers have arrived; preserve this transport solely to consume its error body.
         // Other private requests are cancelled immediately. Explicit caller abort still applies.
         expectedGeneration = generation + 1;
-        try { await this.#invalidate('session_invalidated', controller); }
+        try { await this.#invalidateFromRequest('session_invalidated', controller); }
         catch { return failed('PrivateContextCleanupFailed', action, response.status); }
       }
       if (expectedGeneration !== this.#generation) return failed('SessionContextChanged', action);

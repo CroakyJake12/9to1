@@ -8,14 +8,28 @@ namespace NineToOne.Web.Accounts;
 
 /// <summary>CUI presentation of server-owned account/profile/session wire records. Drafts and confirmation state are view-local.</summary>
 public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRepeatItemBindingContext,
-    ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IDisposable
+    ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IDisposable, IAsyncDisposable
 {
     private static readonly string[] Fields = ["name", "username", "icon", "pronouns", "job"];
-    private readonly IAccountBrowserTransport _transport;
-    private readonly Func<Action, Task> _present;
-    private readonly Func<CancellationToken, Task>? _openSignIn;
+    private IAccountBrowserTransport? _transport;
+    private Func<Action, Task>? _present;
+    private Func<CancellationToken, Task>? _openSignIn;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly object _ownership = new();
+    private readonly HashSet<Task> _ownedBoundaries = [];
+    private readonly HashSet<Task> _brokerContinuations = [];
+    private long _generation;
+    private Task? _cleanup;
+
+    // A boundary settles only when all view-owned work ends or transfers to the
+    // EXISTING broker before its reset callback. It is not a token/actor/job model.
+    private sealed class CommandBoundary
+    {
+        internal readonly TaskCompletionSource Settled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal bool Transferred;
+    }
     private readonly Dictionary<string, string?> _draft = new(StringComparer.Ordinal);
     private readonly HashSet<string> _changed = new(StringComparer.Ordinal);
     private JsonElement? _current, _profile;
@@ -92,9 +106,47 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         _ => false,
     });
 
-    public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+    public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
-        if (_disposed) return;
+        CommandBoundary boundary;
+        long generation;
+        lock (_ownership)
+        {
+            if (_disposed) return ValueTask.CompletedTask;
+            generation = _generation;
+            boundary = new();
+            _ownedBoundaries.Add(boundary.Settled.Task);
+        }
+        return new(RunIssuedCommandAsync(command, parameter, cancellationToken, generation, boundary));
+    }
+
+    /// <summary>Diagnostic ownership receipts only, never authentication success.
+    /// These ORIGINAL broker tasks remain caller-cancellable and may outlive view drain.</summary>
+    public IReadOnlyList<Task> BrokerOwnedContinuations
+    { get { lock (_ownership) return _brokerContinuations.ToArray(); } }
+    public bool HasOutstandingBrokerWork => BrokerOwnedContinuations.Any(task => !task.IsCompleted);
+    private void TransferToExistingBroker(CommandBoundary boundary)
+    {
+        lock (_ownership) { boundary.Transferred = true; _brokerContinuations.Add(boundary.Completion.Task); }
+        boundary.Settled.TrySetResult();
+    }
+
+    private async Task RunIssuedCommandAsync(string command, object? parameter, CancellationToken token,
+        long generation, CommandBoundary boundary)
+    {
+        try { await DispatchCoreAsync(command, parameter, token, generation, boundary); boundary.Completion.TrySetResult(); }
+        catch (Exception error) { if (boundary.Transferred) boundary.Completion.TrySetException(error); else boundary.Completion.TrySetResult(); throw; }
+        finally
+        {
+            boundary.Settled.TrySetResult();
+            lock (_ownership) _ownedBoundaries.Remove(boundary.Settled.Task);
+        }
+    }
+
+    private async Task DispatchCoreAsync(string command, object? parameter, CancellationToken cancellationToken,
+        long generation, CommandBoundary boundary)
+    {
+        if (_disposed || generation != _generation) return;
         // Confirmed session mutations and trusted sign-in clear/dispose this private view during their lifecycle.
         // They retain explicit caller cancellation; the reviewed mutation client pins the original session token.
         // View disposal still cancels reads and profile writes and never permits another command on this view.
@@ -129,12 +181,19 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
             }
             await Present(() => { _busy = true; _status = "Checking account services…"; });
             if (command == "SaveProfile") await SaveAsync(request.Token);
-            else if (command == "ConfirmSessionMutation") await MutateSessionAsync(request.Token);
+            else if (command == "ConfirmSessionMutation") await MutateSessionAsync(request.Token, boundary);
             else if (command == "RequestSignIn")
             {
-                await _openSignIn!(request.Token);
-                // Returning from trusted sign-in is not an account grant. Only the real service can populate this view.
-                if (!_disposed) await RefreshAsync(request.Token);
+                var signIn = _openSignIn ?? throw new OperationCanceledException(request.Token);
+                request.Token.ThrowIfCancellationRequested();
+                if (_disposed || generation != _generation) return;
+                // Exact existing owner: configured-accounts.requestSignIn + BrowserPublicClient.
+                // Its awaited private reset cannot await this enclosing dispatch. Caller cancellation
+                // remains attached to the broker; no token or verified identity is supplied by this view.
+                TransferToExistingBroker(boundary);
+                await signIn(request.Token);
+                // Fresh registration reads actual API self/profile/sessions, not this retired view.
+                await Present(() => _status = "Sign-in owner completed. Reopen account settings to check the actual account service.");
             }
             else
             {
@@ -156,7 +215,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
 
     private async Task RefreshAsync(CancellationToken ct)
     {
-        var current = await _transport.InvokeAsync("GetCurrent", null, ct);
+        var current = await InvokeOwnedAsync("GetCurrent", null, ct);
         if (!Succeeded(current)) { await Present(() => { ClearPrivate(); Fail(current); }); return; }
         var body = current.GetProperty("body");
         var id = Text(body, "accountId");
@@ -164,7 +223,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         if (_current is not null && Text(_current, "accountId") != id)
             await Present(ClearPrivate);
         await Present(() => _current = body.Clone());
-        var profile = await _transport.InvokeAsync("GetProfile", null, ct);
+        var profile = await InvokeOwnedAsync("GetProfile", null, ct);
         if (Succeeded(profile))
         {
             var record = profile.GetProperty("body").GetProperty("profile");
@@ -177,7 +236,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
             });
         }
         else { await Present(() => Fail(profile)); if (PrivateFailure(profile)) return; }
-        var sessions = await _transport.InvokeAsync("ListSessions", null, ct);
+        var sessions = await InvokeOwnedAsync("ListSessions", null, ct);
         if (Succeeded(sessions))
         {
             var rows = sessions.GetProperty("body").GetProperty("sessions").EnumerateArray().Select(row => row.Clone()).ToArray();
@@ -196,7 +255,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         { await Present(() => _status = "Name and Username are required. Enter a nonblank value for both fields."); return; }
         // Capture only changed fields and the original edit revision before transport can yield.
         var patch = _changed.ToDictionary(field => field, field => _draft.GetValueOrDefault(field), StringComparer.Ordinal);
-        var result = await _transport.InvokeAsync("UpdateProfile", JsonSerializer.SerializeToElement(new { expectedRevision = _revision, fields = patch }), ct);
+        var result = await InvokeOwnedAsync("UpdateProfile", JsonSerializer.SerializeToElement(new { expectedRevision = _revision, fields = patch }), ct);
         await Present(() =>
         {
             if (!Succeeded(result)) { Fail(result); return; }
@@ -206,14 +265,20 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         });
     }
 
-    private async Task MutateSessionAsync(CancellationToken ct)
+    private async Task MutateSessionAsync(CancellationToken ct, CommandBoundary boundary)
     {
         var action = _selectedSession is null ? _pendingMutation : "RevokeSession";
         var selected = _selectedSession;
-        if (action is null) return;
+        var transport = _transport;
+        if (action is null || transport is null) return;
         // Private CUI data disappears before the authenticated client's own cleanup and server mutation.
         await Present(() => { ClearPrivate(); _status = "Private views cleared. Waiting for the account service to acknowledge the session change…"; });
-        var result = await _transport.InvokeAsync(action, selected is null ? null : JsonSerializer.SerializeToElement(new { sessionId = selected }), ct);
+        ct.ThrowIfCancellationRequested();
+        if (_disposed) return;
+        // AccountApiClient pins the genuine original token, then awaits owner cleanup
+        // before network mutation. That existing broker owns the transferred task.
+        TransferToExistingBroker(boundary);
+        var result = await transport.InvokeAsync(action, selected is null ? null : JsonSerializer.SerializeToElement(new { sessionId = selected }), ct);
         await Present(() => { if (Succeeded(result)) _status = "Session change acknowledged. Revalidate your account before reopening private content."; else Fail(result); });
     }
 
@@ -254,12 +319,71 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     private static string? Text(JsonElement? value, string field) => value is { ValueKind: JsonValueKind.Object } record && record.TryGetProperty(field, out var item) && item.ValueKind == JsonValueKind.String ? item.GetString() : null;
     private static object? Scalar(JsonElement value) => value.ValueKind switch
     { JsonValueKind.String => value.GetString(), JsonValueKind.Number => value.GetRawText(), JsonValueKind.True => true, JsonValueKind.False => false, _ => null };
-    private Task Present(Action action) => _disposed ? Task.CompletedTask : _present(() => { if (!_disposed) { action(); Changed(); } });
+    private Task Present(Action action)
+    {
+        var generation = _generation;
+        var present = _present;
+        return _disposed || present is null ? Task.CompletedTask : present(() =>
+        { if (!_disposed && generation == _generation) { action(); Changed(); } });
+    }
+    private async Task<JsonElement> InvokeOwnedAsync(string action, JsonElement? args, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var generation = _generation;
+        var transport = _transport;
+        if (_disposed || transport is null) throw new OperationCanceledException(ct);
+        var result = await transport.InvokeAsync(action, args, ct);
+        // A backend ignoring cancellation must not repopulate or start a follow-up request.
+        ct.ThrowIfCancellationRequested();
+        if (_disposed || generation != _generation) throw new OperationCanceledException(ct);
+        return result;
+    }
     private void Changed() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     private void ClearPrivate() { _current = null; _profile = null; _sessions = []; _sessionsChecked = false; _draft.Clear(); _changed.Clear(); _conflict = false; _conflictRevision = null; _revision = 0; _selectedSession = null; _confirmation = null; _pendingMutation = null; }
-    public void Dispose()
+    /// <summary>Callback-free, terminal, synchronous privacy fence. Cancellation and
+    /// observer disposal occur only after every sensitive field and callback is detached.</summary>
+    public void RevokePrivateContext()
     {
-        if (_disposed) return;
-        _disposed = true; _lifetime.Cancel(); ClearPrivate(); _status = "Account view closed."; Changed();
+        lock (_ownership)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            ++_generation;
+            ClearPrivate();
+            _busy = false;
+            _status = "Account view closed.";
+            PropertyChanged = null;
+            _transport = null;
+            _present = null;
+            _openSignIn = null;
+        }
+    }
+
+    // IDisposable is an immediate view fence and starts cleanup; root owner uses
+    // awaited DisposeAsync, whose exact same task preserves cancellation faults.
+    public void Dispose() { RevokePrivateContext(); _ = BeginCleanup(); }
+    public ValueTask DisposeAsync() { RevokePrivateContext(); return new(BeginCleanup()); }
+    private Task BeginCleanup()
+    {
+        TaskCompletionSource completion;
+        Task[] owned;
+        lock (_ownership)
+        {
+            if (_cleanup is not null) return _cleanup;
+            completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _cleanup = completion.Task;
+            owned = _ownedBoundaries.ToArray();
+        }
+        _ = DrainAsync(owned, completion);
+        return completion.Task;
+    }
+    private async Task DrainAsync(Task[] owned, TaskCompletionSource completion)
+    {
+        var failures = new List<Exception>();
+        try { _lifetime.Cancel(); } catch (Exception error) { failures.Add(error); }
+        try { await Task.WhenAll(owned); } catch (Exception error) { failures.Add(error); }
+        try { _lifetime.Dispose(); } catch (Exception error) { failures.Add(error); }
+        if (failures.Count != 0) completion.TrySetException(new AggregateException("Revoked account view cleanup failed.", failures));
+        else completion.TrySetResult();
     }
 }

@@ -34,9 +34,11 @@ Unsupported operations and search are disabled. Opening an unavailable route
 preserves its address and previous valid view. This is an incomplete browser
 host, not an accepted Home implementation or browser parity release.
 
-Account/session/organisation ownership must call `ResetPrivateContext()` before
-loading a different context, clear old adapters, then register current authorised
-ones. No account credentials or private artifact caches are persisted by this
+Account/session/organisation ownership must call and await
+`ResetPrivateContextAsync()` before loading a different context. Private owners
+implement `IBrowserPrivateContextParticipant`: their synchronous revocation hides
+state before callbacks, and their asynchronous disposal drains issued work. The
+registry gates replacement until every reset settles; cleanup failures stay closed. No account credentials or private artifact caches are persisted by this
 host. Service worker registration is disabled until an owning team supplies the
 approved cache/account separation policy.
 
@@ -76,8 +78,8 @@ geometry diagnostics do not establish rich editor accessibility or donor parity.
 Owners with drafts implement `IBrowserCloseParticipant`. Explicit `CloseShell`
 awaits preparation before removing any routes and then awaits asynchronous
 teardown. Failed or cancelled preparation retains the registered owners and draft.
-Synchronous clear rejects owners requiring preparation. Async private-context
-owners require a further owned teardown contract and are rejected at registration.
+Synchronous clear rejects owners requiring preparation. Private asynchronous owners require `IBrowserPrivateContextParticipant` and are
+rejected at registration without that revocation and drain contract.
 The browser's ordinary unsaved-change prompt reads actual owner dirty/busy state.
 Page termination cannot guarantee awaited persistence; save or explicit close
 must finish before leaving. Forced termination/recovery remains an acceptance gate.
@@ -209,3 +211,6 @@ Its real DOM/history checks validate the JavaScript adapter; controlled BFCache
 event dispatch does not validate actual authenticated suspension/restoration.
 The source-linked Home contracts in the unit harness are the existing owner
 types; test handlers are fixtures and do not establish backend acceptance.
+
+Account/root teardown ordering and remaining CUI/provider gates are described in
+[Auth/PRIVATE_CONTEXT_LIFETIME.md](Auth/PRIVATE_CONTEXT_LIFETIME.md).
