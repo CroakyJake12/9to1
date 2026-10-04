@@ -381,18 +381,22 @@ public sealed class NativeRevisionBankOwnerTests
         await RevisionBankOriginalFixture.RunAsync(async profile =>
         {
             var calls = 0;
+            NativeSpacesPage? capturedNative = null;
+            HavenElement[]? conversations = null;
             async Task DeleteOnce(Guid id)
             {
                 calls++;
                 await profile.Owner.Registry.DeleteAsync(id, TestContext.Current.CancellationToken);
+                // Observe after the real owner return, after the selection's earlier queued UI setup.
+                conversations = capturedNative!.OriginalScene.Conversations.Children.ToArray();
             }
             var native = profile.CreateNativePage(DeleteOnce);
+            capturedNative = native;
             await native.ActivateAsync(TestContext.Current.CancellationToken);
             Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(),
                 button => button.Accessibility.AccessibleName == "Open Space " + profile.Space.Name));
             var rows = native.OriginalScene.SpaceRows;
             var count = rows.Children.Count;
-            var conversations = native.OriginalScene.Conversations.Children.ToArray();
             var selectedName = native.OriginalScene.SelectedName.Content;
             var notifications = 0;
             Task? close = null;
@@ -408,6 +412,7 @@ public sealed class NativeRevisionBankOwnerTests
             await Assert.IsAssignableFrom<Task>(close);
             Assert.Equal(1, notifications);
             Assert.Equal(count - 1, rows.Children.Count);
+            Assert.NotNull(conversations);
             Assert.Equal(conversations, native.OriginalScene.Conversations.Children);
             Assert.Equal(selectedName, native.OriginalScene.SelectedName.Content);
             Assert.Equal(1, calls);
@@ -420,19 +425,23 @@ public sealed class NativeRevisionBankOwnerTests
         await RevisionBankOriginalFixture.RunAsync(async profile =>
         {
             var calls = 0;
+            NativeSpacesPage? capturedNative = null;
+            HavenElement[]? conversations = null;
             async Task DeleteOnce(Guid id)
             {
                 calls++;
                 await profile.Owner.Registry.DeleteAsync(id, TestContext.Current.CancellationToken);
+                // Observe after the real owner return, after the selection's earlier queued UI setup.
+                conversations = capturedNative!.OriginalScene.Conversations.Children.ToArray();
             }
             var native = profile.CreateNativePage(DeleteOnce);
+            capturedNative = native;
             await native.ActivateAsync(TestContext.Current.CancellationToken);
             Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(),
                 button => button.Accessibility.AccessibleName == "Open Space " + profile.Space.Name));
             var status = native.OriginalScene.Status;
             status.Content = "retained status";
             status.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
-            var conversations = native.OriginalScene.Conversations.Children.ToArray();
             var notifications = 0;
             Task? close = null;
             status.Invalidated += (_, _) =>
@@ -448,6 +457,7 @@ public sealed class NativeRevisionBankOwnerTests
             Assert.Equal(1, notifications);
             Assert.Equal(string.Empty, status.Content);
             Assert.Equal(HavenVisibility.Visible, status.GetValue(HavenProperties.Visibility));
+            Assert.NotNull(conversations);
             Assert.Equal(conversations, native.OriginalScene.Conversations.Children);
             Assert.Equal(1, calls);
             var archived = Assert.IsType<SpaceDefinition>(await profile.Reopen().ReadExistingAsync(
