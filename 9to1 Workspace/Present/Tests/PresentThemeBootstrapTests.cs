@@ -32,7 +32,9 @@ public sealed class PresentThemeBootstrapTests
 
         Assert.True(application.TryGetResource("HavenFontFamily", null, out var value));
         var font = Assert.IsType<FontFamily>(value);
-        Assert.Contains("avares://Haven/Assets/Fonts/MontserratStatic", font.Name, StringComparison.Ordinal);
+        Assert.Equal("Montserrat", font.Name);
+        Assert.NotNull(font.Key);
+        Assert.Equal(new Uri("avares://Haven/Assets/Fonts/MontserratStatic"), font.Key.Source);
         Assert.Contains("Montserrat", new Typeface(font, weight: FontWeight.SemiBold).GlyphTypeface.FamilyName,
             StringComparison.Ordinal);
     }
