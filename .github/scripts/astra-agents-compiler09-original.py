@@ -439,6 +439,56 @@ def main():
 
 
 
+    restore_output = root / 'artifacts/desktop-visible-owning'
+
+    def snapshot_original_restore(suite, phase, stage, managed, host):
+        """Preserve the unchanged helper context and whole pre/post diagnostic bodies."""
+        primary = None; cleanup = []; snapshot = None; pre_rows = None; pre_retained = None
+        def capture_diagnostics(observation):
+            if restore_output.is_symlink() or not restore_output.is_dir() or restore_output.resolve() != root / 'artifacts/desktop-visible-owning':
+                raise RuntimeError('Same original restore diagnostic context changed')
+            rows = regular_closure(restore_output)
+            retained_rows = []; capture_errors = []
+            for row in rows:
+                def retain_one(row=row):
+                    retained_rows.append(retained(root / row['path'],
+                        out / phase / (suite['name'] + '-' + stage + '-' + observation + '-original-restore-diagnostics')))
+                collect(capture_errors, retain_one)
+            def verify_same_rows():
+                if regular_closure(restore_output) != rows:
+                    raise RuntimeError('Complete original restore diagnostics changed during retention')
+            collect(capture_errors, verify_same_rows)
+            fail(None, capture_errors)
+            return rows, retained_rows
+        try:
+            pre_rows, pre_retained = capture_diagnostics('pre-call')
+            snapshot = restore.snapshot_restore(root, suite['project'], extra_projects=[TASK_PROJECT],
+                evidence_cohort='owning', evidence_output=restore_output,
+                managed_artifacts=managed, host_artifacts=host)
+        except BaseException as error: primary = error
+        finally:
+            def retain_diagnostics():
+                post_rows, post_retained = capture_diagnostics('post-call')
+                if snapshot is not None and not post_rows:
+                    raise RuntimeError('Original successful restore diagnostic evidence unavailable')
+                before_by_path = {row['path']: row for row in (pre_rows or [])}
+                after_by_path = {row['path']: row for row in post_rows}
+                save(out / phase / (suite['name'] + '-' + stage + '-restore-diagnostic-witness.json'),
+                    {'originalEvidenceContext': str(restore_output), 'originalContextRoot': str(root),
+                     'cohort': 'owning', 'preCallInventoryCaptured': pre_rows is not None,
+                     'completePreCallFiles': pre_rows, 'retainedPreCallFiles': pre_retained,
+                     'completePostCallFiles': post_rows, 'retainedPostCallFiles': post_retained,
+                     'identicalPreexistingPaths': sorted(path for path in before_by_path if before_by_path[path] == after_by_path.get(path)),
+                     'newOrChangedPostCallPaths': sorted(path for path in after_by_path if after_by_path[path] != before_by_path.get(path)),
+                     'removedPreCallPaths': sorted(set(before_by_path) - set(after_by_path)),
+                     'helperReturnedSnapshot': snapshot is not None,
+                     'qualification': 'Whole diagnostic bodies retained before and after this unchanged helper call. Identical preexisting rows are not attributed as fresh query stdout. Helper/current query/graph/package/source guards remain unchanged; refusal never becomes a restore PASS.'})
+            collect(cleanup, retain_diagnostics)
+            collect(cleanup, protect_selected)
+            collect(cleanup, budget)
+        fail(primary, cleanup)
+        return snapshot
+
     pdb = load_module(root / '.github/scripts/astra-home-portable-pdb.py', 'joint_actual_pdb')
     restore = load_module(root / '.github/scripts/astra-joint-sdk-restore-evidence.py', 'joint_actual_restore')
     real_subprocess = subprocess
@@ -448,6 +498,9 @@ def main():
         os.environ.update({'AVALONIA_TELEMETRY_OPTOUT': '1', 'DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER': '1',
             'DOTNET_CLI_USE_MSBUILD_SERVER': '0', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE': '1',
             'DOTNET_CLI_TELEMETRY_OPTOUT': '1', 'MSBUILDDISABLENODEREUSE': '1', 'COHORT': 'owning'})
+        if restore_output.exists() or restore_output.is_symlink():
+            raise RuntimeError('Fresh unchanged restore evidence context required for this checkout')
+        restore_output.mkdir(parents=True, mode=0o700)
         verify_control_whole('control-before')
         verify_whole('comparison-before')
         command('toolchain', ['dotnet', '--info'], deadline=60)
@@ -515,8 +568,7 @@ def main():
             compiler_proofs = []
             for suite in entries:
                 name = suite['name']
-                before = restore.snapshot_restore(root, suite['project'], extra_projects=[TASK_PROJECT], evidence_cohort='owning', evidence_output=out,
-                    managed_artifacts=managed, host_artifacts=host)
+                before = snapshot_original_restore(suite, phase, 'before', managed, host)
                 graph_snapshots.append((suite, before))
                 save(out / phase / (name + '-restore-before.json'), before)
                 seen = set()
@@ -622,8 +674,7 @@ def main():
                     physical = P(reference['path'])
                     if physical.is_symlink() or not physical.is_file() or physical.stat().st_size != reference['bytes'] or digest(physical) != reference['sha256']:
                         raise RuntimeError('Same actual resolved compiler reference changed during proof')
-                after = restore.snapshot_restore(root, suite['project'], extra_projects=[TASK_PROJECT], evidence_cohort='owning', evidence_output=out,
-                    managed_artifacts=managed, host_artifacts=host)
+                after = snapshot_original_restore(suite, phase, 'after', managed, host)
                 save(out / phase / (name + '-restore-after.json'), after)
                 if after != before: raise RuntimeError('Complete restored graph/package evidence changed during original suite')
                 if regular_closure(task_target.parent) != task_before: raise RuntimeError('Source-built task output changed during original suite')

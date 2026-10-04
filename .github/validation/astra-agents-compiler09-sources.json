@@ -2985,6 +2985,37 @@
       "sha256": "257c52aea6d00c3ab0a54e694f7daffa51e514714aa4e4235e52f528754090ae"
     },
     "controls": "Source parses and whole source inverses reviewed only. No new controls, actual compiler, tests, SDK/native or payload invoked by owner.",
-    "qualification": "Six independent original compiler lanes, each with an isolated checkout/output/task context. Exact unchanged xUnit v2 baseline Debug/Release; corrected v2/v3 Debug/Release. Actual reference resolution, DefineConstants, evaluated Compile and physical original PE/PortablePDB required. Legacy HintPath failures remain real failures; no aliases, analyzer suppression, fabricated API or test/native/full-SDK acceptance."
+    "qualification": "Six independent original compiler lanes, each with an isolated checkout/output/task context. Exact unchanged xUnit v2 baseline Debug/Release; corrected v2/v3 Debug/Release. Actual reference resolution, DefineConstants, evaluated Compile and physical original PE/PortablePDB required. Legacy HintPath failures remain real failures; no aliases, analyzer suppression, fabricated API or test/native/full-SDK acceptance.",
+    "restoreEvidenceContext": {
+      "status": "SOURCE_ONLY_CONTEXT_ADAPTER_UNRUN",
+      "driver": {
+        "path": ".github/scripts/astra-agents-compiler09-original.py",
+        "bytes": 50589,
+        "sha256": "2d234c87f674975feaed9bd92eccf0eb2bdb8c84ed4cf13ea4a87f93aaaa5eeb"
+      },
+      "unchangedOriginalHelper": {
+        "path": ".github/scripts/astra-joint-sdk-restore-evidence.py",
+        "bytes": 10043,
+        "sha256": "d3681c1578ba683a40f200028bd567fd7d21b47643053adccb08cbdac5624ee3"
+      },
+      "cohort": "owning",
+      "requiredPerOriginalCheckoutPaths": [
+        "artifacts/desktop-visible-owning",
+        "artifacts/root14-managed-build",
+        "artifacts/root14-host-build-tasks"
+      ],
+      "laneEvidenceOutputUnchanged": true,
+      "diagnostics": "Fresh canonical helper context in each real baseline/corrected checkout. Complete original diagnostic bytes retained independently before and after each before/after helper call; unchanged inherited rows are identified without being promoted to fresh query stdout. All exact helper predicates/source-task/current restored graph/package hashing remain unchanged.",
+      "controls": {
+        "count": 14,
+        "source": {
+          "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/original-restore-context-memory-controls.py",
+          "bytes": 12708,
+          "sha256": "2b583583021b659f2e6e46c9e9106282d79dce3ad8e16831003ab73320ab553b"
+        },
+        "status": "SOURCE_ONLY_UNINVOKED"
+      },
+      "qualification": "Original corrected-v3 Debug compiler command succeeded before this post-build context guard refused. This correction does not establish later restore/reference/physical PE-PDB/all-document or sibling compiler acceptance."
+    }
   }
 }

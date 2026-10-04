@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "78d63bf31af259aca6708d4efb87aa9cff903935",
+  "baselineCommit": "1bebfe91deace76f88df1cd2d3a350cc833ed3fc",
   "programTree": "a1495094b0e463f0bfdeb591d6faf4a85c940f3f",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-agents-compiler09-original.py",
       "mode": "100644",
-      "object": "a87af4b3b1d19c79af7f89fab3332fb36f2fdb43",
-      "bytes": 47038,
-      "sha256": "c4158277366fbef5604f3ac844a76776dec230fc705b13603641f5e4b6ba86bf"
+      "object": "1e61cacf82fd966318837bfe6844bbdf7eee6d29",
+      "bytes": 50589,
+      "sha256": "2d234c87f674975feaed9bd92eccf0eb2bdb8c84ed4cf13ea4a87f93aaaa5eeb"
     },
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
@@ -218,9 +218,9 @@
     {
       "path": ".github/validation/astra-agents-compiler09-sources.json",
       "mode": "100644",
-      "object": "cee821e90a221d6361dc196d87b64bd6ac5124fe",
-      "bytes": 115830,
-      "sha256": "7eae8002b3b1fb6aa3bdd62afedd85d1692ca907781cc058f58c39b133c617ee"
+      "object": "d04ebd875a2b3d5b206a4d56ec82fa661352874e",
+      "bytes": 117644,
+      "sha256": "c276e893a8e40f22f8e3f42f9d07e57b0dc84d3884e76b65ced4a81230b93e04"
     },
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
@@ -66905,7 +66905,9 @@
     "All original guarded execvp/G handshake/creator PIDfd/SAME OriginalSession/strict EVERY expected and pending command directory/parent/birth/disappearance seals plus independent body/close/persistence/post-pin faults remain. Shared Mail/profile helpers remain byte exact; SDK-only caller class/current shape fix preserved.",
     "256MiB retained child evidence/16MiB log/1200s command/10800s caller bounds maintained. Whole original compiler/caller evidence uses source-pinned splitter26MiB payload29MiB inner/<32MiB outer/at most12 parts. Periodic budget checks are refusal guards, not hard allocation guarantees.",
     "Full eventual joint Debug/Release16 xUnit+2 Files console+4 product executable and original215/12/48 native cohorts remain independent mandatory gates. Original owning26 Home failures and regression causes are not treated as corrected or retested by this compiler verification.",
-    "No production association/privacy/Cloud/destination/export/bootstrap/installed actor/provider/OS225/Terra or unrelated source activation."
+    "No production association/privacy/Cloud/destination/export/bootstrap/installed actor/provider/OS225/Terra or unrelated source activation.",
+    "Actual1beb corrected-v3 Debug original compiler command exited0 with0 warnings/errors, then unchanged restore helper rejected isolated lane evidence_output. Only a canonical same-checkout restore-diagnostic adapter is selected; helper/managed/host/task/current graph/package/source/doc/drain guards remain exact.",
+    "Four owning driver spans only: fresh helper output, bounded pre/post complete original diagnostics with truthful inherited-row distinction, and before/after call adaptation. Canonical helper context is distinct from caller lane output; no helper predicate/COHORT/source-path/alias relaxation. Same primary and independent retention/post-pin/budget errors preserved."
   ],
   "inputManifests": [
     {
@@ -67187,6 +67189,21 @@
       "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source02-original-marker-utf8/manifest.json",
       "bytes": 32050,
       "sha256": "29829a9160f09691eb2d73c21672b75e5fb1167e687557cec14016bba3666f7f"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source03-exact-original-false-marker-schema/manifest.json",
+      "bytes": 34327,
+      "sha256": "65ca080a3df9273a7983650c0e7c0715a8777e38586352d282b5a2016a74f129"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source04-main-marker-control-scope/manifest.json",
+      "bytes": 36786,
+      "sha256": "1645d76887f607420c0d386b34fb7c29a69b2bde7509268824d1d7dd4992c147"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source05-original-restore-evidence-context/original-restore-context-memory-controls.py",
+      "bytes": 12708,
+      "sha256": "2b583583021b659f2e6e46c9e9106282d79dce3ad8e16831003ab73320ab553b"
     }
   ],
   "sharedCakeIdContract": null
