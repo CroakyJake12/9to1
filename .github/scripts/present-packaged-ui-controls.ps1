@@ -64,6 +64,13 @@ function Find-Control([System.Windows.Automation.AutomationElement]$Window, [str
     $condition = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::AutomationIdProperty, $Id)
     return $Window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
 }
+function Wait-Edit([System.Windows.Automation.AutomationElement]$Window, [string]$Id, [string]$Name) {
+    return Wait-Observed {
+        $candidate = Find-Control $Window $Id
+        if ($null -ne $candidate -and $candidate.Current.IsEnabled -and -not $candidate.Current.IsOffscreen -and $candidate.Current.BoundingRectangle.Width -gt 0 -and $candidate.Current.BoundingRectangle.Height -gt 0) { return $candidate }
+        return $null
+    } $Name
+}
 function Observe-Edit([System.Windows.Automation.AutomationElement]$Element, [string]$ExpectedName) {
     $current = $Element.Current
     Check ($current.ProcessId -eq $process.Id) 'Accessible editor belongs to the exact launched process'
@@ -297,7 +304,7 @@ public static class PresentPackageInput {
     $first = Read-Document $firstFile
     Check ($first.schemaVersion -eq 3 -and [Guid]$first.id -ne [Guid]::Empty -and $first.version -ge 1 -and @($first.slides).Count -eq 1) 'Application-generated canonical initial identity/schema/version/slide'
     $firstHash = (Get-FileHash -LiteralPath $firstFile -Algorithm SHA256).Hash.ToLowerInvariant()
-    $title = Wait-Observed { Find-Control $window 'Present.Deck.Title' } 'Actual native title editor ready'
+    $title = Wait-Edit $window 'Present.Deck.Title' 'Actual native title editor ready'
     [void](Observe-Edit $title 'Presentation title')
     Check ($null -eq (Find-Control $window 'Present.Slide.Title') -and $null -eq (Find-Control $window 'Present.Slide.Body')) 'Collapsed compatibility editor mirrors are absent from actual accessibility tree'
     File-Action $window 'New presentation'
@@ -309,7 +316,7 @@ public static class PresentPackageInput {
     $identity = $created.id
     Check ([Guid]$identity -ne [Guid]::Empty -and $identity -cne $first.id -and $created.schemaVersion -eq 3 -and $created.version -ge 1) 'Native user-visible creation has a fresh persisted identity/schema/version'
     Check ((Get-FileHash -LiteralPath $firstFile -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $firstHash) 'New presentation preserves the earlier application-created document bytes'
-    $title = Wait-Observed { Find-Control $window 'Present.Deck.Title' } 'Native newly-created title'
+    $title = Wait-Edit $window 'Present.Deck.Title' 'Native newly-created title'
     [void](Observe-Edit $title 'Presentation title')
     $editedTitle = 'Team C original packaged presentation'
     $editedNotes = 'Notes saved with actual Windows keyboard input'
@@ -318,7 +325,7 @@ public static class PresentPackageInput {
     $add = Wait-Observed { Find-Control $window 'Present.Slide.Add' } 'Visible native Add slide control'
     Invoke-Button $add '+ Slide'
     [void](Wait-Observed { @(Rail-Buttons $window).Count -eq 2 } 'Actual native slide rail contains two slide identities')
-    $notes = Wait-Observed { Find-Control $window 'Present.Slide.Notes' } 'Visible native notes editor'
+    $notes = Wait-Edit $window 'Present.Slide.Notes' 'Visible native notes editor'
     [void](Observe-Edit $notes 'Speaker notes')
     Type-Text $notes $editedNotes
     File-Action $window 'Save'
@@ -350,19 +357,19 @@ public static class PresentPackageInput {
     Check ((Get-FileHash -LiteralPath $documentPath -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $savedHash) 'Normal native close preserves saved document bytes'
     $result.stage = 'actual-native-reopen-and-library-open'
     $window = Start-Present 'reopen'
-    $title = Wait-Observed { Find-Control $window 'Present.Deck.Title' } 'Reopened native title editor'
+    $title = Wait-Edit $window 'Present.Deck.Title' 'Reopened native title editor'
     $titleValue = Observe-Edit $title 'Presentation title'
     Check ($titleValue.Current.Value -ceq $editedTitle) 'Normal process reopen displays the saved native presentation title'
     $railId = 'Present.Rail.' + ([Guid]$slideId).ToString('N')
     $slide = Wait-Observed { Find-Control $window $railId } 'Reopened native added-slide selector'
     Invoke-Button $slide 'Slide 2: Untitled slide'
-    $notes = Wait-Observed { Find-Control $window 'Present.Slide.Notes' } 'Reopened native notes editor'
+    $notes = Wait-Edit $window 'Present.Slide.Notes' 'Reopened native notes editor'
     $notesValue = Observe-Edit $notes 'Speaker notes'
     Check ($notesValue.Current.Value -ceq $editedNotes -and @(Rail-Buttons $window).Count -eq 2) 'Native process reopen displays saved notes and both canonical slides'
     Check (Check-Document $documentPath $identity $editedTitle $editedNotes $slideId) 'Real native reopen preserves durable document, added-slide and notes identity'
     Check ((Get-FileHash -LiteralPath $documentPath -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $savedHash) 'Reopened editor has not rewritten existing saved bytes'
     File-Action $window 'Back to presentations'
-    $search = Wait-Observed { Find-Control $window 'Present.Library.Search' } 'Native presentation library search editor'
+    $search = Wait-Edit $window 'Present.Library.Search' 'Native presentation library search editor'
     [void](Observe-Edit $search 'Search local presentation titles')
     Type-Text $search $editedTitle
     $openId = 'Present.Library.Open.' + ([Guid]$identity).ToString('N')
@@ -370,12 +377,12 @@ public static class PresentPackageInput {
     $otherId = 'Present.Library.Open.' + ([Guid]$first.id).ToString('N')
     Check ($null -eq (Find-Control $window $otherId)) 'Real library title filter excludes the unmatched local document'
     Invoke-Button $open $editedTitle
-    $title = Wait-Observed { Find-Control $window 'Present.Deck.Title' } 'Actual library-selected document title'
+    $title = Wait-Edit $window 'Present.Deck.Title' 'Actual library-selected document title'
     $titleValue = Observe-Edit $title 'Presentation title'
     Check ($titleValue.Current.Value -ceq $editedTitle) 'Native library Open displays the exact saved presentation title'
     $slide = Wait-Observed { Find-Control $window $railId } 'Library-opened added-slide selector'
     Invoke-Button $slide 'Slide 2: Untitled slide'
-    $notes = Wait-Observed { Find-Control $window 'Present.Slide.Notes' } 'Library-opened speaker notes'
+    $notes = Wait-Edit $window 'Present.Slide.Notes' 'Library-opened speaker notes'
     $notesValue = Observe-Edit $notes 'Speaker notes'
     Check ($notesValue.Current.Value -ceq $editedNotes) 'Actual native library Open restores saved speaker notes'
     Focus-Edit $title; Capture-Window 'reopened-window.png'
