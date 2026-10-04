@@ -1,0 +1,17 @@
+{"status": "PASS", "controls": ["canonical35/UUID/profileRevision/JWKS/OAuth exact restoration", "source unchanged/private modes", "corruption", "hash-mismatch", "interrupted-before-publication", "existing destination preserved", "foreign-key-corruption", "schema-corruption"], "canonicalSchemaObjects": 35, "providerRestoration": "NOT_RUN", "realSigningKeyAcceptance": "NOT_CLAIMED"}
+{"status": "PASS", "sealedImageControls": 2, "privateValuesPrinted": false}
+Traceback (most recent call last):
+  File "/workspace/team-c-release/cloud/cake-id-auth/deployment/recovery/recovery.py", line 84, in restore
+    if any(Path(str(destination)+suffix).exists() or Path(str(destination)+suffix).is_symlink() for suffix in ['-wal','-shm','-journal']):raise ValueError('published image sidecars appeared during readback')
+                                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: published image sidecars appeared during readback
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/team-c-release/cloud/cake-id-auth/deployment/recovery/test_recovery.py", line 99, in <module>
+    restored=root/'wal-restored.db';result=recovery.restore(wal_backup,restored,migrations,wal_receipt)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c-release/cloud/cake-id-auth/deployment/recovery/recovery.py", line 87, in restore
+    raise RecoveryReadbackError('restore publication completed but final readback failed; reconcile the destination') from error
+recovery.RecoveryReadbackError: restore publication completed but final readback failed; reconcile the destination
