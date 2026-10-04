@@ -1,0 +1,258 @@
+{
+  "baseline": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
+  "ownerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "head": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+  "files": [
+    {
+      "path": "9to1 Workspace/Accounts/AccountContractJson.cs",
+      "ownerBytes": 1035,
+      "ownerSha256": "e34f1f521f63efeaf161b8bfab8c74bafc22ad94e4ae692932d58d0e4955d279",
+      "currentBytes": 1035,
+      "currentSha256": "e34f1f521f63efeaf161b8bfab8c74bafc22ad94e4ae692932d58d0e4955d279",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/AccountLedger.cs",
+      "ownerBytes": 8618,
+      "ownerSha256": "92c3125e66653b5237d077ff2dabc21921f98071085294ff033381924394a117",
+      "currentBytes": 8618,
+      "currentSha256": "92c3125e66653b5237d077ff2dabc21921f98071085294ff033381924394a117",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Authentication.cs",
+      "ownerBytes": 8923,
+      "ownerSha256": "b4314c8274f73c55a433dd99f48b8d25cfc75d24bf3130fbc5280494110a541f",
+      "currentBytes": 8923,
+      "currentSha256": "b4314c8274f73c55a433dd99f48b8d25cfc75d24bf3130fbc5280494110a541f",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/DurableState.cs",
+      "ownerBytes": 2549,
+      "ownerSha256": "ec8bdd3835205ac06f413e3effc43c24960d8ba730dc950b351e8f44eb5eef09",
+      "currentBytes": 2549,
+      "currentSha256": "ec8bdd3835205ac06f413e3effc43c24960d8ba730dc950b351e8f44eb5eef09",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/NineToOne.Accounts.csproj",
+      "ownerBytes": 159,
+      "ownerSha256": "96d22c24d1d62f349318ad83614eef885c38ea2613219a4b548c6b0eb731922e",
+      "currentBytes": 159,
+      "currentSha256": "96d22c24d1d62f349318ad83614eef885c38ea2613219a4b548c6b0eb731922e",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
+      "ownerBytes": 23792,
+      "ownerSha256": "990e08a53d7e5728e46d9033aa6275c94419566bca7114b8164b885e337a92d9",
+      "currentBytes": 23792,
+      "currentSha256": "990e08a53d7e5728e46d9033aa6275c94419566bca7114b8164b885e337a92d9",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
+      "ownerBytes": 6941,
+      "ownerSha256": "530dbbc5a38f63037e13be662f2745edadff2be5852cf348b002927aa666a44c",
+      "currentBytes": 6941,
+      "currentSha256": "530dbbc5a38f63037e13be662f2745edadff2be5852cf348b002927aa666a44c",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdministration.cs",
+      "ownerBytes": 5636,
+      "ownerSha256": "8bb5ce52f01b896a5dba257ef5bd132d2bf66f3a9fe6a5b1b1ef812c96d131bd",
+      "currentBytes": 5636,
+      "currentSha256": "8bb5ce52f01b896a5dba257ef5bd132d2bf66f3a9fe6a5b1b1ef812c96d131bd",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
+      "ownerBytes": 459,
+      "ownerSha256": "1dbb6e282e601e814261b04945f67102267206388586cc6dc4375176d59cc88b",
+      "currentBytes": 459,
+      "currentSha256": "1dbb6e282e601e814261b04945f67102267206388586cc6dc4375176d59cc88b",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationBilling.cs",
+      "ownerBytes": 5438,
+      "ownerSha256": "2b90b0b16c4c7a60c7c9ac27f128a0f58e4000f9d6e6b165a04ad1191c96a629",
+      "currentBytes": 5438,
+      "currentSha256": "2b90b0b16c4c7a60c7c9ac27f128a0f58e4000f9d6e6b165a04ad1191c96a629",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationContracts.cs",
+      "ownerBytes": 5141,
+      "ownerSha256": "22e003cc311d0545297a24e287afd93b48d0a89b93c7db21b715fd2354456298",
+      "currentBytes": 5141,
+      "currentSha256": "22e003cc311d0545297a24e287afd93b48d0a89b93c7db21b715fd2354456298",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationDustPools.cs",
+      "ownerBytes": 28711,
+      "ownerSha256": "803531e2f9b9c53d8905cedfa40b472e41c2cffe4860dc5df63be346feac153e",
+      "currentBytes": 28950,
+      "currentSha256": "2e87be6fa8832c6a86d6634de0c4b9b5639d8b4013f5a710556eef767b72b573",
+      "ownerByteEqual": false
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "ownerBytes": 15756,
+      "ownerSha256": "1bb78389d445654b09a756fe1c64a27d5d4a3c21fd873bcf6cb9ccedf7182407",
+      "currentBytes": 15783,
+      "currentSha256": "5930c9b1c23d668d820f62006fb64a2bfcae64b1665bb64ecd2053c1a44d0c4b",
+      "ownerByteEqual": false
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
+      "ownerBytes": 6601,
+      "ownerSha256": "2928309de1932eb19121a20dcc5471c34e7f2e588728ed93c648eeebeae6d8e1",
+      "currentBytes": 6601,
+      "currentSha256": "2928309de1932eb19121a20dcc5471c34e7f2e588728ed93c648eeebeae6d8e1",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
+      "ownerBytes": 7894,
+      "ownerSha256": "892eaa144d8e182089c263413ec17d0ff5175e3a8021888186f712ffd81f26bd",
+      "currentBytes": 7894,
+      "currentSha256": "892eaa144d8e182089c263413ec17d0ff5175e3a8021888186f712ffd81f26bd",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationRollover.cs",
+      "ownerBytes": 15799,
+      "ownerSha256": "47985c539689c3c911118487b74cd50be44f0ccc1609d91bb4998396da712a04",
+      "currentBytes": 15799,
+      "currentSha256": "47985c539689c3c911118487b74cd50be44f0ccc1609d91bb4998396da712a04",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationService.cs",
+      "ownerBytes": 19263,
+      "ownerSha256": "59ba0ab354893fe62c9e59db3eee0e72ac04fd72962782b998f640580a378c5c",
+      "currentBytes": 19263,
+      "currentSha256": "59ba0ab354893fe62c9e59db3eee0e72ac04fd72962782b998f640580a378c5c",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationUsageContracts.cs",
+      "ownerBytes": 2778,
+      "ownerSha256": "cc4119aa05a80fb78acd997493a712cbb57bf342cb021bdfdfdc4eba1e770f35",
+      "currentBytes": 2778,
+      "currentSha256": "cc4119aa05a80fb78acd997493a712cbb57bf342cb021bdfdfdc4eba1e770f35",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationUsageReports.cs",
+      "ownerBytes": 2872,
+      "ownerSha256": "03335140d982ad518e98d09d2839c484d02e1959ef7f4963aaafd41b1e666580",
+      "currentBytes": 2872,
+      "currentSha256": "03335140d982ad518e98d09d2839c484d02e1959ef7f4963aaafd41b1e666580",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Profiles.cs",
+      "ownerBytes": 4179,
+      "ownerSha256": "d49d45a9b447a02ac57187d2b9e932ea6389a71f5233bce1fe36f24f4ec76af9",
+      "currentBytes": 4179,
+      "currentSha256": "d49d45a9b447a02ac57187d2b9e932ea6389a71f5233bce1fe36f24f4ec76af9",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Subscription.cs",
+      "ownerBytes": 3252,
+      "ownerSha256": "f21034da612966113bc0b3edf7ee8515e52075318d25e5c36a8a01016b084736",
+      "currentBytes": 3252,
+      "currentSha256": "f21034da612966113bc0b3edf7ee8515e52075318d25e5c36a8a01016b084736",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/SubscriptionBuilder.cs",
+      "ownerBytes": 11281,
+      "ownerSha256": "c106647472a1f522815c4d3125eb87ac236951ecbf278c71189f9f2198067b52",
+      "currentBytes": 11281,
+      "currentSha256": "c106647472a1f522815c4d3125eb87ac236951ecbf278c71189f9f2198067b52",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/SubscriptionPurchases.cs",
+      "ownerBytes": 8935,
+      "ownerSha256": "fa32580d216a882513c7a7b07b3cfb5df7c5f28ec3af3dd2693ea3ac936b7984",
+      "currentBytes": 8935,
+      "currentSha256": "fa32580d216a882513c7a7b07b3cfb5df7c5f28ec3af3dd2693ea3ac936b7984",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/SubscriptionQuotes.cs",
+      "ownerBytes": 1539,
+      "ownerSha256": "67d553bf585f30f225734d5f74f90d124018996028667c00c0efa0d054aff70c",
+      "currentBytes": 1539,
+      "currentSha256": "67d553bf585f30f225734d5f74f90d124018996028667c00c0efa0d054aff70c",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+      "ownerBytes": 223,
+      "ownerSha256": "65df3a2677258e2c57506d107b1abc5f014d79beae620b977af3ffdbded42abc",
+      "currentBytes": 223,
+      "currentSha256": "65df3a2677258e2c57506d107b1abc5f014d79beae620b977af3ffdbded42abc",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+      "ownerBytes": 290,
+      "ownerSha256": "ea35dd98036baa10265033f0381385f651fd1139dff687fb793c470cfd665ce4",
+      "currentBytes": 290,
+      "currentSha256": "ea35dd98036baa10265033f0381385f651fd1139dff687fb793c470cfd665ce4",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrgPoolsProgram.cs",
+      "ownerBytes": 21746,
+      "ownerSha256": "f42b79dd9583da83b27d6408eb22341fcd9ef79745d4d52a89536b79a2e4ad87",
+      "currentBytes": 27300,
+      "currentSha256": "340f4de5b37933ea8b237521e3f2c54097697758bc5fbf421ae588c9f80fd8e4",
+      "ownerByteEqual": false
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
+      "ownerBytes": 11526,
+      "ownerSha256": "eb27113b66e660fe9d3d02eb3008539d40daa3254a022a5735e29dd765c1f1c7",
+      "currentBytes": 11526,
+      "currentSha256": "eb27113b66e660fe9d3d02eb3008539d40daa3254a022a5735e29dd765c1f1c7",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
+      "ownerBytes": 33395,
+      "ownerSha256": "bb8b1d66e1932bea01c50f18dcefe1e08823b08d4cc85013f3b133ce3acc5e35",
+      "currentBytes": 33395,
+      "currentSha256": "bb8b1d66e1932bea01c50f18dcefe1e08823b08d4cc85013f3b133ce3acc5e35",
+      "ownerByteEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "ownerBytes": 23522,
+      "ownerSha256": "094a954991553e344d05c1477dc71e745b68a9eb35df71a073da51e7ce701418",
+      "currentBytes": 25566,
+      "currentSha256": "de448725144f7eceaf1637dae53b8b52286b643c47dc6355fe2f3f1afbbf2d72",
+      "ownerByteEqual": false
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/Program.cs",
+      "ownerBytes": 33408,
+      "ownerSha256": "9b54905018e32d6ab64e554faa2db600f151bf268aa78d694f43785bfcd3f863",
+      "currentBytes": 33408,
+      "currentSha256": "9b54905018e32d6ab64e554faa2db600f151bf268aa78d694f43785bfcd3f863",
+      "ownerByteEqual": true
+    }
+  ],
+  "sourceCount": 31,
+  "status": "PROPOSED_NOT_ADOPTED",
+  "ownerAckRequired": true
+}
