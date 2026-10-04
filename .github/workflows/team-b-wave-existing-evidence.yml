@@ -1,6 +1,12 @@
 name: Team B existing Wave diagnostic custody export
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - team-b/astra-browser-validation-20261003
+    paths:
+      - .github/workflows/team-b-wave-existing-evidence.yml
+      - apps/Web/Tests/ci/sealed-browser-replay/export-existing-wave-diagnostics.py
 permissions:
   contents: read
   actions: read
