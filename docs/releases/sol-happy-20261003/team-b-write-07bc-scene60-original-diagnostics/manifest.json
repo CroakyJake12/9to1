@@ -1,0 +1,244 @@
+{
+  "state": "EXACT_ORIGINAL07BC_NATIVE60_ZIP_PRESERVED_FULL_ROOT_REMOTE_BODY_READBACK",
+  "UTC": "2026-10-04T18:35:33.589590+00:00",
+  "branch": "artifact/team-b-07bc-write-scene60-original-diagnostics-20261004",
+  "base": "400ecdf1ec36a3d28e742beeba28e223f3ab0d14",
+  "run": 37224554478,
+  "source": "07bc9f277d6163712064cc5b7e25953613ca5a09",
+  "archive": {
+    "path": "docs/releases/sol-happy-20261003/team-b-write-07bc-scene60-original-diagnostics/original.zip",
+    "gitBlob": "7486a5e87155fc764f3328dde2033ef5b59c6d78",
+    "bytes": 341035,
+    "sha256": "2c0f9857ef0f1edb875989282b910746f48bd960ed39522184d3bb3f71751d3d",
+    "temporarySourcePath": "/workspace/attachments/c1964776-0838-4aad-9299-db8cc523c144/write-native-07bc-scene60-original-failure.zip",
+    "temporaryRetired": false,
+    "members": [
+      {
+        "path": "actual-original-assertions.json",
+        "bytes": 2266,
+        "sha256": "f35bc268faf565d1ce871fdaefa47c6706e95a3cee5732882a57ddf570332809",
+        "crc": 2175336609,
+        "mode": 33188
+      },
+      {
+        "path": "build.log",
+        "bytes": 6617,
+        "sha256": "f79a8c42cfdfacc9530d5490b8418615ed45a72772e880908b4caabff7ab39ef",
+        "crc": 1476484828,
+        "mode": 33188
+      },
+      {
+        "path": "commands.json",
+        "bytes": 10626,
+        "sha256": "6fc250a47a283cd8b152cf08cbd7b40b529370caf3a82dc97deae0afa9e978cc",
+        "crc": 1588671481,
+        "mode": 33188
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2980,
+        "sha256": "433b2d394722cac6764b753c5282e7477958ca405eea1a0e587b9dde36940169",
+        "crc": 3816982130,
+        "mode": 33188
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+        "crc": 3257738113,
+        "mode": 33188
+      },
+      {
+        "path": "entry-identity.json",
+        "bytes": 169,
+        "sha256": "de99652b6979f999f7df48d54fc1f3161a1b45d948aa6135b86a032755fd8f3e",
+        "crc": 2992671216,
+        "mode": 33188
+      },
+      {
+        "path": "fixture-tracked.log",
+        "bytes": 177,
+        "sha256": "54fb23159acf3cec6dea3e5003f15fdc88a3515369c774e07ec0c697b4dbf586",
+        "crc": 3332322691,
+        "mode": 33188
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc": 0,
+        "mode": 33188
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc": 0,
+        "mode": 33188
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "sha256": "a4027d6e77438ce89d4c8a68df968696bf8448fe8ea5dbf0b9c293a23c701be7",
+        "crc": 467326874,
+        "mode": 33188
+      },
+      {
+        "path": "native-initial-focus.log",
+        "bytes": 1661,
+        "sha256": "7893886922798c31f8d49c734f6015478f688bf6379d81f0b76e24d30aa4ca7c",
+        "crc": 1827388599,
+        "mode": 33188
+      },
+      {
+        "path": "native-toolbar.log",
+        "bytes": 1700,
+        "sha256": "c04dfa60c6c7e8f67f634089a30da598a8636dd618d6bacd5de70cad06b81dcf",
+        "crc": 3243947882,
+        "mode": 33188
+      },
+      {
+        "path": "restore.log",
+        "bytes": 5383,
+        "sha256": "917b2db2564765f690aa1aa784bf26d6cd1f0be659eed6e3a65be44be02885b6",
+        "crc": 4166413263,
+        "mode": 33188
+      },
+      {
+        "path": "result.json",
+        "bytes": 4821,
+        "sha256": "7592d2a004fe97188a9b9eb50a2aa9d7185e4a337c95589f03b4d1de9233cdd9",
+        "crc": 514173135,
+        "mode": 33188
+      },
+      {
+        "path": "source-pins-before.json",
+        "bytes": 1785,
+        "sha256": "7fd79017e6257e9160402968ad75b995b5899dddd4a8b6ade5016eda642db19f",
+        "crc": 2115401764,
+        "mode": 33188
+      },
+      {
+        "path": "source-tree-pins.log",
+        "bytes": 1306876,
+        "sha256": "b0f07c1624be6c8026dba8f9ec859e2c1e3789500a1a71ea4878ec9f21fbb92d",
+        "crc": 1343876083,
+        "mode": 33188
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 253,
+        "sha256": "b1f3e7409a2700cc2c6ce7f9c0f6c672bd285afeb3b92894819bda6ebcbca076",
+        "crc": 2444639535,
+        "mode": 33188
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 283,
+        "sha256": "2750c47bb864a6a2fd7ed788148b62c14fcd259113e05b4f4b15c41c4d950b41",
+        "crc": 990664225,
+        "mode": 33188
+      }
+    ]
+  },
+  "actualResult": {
+    "suite": "scene-focus60",
+    "status": "FAIL",
+    "sourceCommit": "07bc9f277d6163712064cc5b7e25953613ca5a09",
+    "executed": null,
+    "scope": "Existing native authoring/render/local durable tests only; no WASM/browser/provider/ACL/full parity",
+    "history": "Historical f8de canonical Space10PASS1FAIL4NOTRUN and proposal15PASS unchanged; earlier local durable65 evidence remains scoped historical.",
+    "sceneModes": [
+      {
+        "mode": "toolbar",
+        "state": "FAIL",
+        "error": "RuntimeError('Actual native functional failure: toolbar exit=-6')",
+        "originalCommandError": "RuntimeError('native-toolbar exit -6')",
+        "nativeExit": -6,
+        "expected": 48,
+        "observedAssertLabels": [
+          "actual packed font resolves original asset URI and matches exact owner bytes",
+          "actual owning Write.cui parses",
+          "actual registered owner surface lowers",
+          "actual native templates render before querying editor descendants",
+          "actual toolbar New enabled=True",
+          "actual toolbar Save enabled=False",
+          "actual toolbar Bold enabled=False",
+          "actual toolbar Undo enabled=False",
+          "actual toolbar Redo enabled=False",
+          "actual toolbar Close enabled=False",
+          "actual New control permits interaction",
+          "actual toolbar Save enabled=True",
+          "actual toolbar Bold enabled=True",
+          "actual toolbar Close enabled=True",
+          "actual toolbar Undo enabled=False",
+          "actual toolbar Redo enabled=False"
+        ],
+        "countsQualified": "Prefixes are not a complete PASS; actual failure/notRun require raw case classification"
+      },
+      {
+        "mode": "initial-focus",
+        "state": "FAIL",
+        "error": "RuntimeError('Actual native functional failure: initial-focus exit=-6')",
+        "originalCommandError": "RuntimeError('native-initial-focus exit -6')",
+        "nativeExit": -6,
+        "expected": 12,
+        "observedAssertLabels": [
+          "actual packed font resolves original asset URI and matches exact owner bytes",
+          "initial-focus actual native owner frame renders",
+          "initial-focus disabled new editor does not seize native focus",
+          "initial-focus new owner attachment focuses native scene once when enabled",
+          "initial-focus actual routed native text reaches same original owner editor",
+          "initial-focus same editor busy release preserves real toolbar focus",
+          "initial-focus toolbar-focused text does not mutate original document",
+          "initial-focus null attachment clears pending focus before enable",
+          "initial-focus enabled non-null replacement uses actual owner focus"
+        ],
+        "countsQualified": "Prefixes are not a complete PASS; actual failure/notRun require raw case classification"
+      }
+    ],
+    "error": "RuntimeError('Actual completed native modes failed: toolbar, initial-focus')",
+    "observedNativeLogPrefixes": [
+      {
+        "stage": "native-toolbar",
+        "logSHA": "c04dfa60c6c7e8f67f634089a30da598a8636dd618d6bacd5de70cad06b81dcf",
+        "observedPassLabels": [],
+        "observedAssertLabels": [
+          "actual packed font resolves original asset URI and matches exact owner bytes",
+          "actual owning Write.cui parses",
+          "actual registered owner surface lowers",
+          "actual native templates render before querying editor descendants",
+          "actual toolbar New enabled=True",
+          "actual toolbar Save enabled=False",
+          "actual toolbar Bold enabled=False",
+          "actual toolbar Undo enabled=False",
+          "actual toolbar Redo enabled=False",
+          "actual toolbar Close enabled=False",
+          "actual New control permits interaction",
+          "actual toolbar Save enabled=True",
+          "actual toolbar Bold enabled=True",
+          "actual toolbar Close enabled=True",
+          "actual toolbar Undo enabled=False",
+          "actual toolbar Redo enabled=False"
+        ]
+      },
+      {
+        "stage": "native-initial-focus",
+        "logSHA": "7893886922798c31f8d49c734f6015478f688bf6379d81f0b76e24d30aa4ca7c",
+        "observedPassLabels": [],
+        "observedAssertLabels": [
+          "actual packed font resolves original asset URI and matches exact owner bytes",
+          "initial-focus actual native owner frame renders",
+          "initial-focus disabled new editor does not seize native focus",
+          "initial-focus new owner attachment focuses native scene once when enabled",
+          "initial-focus actual routed native text reaches same original owner editor",
+          "initial-focus same editor busy release preserves real toolbar focus",
+          "initial-focus toolbar-focused text does not mutate original document",
+          "initial-focus null attachment clears pending focus before enable",
+          "initial-focus enabled non-null replacement uses actual owner focus"
+        ]
+      }
+    ]
+  },
+  "qualification": "Both fresh native modes really ran and failed: toolbar16PASS1FAIL31NOT_RUN; initial-focus9PASS1FAIL2NOT_RUN. No functional failure hidden by new all-mode drain. Current source10 repair not adopted. Native successful build/source/tree/tool/custody metadata in original archive. No runtime body/fullWrite/browser acceptance claim."
+}
