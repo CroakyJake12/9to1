@@ -1,0 +1,56 @@
+name: Team C normal Mail72 trusted loopback TLS (unaccepted)
+
+on:
+  push:
+    branches: [team-c/sol-happy-c4-mail72-trusted-greenmail-20261004]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: team-c-mail72-trusted-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  normal-mail72:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      DOTNET_NOLOGO: "1"
+      MSBUILDDISABLENODEREUSE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      TEAM_C_MAIL_OUTPUT: ${{ runner.temp }}/team-c-mail72-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select exact reviewed ordinary SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - name: Select official maintained GreenMail JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17.0.16+8"
+      - name: Run unchanged normal full72 with approved strict TLS and signed CRL
+        id: probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          catalog=.github/validation/team-c-mail72-trusted-greenmail.json
+          manifest_sha=$(sha256sum "$catalog" | cut -d ' ' -f 1)
+          python3 .github/scripts/team-c-mail72-trusted-tls.py -- python3 .github/scripts/team-c-mail72-normal.py --expected-commit '${{ github.sha }}' --manifest "$catalog" --manifest-sha "$manifest_sha"
+      - name: Retain original selected diagnostics and every genuine failure
+        if: always() && steps.probe.outputs.public_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-c-mail72-trusted-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/team-c-mail72-${{ github.run_id }}-${{ github.run_attempt }}/public-diagnostics
+          if-no-files-found: error
+          retention-days: 7
