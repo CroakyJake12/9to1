@@ -16,7 +16,6 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
     private bool _preparing;
     private bool _revoked;
     private Task? _revocationDrain;
-    private TaskCompletionSource? _fenceSettlement;
     private Exception? _fenceFailure;
     // REQUIRED actual issuer primitive. No no-op/default authority and no registration supplied.
     private readonly Action _revokeOwner = revokeAllIssuedOwnerWork ?? throw new ArgumentNullException(nameof(revokeAllIssuedOwnerWork));
@@ -47,31 +46,21 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
     }
     public void RevokePrivateContext()
     {
-        SitesBrowserController[] views; PendingView[] pending; TaskCompletionSource settlement;
+        SitesBrowserController[] views; PendingView[] pending;
         lock (_gate)
         {
             if (_revoked)
             {
-                if (_fenceSettlement is not { Task.IsCompleted: true }) throw new InvalidOperationException("Real owner-group revocation is in progress; private cleanup remains held.");
                 if (_fenceFailure is not null) throw new InvalidOperationException("Real owner-group revocation failed; private cleanup remains held.", _fenceFailure);
                 return;
             }
-            _fenceSettlement = settlement = new(TaskCreationOptions.RunContinuationsAsynchronously);
             _revoked = _disposed = true; views = _issuedViews.ToArray(); pending = _pending.Values.ToArray(); _pending.Clear();
         }
-        try
-        {
-            try { _revokeOwner(); }
-            catch (Exception error) { lock (_gate) _fenceFailure = error; }
-            foreach (var view in views) view.ClearPrivatePresentation();
-            foreach (var view in views) view.Dispose();
-            ReleaseAll(pending);
-        }
-        catch (Exception error)
-        {
-            lock (_gate) _fenceFailure = _fenceFailure is null ? error : new AggregateException(_fenceFailure, error);
-        }
-        finally { settlement.TrySetResult(); }
+        try { _revokeOwner(); }
+        catch (Exception error) { lock (_gate) _fenceFailure = error; }
+        foreach (var view in views) view.ClearPrivatePresentation();
+        foreach (var view in views) view.Dispose();
+        ReleaseAll(pending);
         if (_fenceFailure is not null) throw new InvalidOperationException("Real owner-group revocation failed; private cleanup remains held.", _fenceFailure);
     }
     public ValueTask DisposeAsync()
@@ -112,9 +101,6 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
     }
     private async Task DrainAfterRevocationAsync()
     {
-        Task fenceSettled;
-        lock (_gate) fenceSettled = _fenceSettlement?.Task ?? throw new InvalidOperationException("Real owner-group revocation has not been issued.");
-        await fenceSettled;
         await DrainIssuedWorkAsync();
         Exception? ownerDrainFailure = null;
         try { await _drainOwner(); }

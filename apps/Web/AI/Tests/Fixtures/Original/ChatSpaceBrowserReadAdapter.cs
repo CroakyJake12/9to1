@@ -26,19 +26,7 @@ public sealed class ChatSpaceBrowserReadAdapter : ICuiBindingContext, ICuiAction
     }
 
     public CuiDocument Document { get; }
-    public ChatSpaceViewState OwnerState
-    {
-        get
-        {
-            if (_disposed || !_readVisible) return ChatSpaceViewState.Empty;
-            var current = _owner.State;
-            // The owner retains prior state on read failure. Preserve its actual diagnostic,
-            // but do not re-expose previously loaded private values after a denied refresh.
-            return current.Status.Tone == ChatSpaceStatusTone.Error
-                ? ChatSpaceViewState.Empty with { Status = current.Status, Revision = current.Revision }
-                : current;
-        }
-    }
+    public ChatSpaceViewState OwnerState => _disposed || !_readVisible ? ChatSpaceViewState.Empty : _owner.State;
 
     /// <summary>Names only. Registered factories still require real behavioral acceptance.</summary>
     public IReadOnlyList<string> MissingElementTypes(CuiControlRegistry registry)

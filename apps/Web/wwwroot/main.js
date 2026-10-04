@@ -1,6 +1,7 @@
 import { createBrowserPlatform } from './browser-platform.js';
 import { createBrowserAccessibility } from './browser-accessibility.js';
 import * as waveBrowser from './wave-browser.js';
+import * as pictureBrowser from './picture-browser.js';
 import { createConfiguredAccounts, handleOAuthPopupCallback } from './configured-accounts.bundle.js';
 import { createNotesModule } from './notes-indexeddb.js';
 import * as writePackages from './write-packages.js';
@@ -86,6 +87,7 @@ try {
         const runtime = await dotnet.create();
         runtime.setModuleImports('nineToOneBrowser', { ...platform, releasePrivateAccountContext });
         runtime.setModuleImports('nineToOneWave', waveBrowser);
+        runtime.setModuleImports('nineToOnePicture', pictureBrowser);
         runtime.setModuleImports('nineToOneAccounts', accounts);
         runtime.setModuleImports('nineToOneNotes', notes);
         runtime.setModuleImports('nineToOneWritePackages', writePackages);

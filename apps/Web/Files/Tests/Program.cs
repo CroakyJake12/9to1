@@ -233,7 +233,7 @@ static CuiDocument Document()
 }
 static async Task CancelledRoute(string directory)
 {
-    var s = Store(directory); using var route = new FilesBrowserRoute(s.Provider, s.Owner, Document());
+    var s = Store(directory); using var route = new FilesBrowserRoute(s.Provider, s.Owner, Document(), () => throw new NotSupportedException("Native fixture: actual issuer-group revocation is unavailable; no browser/private authority is established."), () => ValueTask.FromException(new NotSupportedException("Native fixture: actual issuer-group drain is unavailable; no browser/private authority is established.")));
     using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
     try { await route.OpenAsync(new(FilesBrowserRoute.Id), cancelled.Token); throw new Exception("Cancelled open returned a view."); }
     catch (OperationCanceledException) { }
@@ -250,7 +250,7 @@ static async Task CancelledRoute(string directory)
 }
 static async Task InvalidRoute(string directory)
 {
-    var s = Store(directory); using var route = new FilesBrowserRoute(s.Provider, s.Owner, Document());
+    var s = Store(directory); using var route = new FilesBrowserRoute(s.Provider, s.Owner, Document(), () => throw new NotSupportedException("Native fixture: actual issuer-group revocation is unavailable; no browser/private authority is established."), () => ValueTask.FromException(new NotSupportedException("Native fixture: actual issuer-group drain is unavailable; no browser/private authority is established.")));
     Check(!(await route.OpenAsync(new(FilesBrowserRoute.Id, "project", Guid.NewGuid().ToString()))).Succeeded, "Unsupported semantic Project substituted a folder.");
     Check(!(await route.OpenAsync(new(FilesBrowserRoute.Id, "folder", Guid.NewGuid().ToString()))).Succeeded, "Missing folder accepted.");
     Check(!(await route.OpenAsync(new(FilesBrowserRoute.Id, Action: "upload"))).Succeeded, "Unsupported byte transfer accepted.");
@@ -259,7 +259,7 @@ static async Task InvalidRoute(string directory)
 }
 static async Task ActualRoute(string directory)
 {
-    var s = Store(directory); using var route = new FilesBrowserRoute(s.Provider, s.Owner, Document());
+    var s = Store(directory); using var route = new FilesBrowserRoute(s.Provider, s.Owner, Document(), () => throw new NotSupportedException("Native fixture: actual issuer-group revocation is unavailable; no browser/private authority is established."), () => ValueTask.FromException(new NotSupportedException("Native fixture: actual issuer-group drain is unavailable; no browser/private authority is established.")));
     var result = await route.OpenAsync(new(FilesBrowserRoute.Id)); Check(result.Succeeded && result.ViewState is not null, "Owner route did not open.");
     var surface = route.CreateSurface(result.ViewState!); using var lifetime = surface.Lifetime;
     Check(surface.Bindings is FilesBrowserController && surface.Actions is FilesBrowserController, "Route did not yield real CUI controller.");

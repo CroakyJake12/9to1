@@ -16,21 +16,18 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
     private bool _preparing;
     private bool _revoked;
     private Task? _revocationDrain;
-    private TaskCompletionSource? _fenceSettlement;
     private Exception? _fenceFailure;
     // REQUIRED actual issuer primitive. No no-op/default authority and no registration supplied.
     private readonly Action _revokeOwner = revokeAllIssuedOwnerWork ?? throw new ArgumentNullException(nameof(revokeAllIssuedOwnerWork));
     private readonly Func<ValueTask> _drainOwner = drainAllIssuedOwnerWork ?? throw new ArgumentNullException(nameof(drainAllIssuedOwnerWork));
     public bool HasUnsavedChanges { get { lock (_gate) return !_revoked && (_issuedOpen.Count != 0 || _issuedViews.Any(view => view.HasUnsavedChanges)); } }
-    public Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default)
-        => PrepareToCloseCoreAsync(null, cancellationToken);
-    private async Task<HomeCoreOperationResult<bool>> PrepareToCloseCoreAsync(TaskCompletionSource? ownOpening, CancellationToken cancellationToken)
+    public async Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default)
     {
         Task[] work;
         lock (_gate)
         {
             if (_revoked || _disposed) return new(false, "PermissionDenied", "The private owner context has closed.", false);
-            if (_preparing || _issuedOpen.Any(open => !ReferenceEquals(open, ownOpening))) return new(false, "BrowserBusy", "Wait for the current opening to finish.", false);
+            if (_preparing || _issuedOpen.Count != 0) return new(false, "BrowserBusy", "Wait for the current opening to finish.", false);
             _preparing = true; work = _issuedViews.Select(view => view.DrainIssuedAsync()).ToArray();
         }
         try
@@ -47,50 +44,26 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
     }
     public void RevokePrivateContext()
     {
-        SitesBrowserController[] views; PendingView[] pending; TaskCompletionSource settlement;
+        SitesBrowserController[] views; PendingView[] pending;
         lock (_gate)
         {
-            if (_revoked)
-            {
-                if (_fenceSettlement is not { Task.IsCompleted: true }) throw new InvalidOperationException("Real owner-group revocation is in progress; private cleanup remains held.");
-                if (_fenceFailure is not null) throw new InvalidOperationException("Real owner-group revocation failed; private cleanup remains held.", _fenceFailure);
-                return;
-            }
-            _fenceSettlement = settlement = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (_revoked) return;
             _revoked = _disposed = true; views = _issuedViews.ToArray(); pending = _pending.Values.ToArray(); _pending.Clear();
         }
-        try
-        {
-            try { _revokeOwner(); }
-            catch (Exception error) { lock (_gate) _fenceFailure = error; }
-            foreach (var view in views) view.ClearPrivatePresentation();
-            foreach (var view in views) view.Dispose();
-            ReleaseAll(pending);
-        }
-        catch (Exception error)
-        {
-            lock (_gate) _fenceFailure = _fenceFailure is null ? error : new AggregateException(_fenceFailure, error);
-        }
-        finally { settlement.TrySetResult(); }
+        try { _revokeOwner(); }
+        catch (Exception error) { _fenceFailure = error; }
+        foreach (var view in views) view.ClearPrivatePresentation();
+        foreach (var view in views) view.Dispose();
+        ReleaseAll(pending);
         if (_fenceFailure is not null) throw new InvalidOperationException("Real owner-group revocation failed; private cleanup remains held.", _fenceFailure);
     }
     public ValueTask DisposeAsync()
     {
-        TaskCompletionSource completion;
         lock (_gate)
         {
-            if (!_revoked) return new(CloseOrdinarilyAsync());
-            if (_revocationDrain is not null) return new(_revocationDrain);
-            completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            _revocationDrain = completion.Task;
+            if (_revoked) return new(_revocationDrain ??= DrainAfterRevocationAsync());
+            return new(CloseOrdinarilyAsync());
         }
-        _ = SettleRevocationDrainAsync(completion);
-        return new(completion.Task);
-    }
-    private async Task SettleRevocationDrainAsync(TaskCompletionSource completion)
-    {
-        try { await DrainAfterRevocationAsync(); completion.TrySetResult(); }
-        catch (Exception error) { completion.TrySetException(error); }
     }
     private async Task CloseOrdinarilyAsync()
     {
@@ -112,9 +85,6 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
     }
     private async Task DrainAfterRevocationAsync()
     {
-        Task fenceSettled;
-        lock (_gate) fenceSettled = _fenceSettlement?.Task ?? throw new InvalidOperationException("Real owner-group revocation has not been issued.");
-        await fenceSettled;
         await DrainIssuedWorkAsync();
         Exception? ownerDrainFailure = null;
         try { await _drainOwner(); }
@@ -146,6 +116,8 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
     }
     public async Task<HomeFeatureNavigationResult> OpenAsync(HomeFeatureNavigationRequest request, CancellationToken cancellationToken = default)
     {
+        var prepared = await PrepareToCloseAsync(cancellationToken);
+        if (!prepared.Succeeded || prepared.Value != true) return new(false, prepared.Code, prepared.Message, request);
         var issuedOpen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (_gate)
         {
@@ -154,8 +126,6 @@ public sealed class SitesBrowserRoute(SitesBrowserOperations owner, CuiDocument 
         }
         try
         {
-        var prepared = await PrepareToCloseCoreAsync(issuedOpen, cancellationToken);
-        if (!prepared.Succeeded || prepared.Value != true) return new(false, prepared.Code, prepared.Message, request);
         if (_disposed || request.RouteId != Id) return new(false, "SitesUnavailable", "Sites is unavailable in this account context.", request);
         if (request.EntityType is not (null or "site") || request.Action is not (null or "open") || request.DeepLink is not null || request.ModelPickerTarget is not null)
             return new(false, "SitesInvalidDestination", "This destination opens Sites websites.", request);

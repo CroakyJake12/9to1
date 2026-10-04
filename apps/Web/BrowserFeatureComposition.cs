@@ -2,6 +2,7 @@ using Avalonia.Threading;
 using System.Runtime.Versioning;
 using NineToOne.Web.Accounts;
 using NineToOne.Web.Wave;
+using NineToOne.Web.Picture;
 using NineToOne.Web.Services;
 using NineToOne.Web.Write;
 using NineToOne.Web.Write.Storage;
@@ -18,6 +19,8 @@ internal static class BrowserFeatureComposition
     {
         var wave = WaveBrowserFeature.Register(registry);
         if (!wave.Succeeded) throw new InvalidOperationException(wave.Message);
+        var picture = PictureBrowserFeature.Register(registry);
+        if (!picture.Succeeded) throw new InvalidOperationException(picture.Message);
         var write = WriteBrowserFeature.Register(registry,
             new IndexedDbNotesRepository(new BrowserNotesTransport(), new NotesDocumentValidator()),
             new WriteNativeDocumentPackageStore(), Program.ReduceMotion,

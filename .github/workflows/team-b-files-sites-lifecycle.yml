@@ -1,0 +1,63 @@
+name: Team B canonical Files Sites lifecycle controls
+
+on:
+  push:
+    branches: ["team-b/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lifecycle:
+    if: startsWith(github.ref, 'refs/heads/team-b/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [lifecycle14, lifecycle-original01, lifecycle-original02]
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Initialize exact native build submodules
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - name: Build and execute actual lifecycle project and classify preserved controls
+        run: |
+          set +e
+          python3 apps/Web/Files/Tests/ci/run-files-sites-lifecycle.py \
+            --suite '${{ matrix.suite }}' --expected-commit '${{ github.sha }}' \
+            --output "$RUNNER_TEMP/files-sites-${{ matrix.suite }}"
+          lifecycle_driver_exit=$?
+          set -e
+          if [ '${{ matrix.suite }}' = lifecycle14 ]; then
+            exit "$lifecycle_driver_exit"
+          fi
+          python3 apps/Web/Files/Tests/ci/validate-lifecycle-negative-control.py \
+            --suite '${{ matrix.suite }}' --source-commit '${{ github.sha }}' \
+            --actual-driver-exit "$lifecycle_driver_exit" \
+            --diagnostics "$RUNNER_TEMP/files-sites-${{ matrix.suite }}/diagnostics" \
+            --plan apps/Web/Files/Tests/ci/CONTROL-PLAN07.json
+      - name: Upload actual bounded diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-files-sites-${{ matrix.suite }}-${{ github.sha }}
+          path: ${{ runner.temp }}/files-sites-${{ matrix.suite }}/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
