@@ -354,14 +354,21 @@ public sealed class HomeNativeFilesRpcPublicationTests
             AuthenticatedResourceActor actor, CancellationToken token) =>
             Actual(observed) && await profiles.GetCurrentAsync(token) == actor ? Peer : null;
         public async ValueTask<IHomeNativeFilesPublicationGuard?> AcquireOriginalFilesPublicationAsync(
-            HomeNativeObservedPeer observed, AuthenticatedResourceActor actor, HomeNativeInstalledPeer installed,
-            CancellationToken originalLifetime, CancellationToken token)
+            HomeNativeFilesOriginalPublicationContext originalContext, CancellationToken token)
         {
+            // Controlled fixture port: actual Home state gate, not a protected installed implementation.
+            originalContext.DemandOriginalOwnerTransaction();
+            Assert.True(originalContext.OriginalOwnerGuard.IsHeld);
+            var observed = originalContext.OriginalObservedPeer;
+            var actor = originalContext.OriginalActor;
+            var installed = originalContext.OriginalInstalledPeer;
+            var originalLifetime = originalContext.OriginalLifetime;
             InstalledAcquisitions++;
             if (!Actual(observed) || !Same(installed) || originalLifetime.IsCancellationRequested) return null;
             var held = await store.AcquireLocalOperationLeaseAsync(profiles, actor, token);
             if (held is null) return null;
-            LastGuard = new(held, () => Actual(observed) && Same(installed) && !originalLifetime.IsCancellationRequested,
+            LastGuard = new(held, () => Actual(observed) && Same(installed) &&
+                originalContext.OriginalOwnerGuard.IsHeld && !originalLifetime.IsCancellationRequested,
                 CheckFailure, CloseFailure);
             return LastGuard;
         }

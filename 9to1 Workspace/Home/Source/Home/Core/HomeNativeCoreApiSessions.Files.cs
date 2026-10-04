@@ -67,6 +67,7 @@ public sealed partial class HomeNativeCoreApiSessions
         ArgumentNullException.ThrowIfNull(originalPhysicalWrite);
         CancellationTokenSource? linked = null;
         IHomeNativeFilesPublicationGuard? installedGuard = null, ownerGuard = null;
+        HomeNativeFilesOriginalPublicationContext? originalPublication = null;
         var entered = false;
         Exception? primary = null;
         List<Exception> cleanup = [];
@@ -88,12 +89,18 @@ public sealed partial class HomeNativeCoreApiSessions
                     throw new UnauthorizedAccessException("The original Files publication authority is unavailable.");
                 // All ordinary owner/current reads complete before either retained guard.
                 await owner.DemandOriginalReplyCurrentAsync(originalConnection, originalReply, linked.Token).ConfigureAwait(false);
-                installedGuard = await installed.AcquireOriginalFilesPublicationAsync(context.Observed,
-                    context.Actor, context.Peer, context.Lifetime, linked.Token).ConfigureAwait(false)
-                    ?? throw new UnauthorizedAccessException("No genuine installed publication guard was retained.");
+                // Existing Files metadata writers enter Files before Home. Do not invert that order.
                 ownerGuard = await owner.AcquireOriginalReplyPublicationAsync(originalConnection,
                     originalReply, linked.Token).ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("No genuine Files publication transaction was retained.");
+                originalPublication = new(this, context, originalConnection, originalReply, ownerGuard,
+                    context.Observed, context.Peer);
+                installedGuard = await installed.AcquireOriginalFilesPublicationAsync(originalPublication,
+                    linked.Token).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("No supported installed publication transaction was retained.");
+                if (!originalPublication.IsOriginalBinding(this, context, originalConnection, originalReply, ownerGuard))
+                    throw new UnauthorizedAccessException("The original Files publication pairing changed.");
+                originalPublication.DemandOriginalOwnerTransaction();
                 await Check(installedGuard, linked.Token).ConfigureAwait(false);
                 await Check(ownerGuard, linked.Token).ConfigureAwait(false);
                 if (cleanup.Count == 0)
@@ -102,6 +109,7 @@ public sealed partial class HomeNativeCoreApiSessions
                     if (context.Channel.Observe() != context.Observed)
                         throw new UnauthorizedAccessException("The actual original Files process changed.");
                     linked.Token.ThrowIfCancellationRequested();
+                    originalPublication.DemandOriginalOwnerTransaction();
                     // Context.Gate and BOTH actual guards remain held through THIS original frame task.
                     await originalPhysicalWrite(linked.Token).ConfigureAwait(false);
                 }
@@ -123,10 +131,13 @@ public sealed partial class HomeNativeCoreApiSessions
                 await Check(installedGuard, context.Lifetime).ConfigureAwait(false);
             if (ownerGuard is not null)
                 await Check(ownerGuard, context.Lifetime).ConfigureAwait(false);
-            if (ownerGuard is not null)
-                try { await ownerGuard.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
+            if (originalPublication is not null)
+                try { originalPublication.Retire(); } catch (Exception error) { Add(cleanup, error, primary); }
+            // Reverse acquisition order, independently, after the SAME physical frame task has settled.
             if (installedGuard is not null)
                 try { await installedGuard.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
+            if (ownerGuard is not null)
+                try { await ownerGuard.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
             if (entered) try { context.Gate.Release(); } catch (Exception error) { Add(cleanup, error, primary); }
             if (linked is not null) try { linked.Dispose(); } catch (Exception error) { Add(cleanup, error, primary); }
         }
