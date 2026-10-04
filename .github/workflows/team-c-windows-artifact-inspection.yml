@@ -37,8 +37,6 @@ jobs:
           - target: shared-desktop
             artifact_id: 11304576532
     env:
-      ORIGINAL_OUTPUT: ${{ runner.temp }}/original-observation-${{ matrix.target }}
-      ORIGINAL_INPUT: ${{ runner.temp }}/original-package-${{ matrix.target }}
       ORIGINAL_TARGET: ${{ matrix.target }}
       GIT_OPTIONAL_LOCKS: '0'
     steps:
@@ -48,6 +46,7 @@ jobs:
       - name: Bind original run and artifact metadata
         env:
           GH_TOKEN: ${{ github.token }}
+          ORIGINAL_OUTPUT: ${{ runner.temp }}/original-observation-${{ matrix.target }}
         run: python3 .github/scripts/inspect-original-windows-artifact.py --target "$ORIGINAL_TARGET" --output "$ORIGINAL_OUTPUT" --validate-metadata
       - name: Download exact original immutable artifact without executing it
         uses: actions/download-artifact@v4
@@ -56,15 +55,18 @@ jobs:
           repository: CroakyJake12/9to1
           run-id: 37203799923
           artifact-ids: ${{ matrix.artifact_id }}
-          path: ${{ env.ORIGINAL_INPUT }}
+          path: ${{ runner.temp }}/original-package-${{ matrix.target }}
           merge-multiple: true
       - name: Copy bounded original JSON and logs with full file hashes
+        env:
+          ORIGINAL_OUTPUT: ${{ runner.temp }}/original-observation-${{ matrix.target }}
+          ORIGINAL_INPUT: ${{ runner.temp }}/original-package-${{ matrix.target }}
         run: python3 .github/scripts/inspect-original-windows-artifact.py --target "$ORIGINAL_TARGET" --output "$ORIGINAL_OUTPUT" --source "$ORIGINAL_INPUT"
       - name: Retain compact original observations and inspection failures
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: original-windows-observation-${{ matrix.target }}-${{ github.run_id }}
-          path: ${{ env.ORIGINAL_OUTPUT }}
+          path: ${{ runner.temp }}/original-observation-${{ matrix.target }}
           if-no-files-found: warn
           retention-days: 7
