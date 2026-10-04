@@ -1,0 +1,52 @@
+{
+  "state": "EXACT_SECOND_HALF_PERMANENT_ROOT_WHOLE_READBACK_AND_ORDERED_ORIGINAL_PART02_RECONSTRUCTION",
+  "UTC": "2026-10-04T17:59:23.943935+00:00",
+  "branch": "artifact/team-b-independent-wave22d-member-transport-20261004",
+  "parent": "e6121cd0c7cfee8e586dd4efe6e57cdcb265662d",
+  "run": 37221255892,
+  "artifact": 11310174116,
+  "archive": {
+    "subpart": 2,
+    "id": 11310174116,
+    "bytes": 9969553,
+    "sha256": "c3887cb6412aec2dbe67a4315aaeb90aff4f91ce9d181d8917aee388fce92973",
+    "name": "independent-wave-existing-part02-subpart02.zip",
+    "path": "docs/releases/sol-happy-20261003/team-b-wave22d-independent-member-transport/part02-subpart02.zip",
+    "gitBlob": "b1e1cb096188de0005b7eef6a8e8d2776fe4cf58",
+    "temporarySourcePath": "/workspace/attachments/59aab8de-17e6-4679-a306-ee3018cdaec0/independent-wave-existing-part02-subpart02.zip",
+    "temporaryRetired": false,
+    "fullRemoteBodyReadback": true,
+    "members": [
+      {
+        "path": "extracted-members.zip.part02.subpart",
+        "bytes": 9961472,
+        "sha256": "10a16bfa63d4c7e321b820085c425e7d5290b10e67260042c5f22da253b3f64c",
+        "crc": 1219096661,
+        "mode": 33188
+      },
+      {
+        "path": "transport-manifest.json",
+        "bytes": 5914,
+        "sha256": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd",
+        "crc": 1111476243,
+        "mode": 33188
+      },
+      {
+        "path": "subpart-manifest.json",
+        "bytes": 1709,
+        "sha256": "2f10354d6532e1133682efb06676a2d8357bc52b8a15ad1dbe73008a0e37a6a1",
+        "crc": 4013868506,
+        "mode": 33188
+      }
+    ]
+  },
+  "orderedOriginalPart02": {
+    "bytes": 19922944,
+    "sha256": "4dc73ed75c558ce71480d27b195f7196b48c38f7d410965d0fd08b2074048b4b",
+    "rootActualWholeReconstructionInMemory": true,
+    "firstHalfFromPermanentOriginalZIP": true,
+    "secondHalfFromOfficialOriginalZIP": true
+  },
+  "wholeOriginalManifestSHA256": "71e288fa29ff7a87409be9250b9c14533a50ebdd952bde620cfa47aa29f89bfd",
+  "qualifications": "Originalpart02outer19.9MB metadataonly; these originalsubZIPs wholebodyread. Fullcontainer252fa/26/IDB/WAV NOT reconstructeduntilpart3. Noapp14rerun."
+}
