@@ -6,7 +6,25 @@ public sealed record RecordingParticipant(Guid ParticipantId, RecordingDecision 
 public sealed record RecordingAuditEvent(Guid EventId, string Kind, Guid? ActorId, DateTimeOffset At);
 public sealed record RecordingSession(Guid RecordingId, Guid CallId, Guid RequesterId, RecordingState State,
     long Revision, IReadOnlyList<RecordingParticipant> Participants, IReadOnlyList<RecordingAuditEvent> Audit,
-    Guid? ArtifactId = null);
+    Guid? ArtifactId = null)
+{
+    // Consent and membership belong to a revision. Never retain caller-owned mutable storage,
+    // including when a host restores a session or assigns these properties with a record copy.
+    private readonly IReadOnlyList<RecordingParticipant> _participants = Array.AsReadOnly(Participants.ToArray());
+    private readonly IReadOnlyList<RecordingAuditEvent> _audit = Array.AsReadOnly(Audit.ToArray());
+
+    public IReadOnlyList<RecordingParticipant> Participants
+    {
+        get => _participants;
+        init => _participants = Array.AsReadOnly(value.ToArray());
+    }
+
+    public IReadOnlyList<RecordingAuditEvent> Audit
+    {
+        get => _audit;
+        init => _audit = Array.AsReadOnly(value.ToArray());
+    }
+}
 public sealed record RecordingError(string Code, string Message, Guid CallId, bool Recoverable);
 public sealed record RecordingResult(RecordingSession? Session, RecordingError? Error)
 {

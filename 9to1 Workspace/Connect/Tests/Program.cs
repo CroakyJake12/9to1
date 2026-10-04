@@ -26,3 +26,5 @@ fresh = RecordingConsent.Withdraw(fresh, owner, fresh.Revision, now).Session!;
 Assert(!RecordingConsent.MayIncludeMedia(fresh, owner) && fresh.State == RecordingState.Declined, "Withdrawing active consent immediately disables capture.");
 Console.WriteLine("Connect recording-consent transitions passed.");
 static void Assert(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
+
+RecordingSnapshotTests.Run();
