@@ -32,7 +32,7 @@ All paths below are repository-relative. The full files were read at the stated 
 ## Compatible ownership split
 
 1. The private authenticated Session completes ordinary issuer/current, owner, broker/resource and provider checks before retaining publication locks. It retains the same Context, observed peer, installed tuple, actor, original connection and reply.
-2. The Files owner acquires its actual metadata transaction first. Its registered coordinator then acquires actual profile/configuration/permission Home state and, when distinct, canonical device package state. A shared actual store is acquired once.
+2. The Files owner acquires its actual metadata transaction first. Where claimed-resource publication requires the original capability completion lease, that lease follows Files and precedes Home. Its registered coordinator then acquires actual profile/configuration/permission Home state and, when distinct, canonical device package state. A shared actual store is acquired once.
 3. The Session issues a sealed publication context containing the SAME acquired owner guard and private original references. It has no public constructor and is not reconstructed from actor, request, reply, PID, or wire fields.
 4. Native installed acquisition receives that exact context. It requires an actual factory-issued raw state capability bound to its configured profile, package database, device store, original Home lease and actor. A generic guard with `IsHeld == true` cannot supply this capability.
 5. Native acquisition retains original process and protected file evidence, authentic receipt-owner and controlled-launch transactions. These remain owned until the same original frame task settles and independent final checks finish.
@@ -79,7 +79,7 @@ Existing transient `IsCurrentAsync` implementations are not fallbacks. Missing a
 
 ## Lock order and lifecycle constraints
 
-The proposed supported order is Files metadata, then profile/configuration/permission Home state, then distinct device package state, then authentic receipt and launch transactions. Native evidence is acquired within that coordinated ownership.
+The proposed supported order is Files metadata, then the original capability completion gate when required by the retained resource claim, then profile/configuration/permission Home state, then distinct device package state, then authentic receipt and launch transactions. Native evidence is acquired within that coordinated ownership.
 
 A complete participating writer lock-order and alias census has not been established. This document does not certify that every writer follows this order. A reverse-order or unsupported composition must remain unavailable until its actual owning paths are proven compatible. The coordinator cannot assume an installation owner's receipt/launch lock is safe merely because its interface exists.
 
@@ -99,3 +99,51 @@ The existing Windows connection already retains and independently joins its orig
 - Missing genuine installation/launch/publisher configuration remains unavailable. Scripted authorities in managed fixtures do not establish Windows installed trust or native acceptance.
 
 No tests or native operations were run for this design checkpoint.
+
+## Bounded writer, reentry and alias census
+
+This is a bounded source census at `465f9c637f8b1e14d1d61bc0989140837d4e35bc` plus the native `40e836ceddb4f06a804a265b51c4e63adaa16ffb` proposal. The Home/package baseline map carries the completed Home-owner whole-body review. The remaining workspace, directory, materialization, registration and donor-absence reads were independently checked in this follow-up. This does not certify every application, external writer or supplied callback.
+
+Notation: P is the original profile/Home state semaphore and process sidecar; D is canonical device state; F is provider metadata; B is directory-binding metadata; R is materialization metadata; C is the original resource capability completion gate; I is the profile's private gate; T is the permission service's private gate; W is the package database write gate; M is the device owner's original mutation gate.
+
+| Existing path | Actual order or constraint |
+| --- | --- |
+| `HomeLocalProfileIdentity.GetCurrentAsync` | I then P. Raw `CheckAsync` consumes already-locked state and the actual principal source. |
+| `HomePermissionTrustService` public operations | T then P for Load/Save; no permission call is safe merely because P is held. |
+| `HomeResourceOperationCapability` completion/audit | C remains held across the actual permission audit, hence C then T then P. Introducing P then C can deadlock. |
+| `HomeClaimedResourceCommitFence` | Owning external transaction first, then C, then P; raw callbacks avoid public owner reads. P and C release before terminal audit. |
+| `HomePackageDatabase` | Save holds W before D. Read reacquires D. The persisted-write observer runs after physical D releases but W is still held, so observer-to-Save can self-reenter W. |
+| `HomePackageOriginalDeviceOwner` | M and original completion custody cover ordinary current/profile/package observations, then reservation/settlement W then D. Supplied root Admission/Settlement guards run inside D and must be genuinely raw/nonreentrant. |
+| `NativeFilesWorkspaceAuthority.CaptureCommitAuthorityAsync` | Captures outside Files commit; its later callback performs ordinary configuration/ownership Home reads under F. This establishes F then P, and the callback must not be reused while P is already held. |
+| Directory registration/ordinary resolution | Provider reads occur before B update, or B read releases before provider F read. No retained B-to-F nesting follows merely from this ordinary sequence. |
+| `AcquireOriginalBindingCommitLeaseAsync` | Retains actual B gate/sidecar and checks the captured binding/physical directory; performs no Home or provider call internally. Its snapshot/IsHeld is not resource authority. |
+| `FilesMaterializationRegistry` writes | Holds the validated content handle while updating its own R metadata; these whole bodies introduce no Home/device/provider callback. |
+| Native40e admission | Ordinary profile and package reads are released between observations; receipt/launch checks are transient and native evidence closes before return. It is not a retained publication guard. |
+
+Additional exact source pins at the census ref:
+
+- `9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs`: 48,284 bytes, blob `cc6ba17728923511aae03b9194945c2200933d3f`. RecordExecution enters T; Load/Save access P.
+- `9to1 Workspace/Home/Source/Home/Core/HomeResourceOperationBroker.cs`: 26,059 bytes, blob `914e79b950b2fa3a1a6f07ba4c27db4658503ca3`. The capability type and completion gate are in this SAME file; completion/retry/rejected audit retains C across permission audit delegates.
+- `9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceCommitFence.cs`: 18,295 bytes, blob `7a63ab4e842b72dc37cb1a1d55f3ae5c27e771d0`.
+- `9to1 Workspace/Home/Source/Home/Core/HomeLocalStoreOwnership.cs`: 17,316 bytes, blob `ca7bb65dc8485c0de3cd3e18120b69d9b515be15`. These inspected binding/import paths read Files evidence before guarded Home writes.
+- `9to1 Workspace/Home/Source/Home/Apps/HomePackageOriginalDeviceOwner.cs`: 45,153 bytes, blob `f4f5167b0501bd00e742d5a74fb879056aeabb25`.
+- `9to1 Workspace/Files/NativeHost/NativeFilesWorkspaceService.cs`: 22,871 bytes, blob `f657d58cec6267aff5a901374df43d2058d2a60d`. The actual factory pairs `drive.json`, `bindings.json` and `materializations.json` under its configured metadata directory.
+- `9to1 Workspace/Files/CUI/Services/FilesWorkspaceDirectoryResolver.cs`: 18,773 bytes, blob `db7d7bde5dc0ff12363603d4297f9ee567e2afad`.
+- `9to1 Workspace/Files/CUI/Services/FilesMaterializationRegistry.cs`: 14,405 bytes, blob `1aad0f575df27360cd8760919f05eca2e66d4814`.
+- `9to1 Workspace/Files/CUI/Services/FilesProviderRegistry.cs`: 4,304 bytes, blob `15d6ed54b95838d1fa6bc22ca8847cedf706067b`.
+- `9to1 Workspace/Files/NativeHost/FilesNativeHostComposition.cs`: 2,450 bytes, blob `105cbc2bce49bdb7fe721e99b803992f44bcd08f`.
+
+Home's constructor normalizes a path and uses a static case-insensitive semaphore dictionary. Two different store wrappers with the same normalized path can therefore share a nonreentrant gate. Object-reference equality alone cannot deduplicate physical locks. On Linux, different-case payload paths can also share that Home gate without being the same state file; gate equality alone cannot justify merging snapshots. Normalization does not prove no symlink/hardlink alias or exact process-sidecar pairing. Supported read transactions require actual owner lock identity plus protected physical evidence, or refuse the ambiguous composition.
+
+The known historical retained B-to-F donor path `9to1 Workspace/Canvas/CanvasFilesArtifactBridge.OriginalBindingAuthority.cs` returned authenticated 404 at the census ref. It cannot establish a current RPC participating writer or current global ordering. The selected standalone upload/final-publication caller remains unestablished in this bounded read; historical donors cannot fill that gap.
+
+### Required owner action map
+
+- Files RPC: owner-first acquisition, SAME private Session context, independent final checks and reverse disposal; no inferred installation grant.
+- Home state owner: genuine private raw read transaction/fingerprint and alias-aware lock identity; C-before-P when an actual claimed-resource completion lease participates.
+- Package/device owner: SAME canonical database parser and genuine D read transaction; every actual root callback must be proven raw and compatible with the selected lock order.
+- Native verifier: original process/file handle custody and exact retained-state binding, without ordinary Home/device reentry.
+- Installation/controlled-launch owners: authentic retained receipt-generation and launch transactions. These implementations are absent from the inspected interfaces; supplying transient booleans does not implement them.
+- Supported host composition: prove the actual participating writer/callback and alias map, including any selected standalone final publisher, before enrolling a genuine adapter.
+
+Until these actions are completed, Files publication with native installed authority remains typed unavailable. No new speculative implementation, configuration or native operation is introduced by this census.
