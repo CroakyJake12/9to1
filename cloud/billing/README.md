@@ -64,3 +64,5 @@ Requirement map (canonical revision recorded in Team C evidence):
 
 No prices, currencies, rollover, grace periods, allocations, canonical identities
 or production bindings have been invented. Shared product contracts are unchanged.
+
+`listReconciliationCandidates(db, mode, now, limit)` provides read-only, mode-scoped discovery of pending, reconciliation-required and expired-claim receipts. The explicit limit is 1–100, and ordering is accepted timestamp then unique event ID. A candidate can become unavailable immediately; only `claimEvent` acquires ownership. This API does not fetch current provider objects, run a scheduler, apply canonical effects or acknowledge completion. Canonical provider bindings, trusted verifiers/policies and an approved effect transport remain required and unconfigured.

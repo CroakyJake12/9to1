@@ -11,7 +11,7 @@ const now = 1900000000;
 const payload = overrides => JSON.stringify({ id:'evt_123', object:'event', type:'invoice.paid', created:now, livemode:false, data:{object:{id:'in_123'}}, ...overrides });
 const signature = (body, timestamp = now) => `t=${timestamp},v1=${createHmac('sha256',secret).update(`${timestamp}.`).update(body).digest('hex')}`;
 function adapter(db) {
-  return { prepare(sql) { return { bind(...args) { return { async run() { return db.prepare(sql).run(...args); }, async first() { return db.prepare(sql).get(...args) ?? null; } }; } }; } };
+  return { prepare(sql) { return { bind(...args) { return { async run() { return db.prepare(sql).run(...args); }, async first() { return db.prepare(sql).get(...args) ?? null; }, async all() { return {results:db.prepare(sql).all(...args)}; } }; } }; } };
 }
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(),'c3-billing-'));
@@ -78,7 +78,7 @@ test('C3-WH-08: bounded body and malformed verified events leave no receipt',asy
  assert.equal(count(f),0);
 });
 
-import { claimEvent, completeEvent, failEvent } from '../src/inbox-processing.mjs';
+import { claimEvent, completeEvent, failEvent, listReconciliationCandidates } from '../src/inbox-processing.mjs';
 test('C3-WH-09: concurrent claims have one owner; stale claim cannot complete after restart/recovery',async t=>{
  const f=fixture(t);await receiveWebhook(request(payload()),f.env,now);
  const claims=await Promise.all(Array.from({length:20},()=>claimEvent(f.env.BILLING_DB,'test','evt_123',now,30)));
@@ -116,4 +116,33 @@ test('C3-WH-12: lost acknowledgement after commit is safely retried against exis
  assert.equal((await receiveWebhook(request(body),{...f.env,BILLING_DB:binding},now)).status,503);
  assert.equal(failed,true);assert.equal(count(f),1);f.restart();
  assert.equal((await receiveWebhook(request(body),f.env,now)).status,202);assert.equal(count(f),1);
+});
+
+
+test('C3-WH-13: bounded discovery survives restart and never changes ownership or receipt state',async t=>{
+ const f=fixture(t);
+ for(const id of ['evt_c','evt_b','evt_a','evt_done']) await receiveWebhook(request(payload({id})),f.env,now);
+ const done=await claimEvent(f.env.BILLING_DB,'test','evt_done',now,30);
+ assert.equal(await completeEvent(f.env.BILLING_DB,'test','evt_done',done.claim_token,now),true);
+ const active=await claimEvent(f.env.BILLING_DB,'test','evt_b',now,30);
+ const failed=await claimEvent(f.env.BILLING_DB,'test','evt_c',now,30);
+ await failEvent(f.env.BILLING_DB,'test','evt_c',failed.claim_token);
+ f.restart();
+ const before=f.db().prepare('SELECT * FROM stripe_event_inbox ORDER BY event_id').all();
+ assert.deepEqual((await listReconciliationCandidates(f.env.BILLING_DB,'test',now,1)).map(r=>r.event_id),['evt_a']);
+ assert.deepEqual((await listReconciliationCandidates(f.env.BILLING_DB,'test',now,100)).map(r=>r.event_id),['evt_a','evt_c']);
+ assert.deepEqual(await listReconciliationCandidates(f.env.BILLING_DB,'live',now,100),[]);
+ assert.deepEqual((await listReconciliationCandidates(f.env.BILLING_DB,'test',now+30,100)).map(r=>r.event_id),['evt_a','evt_b','evt_c']);
+ assert.deepEqual(f.db().prepare('SELECT * FROM stripe_event_inbox ORDER BY event_id').all(),before);
+ const owners=(await Promise.all([claimEvent(f.env.BILLING_DB,'test','evt_b',now+30,30),claimEvent(f.env.BILLING_DB,'test','evt_b',now+30,30)])).filter(Boolean);
+ assert.equal(owners.length,1);
+ assert.equal(await completeEvent(f.env.BILLING_DB,'test','evt_b',active.claim_token,now+31),false);
+ assert.ok(!(await listReconciliationCandidates(f.env.BILLING_DB,'test',now+31,100)).some(r=>r.event_id==='evt_b'));
+});
+test('C3-WH-14: discovery rejects invalid bounds and fails visibly on actual database failure',async t=>{
+ const f=fixture(t);
+ for(const [mode,time,limit] of [['other',now,1],['test',-1,1],['test',NaN,1],['test',now,0],['test',now,101],['test',now,1.5]])
+  await assert.rejects(listReconciliationCandidates(f.env.BILLING_DB,mode,time,limit),TypeError);
+ f.db().exec('DROP TABLE stripe_event_inbox');
+ await assert.rejects(listReconciliationCandidates(f.env.BILLING_DB,'test',now,1),/no such table/);
 });
