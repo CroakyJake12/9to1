@@ -26,8 +26,8 @@
     "isolatedHomeNativeTaskRecipe": "0d1d64a5ed59e54a915ba3672fd734c0cff0ff40",
     "isolatedStudioGifCatalogMetadata": "137fd22e4cf0379d04adcd6da4c82a1443f5c911"
   },
-  "payloadCount": 578,
-  "totalBytes": 89420649,
+  "payloadCount": 579,
+  "totalBytes": 89422374,
   "entries": [
     {
       "path": "README.md",
@@ -2570,6 +2570,13 @@
       "sha256": "f31995c7cfbecfafd8c3189cfd1f4a02afb257a0cc7934fd40dd3796c89cf68d",
       "originalBytes": 2896,
       "originalSha256": "f31995c7cfbecfafd8c3189cfd1f4a02afb257a0cc7934fd40dd3796c89cf68d"
+    },
+    {
+      "path": "runs/home-native-recipe-source/c6-avalonia-task-recipe-source-peer.json",
+      "bytes": 1725,
+      "sha256": "5c95aa300673acfc0c21d64d166da33ecff7bc8bae8bfb8f41823c64100d36d7",
+      "originalBytes": 1725,
+      "originalSha256": "5c95aa300673acfc0c21d64d166da33ecff7bc8bae8bfb8f41823c64100d36d7"
     },
     {
       "path": "runs/home-native-recipe-source/c6-final-preinvoke.json",
