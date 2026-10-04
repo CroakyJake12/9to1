@@ -284,9 +284,9 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         if (_disposed) return true;
         if (_closing) return false;
         _closing = true;
-        _view.IsEnabled = false;
         try
         {
+            _view.IsEnabled = false;
             ++_navigationVersion;
             _navigationCancellation?.Cancel();
             var closed = await _surfaces.ClearAsync(cancellationToken);
