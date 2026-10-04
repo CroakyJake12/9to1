@@ -1,0 +1,31 @@
+{
+  "sourceCommit": "33d20b7a376e49e052950c85d7c79fc05227516b",
+  "pins": [
+    {
+      "path": "cloud/billing/README.md",
+      "bytes": 4813,
+      "sha256": "e7969ab9542d269b13ee07d716dcc974b6a20f67663e51eaa98bf457e1fcc1b5"
+    },
+    {
+      "path": "cloud/billing/src/inbox-processing.mjs",
+      "bytes": 2765,
+      "sha256": "2b2f7fbdb33a3ead5b4fe115014bfd3e715ba7610372c0d5d50a3fc831b8f63b"
+    },
+    {
+      "path": "cloud/billing/test/stripe-webhook.test.mjs",
+      "bytes": 11206,
+      "sha256": "d11d580191369b1ee5961f0e26ec8e6558ca6f42d5bb115844dcd11f45d3cb8a"
+    }
+  ],
+  "command": "node --test cloud/billing/test/stripe-webhook.test.mjs cloud/billing/test/deployment-config.test.mjs",
+  "exit": 0,
+  "counts": {
+    "tests": 16,
+    "pass": 16,
+    "fail": 0,
+    "skip": 0
+  },
+  "review": "Full3file delta read. Bound mode/time/limit before SELECT, parameter bindings, pending/reconciliation_required/expired lease only, stable accepted_at,event_id ordering. No mutation SQL/claim grant/effect; exceptions retained. RealSQLite tests verify whole receipt state unchanged across restart/read, active/processed/live exclusion, expiry/reclaim and stale owner denial; real droppedtable fails.",
+  "limits": "Candidate can become stale immediately; caller must claim/reconcile. No scheduler/provider fetch/business effects/nativeD1/deployed acceptance. C6 replay boundedlocal actualSQLite only.",
+  "logSHA256": "0087984012927bb2bd555a808a72e3ff8f9fb89c5df279b11736ac1582fbcca5"
+}
