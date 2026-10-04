@@ -75,12 +75,12 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
     {
         if(funding is null)throw new InvalidOperationException("organisation_funding_authority_unconfigured");
         var lot=await funding.ResolveAsync(fundedReference,ct).ConfigureAwait(false)??throw new UnauthorizedAccessException("allocation_not_funded");
-        ValidateLot(lot);
+        ct.ThrowIfCancellationRequested();ValidateLot(lot);
         if(lot.FundingReference.StartsWith("rollover:",StringComparison.Ordinal))throw new InvalidOperationException("rollover_provenance_requires_internal_transition");
         if(lot.OrgID!=orgID||lot.FundingReference!=fundedReference)throw new UnauthorizedAccessException("allocation_owner_or_funding_reference_mismatch");
         Current(token,orgID,policyRevision,"Admin.Resources.FundPool",(_,org)=>
         {
-            using var lease=DurableState.Acquire(statePath);var state=Read();var pool=Pool(state,poolID,org.OrgID);
+            using var lease=DurableState.Acquire(statePath);ct.ThrowIfCancellationRequested();var state=Read();var pool=Pool(state,poolID,org.OrgID);
             var prior=state.Lots.SingleOrDefault(l=>l.SourceAllocationID==lot.SourceAllocationID);
             if(prior is not null)
             {
@@ -90,6 +90,7 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
             if(pool.PeriodID!=lot.PeriodID||lot.ExpiresAt<=clock.GetUtcNow()||lot.AcquiredAt>clock.GetUtcNow())throw new InvalidOperationException("allocation_period_or_expiry_mismatch");
             var fundedTotal=AddCapacity(SumCapacity(state.Lots.Where(l=>state.LotPools[l.SourceAllocationID]==poolID).Select(l=>l.Dust)),lot.Dust);
             var bindings=state.LotPools.ToDictionary(p=>p.Key,p=>p.Value);bindings.Add(lot.SourceAllocationID,poolID);
+            ct.ThrowIfCancellationRequested();
             Write(state with{Lots=state.Lots.Append(lot).ToArray(),LotPools=bindings});return true;
         });
     }
@@ -122,10 +123,11 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
     {
         if(costQuotes is null)throw new InvalidOperationException("organisation_cost_quote_authority_unconfigured");
         var quote=await costQuotes.ResolveAsync(request.CostQuoteID,ct).ConfigureAwait(false)??throw new UnauthorizedAccessException("cost_quote_unverified");
+        ct.ThrowIfCancellationRequested();
         if(quote.QuoteID!=request.CostQuoteID||quote.OrgID!=request.OrgID||quote.ModelRouteID!=request.ModelRouteID||quote.PolicyRevision!=request.ExpectedPolicyRevision||quote.MaximumDust<=0||string.IsNullOrWhiteSpace(request.OperationID))throw new UnauthorizedAccessException("cost_quote_context_mismatch");
         return Current(token,request.OrgID,request.ExpectedPolicyRevision,"AI.Cloud.Reserve",(session,org)=>
         {
-            using var lease=DurableState.Acquire(statePath);var state=Read();var pool=Pool(state,quote.PoolID,org.OrgID);var now=clock.GetUtcNow();
+            using var lease=DurableState.Acquire(statePath);ct.ThrowIfCancellationRequested();var state=Read();var pool=Pool(state,quote.PoolID,org.OrgID);var now=clock.GetUtcNow();
             if(string.IsNullOrWhiteSpace(session.RegisteredClientID)||quote.RegisteredClientID!=session.RegisteredClientID)throw new UnauthorizedAccessException("cost_quote_registered_client_mismatch");
             if(quote.Attribution is null)throw new InvalidOperationException("organisation_quote_usage_attribution_unconfigured");
             ValidateAttribution(quote.Attribution);
@@ -151,6 +153,7 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
             }
             if(remaining!=0)throw new InvalidOperationException("organisation_dust_exhausted");
             var reservation=new OrganisationFundingReservation(Guid.NewGuid(),session.AccountID,org.OrgID,pool.PoolID,pool.PeriodID,request.OperationID,request.ModelRouteID,quote.QuoteID,org.Policy.Revision,quote.MaximumDust,expiry,slices.ToArray(),org.Revision,session.RegisteredClientID,quote.Attribution);
+            ct.ThrowIfCancellationRequested();
             Write(state with{Reservations=state.Reservations.Append(new PoolReservation(reservation,roleIDs,OrganisationPoolReservationState.Reserved,0,null,null,null)).ToArray()});return reservation;
         });
     }
