@@ -30,6 +30,11 @@ db.execute('INSERT INTO oauthResource(id,identifier,name) VALUES (?,?,?)',('offl
 batch=json.loads((folder/'seed-query.json').read_text())['batch']
 with db:
  for q in batch:db.execute(q['sql'],q['params'])
+sql_db=sqlite3.connect(':memory:');sql_db.execute('PRAGMA foreign_keys=ON')
+for p in sorted((root/'migrations').glob('*.sql')):sql_db.executescript(p.read_text())
+sql_db.execute('INSERT INTO oauthResource(id,identifier,name) VALUES (?,?,?)',('offline-resource-id',origin,'Offline actual schema fixture'));sql_db.commit();sql_db.executescript((folder/'seed.sql').read_text())
+for table in ['user','account','oauthClient','oauthClientResource']:
+ assert db.execute('SELECT * FROM '+table+' ORDER BY id').fetchall()==sql_db.execute('SELECT * FROM '+table+' ORDER BY id').fetchall(),table
 assert db.execute('SELECT count(*) FROM user').fetchone()[0]==2
 assert db.execute('SELECT count(*) FROM account WHERE providerId="credential"').fetchone()[0]==2
 assert db.execute('SELECT count(*) FROM user WHERE role IS NOT NULL').fetchone()[0]==0
