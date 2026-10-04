@@ -1,5 +1,5 @@
 {
-  "state": "ROOT_SOURCE01_FULLBODY_INTEGRATED_B4_PEER_CLEAR_GUARD14_CASES22_ASSERTIONS_ACTUAL_PASS",
+  "state": "ROOT_B4_B6_FULL_SOURCE_PROOF_EXACT_SOURCE_CONTROLS14_CASES22PASS_BROWSER17_RERUN_PENDING",
   "productHead": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
   "parent": "e90c6fab21aebd27cb7d8f330022414a889be8df",
   "productPath": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
@@ -116,5 +116,40 @@
       "sha256": "fcd8f65fd5585526d4657b5e23463edddcd072fcbb798d871becd607e3a7592a"
     }
   ],
-  "noJacobPCDependency": "CloudLinuxsource+ordinaryGitHubCI; no localSDK/browser/process held byB3."
+  "noJacobPCDependency": "CloudLinuxsource+ordinaryGitHubCI; no localSDK/browser/process held byB3.",
+  "B6FullRemoteSourceAdoptionProof": {
+    "state": "B6_REMOTE_DRIVER_ADOPTION_SOURCE_PROOF_READERS_CLOSED",
+    "head": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "parent": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+    "refs": [
+      "team-b/astra-browser-validation-20261003",
+      "review/team-b-local-apps-20261004"
+    ],
+    "full9749LeafConservationOnlyDriverChanged": true,
+    "path": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+    "newBlob": "1f617d0c5f80a79c3e4bfff74a0d9829d12b5cc7",
+    "newBytes": 14913,
+    "newSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+    "oldBlob": "0b55f55eb3afaf25683d0fe4742023f172392449",
+    "oldBytes": 11089,
+    "oldSHA256": "20fc542341b8d88ad1b2b96094dbbe33ecc6a0567378cbef7f3b0b3b5c3ba0ca",
+    "fourInheritedHelperASTsExact": [
+      "sha",
+      "write",
+      "inventory",
+      "source_check"
+    ],
+    "commonLedgerCapFloorNamesExact": true,
+    "playwrightToolsThroughOriginal14AndNew3CallAndAllAcceptanceGatesByteExact": true,
+    "browserSegmentSHA256": "4b41be27b50f245e66bdc0ed105566971dd8018a309eb7a99cb0c872c3735a47",
+    "allBrowserOraclesAndWorkflowLeafBodiesUnchanged": true,
+    "newFunctionsOnly": [
+      "owned_regular",
+      "owner_output_guard"
+    ],
+    "reviewedChange": "Exact six same-job owner output rows, body hashes and contained regular nonsymlink paths; exact unique owner-assets-build command and all producer normal closed families; avalonia/storage modules equal sealed public bodies; NUL porcelain exact six unknown generated paths only; publisher proof and generated outputs pinned/rechecked afterward. No generic unknown-input allowance.",
+    "runtimeResultAcceptance": false,
+    "allReadersClosed": true,
+    "noLocalFileImportRuntimeWatchRestartOrSourceMutation": true
+  }
 }
