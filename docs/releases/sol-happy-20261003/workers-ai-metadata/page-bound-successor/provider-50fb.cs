@@ -228,8 +228,6 @@ public abstract class OpenAiCompatibleModelProviderBase(
                 || success.ValueKind != JsonValueKind.True || !root.TryGetProperty("result", out var models)
                 || models.ValueKind != JsonValueKind.Array)
                 throw new InvalidOperationException("Workers AI model catalogue was not confirmed.");
-            if (models.GetArrayLength() > pageSize)
-                throw new InvalidOperationException("Workers AI model catalogue exceeded the bounded page size.");
             foreach (var item in models.EnumerateArray())
             {
                 token.ThrowIfCancellationRequested();

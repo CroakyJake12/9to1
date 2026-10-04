@@ -89,6 +89,19 @@ public sealed class CloudflareWorkersAiMetadataTests
     }
 
     [Fact]
+    public async Task Oversized_provider_page_refuses_catalogue_and_health_without_followup_requests()
+    {
+        var page = JsonSerializer.Serialize(new { success = true, result = Enumerable.Range(0, 101).Select(i => new { name = "@cf/test/model-" + i }) });
+        var models = new Transport(_ => page);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Create(models).GetModelsAsync(CancellationToken.None));
+        Assert.Single(models.Calls);
+        Assert.Contains("bounded page size", error.Message);
+        var health = new Transport(_ => page);
+        Assert.False((await Create(health).CheckHealthAsync(CancellationToken.None)).IsHealthy);
+        Assert.Single(health.Calls);
+    }
+
+    [Fact]
     public async Task Repeated_full_pages_refuse_partial_catalogue_at_bound()
     {
         var page = JsonSerializer.Serialize(new { success = true, result = Enumerable.Range(0, 100).Select(i => new { name = "@cf/test/model-" + i }) });
