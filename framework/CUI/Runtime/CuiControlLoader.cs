@@ -262,7 +262,17 @@ public sealed class CuiControlLoader : IDisposable
     {
         if (_disposed || !button.IsEnabled || !_wiredActions.Contains(button) ||
             _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(button, out var invocation)) return;
-        try { await dispatcher.DispatchAsync(invocation.Command, invocation.Parameter, _lifetime.Token); }
+        try
+        {
+            if (dispatcher is ICuiLifetimeAwareActionDispatcher aware)
+            {
+                // This accepted native Button event has a view lifetime and no separate
+                // external caller token. The host alone decides whether work transfers.
+                await aware.DispatchWithLifetimeAsync(invocation.Command, invocation.Parameter,
+                    new CuiActionDispatchLifetime(_lifetime.Token, CancellationToken.None));
+            }
+            else await dispatcher.DispatchAsync(invocation.Command, invocation.Parameter, _lifetime.Token);
+        }
         catch (OperationCanceledException)
         { if (!_disposed) ReportActionFailure(button, new("CUIA_CANCELLED", "The action was cancelled.", true)); }
         catch (Exception)

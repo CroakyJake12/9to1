@@ -8,7 +8,7 @@ namespace NineToOne.Web.Accounts;
 
 /// <summary>CUI presentation of server-owned account/profile/session wire records. Drafts and confirmation state are view-local.</summary>
 public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRepeatItemBindingContext,
-    ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IDisposable, IAsyncDisposable
+    ICuiActionDispatcher, ICuiLifetimeAwareActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IDisposable, IAsyncDisposable
 {
     private static readonly string[] Fields = ["name", "username", "icon", "pronouns", "job"];
     private IAccountBrowserTransport? _transport;
@@ -29,6 +29,8 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         internal readonly TaskCompletionSource Settled = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal bool Transferred;
+        internal CancellationToken ViewCancellation;
+        internal CancellationTokenRegistration ViewRegistration;
     }
     private readonly Dictionary<string, string?> _draft = new(StringComparer.Ordinal);
     private readonly HashSet<string> _changed = new(StringComparer.Ordinal);
@@ -106,7 +108,16 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         _ => false,
     });
 
+    // Existing public callers keep their actual explicit cancellation, unchanged.
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        => DispatchTrackedAsync(command, parameter, cancellationToken, default);
+
+    // SOURCE ONLY: blocked until A1 owns/delivers the canonical optional CUI port.
+    public ValueTask DispatchWithLifetimeAsync(string command, object? parameter, CuiActionDispatchLifetime lifetime)
+        => DispatchTrackedAsync(command, parameter, lifetime.CallerCancellation, lifetime.ViewCancellation);
+
+    private ValueTask DispatchTrackedAsync(string command, object? parameter,
+        CancellationToken cancellationToken, CancellationToken viewCancellation)
     {
         CommandBoundary boundary;
         long generation;
@@ -114,7 +125,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         {
             if (_disposed) return ValueTask.CompletedTask;
             generation = _generation;
-            boundary = new();
+            boundary = new() { ViewCancellation = viewCancellation };
             _ownedBoundaries.Add(boundary.Settled.Task);
         }
         return new(RunIssuedCommandAsync(command, parameter, cancellationToken, generation, boundary));
@@ -127,6 +138,9 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     public bool HasOutstandingBrokerWork => BrokerOwnedContinuations.Any(task => !task.IsCompleted);
     private void TransferToExistingBroker(CommandBoundary boundary)
     {
+        // Unregister ONLY CUI view retirement, at the existing validated handoff.
+        // Already observed cancellation stays set; true caller remains linked.
+        boundary.ViewRegistration.Dispose();
         lock (_ownership) { boundary.Transferred = true; _brokerContinuations.Add(boundary.Completion.Task); }
         boundary.Settled.TrySetResult();
     }
@@ -153,6 +167,11 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         using var request = command is "ConfirmSessionMutation" or "RequestSignIn"
             ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
             : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+        // The same request remains view-cancellable through selection/admission.
+        // LIFO disposal releases this registration before its request CTS.
+        using var viewRegistration = boundary.ViewCancellation.Register(
+            static state => ((CancellationTokenSource)state!).Cancel(), request);
+        boundary.ViewRegistration = viewRegistration;
         if (!await _gate.WaitAsync(0, request.Token)) return; // Never queue an edit or revocation behind a different operation.
         try
         {
