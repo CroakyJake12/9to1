@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d06c0a4b3bb6903dfecf2f4c0d983b6d5e1a4302",
-  "programTree": "f625d1be194ae7e20464490067febb5480ca9b1f",
+  "baselineCommit": "fafb9b5a9889975ae252eb13b3b6877378b020d2",
+  "programTree": "00067e045d94353e029bd2dcd34d2511b4f58967",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -74,6 +74,13 @@
       "object": "59d8a1ab2f77e7130b2fa50ec6128530fce6e176",
       "bytes": 9668,
       "sha256": "d77bab885d73425d5ff9708ccd20e362e2059036390d83c4ea210d565ce09025"
+    },
+    {
+      "path": ".github/scripts/astra-forms-sites-isolated-validation.py",
+      "mode": "100644",
+      "object": "177d02191fff461c48cb7f68b0b6e8db801d7213",
+      "bytes": 34406,
+      "sha256": "e407d57fda1675036e24a752a8bd7d2c3b0e2088e7c5ffbfbc55824afcddbe35"
     },
     {
       "path": ".github/scripts/astra-home-portable-pdb.py",
@@ -274,9 +281,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "97eef8a749af857c7a510465f7ae64fdc884073e",
-      "bytes": 3332,
-      "sha256": "d591c0a8c3f3a0f4daf7a88214b1f69f82970ec940d41994b16e2a491a372116"
+      "object": "b38ed8ae632b9762cc91378af87388eec1eac9a3",
+      "bytes": 3344,
+      "sha256": "7338c068da7faae9e33dfa4d12cbac8d0101035f0696d4f7554512184ec2301c"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -25453,9 +25460,9 @@
     {
       "path": "9to1 Workspace/Sites/Directory.Build.props",
       "mode": "100644",
-      "object": "68a23bba84e57508d35578ffc3597570d5aa3cf3",
-      "bytes": 525,
-      "sha256": "98b0e8bb4707c63edf213c7c3219c10a1efccc6862075b785bc54b0bac2e0814"
+      "object": "56f3d4ce2cc317e46a3d6914c98609b076226d02",
+      "bytes": 663,
+      "sha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c"
     },
     {
       "path": "9to1 Workspace/Sites/Domain/SiteModels.cs",
@@ -66334,7 +66341,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-forms-math01-cut.json",
-  "limits": "Exact current normal27 full source/root index protected. Complete inherited Math06 owning46/resource48/regression12 classes and original full/filtered suites retained. Add full Home prerequisites and Forms classes to53/55/15 with exact source/method pins. Every original task/build-task/restore/package/native/compiled/PDB/Xvfb/session/pidfd/zero-skip/final-source guard preserved. Actual original classic App/DI/factory/CUI/owning-settings/edit/save/reopen/publish/respond/mark scenario uses fresh0700 XDG/HAVEN_DATA_DIR without HOME changes; original async callbacks/App shutdown, direct native process/maps/Skia/profile inode/witness custody and strictdrains must prove separately. Diagnostics are conditional validation only and excluded from future product publication. No cloud/backend/default provider/billing/WP/data import/global scope claim. Full02 changes only three complete presenter/Home-observer/Forms-observer source files through exact Avalonia.Application.Current qualifications. Tests/classes/counts/callers/workflow/native/restore/drain/App707c and original54ac constructor remain byte-exact full01. Known actual Sites03 presenter CS0234 is fixed as source only; Home/Forms observer bindings are preventive/unreached until actual native run. Full03 refreshes only normal28 metadata/class provenance and binds the four already accepted IMAP sources inherited without overlays. Whole53/55/15 class identities, SHA, ordering and method coverage are retained; no selected Mail suite exists, so no unrelated Inbox suite is introduced. All actual App707c, selected source bodies, full native/caller/workflow/restore/task/session/PE-PDB/profile/drain guards are byte-exact02. Forms04 sole actual Core CS0136 correction renames the field.Graph local and its Validate use. Original53/55/15 whole classes, all35 outcomes, source/PDB/native/task/restore/drain/strict original callbacks and all callers/workflow are unchanged03. Tables retain original actual28 source provenance because no class body/source bytes change. Current29 metadata inherits acceptedMath publication with no source/table regeneration. Root alone constructs/pushes/dispatches. Forms05 captures the actual saved expected GraphDefinition with Assert.IsType, preserves both original identity/revision comparisons and every existing five Fact/outcome, and adds no null-forgiving workaround. Exactly one Core fixture plus its two class SHA/provenance rows change; all53/55/15 class names/order/outcomes and original callers/workflow/App/native/PDB/task/restore/drain/profile/callback guards remain intact. Current30 index protects newer Android publication; no Android or unrelated source overlay. Root alone constructs/pushes/dispatches. Forms06 corrects the frozen05 current-normal coherence omission with exact accepted Android30 csproj and raw current30 documentation refreshes. Those two paths are canonical refresh only, not new Forms/Android product behavior or publication candidates. Sole Forms behavior/test correction, both class rows, all53/55/15/all35 outcomes, every original callback/native/source/PDB/task/restore/drain guard and all78 selected source bodies are unchanged05. Strong54ac constructor remains unchanged and root alone constructs. Actual Forms06 owning138 demonstrated only HomePromptHostCompositionTests.cs32 CS0234 after original Core/Infrastructure187 passes; existing exact W1 Home02 single Avalonia.Application qualifier selected. All53/55/15/35 existing Forms outcomes (including22 Math) and entire native/task/PE-PDB/restore/process/drain controls remain mandatory; regression/resource failed originals unreviewed. Actual Forms08 owning167 compiles and has Core40/Infra147/Desktop87 passes plus six foreign SQLite ID Forms setup failures and one inherited Home finish fixture failure. Exact owning-settings fixture and explicit acknowledged-prompt test port corrected privately; no production authority/import/permission changes. All53/55/15 cohorts,35 existing Forms outcomes including22 Math, and whole classic native/profile/task/PE-PDB/restore/drain controls remain mandatory. Other two failed original families remain held and unreviewed. Actual Forms09 owning167 has Core40/Infrastructure147/Desktop93 passing subsets and one exact retired-host exception assertion failure. Sole specific ObjectDisposedException expectation corrects the fixture; same dispatch must refuse and persisted store must remain exact. Every original53/55/15,35 Forms outcomes including22 Math and actual classic native/profile/PE-PDB/task/restore/drain guard remains mandatory. No production source or authority change and no whole runtime acceptance inferred. Actual Forms10 resource163 original shows Core63/Infrastructure86/FormsCUI41 PASS plus one genuine missing math provider capability refusal, not a production policy defect. SAME complete all-palette test now supplies the actual FormNativeMathematicsProvider through SAME validator/service and existing configured Skia/fonts Headless session, via real Desktop ProjectReference. Every old42 FormsCUI case/53+55+15 cohort/35 Forms/22 Math outcome/source-PDB/task/native/restore/original session/profile drain remains mandatory. Original palette callback and SAME session disposal errors survive independently. No unrelated Sites source imported; failed owning family remains unreviewed until separately admitted. Actual Forms11 owning refused at Python argument evaluation with undefined assert_native_unchanged before original native invocation. This source-only helper binds SAME existing entire Desktop compiled/native-output, source-built task and restore guard. Original owning artifact remains held before this source freeze; complete original closure and fresh full53/55/15 plus actual native activation remain mandatory. No tests/provider/authority/constructor/native helper are changed. Failure-only exact metadata diagnostic on actual d06; four original producer/helper bodies gain reviewed observation adapters and one bounded new helper. SAME held Desktop baseline and all positive compiled/task/native/restore guards remain. Direct retained ancestor handles, full metadata bytes/identity/hash/dedup, pre-attempt content/record caps, independent original/after-capture/projection/persistence/close failures mandatory. Source-reviewed inert7 and isolated temporary-FS4 passed are helper-only; no actual restore fix, source writer attribution, missing native build/runtime receipt or product acceptance claimed. Every prior53/55/15 whole class inventory,35 Forms and22 Math outcomes/source-PDB/native/process/session/drain checks remain unchanged. Original inherited with-log close masking and non-atomic namespace/serialization allocation qualifications remain open.",
+  "limits": "Exact current normal27 full source/root index protected. Complete inherited Math06 owning46/resource48/regression12 classes and original full/filtered suites retained. Add full Home prerequisites and Forms classes to53/55/15 with exact source/method pins. Every original task/build-task/restore/package/native/compiled/PDB/Xvfb/session/pidfd/zero-skip/final-source guard preserved. Actual original classic App/DI/factory/CUI/owning-settings/edit/save/reopen/publish/respond/mark scenario uses fresh0700 XDG/HAVEN_DATA_DIR without HOME changes; original async callbacks/App shutdown, direct native process/maps/Skia/profile inode/witness custody and strictdrains must prove separately. Diagnostics are conditional validation only and excluded from future product publication. No cloud/backend/default provider/billing/WP/data import/global scope claim. Full02 changes only three complete presenter/Home-observer/Forms-observer source files through exact Avalonia.Application.Current qualifications. Tests/classes/counts/callers/workflow/native/restore/drain/App707c and original54ac constructor remain byte-exact full01. Known actual Sites03 presenter CS0234 is fixed as source only; Home/Forms observer bindings are preventive/unreached until actual native run. Full03 refreshes only normal28 metadata/class provenance and binds the four already accepted IMAP sources inherited without overlays. Whole53/55/15 class identities, SHA, ordering and method coverage are retained; no selected Mail suite exists, so no unrelated Inbox suite is introduced. All actual App707c, selected source bodies, full native/caller/workflow/restore/task/session/PE-PDB/profile/drain guards are byte-exact02. Forms04 sole actual Core CS0136 correction renames the field.Graph local and its Validate use. Original53/55/15 whole classes, all35 outcomes, source/PDB/native/task/restore/drain/strict original callbacks and all callers/workflow are unchanged03. Tables retain original actual28 source provenance because no class body/source bytes change. Current29 metadata inherits acceptedMath publication with no source/table regeneration. Root alone constructs/pushes/dispatches. Forms05 captures the actual saved expected GraphDefinition with Assert.IsType, preserves both original identity/revision comparisons and every existing five Fact/outcome, and adds no null-forgiving workaround. Exactly one Core fixture plus its two class SHA/provenance rows change; all53/55/15 class names/order/outcomes and original callers/workflow/App/native/PDB/task/restore/drain/profile/callback guards remain intact. Current30 index protects newer Android publication; no Android or unrelated source overlay. Root alone constructs/pushes/dispatches. Forms06 corrects the frozen05 current-normal coherence omission with exact accepted Android30 csproj and raw current30 documentation refreshes. Those two paths are canonical refresh only, not new Forms/Android product behavior or publication candidates. Sole Forms behavior/test correction, both class rows, all53/55/15/all35 outcomes, every original callback/native/source/PDB/task/restore/drain guard and all78 selected source bodies are unchanged05. Strong54ac constructor remains unchanged and root alone constructs. Actual Forms06 owning138 demonstrated only HomePromptHostCompositionTests.cs32 CS0234 after original Core/Infrastructure187 passes; existing exact W1 Home02 single Avalonia.Application qualifier selected. All53/55/15/35 existing Forms outcomes (including22 Math) and entire native/task/PE-PDB/restore/process/drain controls remain mandatory; regression/resource failed originals unreviewed. Actual Forms08 owning167 compiles and has Core40/Infra147/Desktop87 passes plus six foreign SQLite ID Forms setup failures and one inherited Home finish fixture failure. Exact owning-settings fixture and explicit acknowledged-prompt test port corrected privately; no production authority/import/permission changes. All53/55/15 cohorts,35 existing Forms outcomes including22 Math, and whole classic native/profile/task/PE-PDB/restore/drain controls remain mandatory. Other two failed original families remain held and unreviewed. Actual Forms09 owning167 has Core40/Infrastructure147/Desktop93 passing subsets and one exact retired-host exception assertion failure. Sole specific ObjectDisposedException expectation corrects the fixture; same dispatch must refuse and persisted store must remain exact. Every original53/55/15,35 Forms outcomes including22 Math and actual classic native/profile/PE-PDB/task/restore/drain guard remains mandatory. No production source or authority change and no whole runtime acceptance inferred. Actual Forms10 resource163 original shows Core63/Infrastructure86/FormsCUI41 PASS plus one genuine missing math provider capability refusal, not a production policy defect. SAME complete all-palette test now supplies the actual FormNativeMathematicsProvider through SAME validator/service and existing configured Skia/fonts Headless session, via real Desktop ProjectReference. Every old42 FormsCUI case/53+55+15 cohort/35 Forms/22 Math outcome/source-PDB/task/native/restore/original session/profile drain remains mandatory. Original palette callback and SAME session disposal errors survive independently. No unrelated Sites source imported; failed owning family remains unreviewed until separately admitted. Actual Forms11 owning refused at Python argument evaluation with undefined assert_native_unchanged before original native invocation. This source-only helper binds SAME existing entire Desktop compiled/native-output, source-built task and restore guard. Original owning artifact remains held before this source freeze; complete original closure and fresh full53/55/15 plus actual native activation remain mandatory. No tests/provider/authority/constructor/native helper are changed. Failure-only exact metadata diagnostic on actual d06; four original producer/helper bodies gain reviewed observation adapters and one bounded new helper. SAME held Desktop baseline and all positive compiled/task/native/restore guards remain. Direct retained ancestor handles, full metadata bytes/identity/hash/dedup, pre-attempt content/record caps, independent original/after-capture/projection/persistence/close failures mandatory. Source-reviewed inert7 and isolated temporary-FS4 passed are helper-only; no actual restore fix, source writer attribution, missing native build/runtime receipt or product acceptance claimed. Every prior53/55/15 whole class inventory,35 Forms and22 Math outcomes/source-PDB/native/process/session/drain checks remain unchanged. Original inherited with-log close masking and non-atomic namespace/serialization allocation qualifications remain open. Private isolated validation only: actual Forms13 first restore bracket changed eight Sites dependency outputPath fields and cache dgSpecHash, then the SAME positive Desktop graph/package guard refused. Sole product proposal adds three explicit-true-only Sites path conditions; default legacy values and all four original producer bodies remain unchanged. New validation-only wrapper executes SAME entire owning producer once, then records two exact current property queries and existing physical phase pairs and repeats SAME original positive baseline/source/task checks. No C source owner adoption, emitted-generated source compilation, sole writer PID attribution, product/release acceptance, baseline reset, cache restoration or guard waiver. Forms15 repeats every independent final Desktop/task/source protection and SAME pre-added held native full output/restore witnesses. Added actual queries own fresh direct-child/session/pending/seal records after original completion; a separate bounded after-original metadata context retains SAME held Desktop baseline while original context/caps/producer bodies remain unchanged. No earlier native/cohort seal authorizes added query drains; no baseline reset, launch replay, helper cap change, output waiver or C adoption. Forms16 source-reviewed SAME gated direct child captures creator/birth/pidfd/OriginalSession before G, refuses through EOF on startup errors and restricts WNOWAIT fallback to unreleased unreaped original before poll/drain/reap. Complete new custody record writes/fsync/readback/written-FD/reverse closes independently retain original failures; full query scopes/argv stay in whole required/per-query records, compact64KiB outer receipt binds their exact complete evidence. Root invoked seven exact AST controls once with fake descriptors/process/session only: no actual child/kernel/query/SDK/native result. Original helper/internal with-log masking, kernel/external-reaper/non-atomic namespace and after-allocation/per-record/polling cap qualifications remain. Every original source/cohort/native/task/PE-PDB/restore/session/drain witness remains mandatory; C owner global adoption is separate from this private proposal.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-maps-current20-coherent96-full-owning-gate21/manifest.json",
@@ -67259,6 +67266,98 @@
     {
       "path": "/workspace/astra-source/worker3-forms12-diagnostic02-isolated-filesystem-proof01/proof.json",
       "sha256": "9f8052ff7e2f3b30f1a0f549f27041ffe2d7bb6e3f3c9c2fb44d9b4bce7fd59c"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math13-actuald06-current30-failure-only-exact-metadata-diagnostics/config.json",
+      "sha256": "8d5e7587b3918b83419b4aec7f634b9d19c32166a282a2008db6ff21de20bc87"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math13-actuald06-current30-failure-only-exact-metadata-diagnostics/manifest.json",
+      "sha256": "5bb1d462bc23352e9529e44a8d84c8de6aae79c803fefda0dc082ae348a4694a"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms13-sites-artifact-isolation-source01-conditional-legacy-paths/manifest.json",
+      "sha256": "19f7175afd6d14eb4510ad80f7057a005d95f09d44abaad59e505a2f21d6e255"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms13-sites-artifact-isolation-source01-conditional-legacy-paths/Directory.Build.props",
+      "sha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms13-owning476-original-metadata-cause-closure01/receipt.json",
+      "sha256": "ef7865d5b55a5753e4be855d8b90698dba8fa47ce5ec1f96bf16790db9d9a670"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms13-owning476-original-metadata-cause-closure01/verify_original.py",
+      "sha256": "3ad16ca20e19f4fb7fc81ea4694fad26e2714ed6e9691808fa2a123d40695ced"
+    },
+    {
+      "path": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/Sdk/Sdk.props",
+      "sha256": "41dc552e294cd1f0c6e640c302c112b0788fa8776ecac73e7fa013382a3bf713"
+    },
+    {
+      "path": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/Sdk/UseArtifactsOutputPath.props",
+      "sha256": "641c488d3f6fdca384ff00692271817ea47a5be386369615fc30d8bbb65df063"
+    },
+    {
+      "path": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.DefaultArtifactsPath.props",
+      "sha256": "82e516bbd6189617c23d3288b3012a9dea0163f5da750a32dbde20279a716e0e"
+    },
+    {
+      "path": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.DefaultOutputPaths.targets",
+      "sha256": "c6d64abd6d24a6a67fb307de15da8c58352b55dd092ea9203e56c858cf3cba4a"
+    },
+    {
+      "path": "/workspace/.tools/dotnet/sdk/10.0.401/Current/Microsoft.Common.props",
+      "sha256": "87a2707df41f5abbbd8ad5678715c169ba40ee7543fef4a98d7852ff17e94e48"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math14-actualfafb-current30-isolated-sites-artifact-validation/astra-forms-sites-isolated-validation.py",
+      "sha256": "e65004b3931f827f088fc9684384ef92dde4b16b3d43349844a8bf530b6f9df4"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math14-actualfafb-current30-isolated-sites-artifact-validation/haven-chat-model-ci.yml",
+      "sha256": "7338c068da7faae9e33dfa4d12cbac8d0101035f0696d4f7554512184ec2301c"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math14-actualfafb-current30-isolated-sites-artifact-validation/config.json",
+      "sha256": "e8ad68bdcdcab26b61d8bd4f9455a98dfe9e7905fed2ec62080ea5fd18366a65"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math14-actualfafb-current30-isolated-sites-artifact-validation/manifest.json",
+      "sha256": "b73156cc002e746c86f5dda2808f06a70bea9d9786c6d73ad4037b7020560673"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math15-actualfafb-current30-independent-original-and-added-query-guards/astra-forms-sites-isolated-validation.py",
+      "sha256": "7ac3ec52412584141523051c84f5dacbabdc1584c86da890741aad84d27087f6"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math16-actualfafb-current30-gated-original-query-and-owned-record-custody/astra-forms-sites-isolated-validation.py",
+      "sha256": "e407d57fda1675036e24a752a8bd7d2c3b0e2088e7c5ffbfbc55824afcddbe35"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math15-actualfafb-current30-independent-original-and-added-query-guards/config.json",
+      "sha256": "fe2b040cad3f59d46bccabb44e41e1719933bdf50292aaabb99f6ef8e29fe0b9"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math15-actualfafb-current30-independent-original-and-added-query-guards/manifest.json",
+      "sha256": "ea4141ba0b1ef0c1b8a7f3574090eddd8b7a55a75e647075cdff72b89992e600"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/astra-agents-compiler09-original.py",
+      "sha256": "c4158277366fbef5604f3ac844a76776dec230fc705b13603641f5e4b6ba86bf"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math16-actualfafb-current30-gated-original-query-and-owned-record-custody/manifest.json",
+      "sha256": "b94be982c3756da2a034ded59f947e4c4646ae8d75d460be02d1a08651cfb768"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms16-exact-ast-controls-verifier01/verify.py",
+      "sha256": "3e945c47156fe12609c65fb8af9e0128317be7dff217726a1d2fbb2505b0812c"
+    },
+    {
+      "path": "/workspace/astra-source/root-forms16-exact-inert-controls-proof967.json",
+      "sha256": "7043bde04e24f8e778d7c5ec976eea3d07c6bf7ade072d2c97074fbaacc9d3d7"
     }
   ],
   "sharedCakeIdContract": null
