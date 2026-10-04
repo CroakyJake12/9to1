@@ -3,7 +3,7 @@
     <StackPanel orientation="Horizontal" spacing="8">
       <Button action="9to1.Games.Open" is-enabled="{Binding CanOpen}" content="Open selected project" accessible-name="Open Games project selected in Files" />
       <Button action="9to1.Games.Development" is-enabled="{Binding CanWorkspace}" content="Development" accessible-name="Switch to Development workspace" />
-      <Button action="9to1.Games.CreationRendering" is-enabled="{Binding CanWorkspace}" content="Creation and rendering" accessible-name="Switch to Creation and rendering workspace" />
+      <Button action="9to1.Games.CreationRendering" is-enabled="{Binding CanCreationRendering}" content="Creation and rendering" accessible-name="Switch to Creation and rendering workspace" />
       <Button action="9to1.Games.Observe" is-enabled="{Binding CanObserve}" content="Inspect native scene" accessible-name="Observe canonical scene in Godot" />
     </StackPanel>
     <Grid grid-row="1" columns="*,*" margin="16">
