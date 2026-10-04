@@ -2,8 +2,8 @@
   "state": "SOURCE_ONLY_FUTURE_ADOPTION_REQUIREMENTS",
   "sourceFiles": {
     "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs": {
-      "bytes": 21283,
-      "sha256": "6486db3408b2a0f65281c5d345a380a3c951e873f32bdf97493825d847e8d926"
+      "bytes": 21923,
+      "sha256": "3b051a4a997f9b54d295df26818110cad212d7b6d65501c8f81823edc89b3c07"
     },
     "apps/Web/Tests/WaveResponsiveBrowser/zoom-extension/manifest.json": {
       "bytes": 164,
