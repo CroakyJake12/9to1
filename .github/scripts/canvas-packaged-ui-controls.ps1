@@ -26,6 +26,7 @@ function Wait-Observed([scriptblock]$Probe, [string]$Name, [int]$Seconds = 20) {
         if ($observed) { return $observed }
         Start-Sleep -Milliseconds 100
     } while ([DateTimeOffset]::UtcNow -lt $until)
+    $result.observationTimeout = [ordered]@{ name = $Name; seconds = $Seconds }
     throw "Timed out observing: $Name"
 }
 function Find-InputFile([string]$Root, [string]$Name) {
@@ -365,7 +366,9 @@ public static class CanvasPackageInput {
     Capture-Window 'canvas-reopened-window.png';Close-Canvas
     $result.status='BOUNDED_PACKAGED_NATIVE_CANVAS_CONTROLS_PASS_UNACCEPTED';$result.stage='complete';$exitCode=0
 } catch {
-    $result.status='FAILED_OR_BLOCKED_UNACCEPTED';$result.failure=[ordered]@{type=$_.Exception.GetType().FullName;message=$_.Exception.Message}
+    # Private Home/profile JSON and external exception text never enter public observations.
+    # Exact controlled Check/Wait witnesses remain in checks/observationTimeout and stage.
+    $result.status='FAILED_OR_BLOCKED_UNACCEPTED';$result.failure=[ordered]@{type=$_.Exception.GetType().FullName;stage=$result.stage;rawExceptionText='WITHHELD'}
     if($null -ne $process){try{Capture-Window 'canvas-original-failure-window.png'}catch{$result.failureScreenshotError=$_.Exception.GetType().FullName}}
 } finally {
     if($mouseDown){$result.mouseReleaseFailure='Own native gesture did not release normally.';$result.status='FAILED_OR_BLOCKED_UNACCEPTED';$exitCode=1}
