@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "772baec0d767596f8bed4bea89cb37087cbb8d31",
+  "candidateHead": "b1beba064b238455a15702d35660a240a9767e2f",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -124,7 +124,7 @@
     "audit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
     "globalAdoption": false
   },
-  "finalHandoff": "Active provider pass has actual closed identity deployment/migrations/rollback; reviewable draftsource/evidence published. HTTPS hostname networkallowance and approvedowner/platform/commercial/PC gates remain; globalacceptedHead null.",
+  "finalHandoff": "Actual approved isolated identity resources/migrations/modules/closedrollback/restoration verified; current scoped proposals and raw peers published. HTTPShostname allowance/exactowner integration and fullacceptance/PCdelivery remain open. No accepted executable/background job.",
   "cloudflareConnection": {
     "state": "AUTHENTICATED_APPROVED_ISOLATED_WRITES_AND_READBACK_VERIFIED",
     "isolated": {
@@ -152,7 +152,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T10:05:48.806504+00:00",
+  "updatedUTC": "2026-10-04T10:14:49.867788+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
@@ -161,31 +161,34 @@
     "browser": "Post-restart available connector MCP SSE HTTP404; no DOM control",
     "qualification": "No write/CLI/deployment/paid entitlement/allocation/quota/service journey/fullrelease acceptance; resources unchanged"
   },
-  "executionStatus": "ACTIVE_CLOUDFLARE_PASS_CONTINUING",
+  "executionStatus": "BLOCKED_EXTERNAL_DEPENDENCIES_REVIEWABLE_HANDOFF_PUBLISHED",
   "currentOwnerRequests": {
     "workersAiMetadata": {
       "owner": "Team A maintained provider and current test-project closure",
-      "sourceHead": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
-      "branch": "team-c/sol-happy-c5-workers-ai-metadata",
+      "sourceHead": "65f23458328ab38458ffbfbd4743ea197e49d50f",
+      "branch": "team-c/sol-happy-c5-workers-ai-owner-rebase",
       "sourcePath": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
-      "sourceBytes": 34906,
-      "sourceSHA256": "8d907d23fbc5ce7cbfdc90322722e2d668f00efb9f6383712225047ade339d4f",
-      "baseSHA256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+      "sourceBytes": 35576,
+      "sourceSHA256": "b3fec98daa588c0d2d8e2afa8f3ac3e4ecf996c725e2af77c4cea6d10e0e111b",
+      "baseSHA256": "fd162747b5b95cb02bb5ca2e47cf7c596353d92a30551080622f265e24cbebd0",
       "testPath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs",
       "testBytes": 10151,
       "testSHA256": "7a4db7e89535112817c495bca06bfe75bea721df7503ec57b63b612403d9d9c5",
-      "proposal": "docs/releases/sol-happy-20261003/workers-ai-metadata/proposal.json +page-bound-successor/review.json",
+      "proposal": "workers-ai-owner-rebase/proposal.json +c6/ai-65f-review/audit.json",
       "request": "Deliver exact current1665B Haven.Infrastructure.Tests.csproj SHA c04a3520a284deb0d8220de3e03a5f9b002acba7b7c55a53966e1c77df7686d1 (Git commit/blob+whole bytes) and original DI redirect test owning source/dependency closure. Existing received1572B or proposal1205B project is not that body. Sole90B EmbeddedResource insertion must produce1755B SHA e80f49d60244e7af9e95c44bae312dc9787d0d2bc816b6aebaf13ac86cfcf799. Supply updated current body pins if owner selection changes.",
-      "review": "C6 44d7 boundedsource ACK;24Debug/24Release0, exact50fb oversizednegative1failed/23pass preserved; bytes unbounded explicit",
+      "review": "C6 dac58790 exactsource/inverse plus fresh actual Infrastructure-reference32Debug/32Release0 and unchangedowner31negative11fail20pass exit1. Root all metadata diff/interaction/harness lines reviewed.",
       "remaining": "No inference until exactmaxoutputtokens/approvedroutepricing/quote/funding policies; cataloguevisibilitynotentitlement; fullproject currentrootCanvas511 failed beforediscovery",
       "ownerAckEvidence": "workers-ai-current-owner-ack.json",
-      "state": "CONDITIONAL_OWNER_ACK_EXACT_PROVIDER_REBASE_IN_PROGRESS_TEST_PROJECT_CUSTODY_OPEN",
+      "state": "EXACT_OWNER_TWO_SPAN_REBASE_AND_INDEPENDENT32CASE_VERIFIED_CURRENT_PROJECT_CUSTODY_OPEN",
       "proposalHead": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
-      "basisCustody": "C5 reports exact delivered provider30593B fd162747 basis at57ebc7e2; two-span inverse must recover all unchanged generation/tool/stream/usage/cancellation bytes.",
+      "basisCustody": "Actual delivered57eb30593B/fd162 provider; exact two metadata spans produce35576B/b3fec; whole inverse recovers all basis bytes. Root and C6 verify.",
       "expectedRebasedProviderBytes": 35576,
       "expectedRebasedProviderSHA256": "b3fec98daa588c0d2d8e2afa8f3ac3e4ecf996c725e2af77c4cea6d10e0e111b",
-      "validationQualification": "Historical24 tests omit eight current endpoint cases; C5 may execute exact delivered seven locality cases separately, real DI redirect and whole current project/native remain required. Existing Canvas511 pre-discovery failure retained. No inference or funding/paid activation.",
-      "ownerAck": "release 772baec0d767596f8bed4bea89cb37087cbb8d31:docs/releases/sol-happy-20261003/workers-ai-current-owner-ack.json"
+      "validationQualification": "Real project-reference isolated32case subset on preservedA63 dependencytree includes all eight current endpoint cases without stubs. Exact1665/c04 current normaltestproject body remains undelivered; actual1572/e8be left unchanged. Currentnormalproject/sourcecut/fullcohort/native/provider acceptance remains open; historicalCanvas511 failure retained. Metadata only: response bytes unbounded, no outputtoken/trustedquote/funding/inference/paid activation.",
+      "ownerAck": "release 772baec0d767596f8bed4bea89cb37087cbb8d31:docs/releases/sol-happy-20261003/workers-ai-current-owner-ack.json",
+      "evidence": "workers-ai-owner-rebase/proposal.json +workers-ai-owner-rebase/root-custody-review.json +c6/ai-65f-review/audit.json",
+      "sourceAndEvidenceRequest": "release b1beba064b238455a15702d35660a240a9767e2f:docs/releases/sol-happy-20261003/current-source-owner-integration-requests.json",
+      "historicalProposalEvidence": "docs/releases/sol-happy-20261003/workers-ai-metadata/proposal.json +page-bound-successor/review.json"
     },
     "canonicalSiteImport": {
       "owner": "TeamA current Sites/Files native authority; TeamB editor composition; C1/C4 hosted adapters",
@@ -236,7 +239,7 @@
       "request": "ACK narrow exact source adoption or supply bounded rebase onto current selected owner body, preserving all existing issuer/account/client/session/organisation/quote/funding guards. No stale whole-source replacement. Provide remote actor/current authority/registered-client mapping separately before hosted activation.",
       "productionHead": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
       "publicationQualification": "Original47 narrow-integration payloads and new9 cleanup payloads are separate; peer491e5432 corrects prior874c9944 scope metadata without changing raw test evidence.",
-      "sourceAndEvidenceRequest": "release 772baec0d767596f8bed4bea89cb37087cbb8d31:docs/releases/sol-happy-20261003/current-source-owner-integration-requests.json"
+      "sourceAndEvidenceRequest": "release b1beba064b238455a15702d35660a240a9767e2f:docs/releases/sol-happy-20261003/current-source-owner-integration-requests.json"
     },
     "nativeSites": {
       "owner": "Team A selected native authoring/build source; C1/C4 receiving hosted composition",
@@ -264,7 +267,10 @@
       "evidence": "evidence/c5-native-r2-c218/index.json +evidence/c5-native-r2-b7b4/index.json",
       "review": "C5 exacte0c-type source ACK;21 cases pass, original14 blank-provenance probes pass, hash omission2fail/19pass. Original failures retained. Receiving root lacks manifest types: no receiving compile/activation ACK.",
       "remaining": "Canonical original Files/session/project source binding, consistent snapshot export, real secret scanner, immutable namespace/provider composition and full theme/editor/dynamic parity.",
-      "sourceAndEvidenceRequest": "release 772baec0d767596f8bed4bea89cb37087cbb8d31:docs/releases/sol-happy-20261003/current-source-owner-integration-requests.json"
+      "sourceAndEvidenceRequest": "release b1beba064b238455a15702d35660a240a9767e2f:docs/releases/sol-happy-20261003/current-source-owner-integration-requests.json",
+      "semanticOwnerAck": "semantic/c4-canonical-sites-semantic-ack-receipt.json at remote5569ec61/currentExecution1000",
+      "approvedSnapshotSeam": "Existing SiteArtifactAuthoringService.BuildAsync expected-revision snapshot -> actual pipeline/manifest; no duplicate exporter needed. Trusted original authority/build root/scanner/runtime registration missing.",
+      "nativeImportBoundary": "Importer CAS exists, but native intent/coordinator/session has no import action; direct ImportPageAsync is not approved authority composition. TeamA owner/lifetime/import action work required before hosted enablement."
     }
   },
   "currentSitesArtifactIsolationSourceAck": {
