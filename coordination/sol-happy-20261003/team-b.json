@@ -3776,7 +3776,7 @@
     },
     "ownership": "Root sole B source/artifact/coordination integrator. A native/shared/canonical authority; C sole main/release/acceptedHead/index/combined WorkerLogs integrator. This commit changes only B JSON and preserves every existing checkpoint. No full app/31/LE/platform/provider/release acceptance."
   },
-  "currentBOnlyCheckpointRef": "actualResponsiveSetupRawCorrection_2026-10-04T21:57:10.059827+00:00",
+  "currentBOnlyCheckpointRef": "reviewedStartupSourceAndReceivingHandoff_2026-10-04T22:08:15.578652+00:00",
   "engineeringRecoveryRequest_20261004T205121.948495+0000": {
     "UTC": "2026-10-04T20:51:21.948495+00:00",
     "authority": "Actual latest receiving-root user messages read: stop routine questions to Jacob, coordinate engineering decisions with receiving root, pre-empt blockers; corrected deadline 10:30 interpreted by explicit current delegation as22:30 Europe/London4October. Full acceptance/security/donor scope preserved.",
@@ -4188,7 +4188,7 @@
     "safeLocalDrain": "AllBlocalprocesses/readers/ownedsourcecontrolfixturesclosed; idlewatcher17020recordedcontrolledHOLD/exit2zeroAPI/zeroFragments/noRestart. Sourcefreezeprotecteddirtysaved; noJacobPC dependency here. Thisbrowsercloudjobterminal; preserveotherhealthyautoCI to normalterminal.",
     "stillRequired": "Responsive3 actualcause/repair/unchangedrerun; fullrawsource/runtime/familyproof; A/C receivingNotesRepositorycrossprocessCAS repair+original65+two-processregression; sharedSpaceadoption; full31/LE/installed/signing/cleanPC/provideracceptance remainsopen. No fullacceptanceclaim."
   },
-  "currentResponsiveFailureRootReceiveRequestRef": "actualResponsiveSetupRawCorrection_2026-10-04T21:57:10.059827+00:00",
+  "currentResponsiveFailureRootReceiveRequestRef": "reviewedStartupSourceAndReceivingHandoff_2026-10-04T22:08:15.578652+00:00",
   "actualResponsiveSetupRawCorrection_2026-10-04T21:57:10.059827+00:00": {
     "recordedAtUTC": "2026-10-04T21:57:10.059827+00:00",
     "currentProductSource": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
@@ -4235,5 +4235,74 @@
     "localDrain": "All B owned runtime/watchers and actual readers closed; frozen saved sources only; cloud jobs PC independent. No poweroff performed by B.",
     "resourceObservation": "B3 observed transient TMP255942656 while131072B anonymous heredoc held; after normalexit0 TMP256073728. WS later268439552. Do not claim uninterrupted resource floor.",
     "acceptance": "FAIL_OR_INCOMPLETE"
+  },
+  "reviewedStartupSourceAndReceivingHandoff_2026-10-04T22:08:15.578652+00:00": {
+    "UTC": "2026-10-04T22:08:15.578652+00:00",
+    "currentProductSource": "ab1217e2e61a35bcb67648dcf1e1bf4982c28a33",
+    "parent": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "changedScope": [
+      "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs",
+      "apps/Web/Tests/WaveResponsiveBrowser/source-pins.json",
+      "apps/Web/Tests/ci/run-wave-responsive-browser.py"
+    ],
+    "all9749LeavesConserved": true,
+    "wholeThreeCasesBytes": 4841,
+    "wholeThreeCasesSHA256": "093530240e556fbe7d4eb858dc6a1c8ecb552966b846a71f0a8b9d89147545f2",
+    "rootB4B6FullSourceReview": "CLEAR",
+    "sourceCustody": {
+      "branch": "artifact/team-b-wave-responsive-startup-source02-20261004",
+      "head": "0ed5303c3beb6df599a6b445b6b3ff32aff9da43",
+      "all5WholeSourcesAndIntegration": "PUBLISHED_ROOT_FULL_BODY_VERIFIED",
+      "independentRemoteReview": "PENDING"
+    },
+    "affectedActualRun": {
+      "run": 37238572213,
+      "source": "ab1217e2e61a35bcb67648dcf1e1bf4982c28a33",
+      "status": "IN_PROGRESS",
+      "nativeProposedJob": 111542498235,
+      "nativeOriginalJob": 111542498345,
+      "browserJob": "NOT_YET_STARTED",
+      "acceptance": "PENDING"
+    },
+    "original0c4eResult": {
+      "original14": "14PASS",
+      "responsive": {
+        "discovered": 3,
+        "executed": 0,
+        "passed": 0,
+        "failed": 0,
+        "notRun": 3
+      },
+      "recordedCause": "UNESTABLISHED"
+    },
+    "responsiveSelectedRawFullACK": {
+      "branch": "artifact/team-b-original-transport-diagnostics-20261004",
+      "head": "6a889d981e2f91c004eeffce8bce1a3c0bead6ab",
+      "whole7358ZIPRootAndB6Proof": "COMPLETE_ALL_READERS_CLOSED",
+      "exactNewTemporaryDuplicateAndEmptyFolder": "RETIRED_AFTER_FULL_DURABLE_ACK_AND_FRESH_BODY_PROOF",
+      "originalArchives": "UNTOUCHED"
+    },
+    "receivingRootRelay": {
+      "fourOlderArchives": "REPORTED_COMPLETE_EXACT_BYTE_SHA_RECEIVED_AND_PRIVATELY_PRESERVED_NO_SHARING_CHANGES_OR_DELETIONS",
+      "privatePointers": "NOT_PUBLICLY_DISCLOSED",
+      "rootOldE90Classification": "Preflight generated input handoff failure; six exact publisher JS/maps; no browser assertions executed",
+      "currentDriverRepair": "0c4e authenticates exactsix ownerbytes and19 normalclosed producerfamilies; actual original14 reached and passed. Additional3 then failed setup0executed. Do not merge oldpreflight and newsetup failure classifications.",
+      "latestRequestedRefinement": "Fresh consumer checkout same immutable source, sealed outputs outside checkout, strictempty Git status before/after, no producerinput deletion/ignored vendor trees. B1 RAM-only twofile proposal pending; no additional job dispatched."
+    },
+    "persistenceOwnership": {
+      "receivingRootRelay": "Current6ac originaldurable stale-winner overwrite reproduced; scoped SOLE NotesRepository CAS writer implementing",
+      "canonicalCNotes": "ACK_PRESENT exclusive receivingroot owner, no C writer; preserve original65 and genuine2process race/cancel/exit/recovery",
+      "publishedRepairRefAndActualCASResult": "NOT_YET_SEEN_IN_CANONICAL_NOTES",
+      "namedCurrentCandidate": "6ac6c6ef0e67c62d03eb4b35e8235459899776cb",
+      "repositoryBlobStillOld": "242809b676dc3d3fa5e474d9740c1c8a3555443f",
+      "typedSessionBridgeAlreadyPresent": "3623aa769fbbdd466a23134ddd2cab5f986d0c91",
+      "exceptionAlreadyPresent": "627a500941a48e0a003ed9eea496afb4d3b14596",
+      "BSharedWriter": "NONE"
+    },
+    "deadline": "22:30Europe/LondonOct4 MISSED_NO_WAIVER",
+    "localProcesses": "No B runtime job. Short coordinator API commands normally close; one owned erroneous read-only loop explicitly SIGINTexit130 before refmutation, recorded in custody; no cloudjob signalled. Cloud tests independent of JacobPC.",
+    "resource": "WS still8192belowfloor after newlysealed7358duplicate removal; source02 five newduplicates explicit ownerrelease after fullremote root+B6proof pending. No preexisting source/archives/private packet deletion authorized.",
+    "poweroff": "NOT_PERFORMED_BY_B; conditional completion and safe drain remain receivingroot authority",
+    "acceptance": "INCOMPLETE"
   }
 }
