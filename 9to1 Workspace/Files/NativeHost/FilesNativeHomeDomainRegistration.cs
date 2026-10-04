@@ -19,6 +19,10 @@ public sealed class FilesNativeHomeDomainRegistration
     private FilesNativeStoreReadResolver? _stores;
     private bool _factoryIssued;
     private bool _factoryInvoked;
+    private readonly IFilesNativeOriginalPublicationSource? _originalPublicationSource;
+
+    public FilesNativeHomeDomainRegistration(IFilesNativeOriginalPublicationSource? originalPublicationSource = null)
+    { _originalPublicationSource = originalPublicationSource; }
 
     public HomeNativeWindowsStoreRegistrations ConfigureOriginalStores(HomeNativeWindowsIdentityComponents identity)
     {
@@ -92,7 +96,7 @@ public sealed class FilesNativeHomeDomainRegistration
                     if (_factoryInvoked) throw new InvalidOperationException("The original Files owner factory is already consumed.");
                     _factoryInvoked = true;
                     return new FilesNativeHomeDomainOwner(issuer, _authority, owners.Profiles, _browser,
-                        owners.Resources, owners.Broker, owners.Permissions);
+                        owners.Resources, owners.Broker, owners.Permissions, _originalPublicationSource);
                 }
             };
         }

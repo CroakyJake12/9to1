@@ -1,16 +1,29 @@
-# Files domain RPC recovery checkpoint 03
+# Files domain RPC recovery checkpoint 04
 
-This isolated source checkpoint is UNSELECTED, UNREVIEWED, UNCOMPILED and UNRUN. It is a successor of e2847b2722978ef5a4d8f63a42d955ca196c8f9e; the original six reconstructed bodies carry no older RAM peer result.
+This isolated code-only checkpoint is UNSELECTED, UNREVIEWED, UNCOMPILED and UNRUN. It is based on `024ebce3abc57cebc71ffae68c88f683309e4868`; no global branch or installed package is updated.
 
-The added client path uses the SAME authenticated Windows pipe, original Home Core client request slot and startup requirements. Files requires the actual installed app declaration of files.native. Compatibility and Core.Read do not grant Files resources or writes. The app retains up to 64 original Files tasks and joins them before disposing the physical pipe. The Home composition captures a configured owner factory once and supplies the same private session issuer; null remains unavailable. The configured candidate service depends on home.state and permissions.trust.
+## Publication refusal and retained write
 
-This checkpoint restores complete reconstructed NativeHost handler, store-root resolver, HOME-only staged registration helper and separate remote native CUI consumer. These new bodies are unreviewed and not byte-identical recovery of older lost RAM drafts. No package, installation, protected peer verifier, manual approval, store binding or native acceptance is claimed. The source is recoverable while implementation continues; it must receive whole A1/A6 source/API/lifetime review and actual owning Windows validation before selection.
+The previous owner-await/installed-caller gap is addressed by requiring two genuine retained publication guards. The accepted private Home Session holds its original Context.Gate until the same physical reply write settles. Before it writes a Files result, it acquires an installed actor/process/receipt guard and a SAME owner-issued Home/Files read transaction, independently checks both, and retains both until the write and final checks settle. Every check and disposal failure remains observable with the original body/write failure.
 
-Relevant owning project: 9to1 Workspace/Home/HavenOS.Home.csproj. Owning validation: dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" -c Debug, and Release, with actual Windows pipe fixtures. No command was invoked for this checkpoint.
+No supplied current installation verifier exposes such a physical retained publication guard. No registered Files source currently implements the coupled transaction. Both are named prerequisites, and their default absence produces `Unavailable / FilesPublicationGuardUnavailable` before Files owner invocation or broker approval. The configured service remains unavailable without both supported ports. A successful old asynchronous verifier call, Core readiness, wire identifiers, a cached epoch or a moved await cannot supply these guards.
 
-Known held source category: the reconstructed e284 final publication fence awaits the owner after its issuer actor/installed-peer check and then performs only context/lifetime checks. A1 and A6 identified that actor/installed-peer retirement during the held owner check is not reobserved. Await-order swapping does not fix both owners. The required coupled current witness is being derived; this snapshot remains HELD and cannot be selected.
+The new publication interfaces are trusted HOME-only extension points. They do not authenticate their own implementations. A selected implementation must retain actual canonical ownership and physical transactions; it must not reenter Context.Gate/Home/Files from a held guard. The actual profile/configuration/ownership lease, provider metadata lease and protected installed process/receipt transaction still need coherent implementation and full independent review. Therefore this checkpoint closes the exposed publication path conservatively; it does not claim usable installed Files authority.
 
+## Preserved implementation
 
-The handler keeps private per-connection pages and exact read plans, original actor/store evidence, manual Authorize/Begin/Claim/Complete handles, and original task/audit close custody. HOME-only stages register the actual store evidence and root/item resolvers before ResourceAuthorizationService captures them. The separate app CUI surface borrows HomeNativeWindowsAppConnection, carries display DTOs, and revalidates the original Home-issued page after scene readiness before native publication. No write/package/extraction/open-with/editor operation is supplied. Navigation history, the actual Desktop entrypoint selection and meaningful new Windows fixtures remain unfinished. NextOffset is a bounded observed continuation from the privately issued page, not authority.
+The same installed Core admission, continuing single pipe reader and client pending slot remain. Existing Core.Read operations and manual `permissions.trust` policy are unchanged. The read-only NativeHost handler retains genuine Files store binding, original task/page maps and canonical Home broker plans. It does not add mutation or package execution. The separate app surface borrows the original app connection and CUI readiness and publishes no raw Home objects across IPC.
 
-No full review result or usable package follows from this WIP. The accepted final issuer/owner-currentness category remains held. Existing seven Files native cases are unchanged and unrun. Owning Windows validation also requires complete Haven.Desktop.Tests graph; the 876d receiving project carries Sites and Files NativeHost references that the earlier 73aa baseline omitted.
+The HOME-only staged helper remains default unconfigured and adds no store fallback. Parent checkpoint 03 added the owner, root-store read resolver, helper, remote surface and bounded paging observation. Parent checkpoint 02 retained the issuer-specific client/startup/app connection and exact A1 four-span composition. All original native route fixtures and the reviewed PR13 source remain unchanged.
+
+## Ownership and validation
+
+Home owns canonical actor/profile/permissions, accepted private Session, installed peer/lease, Core server and publication port. Files owns canonical read plan, provider/metadata and native consumer. The app provider and dispatcher initializer are distinct from the Home provider. Installed Windows package selection remains unavailable until real domain ports, canonical store, protected receipt authority and the executable entrypoint are supplied.
+
+Relevant projects:
+- `9to1 Workspace/Home/Source/Home/Home.csproj`
+- `9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj`
+- `9to1 Workspace/Files/NativeUI/HavenOS.Files.NativeUI.csproj`
+- `9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj`
+
+The full Windows Desktop build/test graph and existing seven native cases remain unrun. New missing-guard, retained-write/close, cancellation and independent error-provenance cases are still being authored against the actual protocol. No runtime, installed package, signing, protected receipt or global adoption acceptance is inferred from source publication.

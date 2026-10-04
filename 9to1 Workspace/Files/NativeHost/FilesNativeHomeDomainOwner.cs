@@ -9,7 +9,7 @@ using HavenOS.Home.PermissionsTrustNotifications;
 namespace HavenOS.Files.NativeHost;
 
 // Reconstructed owning source, not selected or compiled. The cross-owner final publication fence is held for review.
-public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
+public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesPublicationOwner
 {
     private readonly HomeNativeCoreApiSessions _issuer;
     private readonly NativeFilesWorkspaceAuthority _workspaces;
@@ -17,13 +17,16 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
     private readonly FilesNativeBrowserService _browser;
     private readonly HomeResourceOperationBroker _broker;
     private readonly HomePermissionTrustService _permissions;
+    private readonly IFilesNativeOriginalPublicationSource? _originalPublicationSource;
+    public bool SupportsOriginalPublication => _originalPublicationSource is not null;
     private readonly ConcurrentDictionary<HomeNativeFilesOriginalConnection, State> _connections =
         new(ReferenceEqualityComparer.Instance);
     private readonly object _connectionGate = new();
 
     public FilesNativeHomeDomainOwner(HomeNativeCoreApiSessions issuer, NativeFilesWorkspaceAuthority workspaces,
         HomeLocalProfileIdentity profiles, FilesNativeBrowserService browser, ResourceAuthorizationService resources,
-        HomeResourceOperationBroker broker, HomePermissionTrustService permissions)
+        HomeResourceOperationBroker broker, HomePermissionTrustService permissions,
+        IFilesNativeOriginalPublicationSource? originalPublicationSource = null)
     {
         _issuer = issuer ?? throw new ArgumentNullException(nameof(issuer));
         _workspaces = workspaces ?? throw new ArgumentNullException(nameof(workspaces));
@@ -31,6 +34,7 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
         _browser = browser ?? throw new ArgumentNullException(nameof(browser));
         _broker = broker ?? throw new ArgumentNullException(nameof(broker));
         _permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
+        _originalPublicationSource = originalPublicationSource;
         if (!resources.IsBoundToActorSource(profiles) || !broker.IsBoundToOriginalComposition(resources, permissions))
             throw new UnauthorizedAccessException("Use the SAME canonical Home actor, resource and permission composition.");
     }
@@ -52,8 +56,9 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
         internal bool Alive => !Closing && !Lifetime.IsCancellationRequested && !connection.OriginalLifetime.IsCancellationRequested;
     }
     private sealed record PageRead(Guid Handle, FilesNativeBrowserPage Source, int Offset, string Search,
-        string Title, Func<CancellationToken, ValueTask<bool>> Current);
-    private sealed record ReplyRead(Func<CancellationToken, ValueTask<bool>> Current);
+        string Title, Func<CancellationToken, ValueTask<bool>> Current, NativeFilesWorkspace Workspace);
+    private sealed record ReplyRead(Func<CancellationToken, ValueTask<bool>> Current,
+        NativeFilesWorkspace Workspace, FilesNativeBrowserPage? Page, string StoreRevision);
     private sealed record Audit(Func<Task> Retry);
     private sealed class Plan(HomeNativeFilesRequest request, NativeFilesWorkspace workspace,
         Guid? parent, string search, string title, FilesNativeBrowserCursor? cursor,
@@ -162,7 +167,8 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
                     if (authorization.State != HomePermissionRequestState.PendingApproval) state.Pending.Remove(key);
                     reply = new(authorization.State == HomePermissionRequestState.PendingApproval ? "AwaitingApproval" : "Denied",
                         authorization.Code, authorization.Message, PermissionRequestId: authorization.RequestId);
-                    state.Replies.Add(reply, new(plan.Current));
+                    state.Replies.Add(reply, new(plan.Current, plan.Workspace,
+                        plan.RetainedPage?.Source, plan.Scopes[0].Revision));
                 }
                 else
                 {
@@ -201,7 +207,7 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
                     if (state.Pages.Count == 16) throw new InvalidOperationException("The bounded original Files page custody is full.");
                     var page = new PageRead(Guid.NewGuid(), source, plan.ChunkOffset, plan.Search, plan.Title,
                         async ct => state.Alive && await plan.Current(ct).ConfigureAwait(false) &&
-                            await sourceCheck(ct).ConfigureAwait(false) && state.Alive);
+                            await sourceCheck(ct).ConfigureAwait(false) && state.Alive, plan.Workspace);
                     state.Pages.Add(page.Handle, page);
                     reply = await CopyPageAsync(connection, state, page, token).ConfigureAwait(false);
                     outcome = new(HomePermissionRequestState.Succeeded, "FilesOriginalReadSucceeded",
@@ -341,7 +347,7 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
             "Actual configured Files metadata observed.", observation);
         if (!await page.Current(token).ConfigureAwait(false)) throw new UnauthorizedAccessException("The original Files display changed.");
         DemandAlive(state);
-        state.Replies.Add(reply, new(page.Current));
+        state.Replies.Add(reply, new(page.Current, page.Workspace, page.Source, page.Source.StoreRevision));
         return reply;
     }
 
@@ -355,7 +361,37 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesDomainOwner
         if (!await original.Current(token).ConfigureAwait(false))
             throw new UnauthorizedAccessException("The original Files reply binding retired.");
         DemandAlive(state);
-        // Current issuer actor/installed-peer coupling remains an explicit held integration gate.
+    }
+
+    public async ValueTask<IHomeNativeFilesPublicationGuard?> AcquireOriginalReplyPublicationAsync(
+        HomeNativeFilesOriginalConnection connection, HomeNativeFilesReply originalReply,
+        CancellationToken token)
+    {
+        DemandConnection(connection);
+        if (_originalPublicationSource is null) return null;
+        if (!_connections.TryGetValue(connection, out var state) ||
+            !state.Replies.TryGetValue(originalReply, out var read))
+            throw new UnauthorizedAccessException("Retain the SAME privately issued Files read before publication.");
+        DemandAlive(state);
+        // The issuer already retains its guard. No ordinary Home/provider current reads here.
+        IHomeNativeFilesPublicationGuard? retained = null;
+        Exception? primary = null;
+        List<Exception> cleanup = [];
+        try
+        {
+            var originalRead = new FilesNativeOriginalPublicationRead(connection, originalReply,
+                read.Workspace, read.Page, read.StoreRevision, state.Lifetime.Token);
+            retained = await _originalPublicationSource.AcquireOriginalAsync(originalRead, token).ConfigureAwait(false);
+            DemandAlive(state);
+            token.ThrowIfCancellationRequested();
+            if (retained is not null && !retained.IsHeld)
+                throw new UnauthorizedAccessException("The original Files transaction was not retained.");
+        }
+        catch (Exception error) { primary = error; }
+        if (primary is not null && retained is not null)
+            try { await retained.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
+        Throw(primary, cleanup);
+        return retained;
     }
 
     public Task CloseOriginalConnectionAsync(HomeNativeFilesOriginalConnection connection)

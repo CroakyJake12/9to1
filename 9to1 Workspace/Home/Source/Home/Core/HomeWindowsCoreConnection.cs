@@ -145,9 +145,9 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
         HomeNativeCoreApiSessions.Session session, HomeNativeFilesReply originalReply,
         byte[] originalPayload, CancellationToken token)
     {
-        await session.DemandOriginalFilesReplyCurrentAsync(originalReply, token).ConfigureAwait(false);
-        token.ThrowIfCancellationRequested();
-        await HomeUnixDiscoveryTransport.WriteFrameAsync(pipe, originalPayload, token).ConfigureAwait(false);
+        await session.PublishOriginalFilesReplyAsync(originalReply,
+            ct => HomeUnixDiscoveryTransport.WriteFrameAsync(pipe, originalPayload, ct),
+            token).ConfigureAwait(false);
     }
 
     private async Task ReadOriginalAsync(ChannelWriter<byte[]> frames)

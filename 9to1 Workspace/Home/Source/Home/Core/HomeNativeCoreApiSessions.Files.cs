@@ -4,7 +4,8 @@ public sealed partial class HomeNativeCoreApiSessions
 {
     private readonly Lazy<IHomeNativeFilesDomainOwner?> _originalFilesOwner;
     public IHomeCoreService? CreateOriginalFilesCoreService() =>
-        _originalFilesOwner.Value is { } original ? new HomeNativeFilesCoreService(original) : null;
+        _originalFilesOwner.Value is { } original ? new HomeNativeFilesCoreService(original,
+            _verifier is IHomeNativeFilesInstalledPublicationVerifier) : null;
     private async Task<HomeNativeFilesReply> InvokeOriginalFilesAsync(Context context,
         HomeNativeFilesRequest request, CancellationToken caller)
     {
@@ -29,6 +30,10 @@ public sealed partial class HomeNativeCoreApiSessions
                 reply = new("Denied", "FilesServiceUndeclared", "The original installed app did not declare the Files domain service.");
             else if (_originalFilesOwner.Value is not { } originalOwner)
                 reply = new("Unavailable", "FilesDomainUnavailable", "The canonical Home Files owner is not configured.");
+            else if (_verifier is not IHomeNativeFilesInstalledPublicationVerifier ||
+                originalOwner is not IHomeNativeFilesPublicationOwner { SupportsOriginalPublication: true })
+                reply = new("Unavailable", "FilesPublicationGuardUnavailable",
+                    "Genuine retained installed-caller and Files read publication guards are not configured.");
             else
             {
                 context.OriginalFilesOwner ??= originalOwner;
@@ -56,10 +61,12 @@ public sealed partial class HomeNativeCoreApiSessions
         ThrowFiles(primary, cleanup);
         return reply!;
     }
-    private async ValueTask DemandOriginalFilesReplyCurrentAsync(Context context,
-        HomeNativeFilesReply originalReply, CancellationToken caller)
+    private async Task PublishOriginalFilesReplyAsync(Context context, HomeNativeFilesReply originalReply,
+        Func<CancellationToken, Task> originalPhysicalWrite, CancellationToken caller)
     {
+        ArgumentNullException.ThrowIfNull(originalPhysicalWrite);
         CancellationTokenSource? linked = null;
+        IHomeNativeFilesPublicationGuard? installedGuard = null, ownerGuard = null;
         var entered = false;
         Exception? primary = null;
         List<Exception> cleanup = [];
@@ -73,20 +80,68 @@ public sealed partial class HomeNativeCoreApiSessions
             if (!ReferenceEquals(context.OriginalFilesReply, originalReply) ||
                 !await CurrentAsync(context, linked.Token).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("Retain this original Files reply and installed connection.");
-            if (context.OriginalFilesOwner is { } owner && context.OriginalFilesConnection is { } connection)
-                await owner.DemandOriginalReplyCurrentAsync(connection, originalReply, linked.Token).ConfigureAwait(false);
-            else if (originalReply.Page is not null || originalReply.State is not ("Unavailable" or "Denied"))
-                throw new UnauthorizedAccessException("An unavailable owner cannot issue a Files page.");
-            DemandIssued(context);
-            linked.Token.ThrowIfCancellationRequested();
+            if (context.OriginalFilesOwner is { } originalOwner &&
+                context.OriginalFilesConnection is { } originalConnection)
+            {
+                if (_verifier is not IHomeNativeFilesInstalledPublicationVerifier installed ||
+                    originalOwner is not IHomeNativeFilesPublicationOwner { SupportsOriginalPublication: true } owner)
+                    throw new UnauthorizedAccessException("The original Files publication authority is unavailable.");
+                // All ordinary owner/current reads complete before either retained guard.
+                await owner.DemandOriginalReplyCurrentAsync(originalConnection, originalReply, linked.Token).ConfigureAwait(false);
+                installedGuard = await installed.AcquireOriginalFilesPublicationAsync(context.Observed,
+                    context.Actor, context.Peer, context.Lifetime, linked.Token).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("No genuine installed publication guard was retained.");
+                ownerGuard = await owner.AcquireOriginalReplyPublicationAsync(originalConnection,
+                    originalReply, linked.Token).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("No genuine Files publication transaction was retained.");
+                await Check(installedGuard, linked.Token).ConfigureAwait(false);
+                await Check(ownerGuard, linked.Token).ConfigureAwait(false);
+                if (cleanup.Count == 0)
+                {
+                    DemandIssued(context);
+                    if (context.Channel.Observe() != context.Observed)
+                        throw new UnauthorizedAccessException("The actual original Files process changed.");
+                    linked.Token.ThrowIfCancellationRequested();
+                    // Context.Gate and BOTH actual guards remain held through THIS original frame task.
+                    await originalPhysicalWrite(linked.Token).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                if (originalReply.Page is not null || originalReply.State is not ("Unavailable" or "Denied"))
+                    throw new UnauthorizedAccessException("An unavailable owner cannot issue a Files page.");
+                DemandIssued(context);
+                linked.Token.ThrowIfCancellationRequested();
+                await originalPhysicalWrite(linked.Token).ConfigureAwait(false);
+            }
         }
         catch (Exception error) { primary = error; }
         finally
         {
+            // Checks and every release are independent even after a body/check/write refusal.
+            if (installedGuard is not null)
+                await Check(installedGuard, context.Lifetime).ConfigureAwait(false);
+            if (ownerGuard is not null)
+                await Check(ownerGuard, context.Lifetime).ConfigureAwait(false);
+            if (ownerGuard is not null)
+                try { await ownerGuard.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
+            if (installedGuard is not null)
+                try { await installedGuard.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
             if (entered) try { context.Gate.Release(); } catch (Exception error) { Add(cleanup, error, primary); }
             if (linked is not null) try { linked.Dispose(); } catch (Exception error) { Add(cleanup, error, primary); }
         }
         ThrowFiles(primary, cleanup);
+
+        async ValueTask Check(IHomeNativeFilesPublicationGuard guard, CancellationToken token)
+        {
+            try
+            {
+                if (!guard.IsHeld) throw new UnauthorizedAccessException("The original publication guard retired.");
+                await guard.DemandOriginalCurrentAsync(token).ConfigureAwait(false);
+                if (!guard.IsHeld) throw new UnauthorizedAccessException("The original publication guard retired during its check.");
+            }
+            catch (Exception error) { Add(cleanup, error, primary); }
+        }
     }
     private void DemandIssued(Context context)
     {
@@ -103,7 +158,8 @@ public sealed partial class HomeNativeCoreApiSessions
     {
         public Task<HomeNativeFilesReply> InvokeOriginalFilesAsync(HomeNativeFilesRequest originalRequest,
             CancellationToken token = default) => _issuer.InvokeOriginalFilesAsync(_context, originalRequest, token);
-        internal ValueTask DemandOriginalFilesReplyCurrentAsync(HomeNativeFilesReply originalReply,
-            CancellationToken token) => _issuer.DemandOriginalFilesReplyCurrentAsync(_context, originalReply, token);
+        internal Task PublishOriginalFilesReplyAsync(HomeNativeFilesReply originalReply,
+            Func<CancellationToken, Task> originalPhysicalWrite, CancellationToken token) =>
+            _issuer.PublishOriginalFilesReplyAsync(_context, originalReply, originalPhysicalWrite, token);
     }
 }

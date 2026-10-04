@@ -62,7 +62,8 @@ public sealed class HomeNativeFilesActionPolicies : IHomeActionPolicySource
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
         appId == TargetAppId && actionId == ReadAction ? new(HomePermissionRisk.Routine, true, false) : null;
 }
-public sealed class HomeNativeFilesCoreService(IHomeNativeFilesDomainOwner originalOwner) : IHomeCoreService
+public sealed class HomeNativeFilesCoreService(IHomeNativeFilesDomainOwner originalOwner,
+    bool originalInstalledPublicationSupported = false) : IHomeCoreService
 {
     private HomeServiceLifecycleState _state = HomeServiceLifecycleState.Starting;
     public HomeServiceDescriptor Descriptor => new(HomeNativeFilesActionPolicies.RequiredInstalledServiceId,
@@ -72,7 +73,9 @@ public sealed class HomeNativeFilesCoreService(IHomeNativeFilesDomainOwner origi
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(originalOwner);
-        _state = HomeServiceLifecycleState.Ready;
+        _state = originalInstalledPublicationSupported &&
+            originalOwner is IHomeNativeFilesPublicationOwner { SupportsOriginalPublication: true }
+            ? HomeServiceLifecycleState.Ready : HomeServiceLifecycleState.Unavailable;
         return Task.CompletedTask;
     }
     public Task StopAsync(CancellationToken cancellationToken = default)
