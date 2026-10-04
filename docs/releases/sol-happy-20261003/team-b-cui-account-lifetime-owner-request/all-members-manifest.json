@@ -1,0 +1,181 @@
+{
+  "recordedUTC": "2026-10-04T02:52:41.574460+00:00",
+  "state": "EXACT_CANONICAL_A1_SOURCE_REQUEST_PORTABLE_ALL_MEMBERS_VERIFIED_NOT_APPLIED",
+  "archive": {
+    "path": "exact-cui-account-lifetime-request.zip",
+    "bytes": 99777,
+    "sha256": "8a1c5e1f18fc3563ce1720ed40029149201fb30ad70b50037a22e3ec4ee67078",
+    "members": 33,
+    "uncompressedBytes": 377968
+  },
+  "allMembers": [
+    {
+      "member": "ACCOUNT-CONSUMER-HANDOFF.md",
+      "bytes": 3332,
+      "sha256": "d80398b715c15dc5272228f82515331d98a64d841db4a6d6aa3c7b2a8d7e524d"
+    },
+    {
+      "member": "ACCOUNT-CONSUMER-PROPOSAL.cs.txt",
+      "bytes": 25366,
+      "sha256": "6e996d786b604d85f4b2c565410e66f359b2b86c878ce6f633bf1e0aceea8326"
+    },
+    {
+      "member": "ACCOUNT-CONSUMER-PROPOSAL.patch",
+      "bytes": 4026,
+      "sha256": "5818c104e3001340ebbf99412dc0639060eee4cf5b07517c41978aeb30a73bd9"
+    },
+    {
+      "member": "ACCOUNT-CONSUMER-SOURCE-MANIFEST.json",
+      "bytes": 2296,
+      "sha256": "b125245c112e56fc31f0a90f1d1d68b2ca8712f4689614a7d14a5f0aea45b075"
+    },
+    {
+      "member": "ACTUAL-LOADER-PROBE-AUTHORED-MANIFEST-02.json",
+      "bytes": 10486,
+      "sha256": "1d60bf834f7a67f69205d54e793d472a4c65abdf6d02124129be5e2c2f879680"
+    },
+    {
+      "member": "ACTUAL-LOADER-PROBE-AUTHORED-MANIFEST-03.json",
+      "bytes": 10573,
+      "sha256": "7d2c39355fa317fecad7eadfcef9dfc130d5f70d656af94f15a8c1bc79970d4f"
+    },
+    {
+      "member": "ACTUAL-LOADER-PROBE-AUTHORED-MANIFEST.json",
+      "bytes": 9711,
+      "sha256": "1899764640e5dc96be92f922c39f7a9994b297356ad8b923e9ae0c324dff1f7d"
+    },
+    {
+      "member": "ActualCallerProbe.cs",
+      "bytes": 7422,
+      "sha256": "14dfe0c768bd63a2c11eb47bdd0e0446b78d71546c10d0e40e02630d705a3bfc"
+    },
+    {
+      "member": "ActualCallerProbe.csproj",
+      "bytes": 6932,
+      "sha256": "a6d22ef476891bda57fc79184b171ee703794513df81daccf6525b3166a83593"
+    },
+    {
+      "member": "CUI-OWNER-PORT-SKETCH.cs.txt",
+      "bytes": 1669,
+      "sha256": "b380d0fa4b1a2ba4e6af34ffbcf0f4572ac3898296c5546f13c1bf98ad89128c"
+    },
+    {
+      "member": "OWNER-REQUEST-SOURCE-MANIFEST-02.json",
+      "bytes": 6679,
+      "sha256": "09cc977712d83ac415d7a54c31bbc2379b5c6fa73c88d588ec1b93b90a960fac"
+    },
+    {
+      "member": "OWNER-REQUEST-SOURCE-MANIFEST.json",
+      "bytes": 4239,
+      "sha256": "3f3843b145793f36d98d16c35bf4ed3e0527f36928eef33859302ef56b48da5c"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "bytes": 17839,
+      "sha256": "b210f634a5ee17ce526c507e472b45161ef7d4dd675de6d41def2f835dfae25e"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/Accounts/Accounts.cui",
+      "bytes": 6365,
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/Auth/browser-public-client.js",
+      "bytes": 13897,
+      "sha256": "2ad00a13b39a3779dcb2a5c66758b8637319abea29b5a3963ff0ac3e96ed234d"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/Auth/configured-accounts.js",
+      "bytes": 3968,
+      "sha256": "c892794e4b8664aae8a4817f1b964e5e5486ba7a33abdbbf9ec4b7d886ff0ad2"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/BrowserApplication.cs",
+      "bytes": 14521,
+      "sha256": "80826b95eecbfcb047654cf5dd3aa3033e9aaef7bc89080f93a4db90d7d3971e"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/Program.cs",
+      "bytes": 2620,
+      "sha256": "38fd64d76f336a7835d9682f72ed58467aef837609770e6b86f511260f6edaa7"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/Services/BrowserAccountSignIn.cs",
+      "bytes": 1403,
+      "sha256": "38e2a11bacaf8f37d39b8a2fdb8d45a733ce79c9eeab1df2838e180e854f980f"
+    },
+    {
+      "member": "actual-owner-source-custody/apps/Web/wwwroot/main.js",
+      "bytes": 3332,
+      "sha256": "aa87ca9b0469410c8c7d22d9fb62c33ab3af8eacbec041ec7962fc915f4cdb04"
+    },
+    {
+      "member": "actual-owner-source-custody/framework/CUI/Core/CuiRuntimeContracts.cs",
+      "bytes": 1441,
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+    },
+    {
+      "member": "actual-owner-source-custody/framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    },
+    {
+      "member": "shared-owner-two-file-proposal/CuiControlLoader.cs.txt",
+      "bytes": 90822,
+      "sha256": "aabc12960e3bbc7579da6c840cefa45dff5bee0b397dde7279e34df96a6ed157"
+    },
+    {
+      "member": "shared-owner-two-file-proposal/CuiRuntimeContracts.cs.txt",
+      "bytes": 2311,
+      "sha256": "91ab48bed44e0b933a7aa7166c7e0afdd9df5a7f61afd318ec65996aaf4fe805"
+    },
+    {
+      "member": "shared-owner-two-file-proposal/SHARED-CUI-TWO-FILE-PROPOSAL-MANIFEST.json",
+      "bytes": 3397,
+      "sha256": "b116dbc2c9d77254807790499d9a709f585740fc4476dd2ac85c7eaabf7a468f"
+    },
+    {
+      "member": "shared-owner-two-file-proposal/canonical-two-file-lifetime.patch",
+      "bytes": 2492,
+      "sha256": "193cd9e6693ab11db10f077623aaf7b526a08d464ae53aa4476c29e38cd1557d"
+    },
+    {
+      "member": "source-custody01/ACTUAL-LOADER-PROBE-AUTHORED-MANIFEST.json",
+      "bytes": 9711,
+      "sha256": "1899764640e5dc96be92f922c39f7a9994b297356ad8b923e9ae0c324dff1f7d"
+    },
+    {
+      "member": "source-custody01/ActualCallerProbe.cs",
+      "bytes": 7422,
+      "sha256": "14dfe0c768bd63a2c11eb47bdd0e0446b78d71546c10d0e40e02630d705a3bfc"
+    },
+    {
+      "member": "source-custody01/ActualCallerProbe.csproj",
+      "bytes": 6548,
+      "sha256": "d5c1c10215b39cc661eb9d4dc37163670ad6a455a8549663b022ff59d54cb674"
+    },
+    {
+      "member": "independent-review/cui-caller-lifetime-source-and-probe02-review.json",
+      "bytes": 3002,
+      "sha256": "15b3f90488b9d0535b88da992dde68996cb0328add27976ef9ed98aee3ca53c1"
+    },
+    {
+      "member": "independent-review/cui-caller-owner-request-custody02-review.json",
+      "bytes": 393,
+      "sha256": "dd7a2be960a139a5f2127ed48c8c189cb56a9d501ccfb37a3dd2520678dcc712"
+    },
+    {
+      "member": "independent-review/cui-lifetime-consumer-source-review01.json",
+      "bytes": 1903,
+      "sha256": "a289454d1f16ccf4746918b1b3c58e1d510a44cae626ade8e98f5ecd467ea8dc"
+    },
+    {
+      "member": "independent-review/cui-shared-two-file-source-review01.json",
+      "bytes": 1527,
+      "sha256": "04ef3f17844922f4fecfef10fb3757a558b94d94b04e41804edc5cfc524ffcc9"
+    }
+  ],
+  "sharedProposalManifestSha256": "b116dbc2c9d77254807790499d9a709f585740fc4476dd2ac85c7eaabf7a468f",
+  "exactPatchSha256": "193cd9e6693ab11db10f077623aaf7b526a08d464ae53aa4476c29e38cd1557d",
+  "qualification": "Actual immutable219 native prelogin PASS/sign-in popup preissuer FAIL. Proposed canonical optional Core/Loader+consumer source only; actual native Button baseline3 NOT_RUN, runtime DLLs referenced by authored project not included. No recipient executable/run/provider acceptance claimed."
+}
