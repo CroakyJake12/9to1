@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T21:09:49.417757+00:00",
+  "updatedUTC": "2026-10-04T21:27:59.293330+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -3776,7 +3776,7 @@
     },
     "ownership": "Root sole B source/artifact/coordination integrator. A native/shared/canonical authority; C sole main/release/acceptedHead/index/combined WorkerLogs integrator. This commit changes only B JSON and preserves every existing checkpoint. No full app/31/LE/platform/provider/release acceptance."
   },
-  "currentBOnlyCheckpointRef": "currentBOnlyCheckpoint_20261004T201955Z",
+  "currentBOnlyCheckpointRef": "reviewedCriticalBrowserFixAndDrain_20261004T212759.293330+0000",
   "engineeringRecoveryRequest_20261004T205121.948495+0000": {
     "UTC": "2026-10-04T20:51:21.948495+00:00",
     "authority": "Actual latest receiving-root user messages read: stop routine questions to Jacob, coordinate engineering decisions with receiving root, pre-empt blockers; corrected deadline 10:30 interpreted by explicit current delegation as22:30 Europe/London4October. Full acceptance/security/donor scope preserved.",
@@ -3947,5 +3947,202 @@
     "deadlineUTC": "2026-10-04T21:30:00Z",
     "allPreviousFailuresHistoryAndPrivatePrivacyPreserved": true
   },
-  "currentCriticalCASHandoffRef": "criticalCASAndSafeDrainHandoff_20261004T210949.417757+0000"
+  "currentCriticalCASHandoffRef": "criticalCASAndSafeDrainHandoff_20261004T210949.417757+0000",
+  "reviewedCriticalBrowserFixAndDrain_20261004T212759.293330+0000": {
+    "UTC": "2026-10-04T21:27:59.293330+00:00",
+    "source": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "parent": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+    "onlyChangedProductPath": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+    "actualRepair": "Original failedbefore/after rawstatus538B exactlysix same-job ownergeneratedJS/maps. Newdriver authenticates same-source publisher/fullinventory/seal/exact19normalcommandfamilies/actualownerbuild and sixfullSHA+bytes/containedregularpaths beforeadmission; rejectsallotherunknown/tracked/rename/duplicate/incomplete inputs; repeatsproofafter. No vendorproduct/ignorepolicy/oracle/threshold/timeoutchange.",
+    "sourceGuardControl": "Actual14controlledcases22assertions0failure/exit0; includes immutableoriginalrefusal, same-lengthtamper/digestremovalmutant, unknown/schema/links/FIFO/status/producerseal/drift failures. This isnotbrowseracceptance.",
+    "B6FullSourceAdoptionProof": {
+      "state": "B6_REMOTE_DRIVER_ADOPTION_SOURCE_PROOF_READERS_CLOSED",
+      "head": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+      "parent": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+      "refs": [
+        "team-b/astra-browser-validation-20261003",
+        "review/team-b-local-apps-20261004"
+      ],
+      "full9749LeafConservationOnlyDriverChanged": true,
+      "path": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+      "newBlob": "1f617d0c5f80a79c3e4bfff74a0d9829d12b5cc7",
+      "newBytes": 14913,
+      "newSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+      "oldBlob": "0b55f55eb3afaf25683d0fe4742023f172392449",
+      "oldBytes": 11089,
+      "oldSHA256": "20fc542341b8d88ad1b2b96094dbbe33ecc6a0567378cbef7f3b0b3b5c3ba0ca",
+      "fourInheritedHelperASTsExact": [
+        "sha",
+        "write",
+        "inventory",
+        "source_check"
+      ],
+      "commonLedgerCapFloorNamesExact": true,
+      "playwrightToolsThroughOriginal14AndNew3CallAndAllAcceptanceGatesByteExact": true,
+      "browserSegmentSHA256": "4b41be27b50f245e66bdc0ed105566971dd8018a309eb7a99cb0c872c3735a47",
+      "allBrowserOraclesAndWorkflowLeafBodiesUnchanged": true,
+      "newFunctionsOnly": [
+        "owned_regular",
+        "owner_output_guard"
+      ],
+      "reviewedChange": "Exact six same-job owner output rows, body hashes and contained regular nonsymlink paths; exact unique owner-assets-build command and all producer normal closed families; avalonia/storage modules equal sealed public bodies; NUL porcelain exact six unknown generated paths only; publisher proof and generated outputs pinned/rechecked afterward. No generic unknown-input allowance.",
+      "runtimeResultAcceptance": false,
+      "allReadersClosed": true,
+      "noLocalFileImportRuntimeWatchRestartOrSourceMutation": true
+    },
+    "durableSourceControlHandoff": {
+      "branch": "artifact/team-b-wave-browser-producer-guard-source01-20261004",
+      "head": "ef1333e6b0d618a17ac9f508377cc48864e29f62",
+      "prefix": "docs/releases/sol-happy-20261003/team-b-wave-browser-producer-guard-source01",
+      "files": "Fullnewsource/controlscript/results/manifest/fullpatch/exactreconstruction/rootintegration+FULLB6sourceproof allreadback; sevenaddedfiles9749inheritedleavesconserved."
+    },
+    "durableOriginalFailureDiagnostics": {
+      "branch": "artifact/team-b-original-transport-diagnostics-20261004",
+      "head": "81e990ec650aa0a7c1e9c1733d844e4a5a57f994",
+      "full5406DiagnosticAnd8599SelectedRawOuterBodies": "Bothwholebody/fullCRC/root+B6fullACKspersisted; actual5rawfiles23364match36membermap3197. Bothoriginal1495261/e794 andsourcee90 fixed. Wholeoriginalnotindependentlyreceived/assetbodiesnotselected.",
+      "controlledNewDuplicateRetirement": "AfterFULLACKpublished/freshpermanent+localbodyreadback/allactualreaderclosure onlyNEW5406+8599tempduplicatesandemptynewdirectoriesremoved. B3/B4unexpectednewtempreadclosuresandphasedeviationsrecorded. Oldprotected/privateoriginalsretained."
+    },
+    "actualChangedSourceBrowser": {
+      "run": 37235516659,
+      "jobs": [
+        {
+          "id": 111533700837,
+          "name": "native-glyph-support (original)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": []
+        },
+        {
+          "id": 111533700946,
+          "name": "native-glyph-support (proposed)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": []
+        },
+        {
+          "id": 111534527139,
+          "name": "real-browser",
+          "status": "in_progress",
+          "conclusion": null,
+          "activeSteps": [
+            "Run additional actual390 touch keyboard and genuine200% browser criteria"
+          ]
+        }
+      ],
+      "nativeDecoded": "Proposed111533700946actual64PASS0FAIL0NOT_RUN; original11153370083764=48PASS16FAILqualifiednegative; allsevennativeexitmodesnormal/sourcebinaryafterunchanged. Mandatory49rawUNIT/families/archivepending.",
+      "browser17": "Original14+separate3 stillPENDING actualpublisher/browser pipeline; noPASScounted beforeactualexecution."
+    },
+    "publisher": {
+      "run": 37235516601,
+      "job": 111533700801,
+      "state": "COMPLETED_SUCCESS",
+      "source": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+      "files": 285,
+      "bytes": 58508843,
+      "innerZIPBytes": 35921988,
+      "innerZIPSHA256": "3b8fc8ee8f60c291e5a831d941b20b7495edbe2587d926f817cb54394a41db2a",
+      "receiptSHA256": "fb355a4bc1db6d053c70ab88a7b09487cd328aa5e837a0ea2d6e7d88857050ce",
+      "diagnosticArtifact": 11314994483,
+      "diagnosticBytes": 1490264,
+      "diagnosticSHA256": "453a420ef4ac4c3ea780a6d8a209113459bac09cb91e290d38f1d36a95cb2ee5",
+      "publicArtifact": 11315995557,
+      "publicBytes": 35847315,
+      "publicSHA256": "c89ba16727d19f69e0b41afec1c5ff4bce58081996f93a2c60ed509016a101ef",
+      "limits": "ActualruntimeVerified/deploy/fullparityfalse; rawbody/compiler/kernel-families notreceived."
+    },
+    "sealedReplay": {
+      "run": 37235516661,
+      "state": "COMPLETED_SUCCESS",
+      "Accounts7": "7/7",
+      "Wave14": "14/14",
+      "runtime": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "driver": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+      "scope": "OLDpinnedruntime; doesnotcertifynewproducthead. Accountsraw11314794993/32380/b216b156f3e4754e4ed09d2cc64b5cb4f1ff6eb912bc2c2b3b078ad3f81b3e07; Waveraw11315372930/45005534/16118d0b1593d953350691ec6abca75e7ac1540575cbdb783de583ddfa9bae08. Unreadrawkernelclosures."
+    },
+    "allActualAutoTriggeredCloudRuns": [
+      {
+        "run": 37235516767,
+        "name": "Team B original Motion durable project workflow",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516661,
+        "name": "Team B sealed browser replay",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516618,
+        "name": "Team B canonical Files Sites lifecycle controls",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516627,
+        "name": "Team B Wave native responsive geometry controls",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516659,
+        "name": "Team B real Wave responsive browser",
+        "status": "in_progress",
+        "conclusion": null,
+        "event": "push"
+      },
+      {
+        "run": 37235516615,
+        "name": "Team B ordinary native regressions",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516624,
+        "name": "Team B genuine Picture browser nine",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516601,
+        "name": "Team B ordinary Web publication",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516672,
+        "name": "Team B Chat supporting interface controls",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      },
+      {
+        "run": 37235516705,
+        "name": "Team B Picture actual native controls",
+        "status": "in_progress",
+        "conclusion": null,
+        "event": "push"
+      },
+      {
+        "run": 37235516658,
+        "name": "Team B actual Write native package browser workflow",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      }
+    ],
+    "safeDrain": "AllBlocalprocesses/readersclosed; idlewatch17020actualHOLDREQUEST_SCHEMAexit2/zerofragments/zeroAPI preserved. B3tinyfixturedirsremoved; maintainer/protectedlocaldirtyscopeunchangedandheld. AlljobshereordinaryGitHub/cloudLinux noJacobPCdependency; preservehealthycloudjobsnormalterminal, no manualrestart/cancel. RootWindows poweroffonlyoncehumancompletion+safe saved/drained condition met.",
+    "remainingPrerequisites": "Actualnewsourceoriginal14+3 browser results + fullraw; A/CsharedSpaceadoption; provenreceivingoldNotesRepositorydataoverwrite handedtoroot/A/CminimalCAS+sessionexceptionbridge andgenuinecross-processserializedcheck+publish remainsownerrepair/verification. Wholee90/nativeandWrite25Moriginalreceivesblockedatlocalfloors; roomierreceivingroot requestpinnedearlier. Full31/LE/installed/signing/cleanWindows/provider/releaseacceptanceopen.",
+    "userExclusivePrerequisite": "NoneinBcurrentboundedbrowserlane; do notrouteordinaryengineeringpromptstoJacob.",
+    "deadlineUTC": "2026-10-04T21:30:00Z",
+    "deadlineNotAcceptanceWaiver": true,
+    "fullAcceptance": "NOT_ACCEPTED"
+  }
 }
