@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "owner": "Team A Sites/Files; Team B native editor composition",
+  "sourceCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+  "input": "docs/releases/sol-happy-20261003/cloudflare/canonical-wordpress-import-input.json",
+  "consumerPins": [
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteHtmlContentImporter.cs",
+      "gitBlob": "0ffac3ec070aac4d188ccea2f053815901267095",
+      "sha256": "ee22b4337a263952694848c5d53964aa9a5e6454ca575c6e02491d6f930e8c73",
+      "bytes": 6789
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeAuthoringSession.cs",
+      "gitBlob": "be504d44accd943bc082aef71944ad2926a77371",
+      "sha256": "64e64a14201795994360c7d27934a62f5fb1c9702b3cded280d72d12deeb218a",
+      "bytes": 15477
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeWorkspaceAuthority.cs",
+      "gitBlob": "e847c786dd751a68769aff82dee354dd8febfc2d",
+      "sha256": "4a9824534d37503d5c370c8824d90b231af340a80ab833e70150c338148f2b66",
+      "bytes": 880
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeWriteCoordinator.cs",
+      "gitBlob": "88acc0ae300bad2415866e1b50952547114f5df1",
+      "sha256": "e1fe109c3217f25f3f4f7072d9d881e76addfdaebeee9a9964efac78aed829c0",
+      "bytes": 18076
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "gitBlob": "90de2fd3bc79a3543d8dd57eb4c5d748281e2c29",
+      "sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+      "bytes": 7715
+    },
+    {
+      "path": "9to1 Workspace/Sites/Runtime/SiteDocumentRenderer.cs",
+      "gitBlob": "b9632443e1a6a55fb510f80d4fc85d8162ff4bb7",
+      "sha256": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8",
+      "bytes": 13403
+    },
+    {
+      "path": "9to1 Workspace/Sites/Projects/cakemods.com/Source/published-wordpress-pages.json",
+      "gitBlob": "ee819b598d0410528288e0bba9dd77ef566eb54f",
+      "sha256": "6e2cfe67bef3d0bfa39c40a8a78a86ff68c95f74dd192d11f3e3bbae567d5cef",
+      "bytes": 70197
+    }
+  ],
+  "requestedActions": [
+    "Bind actual current Projects profile through NativeFilesWorkspaceAuthority.GetCurrentAsync(expectedStoreId), original-profile store resolution and original-binding commit lease; provide actual directory ID and current session/store authority.",
+    "Compose maintained SiteNativeAuthoringSession/SiteNativeWriteCoordinator and SiteHtmlContentImporter; invoke ImportPageAsync with actual site ID and current CAS revision for each retained page, retaining diagnostics.",
+    "Resolve donor class/style/id/data-cake attributes and theme styles into editable canonical design/components; do not waive unsupported runtime attributes or DesignMappingRequired as parity.",
+    "Persist canonical site.project.json in actual Files/Stack source binding and invoke NativeSiteBuildPipeline with real source/config revisions and artifact root; execute actual secret scanner before activation.",
+    "Provide theme cake-glass source and original page-editor authored CSS/JS/component/file/scene/settings dependencies through approved public/source export; current public HTML is insufficient."
+  ],
+  "hostedDependency": "C4 manifest/per-file R2 composition: manifest ContentHash is manifest SHA256; ArtifactReference is directory; SizeBytes excludes manifest. Single-object reader is not sufficient.",
+  "holds": [
+    "No native authority/session lease exists in this input package.",
+    "No full editable/theme/editor parity evidence.",
+    "No preview overwrite or public activation."
+  ]
+}
