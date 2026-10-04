@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "status": "RETAINED_FIRST_ACTUAL_WINDOWS_COMPILER_FAILURE",
+  "runId": 37224785297,
+  "jobId": 111502090256,
+  "sourceCommit": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "officialUrl": "https://github.com/CroakyJake12/9to1/actions/runs/37224785297",
+  "artifact": {
+    "runId": 37224785297,
+    "jobId": 111502090256,
+    "sourceCommit": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+    "artifactId": 11311284432,
+    "bytes": 2492125,
+    "sha256": "0d6fd7890f984fa66ea89d26cba1d9238766b3cbe08634842bd7e444b2ad6e3d",
+    "originalArtifactPath": "/workspace/attachments/7eeb944e-97d9-4129-a1bf-74a9fd75dc02/home-e1fd-original-diagnostics.zip",
+    "allCRCAndSafeUniqueMembersVerified": true,
+    "members": [
+      {
+        "path": "owning-build-release.log",
+        "bytes": 7836,
+        "sha256": "6ba6e64c4251b255b9b4f0d2bbd6c27bec10e5ee086402a9022df7923bb163b4"
+      },
+      {
+        "path": "owning-restore.log",
+        "bytes": 5184,
+        "sha256": "bf2fa079129f5d26aef383a910f269d776eefe33e14fe0f8b4caf9308ca17448"
+      },
+      {
+        "path": "cui-tasks-release.log",
+        "bytes": 378,
+        "sha256": "754cfb86d4f26b7d0a3ffcdf2f4f78e265dbc5e37611551aec4cbefb5f7de65d"
+      },
+      {
+        "path": "result.json",
+        "bytes": 4647,
+        "sha256": "7c3007170769b334b4307a4fdec2d49ebffd2e1d597bb4ac9e0d53594d23de85"
+      },
+      {
+        "path": "sdk-version.log",
+        "bytes": 10,
+        "sha256": "3db6bca4b50618b2e0d2d55d23b3d0541fe039ab6f731df0e9c47317b400ce52"
+      },
+      {
+        "path": "source-after.json",
+        "bytes": 5969725,
+        "sha256": "31ab4bbfe600d75e9a6c7ce45fa2f990aaf97b5b2be657e94ec618949a90049a"
+      },
+      {
+        "path": "source-before.json",
+        "bytes": 5969725,
+        "sha256": "31ab4bbfe600d75e9a6c7ce45fa2f990aaf97b5b2be657e94ec618949a90049a"
+      },
+      {
+        "path": "task-target-properties.log",
+        "bytes": 212,
+        "sha256": "43f67ce73486360b577eab136630d9c88d89aa42c73c88a07bca46d5314084e9"
+      }
+    ]
+  },
+  "result": {
+    "schemaVersion": 1,
+    "status": "FAIL_OR_INCOMPLETE",
+    "stage": "ordinary-owning-six",
+    "sourceCommit": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+    "sourceBasis": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+    "platform": "Windows/win-x64",
+    "commands": [
+      {
+        "name": "sdk-version",
+        "argv": [
+          "--version"
+        ],
+        "exitCode": 0,
+        "startedUTC": "2026-10-04T18:32:37.9410322Z",
+        "endedUTC": "2026-10-04T18:32:41.6712794Z",
+        "log": "sdk-version.log"
+      },
+      {
+        "name": "cui-tasks-release",
+        "argv": [
+          "build",
+          "framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CakeOS.Cui.Build.Tasks.csproj",
+          "-c",
+          "Release",
+          "--nologo",
+          "--artifacts-path",
+          "D:\\a\\_temp\\home-original-37224785297-1\\artifacts",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exitCode": 0,
+        "startedUTC": "2026-10-04T18:32:41.6791479Z",
+        "endedUTC": "2026-10-04T18:32:54.6041963Z",
+        "log": "cui-tasks-release.log"
+      },
+      {
+        "name": "task-target-properties",
+        "argv": [
+          "msbuild",
+          "framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CakeOS.Cui.Build.Tasks.csproj",
+          "-p:Configuration=Release",
+          "-p:UseArtifactsOutput=true",
+          "-p:ArtifactsPath=D:\\a\\_temp\\home-original-37224785297-1\\artifacts",
+          "-getProperty:TargetPath,TargetFramework"
+        ],
+        "exitCode": 0,
+        "startedUTC": "2026-10-04T18:32:54.6065345Z",
+        "endedUTC": "2026-10-04T18:32:54.9316846Z",
+        "log": "task-target-properties.log"
+      },
+      {
+        "name": "owning-restore",
+        "argv": [
+          "restore",
+          "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+          "--configfile",
+          "NuGet.Config",
+          "--disable-parallel",
+          "-p:Configuration=Release",
+          "-p:CuiBuildTasksLocation=D:\\a\\_temp\\home-original-37224785297-1\\artifacts\\bin\\CakeOS.Cui.Build.Tasks\\release\\CakeOS.Cui.Build.Tasks.dll",
+          "--artifacts-path",
+          "D:\\a\\_temp\\home-original-37224785297-1\\artifacts",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exitCode": 0,
+        "startedUTC": "2026-10-04T18:32:54.9359773Z",
+        "endedUTC": "2026-10-04T18:33:13.4633861Z",
+        "log": "owning-restore.log"
+      },
+      {
+        "name": "owning-build-release",
+        "argv": [
+          "build",
+          "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+          "--no-restore",
+          "-c",
+          "Release",
+          "-p:CuiBuildTasksLocation=D:\\a\\_temp\\home-original-37224785297-1\\artifacts\\bin\\CakeOS.Cui.Build.Tasks\\release\\CakeOS.Cui.Build.Tasks.dll",
+          "--artifacts-path",
+          "D:\\a\\_temp\\home-original-37224785297-1\\artifacts",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exitCode": 1,
+        "startedUTC": "2026-10-04T18:33:13.4647004Z",
+        "endedUTC": "2026-10-04T18:34:36.4320810Z",
+        "log": "owning-build-release.log"
+      }
+    ],
+    "nativeProcesses": [],
+    "managedCases": null,
+    "buildTaskSHA256": "737f29d7f89326618733c4942c35df5a4ce85054f832f7d56f372c07bbbe9197",
+    "package": null,
+    "sourceAfterUnchanged": true,
+    "acceptedNativeShutdownScope": false,
+    "processSignals": [],
+    "forcedCleanup": false,
+    "originalForcedFailure": {
+      "source": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+      "run": 37205981853,
+      "job": 111447135076,
+      "forcedCleanup": true,
+      "exitCode": -1,
+      "status": "RETAINED_ORIGINAL_FAILURE_NO_ACCEPTANCE"
+    },
+    "qualification": "Original owning six tests and current unaccepted Home package/visible-window explicit quit only; no installed identity, signing, clean-PC, provider, all-theme or full Home/release acceptance.",
+    "ordinaryWindowClose": "NOT_RUN: Close intentionally keeps Core alive. No original external quit/reopen route exists once the sole HWND is gone; old forced-1 remains retained.",
+    "nativePersistenceMutation": "NOT_RUN: current host exposes no configured writer. Two fresh processes use the original OS LocalApplicationData/9to1/Home route; scoped catalog equality is read-only cold-open observation.",
+    "runnerImage": "20260927.320.1",
+    "osVersion": "Microsoft Windows NT 10.0.20348.0",
+    "initialOutputDriveFreeBytes": 235233058816,
+    "failureType": "RuntimeException"
+  },
+  "sourceBeforeAfter": {
+    "rows": 17109,
+    "byteEquivalent": true,
+    "allActualBodyAndGitlinkHashesUnchanged": true
+  },
+  "actualClosestOutcome": {
+    "owningBuildExit": 1,
+    "owningWarnings": 0,
+    "owningErrors": 2,
+    "discoveryExecuted": false,
+    "testsExecuted": null,
+    "nativePackageExecuted": false,
+    "nativeProcessLaunched": false
+  },
+  "firstCause": "MSB4062 GenerateAvaloniaResourcesTask tries unchanged repository bin/Release/netstandard2.0/Avalonia.Build.Tasks.dll; actual normal source graph built that task into task-private artifacts/bin/Avalonia.Build.Tasks/release instead. Fonts.Inter and Dialogs resource consumers cannot find default fixed path.",
+  "classification": "C-owned isolated invocation omitted existing maintained AvaloniaBuildTasksLocation public property for task-private artifacts. No native product defect established.",
+  "preservedOriginals": "Entire official diagnosticZIP and all8 original members retained; old7e forced-1 still preserved. No assertions/guards/source repinned; no retry occurred."
+}

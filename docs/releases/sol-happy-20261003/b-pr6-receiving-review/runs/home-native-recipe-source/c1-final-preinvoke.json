@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-10-04T18:26:50.272567+00:00",
+  "independentReviewer": "C1",
+  "status": "SOURCE_PREINVOCATION_ACK_NOT_RUNTIME_ACCEPTANCE",
+  "candidate": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "parent": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+  "changed": [
+    {
+      "path": ".github/scripts/home-windows-original-shutdown.ps1",
+      "modeKindBlob": "100644 blob 70ad837bb8e37a4eaa99639a0d19fa04fcce36ce",
+      "bytes": 30217,
+      "sha256": "826521e5fdf080c4aa5fcd3ddfa896e2d1c511373db100305684080b27d6387a"
+    },
+    {
+      "path": ".github/validation/home-windows-original-shutdown.json",
+      "modeKindBlob": "100644 blob 50216d72325f4cdfeee535fb05782a4be351c3ac",
+      "bytes": 18576,
+      "sha256": "e4643d06a70f81342318911602e5eac61ce17b249be5d72f852fb632fe594942"
+    },
+    {
+      "path": ".github/workflows/team-c-home-windows-original-shutdown.yml",
+      "modeKindBlob": "100644 blob 6fcaf12e2458cab231690025ef670a26eb1a8cd3",
+      "bytes": 7272,
+      "sha256": "ee9b7ca0dd1e12da5ef300ced25073c0ee12e7836ef313610b325d1ea7ee07cf"
+    }
+  ],
+  "outsideEntriesPreserved": 16504,
+  "verifiedSourcePins": 79,
+  "reviewedSemantics": [
+    "current exact two gitlinks XamlX009d and DBus864a; no stale three-link helper",
+    "source-built CUI Tasks then original owning six discovery+strict all executed/passed TRX and unchanged original render/lifetime methods",
+    "normal native original project Release and genuine original self-contained win-x64 publication",
+    "actual own visible HWND owner PID, foreground recheck, no held modifier, six declared CtrlShiftQ inputs and three key-up events required",
+    "45s bounded original natural exit; parameterless WaitForExit removed;5s exclusive stdout/stderr log-lock drain guard",
+    "whole sealed package_ready set before bounded raw transport refusal; actual complete artifact independent from parts readiness",
+    "raw external exception message withheld; phase/type controlled public diagnostics",
+    "source, runtime and canonical OS profile relative file/size/SHA custody; no profile/config/actor injection or profile bodies",
+    "original7e forced cleanup/exit-1 retained; defaultClose after HWND gone and consequential native state mutation remain NOT_RUN"
+  ],
+  "limits": {
+    "localScope": "read-only source and pin review; no native OS call, build, functional rerun, mutation or provider action",
+    "debugReleaseRuntime": "NOT_RUN_HERE",
+    "SDKFreeCleanPC": "NOT_RUN",
+    "installedHomeSigningDonorAuthority": "NOT_SUPPLIED_NOT_ACCEPTED",
+    "sourceTestAssertionSites": 54,
+    "runtimeAssertions": null,
+    "normalCases": 6,
+    "fullAcceptedOf29": 0
+  },
+  "retainedPriorFinding": {
+    "originalCandidate": "0a8c34ab3a098264d0d6f8c13861e1ba3acf2a1b",
+    "finding": "parameterless WaitForExit after bounded observation",
+    "successorClosesFinding": true
+  }
+}
