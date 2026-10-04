@@ -87,3 +87,28 @@ Cancel/Select Folder name flags are retained; no values, text, paths, directory
 listings or profile payloads are dumped. Read-only diagnostics cannot replace
 the original timeout/refusal if they themselves fail. There is no focus, target,
 request, field/value, wait-threshold, approval or document-state correction here.
+
+
+Original eb46 run37222459785 retains58 checks and the original20-second address
+Edit timeout/forced cleanup/exit-1. Its exact owned native Edit and Select Folder/
+Cancel Button HWNDs are exposed to the test client as UIA Pane without Value or
+Invoke. This successor registers the standard installed Microsoft framework
+client-side providers through public ClientSettings before any UIA query. The
+actual client/provider assemblies must be in the GAC and beneath the actual OS
+Windows directory, with genuine Microsoft public-key token and matching loaded
+version/culture. Identity/location/SHA and successful registration are recorded;
+missing or mismatched installed tooling refuses. No proxy/provider is invented,
+downloaded, injected into the app, or registered in global OS configuration.
+
+The managed LegacyIAccessiblePattern type was unobserved/unavailable during the
+original diagnostic; its initialized false flags were not capability evidence.
+Diagnostic rows now distinguish type availability/read phase, and null legacy
+fields when unobserved. The unchanged actual Edit/Value/PID/tree/geometry gates
+still apply. The OS dialog's actual default control is read using documented
+DM_GETDEFID/GetDlgItem with a two-second abort-if-hung bound and no supplied ID.
+The observed control must be the exact owned native Button child, same HWND/PID
+UIA Button, and exact Select Folder name/caption before the original one-default-
+button/geometry/foreground/Invoke guards admit choice. Pane acceptance, coordinate
+click fallback, synthetic picker results and request retries remain prohibited.
+Standard tooling setup does not establish runtime success: all actual native
+setup/create/approval/stroke/commit/reopen criteria remain original open gates.

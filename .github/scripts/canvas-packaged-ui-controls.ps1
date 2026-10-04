@@ -201,7 +201,7 @@ function Observe-OwnedPicker {
     Record-OwnedPickerTreeWitness;return $dialog
 }
 function Read-PickerPeerWitness($Peer,[IntPtr]$PickerHandle,[IntPtr]$KernelHandle=[IntPtr]::Zero) {
-    $w=[ordered]@{kernelWindowHandle=$KernelHandle.ToInt64();kernelProcessId=0;kernelClass='UNOBSERVED';kernelIsPickerChild=$false;uiaProcessId=0;uiaWindowHandle=0;uiaHandleIsZero=$true;uiaMatchesKernelHandle=$false;uiaKernelProcessId=0;uiaIsPickerChild=$false;role='UNOBSERVED';enabled=$false;offscreen=$true;rectangle=$null;nameMatchesCancel=$false;nameMatchesSelectFolder=$false;nativeCaptionMatchesCancel=$false;nativeCaptionMatchesSelectFolder=$false;valuePattern=$false;invokePattern=$false;legacyPattern=$false;legacyDefaultButton=$false;readFailure=$null}
+    $w=[ordered]@{kernelWindowHandle=$KernelHandle.ToInt64();kernelProcessId=0;kernelClass='UNOBSERVED';kernelIsPickerChild=$false;uiaProcessId=0;uiaWindowHandle=0;uiaHandleIsZero=$true;uiaMatchesKernelHandle=$false;uiaKernelProcessId=0;uiaIsPickerChild=$false;role='UNOBSERVED';enabled=$false;offscreen=$true;rectangle=$null;nameMatchesCancel=$false;nameMatchesSelectFolder=$false;nativeCaptionMatchesCancel=$false;nativeCaptionMatchesSelectFolder=$false;valuePattern=$false;invokePattern=$false;legacyTypeAvailable=$false;legacyPattern=$null;legacyDefaultButton=$null;legacyReadStatus='NOT_READ';readPhase='properties';readFailure=$null}
     if($KernelHandle -ne [IntPtr]::Zero) {
         $w.kernelProcessId=[CanvasPackageInput]::WindowPid($KernelHandle)
         $w.kernelIsPickerChild=[CanvasPackageInput]::IsChild($PickerHandle,$KernelHandle)
@@ -214,10 +214,14 @@ function Read-PickerPeerWitness($Peer,[IntPtr]$PickerHandle,[IntPtr]$KernelHandl
         if(-not $w.uiaHandleIsZero){$w.uiaKernelProcessId=[CanvasPackageInput]::WindowPid([IntPtr]$w.uiaWindowHandle);$w.uiaIsPickerChild=[CanvasPackageInput]::IsChild($PickerHandle,[IntPtr]$w.uiaWindowHandle)}
         $w.role=$c.ControlType.ProgrammaticName;$w.enabled=$c.IsEnabled;$w.offscreen=$c.IsOffscreen;$w.rectangle=@($r.X,$r.Y,$r.Width,$r.Height)
         $w.nameMatchesCancel=$c.Name -ceq 'Cancel';$w.nameMatchesSelectFolder=$c.Name -ceq 'Select Folder'
-        $pattern=$null;$w.valuePattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern,[ref]$pattern)
-        $pattern=$null;$w.invokePattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern,[ref]$pattern)
-        $pattern=$null;$w.legacyPattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern,[ref]$pattern)
-        if($w.legacyPattern){$w.legacyDefaultButton=($pattern.Current.State -band 0x100)-ne 0}
+        $w.readPhase='value-pattern';$pattern=$null;$w.valuePattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern,[ref]$pattern)
+        $w.readPhase='invoke-pattern';$pattern=$null;$w.invokePattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern,[ref]$pattern)
+        $w.readPhase='legacy-type-availability';$legacyType='System.Windows.Automation.LegacyIAccessiblePattern' -as [type];$w.legacyTypeAvailable=$null -ne $legacyType
+        if($w.legacyTypeAvailable){
+            $w.readPhase='legacy-pattern';$pattern=$null;$w.legacyPattern=$Peer.TryGetCurrentPattern($legacyType::Pattern,[ref]$pattern)
+            if($w.legacyPattern){$w.legacyDefaultButton=($pattern.Current.State -band 0x100)-ne 0};$w.legacyReadStatus='OBSERVED'
+        }else{$w.legacyReadStatus='MANAGED_TYPE_UNAVAILABLE'}
+        $w.readPhase='completed'
     }catch{$w.readFailure=$_.Exception.GetType().FullName}
     return $w
 }
@@ -262,6 +266,35 @@ function Cancel-OwnPickerOnFailure {
     [void](Wait-Observed {-not [CanvasPackageInput]::WindowExists($handle)} 'Actual owned failed picker closed after controlled Cancel')
     $result.pickerCancellation.closed=$true;Write-Result
 }
+function Test-GenuineUiAutomationAssembly($Snapshot,[string]$ExpectedName,[string]$ExpectedVersion,[string]$ExpectedCulture) {
+    return $Snapshot.name -ceq $ExpectedName -and $Snapshot.version -ceq $ExpectedVersion -and $Snapshot.culture -ceq $ExpectedCulture -and $Snapshot.publicKeyToken -ceq '31bf3856ad364e35' -and $Snapshot.globalAssemblyCache -and $Snapshot.beneathWindowsDirectory -and -not [string]::IsNullOrWhiteSpace($Snapshot.location) -and $Snapshot.sha256 -cmatch '^[0-9a-f]{64}$'
+}
+function Read-UiAutomationAssembly($Assembly) {
+    $name=$Assembly.GetName();$location=[IO.Path]::GetFullPath($Assembly.Location)
+    $windows=[IO.Path]::GetFullPath([Environment]::GetFolderPath([Environment+SpecialFolder]::Windows)).TrimEnd('\')+'\'
+    $beneathWindows=$location.StartsWith($windows,[StringComparison]::OrdinalIgnoreCase);$publicLocation='WITHHELD_NON_SYSTEM';if($beneathWindows -and $Assembly.GlobalAssemblyCache){$publicLocation=$location}
+    return [ordered]@{name=$name.Name;version=$name.Version.ToString();culture=$name.CultureName;publicKeyToken=([BitConverter]::ToString($name.GetPublicKeyToken())).Replace('-','').ToLowerInvariant();globalAssemblyCache=$Assembly.GlobalAssemblyCache;beneathWindowsDirectory=$beneathWindows;location=$publicLocation;sha256=(Get-FileHash -LiteralPath $location -Algorithm SHA256).Hash.ToLowerInvariant()}
+}
+function Initialize-StandardUiAutomationProviders {
+    $result.uiaProviderSetup=[ordered]@{registrationCompleted=$false;client=$null;provider=$null;managedLegacyTypeAvailable=$false}
+    $client=[System.Windows.Automation.AutomationElement].Assembly;$clientName=$client.GetName()
+    $clientSnapshot=Read-UiAutomationAssembly $client;$result.uiaProviderSetup.client=$clientSnapshot
+    Check (Test-GenuineUiAutomationAssembly $clientSnapshot 'UIAutomationClient' $clientName.Version.ToString() $clientName.CultureName) 'Actual UIAutomation client is genuine Microsoft installed matching framework assembly'
+    $requested=New-Object System.Reflection.AssemblyName
+    $requested.Name='UIAutomationClientsideProviders';$requested.Version=$clientName.Version;$requested.CultureInfo=$clientName.CultureInfo;$requested.SetPublicKeyToken($clientName.GetPublicKeyToken())
+    $provider=[System.Reflection.Assembly]::Load($requested)
+    $providerSnapshot=Read-UiAutomationAssembly $provider;$result.uiaProviderSetup.provider=$providerSnapshot
+    Check (Test-GenuineUiAutomationAssembly $providerSnapshot $requested.Name $clientName.Version.ToString() $clientName.CultureName) 'Actual standard UIAutomation provider is genuine installed Microsoft assembly matching loaded client'
+    # Public framework API registers only the genuine installed OS client-side proxies.
+    # Existing Edit/Value, Button/Invoke, PID, ownership and geometry criteria remain required.
+    [System.Windows.Automation.ClientSettings]::RegisterClientSideProviderAssembly($requested)
+    $result.uiaProviderSetup.registrationCompleted=$true
+    $result.uiaProviderSetup.managedLegacyTypeAvailable=$null -ne ('System.Windows.Automation.LegacyIAccessiblePattern' -as [type])
+    Write-Result
+}
+function Test-OwnedDefaultButtonSnapshot($Snapshot) {
+    return $Snapshot.nativeWindowHandle -ne 0 -and $Snapshot.nativeProcessId -eq $process.Id -and $Snapshot.nativeIsPickerChild -and $Snapshot.nativeClass -ceq 'Button' -and $Snapshot.nativeCaptionMatchesSelectFolder -and $Snapshot.uiaProcessId -eq $process.Id -and $Snapshot.uiaWindowHandle -eq $Snapshot.nativeWindowHandle -and $Snapshot.uiaRole -ceq 'ControlType.Button' -and $Snapshot.uiaNameMatchesSelectFolder
+}
 function Choose-OwnFolder {
     Invoke-Button 'Set up Canvases'
     $dialog=Observe-OwnedPicker
@@ -285,10 +318,24 @@ function Choose-OwnFolder {
         try{$addressGone=$address.Current.IsOffscreen}catch{$addressGone=$true}
         $addressGone -and $witness.Count -eq 1
     } 'Actual native picker navigated breadcrumb to exact private fixture')
-    $defaults=@();$condition=New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty,$process.Id)
-    foreach($candidate in $dialog.FindAll([System.Windows.Automation.TreeScope]::Descendants,$condition)){
-        if($candidate.Current.ControlType -ne [System.Windows.Automation.ControlType]::Button){continue}
-        try{$legacy=$candidate.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern);if(($legacy.Current.State -band 0x100)-ne 0){$defaults+=$candidate}}catch{}
+    Require-OwnedControl $dialog 'ControlType.Window'
+    Check ([CanvasPackageInput]::ForegroundMatches($handle) -and [CanvasPackageInput]::WindowPid($handle) -eq $process.Id) 'Default-button read targets current exact owned native picker'
+    # DM_GETDEFID/GetDlgItem observe the OS dialog's actual default control, with
+    # a two-second abort-if-hung message bound; no caller-provided control ID.
+    $defaultRead=[CanvasPackageInput]::ReadDefaultButton($handle)
+    $result.pickerDefaultButtonRead=[ordered]@{messageCompleted=$defaultRead.MessageCompleted;win32Error=$defaultRead.Win32Error;hasDefaultMarker=$defaultRead.HasDefaultMarker;observedControlId=$defaultRead.ControlId;nativeWindowHandle=$defaultRead.WindowHandle.ToInt64();getDlgItemWin32Error=$defaultRead.GetDlgItemWin32Error;timeoutMilliseconds=2000}
+    Check $defaultRead.MessageCompleted 'Actual bounded native default-button metadata read completed'
+    $defaultHandle=$defaultRead.WindowHandle
+    $defaults=@();$snapshot=[ordered]@{nativeWindowHandle=$defaultHandle.ToInt64();nativeProcessId=0;nativeIsPickerChild=$false;nativeClass='UNOBSERVED';nativeCaptionMatchesSelectFolder=$false;uiaProcessId=0;uiaWindowHandle=0;uiaRole='UNOBSERVED';uiaNameMatchesSelectFolder=$false}
+    $result.pickerDefaultButtonObservation=$snapshot
+    if($defaultHandle -ne [IntPtr]::Zero){
+        $snapshot.nativeProcessId=[CanvasPackageInput]::WindowPid($defaultHandle);$snapshot.nativeIsPickerChild=[CanvasPackageInput]::IsChild($handle,$defaultHandle)
+        if($snapshot.nativeProcessId -eq $process.Id -and $snapshot.nativeIsPickerChild){
+            $snapshot.nativeClass=[CanvasPackageInput]::WindowClass($defaultHandle);$snapshot.nativeCaptionMatchesSelectFolder=[CanvasPackageInput]::WindowTitleEquals($defaultHandle,'Select Folder')
+            $candidate=[System.Windows.Automation.AutomationElement]::FromHandle($defaultHandle);$c=$candidate.Current
+            $snapshot.uiaProcessId=$c.ProcessId;$snapshot.uiaWindowHandle=[long]$c.NativeWindowHandle;$snapshot.uiaRole=$c.ControlType.ProgrammaticName;$snapshot.uiaNameMatchesSelectFolder=$c.Name -ceq 'Select Folder'
+            if(Test-OwnedDefaultButtonSnapshot $snapshot){$defaults+=$candidate}
+        }
     }
     Check ($defaults.Count -eq 1) 'Actual native folder picker exposes one observed standard default button'
     Require-OwnedControl $defaults[0] 'ControlType.Button'
@@ -384,6 +431,7 @@ try {
     Check ($manifest.workflowCommit -ceq $catalog.sourceBasis -and $manifest.target -ceq 'canvas' -and $manifest.package.sha256 -ceq $catalog.package.sha256) 'Original package manifest binds Canvas and exact producer'
     $result.manifestHashVerified = $true
     Add-Type -AssemblyName System.IO.Compression.FileSystem, UIAutomationClient, UIAutomationTypes, System.Drawing, System.Windows.Forms
+    Initialize-StandardUiAutomationProviders
     $install = Join-Path $output 'install'
     $archive = [IO.Compression.ZipFile]::OpenRead($zip)
     try {
@@ -430,6 +478,11 @@ public static class CanvasPackageInput {
     public static bool WindowExists(IntPtr window) { return IsWindow(window); }
     public static bool WindowTitleEquals(IntPtr window,string expected) { var text=new System.Text.StringBuilder(512); GetWindowText(window,text,text.Capacity); return string.Equals(text.ToString(),expected,StringComparison.Ordinal); }
     public static string WindowClass(IntPtr window) { var text=new System.Text.StringBuilder(256); GetClassName(window,text,text.Capacity); return text.ToString(); }
+    [DllImport("user32.dll",SetLastError=true)] static extern IntPtr SendMessageTimeout(IntPtr window,uint message,UIntPtr wParam,IntPtr lParam,uint flags,uint milliseconds,out UIntPtr result);
+    [DllImport("user32.dll",SetLastError=true)] static extern IntPtr GetDlgItem(IntPtr window,int controlId);
+    [DllImport("kernel32.dll")] static extern void SetLastError(uint error);
+    public sealed class DefaultButtonRead { public bool MessageCompleted; public int Win32Error; public bool HasDefaultMarker; public int ControlId; public IntPtr WindowHandle; public int GetDlgItemWin32Error; }
+    public static DefaultButtonRead ReadDefaultButton(IntPtr window) { var read=new DefaultButtonRead(); UIntPtr result; SetLastError(0); read.MessageCompleted=SendMessageTimeout(window,0x0400,UIntPtr.Zero,IntPtr.Zero,3,2000,out result)!=IntPtr.Zero; if(!read.MessageCompleted) {read.Win32Error=Marshal.GetLastWin32Error();return read;} var value=result.ToUInt64(); read.HasDefaultMarker=((value>>16)&0xffff)==0x534b; if(!read.HasDefaultMarker) return read; read.ControlId=(int)(value&0xffff); if(read.ControlId==0) return read; SetLastError(0); read.WindowHandle=GetDlgItem(window,read.ControlId); if(read.WindowHandle==IntPtr.Zero) read.GetDlgItemWin32Error=Marshal.GetLastWin32Error(); return read; }
     [DllImport("user32.dll")] public static extern bool IsChild(IntPtr parent,IntPtr child);
     [StructLayout(LayoutKind.Sequential)] struct RECT { public int left,top,right,bottom; }
     [StructLayout(LayoutKind.Sequential)] struct GUIINFO { public uint size,flags; public IntPtr active,focus,capture,menuOwner,moveSize,caret; public RECT caretRect; }
