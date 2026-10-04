@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
-const { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver, createPublicNetworkDiagnostics } = require('./run-local-auth-current.cjs');
+const { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver, createPublicNetworkDiagnostics, readAuthoredPrivateProjection } = require('./run-local-auth-current.cjs');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const contract = JSON.parse(fs.readFileSync(path.join(__dirname, 'source-contract.json')));
 const repo = path.resolve(__dirname, '../../../..');
@@ -286,4 +286,84 @@ test('both revised issuer bodies refuse an alternate caller-rehashed fixture imp
     try { assert.throws(() => gate({ fixtureSourcePins: fixtures.map(item => item === row ? { ...item, bytes: fs.statSync(row.path).size, sha256: sha(fs.readFileSync(row.path)) } : item) })); }
     finally { fs.writeFileSync(row.path, bytes); }
   }
+});
+
+
+test('private projection witness reports only the four authored labels and fixed known roles', () => {
+  const elements = [
+    { name: 'Profile name', role: 'textbox', value: privateTripwire },
+    { name: 'Canonical account ID', role: 'text', value: privateTripwire },
+    { name: 'Canonical session ID', role: 'text' }, { name: 'Canonical session ID', role: 'text' },
+    { name: 'Current profile revision', role: 'text' }, { name: privateTripwire, role: privateTripwire }
+  ];
+  const actual = readAuthoredPrivateProjection({ elements });
+  assert.equal(actual.observed, true); assert.equal(actual.readFailed, false); assert.equal(actual.peersInspected, 6); assert.equal(actual.truncated, false);
+  assert.deepEqual(actual.fields.profileName, { present: true, matches: 1, roles: { text: 0, textbox: 1, button: 0, other: 0 } });
+  assert.equal(actual.fields.accountId.roles.text, 1); assert.equal(actual.fields.sessionId.matches, 2); assert.equal(actual.fields.profileRevision.roles.text, 1);
+  assert(!JSON.stringify(actual).includes(privateTripwire));
+});
+test('actual displayed private text cannot substitute for absent authored labels', () => {
+  const actual = readAuthoredPrivateProjection({ elements: [
+    { name: 'Profile name', role: 'textbox' },
+    { name: privateTripwire, role: 'text' }, { name: '1', role: 'text' }
+  ] });
+  assert.equal(actual.fields.profileName.present, true);
+  for (const key of ['accountId', 'sessionId', 'profileRevision']) { assert.equal(actual.fields[key].present, false); assert.equal(actual.fields[key].matches, 0); }
+  assert(!JSON.stringify(actual).includes(privateTripwire));
+});
+test('projection witness never reads unrelated private snapshot or peer properties and leaves input unchanged', () => {
+  let reads = 0;
+  const refused = () => { reads++; throw new Error(privateTripwire); };
+  const peer = Object.freeze({ name: 'Profile name', role: 'textbox', get value() { return refused(); }, get id() { return refused(); }, get automationId() { return refused(); }, get help() { return refused(); }, get bounds() { return refused(); } });
+  const snapshot = Object.freeze({ elements: Object.freeze([peer]), get generation() { return refused(); }, get unsupported() { return refused(); }, get unsupportedPeers() { return refused(); } });
+  const actual = readAuthoredPrivateProjection(snapshot);
+  assert.equal(reads, 0); assert.equal(actual.readFailed, false); assert.equal(actual.fields.profileName.present, true);
+  assert(!JSON.stringify(actual).includes(privateTripwire));
+});
+test('unknown matched role and throwing name getter produce only fixed diagnostic output', () => {
+  const unknown = readAuthoredPrivateProjection({ elements: [{ name: 'Profile name', role: privateTripwire }] });
+  assert.equal(unknown.fields.profileName.roles.other, 1); assert(!JSON.stringify(unknown).includes(privateTripwire));
+  const throws = readAuthoredPrivateProjection({ elements: [{ get name() { throw new Error(privateTripwire); } }] });
+  assert.equal(throws.readFailed, true); assert(!JSON.stringify(throws).includes(privateTripwire));
+  const missing = readAuthoredPrivateProjection({ elements: null });
+  assert.equal(missing.observed, false); assert.equal(missing.readFailed, true);
+});
+test('projection witness bounds peers and explicitly qualifies truncated label coverage', () => {
+  const elements = Array.from({ length: 4096 }, () => ({ name: 'Canonical session ID', role: 'text' }));
+  let beyond = 0; elements.push({ get name() { beyond++; throw new Error(privateTripwire); } });
+  const actual = readAuthoredPrivateProjection({ elements });
+  assert.equal(actual.truncated, true); assert.equal(actual.peersInspected, 4096); assert.equal(actual.fields.sessionId.matches, 4096); assert.equal(beyond, 0);
+  assert(!JSON.stringify(actual).includes(privateTripwire));
+});
+test('issuer diagnostic distinguishes fixed consent/client/signin/favicon paths with no private query retention', () => {
+  const observer = createPublicNetworkDiagnostics(publicEndpoints);
+  const paths = [['/api/auth/sign-in/email', 'SIGN_IN_EMAIL'], ['/api/auth/oauth2/consent', 'CONSENT_API'], ['/api/auth/oauth2/public-client', 'PUBLIC_CLIENT'], ['/favicon.ico', 'FAVICON']];
+  for (const [path, code] of paths) {
+    const url = 'http://127.0.0.1:8799' + path + '?client_id=' + privateTripwire;
+    assert.equal(observer.classify(url), code); observer.record('request', syntheticRequest(url, code === 'PUBLIC_CLIENT' ? 'GET' : 'POST', 'fetch'), null, 'PKCE');
+    observer.record('response', syntheticRequest(url), code === 'PUBLIC_CLIENT' ? 404 : 200, 'PKCE');
+  }
+  assert.equal(observer.state.boundaries.PUBLIC_CLIENT.statuses['404'], 1);
+  assert.equal(observer.classify('http://127.0.0.1:8799/api/auth/oauth2/public-client/extra?' + privateTripwire), 'ISSUER_OTHER');
+  assert.equal(observer.classify('https://foreign.example/api/auth/oauth2/public-client?' + privateTripwire), 'OTHER');
+  observer.consoleError({ text: () => 'Failed to load resource: ' + privateTripwire, location: () => ({ url: 'http://127.0.0.1:8799/api/auth/oauth2/public-client?client_id=' + privateTripwire }) });
+  assert.equal(observer.state.consoleBoundaries.PUBLIC_CLIENT, 1); assert(!JSON.stringify(observer.state).includes(privateTripwire));
+});
+
+test('actual snapshot wrapper captures the witness only during the original private-read stage and adds no reads', async () => {
+  const vm = require('node:vm'), body = fs.readFileSync(path.join(__dirname, 'run-local-auth-current.cjs'), 'utf8');
+  const start = body.indexOf('  async function snapshot() {'), end = body.indexOf('  async function native(', start);
+  assert(start >= 0 && end > start);
+  const actual = Object.freeze({ elements: Object.freeze([{ name: 'Profile name', role: 'textbox' }]) });
+  const names = ['READY', 'PKCE', 'PRIVATE_READS', 'SIGNOUT', 'TOKENLESS', 'NATIVE_CLOSE', 'BROWSER_CLOSE'];
+  let reads = 0, witnesses = 0;
+  const scope = { page: { evaluate: async () => { reads++; return actual; } }, active: names[0], names, diagnostic: { nativePrivateProjection: null },
+    readAuthoredPrivateProjection(snapshot) { witnesses++; assert.equal(snapshot, actual); return readAuthoredPrivateProjection(snapshot); } };
+  for (let index = 0; index < names.length; index++) {
+    scope.active = names[index]; const oldWitness = scope.diagnostic.nativePrivateProjection;
+    const value = await vm.runInNewContext(body.slice(start, end) + '\nsnapshot();', scope);
+    assert.equal(value, actual); assert.equal(reads, index + 1); assert.equal(witnesses, index >= 2 ? 1 : 0);
+    if (index !== 2) assert.equal(scope.diagnostic.nativePrivateProjection, oldWitness);
+  }
+  assert.equal(scope.diagnostic.nativePrivateProjection.fields.profileName.present, true);
 });

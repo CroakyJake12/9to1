@@ -107,6 +107,35 @@ function installPublicStatusObserver({ origin }) {
   capture();
 }
 
+function readAuthoredPrivateProjection(snapshot) {
+  // Whitelist authored labels only. Never retain arbitrary names, private values,
+  // IDs, help, geometry or the snapshot; this adds no native read or action.
+  const labels = [
+    ['profileName', 'Profile name'], ['accountId', 'Canonical account ID'],
+    ['sessionId', 'Canonical session ID'], ['profileRevision', 'Current profile revision']
+  ];
+  const result = { observed: false, readFailed: false, peersInspected: 0, truncated: false,
+    fields: Object.fromEntries(labels.map(([key]) => [key, { present: false, matches: 0,
+      roles: { text: 0, textbox: 0, button: 0, other: 0 } }])) };
+  try {
+    if (!Array.isArray(snapshot?.elements)) { result.readFailed = true; return result; }
+    result.observed = true;
+    const limit = Math.min(snapshot.elements.length, 4096);
+    result.truncated = snapshot.elements.length > limit;
+    for (let index = 0; index < limit; index++) {
+      const peer = snapshot.elements[index];
+      result.peersInspected++;
+      const label = labels.find(([, name]) => peer?.name === name);
+      if (!label) continue;
+      const field = result.fields[label[0]];
+      field.present = true; field.matches++;
+      const role = ['text', 'textbox', 'button'].includes(peer.role) ? peer.role : 'other';
+      field.roles[role]++;
+    }
+  } catch { result.readFailed = true; }
+  return result;
+}
+
 function createPublicNetworkDiagnostics(endpoints) {
   // These observers never retain URLs, queries, bodies, headers or raw errors.
   const state = { boundaries: {}, consoleCodes: {}, consoleBoundaries: {}, saturated: false };
@@ -119,7 +148,8 @@ function createPublicNetworkDiagnostics(endpoints) {
       if (url.origin !== issuerOrigin) return 'OTHER';
       const exact = [[endpoints.issuer + '/.well-known/openid-configuration', 'DISCOVERY'], [endpoints.jwks, 'JWKS'], [endpoints.authorize, 'AUTHORIZE'], [endpoints.token, 'TOKEN']];
       for (const [endpoint, code] of exact) if (url.href.split('?')[0] === endpoint) return code;
-      const account = { '/api/account/current': 'CURRENT', '/api/account/profile': 'PROFILE', '/api/account/sessions': 'SESSIONS', '/api/account/signout': 'SIGNOUT' };
+      const account = { '/api/account/current': 'CURRENT', '/api/account/profile': 'PROFILE', '/api/account/sessions': 'SESSIONS', '/api/account/signout': 'SIGNOUT',
+        '/api/auth/sign-in/email': 'SIGN_IN_EMAIL', '/api/auth/oauth2/consent': 'CONSENT_API', '/api/auth/oauth2/public-client': 'PUBLIC_CLIENT', '/favicon.ico': 'FAVICON' };
       return account[url.pathname] || (['/sign-in', '/consent', '/account'].includes(url.pathname) ? 'ISSUER_DOCUMENT' : url.pathname === '/assets/auth-ui.js' ? 'ISSUER_UI' : 'ISSUER_OTHER');
     } catch { return 'OTHER'; }
   };
@@ -267,7 +297,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
   const mark = stage => { substep = stage; };
   const safeError = error => ({ stage: active, substep, type: ['Error', 'TypeError', 'AssertionError', 'TimeoutError'].includes(error?.name) ? error.name : 'Error', elapsedMs: Math.min(240000, Math.max(0, Date.now() - started)) });
   const observed = { discovery: 0, jwks: 0, authorize: 0, callback: 0, token: 0, current: 0, profile: 0, sessions: 0, signout: 0, apiRequests: 0, protocolValid: true, sameSubject: true };
-  const diagnostic = { socketTempRoot: null, launchError: null, formError: null, fetchReceiver: null, popupOpened: false, popupClosed: false, popupClosePhase: 'NOT_OBSERVED', popupNavigations: { blank: 0, issuer: 0, client: 0, other: 0 }, discoveryRequests: 0, discoveryResponses: 0, discoveryStatusCounts: {}, discoveryFinished: 0, discoveryFailed: 0, publicStatusCodes: [], publicStatusTruncated: false, publicStatusReadFailed: false, network: null };
+  const diagnostic = { socketTempRoot: null, launchError: null, formError: null, fetchReceiver: null, popupOpened: false, popupClosed: false, popupClosePhase: 'NOT_OBSERVED', popupNavigations: { blank: 0, issuer: 0, client: 0, other: 0 }, discoveryRequests: 0, discoveryResponses: 0, discoveryStatusCounts: {}, discoveryFinished: 0, discoveryFailed: 0, publicStatusCodes: [], publicStatusTruncated: false, publicStatusReadFailed: false, network: null, nativePrivateProjection: null };
   const popupPhases = new Set(['actual-issuer-signin-form', 'actual-issuer-consent', 'actual-callback-exchange-and-broker-close']);
   async function capturePublicStatus() {
     if (!page || page.isClosed()) { diagnostic.publicStatusReadFailed = true; return; }
@@ -281,7 +311,11 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
   const pending = new Set();
   let state, nonce, challenge, callbackCode;
   async function drainObservations() { while (pending.size) await Promise.all([...pending]); }
-  async function snapshot() { return page.evaluate(async () => { const runtime = getDotnetRuntime(0); const exports = await runtime.getAssemblyExports(runtime.getConfig().mainAssemblyName); return JSON.parse(exports.NineToOne.Web.Program.ReadAccessibility()); }); }
+  async function snapshot() {
+    const actual = await page.evaluate(async () => { const runtime = getDotnetRuntime(0); const exports = await runtime.getAssemblyExports(runtime.getConfig().mainAssemblyName); return JSON.parse(exports.NineToOne.Web.Program.ReadAccessibility()); });
+    if (active === names[2]) diagnostic.nativePrivateProjection = readAuthoredPrivateProjection(actual);
+    return actual;
+  }
   async function native(operation, id) { return page.evaluate(async ({ operation, id }) => { const runtime = getDotnetRuntime(0); const exports = await runtime.getAssemblyExports(runtime.getConfig().mainAssemblyName); const owner = exports.NineToOne.Web.Program; return operation === 'stale' ? owner.PerformAccessibility(id, 'invoke', null) : await owner[operation](); }, { operation, id }); }
   async function wait(predicate, timeout = 15000) {
     const deadline = Date.now() + timeout;
@@ -490,5 +524,5 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     state = nonce = challenge = callbackCode = null;
   }
 }
-module.exports = { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver, createPublicNetworkDiagnostics };
+module.exports = { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver, createPublicNetworkDiagnostics, readAuthoredPrivateProjection };
 if (require.main === module) run(...process.argv.slice(2)).catch(() => { console.log(JSON.stringify({ status: 'FAIL', stage: 'bounded-runner' })); process.exitCode = 1; });
