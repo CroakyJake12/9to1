@@ -77,6 +77,56 @@ var failures = await session.Dispatch(() =>
         var buttons = controls.OfType<Button>().Where(c => c.IsEffectivelyVisible
             && c.Tag is string && CuiRuntimeIdentity.GetStableId(c) is not null).ToArray();
         var inputs = controls.OfType<TextBox>().Where(c => c.IsEffectivelyVisible).ToArray();
+        // Diagnostic-only public visual/frame capture. No geometry checks or layout writes.
+        object Number(double value) => double.IsFinite(value) ? value : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        object Box(Rect value) => new { X = Number(value.X), Y = Number(value.Y), Width = Number(value.Width), Height = Number(value.Height) };
+        bool FiniteBox(Rect value) => double.IsFinite(value.X) && double.IsFinite(value.Y) && double.IsFinite(value.Width) && double.IsFinite(value.Height);
+        Rect? RelativeBox(Control control, Control target)
+        {
+            var point = control.TranslatePoint(default, target);
+            return point.HasValue ? new Rect(point.Value, control.Bounds.Size) : null;
+        }
+        object? RelativeBoxData(Control control, Control target) => RelativeBox(control, target) is Rect value ? Box(value) : null;
+        object? ClipData(Control control)
+        {
+            var geometry = control.Clip;
+            if (geometry is null) return null;
+            var transform = geometry.Transform?.Value;
+            return new { type = geometry.GetType().FullName, bounds = Box(geometry.Bounds),
+                transform = transform.HasValue ? new { M11 = Number(transform.Value.M11), M12 = Number(transform.Value.M12),
+                    M21 = Number(transform.Value.M21), M22 = Number(transform.Value.M22), M31 = Number(transform.Value.M31), M32 = Number(transform.Value.M32) } : null,
+                qualification = "Public geometry type/bounds/transform; arbitrary path fill is not reconstructed from bounds." };
+        }
+        object FrameData(Control control) => new {
+            control.Name, type = control.GetType().FullName, stableId = CuiRuntimeIdentity.GetStableId(control),
+            bounds = Box(control.Bounds), inRoot = RelativeBoxData(control, root), control.ClipToBounds, clip = ClipData(control),
+            control.IsMeasureValid, control.IsArrangeValid, control.IsVisible, control.IsEffectivelyVisible,
+            width = Number(control.Width), height = Number(control.Height), minWidth = Number(control.MinWidth), maxWidth = Number(control.MaxWidth),
+            minHeight = Number(control.MinHeight), maxHeight = Number(control.MaxHeight), control.Margin,
+            padding = control switch { Border border => (Thickness?)border.Padding, TemplatedControl templated => (Thickness?)templated.Padding,
+                TextBlock text => (Thickness?)text.Padding, _ => null }
+        };
+        var diagnosticLocalScrolls = controls.OfType<ScrollViewer>().Where(c => c.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto
+            && c.Content is Control content && (content.Name == "wave-waveform-scroll"
+                || content.GetVisualDescendants().OfType<Control>().Any(x => x.Name == "wave-waveform-scroll"))).ToArray();
+        var localScrollDiagnostics = diagnosticLocalScrolls.Select(local => {
+            var content = (Control)local.Content!;
+            var children = content.GetVisualDescendants().OfType<Control>().ToArray();
+            var actualRects = children.Select(child => RelativeBox(child, content)).ToArray();
+            var finiteRects = actualRects.Where(rect => rect.HasValue && FiniteBox(rect.Value)).Select(rect => rect!.Value).ToArray();
+            var minimumX = finiteRects.Length > 0 ? finiteRects.Min(rect => rect.X) : 0;
+            var minimumY = finiteRects.Length > 0 ? finiteRects.Min(rect => rect.Y) : 0;
+            var maximumRight = finiteRects.Length > 0 ? finiteRects.Max(rect => rect.Right) : 0;
+            var maximumBottom = finiteRects.Length > 0 ? finiteRects.Max(rect => rect.Bottom) : 0;
+            return new { frame = FrameData(local), extent = new { Width = Number(local.Extent.Width), Height = Number(local.Extent.Height) },
+                viewport = new { Width = Number(local.Viewport.Width), Height = Number(local.Viewport.Height) },
+                offset = new { X = Number(local.Offset.X), Y = Number(local.Offset.Y) }, local.HorizontalScrollBarVisibility, local.VerticalScrollBarVisibility,
+                content = FrameData(content), childCount = children.Length,
+                finiteAggregate = new { finiteCount = finiteRects.Length, unavailableOrNonfiniteCount = actualRects.Length - finiteRects.Length,
+                    bounds = finiteRects.Length > 0 ? Box(new Rect(minimumX, minimumY, maximumRight - minimumX, maximumBottom - minimumY)) : null },
+                children = children.Select(child => new { child.Name, type = child.GetType().FullName,
+                    bounds = Box(child.Bounds), inContent = RelativeBoxData(child, content), inRoot = RelativeBoxData(child, root) }).ToArray() };
+        }).ToArray();
         var texts = controls.OfType<TextBlock>().Where(c => c.IsEffectivelyVisible && !string.IsNullOrEmpty(c.Text)).Select(c => new {
             text = c.Text!, bounds = InRoot(c), width = c.Bounds.Width, height = c.Bounds.Height,
             valid = c.IsMeasureValid && c.IsArrangeValid, complete = c.TextLayout.TextLines.Sum(l => l.Length),
@@ -93,7 +143,10 @@ var failures = await session.Dispatch(() =>
                     && (long)l.FirstTextSourceIndex + l.Length <= c.Text!.Length
                     ? c.Text!.Substring(l.FirstTextSourceIndex, l.Length) : null
             }).ToArray(),
-            glyphs = c.TextLayout.HitTestTextRange(0, c.Text!.Length).ToArray(), padding = c.Padding }).ToArray();
+            glyphs = c.TextLayout.HitTestTextRange(0, c.Text!.Length).ToArray(), padding = c.Padding,
+            paintFrame = FrameData(c),
+            nearestButton = c.GetVisualAncestors().OfType<Button>().FirstOrDefault() is Button captionButton ? FrameData(captionButton) : null,
+            controlAncestors = c.GetVisualAncestors().OfType<Control>().Select(FrameData).ToArray() }).ToArray();
         Check("Actual native client is requested width", Math.Abs(window.ClientSize.Width - width) < 0.1);
         Check("Outer policy is opt-in only", scroll.HorizontalScrollBarVisibility == (optIn && policyIndex >= 0 ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto));
         if (optIn)
@@ -121,7 +174,7 @@ var failures = await session.Dispatch(() =>
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         File.WriteAllText(output, JsonSerializer.Serialize(new { scope = "Native geometry/font enlargement UNIT; scripted public projection only; no Wave action/storage/audio/browser/zoom acceptance", width, height, fontFactor, nativeFonts = fonts.Select(f => new { f.Control.Name, before = f.Before, actual = f.Read() }), optIn, policyPresent = policyIndex >= 0, checks, failures = failed,
             nativeClient = window.ClientSize, extent = scroll.Extent, viewport = scroll.Viewport, root = root.Bounds,
-            texts, buttons = buttons.Select(b => new { b.Name, bounds = InRoot(b), b.IsEnabled }), inputs = inputs.Select(c => new { c.Name, bounds = InRoot(c) }) }, new JsonSerializerOptions { WriteIndented = true }));
+            localScrollDiagnostics, texts, buttons = buttons.Select(b => new { b.Name, bounds = InRoot(b), b.IsEnabled }), inputs = inputs.Select(c => new { c.Name, bounds = InRoot(c) }) }, new JsonSerializerOptions { WriteIndented = true }));
         return failed;
     }
     finally { app.ResetPrivateContext(); window.Content = null; window.Close(); }
