@@ -23,6 +23,7 @@
     <ProjectReference Include="$(WriteOwnerRoot)/Haven.UI/Haven.UI.csproj" />
     <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <AvaloniaResource Include="$(WriteOwnerRoot)/Haven.Desktop/Assets/Fonts/MontserratStatic/*.ttf" Link="Assets/Fonts/MontserratStatic/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(WriteOwnerRoot)/Haven.Desktop/Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
   </ItemGroup>
   <!-- Existing pinned upstream asset/compiler targets preserve the AssetLoader
        resource format. The product shell itself remains Write.cui. -->
