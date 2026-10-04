@@ -1,0 +1,48 @@
+{
+  "status": "ACK_FOR_ROOT_SINGLE_BOUNDED_DIAGNOSTIC_AUTH7_EXECUTION",
+  "scope": "Independent public generated binding/argv/source/dependency/asset/custodian and restrictive metadata review only; no private READY contents or TLS key read, issuer/browser invocation.",
+  "originalIssuerTtyOwnedOnlyByRoot": 7148,
+  "producerAndFixture": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "testSource": "dde012fa7c73b966bbc204aff2570566c890261e",
+  "binding": {
+    "path": "/tmp/team-c-root-owned-auth-execution-df547b5c-diagnostic-dde012/public-binding.json",
+    "bytes": 27801,
+    "sha256": "5ded09e40e3f3af5a4e5a8a451c80d8a43019eb1e51ca5ba32db84dc9b1be8b0"
+  },
+  "plan": {
+    "path": "/tmp/team-c-root-owned-auth-execution-df547b5c-diagnostic-dde012/plan.json",
+    "bytes": 1240848,
+    "sha256": "24451a37a16a742c5716db02e959ba5ccfc222711fab496e624cc75ea1458687",
+    "regularActualPhysicalPinsVerified": 5387,
+    "maximumSeconds": 240,
+    "maximumOutputAndTemporaryBytes": 192000000
+  },
+  "invocation": {
+    "path": "/tmp/team-c-root-owned-auth-execution-df547b5c-diagnostic-dde012/invocation.json",
+    "bytes": 2097,
+    "sha256": "bff63226aca4dd50bab18764016a131ed4bb7801ccfb85784cd0a58db4a69dc7",
+    "exactExistingKernelBrowserCustodianArgv": true,
+    "diagnosticEnvironmentClearedBeforeNode": true
+  },
+  "criticalBodyChecks": {
+    "consumer": 13,
+    "issuer": 92,
+    "separateActualGitHeadsExplicit": true,
+    "originalSevenRuntimeAssertionsPreserved": true
+  },
+  "actualPublicAssets": {
+    "count": 285,
+    "bytes": 59201582,
+    "onlyPublishRootChangedInSeparateLocalManifest": true,
+    "originalTuplePathsAndHashesUnchanged": true
+  },
+  "freshOwnOpaqueReadyPathCarriedOnly": true,
+  "privateTlsKeyMetadataMode600UIDIdentityUnchangedOnly": true,
+  "dependencyReuse": "Existing explicit reviewed node_modules link and every available regular dependency/tool body pinned; no install/chmod/shared cache change. Read-only intended use, not enforced read-only mount.",
+  "custodyAndCleanup": "Root must hold original7148 PTY through browser run, then stop newline on that same session and verify strict original family reap/disappearance/final exit. Browser custody distinct, unchanged runner and kernel identities; no reconstructed port/PID authority.",
+  "limitations": [
+    "Diagnostics may establish request/status/popup/receiver behavior but never replace actual PKCE/JOSE/subject/native assertions.",
+    "Original73 failure and original88463 stop/counter interpretation correction remain preserved.",
+    "No hosted/.NET RSA/auth_revision/provider/global/installedHome acceptance inferred."
+  ]
+}

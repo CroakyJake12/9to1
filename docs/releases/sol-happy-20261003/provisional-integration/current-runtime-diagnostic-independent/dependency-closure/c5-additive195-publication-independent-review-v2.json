@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent additive evidence publication reviewer",
+  "evidenceCommit": "b012178230e0d6b15ab8120eba169bda8a1e7454",
+  "previousFrozenCommit": "c32c46405452ac9be10eafcf54757177e2c10b35",
+  "indexSha256": "1413f28f2299428cbe6ccfe6925d6a6052b853c2aa17228a4e9cde422aa3a27c",
+  "payloads": 549,
+  "totalBytes": 84054416,
+  "newPayloadsAudited": 195,
+  "old354BodiesModeBlobsAndEntryMetadata": "UNCHANGED",
+  "newPayloadRegularUniqueSizeSHA": "PASS",
+  "losslessGzipOriginalsVerified": 25,
+  "jsonSchemasParsed": 91,
+  "originalTRXsParsed": 4,
+  "embeddedTraceZIPs": [
+    {
+      "path": "hosted-web-df547-retained-success/browser/raw/picture-final-process.zip",
+      "members": 129,
+      "crcAndSecretScan": "PASS"
+    },
+    {
+      "path": "hosted-web-df547-retained-success/browser/raw/picture-first-process.zip",
+      "members": 123,
+      "crcAndSecretScan": "PASS"
+    }
+  ],
+  "originalRawByteMappingsVerified": 176,
+  "remainingCuratedMetadataPaths": [
+    "hosted-web-df547-retained-success/acquire-verify-original-hosted-artifacts.py",
+    "hosted-web-df547-retained-success/publication-qualification.json",
+    "motion-original-a975/selected-verification.json",
+    "normal-infrastructure-434-plugin-temp/selected-verification.json"
+  ],
+  "exactC6CurrentRuntimePeers": "Motion/plugin/full434 copies exact",
+  "scope": "Additive Motion originalONE/currentnative5-project; exactdf4548/publicmanifestsealpartsmetadata/original9; original27dd433/1 and4544D4R4 then5ec434; completedtask-local cache retirement inventories",
+  "privacy": "No secret-pattern/private key/credential/signed download URL found in new bodies,decompressed originals or embedded trace members. No runtime DLL/private fixture/model/profile/issuersecret or originalcompiledpublicZIP/parts/assets copied. Controlled literalPicturefixtureIDs/GPS/sourcebase64/hash metadata retained. Additional case-insensitive signed URL query credential scan passed in curated metadata bodies.",
+  "verdict": "ACK additive195 safe public payloads and exact index conservation",
+  "qualifications": [
+    "Actual runtime/source/compiledtuple custody reviewed separately without rerun; this is frozen evidence publication audit only.",
+    "New officialdf originalpayload readback proved through both immutable partcontainers,not wholecontainerdownload; copied packet retains publicmanifest/seal/partsmetadata and traces,not36MBcompiledpublicZIP or partbodies.",
+    "Original27ddfailure and previousce50/7ded/native negatives remain unchanged.",
+    "MotionRender/Engine/Export false and held provider/fullApp/Windows/account/installedHome/global acceptance qualifications remain preserved."
+  ],
+  "additionalRawMetadataMappingsVerified": 15,
+  "additionalMappedPaths": [
+    "completed-private-cache-retirement/retirement.json",
+    "completed-private-cache-retirement/team-c-c5-mail-original-89cd-20261004-http-inventory.json.gz",
+    "completed-private-cache-retirement/team-c-c5-mail-original-89cd-20261004-nuget-inventory.json.gz",
+    "completed-private-cache-retirement/team-c-c5-mail-original-89cd-20261004-plugins-inventory.json.gz",
+    "completed-private-cache-retirement/team-c-c5-maps-original-ef1-20261004-setup-corrected-http-inventory.json.gz",
+    "completed-private-cache-retirement/team-c-c5-maps-original-ef1-20261004-setup-corrected-nuget-inventory.json.gz",
+    "completed-private-cache-retirement/team-c-c5-maps-original-ef1-20261004-setup-corrected-plugins-inventory.json.gz",
+    "motion-original-a975/proposal/c1-source-proposal.json.gz",
+    "motion-original-a975/proposal/c4-source-review.json",
+    "motion-original-a975/proposal/c6-pre-invocation.json",
+    "motion-original-a975/proposal/driver.log",
+    "motion-original-a975/proposal/guarded-source-before.json",
+    "motion-original-a975/proposal/invocation.json",
+    "motion-original-a975/proposal/native-driver.log",
+    "motion-original-a975/run-native-review-orchestration.py"
+  ],
+  "selectedQualificationAndRetirementSchemaReadback": "PASS; actual retained producer tuple/current runtime/source/scope counts agree with separate C6 readbacks; six completed-only cache inventories original hash/sizes and absent private cache roots verified, compiled runtime preserved"
+}

@@ -1,0 +1,73 @@
+name: Team C immutable Canvas native workflow controls (unaccepted)
+on:
+  push:
+    branches: [team-c/sol-happy-c3-canvas-uia-providers-20261004]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: team-c-canvas-native-workflow-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  packaged-ui:
+    runs-on: windows-2022
+    timeout-minutes: 12
+    env:
+      GIT_OPTIONAL_LOCKS: '0'
+    steps:
+      - name: Preserve exact source line endings
+        shell: powershell
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable original producer and read-only inspector metadata
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $c = Get-Content -Raw .github/validation/canvas-packaged-ui-controls.json | ConvertFrom-Json
+          if ($env:GITHUB_REPOSITORY -cne $c.repository) { throw 'Wrong repository.' }
+          $headers = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28' }
+          $base = "https://api.github.com/repos/$($c.repository)/actions"
+          foreach ($expected in $c.artifacts) {
+            $run = Invoke-RestMethod -Headers $headers -Uri "$base/runs/$($expected.runId)"
+            if ($run.head_sha -cne $expected.headSha) { throw 'Pinned original run source mismatch.' }
+            $a = Invoke-RestMethod -Headers $headers -Uri "$base/artifacts/$($expected.id)"
+            if ($a.id -ne $expected.id -or $a.name -cne $expected.name -or $a.size_in_bytes -ne $expected.size_in_bytes -or $a.digest -cne $expected.digest -or $a.expired -or $a.workflow_run.id -ne $expected.runId -or $a.workflow_run.head_sha -cne $expected.headSha) { throw 'Immutable original artifact tuple mismatch or expiry.' }
+          }
+      - name: Download exact original package inside Windows runner
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 37203799923
+          artifact-ids: 11304710012
+          path: ${{ runner.temp }}/canvas-package-input
+      - name: Download exact original read-only manifest observations
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 37205514551
+          artifact-ids: 11303769280
+          path: ${{ runner.temp }}/canvas-observation-input
+      - name: Observe actual native Files setup, Canvas creation, stroke commit and reopen
+        shell: powershell
+        env:
+          PROBE_OUTPUT: ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          & .github/scripts/canvas-packaged-ui-controls.ps1 -PackageInput '${{ runner.temp }}/canvas-package-input' -ObservationInput '${{ runner.temp }}/canvas-observation-input' -OutputDirectory $env:PROBE_OUTPUT
+          exit $LASTEXITCODE
+      - name: Retain original bounded observations and failures only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-native-workflow-unaccepted-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/result.json
+            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.log
+            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.png
+          if-no-files-found: warn
+          retention-days: 7

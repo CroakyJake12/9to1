@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "unchangedWholeOldFunctions": [
+    "Accept-OwnRequest",
+    "Capture-Window",
+    "Check",
+    "Close-Canvas",
+    "Drain-OwnedLogs",
+    "Draw-OwnStroke",
+    "Find-InputFile",
+    "Find-Unique",
+    "Invoke-Button",
+    "Is-InSurface",
+    "Observe-Control",
+    "Position-Window",
+    "Read-BoundedJson",
+    "Read-CurrentCanvas",
+    "Record-CanvasState",
+    "Require-OwnedControl",
+    "Start-Canvas",
+    "Type-Edit",
+    "Wait-Observed",
+    "Write-Result"
+  ],
+  "changedOldFunction": "Choose-OwnFolder",
+  "addedFunctions": [
+    "Cancel-OwnPickerOnFailure",
+    "Find-OwnedForegroundPicker",
+    "Observe-OwnedPicker",
+    "Record-OwnedPickerTreeWitness",
+    "Test-OwnedPickerSnapshot"
+  ],
+  "parserErrors": 0,
+  "qualification": "Actual whole-function AST bodies compared; original Choose lookup replaced by observed foreground picker guard. Main criterion/body conservation checked separately."
+}

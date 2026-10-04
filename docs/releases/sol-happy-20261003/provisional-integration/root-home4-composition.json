@@ -1,0 +1,34 @@
+{
+  "schema": "root-home-four-whole-owner-source-composition/v1",
+  "ownerSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+  "receiverProposal": "93293d26cf24e1d4b4639f475ca91fec1c5d7888",
+  "before": "c2b4e4946d223af07a6c2aa11b9bc6c3bd09d25e",
+  "after": "323ccff8c9cc9b020d511379388bd57a569a138b",
+  "outsideGitModeBlobEntriesConserved": 16500,
+  "paths": [
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "gitModeTypeBlob": "100644 blob df29084cc4e7ef680d7a19cd1009ccde250a77d7",
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "gitModeTypeBlob": "100644 blob cf80699cbebefed7452a39b77dd537e350790081",
+      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "gitModeTypeBlob": "100644 blob 09f4d6e17f68a4f532a4974c7632ebb53d1612e8",
+      "sha256": "bd1c87199689d36f43020830cad93001bd613b0347c1c015fc7384db93723b38"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "gitModeTypeBlob": "100644 blob 103ea358357b14cd8ffca3a5f1a1ad4c95cef7c0",
+      "sha256": "cf95cd6e90782ba9c2371d07e1376bab9a84c72158e694c9cf163821711726e9"
+    }
+  ],
+  "nativeOwningCases": 6,
+  "nativeTestExecution": "NOT_RUN Windows recipe being prepared",
+  "actualRealQuit": "Existing owned visible HWND original Ctrl+Shift+Q; default shell close intentionally keeps Core alive",
+  "acceptance": "UNACCEPTED; no new package/installed bootstrap/SDK-free/signing/delivery claimed"
+}
