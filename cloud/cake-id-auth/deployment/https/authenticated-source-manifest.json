@@ -1,0 +1,27 @@
+{
+  "candidate": "1f8a75a0c2a522625d3473507f02ed81a84064e4",
+  "producer": "d643d723d15ec20d70263a408b0cfefbd5be69ae",
+  "sha256": {
+    "deployment/https/prepare-fixture.mjs": "4c410a07f34a9d77d5e93f217ac0ed6c172335118f210a3d37d8b5522a21e343",
+    "deployment/https/authenticated.mjs": "630e5a0948fdfbe53444c5c4fc9a82f27569994e98c934dd85960103d67b0034",
+    "deployment/https/authenticated.test.mjs": "d68a06eb030ef02d6f09588b1d41d491568e2ebcdf6deaa0e519d44b73ddb570",
+    "deployment/https/AUTHENTICATED.md": "238dbf1a74ff28f6e206502c70b72c96d6600d6bff1f4bc4e27c3dbef4e996dc",
+    "src/index.ts": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+    "src/auth.ts": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
+    "src/resource-api.ts": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+    "src/email.ts": "ed288123118c4a65ecb6037cfa4d66b5c875a24268906e575354ce14ab940cec",
+    "migrations/0000_cake_guardrails.sql": "8cd4b84109d4deab88d531b125d59a8a3cf1d87c0cb1abd766bc7ff4cdf5245b",
+    "migrations/0001_better_auth.sql": "7145e80b0d4887c785b7e9897ebe36f8b505777ff06df811781faead6f89631c",
+    "package.json": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228",
+    "package-lock.json": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098"
+  },
+  "producerSchemaPackageUnchanged": true,
+  "offlineCommands": [
+    "node --check deployment/https/authenticated.mjs",
+    "node --check deployment/https/prepare-fixture.mjs",
+    "node deployment/https/authenticated.test.mjs"
+  ],
+  "cwd": "/workspace/team-c/c2-https-validation/cloud/cake-id-auth",
+  "offlineExitCode": 0,
+  "actualRemoteMutationOrJourney": "NOT_RUN"
+}
