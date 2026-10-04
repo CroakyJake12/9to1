@@ -19,7 +19,6 @@ jobs:
       DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
       MSBUILDDISABLENODEREUSE: "1"
       PYTHONDONTWRITEBYTECODE: "1"
-      PLAYWRIGHT_MODULE: ${{ runner.temp }}/pb-tools/node_modules/playwright
     steps:
       - name: Check out exact source
         uses: actions/checkout@v4
@@ -44,10 +43,14 @@ jobs:
           --expected-commit '${{ github.sha }}'
           --output "$RUNNER_TEMP/pb-publish"
       - name: Install maintained Playwright and actual Chromium
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/pb-tools/node_modules/playwright
         run: |
           npm install --prefix "$RUNNER_TEMP/pb-tools" --ignore-scripts --no-package-lock --no-audit --no-fund playwright@1.62.0
           node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium
       - name: Run exact real local Picture workflow
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/pb-tools/node_modules/playwright
         run: >-
           python3 apps/Web/Tests/ci/run-picture-browser.py
           --expected-commit '${{ github.sha }}'
