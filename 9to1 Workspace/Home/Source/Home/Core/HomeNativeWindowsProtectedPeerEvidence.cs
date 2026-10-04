@@ -164,7 +164,7 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
         List<Exception> cleanup = [];
         try
         {
-            nativeFile = Marshal.AllocHGlobal(Marshal.SizeOf<TrustFile>());
+            nativeFile = Marshal.AllocHGlobal(Marshal.SizeOf<NativeTrustFile>());
             // Pointer fields are initialized explicitly. No partial LPWSTR marshalling
             // owns a second allocation if native-structure initialization fails.
             var nativePath = Marshal.StringToHGlobalUni(file.FilePath);
