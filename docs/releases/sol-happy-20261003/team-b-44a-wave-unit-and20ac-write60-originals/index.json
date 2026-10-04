@@ -1,0 +1,2461 @@
+{
+  "state": "ROOT_EXACT_ORIGINAL_AND_SOURCE_CUSTODY_SOURCE07_PREREQUISITE_FAILURE_ORIGINAL60_SUCCESS",
+  "UTC": "2026-10-04T19:45:21.302511+00:00",
+  "branch": "artifact/team-b-44a-wave-unit-and20ac-write60-originals-20261004",
+  "base": "400ecdf1ec36a3d28e742beeba28e223f3ab0d14",
+  "archives": [
+    {
+      "kind": "wave-source07-proposed",
+      "artifact": 11313496378,
+      "sourceCommit": "44a6403cf1683e8b54105d053a29cb15872a0b9f",
+      "bytes": 370959,
+      "sha256": "c29a2adc69792a2db26b64db9b4f7fadd14b09432bbe3f58a3961fb745094a57",
+      "gitBlob": "2f158572d5b384012658eda7cae536cb31d8d6c5",
+      "path": "docs/releases/sol-happy-20261003/team-b-44a-wave-unit-and20ac-write60-originals/wave-source07-proposed.zip",
+      "temporarySourcePath": "/workspace/attachments/036baadd-23d2-4772-9145-801c14f0913e/44a-wave-source07-proposed-original.zip",
+      "members": [
+        {
+          "path": "build.log",
+          "bytes": 6926,
+          "sha256": "36fd158cf2ea2422a8dc19ff77bddc7589d7554f0c62185ecf38b0fad70e334c",
+          "crc32": 4276359219,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2979,
+          "sha256": "5b3a661f0c4ebac01b080ae13692e4867b02920d3973e68a5b5192f6f69ad891",
+          "crc32": 2121015246,
+          "mode": 33188
+        },
+        {
+          "path": "commands.json",
+          "bytes": 11516,
+          "sha256": "548e71cc3b4e8805d34470765fc297031741016971431e651336513bb33a205b",
+          "crc32": 1248368561,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc32": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "26e1c0e3cb4c49bb7eb5c7f69730d54885594901df1b49770b464e2bd200163a",
+          "crc32": 2618044744,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": 0,
+          "mode": 33188
+        },
+        {
+          "path": "narrow.log",
+          "bytes": 28262,
+          "sha256": "e095006c10728b360686e7fb1f484ec6137ee5b2370b056459ae9a2eed2f5103",
+          "crc32": 1305218668,
+          "mode": 33188
+        },
+        {
+          "path": "native-submodule-pins.log",
+          "bytes": 202,
+          "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+          "crc32": 4050951216,
+          "mode": 33188
+        },
+        {
+          "path": "restore.log",
+          "bytes": 5654,
+          "sha256": "9f1e5491b8966e50a24abb4c47735ac9bbcf783223fce7916d08f0fc423c15d9",
+          "crc32": 956619765,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 1012,
+          "sha256": "0c60e8c1d8e931f4b315de5624b0512719364b3ac36c209a640e594de6e93386",
+          "crc32": 344073512,
+          "mode": 33188
+        },
+        {
+          "path": "selected-native-binary-after.json",
+          "bytes": 141358,
+          "sha256": "699482a169233aed16cf187b84d4bf260f96cb3a574960327f2a2f1f758caf39",
+          "crc32": 418531605,
+          "mode": 33188
+        },
+        {
+          "path": "selected-native-binary-before.json",
+          "bytes": 141358,
+          "sha256": "699482a169233aed16cf187b84d4bf260f96cb3a574960327f2a2f1f758caf39",
+          "crc32": 418531605,
+          "mode": 33188
+        },
+        {
+          "path": "selected-source-after.json",
+          "bytes": 7539,
+          "sha256": "5a85f6e4b698bc27e38f2e9dfa3cb768984c43a11caae51deb0f480630e138bf",
+          "crc32": 1698125150,
+          "mode": 33188
+        },
+        {
+          "path": "selected-source-before.json",
+          "bytes": 7539,
+          "sha256": "5a85f6e4b698bc27e38f2e9dfa3cb768984c43a11caae51deb0f480630e138bf",
+          "crc32": 1698125150,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 637,
+          "sha256": "dd161cd73a66f3576edbd10143b4dff758402d8688d408b788efe3bed7916241",
+          "crc32": 4229989806,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 673,
+          "sha256": "59f30d42ac822727a6374de082d1aab01210877776405273f54106dde52f80f8",
+          "crc32": 97235448,
+          "mode": 33188
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1307629,
+          "sha256": "5a72d4ef8f580fc75cd5eea7116c111cda4396dbe48032b2f31cb89e4899c21a",
+          "crc32": 3613486951,
+          "mode": 33188
+        }
+      ],
+      "result": {
+        "status": "FAIL",
+        "variant": "proposed",
+        "expectedGroups": 7,
+        "expectedChecks": 64,
+        "executed": 0,
+        "passed": 0,
+        "failed": 0,
+        "notRun": 64,
+        "groups": [],
+        "scope": "Actual native Render/parser/font/glyph geometry with scripted bindings and availability; dispatch always throws. Native font2 and viewport195 are NOT browser zoom. No Wave model/audio/storage/action/AT/full-parity acceptance.",
+        "sourceCommit": "44a6403cf1683e8b54105d053a29cb15872a0b9f",
+        "sourceLedgerSHA256": "5a85f6e4b698bc27e38f2e9dfa3cb768984c43a11caae51deb0f480630e138bf",
+        "driverSHA256": "4515e8c7fb5322ca4b4234b673a0f358ea9def4f640e99c72bbbeee86bd6ff9f",
+        "entrySHA256": "8d9b39f93e5f633e91e7b343dfe0d3fe975268f53973a02ddbe641af21b2b15e",
+        "apphostSHA256": "cc960c260be0a3319be2f99714904b7548913e5da7a039371f13fa642182a680",
+        "error": "RuntimeError('Native structured report absent/unbounded; no expected RED inferred: narrow')",
+        "selectedSourceAfterUnchanged": true,
+        "selectedBinaryAfterUnchanged": true
+      },
+      "criterionUnits": [
+        {
+          "name": "real-production-factory-font1-padding-allocation",
+          "passed": true,
+          "evidence": {
+            "captionPadding": {
+              "Left": 1,
+              "Top": 1,
+              "Right": 1,
+              "Bottom": 1,
+              "IsUniform": true
+            },
+            "verticalPadding": {
+              "Left": 1,
+              "Top": 1,
+              "Right": 1,
+              "Bottom": 1,
+              "IsUniform": true
+            },
+            "ordinaryPadding": {
+              "Left": 0,
+              "Top": 1,
+              "Right": 0,
+              "Bottom": 1,
+              "IsUniform": false
+            },
+            "caption": {
+              "Supported": true,
+              "SourceComplete": true,
+              "OwnPaintFits": true,
+              "RootAndAncestorPaintFits": true,
+              "Reasons": [],
+              "InkInText": [
+                {
+                  "X": 2,
+                  "Y": 3.5625,
+                  "Width": 77.46875,
+                  "Height": 14,
+                  "Position": {
+                    "X": 2,
+                    "Y": 3.5625
+                  },
+                  "Size": {
+                    "AspectRatio": 5.533482142857143,
+                    "Width": 77.46875,
+                    "Height": 14
+                  },
+                  "Right": 79.46875,
+                  "Bottom": 17.5625,
+                  "Left": 2,
+                  "Top": 3.5625,
+                  "TopLeft": {
+                    "X": 2,
+                    "Y": 3.5625
+                  },
+                  "TopRight": {
+                    "X": 79.46875,
+                    "Y": 3.5625
+                  },
+                  "BottomLeft": {
+                    "X": 2,
+                    "Y": 17.5625
+                  },
+                  "BottomRight": {
+                    "X": 79.46875,
+                    "Y": 17.5625
+                  },
+                  "Center": {
+                    "X": 40.734375,
+                    "Y": 10.5625
+                  }
+                }
+              ],
+              "ReconstructedSource": "Import WAV",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 10,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "Import WAV",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 0,
+                  "start": 10,
+                  "Length": 1,
+                  "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                  "terminalParagraphSentinel": true
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-caption",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 80,
+                    "Height": 19,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 4.2105263157894735,
+                      "Width": 80,
+                      "Height": 19
+                    },
+                    "Right": 80,
+                    "Bottom": 19,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 80,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 19
+                    },
+                    "BottomRight": {
+                      "X": 80,
+                      "Y": 19
+                    },
+                    "Center": {
+                      "X": 40,
+                      "Y": 9.5
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            },
+            "vertical": {
+              "Supported": true,
+              "SourceComplete": true,
+              "OwnPaintFits": true,
+              "RootAndAncestorPaintFits": true,
+              "Reasons": [],
+              "InkInText": [
+                {
+                  "X": 1,
+                  "Y": 3.5625,
+                  "Width": 113.25852272727273,
+                  "Height": 15,
+                  "Position": {
+                    "X": 1,
+                    "Y": 3.5625
+                  },
+                  "Size": {
+                    "AspectRatio": 7.550568181818182,
+                    "Width": 113.25852272727273,
+                    "Height": 15
+                  },
+                  "Right": 114.25852272727273,
+                  "Bottom": 18.5625,
+                  "Left": 1,
+                  "Top": 3.5625,
+                  "TopLeft": {
+                    "X": 1,
+                    "Y": 3.5625
+                  },
+                  "TopRight": {
+                    "X": 114.25852272727273,
+                    "Y": 3.5625
+                  },
+                  "BottomLeft": {
+                    "X": 1,
+                    "Y": 18.5625
+                  },
+                  "BottomRight": {
+                    "X": 114.25852272727273,
+                    "Y": 18.5625
+                  },
+                  "Center": {
+                    "X": 57.62926136363637,
+                    "Y": 11.0625
+                  }
+                }
+              ],
+              "ReconstructedSource": "Toggle track solo",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 17,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "Toggle track solo",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 0,
+                  "start": 17,
+                  "Length": 1,
+                  "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                  "terminalParagraphSentinel": true
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-vertical",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 116,
+                    "Height": 19,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 6.105263157894737,
+                      "Width": 116,
+                      "Height": 19
+                    },
+                    "Right": 116,
+                    "Bottom": 19,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 116,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 19
+                    },
+                    "BottomRight": {
+                      "X": 116,
+                      "Y": 19
+                    },
+                    "Center": {
+                      "X": 58,
+                      "Y": 9.5
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            },
+            "ordinary": {
+              "Supported": true,
+              "SourceComplete": true,
+              "OwnPaintFits": true,
+              "RootAndAncestorPaintFits": true,
+              "Reasons": [],
+              "InkInText": [
+                {
+                  "X": 0,
+                  "Y": 3.5625,
+                  "Width": 315.12499999999994,
+                  "Height": 14,
+                  "Position": {
+                    "X": 0,
+                    "Y": 3.5625
+                  },
+                  "Size": {
+                    "AspectRatio": 22.508928571428566,
+                    "Width": 315.12499999999994,
+                    "Height": 14
+                  },
+                  "Right": 315.12499999999994,
+                  "Bottom": 17.5625,
+                  "Left": 0,
+                  "Top": 3.5625,
+                  "TopLeft": {
+                    "X": 0,
+                    "Y": 3.5625
+                  },
+                  "TopRight": {
+                    "X": 315.12499999999994,
+                    "Y": 3.5625
+                  },
+                  "BottomLeft": {
+                    "X": 0,
+                    "Y": 17.5625
+                  },
+                  "BottomRight": {
+                    "X": 315.12499999999994,
+                    "Y": 17.5625
+                  },
+                  "Center": {
+                    "X": 157.56249999999997,
+                    "Y": 10.5625
+                  }
+                },
+                {
+                  "X": 0,
+                  "Y": 20.50568181818182,
+                  "Width": 226.04545454545456,
+                  "Height": 15,
+                  "Position": {
+                    "X": 0,
+                    "Y": 20.50568181818182
+                  },
+                  "Size": {
+                    "AspectRatio": 15.06969696969697,
+                    "Width": 226.04545454545456,
+                    "Height": 15
+                  },
+                  "Right": 226.04545454545456,
+                  "Bottom": 35.50568181818182,
+                  "Left": 0,
+                  "Top": 20.50568181818182,
+                  "TopLeft": {
+                    "X": 0,
+                    "Y": 20.50568181818182
+                  },
+                  "TopRight": {
+                    "X": 226.04545454545456,
+                    "Y": 20.50568181818182
+                  },
+                  "BottomLeft": {
+                    "X": 0,
+                    "Y": 35.50568181818182
+                  },
+                  "BottomRight": {
+                    "X": 226.04545454545456,
+                    "Y": 35.50568181818182
+                  },
+                  "Center": {
+                    "X": 113.02272727272728,
+                    "Y": 28.00568181818182
+                  }
+                }
+              ],
+              "ReconstructedSource": "Saved local project \u00b7 revision 12. This is scripted geometry data, not a save receipt.",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 52,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "Saved local project \u00b7 revision 12. This is scripted ",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 1,
+                  "start": 52,
+                  "length": 34,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "geometry data, not a save receipt.",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 1,
+                  "start": 86,
+                  "Length": 1,
+                  "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                  "terminalParagraphSentinel": true
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-ordinary",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 358,
+                    "Height": 36,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 9.944444444444445,
+                      "Width": 358,
+                      "Height": 36
+                    },
+                    "Right": 358,
+                    "Bottom": 36,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 358,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 36
+                    },
+                    "BottomRight": {
+                      "X": 358,
+                      "Y": 36
+                    },
+                    "Center": {
+                      "X": 179,
+                      "Y": 18
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            }
+          }
+        },
+        {
+          "name": "real-production-factory-font2-padding-allocation",
+          "passed": true,
+          "evidence": {
+            "captionPadding": {
+              "Left": 1,
+              "Top": 1,
+              "Right": 1,
+              "Bottom": 1,
+              "IsUniform": true
+            },
+            "verticalPadding": {
+              "Left": 1,
+              "Top": 1,
+              "Right": 1,
+              "Bottom": 1,
+              "IsUniform": true
+            },
+            "ordinaryPadding": {
+              "Left": 0,
+              "Top": 1,
+              "Right": 0,
+              "Bottom": 1,
+              "IsUniform": false
+            },
+            "caption": {
+              "Supported": true,
+              "SourceComplete": true,
+              "OwnPaintFits": true,
+              "RootAndAncestorPaintFits": true,
+              "Reasons": [],
+              "InkInText": [
+                {
+                  "X": 3,
+                  "Y": 7.125,
+                  "Width": 153.9375,
+                  "Height": 27,
+                  "Position": {
+                    "X": 3,
+                    "Y": 7.125
+                  },
+                  "Size": {
+                    "AspectRatio": 5.701388888888889,
+                    "Width": 153.9375,
+                    "Height": 27
+                  },
+                  "Right": 156.9375,
+                  "Bottom": 34.125,
+                  "Left": 3,
+                  "Top": 7.125,
+                  "TopLeft": {
+                    "X": 3,
+                    "Y": 7.125
+                  },
+                  "TopRight": {
+                    "X": 156.9375,
+                    "Y": 7.125
+                  },
+                  "BottomLeft": {
+                    "X": 3,
+                    "Y": 34.125
+                  },
+                  "BottomRight": {
+                    "X": 156.9375,
+                    "Y": 34.125
+                  },
+                  "Center": {
+                    "X": 79.96875,
+                    "Y": 20.625
+                  }
+                }
+              ],
+              "ReconstructedSource": "Import WAV",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 10,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "Import WAV",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 0,
+                  "start": 10,
+                  "Length": 1,
+                  "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                  "terminalParagraphSentinel": true
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-caption",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 158,
+                    "Height": 36,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 4.388888888888889,
+                      "Width": 158,
+                      "Height": 36
+                    },
+                    "Right": 158,
+                    "Bottom": 36,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 158,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 36
+                    },
+                    "BottomRight": {
+                      "X": 158,
+                      "Y": 36
+                    },
+                    "Center": {
+                      "X": 79,
+                      "Y": 18
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            },
+            "vertical": {
+              "Supported": true,
+              "SourceComplete": true,
+              "OwnPaintFits": true,
+              "RootAndAncestorPaintFits": true,
+              "Reasons": [],
+              "InkInText": [
+                {
+                  "X": 2,
+                  "Y": 7.125,
+                  "Width": 225.51704545454547,
+                  "Height": 28,
+                  "Position": {
+                    "X": 2,
+                    "Y": 7.125
+                  },
+                  "Size": {
+                    "AspectRatio": 8.054180194805195,
+                    "Width": 225.51704545454547,
+                    "Height": 28
+                  },
+                  "Right": 227.51704545454547,
+                  "Bottom": 35.125,
+                  "Left": 2,
+                  "Top": 7.125,
+                  "TopLeft": {
+                    "X": 2,
+                    "Y": 7.125
+                  },
+                  "TopRight": {
+                    "X": 227.51704545454547,
+                    "Y": 7.125
+                  },
+                  "BottomLeft": {
+                    "X": 2,
+                    "Y": 35.125
+                  },
+                  "BottomRight": {
+                    "X": 227.51704545454547,
+                    "Y": 35.125
+                  },
+                  "Center": {
+                    "X": 114.75852272727273,
+                    "Y": 21.125
+                  }
+                }
+              ],
+              "ReconstructedSource": "Toggle track solo",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 17,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "Toggle track solo",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 0,
+                  "start": 17,
+                  "Length": 1,
+                  "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                  "terminalParagraphSentinel": true
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-vertical",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 230,
+                    "Height": 36,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 6.388888888888889,
+                      "Width": 230,
+                      "Height": 36
+                    },
+                    "Right": 230,
+                    "Bottom": 36,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 230,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 36
+                    },
+                    "BottomRight": {
+                      "X": 230,
+                      "Y": 36
+                    },
+                    "Center": {
+                      "X": 115,
+                      "Y": 18
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            },
+            "ordinary": {
+              "Supported": true,
+              "SourceComplete": true,
+              "OwnPaintFits": true,
+              "RootAndAncestorPaintFits": true,
+              "Reasons": [],
+              "InkInText": [
+                {
+                  "X": 1,
+                  "Y": 7.125,
+                  "Width": 264.31818181818187,
+                  "Height": 27,
+                  "Position": {
+                    "X": 1,
+                    "Y": 7.125
+                  },
+                  "Size": {
+                    "AspectRatio": 9.78956228956229,
+                    "Width": 264.31818181818187,
+                    "Height": 27
+                  },
+                  "Right": 265.31818181818187,
+                  "Bottom": 34.125,
+                  "Left": 1,
+                  "Top": 7.125,
+                  "TopLeft": {
+                    "X": 1,
+                    "Y": 7.125
+                  },
+                  "TopRight": {
+                    "X": 265.31818181818187,
+                    "Y": 7.125
+                  },
+                  "BottomLeft": {
+                    "X": 1,
+                    "Y": 34.125
+                  },
+                  "BottomRight": {
+                    "X": 265.31818181818187,
+                    "Y": 34.125
+                  },
+                  "Center": {
+                    "X": 133.15909090909093,
+                    "Y": 20.625
+                  }
+                },
+                {
+                  "X": 2,
+                  "Y": 41.01136363636364,
+                  "Width": 352.34090909090907,
+                  "Height": 27,
+                  "Position": {
+                    "X": 2,
+                    "Y": 41.01136363636364
+                  },
+                  "Size": {
+                    "AspectRatio": 13.0496632996633,
+                    "Width": 352.34090909090907,
+                    "Height": 27
+                  },
+                  "Right": 354.34090909090907,
+                  "Bottom": 68.01136363636364,
+                  "Left": 2,
+                  "Top": 41.01136363636364,
+                  "TopLeft": {
+                    "X": 2,
+                    "Y": 41.01136363636364
+                  },
+                  "TopRight": {
+                    "X": 354.34090909090907,
+                    "Y": 41.01136363636364
+                  },
+                  "BottomLeft": {
+                    "X": 2,
+                    "Y": 68.01136363636364
+                  },
+                  "BottomRight": {
+                    "X": 354.34090909090907,
+                    "Y": 68.01136363636364
+                  },
+                  "Center": {
+                    "X": 178.17045454545453,
+                    "Y": 54.51136363636364
+                  }
+                },
+                {
+                  "X": 1,
+                  "Y": 74.89772727272728,
+                  "Width": 343.8352272727273,
+                  "Height": 28,
+                  "Position": {
+                    "X": 1,
+                    "Y": 74.89772727272728
+                  },
+                  "Size": {
+                    "AspectRatio": 12.279829545454547,
+                    "Width": 343.8352272727273,
+                    "Height": 28
+                  },
+                  "Right": 344.8352272727273,
+                  "Bottom": 102.89772727272728,
+                  "Left": 1,
+                  "Top": 74.89772727272728,
+                  "TopLeft": {
+                    "X": 1,
+                    "Y": 74.89772727272728
+                  },
+                  "TopRight": {
+                    "X": 344.8352272727273,
+                    "Y": 74.89772727272728
+                  },
+                  "BottomLeft": {
+                    "X": 1,
+                    "Y": 102.89772727272728
+                  },
+                  "BottomRight": {
+                    "X": 344.8352272727273,
+                    "Y": 102.89772727272728
+                  },
+                  "Center": {
+                    "X": 172.91761363636365,
+                    "Y": 88.89772727272728
+                  }
+                },
+                {
+                  "X": 2,
+                  "Y": 108.78409090909093,
+                  "Width": 96.07386363636364,
+                  "Height": 27,
+                  "Position": {
+                    "X": 2,
+                    "Y": 108.78409090909093
+                  },
+                  "Size": {
+                    "AspectRatio": 3.558291245791246,
+                    "Width": 96.07386363636364,
+                    "Height": 27
+                  },
+                  "Right": 98.07386363636364,
+                  "Bottom": 135.78409090909093,
+                  "Left": 2,
+                  "Top": 108.78409090909093,
+                  "TopLeft": {
+                    "X": 2,
+                    "Y": 108.78409090909093
+                  },
+                  "TopRight": {
+                    "X": 98.07386363636364,
+                    "Y": 108.78409090909093
+                  },
+                  "BottomLeft": {
+                    "X": 2,
+                    "Y": 135.78409090909093
+                  },
+                  "BottomRight": {
+                    "X": 98.07386363636364,
+                    "Y": 135.78409090909093
+                  },
+                  "Center": {
+                    "X": 50.03693181818182,
+                    "Y": 122.28409090909093
+                  }
+                }
+              ],
+              "ReconstructedSource": "Saved local project \u00b7 revision 12. This is scripted geometry data, not a save receipt.",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 22,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "Saved local project \u00b7 ",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 1,
+                  "start": 22,
+                  "length": 30,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "revision 12. This is scripted ",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 2,
+                  "start": 52,
+                  "length": 26,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "geometry data, not a save ",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 3,
+                  "start": 78,
+                  "length": 8,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "receipt.",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 3,
+                  "start": 86,
+                  "Length": 1,
+                  "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                  "terminalParagraphSentinel": true
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-ordinary",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 358,
+                    "Height": 138,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 2.5942028985507246,
+                      "Width": 358,
+                      "Height": 138
+                    },
+                    "Right": 358,
+                    "Bottom": 138,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 358,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 138
+                    },
+                    "BottomRight": {
+                      "X": 358,
+                      "Y": 138
+                    },
+                    "Center": {
+                      "X": 179,
+                      "Y": 69
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            }
+          }
+        },
+        {
+          "name": "real-native-font1-padding0-nonblank-clip-rejected",
+          "passed": true,
+          "evidence": {
+            "Supported": true,
+            "SourceComplete": true,
+            "OwnPaintFits": false,
+            "RootAndAncestorPaintFits": false,
+            "Reasons": [
+              "Actual ink exceeds clip: probe-caption"
+            ],
+            "InkInText": [
+              {
+                "X": 1,
+                "Y": 2.5625,
+                "Width": 77.46875,
+                "Height": 14,
+                "Position": {
+                  "X": 1,
+                  "Y": 2.5625
+                },
+                "Size": {
+                  "AspectRatio": 5.533482142857143,
+                  "Width": 77.46875,
+                  "Height": 14
+                },
+                "Right": 78.46875,
+                "Bottom": 16.5625,
+                "Left": 1,
+                "Top": 2.5625,
+                "TopLeft": {
+                  "X": 1,
+                  "Y": 2.5625
+                },
+                "TopRight": {
+                  "X": 78.46875,
+                  "Y": 2.5625
+                },
+                "BottomLeft": {
+                  "X": 1,
+                  "Y": 16.5625
+                },
+                "BottomRight": {
+                  "X": 78.46875,
+                  "Y": 16.5625
+                },
+                "Center": {
+                  "X": 39.734375,
+                  "Y": 9.5625
+                }
+              }
+            ],
+            "ReconstructedSource": "Import WAV",
+            "SourceRuns": [
+              {
+                "line": 0,
+                "start": 0,
+                "length": 10,
+                "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                "text": "Import WAV",
+                "exactSourceMatch": true
+              },
+              {
+                "line": 0,
+                "start": 10,
+                "Length": 1,
+                "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                "terminalParagraphSentinel": true
+              }
+            ],
+            "ClipFrames": [
+              {
+                "Name": "probe-caption",
+                "type": "Avalonia.Controls.TextBlock",
+                "ClipToBounds": true,
+                "actualRectangularClip": {
+                  "X": 0,
+                  "Y": 0,
+                  "Width": 78,
+                  "Height": 17,
+                  "Position": {
+                    "X": 0,
+                    "Y": 0
+                  },
+                  "Size": {
+                    "AspectRatio": 4.588235294117647,
+                    "Width": 78,
+                    "Height": 17
+                  },
+                  "Right": 78,
+                  "Bottom": 17,
+                  "Left": 0,
+                  "Top": 0,
+                  "TopLeft": {
+                    "X": 0,
+                    "Y": 0
+                  },
+                  "TopRight": {
+                    "X": 78,
+                    "Y": 0
+                  },
+                  "BottomLeft": {
+                    "X": 0,
+                    "Y": 17
+                  },
+                  "BottomRight": {
+                    "X": 78,
+                    "Y": 17
+                  },
+                  "Center": {
+                    "X": 39,
+                    "Y": 8.5
+                  }
+                },
+                "deliberateVerticalViewportAtOrAbove": false
+              },
+              {
+                "Name": null,
+                "type": "Avalonia.Controls.StackPanel",
+                "ClipToBounds": false,
+                "actualRectangularClip": null,
+                "deliberateVerticalViewportAtOrAbove": false
+              },
+              {
+                "Name": "PART_ContentPresenter",
+                "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                "ClipToBounds": false,
+                "actualRectangularClip": null,
+                "deliberateVerticalViewportAtOrAbove": false
+              },
+              {
+                "Name": "PART_VisualLayerManager",
+                "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                "ClipToBounds": false,
+                "actualRectangularClip": null,
+                "deliberateVerticalViewportAtOrAbove": false
+              },
+              {
+                "Name": null,
+                "type": "Avalonia.Controls.Panel",
+                "ClipToBounds": false,
+                "actualRectangularClip": null,
+                "deliberateVerticalViewportAtOrAbove": false
+              },
+              {
+                "Name": null,
+                "type": "Avalonia.Controls.Window",
+                "ClipToBounds": true,
+                "actualRectangularClip": {
+                  "X": 0,
+                  "Y": 0,
+                  "Width": 400,
+                  "Height": 400,
+                  "Position": {
+                    "X": 0,
+                    "Y": 0
+                  },
+                  "Size": {
+                    "AspectRatio": 1,
+                    "Width": 400,
+                    "Height": 400
+                  },
+                  "Right": 400,
+                  "Bottom": 400,
+                  "Left": 0,
+                  "Top": 0,
+                  "TopLeft": {
+                    "X": 0,
+                    "Y": 0
+                  },
+                  "TopRight": {
+                    "X": 400,
+                    "Y": 0
+                  },
+                  "BottomLeft": {
+                    "X": 0,
+                    "Y": 400
+                  },
+                  "BottomRight": {
+                    "X": 400,
+                    "Y": 400
+                  },
+                  "Center": {
+                    "X": 200,
+                    "Y": 200
+                  }
+                },
+                "deliberateVerticalViewportAtOrAbove": false
+              },
+              {
+                "Name": null,
+                "type": "Avalonia.Controls.TopLevelHost",
+                "ClipToBounds": false,
+                "actualRectangularClip": null,
+                "deliberateVerticalViewportAtOrAbove": false
+              }
+            ],
+            "DeliberateVerticalViewport": false
+          }
+        },
+        {
+          "name": "real-native-own-height-nonblank-clip-rejected",
+          "passed": false,
+          "evidence": {
+            "heightOne": {
+              "Supported": true,
+              "SourceComplete": false,
+              "OwnPaintFits": false,
+              "RootAndAncestorPaintFits": false,
+              "Reasons": [
+                "Full owner text layout exceeds own height.",
+                "Exact source/run/paragraph-sentinel retention failed."
+              ],
+              "InkInText": [],
+              "ReconstructedSource": " ",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 1,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": " ",
+                  "exactSourceMatch": false
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-caption",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 2,
+                    "Height": 1,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 2,
+                      "Width": 2,
+                      "Height": 1
+                    },
+                    "Right": 2,
+                    "Bottom": 1,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 2,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 1
+                    },
+                    "BottomRight": {
+                      "X": 2,
+                      "Y": 1
+                    },
+                    "Center": {
+                      "X": 1,
+                      "Y": 0.5
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            },
+            "verticalPaddingRemoved": {
+              "Supported": true,
+              "SourceComplete": true,
+              "OwnPaintFits": false,
+              "RootAndAncestorPaintFits": false,
+              "Reasons": [
+                "Actual ink exceeds clip: probe-vertical"
+              ],
+              "InkInText": [
+                {
+                  "X": 1,
+                  "Y": 2.5625,
+                  "Width": 113.25852272727273,
+                  "Height": 15,
+                  "Position": {
+                    "X": 1,
+                    "Y": 2.5625
+                  },
+                  "Size": {
+                    "AspectRatio": 7.550568181818182,
+                    "Width": 113.25852272727273,
+                    "Height": 15
+                  },
+                  "Right": 114.25852272727273,
+                  "Bottom": 17.5625,
+                  "Left": 1,
+                  "Top": 2.5625,
+                  "TopLeft": {
+                    "X": 1,
+                    "Y": 2.5625
+                  },
+                  "TopRight": {
+                    "X": 114.25852272727273,
+                    "Y": 2.5625
+                  },
+                  "BottomLeft": {
+                    "X": 1,
+                    "Y": 17.5625
+                  },
+                  "BottomRight": {
+                    "X": 114.25852272727273,
+                    "Y": 17.5625
+                  },
+                  "Center": {
+                    "X": 57.62926136363637,
+                    "Y": 10.0625
+                  }
+                }
+              ],
+              "ReconstructedSource": "Toggle track solo",
+              "SourceRuns": [
+                {
+                  "line": 0,
+                  "start": 0,
+                  "length": 17,
+                  "type": "Avalonia.Media.TextFormatting.ShapedTextRun",
+                  "text": "Toggle track solo",
+                  "exactSourceMatch": true
+                },
+                {
+                  "line": 0,
+                  "start": 17,
+                  "Length": 1,
+                  "type": "Avalonia.Media.TextFormatting.TextEndOfParagraph",
+                  "terminalParagraphSentinel": true
+                }
+              ],
+              "ClipFrames": [
+                {
+                  "Name": "probe-vertical",
+                  "type": "Avalonia.Controls.TextBlock",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 116,
+                    "Height": 17,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 6.823529411764706,
+                      "Width": 116,
+                      "Height": 17
+                    },
+                    "Right": 116,
+                    "Bottom": 17,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 116,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 17
+                    },
+                    "BottomRight": {
+                      "X": 116,
+                      "Y": 17
+                    },
+                    "Center": {
+                      "X": 58,
+                      "Y": 8.5
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.StackPanel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_ContentPresenter",
+                  "type": "Avalonia.Controls.Presenters.ContentPresenter",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": "PART_VisualLayerManager",
+                  "type": "Avalonia.Controls.Primitives.VisualLayerManager",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Panel",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.Window",
+                  "ClipToBounds": true,
+                  "actualRectangularClip": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 400,
+                    "Height": 400,
+                    "Position": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "Size": {
+                      "AspectRatio": 1,
+                      "Width": 400,
+                      "Height": 400
+                    },
+                    "Right": 400,
+                    "Bottom": 400,
+                    "Left": 0,
+                    "Top": 0,
+                    "TopLeft": {
+                      "X": 0,
+                      "Y": 0
+                    },
+                    "TopRight": {
+                      "X": 400,
+                      "Y": 0
+                    },
+                    "BottomLeft": {
+                      "X": 0,
+                      "Y": 400
+                    },
+                    "BottomRight": {
+                      "X": 400,
+                      "Y": 400
+                    },
+                    "Center": {
+                      "X": 200,
+                      "Y": 200
+                    }
+                  },
+                  "deliberateVerticalViewportAtOrAbove": false
+                },
+                {
+                  "Name": null,
+                  "type": "Avalonia.Controls.TopLevelHost",
+                  "ClipToBounds": false,
+                  "actualRectangularClip": null,
+                  "deliberateVerticalViewportAtOrAbove": false
+                }
+              ],
+              "DeliberateVerticalViewport": false
+            }
+          }
+        }
+      ],
+      "selectedSourceRows": 42,
+      "sourceFullGitBodiesAndWholeTreeRead": true,
+      "families": 11,
+      "births": 60,
+      "normalClosure": true,
+      "originalWholeOuterAndAllCRC": true
+    },
+    {
+      "kind": "write-original60",
+      "artifact": 11312154987,
+      "sourceCommit": "20ac0960c7adcc5bc724e14924fc1b6ec30f14f3",
+      "bytes": 342027,
+      "sha256": "f23f15c4774a4decd1d1abe0d6586fafd0bab279bce8247c0f75c29ce326f0bf",
+      "gitBlob": "5d24389468c47cc89d68e64b79e9b9e3261abf3a",
+      "path": "docs/releases/sol-happy-20261003/team-b-44a-wave-unit-and20ac-write60-originals/write-original60.zip",
+      "temporarySourcePath": "/workspace/attachments/09deb385-bd6a-4db5-b48b-54278da65f81/20ac-write-original60-original.zip",
+      "members": [
+        {
+          "path": "actual-original-assertions.json",
+          "bytes": 4244,
+          "sha256": "8162911c99e124022f408df8327dfc9fe9ee8d1eba0ab957f887c7c770667dd5",
+          "crc32": 3175712946,
+          "mode": 33188
+        },
+        {
+          "path": "build.log",
+          "bytes": 6743,
+          "sha256": "9c47b417c96395ae63175ab2e07fdba38bc2394c99ec42e99e3dc2b61cb9fa0a",
+          "crc32": 2381947149,
+          "mode": 33188
+        },
+        {
+          "path": "commands.json",
+          "bytes": 11054,
+          "sha256": "b3ddd505f358698c02e7d238a2cec1ecdf8e6851bf0e6819a698abb07dec35f9",
+          "crc32": 1376514006,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2983,
+          "sha256": "7bfb863cf212a92338178bee2fe4a1683aeac04bd71e375fc42612e873fd8c81",
+          "crc32": 4214062249,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc32": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "entry-identity.json",
+          "bytes": 169,
+          "sha256": "f603cfb9058997f82985f49b24c3e9947ca9822d32619c328a5e1a42ff1de0ea",
+          "crc32": 1739815425,
+          "mode": 33188
+        },
+        {
+          "path": "fixture-tracked.log",
+          "bytes": 193,
+          "sha256": "b039be5c4f9490f0367f8939c920d41dbd792144eccf70b383d30a1e1ae4e507",
+          "crc32": 172344093,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "22addd8046476eca2559c54f24acf797317116bc37d5a1e896e3f5c5e47e6526",
+          "crc32": 2445691231,
+          "mode": 33188
+        },
+        {
+          "path": "native-initial-focus.log",
+          "bytes": 1111,
+          "sha256": "7f2057b4ca7bee24a91f506648c8d56c282c0d4303c86ff0d60b7e02676bd049",
+          "crc32": 2726539810,
+          "mode": 33188
+        },
+        {
+          "path": "native-toolbar.log",
+          "bytes": 2394,
+          "sha256": "d34235e0c5a489e22f1a3b681eff2abbb19218ccb42c811f079db74c49bbbd57",
+          "crc32": 3682856351,
+          "mode": 33188
+        },
+        {
+          "path": "restore.log",
+          "bytes": 5373,
+          "sha256": "6863f65c597a871d3d29e25f36d2d71ab2f28745025393f9a2a24c5b42d45977",
+          "crc32": 2336281072,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 9079,
+          "sha256": "26e88c8d5139d545842639424d03c414cb8daf23d6fbb572c45365fe440084e9",
+          "crc32": 753252598,
+          "mode": 33188
+        },
+        {
+          "path": "source-pins-before.json",
+          "bytes": 1801,
+          "sha256": "2d2046fcd7fdc29b032814ca0d3bb626bee3cc4cb4a5acc48a0dcd4331c66d92",
+          "crc32": 2189856346,
+          "mode": 33188
+        },
+        {
+          "path": "source-tree-pins.log",
+          "bytes": 1307629,
+          "sha256": "d7ce0a7b0f12649934ab80350c1f2a6204fbe8c94713025d09ef006ab57ba0e3",
+          "crc32": 3037048349,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 369,
+          "sha256": "d30878ce39b97131852d9d1e153bd2b6ceb4ff2056fb99d7741d288afbb17012",
+          "crc32": 3916623262,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 401,
+          "sha256": "b5928dd7f505ebc261333fe8b24a78e40e8ff60ac635a56f72e9811c1bbe4d4a",
+          "crc32": 719083799,
+          "mode": 33188
+        }
+      ],
+      "result": {
+        "suite": "scene-original60",
+        "status": "PASS",
+        "sourceCommit": "20ac0960c7adcc5bc724e14924fc1b6ec30f14f3",
+        "executed": 60,
+        "scope": "Existing native authoring/render/local durable tests only; no WASM/browser/provider/ACL/full parity",
+        "history": "Historical f8de canonical Space10PASS1FAIL4NOTRUN and proposal15PASS unchanged; earlier local durable65 evidence remains scoped historical.",
+        "fixtureIdentity": {
+          "path": "apps/Web/Write/Tests/OriginalScene60/SceneProgram.cs",
+          "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80",
+          "literalOriginalSourceCommit": "07bc9f277d6163712064cc5b7e25953613ca5a09",
+          "productSourceCommit": "20ac0960c7adcc5bc724e14924fc1b6ec30f14f3",
+          "originalExpected": 60
+        },
+        "sceneModes": [
+          {
+            "mode": "toolbar",
+            "assertions": 48,
+            "actualNames": [
+              "actual packed font resolves original asset URI and matches exact owner bytes",
+              "actual owning Write.cui parses",
+              "actual registered owner surface lowers",
+              "actual native templates render before querying editor descendants",
+              "actual toolbar New enabled=True",
+              "actual toolbar Save enabled=False",
+              "actual toolbar Bold enabled=False",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "actual toolbar Close enabled=False",
+              "actual New control permits interaction",
+              "actual toolbar Save enabled=True",
+              "actual toolbar Bold enabled=True",
+              "actual toolbar Close enabled=True",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "toolbar journey actual routed typing mutates owner",
+              "actual toolbar Undo enabled=True",
+              "actual toolbar Redo enabled=False",
+              "actual Bold control permits interaction",
+              "toolbar actual Bold changes only selected structured run",
+              "actual Undo control permits interaction",
+              "actual toolbar Redo enabled=True",
+              "actual Redo control permits interaction",
+              "actual toolbar Redo enabled=False",
+              "actual Save control permits interaction",
+              "toolbar Save awaits actual repository barrier with unsaved work",
+              "actual toolbar New enabled=False",
+              "actual toolbar Save enabled=False",
+              "actual toolbar Bold enabled=False",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "actual toolbar Close enabled=False",
+              "actual toolbar Import native package enabled=False",
+              "actual toolbar Download native package enabled=False",
+              "actual toolbar Refresh documents enabled=False",
+              "actual toolbar New enabled=True",
+              "actual toolbar Save enabled=True",
+              "actual toolbar Bold enabled=True",
+              "actual toolbar Close enabled=True",
+              "toolbar actual Save commits canonical revision and selected formatting",
+              "actual Close control permits interaction",
+              "actual toolbar New enabled=True",
+              "actual toolbar Save enabled=False",
+              "actual toolbar Bold enabled=False",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "actual toolbar Close enabled=False"
+            ],
+            "originalReceipt": {
+              "assertions": 48,
+              "mode": "toolbar",
+              "scope": "actual headless retained CUI/owner/local durable backend; browser GUI not executed",
+              "delayedClipboardCompletion": "NOT_RUN"
+            },
+            "scope": "Actual original native scene/focus manager/editor and local repository; direct TextInput is not physical browser Space KeyDown",
+            "state": "PASS"
+          },
+          {
+            "mode": "initial-focus",
+            "assertions": 12,
+            "actualNames": [
+              "actual packed font resolves original asset URI and matches exact owner bytes",
+              "initial-focus actual native owner frame renders",
+              "initial-focus disabled new editor does not seize native focus",
+              "initial-focus new owner attachment focuses native scene once when enabled",
+              "initial-focus actual routed native text reaches same original owner editor",
+              "initial-focus same editor busy release preserves real toolbar focus",
+              "initial-focus toolbar-focused text does not mutate original document",
+              "initial-focus null attachment clears pending focus before enable",
+              "initial-focus enabled non-null replacement uses actual owner focus",
+              "initial-focus actual busy router renewal preserves already-native-focused scene",
+              "initial-focus renewed actual owner router accepts native text after busy roundtrip",
+              "initial-focus disposed pending editor leaves native toolbar focused and root detached"
+            ],
+            "originalReceipt": {
+              "assertions": 12,
+              "mode": "initial-focus",
+              "scope": "actual headless retained CUI/owner/local durable backend; browser GUI not executed",
+              "delayedClipboardCompletion": "NOT_RUN"
+            },
+            "scope": "Actual original native scene/focus manager/editor and local repository; direct TextInput is not physical browser Space KeyDown",
+            "state": "PASS"
+          }
+        ],
+        "passed": 60,
+        "failed": 0,
+        "observedNativeLogPrefixes": [
+          {
+            "stage": "native-toolbar",
+            "logSHA": "d34235e0c5a489e22f1a3b681eff2abbb19218ccb42c811f079db74c49bbbd57",
+            "observedPassLabels": [],
+            "observedAssertLabels": [
+              "actual packed font resolves original asset URI and matches exact owner bytes",
+              "actual owning Write.cui parses",
+              "actual registered owner surface lowers",
+              "actual native templates render before querying editor descendants",
+              "actual toolbar New enabled=True",
+              "actual toolbar Save enabled=False",
+              "actual toolbar Bold enabled=False",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "actual toolbar Close enabled=False",
+              "actual New control permits interaction",
+              "actual toolbar Save enabled=True",
+              "actual toolbar Bold enabled=True",
+              "actual toolbar Close enabled=True",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "toolbar journey actual routed typing mutates owner",
+              "actual toolbar Undo enabled=True",
+              "actual toolbar Redo enabled=False",
+              "actual Bold control permits interaction",
+              "toolbar actual Bold changes only selected structured run",
+              "actual Undo control permits interaction",
+              "actual toolbar Redo enabled=True",
+              "actual Redo control permits interaction",
+              "actual toolbar Redo enabled=False",
+              "actual Save control permits interaction",
+              "toolbar Save awaits actual repository barrier with unsaved work",
+              "actual toolbar New enabled=False",
+              "actual toolbar Save enabled=False",
+              "actual toolbar Bold enabled=False",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "actual toolbar Close enabled=False",
+              "actual toolbar Import native package enabled=False",
+              "actual toolbar Download native package enabled=False",
+              "actual toolbar Refresh documents enabled=False",
+              "actual toolbar New enabled=True",
+              "actual toolbar Save enabled=True",
+              "actual toolbar Bold enabled=True",
+              "actual toolbar Close enabled=True",
+              "toolbar actual Save commits canonical revision and selected formatting",
+              "actual Close control permits interaction",
+              "actual toolbar New enabled=True",
+              "actual toolbar Save enabled=False",
+              "actual toolbar Bold enabled=False",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "actual toolbar Close enabled=False"
+            ]
+          },
+          {
+            "stage": "native-initial-focus",
+            "logSHA": "7f2057b4ca7bee24a91f506648c8d56c282c0d4303c86ff0d60b7e02676bd049",
+            "observedPassLabels": [],
+            "observedAssertLabels": [
+              "actual packed font resolves original asset URI and matches exact owner bytes",
+              "initial-focus actual native owner frame renders",
+              "initial-focus disabled new editor does not seize native focus",
+              "initial-focus new owner attachment focuses native scene once when enabled",
+              "initial-focus actual routed native text reaches same original owner editor",
+              "initial-focus same editor busy release preserves real toolbar focus",
+              "initial-focus toolbar-focused text does not mutate original document",
+              "initial-focus null attachment clears pending focus before enable",
+              "initial-focus enabled non-null replacement uses actual owner focus",
+              "initial-focus actual busy router renewal preserves already-native-focused scene",
+              "initial-focus renewed actual owner router accepts native text after busy roundtrip",
+              "initial-focus disposed pending editor leaves native toolbar focused and root detached"
+            ]
+          }
+        ]
+      },
+      "criterionUnits": [],
+      "selectedSourceRows": 16,
+      "sourceFullGitBodiesAndWholeTreeRead": true,
+      "families": 12,
+      "births": 56,
+      "normalClosure": true,
+      "originalWholeOuterAndAllCRC": true
+    }
+  ],
+  "qualification": "Wave source07 failed Height1 nonblank prerequisite before all64 UI checks; no accepted original negative or product geometry result. Write literal07bc original48+12 executed against20ac current scene PASS60 scoped native. Space15 and full browser/platform acceptance remain separate. Only2 new declared temporary duplicates eligible after enrolled reader closure and independent full proof."
+}
