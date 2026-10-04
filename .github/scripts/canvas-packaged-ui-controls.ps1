@@ -440,13 +440,37 @@ function Read-OwnedPickerValueObservation($Editor,$Dialog,[IntPtr]$PickerHandle,
     foreach($key in $witness.Keys){$s[$key]=$witness[$key]}
     return $s
 }
+function Test-OwnedPickerFocusSnapshot($Snapshot,[bool]$RequireTransition) {
+    $owned=$Snapshot.focusProcessId -eq $process.Id -and $Snapshot.nativeWindowHandle -ne 0 -and $Snapshot.nativeProcessId -eq $process.Id -and $Snapshot.nativeIsPickerChild -and $Snapshot.kernelFocusHandle -ne 0 -and $Snapshot.kernelFocusProcessId -eq $process.Id -and $Snapshot.kernelFocusMatchesNative -and $Snapshot.focusInDialog -and $Snapshot.enabled -and -not $Snapshot.offscreen -and $Snapshot.width -gt 0 -and $Snapshot.height -gt 0 -and $Snapshot.pickerWindowHandle -ne 0 -and $Snapshot.pickerForeground -and $Snapshot.pickerKernelProcessId -eq $process.Id -and $Snapshot.processLive
+    if(-not $owned){return $false}
+    if($RequireTransition){return $Snapshot.focusRole -ceq 'ControlType.Edit' -and $Snapshot.nativeClassIsEdit -and $Snapshot.baselinePresent -and $Snapshot.identityChanged -and $Snapshot.nativeHandleChanged}
+    return $true
+}
+function Read-OwnedPickerFocus($Dialog,[IntPtr]$PickerHandle,$Baseline=$null,[IntPtr]$BaselineHandle=[IntPtr]::Zero) {
+    $focus=[System.Windows.Automation.AutomationElement]::FocusedElement;$c=$focus.Current;$r=$c.BoundingRectangle
+    $native=[IntPtr]$c.NativeWindowHandle;$kernel=[CanvasPackageInput]::FocusHandle($PickerHandle,$process.Id)
+    $s=[ordered]@{focusProcessId=$c.ProcessId;focusRole=$c.ControlType.ProgrammaticName;nativeWindowHandle=$native.ToInt64();nativeProcessId=$null;nativeIsPickerChild=$false;nativeClassIsEdit=$false;kernelFocusHandle=$kernel.ToInt64();kernelFocusProcessId=$null;kernelFocusMatchesNative=$native -ne [IntPtr]::Zero -and $native -eq $kernel;focusInDialog=$false;enabled=$c.IsEnabled;offscreen=$c.IsOffscreen;width=$r.Width;height=$r.Height;pickerWindowHandle=$PickerHandle.ToInt64();pickerForeground=[CanvasPackageInput]::ForegroundMatches($PickerHandle);pickerKernelProcessId=[CanvasPackageInput]::WindowPid($PickerHandle);processLive=-not $process.HasExited;baselinePresent=$null -ne $Baseline;identityChanged=$null;nativeHandleChanged=$null}
+    if($s.focusProcessId -eq $process.Id){$s.focusInDialog=Is-InSurface $focus $Dialog}
+    if($native -ne [IntPtr]::Zero){$s.nativeProcessId=[CanvasPackageInput]::WindowPid($native);if($s.nativeProcessId -eq $process.Id){$s.nativeIsPickerChild=[CanvasPackageInput]::IsChild($PickerHandle,$native);$s.nativeClassIsEdit=[CanvasPackageInput]::WindowClass($native) -ceq 'Edit'}}
+    if($kernel -ne [IntPtr]::Zero){$s.kernelFocusProcessId=[CanvasPackageInput]::WindowPid($kernel)}
+    if(-not(Test-OwnedPickerFocusSnapshot $s $false)){return}
+    if($null -ne $Baseline){$s.identityChanged=-not $Baseline.Equals($focus);$s.nativeHandleChanged=$BaselineHandle -ne [IntPtr]::Zero -and $native -ne [IntPtr]::Zero -and $native -ne $BaselineHandle}
+    if(Test-OwnedPickerFocusSnapshot $s ($null -ne $Baseline)){return [pscustomobject]@{element=$focus;snapshot=$s}}
+}
 function Choose-OwnFolder {
     Invoke-Button 'Set up Canvases'
     $dialog=Observe-OwnedPicker
     $handle=[IntPtr]$dialog.Current.NativeWindowHandle
     Check ([CanvasPackageInput]::SetForegroundWindow($handle) -and [CanvasPackageInput]::ForegroundMatches($handle)) 'Native folder address input targets exact owned picker HWND'
-    [CanvasPackageInput]::Chord(0x11,0x4C)
-    try{$address=Wait-Observed {$f=[System.Windows.Automation.AutomationElement]::FocusedElement;if($f.Current.ProcessId -eq $process.Id -and $f.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit){$f}} 'Actual focused OS folder-address Edit'}
+    try{
+        # CtrlL is real queued input. Observe owned kernel/UIA focus BEFORE it,
+        # then retain the actual new Edit after the shortcut changes focus.
+        $beforeFocus=Wait-Observed {Read-OwnedPickerFocus $dialog $handle} 'Actual owned native picker focus before address shortcut'
+        $result.pickerAddressFocusTransition=[ordered]@{baseline=$beforeFocus.snapshot;address=$null};Write-Result
+        [CanvasPackageInput]::Chord(0x11,0x4C)
+        $addressFocus=Wait-Observed {Read-OwnedPickerFocus $dialog $handle $beforeFocus.element ([IntPtr]$beforeFocus.snapshot.nativeWindowHandle)} 'Actual focused OS folder-address Edit'
+        $address=$addressFocus.element;$result.pickerAddressFocusTransition.address=$addressFocus.snapshot;Write-Result
+    }
     catch{
         $originalAddressFailure=$_
         try{Record-PickerControlWitness $dialog 'focused-address-timeout'}catch{$result.pickerFocusWitnessFailure=$_.Exception.GetType().FullName}

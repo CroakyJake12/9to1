@@ -211,3 +211,26 @@ metadata. No value, name, path, private profile or raw exception text is emitted
 The original false identity remains a refusal even if typed diagnostics differ;
 no replacement editor, identity-API fallback, retyping or acceptance inference is
 introduced. Actual native diagnostics remain NOT_RUN until reviewed invocation.
+
+Actual 3cf diagnostic run 37232138231 preserves the 71-check/20-second negative
+and establishes two different real owned native Edit controls. The retained lower
+Folder field has HWND196830 and bounds179,429,421x23; the focused upper address
+field has HWND66206 and bounds139,67,185x15. Actual kernel focus matches66206,
+and instance Equals, typed UIA comparison and two-element runtime-ID comparison
+all correctly report different identities. These observed IDs/coordinates are
+evidence only and are never used as locators. No private Value was read, folder
+chosen or Home request/state produced; genuine Cancel/failure cleanup exits0.
+
+The existing generic Edit probe after queued CtrlL can retain the already focused
+lower Folder editor before the shortcut changes focus. This successor observes
+the actual owned kernel/UIA focus in the proven picker BEFORE the SAME single
+CtrlL, then uses the existing20-second bound to require a new genuine owned Edit
+whose identity and nonzero native handle differ from that observed baseline.
+Current kernel focus must match the selected UIA handle, and PID/native child/raw
+modal tree/foreground/live/enabled/visible geometry checks must all pass. Baseline
+unavailable/zero/foreign or unchanged focus refuses. Only safe baseline/selected
+metadata is retained. The selected peer is then kept through the SAME single
+TypeText/existing same-editor guard/exact private Value check and all original
+navigation/one-request approval/stroke/durable/close/reopen criteria. No hardcoded
+ID/coordinate, replacement after typing, API swap, fallback or repeated input is
+introduced. New actual workflow acceptance remains NOT_RUN before invocation.
