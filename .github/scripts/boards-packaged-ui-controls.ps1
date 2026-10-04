@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$PackageInput,
     [Parameter(Mandatory = $true)][string]$ObservationInput,
-    [Parameter(Mandatory = $true)][string]$OutputDirectory
+    [Parameter(Mandatory = $true)][string]$OutputDirectory,
+    [ValidateSet('edit-save', 'rich-history')][string]$Scenario = 'edit-save'
 )
 
 # Windows PowerShell 5.1 / standard Windows UIAutomation and keyboard input.
@@ -16,7 +17,7 @@ if (Test-Path -LiteralPath $output) { throw 'Evidence directory must be new.' }
 if ($output.StartsWith($repo + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Keep runtime evidence outside the source checkout.' }
 [void][IO.Directory]::CreateDirectory($output)
 $result = [ordered]@{
-    schemaVersion = 1; status = 'NOT_RUN'; stage = 'preflight'; checks = @(); launches = @(); screenshots = @(); streamDrains = @()
+    schemaVersion = 1; status = 'NOT_RUN'; stage = 'preflight'; scenario = $Scenario; checks = @(); launches = @(); screenshots = @(); streamDrains = @()
     producerRunId = $catalog.producerRunId; producerCommit = $catalog.sourceBasis
     originalArtifacts = $catalog.artifacts; package = $catalog.package
     packageHashVerified = $false; manifestHashVerified = $false; extractedFilesVerified = $false
@@ -89,6 +90,60 @@ function Type-Text([System.Windows.Automation.AutomationElement]$Element, [strin
     Check ($value.Current.Value -ceq $Text) 'Actual keyboard input updated the native editor value'
 }
 function Read-Board { return Get-Content -Raw -LiteralPath $boardPath | ConvertFrom-Json }
+function Find-NamedButton([System.Windows.Automation.AutomationElement]$Window, [string]$Name) {
+    $namedButton = New-Object System.Windows.Automation.AndCondition(
+        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, $Name)),
+        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)))
+    $condition = New-Object System.Windows.Automation.AndCondition(
+        $namedButton,
+        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.Id)))
+    $matches = $Window.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+    if ($matches.Count -gt 1) { throw "Ambiguous actual native button: $Name" }
+    if ($matches.Count -eq 0) { return $null }
+    return $matches[0]
+}
+function Observe-NamedButton([string]$Name) {
+    $button = Wait-Observed { Find-NamedButton $window $Name } "Actual named native button: $Name"
+    $c = $button.Current
+    Check ($c.ProcessId -eq $process.Id -and $c.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $c.Name -ceq $Name) "Exact process-bound native Button: $Name"
+    Check ($c.IsEnabled -and -not $c.IsOffscreen -and $c.BoundingRectangle.Width -gt 0 -and $c.BoundingRectangle.Height -gt 0) "Enabled visible native Button: $Name"
+    return $button
+}
+function Native-BoldIs([bool]$Expected) {
+    # Formatting/history rebuild peers. Always read the current native peer.
+    try {
+        $button = Find-NamedButton $window 'Bold'
+        if ($null -eq $button) { return $false }
+        $pattern = $button.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+        $state = if ($Expected) { [System.Windows.Automation.ToggleState]::On } else { [System.Windows.Automation.ToggleState]::Off }
+        return $pattern.Current.ToggleState -eq $state
+    } catch [System.Windows.Automation.ElementNotAvailableException] { return $false }
+}
+function Durable-BoldIs([bool]$Expected) {
+    try {
+        $doc = Read-Board
+        $blocks = @($doc.richNotes.sections[0].pages[0].blocks | Where-Object { $_.id -ceq $paragraphs[0].id })
+        if ($doc.documentId -cne $identity -or $blocks.Count -ne 1 -or $blocks[0].plainText -cne $historyText) { return $false }
+        $runs = @($blocks[0].runs)
+        if ($Expected) { return $runs.Count -eq 1 -and $runs[0].bold -and $runs[0].text -ceq $historyText }
+        return @($runs | Where-Object { $_.bold }).Count -eq 0
+    } catch { return $false }
+}
+function Observe-HistoryState([string]$Label, [bool]$Bold) {
+    [void](Wait-Observed { (Native-BoldIs $Bold) -and (Durable-BoldIs $Bold) } "Native and durable canonical rich state: $Label")
+    $button = Observe-NamedButton 'Bold'
+    $toggle = $button.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+    Check ((Native-BoldIs $Bold) -and (Durable-BoldIs $Bold)) "Actual $Label preserves paragraph text/block/document identity and expected canonical bold"
+    $doc = Read-Board
+    $result.historyStates += [ordered]@{ label = $Label; bold = $Bold; nativeToggleState = $toggle.Current.ToggleState.ToString(); documentId = $doc.documentId; paragraphId = $paragraphs[0].id; canonicalVersion = $doc.richNotes.version; fileSha256 = (Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant() }
+    Write-Result
+}
+function Invoke-NativeHistory([string]$Name) {
+    $button = Observe-NamedButton $Name
+    Check (-not $process.HasExited -and [BoardsPackageInput]::OwnsForeground($process.Id)) "Native $Name invocation belongs to the exact foreground app"
+    $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Check $true "Actual native $Name InvokePattern admitted the app command"
+}
 function Start-Board([string]$Label) {
     $start = New-Object Diagnostics.ProcessStartInfo
     $start.FileName = $exe; $start.Arguments = '"' + $boardPath + '"'; $start.WorkingDirectory = $install
@@ -218,7 +273,7 @@ public static class BoardsPackageInput {
     public static void TypeText(string text) { var input=new INPUT[text.Length*2]; for(int i=0;i<text.Length;i++) { input[i*2]=Key(0,text[i],4); input[i*2+1]=Key(0,text[i],6); } Send(input); }
 }
 '@
-    $result.stage = 'actual-native-edit-save-reopen'
+    $result.stage = if ($Scenario -ceq 'rich-history') { 'actual-native-rich-history' } else { 'actual-native-edit-save-reopen' }
     $exe = Join-Path $install $catalog.executable
     $fixture = Join-Path $output 'runtime-fixture'; [void][IO.Directory]::CreateDirectory($fixture)
     $boardPath = Join-Path $fixture 'Packaged UI board.9to1board'
@@ -231,6 +286,43 @@ public static class BoardsPackageInput {
     $paragraphs = @($initial.richNotes.sections[0].pages[0].blocks | Where-Object { $_.kind -eq 0 })
     Check ($paragraphs.Count -eq 1) 'Fresh actual application has one canonical paragraph target'
     $paragraphId = 't_' + $paragraphs[0].id
+    if ($Scenario -ceq 'rich-history') {
+        $result.historyStates = @()
+        $historyText = 'Rich history formatted through native Windows input'
+        $result.expectedRichHistory = [ordered]@{ paragraph = $historyText; finalBold = $true; historyInput = 'Actual application Undo and Redo buttons via UIAutomation InvokePattern' }
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Actual selected paragraph derived from app-created identity'
+        [void](Observe-Edit $paragraph 'Paragraph editor')
+        Type-Text $paragraph $historyText
+        Assert-OwnedFocus $paragraph; [BoardsPackageInput]::Chord(0x11, 0x53)
+        Observe-HistoryState 'plain-baseline' $false
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Current paragraph before focused Ctrl+B'
+        Focus-Edit $paragraph
+        Assert-OwnedFocus $paragraph; [BoardsPackageInput]::Chord(0x11, 0x42) # Ctrl+B
+        Check $true 'Actual focused Ctrl+B admitted existing selected-paragraph format command'
+        Observe-HistoryState 'formatted' $true
+        Invoke-NativeHistory 'Undo'
+        Observe-HistoryState 'undone' $false
+        Invoke-NativeHistory 'Redo'
+        Observe-HistoryState 'redone' $true
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Current paragraph after native history rebuilds'
+        Focus-Edit $paragraph
+        Assert-OwnedFocus $paragraph; [BoardsPackageInput]::Chord(0x11, 0x53)
+        Check $true 'Actual Ctrl+S admitted after native rich-history round trip'
+        Capture-Window 'rich-history-edited-window.png'
+        Close-Board
+        $beforeReopen = (Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $result.stage = 'actual-native-formatted-reopen'
+        $window = Start-Board 'reopen'
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Real reopened paragraph with same application-generated block identity'
+        $paragraphValue = Observe-Edit $paragraph 'Paragraph editor'
+        Check ($paragraphValue.Current.Value -ceq $historyText) 'Real native reopen restores rich-history paragraph text'
+        Focus-Edit $paragraph
+        Observe-HistoryState 'reopened-formatted' $true
+        Check ((Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $beforeReopen) 'Formatted native reopen preserves saved file bytes before close'
+        Capture-Window 'rich-history-reopened-window.png'
+        Close-Board
+        Check (Durable-BoldIs $true) 'Final native close retains actual formatted paragraph and canonical identities'
+    } else {
     $title = Wait-Observed { Find-Control $window 'BoardTitleBox' } 'Actual native board title editor'
     $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Actual native paragraph editor derived from real document identity'
     $search = Wait-Observed { Find-Control $window 'NavSearchBox' } 'Actual native navigation search editor'
@@ -259,6 +351,7 @@ public static class BoardsPackageInput {
     Focus-Edit $title; Capture-Window 'reopened-window.png'
     Close-Board
     Check ((Read-Board).documentId -ceq $identity) 'Final native close preserves Board identity'
+    }
     $result.document = [ordered]@{ documentId = $identity; schemaVersion = $initial.schemaVersion; paragraphId = $paragraphs[0].id; finalSha256 = (Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant() }
     $result.status = 'BOUNDED_PACKAGED_NATIVE_UI_CONTROLS_PASS_UNACCEPTED'; $result.stage = 'complete'; $exitCode = 0
 } catch {

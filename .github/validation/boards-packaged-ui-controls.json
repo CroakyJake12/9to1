@@ -62,6 +62,34 @@
     {
       "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ControlAutomationPeer.cs",
       "sha256": "abc2ee12e374261fc21f685e921a22468e020d78a45b708fbc70d92364b30b5f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardProjection.cs",
+      "sha256": "4d74ddce861b602e3cd84209615a83a1f1c5f0077432cc4abbf01650404f3614"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ShellChrome.cs",
+      "sha256": "f884ba8bd33277a3eacc1783c3ce1cc71d0abfe3fe7f577cb59fa6c6247e4f2a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ToolbarBuilder.cs",
+      "sha256": "c300c676948cbf6d29d50eaf830159886f4159f4494fac022906b40f16b086ed"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsIcons.cs",
+      "sha256": "1fd6f0d869be41844dacc7a51346b253b827d76b1bccc997f2a497f793231aa3"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/RichBoardSession.cs",
+      "sha256": "e5406be4fd78dc7a7828f9b9646a8f8b0e9896a634753cb920d26b03c5a86134"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ToggleButtonAutomationPeer.cs",
+      "sha256": "cad98e633cbf6872a9c564c75fb9793d6a43d62fcbcb1275a0f2ca692d9cdda6"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs",
+      "sha256": "2cf3aa4d9b42dcefac0a033b71b055daa79811b2ae8b675ea4a4e58e26e32f5b"
     }
   ]
 }

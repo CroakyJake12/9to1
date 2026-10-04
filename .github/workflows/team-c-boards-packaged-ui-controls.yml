@@ -1,8 +1,8 @@
-name: Team C immutable Boards packaged UI controls (unaccepted)
+name: Team C immutable Boards native rich-history controls (unaccepted)
 
 on:
   push:
-    branches: [team-c/sol-happy-c3-boards-packaged-ui-20261004]
+    branches: [team-c/sol-happy-c3-boards-rich-history-20261004]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +10,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: boards-packaged-ui-${{ github.ref }}
+  group: boards-rich-history-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -57,21 +57,21 @@ jobs:
           run-id: '37208129079'
           artifact-ids: '11305292433'
           path: ${{ runner.temp }}/boards-observation-input
-      - name: Observe actual packaged native editing, save, close and reopen
+      - name: Observe actual packaged native rich formatting, Undo, Redo and reopen
         shell: powershell
         env:
-          PROBE_OUTPUT: ${{ runner.temp }}/boards-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}
+          PROBE_OUTPUT: ${{ runner.temp }}/boards-rich-history-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          & .github/scripts/boards-packaged-ui-controls.ps1 -PackageInput '${{ runner.temp }}/boards-package-input' -ObservationInput '${{ runner.temp }}/boards-observation-input' -OutputDirectory $env:PROBE_OUTPUT
+          & .github/scripts/boards-packaged-ui-controls.ps1 -PackageInput '${{ runner.temp }}/boards-package-input' -ObservationInput '${{ runner.temp }}/boards-observation-input' -OutputDirectory $env:PROBE_OUTPUT -Scenario rich-history
           exit $LASTEXITCODE
       - name: Retain original observations and failures
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: boards-packaged-ui-unaccepted-${{ github.sha }}-${{ github.run_attempt }}
+          name: boards-rich-history-unaccepted-${{ github.sha }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/boards-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/result.json
-            ${{ runner.temp }}/boards-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.log
-            ${{ runner.temp }}/boards-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.png
+            ${{ runner.temp }}/boards-rich-history-${{ github.run_id }}-${{ github.run_attempt }}/result.json
+            ${{ runner.temp }}/boards-rich-history-${{ github.run_id }}-${{ github.run_attempt }}/*.log
+            ${{ runner.temp }}/boards-rich-history-${{ github.run_id }}-${{ github.run_attempt }}/*.png
           if-no-files-found: warn
           retention-days: 7
