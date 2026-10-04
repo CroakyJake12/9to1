@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-04T03:40:34.217995+00:00",
+  "updatedUTC": "2026-10-04T04:51:47.037341+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -930,135 +930,68 @@
     }
   },
   "currentSourceWork": {
-    "OSSupervisor02": "Full A1/A6 source/API/inverse peers CLEAR qualified; actual native bootstrap/installed/signature/genuine lifecycle acceptance OPEN. A5 derives coherent actualSDKparent151->actual19+48->new23=222 source union inRAM, no blind58file transplant.",
-    "Present02": "Historical02 findings/sourcehold preserved in immutable previousrecord;03 complete source correction is current.",
-    "LE12": "Source02 full3peersCLEARqualified10/21UNRUN; actualregistry/dispatch/CAS/jobs required.",
-    "Forms": "Originals closed825managedPASS; actual restoration-path cause pinned above; private Forms14 exact-source validation prepared, native remains OPEN.",
-    "Present03": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker3-present-native-lifetime-source03-retained-close-fixtures-and-current-publication/manifest.json",
-        "bytes": 38972,
-        "sha256": "c1e8cb883809421f99bf14cbc9a2eece3246dc6692f7a87035f8a3abcdbda7ec"
+    "currentSourceManifests": {
+      "Agents51": {
+        "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/manifest.json",
+        "bytes": 30078,
+        "sha256": "348039e5523ce074934cf1be01170cb1d623f11bab4428a383fd3896eeb89051"
       },
-      "state": "COMPLETE_A1_A6_SOURCE_API_INVERSE_PEERS_CLEAR_QUALIFIED_17METHODS21OUTCOMES_UNRUN"
-    },
-    "LE12source02": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker1-le12-capability-action-contract-source02-required-owning-revisions-and-strict-codec/manifest.json",
-        "bytes": 10782,
-        "sha256": "98061d246c831e94c07fb56eeb909c065855f1e7b8c565c8e3076c71ea9b93f1"
+      "Den02": {
+        "path": "/workspace/astra-source/worker1-home-native-selected-den-owner-source02-exact-dispatch-and-manual-decision-api/manifest.json",
+        "bytes": 20668,
+        "sha256": "528375386b594777bf88b8e35b8f9e88f6f54f5be0e9e5f93da9ba1629e32e4c"
       },
-      "state": "COMPLETE_A3_A4_A6_SOURCE_API_INVERSE_PEERS_CLEAR_QUALIFIED_10METHODS21OUTCOMES_UNRUN"
-    },
-    "FormsDiagnostics02": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker3-forms12-native-restore-diagnostics-source02-original-directory-custody-and-attempt-budget/manifest.json",
-        "bytes": 27022,
-        "sha256": "043c432e2f7e562f7b5550e3d52e4bd5abd008ff1128db81eb6753351d327a34"
+      "Files02": {
+        "path": "/workspace/astra-source/worker2-le07-original-files-attachment-source02-final-original-files-owner-fence/manifest.json",
+        "bytes": 27408,
+        "sha256": "58c30c0e6792f22ab023cb0ba570363096bf6a57e68d8bc07fc1eb3be4210064"
       },
-      "state": "COMPLETE_A3_A4_A6_SOURCE_PEERS_CLEAR_QUALIFIED_INERT7_AND_ACTUAL_ISOLATED_FS4_PASS_ONCE",
-      "qualification": "Same original baseline+guard/source/PDB/task/native/drains preserved; exact parent-directory retainedfd custody, preattempt budgets and independent original/diagnostic/close errors. Original writer unknown, no actual restore correction inferred."
-    },
-    "OS222": {
-      "path": "/workspace/astra-source/worker5-os222-sdk3a52-source-plan01",
-      "state": "FULL_A6_SOURCE_COUNT_RECONCILIATION_CLEAR_A1_A4_PENDING_187METHODS222OUTCOMES_UNRUN",
-      "qualification": "CurrentSDK actualfailed; final correctiveparent CAS rederived before selection, no blindProgram/normal source transplant/native/bootstrap/installed acceptance."
-    },
-    "LinuxStartupDiagnostic01": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker5-linux19-fixed-controlled-startup-refusal-diagnostic-source01/manifest.json",
-        "bytes": 3373,
-        "sha256": "a3dda54c1ac9388bc8ec6d4092300426319c7d2b149c88696c712bbc6a90fd1a"
+      "LinuxTestPolicy": {
+        "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/manifest.json",
+        "bytes": 22974,
+        "sha256": "274637c642f86a3c571904352d33196df83972b2d31db9d793dbd67a8493a6f2"
       },
-      "state": "FULL_A1_A6_SOURCE_CLEAR_SELECTED_IN_ACTUAL_LINUX20_DIAGNOSTIC_RETRY",
-      "qualification": "A5+A6 full190 causal originals: twelve exact NonDumpableCredentialPolicyRequired child refusals in original TRX ResultSummary stdout before credential transition/profile/lease/connect; seven direct/five native Accept cancellations downstream. Exact sysctl bytes/readcount/kernel state were not recorded. Original non-dumpable/check/prctl policy preserved."
-    },
-    "LE07": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker1-le07-original-local-conversation-storage-source02-final-original-privacy-and-receipt-fence/manifest.json",
-        "bytes": 13808,
-        "sha256": "9ae3fc81b447fe69ec8ebd9fd2a571377ee16b75c898e9f6b38e57e2b2888184"
+      "Linux21": {
+        "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package21-hosted-nondumpable-policy/manifest.json",
+        "bytes": 105850,
+        "sha256": "e93e2ca9f4269e7b183dc3b417b01170ccf44650e124fb84cb701614f8977993"
       },
-      "state": "EXECUTABLE_LOCAL_SQL_ADMISSION02_FULL_A4_A6_SOURCE_PEERS_CLEAR_10METHODS13OUTCOMES_UNRUN",
-      "qualification": "Same existingSQLite/migration29/private originalstoreHome actor/policy receipt, Local-save/intentjournal; final rawHome+privacy checks afterdestinationawait. Six other source01bodies byref. RealUI/Files typed originalsource/export/ONEdestination/currentreceiverACK stillrequired. Cpaidallocatedstrict>10GB+separatequota absentblocksdependentCloud only; no default/local removal."
-    },
-    "Forms13": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker3-forms-math13-actuald06-current30-failure-only-exact-metadata-diagnostics/manifest.json",
-        "bytes": 122361,
-        "sha256": "5bb1d462bc23352e9529e44a8d84c8de6aae79c803fefda0dc082ae348a4694a"
+      "Forms15": {
+        "path": "/workspace/astra-source/worker3-forms-math15-actualfafb-current30-independent-original-and-added-query-guards/manifest.json",
+        "bytes": 155518,
+        "sha256": "ea4141ba0b1ef0c1b8a7f3574090eddd8b7a55a75e647075cdff72b89992e600"
       },
-      "rootReview": {
-        "path": "/workspace/astra-source/root-forms13-complete-caller-review918.json",
-        "bytes": 2435,
-        "sha256": "714211a5d2ce617eb8982b21fd2f9ff57caad512a8797def98d0dc2c25dd7cb7"
+      "OwningReader01": {
+        "path": "/workspace/astra-source/worker6-sdk08-owning-original-evidence-reader-source01-fixed-five-parts/manifest.json",
+        "bytes": 47369,
+        "sha256": "fcfbc2fce6c29f381107e29aff4f067325a836fc430a19f6c6c761a610c3ae89"
       },
-      "state": "ORIGINAL_OWNING_FAIL_RESOURCE_REGRESSION_SUCCESS_FULL_A2_A6_CUSTODY_CLOSED"
+      "RegressionReader01": {
+        "path": "/workspace/astra-source/worker6-sdk08-regression-original-evidence-reader-source01-fixed-monolithic-archive/manifest.json",
+        "bytes": 39272,
+        "sha256": "df6bf62a9de812c761d2f945a07139fd2fce3a2f7fe53a6e780d8a857dd59988"
+      }
     },
-    "StudioStartup02": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker4-studio-native-startup-source02-observed-original-shutdown-proof/manifest.json",
-        "bytes": 12123,
-        "sha256": "5cf109bd355fd73f9e82d66016edf3708e16edb853b81583c50122c71e5c9cbc"
-      },
-      "state": "FULL_A1_A6_SOURCE_EXTENSION_CLEAR_6METHODS8OUTCOMES_UNRUN",
-      "qualification": "Source01 actual startup boundary wholepeersCLEAR; SAMEoriginal shutdownTask observation+unchanged guard only. Borrowedconnection/platformfinalclose/runtimeactivation/genuineinstalled/partialconstructor/nativeglobaldrain stillopen. A5 quotesOSsharedtrustedruntime/oneoriginalsocket scope; no fabricatedReady/provider/identity."
+    "sourceReviewStatus": {
+      "Agents51": "A3+A4+A6 full CLEAR qualified; actual v3/v2 compilation UNRUN",
+      "Den02": "A3+A6 full CLEAR qualified; production factory/native/tasks UNRUN",
+      "Files02": "A1+A6 full CLEAR qualified; actual source/bytes/SQL relation/native UNRUN",
+      "LinuxTestPolicy": "A1+A6 full CLEAR qualified, A3 pending;14 inert controls UNRUN, real kernel/native policy UNRUN",
+      "Linux21": "Frozen3metadata only; five TESTCIoverlays+selfcut; fixture/caller full peers pending; constructor/run HELD",
+      "Forms14": "HELD immutable: final guards one shared try; superseded source proposal15",
+      "Forms15": "A6 full CLEAR qualified; A3+A4 pending. Native original/source/tasks/added-process final guards independent; full run UNRUN, C shared adoption pending",
+      "OwningReader01": "A4+A5 full CLEAR qualified; root33 pure once passed; actual readonly archive replay SUCCESS; full owning cause/semantic peer pending",
+      "RegressionReader01": "A4+A5 full CLEAR qualified; root33+8 inert controls PASS once; actual readonly replay not yet constructed, no runtime/native acceptance."
     },
-    "ExistingProfile01": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker1-home-existing-enrolled-profile-source01/manifest.json",
-        "bytes": 7436,
-        "sha256": "26fd5e7887c0fb9ad24e5eb7d3448be27cf7d146fd72168154af91015cf9c56c"
-      },
-      "state": "FULL_A5_A6_SOURCE_PEERS_CLEAR_4METHODS6OUTCOMES_UNRUN",
-      "qualification": "Same instance existingenrolled record only; no creation/defaultWrite path, oldGetCurrent/Check unchanged. Readlock filesystemeffects honest; no installedbootstrap acceptance."
+    "concreteNativeFeatures": {
+      "A1": "Association SQL30 private first-source publisher, same16field row/actualFile store/current privacy authority; RAM only, real legacy fixture preservesv29 by clearing newv30 schema in fixture only; root prioritized26originalHome failures first.",
+      "A2": "Native Notes capture/known SAME-ID ack/edit-generation/Open/New/Import/UndoRedo/retained outer actual native handler tasks/coalesced close; RAM only. Cards01 A1 clear A3/A6 pending, real Home principal/factory/editor integration open.",
+      "A3": "18 actual Tabs/Spaces full bodies442KiB RAM before inverse/selfreview; genuine SQLiteCAS/replay/Home authority/action/save/task-retirement fixtures. Default-null prewriter fixture checkpoint only, no wire grant; exact quote pending.",
+      "A4": "Six compiler lanes RAM43178 source bytes before final strengthening, full inverse; source freeze quote pending. Actual Files02 source clear; original SDK owning independent cause peer required.",
+      "A5": "Linux21 frozen; kernel TEST fixture peers; actual installed native declaration C request remains unanswered; no canonical currentStudio package/version/public signed descriptor invented.",
+      "A6": "Separate regression reader frozen; owning full original302 custody closure underway, Forms15 full new-process peer clear."
     },
-    "Canvas14": {
-      "manifest": {
-        "path": "/workspace/astra-source/worker3-canvas03-retained-exact-history-and-modeled-pressure-source15-current-project-closure/manifest.json",
-        "bytes": 61299,
-        "sha256": "eab646a879e8416a76c88ce514284764188473ed572db4844f9b8bb034a71626"
-      },
-      "state": "ALL_FULL14_SOURCE_PLUS_NARROW15_METADATA_PEERS_CLEAR_QUALIFIED_UNRUN",
-      "qualification": "Sole stale currentTests descriptor corrected652/d0f947ee with562 explicitlineage/whole14inverse; allsource/19inverses/20methods22outcomes/currentnativehistory/pressure guards retained. Fullactualruntime stillpending."
-    },
-    "Platform02": {
-      "state": "FROZEN_FULL_A1_A3_A6_CLEAR_QUALIFIED_UNSELECTED_UNRUN",
-      "manifestSha256": "f65dece949c469264ffa5e3e1158858b2a5bcd6e35a86bc124f1504554e4b455",
-      "qualification": "Only entry4363/de4e and fixture48384/f929; seven predecessor bodies byref, all100 assertions/14methods19cases preserved, same original task/borrowed socket/administrator acquisition cleanup independently collected, explicit Linux guards, currentf877 service inherited; whole2source+MF inverses exact. Prospective OS225 not current selectedOS222.",
-      "remaining": "PhysicalmoduleCompile/PE-PDB/native/defaultroot/installed/Csignedrelease declarationsOPEN."
-    },
-    "Attachment01": {
-      "state": "FROZEN_FULL_A4_A6_CLEAR_UNRUN",
-      "manifestSha256": "895c97553ca72e656120bd1580cdb489865a5a3c19e8f45b709e623656560434",
-      "qualification": "SAME opaque attachment request/private issuer/full16fieldSQLite observation; physicalbytes/genuineFilesproductionrelation/export/destinationACK/DI/native stillneeded. No Cloud grant."
-    },
-    "SpacesCatalogue01": {
-      "state": "FULL_A1_A6_CLEAR_QUALIFIED_4_METADATA_TESTS_UNRUN_ACTUAL_FEATURE_REQUIRED",
-      "manifestSha256": "3d972c0d1f96696c0a88215ab844a17fc75e8858d19c8af6d22a94e6b8e1bf6c",
-      "qualification": "Ten stableLE12 names Blocked/null applicability with exact missingownerCAS/replay/target evidence; metadata only4tests, no feature runtime/grant."
-    },
-    "DenRegistration01": {
-      "state": "FULL_A4_A6_CLEAR_QUALIFIED_3FACTS3UNRUN_GENUINE_HOME_SELECTED_OWNER_UNRUN",
-      "manifestSha256": "188dbb06",
-      "qualification": "Explicit actual original HomeDenStoreEvidenceProvider overload preserves Coreonly preferredbody; sameopenedprovider/no duplicate/conflicting registration, actualownerSQL tests3Facts3UNRUN. Genuine Home nativeproducer/host-before-providerdisposal/defaultrealAgentroute gates open."
-    },
-    "OS225": {
-      "path": "/workspace/astra-source/worker5-sdk08-os-platform225-current-source-plan01",
-      "sourcePlanBytes": 57806,
-      "sourcePlanSha256": "89e81507fe1a92c645b62285c5a8f5b65c674d344d36cde5062241006e6a4c0b",
-      "methodMapBytes": 63602,
-      "methodMapSha256": "2f13f0daae1bfa6af6ce1eda8a8e393805793966255869f4c9ac70fbced933ba",
-      "state": "FULL_A4_A6_CURRENT_PARENT_PEERS_CLEAR_A1_PENDING_UNSELECTED_190METHODS225UNRUN",
-      "qualification": "85exact targets13actual4fCAS72absences/30moduleCompile links+30Shellremoves; all4SDKfixes preserved; genuine installed/native/modulephysicalPDB/runtime stillOPEN."
-    },
-    "FilesAttachment01": {
-      "state": "FROZEN_SOURCE_PEER_HELD_FINAL_FILESBINDING_CURRENTNESS_AFTER_SQL_AWAIT",
-      "manifestSha256": "0ed43c5ced775ebd4b7c39a138252c25b22783c0cfe285b6013ca1c5507b1989",
-      "qualification": "A1 found awaited final SQL row fence after Files check permits known Files Home binding retirement; A4 successor retains SAME captured raw Files callback and held-real-SQL no-byte negative. Original01 preserved; no adoption."
-    },
-    "SelectedDen": "Concrete7file88161logical source quote/freeze inprogress; actual Create/Open retained Home Den/provider task ownership, local compatibility setup, heldnativeaction tests; genuine selected installedhost/registration/runtime OPEN.",
-    "CardsStudy": "Concrete8source+manifest264944logical quote awaiting capacity: existing schema1 typed rich metadata, no-loss SAME-root/CAS, original JSON roundtrip, truthful recorded <=3 recommendation ranking;20methods32AUTHORED_UNRUN. Native owner/editor/Bank/Planner work remains."
+    "qualifications": "All authored source/rich native/SAME owner proofs remain scoped and UNRUN until actual owning/native gates. No synthetic Ready, permission grant, current signed package values or spec percentages invented."
   },
   "historicalActualEvidence": {
     "record": {
@@ -1102,46 +1035,38 @@
     "qualification": "SDK07originalcontrolCRC failure/source02pure33PASS preserved in920; complete sixartifactreplay/568textbody custody source-only. No payloadretest or productvalidation."
   },
   "currentLinux20": {
-    "commit": "aa03b6a0724cad0798af9e2415e7dd6933cfd293",
-    "tree": "0aaa00bfb7b5c403c48c9aefc7c55e593a88ef13",
-    "cut": "d060fb4b1d0774a6a986e5fe1d55b72ae92940bd84d75ad1253a5f981ce9b129",
-    "run": 37166222783,
-    "jobs": {
-      "owning": {
-        "id": 111329546980,
-        "state": "FAILURE"
-      },
-      "resource": {
-        "id": 111329546793,
-        "state": "SUCCESS"
-      },
-      "regression": {
-        "id": 111329547165,
-        "state": "SUCCESS"
-      }
-    },
-    "qualification": "Actual ownFAIL/reg+resSUCCESS; no childcause inference. Exact39724B owningindex11289907568/12172275 locallyverifiedfullCRC/sole273274Bmanifest/551originalfiles507pieces/twoinnerbundles. A6boundedremoteoriginalreplay sourcequote underway;47.8MBpartsnotdownloaded. Fulloriginalroot34137B50f10b2a/123986BTRX andpending/expected/processreceipts required. Native/startuppredicate stillUNKNOWN.",
-    "readerPreparation": "Frozen fixedactualaa03 original551/507 reader+190complete causal selector fullA4A5CLEAR. Pure33controls926PASS/zerooriginalIO. Rootpublisher928 fullpeer pending; full532textremote retained. No localcompressedfit/cause/nativeclaim.",
-    "cause": "A5+A6 full190 causal originals: twelve exact NonDumpableCredentialPolicyRequired child refusals in original TRX ResultSummary stdout before credential transition/profile/lease/connect; seven direct/five native Accept cancellations downstream. Exact sysctl bytes/readcount/kernel state were not recorded. Original non-dumpable/check/prctl policy preserved.",
-    "diagnostic": {
-      "actual": "4db74de394e970c88af863bbd892055bfaedd8a9",
-      "tree": "e46161cf2eb5b01035e869a83c52c074706cc462",
-      "run": 37173347701,
-      "job": 111350711812,
-      "conclusion": "SUCCESS_CUSTODY_ONLY",
-      "originalProductJobs": "SKIPPED",
-      "receiptSha256": "7ee6d162cfe00bb1a54de89ea2e82ee0fa95114b0dca9a8bcc43a5b7629aaf70"
-    },
-    "admittedCausalZip": {
-      "id": 11292511389,
-      "path": "/workspace/attachments/11b7f576-c4ef-445e-81e5-92baf6c154da/linux20-complete-causal-originals-11292511389.zip",
+    "originalFullCause": {
+      "zip": "/workspace/attachments/11b7f576-c4ef-445e-81e5-92baf6c154da/linux20-complete-causal-originals-11292511389.zip",
       "bytes": 728528,
       "sha256": "bd7a744d856e7539dbf53357eee0017fff194621bb27f891ceefe8abbdb8c84c",
-      "wholeMembers": 193,
-      "completeOriginalFiles": 190,
-      "state": "FULL_A5_A6_ORIGINAL_CAUSAL_REPLAY_CLOSED_QUALIFIED"
+      "members": 193,
+      "expandedBytes": 5330048,
+      "wholeOriginals": 190,
+      "wholeOriginalBytes": 2697478,
+      "originalIndex": {
+        "files": 551,
+        "pieces": 507,
+        "empty": 45,
+        "remoteTextWitnesses": 532,
+        "remoteBinaryWitnesses": 19
+      },
+      "peers": "A5+A6_FULL_CLOSED_CLEAR_QUALIFIED",
+      "cause": "12 original root TRX ResultSummary/Output/StdOut ControlledHomeStartupRefusal:UnauthorizedAccessException:NonDumpableCredentialPolicyRequired fixed lines precede exact associated seven direct/five native downstream Accept cancellation stacks. Actual original source sole sysctl bytes0\n+EOF predicate before prctl/credentials/profile IO/lease. Actual rejected sysctl value/readcount/kernel state not recorded.",
+      "results": "Root32=20pass12fail; Home340/OS199pass original-only.16 expected/pending observed seals/41 members and task10files stable; no physical binary PDB/unobserved descendants/whole native acceptance.",
+      "next": "A5 RAM bounded ephemeral GitHub-hosted TEST observation/policy protection+restore exact observed value only after SAME original drains; production check/prctl stays byte-exact."
     },
-    "next": "Bounded isolated TEST-host observation/policy protection during SAME original credential journeys; no child guard waiver/assumed host value/production policy change."
+    "testPolicyManifest": {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/manifest.json",
+      "bytes": 22974,
+      "sha256": "274637c642f86a3c571904352d33196df83972b2d31db9d793dbd67a8493a6f2"
+    },
+    "linux21Manifest": {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package21-hosted-nondumpable-policy/manifest.json",
+      "bytes": 105850,
+      "sha256": "e93e2ca9f4269e7b183dc3b417b01170ccf44650e124fb84cb701614f8977993"
+    },
+    "sourceReview": "A1+A6 full CLEAR qualified; A3 pending. Actualproductionprctl/NNP/credential/signedchild/root32/native16/pair5/old3 unchanged. TEST-only hosted global policy recorder sets0 then restores ONLYactual recorded0/1/2 after fresh original root/setup/userdel seals. No kernelvalue assumed/no namespace-isolation claim.",
+    "actualValidation": "UNRUN;14 inert controls not yet invoked. Five TESTCIoverlays+selfcut only, no product overlays/semantic tree change."
   },
   "currentFilesGuardAvailable": {
     "commit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
@@ -1160,93 +1085,165 @@
     "qualification": "ExistingGuarded mutation alreadychecks currentauthority before replay and atpublication +store/owner/location; consumeactualsource. No crossproduct atomic revocationlock orCloud quota invented."
   },
   "currentSDK08": {
-    "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
-    "tree": "de2e74830fe71ac2af4858a4551c4ee89f0bf1b6",
-    "cut": "a865a55212a8eed45596cc4b6e8423eb582064c95bd5abe3dbd41ea7a279733e",
-    "run": 37169483364,
-    "jobs": {
-      "joint111339329354": "FAILURE",
-      "resource111339329411": "SUCCESS",
-      "owning111339329448": "FAILURE",
-      "regression111339329496": "FAILURE"
-    },
-    "state": "COMPLETE_JOINT_OWNING_REGRESSION_FAILED_RESOURCE_PASSED_ORIGINAL_CAUSE_UNKNOWN",
-    "manifest": {
-      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package08-actuale0c-compiler-corrective/manifest.json",
-      "bytes": 41840,
-      "sha256": "e135c3c20780dfe789693c9fd91f05bdb39a184dfef22835b1e625f73c9fc844"
-    },
-    "rootReview": {
-      "path": "/workspace/astra-source/root-joint-sdk08-whole-review923.json",
-      "bytes": 2694,
-      "sha256": "60043fb5423dfb7869cd80e0dfabcf5e0fa7b9c9d4492ccde90d936c4e6e7452"
-    },
-    "qualification": "CompleteA3+A6metadata/sourcepeersCLEARqualified; unchanged643/54acrootconstruction+push+dispatch. Onlyfour exactcausal source products/catalog changed, old190/237/cohorts2151248/fullDebugRelease16tests2console4builds/sourcePDB/Compile/task/native/restores/originaldrains retained. No acceptance or OS222/platform/attachment/Terra selection.",
-    "cause": "UNKNOWN. Whole outer joint155465B/59dcf8 and regression22090B/61e99e logs do not expose original childcause. No source retry from generic exit.",
-    "index": {
-      "path": "/workspace/attachments/b53ed422-c9ad-43c9-8d37-44cd7269eb1d/sdk08-original-index-11290996681.zip",
-      "bytes": 22238,
-      "sha256": "0a8cb57c5050f68176834fa38a77a19b5b09ab0cdcb05b70c7aac237b9c5d078",
-      "files": 384,
+    "updatedUTC": "2026-10-04T04:51:47.037341+00:00",
+    "originalHead": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+    "jointOriginal": {
+      "fullOriginalTexts": 370,
+      "completeFilesRemoteHashed": 384,
       "pieces": 343,
-      "fullFileBytes": 49108754,
-      "totalAllocatedBytes": 57344,
-      "originalPartsAcquired": 0
+      "localPhysicalPePdb": false,
+      "commands": 103,
+      "successfulCommands": 102,
+      "DebugEntry05Exit": 1,
+      "distinctXunit1051Sites": 51,
+      "correctedGroupCounts": {
+        "ToolRegistry": 16,
+        "Runtime": 14,
+        "AgentOriginalContextBinding": 11,
+        "DenAgentExecutionStateStore": 8,
+        "DenAgentChatExecutionAdapter": 2
+      },
+      "historicalTranscriptionCorrection": "946 shorthand17/13 is superseded by actual complete log51-site count16/14; original source/log/hash and history preserved.",
+      "DebugLog": {
+        "bytes": 41340,
+        "sha256": "05c657aa1ddfb75d49ac6f06df84a8c4188806556fa775f6b78a0cf27ba77d36"
+      },
+      "noSuitesOrReleaseRan": true,
+      "compiler51SourceCorrectionAuthoredMethods": 43,
+      "preservedOutcomes": 49,
+      "newMethods": 0
     },
-    "next": "Acquire only measured whole1.925MB custody ZIP after closed lossless metadata retention; read original compiler/native cause, no blind product retry.",
-    "diagnostic": {
-      "actual": "e3483177ae43053c83039243651402551a06dcf0",
-      "tree": "b8078b18814afa17f6d685b735b7167dbf5c9c81",
-      "run": 37173482461,
-      "job": 111351134550,
-      "conclusion": "SUCCESS_CUSTODY_ONLY",
-      "oldProductJobs": "SKIPPED",
-      "receiptSha256": "8d2da41a23a5842fb056d2e93e64a00406af4392e77d51b2f74be130fe73ee6e"
+    "owningOriginal": {
+      "launchReceipt": {
+        "path": "/workspace/astra-source/root-sdk08-owning-original-custody-launch948.json",
+        "bytes": 2602,
+        "sha256": "39141f0dedc395600af654e3a6aa3ef0e628c656d9ddded14b56ddba0d3907fb"
+      },
+      "publisher": {
+        "path": "/workspace/astra-source/root-publish-sdk08-owning-original-evidence949.py",
+        "bytes": 11476,
+        "sha256": "75f3eb70f17c80b83752f325186ea77be28c4f028c734100ce41a419d27a5c86"
+      },
+      "failed948Publisher": {
+        "path": "/workspace/astra-source/root-publish-sdk08-owning-original-evidence948.py",
+        "bytes": 11242,
+        "sha256": "17b05ef83de111f6ac5c1cb30a02ce3874f08df60d2c656962f57d07d03a2875"
+      },
+      "failed948Cause": "local preflight treated299 descriptor JSON rows as newline paths; refused before any API mutation; exact one-span successor949 full source peer/root local preflight clear.",
+      "pureControls": {
+        "path": "/workspace/astra-source/root-sdk08-owning-custody-reader01-memory-controls947.json",
+        "bytes": 3804,
+        "sha256": "4a5d62c355b445618ffa7836db584e105b67818a6deef885d0c21905bf0c8db5"
+      },
+      "commit": "40c521f4653930f4b9b40f8fee8bb6fff9334511",
+      "tree": "6fa385ae385b1894667804f2f4929ef758a9ac22",
+      "run": 37177705866,
+      "job": 111363703356,
+      "conclusion": "success custody only",
+      "originalProductJobs": "both skipped",
+      "admittedWholeArtifact": {
+        "path": "/workspace/attachments/3391b605-cf6c-40ba-bde0-42214b7cbab5/sdk08-owning-complete-causal-originals-11293564384.zip",
+        "bytes": 4276679,
+        "sha256": "d5cb82b682ea7217bb9c5863cd4c05b9d7f31daa6fe82f6b30e9daf20f5a2b9c"
+      },
+      "artifactId": 11293564384,
+      "wholeZipMembers": 302,
+      "expandedBytes": 26490108,
+      "originalWholeLocalTexts": 299,
+      "originalWholeTextBytes": 23957989,
+      "completeFilesRemoteHashed": 358,
+      "pieces": 326,
+      "rootAllWholeTextIndexCRCAndSHA": "PASS closed handles; no extraction/source/network/native payload invocation",
+      "originalHomeFullObserved": {
+        "total": 432,
+        "passed": 406,
+        "failed": 26,
+        "skipped": 0,
+        "cause": "whole26/TRX/source attribution A1 in progress; independent A4/A6 full custody/task/symbol/restores/drains reviews pending; not joint51compiler cause"
+      },
+      "actualOriginalNative22687": "pending descriptor allocated; actual drain status semantic review pending. Inherited caller stdout absent from index remains missing."
     },
-    "measuredWholeCustodyArchive": {
-      "id": 11291069799,
-      "bytes": 1925859,
-      "sha256": "cb4823c6e20045e379dcfb592d88e01c904c7928ca78dc54990b1cc4c9d23e8a",
-      "admitted": false
-    }
+    "owningSourceCauseNowGrounded": {
+      "HomeFullLog": {
+        "bytes": 139828,
+        "sha256": "008170c4ba4ab40f608e13e8ac4bedf62ce9bb4d2ed7106518e594358f40a90f"
+      },
+      "HomeFullTrx": {
+        "bytes": 952012,
+        "sha256": "ea4b6157f2ba745833cd52c9e8444fd88abc8cbfb69799981977bedbe84efc66"
+      },
+      "observed": {
+        "total": 432,
+        "passed": 406,
+        "failed": 26,
+        "skipped": 0
+      },
+      "groundedAttribution": "A1 whole original outcome/error/source review:25 Admissions outcomes ~30s re-enter SAME held Den write lease through policy current admission/factory/evidence ownership. One distinct transport fresh-profile vs canonical home.core mismatch. Full semantic independent source/physical/drain closure still pending; minimal coherent same-owner non-reentrant source fix RAM only, no timeout or assertion weakening."
+    },
+    "compilerFixManifest": {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/manifest.json",
+      "bytes": 30078,
+      "sha256": "348039e5523ce074934cf1be01170cb1d623f11bab4428a383fd3896eeb89051"
+    },
+    "compilerVerification": {
+      "SDK09SourceRows": 106,
+      "fixtures": 31,
+      "methods": 204,
+      "minimumOutcomes": 251,
+      "newMethods": 0,
+      "qualification": "14 old tests newly explicit in catalogue; no extra authored cases. Full SDK09 not yet selected.",
+      "probeScope": "Six independent build/evaluation lanes: unchanged actual4f sibling v2 Debug/Release plus corrected v3/v2 Debug/Release, separate checkout/output/original-task contexts. Actual compiled graph/Compile/DefineConstants/ReferencePath/PEPDB/all docs/restores/custody only; no tests/native acceptance, no HintPath aliases. Quote pending."
+    },
+    "regressionOriginal": {
+      "manifest": {
+        "path": "/workspace/astra-source/worker6-sdk08-regression-original-evidence-reader-source01-fixed-monolithic-archive/manifest.json",
+        "bytes": 39272,
+        "sha256": "df6bf62a9de812c761d2f945a07139fd2fce3a2f7fe53a6e780d8a857dd59988"
+      },
+      "sourcePeers": "A4+A5 full qualified CLEAR",
+      "rootInertControls": {
+        "old": 33,
+        "directZip": 8,
+        "total": 41,
+        "status": "PASS once; originalFS/network/payload0",
+        "receipt": "root-sdk08-regression-reader01-memory-controls951.json",
+        "sha256": "3f1853be7d27fee1a4115fdf67617097c5700b40b6843a5b558ada323c53b708"
+      },
+      "actualReplay": "Dedicated3-file diagnostic API transport952 rootlocalpreflight clear; A5 full peer pending; not yet constructed/dispatched",
+      "descriptorIndex": "No original index. Entire authenticated monolithic6440507B/306f3baa will be replayed; derived inventory explicitly derived. No manufactured OriginalSession/drain seals or Compile acceptance."
+    },
+    "qualification": "Resource original green is separate; no full SDK09 retry/DebugRelease/native or product acceptance yet."
   },
   "currentForms13": {
-    "actual": "fafb9b5a9889975ae252eb13b3b6877378b020d2",
-    "run": 37168818529,
-    "jobs": {
-      "owning111337361003": "FAILURE",
-      "resource111337361170": "SUCCESS",
-      "regression111337361521": "SUCCESS"
-    },
-    "cause": "Full476 original members independently replayed by A2+A6:825 managedPASS/0fail/0skip; operation1 nativeDesktop restore changes exactly eight dependency restore.outputPath values and dgSpecHash; operation81 SAME positive metadata guard refuses before native build. No sole writerPID/target attribution or native acceptance.",
-    "owningArtifact": {
-      "id": 11290689956,
+    "originalComplete": {
+      "zip": "/workspace/attachments/3ef15686-0e05-431f-aaf5-763a22fc91cb/forms13-owning-original-11290689956.zip",
       "bytes": 8013708,
       "sha256": "cb63caf2cc555236f041f17827c2fe5d2e4a6f0bca039b48889b62bce1c95ab8",
-      "acquired": true,
-      "path": "/workspace/attachments/3ef15686-0e05-431f-aaf5-763a22fc91cb/forms13-owning-original-11290689956.zip"
+      "A2ReceiptSha256": "ef7865d5b55a5753e4be855d8b90698dba8fa47ce5ec1f96bf16790db9d9a670",
+      "A6": "INDEPENDENT_ALL476_9460FILES22LINKS86PINS229BINDINGS_825PASS0FAIL0SKIP8PEPDB629GITDOCS53CLASSES_ALL146OPS4CONTENTS_CLOSED",
+      "cause": "Operation1 native Desktop restore changes exactly8 dependency restore.outputPath values and cache dgSpecHash; operation81 SAME positive finalmetadata guard refuses before nativebuild. Final Desktop changed3Sitesdescriptors/sevenother suite pairs exact; no solewriterPID attribution.",
+      "proposal": {
+        "directory": "worker3-forms13-sites-artifact-isolation-source01-conditional-legacy-paths",
+        "manifestBytes": 13013,
+        "manifestSha256": "19f7175afd6d14eb4510ad80f7057a005d95f09d44abaad59e505a2f21d6e255",
+        "sourceBytes": 663,
+        "sourceSha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c",
+        "qualification": "3conditional legacy path attrs only; defaultlegacyoldvalues exact, explicittrue artifact phases scope; actual5SDK401files/currentChelper+driver complete source peers A1+A3CLEAR. C globaladoption ACK/currentcut rebinding pending. A2prepares isolatedForms14 exactsource/caller/property queries withallold17controls/4producers/full metadata+PEPDB+nativeguards intact."
+      }
     },
-    "ramEndpoint": {
-      "path": "/workspace/astra-source/worker3-forms13-owning-ram-original-review01/endpoint-refusal.json",
-      "bytes": 1099,
-      "sha256": "f1f8a9ab625931387772ab0b0c95eca15c3f570001517698666d7dca806ad89b",
-      "category": "URLError",
-      "httpStatus": null,
-      "originalAcquired": false,
-      "qualification": "One exact authorized RAM endpoint attempt did not obtain response; no ZIP/CRC/body proof. Connector alternate and exact localspace admission continue."
+    "privateForms15Manifest": {
+      "path": "/workspace/astra-source/worker3-forms-math15-actualfafb-current30-independent-original-and-added-query-guards/manifest.json",
+      "bytes": 155518,
+      "sha256": "ea4141ba0b1ef0c1b8a7f3574090eddd8b7a55a75e647075cdff72b89992e600"
     },
-    "next": "Private isolated Forms14 review/test branch with sole conditional legacy Sites path proposal, unchanged full source/PDB/task/metadata/native guards; Team C owns global adoption.",
-    "closure": {
-      "path": "/workspace/astra-source/worker3-forms13-owning476-original-metadata-cause-closure01/receipt.json",
-      "bytes": 10328,
-      "sha256": "ef7865d5b55a5753e4be855d8b90698dba8fa47ce5ec1f96bf16790db9d9a670",
-      "independentA6": "FULL_CLOSED_CLEAR_QUALIFIED"
-    }
+    "privateSitesSource": "SAME663B/7708aabe conditional legacy overrides, three whole predecessor525B inverse; C-owned no global adoption. Existing generic emitted ownerpath branch to be exercised with actual explicit UseArtifactsOutput=true, no strict guard/fingerprint bypass.",
+    "sourcePeerStatus": "A6 full15CLEARqualified; A3+A4 pending. Whole old14 HELD. Independent SAME original Desktop/nativeRestore/nativeOutput/task/source final guards and fresh addedquery process/session/pidfd/error seals.",
+    "actualValidation": "UNRUN; original source task/cohorts/PDB/signednative/restores untouched; Emit=true added property observation does not prove generated source files. C new fingerprint/cut global adoption outstanding."
   },
   "currentRootCheckpoint": {
-    "path": "/workspace/astra-source/root-teamA-current-continuation929.json",
-    "bytes": 49214,
-    "sha256": "b9e736d0ec14aa8ec7f102726effb175597340f83739e5f8f7ec808d67222e52"
+    "path": "/workspace/astra-source/root-teamA-current-continuation950.json",
+    "bytes": 77922,
+    "sha256": "57cdb147400c768355234ee73b615e22f8970aaa13f7a49dcded99903c536d03"
   },
   "SitesArtifactIsolationOwnerReviewRequest": {
     "status": "PRIVATE_FROZEN_PROPOSAL_UNRUN_NOT_GLOBALLY_ADOPTED",
@@ -1269,12 +1266,65 @@
     "qualification": "Frozen observational contract only; Home os.shell selector is source-known. Studio fixture is historical, no current approved release/key/ABI/payload identity invented. C supplies trusted release declaration and global release owns adoption."
   },
   "metadataCustodyProgress": {
-    "currentCompletedReader": {
-      "path": "/workspace/astra-source/root-read-closed-evidence942.py",
-      "groups": 76,
-      "sha256": "a3c17a841d9eb3b119f02af7ad9b192281de49eedd7f31f2830ec562b98c5d43"
+    "status": "COMPLETED exact lossless closed metadata retention",
+    "groups": 77,
+    "operativeReader": {
+      "path": "/workspace/astra-source/root-read-closed-evidence943.py",
+      "bytes": 9907,
+      "sha256": "7acebdc55fdae43453102b948d84ed793c6254cc441a154df9e958e00808a549"
     },
-    "rootClosedMetadata": "Seven obsolete API snapshots +49 nondependent historical root JSONs retained losslessly, whole bytes/metadata/readback restored before/after each unlink. All operative refs/current/source/native/SDK/binaries/original ZIPs untouched.",
-    "pendingA3ClosedMetadata": "Eleven closed historical generated JSONs16,182,675raw/9wholeunique members in root-owned exactretention944; preflight943 refused before mutation on TAR member ordering, successor changes only computed packsize/hash. No source/native/original archive removal."
+    "completed": "ROOTbootstrap7,ROOTclosed49,A3closed11historical generatedmetadata. Wholebyte proofs/duplicate members/original metadata/index/fsync/readers verified; failed quote preflights preserved. No original/archive/product/native/source deletion."
+  },
+  "previousRecord954": {
+    "commit": "815a13bfca5d0bdd13ae06f886f582da38da550b",
+    "path": "coordination/sol-happy-20261003/team-a.json",
+    "bytes": 103426,
+    "sha256": "da095b8cbdd2d7cafb111698b8f4d0eb63f236dad575f0076bc76cf1377dad92",
+    "url": "https://github.com/CroakyJake12/9to1/blob/815a13bfca5d0bdd13ae06f886f582da38da550b/coordination/sol-happy-20261003/team-a.json",
+    "qualification": "Complete prior status/source/history/owner requests preserved at immutable whole record, no specification content removed.",
+    "completeOldFields": {
+      "currentSDK08": {
+        "bytes": 2253,
+        "sha256": "c33b2452f78894b9813e7f8bd4eeff2631c7f218f7326a48f2720bc864abaaab"
+      },
+      "currentLinux20": {
+        "bytes": 2213,
+        "sha256": "0304eab97587d1c31a6b766bd09ef483613aa5647aa6c90f676610bd92ef70ea"
+      },
+      "currentForms13": {
+        "bytes": 1645,
+        "sha256": "3f2e256493ae1edfd56a0582b3b9f74baaa224d0d58dcc1efe5d2164ee60e718"
+      },
+      "currentRootCheckpoint": {
+        "bytes": 164,
+        "sha256": "3cc3b59076c273bc8abc9584dfd7dfdf645f50ccb1303a7009871d9606a1929c"
+      },
+      "metadataCustodyProgress": {
+        "bytes": 724,
+        "sha256": "9f46fce0c099915f17fda84933de5b66eea2dc90430ea85b404ec2c5b216b6a9"
+      },
+      "currentSourceWork": {
+        "bytes": 9290,
+        "sha256": "5be8bb1630d1a630b7f1e0a92372b2b351fbaa2a1525f1d1f9add9c0e29823e9"
+      }
+    }
+  },
+  "latestTeamCCoordinationRead954": {
+    "updatedUTC": "2026-10-03T23:48:21.261055+00:00",
+    "bytes": 69539,
+    "sha256": "d8c14d77707c1a38b7dce8cea9b186e585b1eee79299f4648a014045866e9544",
+    "blob": "2d988c7531d3d1122443bd89bbc6e53e3d9b23f4",
+    "observedUnchanged": true,
+    "privateSitesProposal": "663-byte conditional existing legacy path source remains C-owned; no global adoption/newcutfingerprint ACK yet",
+    "installedCurrentReleaseDeclaration": "whole10848-byte concrete contract published945; canonical actual package/version/services/payload/publicpolicy/signed descriptor outstanding"
+  },
+  "currentExecution954": {
+    "scope": "Adopted Team A native/shared/provider-neutral apps/OS/mobile; six current Sol6.1 workers. B browser, C hosted/billing and sole release/main. Complete current Astra pass exact acceptance and usable PC artifact before Terraform. No spec removals or whole-product completion claim.",
+    "allSixWorkersActive": true,
+    "remainingOutcome": "Complete current Astra full native source/runtime/installed/restart/accessibility/resource evidence and usable PC artifact, then Team C exact source/main/release handoff; Terraform after current pass only.",
+    "next": "Complete owning26 actual cause; separately clear+replay regression archive; complete Linux policy/caller peers+14 inert controls+root exact TEST validation; complete Forms15 peers and actual private output validation; quote/freeze/peer/run six compiler lanes. Continue genuine native source with exact scope; global release handoff/usablePC artifact remain open.",
+    "sharedRequestsAlreadyConcrete": "C review/adoption of whole663B Sites props proposal+new cut/fingerprint; genuine canonical installed-native package/version/services/public signed declaration and protected actual root launch. Whole10848B contract and663B body retained in945 record fields unchanged.",
+    "noProductionChanges": true,
+    "noExistingWordpressAccountDataTransfer": true
   }
 }
