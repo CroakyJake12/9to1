@@ -1,0 +1,82 @@
+name: Team C ordinary Web and genuine Picture browser gate
+
+on:
+  push:
+    branches: ["team-c/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actual-local-picture:
+    if: startsWith(github.ref, 'refs/heads/team-c/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Initialize only real native build gitlinks
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Publish genuine source with maintained SDK recipe
+        run: >-
+          python3 apps/Web/Tests/ci/run-ordinary-web-publish.py
+          --expected-commit '${{ github.sha }}'
+          --output "$RUNNER_TEMP/pb-publish"
+      - name: Install maintained Playwright and actual Chromium
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/pb-tools/node_modules/playwright
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/pb-tools/browsers
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pb-tools" --ignore-scripts --no-package-lock --no-audit --no-fund playwright@1.62.0
+          node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium
+      - name: Run exact real local Picture workflow
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/pb-tools/node_modules/playwright
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/pb-tools/browsers
+        run: >-
+          python3 apps/Web/Tests/ci/run-picture-browser.py
+          --expected-commit '${{ github.sha }}'
+          --publication "$RUNNER_TEMP/pb-publish"
+          --output "$RUNNER_TEMP/pb-run"
+      - name: Upload bounded public diagnostics and fixtures only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-c-picture-browser-nine-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/pb-run/diagnostics
+            ${{ runner.temp }}/pb-run/raw/results.json
+            ${{ runner.temp }}/pb-run/raw/picture-original.png
+            ${{ runner.temp }}/pb-run/raw/actual-crop-remove-all.png
+            ${{ runner.temp }}/pb-run/raw/picture-first-process.zip
+            ${{ runner.temp }}/pb-run/raw/picture-final-process.zip
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload publisher diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-c-picture-browser-publisher-${{ github.sha }}
+          path: ${{ runner.temp }}/pb-publish/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
