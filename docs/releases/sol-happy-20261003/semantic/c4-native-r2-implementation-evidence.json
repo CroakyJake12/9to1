@@ -1,0 +1,90 @@
+{
+  "status": "ADDITIVE_NATIVE_MANIFEST_READER_LOCAL_SOURCE_TESTED_UNADOPTED",
+  "canonicalSourceCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+  "C1Ack": "Explicit non-overlap reader+tests; existing native manifest/output types only, no pipeline/model edits",
+  "positive": {
+    "exit": 0,
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  },
+  "negative": {
+    "exit": 1,
+    "passed": 10,
+    "failed": 2,
+    "skipped": 0,
+    "mutation": "Isolated copy only RequireHash predicate false; unchanged tests. Corrupt-output accepted (test fails), corrupt-manifest reaches JSON parse instead of integrity refusal (test fails)."
+  },
+  "command": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c4/dotnet-home NUGET_PACKAGES=/workspace/.tools/nuget /workspace/.tools/dotnet/dotnet test /workspace/team-c/evidence/c4/native-r2/ActualNativeR2.Tests.csproj --logger trx;LogFileName=native-r2.trx",
+  "pins": [
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Application/SiteAuthoringService.cs",
+      "bytes": 9125,
+      "sha256": "27d3807af5e20c75310f72fcd39a6ac116982c823485a8b91f56b41e36a4c40a"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Application/SiteProjectService.cs",
+      "bytes": 9018,
+      "sha256": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Domain/SiteModels.cs",
+      "bytes": 8654,
+      "sha256": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Domain/SiteSlug.cs",
+      "bytes": 5341,
+      "sha256": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Hosting/NativeSiteBuildPipeline.cs",
+      "bytes": 7715,
+      "sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Hosting/SiteHostingContracts.cs",
+      "bytes": 4280,
+      "sha256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Infrastructure/FileSiteWorkspaceStore.cs",
+      "bytes": 10005,
+      "sha256": "e3ec22beb78ca0240c317b9e30db2fceeb2a3cd928ff27a051a2a666a1dc876c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/canonical/Runtime/SiteDocumentRenderer.cs",
+      "bytes": 13403,
+      "sha256": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/run.log",
+      "bytes": 574,
+      "sha256": "5b930da4d68d3d8bd03da597c0c1a362a15b3fb9ba798fc3f33e444cb8fb4fc0"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/negative.log",
+      "bytes": 3639,
+      "sha256": "9671234573c45d96efd559ab68541771fb3ebbf646e5757089b5bbdec305be11"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/initial-missing-dependency.log",
+      "bytes": 438,
+      "sha256": "912000837c24c64eb5f6a53a105caceb4336422fa157c40cb380b92c9254d610"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/ActualNativeR2.Tests.csproj",
+      "bytes": 816,
+      "sha256": "728f2a0d8c34bc6edca9f1e01e0816c8cbbd61b5af9f8c18a2252a5c34735479"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/TestResults/native-r2.trx",
+      "bytes": 18926,
+      "sha256": "49ec2209790c916b5e057a575c53228ba4cdfc40de25bc8342619ed4f72da3e5"
+    }
+  ],
+  "providerAcceptance": false,
+  "canonicalOwnerBinding": false,
+  "sharedContractChanges": false,
+  "filesHTTPJourneys": "12 NOT_RUN"
+}
