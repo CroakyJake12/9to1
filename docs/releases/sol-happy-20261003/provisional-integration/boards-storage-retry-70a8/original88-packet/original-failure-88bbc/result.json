@@ -1,0 +1,302 @@
+﻿{
+    "schemaVersion":  1,
+    "status":  "FAILED_OR_BLOCKED_UNACCEPTED",
+    "stage":  "actual-native-storage-failure",
+    "scenario":  "storage-retry",
+    "checks":  [
+                   {
+                       "name":  "Actual Windows x64 PowerShell host",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:19.3900704+00:00"
+                   },
+                   {
+                       "name":  "Visible interactive Windows desktop available for real keyboard and screen observations",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:19.4682336+00:00"
+                   },
+                   {
+                       "name":  "Existing hosted runner SDK-present qualification observed",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:19.7963625+00:00"
+                   },
+                   {
+                       "name":  "Current harness Git commit observed",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:19.8276150+00:00"
+                   },
+                   {
+                       "name":  "Harness descends from the exact immutable producer source",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:19.8589534+00:00"
+                   },
+                   {
+                       "name":  "Only declared workflow/control files changed from the producer",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:19.9057370+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/Program.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0151139+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/Boards.cui",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0151139+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/BlockRenderer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0151139+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/BoardsViewModel.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0151139+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0307410+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0307410+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0379188+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ControlAutomationPeer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0384447+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/BoardProjection.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0384447+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/ShellChrome.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0384447+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/ToolbarBuilder.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0464703+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/app/BoardsIcons.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0464703+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: 9to1 Workspace/Boards/contract/RichBoardSession.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0464703+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ToggleButtonAutomationPeer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0464703+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0464703+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBlockAutomationPeer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0621263+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/AutomationPeer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0621263+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/AutomationNode.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0621263+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowAutomationPeer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0621263+00:00"
+                   },
+                   {
+                       "name":  "Exact native source pin: framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowBaseAutomationPeer.cs",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.0621263+00:00"
+                   },
+                   {
+                       "name":  "Exact original inner package bytes and SHA256",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.1871329+00:00"
+                   },
+                   {
+                       "name":  "Exact original producer manifest SHA256",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.2027660+00:00"
+                   },
+                   {
+                       "name":  "Original package manifest binds Boards and exact producer",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:20.2340099+00:00"
+                   },
+                   {
+                       "name":  "Extracted package contains the exact original file count",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:22.3453265+00:00"
+                   },
+                   {
+                       "name":  "Explicit fixture path starts absent and is safely quoted",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:24.0504651+00:00"
+                   },
+                   {
+                       "name":  "Actual HWND exposes a native UIAutomation Window",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.6141037+00:00"
+                   },
+                   {
+                       "name":  "Application created a genuine canonical board identity and schema",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.6454179+00:00"
+                   },
+                   {
+                       "name":  "Fresh actual application has one canonical paragraph target",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.6454179+00:00"
+                   },
+                   {
+                       "name":  "Accessible editor belongs to the exact launched process",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.9110733+00:00"
+                   },
+                   {
+                       "name":  "Accessible Edit name: Paragraph editor",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.9110733+00:00"
+                   },
+                   {
+                       "name":  "Visible, enabled, keyboard-focusable editor: Paragraph editor",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.9423178+00:00"
+                   },
+                   {
+                       "name":  "Editable native ValuePattern: Paragraph editor",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.9579480+00:00"
+                   },
+                   {
+                       "name":  "Native app admitted foreground activation",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:26.9579480+00:00"
+                   },
+                   {
+                       "name":  "Standard Win+Up admitted only to the exact focused native app",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:27.0421932+00:00"
+                   },
+                   {
+                       "name":  "Actual OS-positioned window retains exact process foreground",
+                       "passed":  true,
+                       "observedAtUtc":  "2026-10-04T16:04:27.1611540+00:00"
+                   }
+               ],
+    "launches":  [
+                     {
+                         "label":  "first-launch",
+                         "processId":  2204,
+                         "windowObserved":  true,
+                         "closeRequested":  false,
+                         "exited":  false,
+                         "exitCode":  null,
+                         "windowTitle":  "Packaged UI board — Boards"
+                     }
+                 ],
+    "screenshots":  [
+
+                    ],
+    "streamDrains":  [
+                         {
+                             "launch":  "first-launch",
+                             "stream":  "stdout",
+                             "timeoutMilliseconds":  5000,
+                             "completed":  true,
+                             "failureType":  null
+                         },
+                         {
+                             "launch":  "first-launch",
+                             "stream":  "stderr",
+                             "timeoutMilliseconds":  5000,
+                             "completed":  true,
+                             "failureType":  null
+                         }
+                     ],
+    "producerRunId":  37208129079,
+    "producerCommit":  "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+    "originalArtifacts":  [
+                              {
+                                  "id":  11305252552,
+                                  "name":  "windows-unaccepted-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+                                  "bytes":  78087570,
+                                  "digest":  "sha256:97012e4592d4c0f5da14bedd1ac13b5a6b1988bd292b2e990bccd3cdec30d68f"
+                              },
+                              {
+                                  "id":  11305292433,
+                                  "name":  "windows-observation-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+                                  "bytes":  34079,
+                                  "digest":  "sha256:7645fdba070177fd1319112030a11242eacfc5000b8cabb553b0e9f16938b234"
+                              }
+                          ],
+    "package":  {
+                    "file":  "boards-win-x64-unaccepted.zip",
+                    "bytes":  78324943,
+                    "sha256":  "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64"
+                },
+    "packageHashVerified":  true,
+    "manifestHashVerified":  true,
+    "extractedFilesVerified":  true,
+    "forcedCleanup":  false,
+    "acceptanceVerified":  false,
+    "fullAppAcceptance":  "NOT_RUN",
+    "installedHomeTuple":  "NOT_RUN",
+    "cleanPcDelivery":  "NOT_RUN",
+    "failure":  {
+                    "type":  "System.Management.Automation.RuntimeException",
+                    "message":  "Timed out observing: Visible native save text: Saved"
+                },
+    "qualification":  "Actual immutable packaged executable on a disposable SDK-present hosted Windows runner. Bounded native UI, keyboard and persistence controls only; no Home installed tuple, signing, donor matrix, Android, clean-PC or full-app acceptance.",
+    "windowsVersion":  "Microsoft Windows NT 10.0.20348.0",
+    "runnerImage":  "20260927.320.1",
+    "powerShellVersion":  "5.1.20348.5622",
+    "sdkInventory":  [
+                         "8.0.131 [C:\\Program Files\\dotnet\\sdk]",
+                         "8.0.206 [C:\\Program Files\\dotnet\\sdk]",
+                         "8.0.319 [C:\\Program Files\\dotnet\\sdk]",
+                         "8.0.425 [C:\\Program Files\\dotnet\\sdk]",
+                         "9.0.121 [C:\\Program Files\\dotnet\\sdk]",
+                         "9.0.205 [C:\\Program Files\\dotnet\\sdk]",
+                         "9.0.318 [C:\\Program Files\\dotnet\\sdk]",
+                         "10.0.112 [C:\\Program Files\\dotnet\\sdk]",
+                         "10.0.204 [C:\\Program Files\\dotnet\\sdk]",
+                         "10.0.303 [C:\\Program Files\\dotnet\\sdk]",
+                         "10.0.401 [C:\\Program Files\\dotnet\\sdk]"
+                     ],
+    "workflowCommit":  "88bbc69d8c22cbf9095ddfc8282460dfc7841d07",
+    "storageStatusObservations":  [
+
+                                  ],
+    "expectedStorageRetry":  {
+                                 "paragraph":  "Retried after a real Windows read-only storage failure",
+                                 "fault":  "Own app-created NTFS primary ReadOnly file attribute",
+                                 "qualification":  "OS storage behavior only, not account authority or ACL policy. Autosave may also contribute."
+                             }
+}

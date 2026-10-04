@@ -1,0 +1,8 @@
+{
+  "parserVersion": "7.6.6",
+  "parsedActualSource": ".github/scripts/boards-packaged-ui-controls.ps1",
+  "frozenCommit": "88bbc69d8c22cbf9095ddfc8282460dfc7841d07",
+  "sourceSha256": "cf117539f495d9c13b4152cb75dbea5c81490cc9be50dd911f3a08244639772b",
+  "errors": [],
+  "qualification": "Linux PowerShell7 syntax parsing only, not Windows PowerShell5.1/native UI execution."
+}
