@@ -129,7 +129,7 @@
     "Team A: fix B-FORMS-FIRST-ROOT-LOSS-PRIVATE-CLEAR-11. Original and independent diagnostic replays retained the private Response on FIRST Save after root replacement, with replacement bytes unchanged, SaveOutcomeUnknownReloadRequired and the same canonical revision1. Require authoritative typed root loss and immediate private clear/fence, distinct from genuinely uncertain commit replies; preserve original8+seed/verify assertions. Complete173-file/124-blob portable native source and runtimes08/11: https://github.com/CroakyJake12/9to1/blob/43b53ef16f553dd01b17d8962483e483faa6ba30/docs/releases/sol-happy-20261003/team-b-forms-root-loss-native-8041/delivery-manifest.json. ZIP SHA f3b45020. Independent diagnostic04 manifest7b5dab/rootreviewcbd277 confirm the observation. No replacement write/adoption observed; B will not edit shared production without exact ACK.",
     "Team C C5: exact two Forms adapter bodies requested in original0dce sourcepins are already committed on B8041 (initiallyf2afb76c), and root verified exact bytes: Route20543ec0557eac26b37b8a78577f19be182334f4bbab1e43f2d7f10a6e54b7d2/7829B; Session4c3ce6c0f255ed16c0a102ea5e1490c12d8781c60ca281bd2b25cfb2548a2e3e/9964B. ImmutableURLs and originalrequest/baseline provenance in formsMissingAdapterBodiesDelivery. Please review these exact bodies rather than old0dceabsence; sourceAPI/authority ACK and actualbrowser gates remain open."
   ],
-  "testStatus": "Actual aef50 ordinary six-job CI98PASS (63unit/boundary+35durable-owner),66normalclosed commands; root+independent actual anonymous old8041 BFcache6 each6PASS. Planner actual45eb normalCI success/freshTRX selected1PASS1, fullrecordedreview in progress. JS73+platform10PASS; wrongargument firstinvocation retained. Picture15/nativecontrols+freshWebpublisher and realChat denied-refresh SAME10 source peers ready, adoption/actualexecution next. Full active-app/browser/provider/donor/accessibility acceptance remains OPEN.",
+  "testStatus": "Previous07bc package actual public7/9/9SUCCESS/fullrawpending; original60bothFAIL/Space15FAIL/durable65PASS separately preserved. New69cffWrite62+package andWave3native64+7UNIT\u2192strict14+new3 browser actively running. Full31/LE/platform/provider/AT acceptanceOPEN.",
   "evidenceLocation": {
     "branch": "team-b/sol-happy-browser-20261003",
     "commit": "1356a1346f9d6ea948c202b2dd920b3b29869b77",
@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T17:40:46.959693+00:00",
+  "updatedUTC": "2026-10-04T19:07:10.865380+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -163,10 +163,13 @@
     "0dd58e0b50b99e4ed7996bb57b982e9bda027907",
     "11b2890f6fe73747db74fa1a0c686648ed971c94",
     "dbb10e81c865dac61dbfb9f27a16da4e9556e7aa",
-    "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443"
+    "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
+    "07bc9f277d6163712064cc5b7e25953613ca5a09",
+    "c1de77a1c7854c876835172e8538853ebc409bfc",
+    "69cff0de54c22ab46728efa18ed0a32ac1efce03"
   ],
-  "candidateCommit": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
-  "candidateStatus": "PROVISIONAL_SCOPED_RESULTS_CURRENT_NATIVE_FAILURES_FULL_ACTIVE31_OPEN",
+  "candidateCommit": "69cff0de54c22ab46728efa18ed0a32ac1efce03",
+  "candidateStatus": "PROVISIONAL_OWNER_REPAIRS_GENUINE_LOOPS_RUNNING_FULL31_PLUS_INCORPORATED_LE_OPEN",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -1185,29 +1188,37 @@
     "formsGeneratedOutputs": "InterruptedRespond03neutral-nativecopy allocated~599MB with1817paths/765unique470MBlogical blobs,90hardlinkgroups. FailedplainZIP200MiB retainedbyteexact/incomplete. Complete content-addressedarchivewriter765fullblobs measuredDEFLATE156713857B preservesall1817path/stat/hash/links; writerheldwhileGUI192MBresourcecap. No Forms generated output/source/rawfailuresdeleted."
   },
   "currentExecutableQueue": {
-    "actual": "Formsoriginal09+indepboth7/1; diagnostic11ANDindep04FIRSTSaveprivateResponseNullFALSE/byteequalityTRUE/statusunknownsameIDsrev1. Data17PASSrecordedindep; Waveactual+indep14PASS. Navproposal5redgreen+indep5PASS, production1beunchanged/portable03RESOURCE_HOLD/all4NOT_RUN. Context6actual5PASS1BFcacheNOT_RUN.",
-    "sourceCandidate": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
-    "artifactCandidate": "43b53ef16f553dd01b17d8962483e483faa6ba30",
-    "SDK": "CLOSED; Planner10extractedmembergate sourceauthoring/B1newactualassetcontinuation sourceproposal. Genuineper-entryassets for37/15/6absent, mustnormalrestoreexplicitlyreviewedno copiedassets/competingresolver.",
-    "GUI": "CLOSED after Context6 original and independent same-six runs: both5PASS0FAIL1BFcacheNOT_RUN/exit2 incomplete, normal12held identities/0signals/ECHILD/portsclosed. CDPreason-only diagnostic03 sourcee187 pending independentpeer/rootreview/newgrant; no inference before actual evidence.",
-    "largeWriter": "CLOSED; publicsmallFormsindep04/Context6additivepacket inventoryB3, Data927/Wave110publicpacket selections pendingrootbudgetreview.",
-    "Planner": "ProtocolactualsixPASS supportingonly. Packagegate09sourcegapconfirmed/notrun; source10repairauthorized. OnceofficialSQLiteacquisition/nativeFactstillNOT_RUN.",
-    "FilesSites": "B4warm13projectsource07/B3peer6335e220 clear; 8outputs actualgraph not7. Source08correctcounts/boundedwarmgenuineFiles17+mutants/Sites18+childordinaryOutputPath plan; HTTP6fulloriginalRemoteIdentityModel8.14 missingnormalcache, separateordinaryrestoreprerequisite. No actualnative/backendPASS.",
-    "next": "FinishindependentContext6/CDPnonuseactualreason; reviewedoncePlannerSQLite+realFact/Schedule3/Games4; genuinewarmFiles17/Sites18/HTTP6; actualNavportable5/37/15/6/fullWebbuild thenrootadopt/seal+affectedAccount7/Wave14; exactAHome742/CUI193/WriteSpace/Glyph/Picture/Formsrootlossrequests; all31app/platform/donor/LE/provider/AT/crossclient/integratedcandidategates outstanding.",
-    "noCompletionClaim": "Usefulauthorizedimplementationandvalidation continues; nofullscopeacceptance/percentages/mainmerge/deploy/spend."
+    "sourceCandidate": "69cff0de54c22ab46728efa18ed0a32ac1efce03",
+    "authority": "CurrentExecutableCheckpoint nextExecutables",
+    "SDK": "LOCAL_RUNTIME_CLOSED_CAPACITY_FLOORS; ordinary public Ubuntu CI genuinely running",
+    "GUI": "LOCAL_RUNTIME_CLOSED; genuine maintained Chromium CI gated by native",
+    "noCompletionClaim": true
   },
   "specificationMetadataRecheck": {
-    "UTC": "2026-10-04T12:25:38.818892+00:00",
-    "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
-    "modifiedTime": "2026-10-04T11:47:25.349Z",
-    "state": "LIVE_MODIFIED_FULL_FRESH_TEXT_EXPORT_READ_AND_INDEPENDENT_FULL_DIFF",
-    "format": "text/plain native export,1402519bytes",
-    "snapshotSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
-    "previousFull8534ParagraphSnapshot": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
-    "activeSubstantiveRequirementChanges": 0,
-    "actualChanges": "Nine numbered completion clauses238..246 retain exact text; explicitly OUT_OF_SCOPE tan90 name8531 Choo Choo\u2192Dulche Decorum. All8524 other normalized paragraphs exact. New structural Docs revision/indices not inferred.",
-    "rootDiffSHA256": "11ca0414e2957744556f994c742222ce552749cc1f6d02600d1641a6fbe5f61e",
-    "independentFullDiffSHA256": "caa41671d264e7e64085b3e949c4cc33c194dcff94aa9893e8c75f9ae1dc7819"
+    "UTC": "2026-10-04T18:33:18.837073+00:00",
+    "authority": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "modifiedTime": "2026-10-04T18:20:37.341Z",
+    "exportBytes": 1404321,
+    "exportSHA256": "2a2a90823fdef8962f89b360c565cb02df7a0cad8749e81b54eebeddad07215a",
+    "exportPath": "/workspace/attachments/50942447-9d27-41e5-87af-9d569839acc8/9to1 Development Specification.txt",
+    "previousSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
+    "completeDeltaPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/canonical-live-1820-update.diff",
+    "effect": "Entire LE01\u201315 formally incorporated into Pass1 and remains at existing location under renamed heading; all technical contracts/platforms/precise supersessions unchanged. TeamB existing full31/LE goal continues, no passing evidence relabel or double count.",
+    "deliveryTargets": {
+      "WindowsRequiredPass1": "2026-10-05T07:00:00+01:00",
+      "FullPass1Pass2Pass3": "2026-10-05T19:00:00+01:00",
+      "timezone": "Europe/London"
+    },
+    "acceptanceAndSecurityApprovalRequirementsUnchanged": true,
+    "TeamA": "native/shared",
+    "TeamB": "browser",
+    "TeamC": "hosted/globalintegration",
+    "actualCurrent07bcNativeFailurePreserved": true,
+    "independentWholeScopeReview": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/canonical-live-1820-independent-scope-review01/REVIEW.json",
+      "bytes": 39492,
+      "sha256": "15f5594049fc8efd77f17c9ff895a5d876f63d9056551523ca824cafad65c11a"
+    }
   },
   "homeResponsiveJointOwnerAckRequest": {
     "owner": "TeamA A1 canonicalHomeCUI; B-ownedperHomehostingmetadata",
@@ -1292,9 +1303,9 @@
     "owners": "LatestA03:40 record815a13bf preserves historicalACKfields byimmutable5e153eb; no newexact193c/742/35c/Glyph/PictureACK. C23:48 no newhostedports. NewA CardsStudy32/sourcecontracts remainunrun/unpublished; no fabricatedfrontendBank/Burrows. RootsoleBwriter Csoleglobalrelease unchanged."
   },
   "currentExecutableCheckpoint": {
-    "UTC": "2026-10-04T17:40:46.959693+00:00",
-    "sourceHead": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
-    "state": "ACTIVE_OWNED_PRODUCT_REPAIRS_ACTUAL_FAILURE_LOOPS_AND_INDEPENDENT_CUSTODY",
+    "UTC": "2026-10-04T19:07:10.865380+00:00",
+    "sourceHead": "69cff0de54c22ab46728efa18ed0a32ac1efce03",
+    "state": "PUSHED_OWNER_REPAIRS_GENUINE_NATIVE_AND_BROWSER_LOOPS_ACTIVE_FULL31_PLUS_LE01_15_OPEN",
     "PictureBrowser9": {
       "firstRun": 37206507446,
       "firstSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
@@ -1500,7 +1511,7 @@
         "bytes": 3842,
         "sha256": "2a0c8300321d83fe70d0f8468d24b68e2debbfaa5a298c27919a29350b3bcc5c"
       },
-      "qualification": "Original14/localdurableIDB full26/literal27/WAVbody reviewed; independent critical14 passed and causalraw independentlyreviewed, fullsecond26 transport1of3 complete. Historical390clip failure preserved; realB-ownednativeviewport nowfits, current64=56PASS8FAIL. FullAT/provider/audiohardware/donor/crossclient/fullWave open.",
+      "qualification": "Original and critical independent14 remain narrow local durable PASS; both full26 raw custody/literal27/PCM reviewed. Historical390 visual defect remains failed. New69cff responsive source native/browser acceptance pending.",
       "fullCausalRawPrimary": {
         "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-recorded-raw-review01/recorded-wave14-full-causal-review.json",
         "bytes": 33054,
@@ -1544,7 +1555,32 @@
           "bytes": 15150,
           "sha256": "244bd569f6fb7a50b0e8bc5d334346e30040de2c2f2dfb2a4a786093455afe80"
         },
-        "scope": "RealIDB/audio/export/quota-refusal-and-recoveronce14; rawWAVnotuploaded/hardwareaudibilityunverified; full3trace/3PNGcustodypending; originalActionsouterwholebodyidentitymetadataonly."
+        "scope": "Original14 critical replay37212388505 complete26/literal27 persisted values/actual288044B PCM network WAV exactsilence+sourceTail. Original44MB Actions ZIP outer SHA metadata-only; all reconstructed45MB container bodies verified. Historical390 caption/narrow visual defect remainsFAIL; no new responsive product acceptance.",
+        "full26CriticalAndVisualDelivery": {
+          "head": "b53980f16e36c91b5fccf281320684395da7c51d",
+          "branch": "artifact/team-b-independent-wave22d-member-transport-20261004",
+          "state": "COMPLETE_26_MEMBER_PLUS365_NESTED_BODY_CUSTODY_ROOT_AND_B6_AND_B1_VISUAL_REVIEWED",
+          "rootWholeBodyReceipt": {
+            "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/independent-wave-part03-and-full26-durable-delivery.json",
+            "bytes": 241065,
+            "sha256": "1ba9e02a0c6d2da5b79c60d5a7aa3e9e39915cd9df615f0d096cd7e2c337eb96"
+          },
+          "rootLiteral27AndPCM": {
+            "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/independent-wave-full26-critical-root-review.json",
+            "bytes": 18279,
+            "sha256": "b67e3d866b6a9a171b626cae80007c676143525d5ddb9f8f5afddc589f51ff8f"
+          },
+          "independent": {
+            "path": "/tmp/team-b-b6-wave22d-independent-full26-memory-review01/review.json",
+            "sha256": "47e29e68d803570451cc0849d95c74d91d5ab4653cace4f81775e97f1e1e027d"
+          },
+          "actualVisual3PNG": {
+            "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-visual-memory-review01/visual-review02.json",
+            "bytes": 5532,
+            "sha256": "8b655c186915b3146fcf7b1d8eea1e2cb11b03c1ba7542859f2e96955d153dde"
+          },
+          "scope": "Original14 critical replay37212388505 complete26/literal27 persisted values/actual288044B PCM network WAV exactsilence+sourceTail. Original44MB Actions ZIP outer SHA metadata-only; all reconstructed45MB container bodies verified. Historical390 caption/narrow visual defect remainsFAIL; no new responsive product acceptance."
+        }
       },
       "fullOriginal26Custody": {
         "primary": {
@@ -1571,12 +1607,12 @@
     "WriteAuthoring": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
     "Planner": "Actual selected original SQLite1/1 PASS; B2+B6 full recorded review complete.",
     "nextExecutables": [
-      "Wave actualnative repair/meaningful glyph+localpan checks thenactualbrowser14+3 andB6criticalreproduce",
-      "Write initial-focus/save retention/RIDless+cache/validatedasset source07review/rootadopt thenactual7/9/9+original48/new9nativefocus mode",
-      "Independent existingWave full26 secondrun: isolated officialpart02 two<10MB subparts thenpart3/fullIDB+PCM reproduce in memory",
-      "Continue other current31 realowner workflows and exact sharedA/hostedC dependencies without scope reduction"
+      "Inspect genuine69cffWrite62/Space15/durable65/package7_9_9 and complete exactoriginal60 follow-up",
+      "Inspect genuineWave3native64plus7UNIT then original14+new3 actualbrowser with source/ink/tail/pixels/AX and independent reproduction",
+      "Read-only original successful07bcWrite ZIP transport7parts once; fullraw root/primary/B6 review then critical independent replay",
+      "Continue complete31app and incorporatedLE01_15 executable owner lanes; exact sharedA/hostedC requests remain open"
     ],
-    "completion": "FULL_ACTIVE31_AND_LE01_15_INCOMPLETE_CONTINUING_AUTHORISED_WORK",
+    "completion": "NOT_COMPLETE; no fullapp/platform/donor/LE/provider/AT/deployment acceptance or conformance percentage.",
     "Study": {
       "run": 37210629435,
       "source": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
@@ -1703,16 +1739,84 @@
       "unchangedFloor": 256000000,
       "nativeSeedBrowserNativeReadback": "ALL_7_9_9_NOT_RUN",
       "causeQualification": "Exact added package identities unrecorded; assets originalexcluded. Do not infer runtime-pack cause or focusfix pass.",
-      "nextOwnedSource": "RID-less genuine Linux framework-dependent apphost; BOTH genuine publisher NuGet and HTTP positive-path growth; narrowinitialfocus latch neweditoronly; actualexisting selectedassets bounded512KiB/2MiB/index64KiB; source06 valid uploadguard HOLD being fixed07, no cap/oracle waiver; original48+new9 realScene focus branch requires actualCI invocation",
+      "nextOwnedSource": "Exact original07bc60 fixture against current product proposed by B2; separate real scene-original60 run retaining48+12 unchanged names and predicate bodies, current62 kept with2 busy toolbar guards; no aliases/subset PASS.",
       "firstPermanentOriginal": "27c456cda58fd1e690c51eae98b83493bbd43ee8",
       "rerunPermanentOriginal": "7e31d7393178ca9810f2faabf429a4e7003b285f",
       "independentRerunReviewSHA": "c815a89f7fe60b37b5f04ad9962bc12c381ccbafc032f7cabd929412e6012117",
       "wholeRerunIndependentReviewSHA": "5da62a9da88c017f8cfe00da15959818459a042e70006e5750bd1537bdcb0292",
-      "scope": "Actual localPackage/import/editBold/save/revisionHistory/download/readback/coldBrowser; fullSpace/A-owned font metrics/fullformats/providers/donorAT remainopen"
+      "scope": "Actual localPackage/import/editBold/save/revisionHistory/download/readback/coldBrowser; fullSpace/A-owned font metrics/fullformats/providers/donorAT remainopen",
+      "currentSourceHead": "69cff0de54c22ab46728efa18ed0a32ac1efce03",
+      "source10Commit": "c1de77a1c7854c876835172e8538853ebc409bfc",
+      "rootSourceAdoption": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/write-source10-root-adoption.json",
+        "bytes": 6149,
+        "sha256": "04b5923244972ea5de22b270db0fc3a455d4f50cdae1c34d131e4b0d56959863"
+      },
+      "previous07bcNative60": {
+        "run": 37224554478,
+        "toolbar48": {
+          "pass": 16,
+          "fail": 1,
+          "notRun": 31
+        },
+        "initial12": {
+          "pass": 9,
+          "fail": 1,
+          "notRun": 2
+        },
+        "permanentOriginalHead": "8a16dd1b2fc6bea836fc289e5fd6f7342d1f5155",
+        "independent": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/07bc-scene60-remote-review01/review.json",
+          "bytes": 14101,
+          "sha256": "272ad0aa3549eded5f85d8d84d59826eb1ef96299d9d2bdded42d188c447a2f7"
+        },
+        "qualification": "Both genuine modes FAILED; natural -6 assertions/full12 families56 births/EOF ECHILD/0 sent signals; no PASS from peer review."
+      },
+      "previous07bcPackageActual": {
+        "source": "07bc9f277d6163712064cc5b7e25953613ca5a09",
+        "run": 37224554469,
+        "job": 111501407660,
+        "publicJobConclusion": "SUCCESS",
+        "nativeSeedPass": 7,
+        "browserPass": 9,
+        "nativeReadbackPass": 9,
+        "ownedPositiveGrowthBytes": 74572856,
+        "sharedNugetGrowth": 0,
+        "sharedHttpGrowth": 0,
+        "resourceCapBytes": 192000000,
+        "rawOriginalArtifact": 11311313103,
+        "rawOriginalBytes": 25397848,
+        "rawOriginalSHA256": "fc4f48f45a5df40e401a5df08cf018c97fc0f9bf3f79f3946db3792c57576bc3",
+        "fullRawBodyReview": "PENDING_ONCE_SEVEN_EXACT_ORIGINAL_BYTE_FRAGMENTS",
+        "publicLogCheckpoint": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/checkpoint-write-07bc-package-success.json",
+          "bytes": 2520,
+          "sha256": "048c1c256b386d279d3b731a79b87d488bd5d71e906d2496701ad21829cbad53"
+        }
+      },
+      "currentActualRuns": {
+        "native62_Space15_durable65": 37226746186,
+        "package7_9_9": 37226746160,
+        "source": "69cff0de54c22ab46728efa18ed0a32ac1efce03",
+        "state": "RUNNING_NO_NEW_PASS_CLAIM"
+      },
+      "sourceOnlyExporter": {
+        "manifest": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-package-original-custody-source01/manifest.json",
+          "bytes": 4596,
+          "sha256": "5c97a33f0b8fa1301565bfba3a97463ccbd90801c1cdd279e091c3e4a228f371"
+        },
+        "peer": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/write-package-original-custody-source01-peer/REVIEW.json",
+          "bytes": 9608,
+          "sha256": "27fc4816c874ddead803637dd9a2d82a873b5574747a90373b43cc66b6581fab"
+        },
+        "scope": "Read-only official original ZIP, contiguous7 <=4000000 byte fragments, no application rerun/product writes; root isolated branch adoption next."
+      }
     },
     "WaveResponsive": {
       "ownedProductHead": "0dd58e0b50b99e4ed7996bb57b982e9bda027907",
-      "currentSourceHead": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
+      "currentSourceHead": "69cff0de54c22ab46728efa18ed0a32ac1efce03",
       "firstNativeRun": 37218630614,
       "firstActualProposed": {
         "executed": 13,
@@ -1744,12 +1848,36 @@
         "bytes": 61798,
         "sha256": "0e619ca1998937edda294e5e385ee7cdc4f4ac366788e1cc05edd3298419f097"
       },
-      "causalFacts": "All18 selection-rectangle overruns are recorded trailing-space advances; visible ink of those exact offending lines fits. Three recurring button-caption ink overhangs exceed their text advance allocations but stay within root. Public clipping/parent padding geometry must be reviewed, no .1 waiver. Wide local waveform-scroll failure needs actual local metrics. All original failed assertions retained.",
+      "causalFacts": "Actual3 native captions selfClipToBounds true with ink overhangs+0.178977/+0.46875/+0.21875; old capped inner extent700 versus aggregate1799 leaves tail unreachable. Stress600 buckets is scripted; production max192 remains unchanged. Selection-advance trailing whitespace is diagnostic and not visible ink. Unknown transform/clip criteria fail closed.",
       "nativeDiagnosticOnly": "Additive actual15 line fields/source spans/all7group completion; no product/oracle/tolerance change",
       "browserWorkflowRun": 37218630611,
       "browserState": "SKIPPED_NATIVE_PREREQUISITE_FAILED_STRICT14_AND_NEW3_NOT_RUN",
       "browserCriteria": "Actual populated390;Tab/ShiftTab/touch/localwheel/physicalSaveCloseReopen;genuineChrome setZoom/getZoom2. FullAT/theme/providers/crossclient/resource acceptance open",
-      "next": "Complete actual caption/clipping/local-waveform geometry diagnosis; independently review meaningful oracle correction/control only where source/raw establish fixture defect; fix genuine B-owned layout defects; native64 then strict14+new3 actual screenshots/independent reproduction."
+      "next": "Inspect full7UNIT+64 native results/raw incl actual1799 content extent andoffset, then strictoriginal14+additional3 realbrowser/390/font2/genuine200%/Tab/touch/wheel/cold close/reopen/pixels/AX; independent critical reproduction required.",
+      "source06RootAdoption": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave-source06-root-adoption.json",
+        "bytes": 8775,
+        "sha256": "abd36960ef670c10781eec4caa69867316112235c027b7c398f1a819142a3d53"
+      },
+      "productRepair": "Wave native caption factory allocates actual one-unit horizontal padding inside unchanged self ClipToBounds; finite700 limit moved to outer waveform viewport, inner content unbounded.",
+      "criterionVersion": {
+        "allUIChecks": 64,
+        "tolerance": 0.1,
+        "versionedCheckInstances": 12,
+        "unchangedCheckInstances": 52,
+        "separateActualNativeUnitPrerequisites": 7,
+        "oldFailuresRemainFailed": true,
+        "erratum": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-native-paint-criterion-source06-accounting-erratum.json",
+          "bytes": 1182,
+          "sha256": "c7d66c1c992d26b40a1060f3bb932358e623a50920653c2e5145fdb92cb7f727"
+        }
+      },
+      "currentRuns": {
+        "original_D93Unrepaired_proposed": 37226746100,
+        "nativeSupportThenOriginal14PlusAdditional3Browser": 37226746108,
+        "state": "RUNNING_NO_NEW_NATIVE_OR_BROWSER_PASS"
+      }
     }
   },
   "executableCheckpointHistory": [
@@ -3161,10 +3289,10 @@
   "currentDraftLocalAppsReview": {
     "url": "https://github.com/CroakyJake12/9to1/pull/6",
     "draft": true,
-    "head": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
+    "head": "69cff0de54c22ab46728efa18ed0a32ac1efce03",
     "base": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
-    "status": "FF_HEAD_AND_STRUCTURED_PR_BODY_VERIFIED",
-    "scope": "Actual originalowner workflows/B-ownedWaveviewportrepair/Writefocus source with currentfailedgate/initialfocusfollowup; Csolemain/releaseacceptance"
+    "status": "PUSHED_AND_STRUCTURED_PR_BODY_UPDATED_DRAFT",
+    "scope": "B-ownedWrite focus capture/host toolbar guard+Wave caption ink allocation and reachable waveform viewport; genuine execution underway, historicalFAILs preserved, Csoleintegrator"
   },
   "latestTeamCIntegrationReceived1405": {
     "coordCommit": "53299e8686d6903e9a60111bb1610a3ed0e10264",
@@ -3398,15 +3526,29 @@
     "scope": "Wholeprimary/B6Motion1 Mailoriginal1+local3 Canvas8Maps6 newnegative13/2 Accounts7+Wave14critical rawreview/Chat3independent/originalfull26+literalquota/WAV/3actualPNG/390visualFAIL. ExactMotion48471Bownerrequest+peer/sourcepins/57quotes/31APIrows +MailrevisionCASrequest; no fullappacceptance. RootallcopySHAreadback+all7ZIPCRC pass; publicGitpushed."
   },
   "currentIndependentWave26TransportProgress": {
-    "head": "6c970e11623c32821d27b11daccdd269f348fc67",
-    "branch": "artifact/team-b-wave22d-independent-member-transport-20261004",
-    "state": "PART01_OF_THREE_DURABLE_FULLREMOTE_BODY_ROOT_AND_B6_PASS; parts02/03notlocaldownloadedyet",
-    "peer": {
-      "path": "/tmp/team-b-b6-wave22d-independent-durable-transport-peers/part01-review.json",
-      "bytes": 2733,
-      "sha256": "a534bca475fb0afcae07b0b33d9d53a2e5be881d622f07174392e99c93c245f5"
+    "head": "b53980f16e36c91b5fccf281320684395da7c51d",
+    "branch": "artifact/team-b-independent-wave22d-member-transport-20261004",
+    "state": "COMPLETE_26_MEMBER_PLUS365_NESTED_BODY_CUSTODY_ROOT_AND_B6_AND_B1_VISUAL_REVIEWED",
+    "rootWholeBodyReceipt": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/independent-wave-part03-and-full26-durable-delivery.json",
+      "bytes": 241065,
+      "sha256": "1ba9e02a0c6d2da5b79c60d5a7aa3e9e39915cd9df615f0d096cd7e2c337eb96"
     },
-    "scope": "Newcontainerofindependentrun37212388505officialextractedoriginal26bodies; actualActions44MBouterwholeidentitymetadataonly. Onlyownedtemporarypart01retiredafterbodyproof/readersclosed."
+    "rootLiteral27AndPCM": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/independent-wave-full26-critical-root-review.json",
+      "bytes": 18279,
+      "sha256": "b67e3d866b6a9a171b626cae80007c676143525d5ddb9f8f5afddc589f51ff8f"
+    },
+    "independent": {
+      "path": "/tmp/team-b-b6-wave22d-independent-full26-memory-review01/review.json",
+      "sha256": "47e29e68d803570451cc0849d95c74d91d5ab4653cace4f81775e97f1e1e027d"
+    },
+    "actualVisual3PNG": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-visual-memory-review01/visual-review02.json",
+      "bytes": 5532,
+      "sha256": "8b655c186915b3146fcf7b1d8eea1e2cb11b03c1ba7542859f2e96955d153dde"
+    },
+    "scope": "Original14 critical replay37212388505 complete26/literal27 persisted values/actual288044B PCM network WAV exactsilence+sourceTail. Original44MB Actions ZIP outer SHA metadata-only; all reconstructed45MB container bodies verified. Historical390 caption/narrow visual defect remainsFAIL; no new responsive product acceptance."
   },
   "latestTeamCIntegrationReceived1604": {
     "coord": "85d87121b49c330fddb448c25c5552bd22a642cf",
@@ -3471,5 +3613,107 @@
     "wholeCurrentExportSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
     "active31AndLE01_15Unchanged": true,
     "TrainingLabExcluded": true
+  },
+  "previousExecutableCheckpoint1900": {
+    "coordinationCommit": "e0febd701d6261a66a836ece01ece5947856cf80",
+    "path": "coordination/sol-happy-20261003/team-b.json",
+    "wholeBytes": 283501,
+    "sha256": "67de1652af64c6c26772ed370a48a7db73f3df9c490a327564c59e241924825b",
+    "allOriginalRequirementsAndFailuresRetained": true
+  },
+  "previousSpecificationMetadataRecheck1900": {
+    "UTC": "2026-10-04T12:25:38.818892+00:00",
+    "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "modifiedTime": "2026-10-04T11:47:25.349Z",
+    "state": "LIVE_MODIFIED_FULL_FRESH_TEXT_EXPORT_READ_AND_INDEPENDENT_FULL_DIFF",
+    "format": "text/plain native export,1402519bytes",
+    "snapshotSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
+    "previousFull8534ParagraphSnapshot": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+    "activeSubstantiveRequirementChanges": 0,
+    "actualChanges": "Nine numbered completion clauses238..246 retain exact text; explicitly OUT_OF_SCOPE tan90 name8531 Choo Choo\u2192Dulche Decorum. All8524 other normalized paragraphs exact. New structural Docs revision/indices not inferred.",
+    "rootDiffSHA256": "11ca0414e2957744556f994c742222ce552749cc1f6d02600d1641a6fbe5f61e",
+    "independentFullDiffSHA256": "caa41671d264e7e64085b3e949c4cc33c194dcff94aa9893e8c75f9ae1dc7819"
+  },
+  "currentCanonicalSpecification": {
+    "UTC": "2026-10-04T18:33:18.837073+00:00",
+    "authority": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "modifiedTime": "2026-10-04T18:20:37.341Z",
+    "exportBytes": 1404321,
+    "exportSHA256": "2a2a90823fdef8962f89b360c565cb02df7a0cad8749e81b54eebeddad07215a",
+    "exportPath": "/workspace/attachments/50942447-9d27-41e5-87af-9d569839acc8/9to1 Development Specification.txt",
+    "previousSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
+    "completeDeltaPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/canonical-live-1820-update.diff",
+    "effect": "Entire LE01\u201315 formally incorporated into Pass1 and remains at existing location under renamed heading; all technical contracts/platforms/precise supersessions unchanged. TeamB existing full31/LE goal continues, no passing evidence relabel or double count.",
+    "deliveryTargets": {
+      "WindowsRequiredPass1": "2026-10-05T07:00:00+01:00",
+      "FullPass1Pass2Pass3": "2026-10-05T19:00:00+01:00",
+      "timezone": "Europe/London"
+    },
+    "acceptanceAndSecurityApprovalRequirementsUnchanged": true,
+    "TeamA": "native/shared",
+    "TeamB": "browser",
+    "TeamC": "hosted/globalintegration",
+    "actualCurrent07bcNativeFailurePreserved": true,
+    "independentWholeScopeReview": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/canonical-live-1820-independent-scope-review01/REVIEW.json",
+      "bytes": 39492,
+      "sha256": "15f5594049fc8efd77f17c9ff895a5d876f63d9056551523ca824cafad65c11a"
+    }
+  },
+  "previousIndependentWave26TransportProgress1900": {
+    "head": "6c970e11623c32821d27b11daccdd269f348fc67",
+    "branch": "artifact/team-b-wave22d-independent-member-transport-20261004",
+    "state": "PART01_OF_THREE_DURABLE_FULLREMOTE_BODY_ROOT_AND_B6_PASS; parts02/03notlocaldownloadedyet",
+    "peer": {
+      "path": "/tmp/team-b-b6-wave22d-independent-durable-transport-peers/part01-review.json",
+      "bytes": 2733,
+      "sha256": "a534bca475fb0afcae07b0b33d9d53a2e5be881d622f07174392e99c93c245f5"
+    },
+    "scope": "Newcontainerofindependentrun37212388505officialextractedoriginal26bodies; actualActions44MBouterwholeidentitymetadataonly. Onlyownedtemporarypart01retiredafterbodyproof/readersclosed."
+  },
+  "currentReviewedLoop04Delivery": {
+    "head": "ea78f0da818bd296b9af082ed7a44a7d3a540be3",
+    "branch": "artifact/team-b-browser-review-loop04-20261004",
+    "url": "https://github.com/CroakyJake12/9to1/tree/ea78f0da818bd296b9af082ed7a44a7d3a540be3/docs/releases/sol-happy-20261003/team-b-browser-reviewed-loop04",
+    "payloadFiles": 32,
+    "payloadBytes": 3051081,
+    "root": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/browser-reviewed-loop04-durable-delivery.json",
+      "bytes": 17278,
+      "sha256": "bb06b2d65e838c642d29e17d9866ff906df0d26dd9395afc9a104d5a7539f56b"
+    },
+    "independent": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/browser-reviewed-loop04-remote-review01/review.json",
+      "bytes": 17988,
+      "sha256": "827730cda2016bd5703b142d5daae6f8e68fad02593871fbe519c9244402bd40"
+    },
+    "historicScope": "Currentcanonical2a2+completeindependent26/27/PCM/3PNG/d93original reviews/source09. NewSource10/Wave06 not retroactively included."
+  },
+  "currentPermanentOriginalDiagnosticDelivery": {
+    "d93Six": "fe27d2d4300e5b4a44a247879e170381fccd6d1d",
+    "07bcScene60": "8a16dd1b2fc6bea836fc289e5fd6f7342d1f5155",
+    "originalFailuresUnchanged": true,
+    "onlyPredeclaredNewTemporaryDuplicatesRetiredAfterAllReadersClosed": true,
+    "allEarlierProtectedOriginalsRetained": true
+  },
+  "latestTeamCIntegrationReceived1900": {
+    "coordCommit": "e0febd701d6261a66a836ece01ece5947856cf80",
+    "wholeSHA256": "24cadc0c99d63d55d2b319350af89bea75da36112e8e9c522dba20d7da94542e",
+    "updatedUTC": "2026-10-04T18:16:10.541739+00:00",
+    "currentGlobalProvisional": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+    "acceptedHead": null,
+    "qualification": "WholeCbody same as prior3734f3 fullread. Historical df547 browser9 producer/fullbody proof cannot represent newer Home source2a; Home6 Windows original+new cases, Mail72, Canvas58 picker, Present44 and issuer current failures remain qualified. C sole integration/spec writer delegation toA preserved."
+  },
+  "incomingBlockerRecoveryChat1900": {
+    "sourceThreadId": "01a1082b-e5ba-70c2-bc49-4999a5934643",
+    "authority": "Direct current user delegation: Jacob authorized non-destructive blocker recovery and owner coordination. Attached reference instructions remain distinct.",
+    "receivingSource": "fa7db1bd",
+    "receivingReport": "Other chat self-reports isolatedWindows exact XamlX/DBus/SDK10.0.401, CUI.Tasks Release0warnings0errors and restoredHomegraph; originalHome tests compiling. No B receiving reproduction/adoption or browser acceptance claimed.",
+    "BResponse": "Continue actual Write owner capture-before-disable guard and separately original60/Space15/durable65; continue Wave actual caption/padding/scroll controls. Active sixBowners retained; no truly unclaimed B product-write lane currently, receivingHome lane disjoint.",
+    "proposalFactPeer": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/coordination-checkpoint-canonical1820-delegation01/FACT-PROPOSAL.json",
+      "bytes": 9147,
+      "sha256": "b0c09c0a8982f8a4954e4326c283964d5f84f8d64316a9b667591eb52c965b88"
+    }
   }
 }
