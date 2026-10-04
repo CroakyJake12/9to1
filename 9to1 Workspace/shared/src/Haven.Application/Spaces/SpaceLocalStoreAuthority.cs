@@ -5,6 +5,13 @@ namespace Haven.Application;
 public sealed class SpaceLocalStoreAuthority(IResourceStoreIdentitySource identities,
     IAuthenticatedResourceActorSource actors, IResourceStoreOwnershipAuthority ownership, Func<bool> hostAllowsWrites)
 {
+    /// <summary>Observes the original configured dependencies. This supplies no write decision
+    /// or receipt; CaptureWriteAdmissionAsync remains required for every owning mutation.</summary>
+    public bool MatchesOriginalInputs(IResourceStoreIdentitySource originalIdentities,
+        IAuthenticatedResourceActorSource originalActors, IResourceStoreOwnershipAuthority originalOwnership) =>
+        ReferenceEquals(identities, originalIdentities) && ReferenceEquals(actors, originalActors) &&
+        ReferenceEquals(ownership, originalOwnership);
+
     public ValueTask<ISettingsCommitAdmission> CaptureWriteAdmissionAsync(CancellationToken cancellationToken = default) =>
         CaptureAsync(null, cancellationToken);
 
