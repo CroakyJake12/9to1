@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+  "baselineCommit": "f09cfcd0d490e99db0abd6849129a69cf405aa7b",
   "programTree": "a1495094b0e463f0bfdeb591d6faf4a85c940f3f",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
@@ -22,9 +22,9 @@
     {
       "path": ".github/scripts/astra-agents-compiler09-caller.py",
       "mode": "100644",
-      "object": "42aae23b2af8c6dc9d478373cf6c2d33acbe8f0e",
-      "bytes": 13941,
-      "sha256": "45c6d2b75d12bddea482ddc231be329a22593dde8649858465c1115ee7ee45b6"
+      "object": "bb06decd7d9b892059aad8da89bbba73f23865be",
+      "bytes": 13959,
+      "sha256": "89771fc6f23bce189d55142b95912c25fdfe8df14ad17dd73d8086d8eb1665e5"
     },
     {
       "path": ".github/scripts/astra-agents-compiler09-original.py",
@@ -218,9 +218,9 @@
     {
       "path": ".github/validation/astra-agents-compiler09-sources.json",
       "mode": "100644",
-      "object": "2cec81b673a500a4ec3504703df13fafa76a9633",
+      "object": "3d04aa2b974d30a202c5b7712da0326267fa80fa",
       "bytes": 115830,
-      "sha256": "227ef11f50a9f6b749ebd69557b8a12460b172553b0f5986c55302eb8cebefd6"
+      "sha256": "87150dedfb25bc862a61d3c074c0aaf6786785e52cf387111341d4a3da7d5fdb"
     },
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
@@ -67177,6 +67177,11 @@
       "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/haven-chat-model-ci.yml",
       "bytes": 29688,
       "sha256": "50c56d25904dfd275e7ad67e883482fa8824ae8f3fab9059806ac3d989eac4aa"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/manifest.json",
+      "bytes": 27085,
+      "sha256": "089e85829a70ad72833b07c40b63c42daa9da4c0a639de59c7096e2dcb2e6506"
     }
   ],
   "sharedCakeIdContract": null

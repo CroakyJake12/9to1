@@ -2944,8 +2944,8 @@
     ],
     "caller": {
       "path": ".github/scripts/astra-agents-compiler09-caller.py",
-      "bytes": 13941,
-      "sha256": "45c6d2b75d12bddea482ddc231be329a22593dde8649858465c1115ee7ee45b6"
+      "bytes": 13959,
+      "sha256": "89771fc6f23bce189d55142b95912c25fdfe8df14ad17dd73d8086d8eb1665e5"
     },
     "lanes": [
       {

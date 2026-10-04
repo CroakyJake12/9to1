@@ -195,7 +195,7 @@ if __name__=='__main__':
  handle=None;primary=None;cleanup=[]
  try:
   handle=(records/'expected-managed-launch.json').open('xb')
-  data=json.dumps(marker,sort_keys=True)+'\n'
+  data=(json.dumps(marker,sort_keys=True)+'\n').encode('utf-8')
   if handle.write(data)!=len(data):raise RuntimeError('Original unlaunched marker fullwrite refused')
   handle.flush();os.fsync(handle.fileno())
  except BaseException as error:primary=error
