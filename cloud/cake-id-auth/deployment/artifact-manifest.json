@@ -1,0 +1,37 @@
+{
+  "kind": "local dry-run compiled artifacts; no deployment",
+  "artifacts": {
+    "/workspace/team-c/evidence/c2/hosted-artifact/README.md": {
+      "bytes": 124,
+      "sha256": "1b76cde1a99cfa67b9721825b84e3adf1c9d7d70ed53f627b57a556c87dd6f70"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/c38a9b6078aaf2c8cdfc1a4fbef6c1503335e663-auth-ui.txt": {
+      "bytes": 39127,
+      "sha256": "b1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/esbuild-meta.json": {
+      "bytes": 771852,
+      "sha256": "65d7d758d847a735b122d3ea31990657c9c0f31a5b16eb7b747667ae7b7f9506"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/index.js": {
+      "bytes": 3109063,
+      "sha256": "9d859012015fd20b67500d07646fd5e09dea3d08e8b89229494907adf37e54a2"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/index.js.map": {
+      "bytes": 5534189,
+      "sha256": "68217940553358e44f3c94c5018026e96a3ebc9b58a57aa6356b300f64493d11"
+    },
+    "/workspace/team-c/evidence/c2/hosted-rollback-artifact/README.md": {
+      "bytes": 127,
+      "sha256": "0d6f923634fc074c489a9226422e1d1f01514b4231caa70946f1b5cb95491673"
+    },
+    "/workspace/team-c/evidence/c2/hosted-rollback-artifact/rollback.js": {
+      "bytes": 334,
+      "sha256": "6ed1bdd972925bee5e60de5c8024e977db5129dfb355ca44381444c67a7f49a7"
+    },
+    "/workspace/team-c/evidence/c2/hosted-rollback-artifact/rollback.js.map": {
+      "bytes": 819,
+      "sha256": "63d163dfc2ebf762176ba9663617735a843c6b1bd2255410d9417f0c9ca78c74"
+    }
+  }
+}
