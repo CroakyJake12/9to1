@@ -1,0 +1,17 @@
+{
+  "recordedUTC": "2026-10-04T04:43:09.131683+00:00",
+  "state": "SOURCE_ONLY_AUTHOR_NO_NATIVE_BUILD_GUI_OR_CHILD_LAUNCH; ROOT_REVIEW_AND_LANE_REQUIRED",
+  "script": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned.py",
+    "sha256": "a0e2c87a34dc7cd6970e1671b40440cb92c5765eee089bd4e2a666ede8a62c3c"
+  },
+  "plan": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan.json",
+    "sha256": "ae82f0416660ffc95a4234708143e065a4795d20caadf6710c60561f8783f51d"
+  },
+  "pinsCount": 187,
+  "allMatch": true,
+  "scope": "Actual existing compiled Homefixture two independent processes with unchanged exact20criterion names. Original142source and42copiedruntime/source receipts plus3compiled binary witness pinned. Native proposal only/no A1adoption/browserAT.",
+  "sourceReview": "Owned kernel subreaper/namespace/parent birth and held pidfds; actual ECHILD pre/each/final; no numeric global signals. 120s each; measuredlogical+allocated single-outputtree and both free reserves before/after each/final. Forcedcleanup/identity/unproven/deadline/budget fails, no prior outputs overwritten.",
+  "authorSetupCorrection": "Initial unexecuted draft used guessed counts property absent actual native JSON; corrected only parser to actual checks boolean list/exact20 names from pinned original report. First draft/plan retained under home-native2-author-custody01. No fixture run/result changed."
+}

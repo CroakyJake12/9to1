@@ -1,0 +1,101 @@
+{
+  "state": "FAIL",
+  "scope": "Independent proposal Home native20x2 only, no shared adoption/browser/AT",
+  "identityFailures": [],
+  "forcedCleanup": false,
+  "deadlineFailure": false,
+  "budgetFailure": false,
+  "cases": [
+    {
+      "name": "public-flag-360",
+      "status": "RUNNING",
+      "nativeRoot": {
+        "pid": 128736,
+        "ppid": 128733,
+        "birth": 4334071
+      }
+    }
+  ],
+  "prelaunchKernel": {
+    "empty": true,
+    "flags": [
+      "WEXITED",
+      "WNOHANG",
+      "WNOWAIT",
+      "LINUX___WALL"
+    ],
+    "flagsValue": 1090519045,
+    "flagsAccepted": true,
+    "sigchldDisposition": "DEFAULT",
+    "nonreaping": true,
+    "status": "ECHILD"
+  },
+  "phase": "resource-inspection",
+  "unexpectedOutputEntry": {
+    "relativePath": "tmp/clr-debug-pipe-128736-4334071-in",
+    "capturedMode": "0o10700",
+    "isSymlink": false,
+    "isSocket": false
+  },
+  "failureType": "RuntimeError",
+  "fixedFailureDetail": "Unexpected special output entry",
+  "lastObservedNativeExitCode": 0,
+  "lastFamilyClosure": {
+    "allHeldExit": true,
+    "allBirthsGone": true,
+    "kernel": {
+      "empty": true,
+      "flags": [
+        "WEXITED",
+        "WNOHANG",
+        "WNOWAIT",
+        "LINUX___WALL"
+      ],
+      "flagsValue": 1090519045,
+      "flagsAccepted": true,
+      "sigchldDisposition": "DEFAULT",
+      "nonreaping": true,
+      "status": "ECHILD"
+    }
+  },
+  "finalPinsUnchanged": true,
+  "finalMeasuredFootprint": {
+    "logical": 1241511,
+    "allocated": 1331200
+  },
+  "finalMeasuredFree": {
+    "/workspace": 584515584,
+    "/tmp": 693637120
+  },
+  "ownedFamily": [
+    {
+      "pid": 128736,
+      "ppid": 128733,
+      "pgrp": 128736,
+      "session": 128736,
+      "birth": 4334071,
+      "state": "R",
+      "relation": "original owned Popen direct child",
+      "signalCount": 0,
+      "profileBound": null,
+      "cgroupSha256": "e57fd7b21104f091de366ace1464596378a498b0a5e63f1b21147a8998c20107",
+      "exeBasename": "dotnet"
+    }
+  ],
+  "finalKernel": {
+    "empty": true,
+    "flags": [
+      "WEXITED",
+      "WNOHANG",
+      "WNOWAIT",
+      "LINUX___WALL"
+    ],
+    "flagsValue": 1090519045,
+    "flagsAccepted": true,
+    "sigchldDisposition": "DEFAULT",
+    "nonreaping": true,
+    "status": "ECHILD"
+  },
+  "recordedUTC": "2026-10-04T04:55:26.392366+00:00",
+  "planSHA256": "f8fe1091de01c5f5e237cfa18cd703fec7dcda4b253897d210a6258dafd10e42"
+}

@@ -1,0 +1,19 @@
+{
+  "recordedUTC": "2026-10-04T04:59:20.732986+00:00",
+  "reviewer": "root",
+  "state": "SOLE_NO_BUILD_NATIVE_GRANTED",
+  "scriptSha256": "2292e7bdb8147a93726679b0a50632f0296a0f43c9ce58ee1bcda4d7805831b9",
+  "planSha256": "dc7e7659f1ac878ef45a50603072637140b6e60ebcab1628d57333ae1c904321",
+  "all187PinsMatch": true,
+  "review": "Only metadata accounting for exact held-root PID+birth CLR FIFOin/out/socket in fresh own TMP; no read/follow/signals. Unknown special/symlink/IO still fail; logical+allocated counted and known IPC must disappear with normal family closure. Exact20 fixture and normal CLR env unchanged.",
+  "definitiveFirstCause": {
+    "relativePath": "tmp/clr-debug-pipe-128736-4334071-in",
+    "capturedMode": "0o10700",
+    "isSymlink": false,
+    "isSocket": false
+  },
+  "originalFailuresRetained": true,
+  "priorNativeFamilyObservedAbsent": true,
+  "budgetsUnchanged": "64MiB output/256MiB both free/120s each",
+  "allOtherSDKGuiArchiveWritersHeld": true
+}

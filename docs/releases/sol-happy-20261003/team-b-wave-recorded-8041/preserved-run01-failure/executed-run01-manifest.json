@@ -1,0 +1,30 @@
+{
+  "state": "PREREQUISITE_RED_NO_WAVE_BEHAVIOR_EXECUTED",
+  "files": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run01/cleanup-source-receipt.json",
+      "bytes": 25834,
+      "sha256": "b016130cd6a374b17a7f1ecb41301a512d0f6edc0b7e0a757af91c5a155957e4"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run01/results.json",
+      "bytes": 105058,
+      "sha256": "d8f3f71ed427bea333eefb675b9dd4ba74681af35a2dee0b4eea9ea1c47c97a8"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run01/stereo-pcm16.wav",
+      "bytes": 192044,
+      "sha256": "077da5220c69b28c134f578508372681ad3c8b2c3a466edc9512eb67fda76b86"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-control01/owned-family-receipt.json",
+      "bytes": 3503,
+      "sha256": "4b041c526ff0a7c5c49540b50193f28ed54ffcb4d137c4fb8844a59b3db6446f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-control01/runner-safe-stdout.log",
+      "bytes": 85,
+      "sha256": "35833f545a6c9ae0f8b4165a64e3fc117584afd8734aea559b6e534e47823d06"
+    }
+  ]
+}

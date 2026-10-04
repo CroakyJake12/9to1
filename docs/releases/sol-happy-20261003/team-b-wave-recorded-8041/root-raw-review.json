@@ -1,0 +1,30 @@
+{
+  "recordedUTC": "2026-10-04T05:28:17.751415+00:00",
+  "state": "ROOT_RAW_WAVE8041_14_REVIEW_PASS",
+  "candidate": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "runnerSha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f",
+  "rawResultsSha256": "e266659619d98b7a722fdca1c90bcb00b166dbe6a54ebbdef931c18459c594a5",
+  "cleanupSha256": "77b9536da3a17a9cd4bb6e14007b4c42caa41c3a08da24d5ab86ef14a24dc29a",
+  "all14OutcomeNames": [
+    "real-cui-route-and-inputs",
+    "create-canonical-local-project",
+    "real-filechooser-import",
+    "nondestructive-trim",
+    "persistent-undo-redo",
+    "exact-pcm-download",
+    "real-browser-audio-transport",
+    "wrong-format-preserves-state",
+    "browser-process-restart",
+    "actual-two-tab-revision-conflict",
+    "failed-save-cannot-close-dirty-project",
+    "stored-source-integrity-negative-control",
+    "actual-browser-quota-two-store-atomicity",
+    "runtime-and-candidate-integrity"
+  ],
+  "inputPinsFullSHAReverified": 69,
+  "runtimeFilesFullSHAReverified": 270,
+  "bothInventoriesExact": true,
+  "normalOwnedFamily42NoSignals": true,
+  "port18761Rebind": true,
+  "qualification": "Actual local browserCUI/IndexedDB/PCM/audio transport scoped14 only. No hardwareaudibility/deployed/crossclient/fullWave/donor acceptance; originalsocket135byte0executed14NOTRUN retained. Independent exactcurrent replay pending."
+}

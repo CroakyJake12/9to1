@@ -1,0 +1,397 @@
+{
+  "recordedUTC": "2026-10-04T05:24:27.141737+00:00",
+  "state": "SMALL_EXPLICIT_ADDENDUM_MEMBER_SELECTION_ONLY_NO_COPY_ARCHIVE_OR_EXECUTION",
+  "purpose": "Root can copy byte-exact small independent raw/source/control-failure evidence into existing artifact packet; absolute paths remain provenance, not portable executable commands.",
+  "files": [
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "member": "home03/source-and-receipts/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "bytes": 79541,
+      "sha256": "248b85a3c1c8544f661cdd4cf914bc50a99760cb2bbbbb24b5239410aa14745c",
+      "reason": "Executed03 exact source/resource/custody identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-independent-command-plan.json",
+      "member": "home03/source-and-receipts/home-public-flag-native2-independent-command-plan.json",
+      "bytes": 5706,
+      "sha256": "c5ccd3b436826243b10233985135aaaddcddda1e7e9ea15204459758d4255728",
+      "reason": "Executed03 exact source/resource/custody identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan03.json",
+      "member": "home03/source-and-receipts/home-public-flag-native2-owned-execution-plan03.json",
+      "bytes": 47764,
+      "sha256": "dc7e7659f1ac878ef45a50603072637140b6e60ebcab1628d57333ae1c904321",
+      "reason": "Executed03 exact source/resource/custody identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-native2-source03-owned-clr-ipc-freeze.json",
+      "member": "home03/source-and-receipts/home-native2-source03-owned-clr-ipc-freeze.json",
+      "bytes": 1931,
+      "sha256": "3d57a47847a6c2b3786e8cf29a61331013c0691c4cf7fa68c36f625232a84963",
+      "reason": "Executed03 exact source/resource/custody identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned03.py",
+      "member": "home03/source-and-receipts/run-home-public-flag-native2-owned03.py",
+      "bytes": 13300,
+      "sha256": "2292e7bdb8147a93726679b0a50632f0296a0f43c9ce58ee1bcda4d7805831b9",
+      "reason": "Executed03 exact source/resource/custody identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/owned-kernel-child-proof01.py",
+      "member": "home03/source-and-receipts/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2",
+      "reason": "Executed03 exact source/resource/custody identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/root-home-native2-source03-review-and-runtime-grant.json",
+      "member": "home03/source-and-receipts/root-home-native2-source03-review-and-runtime-grant.json",
+      "bytes": 978,
+      "sha256": "4a6cae3f6b779f4377f33cf150c229f1e583753a0a9b8a9c6a2850f840285821",
+      "reason": "Executed03 exact source/resource/custody identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent01/independent-receipt.json",
+      "member": "home03/raw-independent01/independent-receipt.json",
+      "bytes": 2111,
+      "sha256": "b74a52fd38a2cd27adab42e1cec88f8d6a7c2da41afcc2220e11896de15f9b20",
+      "reason": "Original supervised failure evidence"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-360.json",
+      "member": "home03/raw-independent01/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86",
+      "reason": "Original supervised failure evidence"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-360.log",
+      "member": "home03/raw-independent01/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa",
+      "reason": "Original supervised failure evidence"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent02/independent-receipt.json",
+      "member": "home03/raw-independent02/independent-receipt.json",
+      "bytes": 2410,
+      "sha256": "4a108a840b6e5722347e25ad7cd01c9a9d5decef0bea74b5cbc2bcbd9b0a0838",
+      "reason": "Original supervised failure evidence"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent02/public-flag-360.json",
+      "member": "home03/raw-independent02/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86",
+      "reason": "Original supervised failure evidence"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent02/public-flag-360.log",
+      "member": "home03/raw-independent02/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa",
+      "reason": "Original supervised failure evidence"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/independent-receipt.json",
+      "member": "home03/raw-independent03/independent-receipt.json",
+      "bytes": 4315,
+      "sha256": "f90a48d42cad4e3c31f99492f9fd3c1231f9d00d9e9bab4792c93af012a1920e",
+      "reason": "Actual two20 raw assertions and normal process receipt"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-1440.json",
+      "member": "home03/raw-independent03/public-flag-1440.json",
+      "bytes": 158002,
+      "sha256": "bba1acc70098518850fa3cb404d93f47a1da66ba4ece44f6c41a5cc7608a6425",
+      "reason": "Actual two20 raw assertions and normal process receipt"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-1440.log",
+      "member": "home03/raw-independent03/public-flag-1440.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa",
+      "reason": "Actual two20 raw assertions and normal process receipt"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-360.json",
+      "member": "home03/raw-independent03/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86",
+      "reason": "Actual two20 raw assertions and normal process receipt"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-360.log",
+      "member": "home03/raw-independent03/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa",
+      "reason": "Actual two20 raw assertions and normal process receipt"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned.py",
+      "member": "home03/original-control-failures/run-home-public-flag-native2-owned.py",
+      "bytes": 11386,
+      "sha256": "a0e2c87a34dc7cd6970e1671b40440cb92c5765eee089bd4e2a666ede8a62c3c",
+      "reason": "Preserve original01/02 supervisor source failures; no rerun/relabel"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan.json",
+      "member": "home03/original-control-failures/home-public-flag-native2-owned-execution-plan.json",
+      "bytes": 47467,
+      "sha256": "ae82f0416660ffc95a4234708143e065a4795d20caadf6710c60561f8783f51d",
+      "reason": "Preserve original01/02 supervisor source failures; no rerun/relabel"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-source-freeze.json",
+      "member": "home03/original-control-failures/home-public-flag-native2-owned-source-freeze.json",
+      "bytes": 1518,
+      "sha256": "4409e6dcd05886d09c71c9c1d3bacf7d82056974e05da818cc2e86086ddccaf5",
+      "reason": "Preserve original01/02 supervisor source failures; no rerun/relabel"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned02.py",
+      "member": "home03/original-control-failures/run-home-public-flag-native2-owned02.py",
+      "bytes": 12147,
+      "sha256": "a3a66888b644e260012d633070b06af68d7a0817b119ced62417e1d4f348bfbd",
+      "reason": "Preserve original01/02 supervisor source failures; no rerun/relabel"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan02.json",
+      "member": "home03/original-control-failures/home-public-flag-native2-owned-execution-plan02.json",
+      "bytes": 47679,
+      "sha256": "f8fe1091de01c5f5e237cfa18cd703fec7dcda4b253897d210a6258dafd10e42",
+      "reason": "Preserve original01/02 supervisor source failures; no rerun/relabel"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-native2-first-control-failure-and-source02.json",
+      "member": "home03/original-control-failures/home-native2-first-control-failure-and-source02.json",
+      "bytes": 2371,
+      "sha256": "746dd5e0b2f32ae9f415f290eb29ce7ef39306304e2b0d5592743a8e647f9071",
+      "reason": "Preserve original01/02 supervisor source failures; no rerun/relabel"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/root-home-native2-source02-review-and-runtime-grant.json",
+      "member": "home03/original-control-failures/root-home-native2-source02-review-and-runtime-grant.json",
+      "bytes": 972,
+      "sha256": "d3a19130ecbb7fb069a5d012acfb78c24f9c59387c42e1942553184ebd1a804d",
+      "reason": "Preserve original01/02 supervisor source failures; no rerun/relabel"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent01-executed-manifest.json",
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent01-executed-manifest.json",
+      "bytes": 84218,
+      "sha256": "4f53bf4522338284a8f129597e71a595440867091f18a078be959f9276a056ee",
+      "reason": "Exact unchanged actual08 independent seven/23pins identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent-owned-source-freeze01.json",
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent-owned-source-freeze01.json",
+      "bytes": 1408,
+      "sha256": "8ec253cdf8de10e588c43c4193e9f8606fe67aa98349ce36985407e944780ce2",
+      "reason": "Exact unchanged actual08 independent seven/23pins identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent-owned-execution-plan01.json",
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent-owned-execution-plan01.json",
+      "bytes": 12160,
+      "sha256": "19011e63c349cfbfc48657e4fa24015c220401408847aa86c14e0a23118859ed",
+      "reason": "Exact unchanged actual08 independent seven/23pins identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-independent-accounts-interop7-owned01.py",
+      "member": "accounts7/source-and-receipts/run-independent-accounts-interop7-owned01.py",
+      "bytes": 13797,
+      "sha256": "d2cdf267cbb09b46ab63fb52a6ad92abdf6f1fdd896d222d69705c98fc711acb",
+      "reason": "Exact unchanged actual08 independent seven/23pins identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent-root-source-review01.json",
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent-root-source-review01.json",
+      "bytes": 838,
+      "sha256": "4da5a8ad5782ff056d58e29e8de7075e9237a0d0efa1342fef7997a098e97e28",
+      "reason": "Exact unchanged actual08 independent seven/23pins identity"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-interop-8041-independent01/results.json",
+      "member": "accounts7/raw-independent01/run/results.json",
+      "bytes": 2923,
+      "sha256": "2898abeaacfcac20008e7d39826a9469c5f71063afecd0e2643d2682464918dc",
+      "reason": "Safe actual unconfigured raw counts/runtime/custody; no profile or private traces"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-interop-8041-independent01-control/owned-family-receipt.json",
+      "member": "accounts7/raw-independent01/control/owned-family-receipt.json",
+      "bytes": 5743,
+      "sha256": "19ccdbf4fdd98280923fc282c176a29123f91baeeaf068f4365c02f2bae10834",
+      "reason": "Safe actual unconfigured raw counts/runtime/custody; no profile or private traces"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-interop-8041-independent01-control/runner-safe-stdout.log",
+      "member": "accounts7/raw-independent01/control/runner-safe-stdout.log",
+      "bytes": 397,
+      "sha256": "824ab28714aae19c3838697997520b1c55e3af1e51ad95c0cfca7527c25d6c6d",
+      "reason": "Safe actual unconfigured raw counts/runtime/custody; no profile or private traces"
+    }
+  ],
+  "memberCount": 33,
+  "totalBytes": 1056746,
+  "checkedOriginalManifestIdentities": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "sha256": "248b85a3c1c8544f661cdd4cf914bc50a99760cb2bbbbb24b5239410aa14745c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent01-executed-manifest.json",
+      "sha256": "4f53bf4522338284a8f129597e71a595440867091f18a078be959f9276a056ee"
+    }
+  ],
+  "excluded": [
+    "ALL native CLI/fontcache/TMP/HAVEN data dirs and __pycache__/pyc",
+    "ALL Chromium profiles/cache/lock/socket/IPC files",
+    "TLS keys/certificates/issuer fixtures/account credentials/tokens/auth traces",
+    "Duplicate actual270 bundle/native40+2 libraries already held by referenced worker packets"
+  ],
+  "dependencyReuseQualification": [
+    "Home03 executes compiled HomeResponsiveJoint.Dll.Tests444372f3 with40ownerDLL+2native references preserved in B1 publicflag/native packets. Source187 is custody identity, not required to duplicate every binary in this addendum. Receivers require separately reviewed exact dependency restoration/path translation; source scripts remain original bytes.",
+    "Accounts exact successor08 runner/binding/host/current8041all270 plus original04HOLD/sourcecorrection already preserved in B5 portable packet02 SHA74b2a8d42cb428d249d80b3653395002bca266556bbb703708599c405d5dfcc6. Addendum adds independent7 raw results/custody; no newprovider authority.",
+    "Some actual reports/raw native log bytes are byte-identical across independent original attempts and B1 reports; preserve attempt-specific mapping instead of inferring one execution."
+  ],
+  "privacyChecks": [
+    {
+      "member": "home03/source-and-receipts/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/source-and-receipts/home-public-flag-native2-independent-command-plan.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/source-and-receipts/home-public-flag-native2-owned-execution-plan03.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/source-and-receipts/home-native2-source03-owned-clr-ipc-freeze.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/source-and-receipts/run-home-public-flag-native2-owned03.py",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/source-and-receipts/owned-kernel-child-proof01.py",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/source-and-receipts/root-home-native2-source03-review-and-runtime-grant.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent01/independent-receipt.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent01/public-flag-360.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent01/public-flag-360.log",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent02/independent-receipt.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent02/public-flag-360.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent02/public-flag-360.log",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent03/independent-receipt.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent03/public-flag-1440.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent03/public-flag-1440.log",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent03/public-flag-360.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/raw-independent03/public-flag-360.log",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/original-control-failures/run-home-public-flag-native2-owned.py",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/original-control-failures/home-public-flag-native2-owned-execution-plan.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/original-control-failures/home-public-flag-native2-owned-source-freeze.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/original-control-failures/run-home-public-flag-native2-owned02.py",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/original-control-failures/home-public-flag-native2-owned-execution-plan02.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/original-control-failures/home-native2-first-control-failure-and-source02.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "home03/original-control-failures/root-home-native2-source02-review-and-runtime-grant.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent01-executed-manifest.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent-owned-source-freeze01.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent-owned-execution-plan01.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/source-and-receipts/run-independent-accounts-interop7-owned01.py",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/source-and-receipts/accounts-interop7-independent-root-source-review01.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/raw-independent01/run/results.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/raw-independent01/control/owned-family-receipt.json",
+      "privateKeyOrJWTLiteralIndicators": false
+    },
+    {
+      "member": "accounts7/raw-independent01/control/runner-safe-stdout.log",
+      "privateKeyOrJWTLiteralIndicators": false
+    }
+  ],
+  "privacyScope": "Literal key/JWT indicators checked in explicit UTF8members; manual record types reviewed as source code and public native layout/unconfigured status booleans plus PID/birth/budget/hash maps. No full repository secret-scan claim.",
+  "acceptance": "Home03 two20 native proposed layout only. Accounts independent7 actual unconfigured physicalCheck+controllednative lifecycle only. No wholeplatform/AT/BFCache/provider/fullparity upgrade."
+}

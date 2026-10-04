@@ -1,0 +1,408 @@
+{
+  "recordedUTC": "2026-10-04T05:12:03.959158+00:00",
+  "state": "SOURCE_ONLY_NOT_RUN_PENDING_PEER_AND_ROOT_GUI",
+  "candidateCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "output": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run02",
+  "control": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-control02",
+  "tmpdir": "/workspace/b3w8041t02",
+  "cache": "/workspace/b3w8041x02",
+  "profile": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run02/profile",
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-execution-freeze01/run-wave-browser-cold-quota.cjs",
+    "/tmp/team-b-artifacts/browser-8041a70b/wwwroot",
+    "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run02"
+  ],
+  "maximumSeconds": 240,
+  "maximumOutputAndTemporaryBytes": 192000000,
+  "workspaceMinimumReserveBytes": 256000000,
+  "workspacePrelaunchMinimumBytes": 384000000,
+  "pins": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/run-owned-wave-watchdog03.py",
+      "bytes": 14470,
+      "sha256": "3ce9adde875ee1eff64c9a88f56b890df7aa04b8f458eb063029c1e91cbba6c2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog05.py",
+      "bytes": 13578,
+      "sha256": "dca1f423d7678381c0a940cef3d5c5ef113dbaf79d8c4a95c3deab7354e1ea94"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-execution-freeze01/execution-freeze.json",
+      "bytes": 1859,
+      "sha256": "ec448a2d7ffde4d7bc21ccad2a5358f9cf6854aae44b6d8000e6f928254e322a"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-execution-freeze01/run-wave-browser-cold-quota.cjs",
+      "bytes": 35538,
+      "sha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/publish-8041a70b/publish-manifest.json",
+      "bytes": 49878,
+      "sha256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/manifest02.json",
+      "bytes": 17080,
+      "sha256": "56dbb641eb89494d9a06bf247e1e2611f45ed147a136bdfa20ee238c2d29043a"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/actual-runtime-embedded-config.json",
+      "bytes": 18514,
+      "sha256": "06919cc4b94bbb3bbdeed0eaf85b78815ea83e5710bf87c96757fd07f3dc1c86"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/audit.json",
+      "bytes": 3592,
+      "sha256": "c0ab56610d3cf637cd59c943cd0fa3f63119671034501499f0ad1b3c793506d7"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/custody.json",
+      "bytes": 35155,
+      "sha256": "8ef38f2cf8eac01ae592a4ed94ae061782308e3d3793897d4b640d9f0c322876"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/finalize_source_audit.py",
+      "bytes": 6570,
+      "sha256": "65a8669e522dbf1bec775f797f5541850ba016b6b04bcbae807e7ab50bf8baf0"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/native-static-assets-supplement.json",
+      "bytes": 2202,
+      "sha256": "f90585065b1b4f7076028f8cf22aae4e74473dcc70696cbdf30374e53630453c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/_framework/avalonia.js",
+      "bytes": 29170,
+      "sha256": "e8782504d89cc1c41add8d99460369b2c04b4e486d43ff77bced979056791e84"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/_framework/dotnet.js",
+      "bytes": 56383,
+      "sha256": "5e75a2dee4d5dc876dd0d3b3b163ac16c2a8c1bd907d2d5917a159d2740730c5"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/_framework/dotnet.native.ykrhmjmwac.js",
+      "bytes": 377048,
+      "sha256": "1ef877e1ae1e55848ef53be41c3cbbbe0900cc6d77f4252be7f8b5f3970ad6a3"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/_framework/dotnet.runtime.v06hirbjsv.js",
+      "bytes": 198480,
+      "sha256": "41b9eaad9187b46abbc2e752d7bfc06043e91fd264a61aecc959650fa24799db"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/_framework/storage.js",
+      "bytes": 43044,
+      "sha256": "b38d9247eed6e02e9b57f82997b66e603a2f71584d7c68cfd70b309a1cc3b6c1"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/browser-private-context.js",
+      "bytes": 4691,
+      "sha256": "77af4c31e4f81a22f6e8b290877f43443b443716b4af9f29c0b75b19bb8b8b98"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/configured-accounts.bundle.js",
+      "bytes": 74759,
+      "sha256": "4d8801b4be087837763c3a23f117c74b4fd73a290a4ef6e7c2eaf8c4eab396d3"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/main.js",
+      "bytes": 6186,
+      "sha256": "d10018571a6d4399ea2c225763080a512ee1f159a41bfb7438e5d6a94327d09d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/notes-indexeddb.js",
+      "bytes": 11550,
+      "sha256": "931bca83e2963f205a7991ba605b9496e0d42c2536ea0e76af2f4d20baab14e9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/wave-browser.js",
+      "bytes": 10466,
+      "sha256": "3bae37f83369874c0ca278518bcb1c459a2cf4447fc4e248d99d6a138af8069c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/publish/write-packages.js",
+      "bytes": 2367,
+      "sha256": "8e757506389202c46009090faa60a12831a290c804f34806fab09af64d4e73f0"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/9to1 Workspace/Wave/Program.cs",
+      "bytes": 38203,
+      "sha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
+      "bytes": 787,
+      "sha256": "a8ba16905a071620495ba18023923c31f3eb3a64b7bb8bad9908655fa1fbc2d1"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/9to1 Workspace/Wave/WaveProject.cs",
+      "bytes": 18706,
+      "sha256": "8ce0273faff2f8b47c4cf15a57838d2defeed6be115e6a3f32700132f6a44ff2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/9to1 Workspace/Wave/WaveProjectEdits.cs",
+      "bytes": 8427,
+      "sha256": "ededd91053649b22ab7ed074381813ac72e9e453fbea9b7e14e119fa7201a4bf"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/9to1 Workspace/Wave/WaveTimelineAnnotations.cs",
+      "bytes": 6681,
+      "sha256": "e824f1add1da06eec8d9be15e0091f0bc7b6ac32f038de3a0154fc2dadd7841a"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "bytes": 23962,
+      "sha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Accounts/AccountSettingsFeature.cs",
+      "bytes": 10474,
+      "sha256": "400a5537dff6b56d438e6dbbafa5f7b3f06f74caae4e0b8439e49b9454552d24"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Auth/account-api-client.js",
+      "bytes": 14059,
+      "sha256": "305d81f13520617d20e42e6832a7ed2436d395fa8624de567d6dcc21cec50f72"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Auth/browser-public-client.js",
+      "bytes": 18092,
+      "sha256": "18d7885bc847fb969a1d56dda8639106b103bd51abbfdcbc400308926d107697"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Auth/configured-accounts.bundle.js",
+      "bytes": 74759,
+      "sha256": "4d8801b4be087837763c3a23f117c74b4fd73a290a4ef6e7c2eaf8c4eab396d3"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Auth/configured-accounts.js",
+      "bytes": 8176,
+      "sha256": "70c5f9335c391542e26e9446c9c0b1ea9c49199a7c7bacb17e175e2b22d7467f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/BrowserApplication.cs",
+      "bytes": 18174,
+      "sha256": "1be15d72354c29ef04e1bac80d4fd8fd5b0c342123415489e028c115d7c0e140"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/BrowserFeatureComposition.cs",
+      "bytes": 1696,
+      "sha256": "d49cdf7d109eacb511299a678938dc3271c5ec6d28d382d831ef1bacb05d9b3f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/BrowserRouteDispatcher.cs",
+      "bytes": 2559,
+      "sha256": "0deb17b239d0cabe89f0c65633ea00275a415761955c51b0dd7b827c73d06ae6"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 14479,
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Media/BrowserWaveMedia.cs",
+      "bytes": 920,
+      "sha256": "2a0d4b2a0f2d7604b25b49edd5fb5ecc865b794a4e2b1c8e3f9fff65689fddb6"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Media/wave-browser.js",
+      "bytes": 10466,
+      "sha256": "3bae37f83369874c0ca278518bcb1c459a2cf4447fc4e248d99d6a138af8069c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/NineToOne.Web.csproj",
+      "bytes": 4602,
+      "sha256": "7fa36055b3df61c8062f68667e155cad83501b27064374b6c6187fe766839ab9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Program.cs",
+      "bytes": 3074,
+      "sha256": "68d8bb7f09be106303b8df9001704b8363e20cd7f26b6aee4867ad2f36982efa"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Services/BrowserAccountSignIn.cs",
+      "bytes": 1403,
+      "sha256": "38e2a11bacaf8f37d39b8a2fdb8d45a733ce79c9eeab1df2838e180e854f980f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Services/BrowserAccountTransport.cs",
+      "bytes": 1196,
+      "sha256": "d8bca95c7000819c42284949a8cc92f145427fb648c222c969bf0590b50656f4"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Services/account-service.js",
+      "bytes": 3214,
+      "sha256": "2ca8fab3b99209fb0fcdc05105fb48a81bbe8158b54156685a7c2b4a609ccab9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Services/notes-indexeddb.js",
+      "bytes": 11550,
+      "sha256": "931bca83e2963f205a7991ba605b9496e0d42c2536ea0e76af2f4d20baab14e9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Wave/Engine/NineToOne.Wave.BrowserEngine.csproj",
+      "bytes": 1622,
+      "sha256": "eb54fd843c7403aadf7423e75cb99a561cd5f2f4b6ac148ef73ee407539c9380"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Wave/Engine/generate-owner-decoder.py",
+      "bytes": 2629,
+      "sha256": "e0500416975d2adfa31122e978e2c76e45a45871f06ca2befca6ef1420f0e372"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Wave/WaveBrowserFeature.cs",
+      "bytes": 4788,
+      "sha256": "e6620acf141f7289cba92d103fee0739e346b462da162266e32bf838c05b1d0b"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Wave/WaveBrowserSession.cs",
+      "bytes": 34166,
+      "sha256": "467d0667ef7df79722f424acb7465161beb89366c0b2bd1f8a34528f6713abcd"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Write/Packages/BrowserWritePackageBroker.cs",
+      "bytes": 3775,
+      "sha256": "e8be7331ecc54a5eeb89fb2f001c4504c48a1b810276680c5729ce91a9e82293"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Write/Packages/write-packages.js",
+      "bytes": 2367,
+      "sha256": "8e757506389202c46009090faa60a12831a290c804f34806fab09af64d4e73f0"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Write/Scene/WriteRetainedSceneResources.cs",
+      "bytes": 731,
+      "sha256": "bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Write/Storage/IndexedDbNotesRepository.cs",
+      "bytes": 15773,
+      "sha256": "3f55f1e49b687ea91fabd6ffc056ffafebfc67f46cf9f05bb77e757e50daec15"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Write/WriteBrowserFeature.cs",
+      "bytes": 12137,
+      "sha256": "dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/Write/WriteBrowserSession.cs",
+      "bytes": 31701,
+      "sha256": "741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/wwwroot/browser-accessibility.js",
+      "bytes": 8891,
+      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/wwwroot/browser-platform.js",
+      "bytes": 3009,
+      "sha256": "4ddcd9ffad1aac575dcb3aa5a176df8bb8e5747d57975d3bfc87e8241650cb80"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/wwwroot/browser-private-context.js",
+      "bytes": 4691,
+      "sha256": "77af4c31e4f81a22f6e8b290877f43443b443716b4af9f29c0b75b19bb8b8b98"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/wwwroot/index.html",
+      "bytes": 848,
+      "sha256": "bd45a95ede10706cb7d632affd5fccf6ca5931de08761139f19006149c76cead"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/apps/Web/wwwroot/main.js",
+      "bytes": 6186,
+      "sha256": "d10018571a6d4399ea2c225763080a512ee1f159a41bfb7438e5d6a94327d09d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Storage/BrowserStorageProvider.cs",
+      "bytes": 15024,
+      "sha256": "9c1d75157b2cd730c175fa2b9bd587662fbc9f17beb0339718154f4b04014b6f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/avalonia.js",
+      "bytes": 29170,
+      "sha256": "e8782504d89cc1c41add8d99460369b2c04b4e486d43ff77bced979056791e84"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/storage.js",
+      "bytes": 43044,
+      "sha256": "b38d9247eed6e02e9b57f82997b66e603a2f71584d7c68cfd70b309a1cc3b6c1"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/webapp/modules/storage/indexedDb.ts",
+      "bytes": 2628,
+      "sha256": "8ecc0881554fe9736bcb949404e752e87576f883438e8f57f01a2798b5c5defc"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/webapp/modules/storage/storageItem.ts",
+      "bytes": 7580,
+      "sha256": "e3e10ae61084cfb7630712e14f6d48dbef4a1954c96a2b33d0853375a9a9b099"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/source/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/webapp/modules/storage/storageProvider.ts",
+      "bytes": 3062,
+      "sha256": "b4c7b2df3731d3072b7ec285e7982cf8e61bd022192f7067c1f58d36de28cbda"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-cold-startup-audit-8041a70b02/static-asset-git-prerequisite-failure.json",
+      "bytes": 1458,
+      "sha256": "2dce1054474b43f8bc2395baddef5a1f25a582d215b88d28cce4ca80fa09ee10"
+    }
+  ],
+  "command": {
+    "environment": {
+      "B3_CANDIDATE_MANIFEST": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/publish-8041a70b/publish-manifest.json",
+      "B3_CANDIDATE_MANIFEST_SHA256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70",
+      "B3_PORT": "18761",
+      "B3_WAVE_GUI_GRANTED": "granted"
+    },
+    "argv": [
+      "python3",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/run-owned-wave-watchdog03.py"
+    ]
+  },
+  "ownership": "Reviewed B5watchdog05 mechanism except exact Wave persistentprofile and bounded three SEQUENTIAL top launches. All descendants retain unchanged heldbirth/pidFD/subreaper/kernelECHILD custody, no argvshape assumption.",
+  "qualification": "Helper ordinary3 approved independently; no customCLONE execution claim. B5 wrapper browser-family run pending; this adaptation SOURCE_ONLY. Forced cleanup rejects clean acceptance.",
+  "oracles": "Unchanged runner8c8 all14 strict canonical/history/CAS/quota/asset/runtime oracles; no input/action/assertion change. Sourcecuts retained8041; no current working-tree provenance relabel.",
+  "prelaunch": "All output/control/temp/cache paths must be absent. Wrapper hardcoded reserve384MB/prelaunch256MB/runtime, max192MB total outputs,temp,cache. Actual priorfe output59,183,009B including14,405,887B profile is estimate not budget guarantee.",
+  "syntax": "ast.parse only; no subprocess/kernel/browser operations during preparation.",
+  "upstreamWrapper": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog05.py",
+    "bytes": 13578,
+    "sha256": "dca1f423d7678381c0a940cef3d5c5ef113dbaf79d8c4a95c3deab7354e1ea94"
+  },
+  "preservedWave01Manifest": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution01/manifest01.json",
+    "bytes": 1407,
+    "sha256": "9e7e9925aaac9f383606210a7d879c04eb17af2b6c935003f7fe8156f8eef891"
+  },
+  "topBrowserQualification": "Unchanged runner calls launch at219,302,368, awaits each previous context.close at301 and366. Same exact output/profile; top directchild of LIVE birth/pidfd-held original Node only; no overlapping live held tops and max3. Successful exit0 requires3; early failing runner may1/2 while same custody proof. Any forcedcleanup/identityfailure remains nonclean.",
+  "preservedOriginalRun01Manifest": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution02/executed-run01-manifest.json",
+    "bytes": 1336,
+    "sha256": "af84d4835569f64308c09a4362cff8c17a1c18239ec8d614ee58370471c21140"
+  },
+  "prerequisiteCorrection": "Actualrun01 ChromiumSingleton socketpath too long; shorten only ownedTMPDIR and cache; new output/control/profile remain fresh. Same exactrunner8c8/14/all270/source61, wrapper03 onlyplanbasename change. NoAPI/flags/browser/oracle/productcode change.",
+  "socketPathCapacity": {
+    "tmpdirBytes": 21,
+    "exampleChromiumSocketBytes": 66,
+    "priorActualSocketBytes": 135,
+    "linuxUnixSunPathBytes": 108,
+    "qualification": "Measured exactASCII taskpath and observedrandomsuffix shape, not general Chromiumpath guarantee; nextactual launch stillrequired."
+  }
+}

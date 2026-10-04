@@ -1,0 +1,47 @@
+{
+  "recordedUTC": "2026-10-04T04:52:04.820070+00:00",
+  "state": "ORIGINAL_CONTROL_FAILURE_PRESERVED; SOURCE02_REPAIR_NOT_EXECUTED",
+  "original": {
+    "supervisorSHA256": "a0e2c87a34dc7cd6970e1671b40440cb92c5765eee089bd4e2a666ede8a62c3c",
+    "receiptSHA256": "b74a52fd38a2cd27adab42e1cec88f8d6a7c2da41afcc2220e11896de15f9b20",
+    "raw360SHA256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86",
+    "actual360OriginalChecks": {
+      "executed": 20,
+      "passed": 20,
+      "failed": 0
+    },
+    "1440Executed": false,
+    "controlFailed": true,
+    "source187Unchanged": true,
+    "actualOwnFamilyClosure": {
+      "allHeldExit": true,
+      "allBirthsGone": true,
+      "kernel": {
+        "empty": true,
+        "flags": [
+          "WEXITED",
+          "WNOHANG",
+          "WNOWAIT",
+          "LINUX___WALL"
+        ],
+        "flagsValue": 1090519045,
+        "flagsAccepted": true,
+        "sigchldDisposition": "DEFAULT",
+        "nonreaping": true,
+        "status": "ECHILD"
+      }
+    },
+    "forcedCleanup": false
+  },
+  "source02": {
+    "script": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned02.py",
+    "sha256": "a3a66888b644e260012d633070b06af68d7a0817b119ced62417e1d4f348bfbd",
+    "plan": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan02.json",
+    "planSHA256": "f8fe1091de01c5f5e237cfa18cd703fec7dcda4b253897d210a6258dafd10e42",
+    "outputFreshAbsent": true,
+    "all187PinsMatch": true,
+    "diagnosticDelta": "Captured mode/relative ownoutput path for unsupported entry, fixed resource phase/detail and actual child.wait result retained in finally. Original01 has no errorpath/message/nativeexit; unrecorded remains unknown."
+  },
+  "causeQualification": "Actual exception was RuntimeError before child exitCode write; transient nonregular/disappearing resource-inspection entry not retained, so exact path/event not proven. Old footprint uses lstat then second p.is_file/is_symlink lookup; new captured-stat mode check removes that source-reachable disappearance race without relaxing special-file rejection. Native360 raw successful; cohort controlFAIL remains.",
+  "requiredNext": "Root source/grant review for same2 fresh fixture processes; no build/test code/source assertions or limits changed."
+}

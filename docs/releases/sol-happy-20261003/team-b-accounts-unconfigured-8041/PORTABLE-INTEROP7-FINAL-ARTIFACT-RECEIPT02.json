@@ -1,0 +1,52 @@
+{
+  "recordedUTC": "2026-10-04T05:04:00.298980+00:00",
+  "state": "OWN_VERIFIED_PORTABLE_PACKAGE_COMPLETE_WRITER_RELEASED",
+  "artifactFiles": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/PORTABLE-INTEROP7-PACKAGE-INVENTORY01.json",
+      "bytes": 157287,
+      "sha256": "13f10cdbc957ed8b82b72b5dbc5acb2465a3eab3c4697e67d5535ac44b65c34f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/PORTABLE-INTEROP7-PACKAGE-INVENTORY02.json",
+      "bytes": 158413,
+      "sha256": "9cdcf53dd00f70f76718982257052cd2fcfd281c8f7a0239f1e68116a307d21d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/README.md",
+      "bytes": 2941,
+      "sha256": "d5c5647c9753cd8d89eefba5d6e8decd801db3b47350cd84fabf5fe4bd872194"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/build-portable-packet01.py",
+      "bytes": 4372,
+      "sha256": "46af6fec37dec240b1a75990c1198646c8c1d20651c51c14c67feb5ae8024d81"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/build-portable-packet02.py",
+      "bytes": 4372,
+      "sha256": "f91869258cc60b22f1c0c4c8a9499979e9e5a374fe0c0d7a72e94c5017553d3a"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/PORTABLE-INTEROP7-BUILD-RECEIPT02.json",
+      "bytes": 150687,
+      "sha256": "361d78eb214ec0886576ae86ad01ceea09e5ed21e83c38564980c51a9a7982ac"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/portable-unconfigured-interop7-source-runtime02.zip",
+      "bytes": 36489326,
+      "sha256": "74b2a8d42cb428d249d80b3653395002bca266556bbb703708599c405d5dfcc6"
+    }
+  ],
+  "archiveMemberCount": 375,
+  "rawMemberBytes": 63696403,
+  "exactSealedAssetCount": 270,
+  "all375MembersSHABytesVerified": true,
+  "allSourceInputsUnchanged": true,
+  "safeUniqueFullInventory": true,
+  "forbiddenPrivateMembers": [],
+  "workspaceFreeBytes": 545980416,
+  "scope": "Exact public source/sealed8041 runtime plus safe recorded7/null-config browser evidence. Historical03/04 failures retained. No signed issuer/provider/BFCache/screen-reader acceptance. No SDK/GUI used in packaging.",
+  "preservedInventory01Sha256": "13f10cdbc957ed8b82b72b5dbc5acb2465a3eab3c4697e67d5535ac44b65c34f",
+  "narrow02Addition": "Only independent actual B6review7615 added; rootactual2c2 already preserved in01.375 includes372inputmembers plus packaged README/original inventory02/builder02."
+}

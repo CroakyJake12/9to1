@@ -1,0 +1,26 @@
+{
+  "recordedUTC": "2026-10-04T04:55:13.263712+00:00",
+  "state": "SOURCE_PREPARATION_ONLY_NOT_LAUNCHED_ROOT_GUI_GRANT_REQUIRED",
+  "wrapper": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-independent-accounts-interop7-owned01.py",
+    "sha256": "d2cdf267cbb09b46ab63fb52a6ad92abdf6f1fdd896d222d69705c98fc711acb"
+  },
+  "plan": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent-owned-execution-plan01.json",
+    "sha256": "19011e63c349cfbfc48657e4fa24015c220401408847aa86c14e0a23118859ed"
+  },
+  "sameImmutableRunner": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor08.cjs",
+    "sha256": "a8dcabb4c56060c67d54a8c58faef71136078572736e10c6e30d35e1a969b21c"
+  },
+  "sourcePinsCount": 23,
+  "allPinsMatch": true,
+  "freshPathsAbsent": {
+    "output": true,
+    "control": true,
+    "tmpdir": true,
+    "cache": true
+  },
+  "diffQualification": "Only supervisor planfilename+separateB6gate and gatedforward of unchanged runner B5grant; freshownpaths. No runner/host/config/asset/case/oracle edits. Exact actualseal270 assets unchanged, provider remains unconfigured.",
+  "limits": "240s/192MB/source/fullseal/runtime0/same7/one bound top/birthFD/ECHILD normalclosure/no forced; actual independent reproduction NOT_RUN."
+}

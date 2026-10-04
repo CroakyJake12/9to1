@@ -1,0 +1,837 @@
+{
+  "state": "SOURCE_ONLY_AUTHORING_NOT_EXECUTED_ROOT_LANE_REQUIRED",
+  "output": "/workspace/team-b-b6-home-public-flag-native2-independent03",
+  "commands": [
+    {
+      "name": "public-flag-360",
+      "argv": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.dll",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.proposed",
+        "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-360.json",
+        "360",
+        "800",
+        "home-constrained-proposal"
+      ],
+      "log": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-360.log",
+      "environment": {
+        "DOTNET_ROOT": "/workspace/.tools/dotnet",
+        "DOTNET_CLI_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent03/cli-home",
+        "XDG_CACHE_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent03/font-cache",
+        "TMPDIR": "/workspace/team-b-b6-home-public-flag-native2-independent03/tmp",
+        "HAVEN_DATA_DIR": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-360-data"
+      },
+      "maximumSeconds": 120,
+      "expectedChecks": 20,
+      "requiredPassed": 20,
+      "requiredFailed": 0,
+      "requiredExitCode": 0,
+      "declaredSurfaceConstraint": true,
+      "diagnosticPropertyMutation": false
+    },
+    {
+      "name": "public-flag-1440",
+      "argv": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.dll",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.proposed",
+        "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-1440.json",
+        "1440",
+        "954",
+        "home-constrained-proposal"
+      ],
+      "log": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-1440.log",
+      "environment": {
+        "DOTNET_ROOT": "/workspace/.tools/dotnet",
+        "DOTNET_CLI_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent03/cli-home",
+        "XDG_CACHE_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent03/font-cache",
+        "TMPDIR": "/workspace/team-b-b6-home-public-flag-native2-independent03/tmp",
+        "HAVEN_DATA_DIR": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-1440-data"
+      },
+      "maximumSeconds": 120,
+      "expectedChecks": 20,
+      "requiredPassed": 20,
+      "requiredFailed": 0,
+      "requiredExitCode": 0,
+      "declaredSurfaceConstraint": true,
+      "diagnosticPropertyMutation": false
+    }
+  ],
+  "maximumOutputBytes": 67108864,
+  "minimumFreeBytes": 268435456,
+  "kernelProofPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/owned-kernel-child-proof01.py",
+  "pins": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/HomeResponsiveLayoutRegression.with-host-policy.proposed.cs",
+      "sha256": "319eaa42bb0db399a9efcb9875c632f7eefdf87fd6f605696e8c4da16b464f4e"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserApplication.cs.proposed",
+      "sha256": "2faa6d6c30bca3fabccd6189b01b45bbd6a19c281cdbed891a0945d5e07e1959"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserSurfaceRegistry.cs.proposed",
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserRenderPlatformShims.cs",
+      "sha256": "d261718ea1a2a991c29afe9736c4e247a57d4ed045ea331ef7eedd37dd26347d"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteCodec.cs",
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs",
+      "sha256": "0deb17b239d0cabe89f0c65633ea00275a415761955c51b0dd7b827c73d06ae6"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserHomeContext.cs",
+      "sha256": "67d160a6cb30ed2bc5c1020235d02ba931fe276aeb23c83003263a4e48923829"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserActionAvailability.cs",
+      "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserAccessibilityBridge.cs",
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserAccessibilityJsonContext.cs",
+      "sha256": "86b6b7b9aa6d39f4b0f51157322fd93ed599a9655c02d8d73ac7f662ab97d851"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Base.dll",
+      "sha256": "104b07f62c34a2e1d4848daef4d44605f943e79f725a4c1472bb8fa2ba2278c0"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Controls.dll",
+      "sha256": "8d8c0a6bd17d96dd2abc633fc2fd19a1a7fc9429c2506309f8ce76b08098d3b9"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.DesignerSupport.dll",
+      "sha256": "a2f03e6bce3de4112749403210e456e5760f2d16ddd5c0e3537fb1964df40ae8"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Desktop.dll",
+      "sha256": "ba8e9c5bd5bad60fe10eb38b64a0103fb6845ddc4a15b9e7aa6b53eab2858cfd"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Dialogs.dll",
+      "sha256": "7f2fd8d88b3813d0eb425b7a58a126f590600e723113fc87858de275abd6316f"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Fonts.Inter.dll",
+      "sha256": "ef4649e1d7076d37a6e2f3b2d426fbe66062552124cbfa9a4a53989e9bc29aef"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll",
+      "sha256": "1b912f4876b45ce31b20d9c145ecab391725e959f79890d663e74a8d88f665bf"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.FreeDesktop.dll",
+      "sha256": "6a2359f6c3de71cabbba1c82d4a54b33ce1d24e30aec895b5b0b4059db447d11"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.HarfBuzz.dll",
+      "sha256": "42ac862f59c801bdcd3f6ade1008cc53f98cfc9b18361df10e849628364f519d"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Headless.dll",
+      "sha256": "d585aaa67ff0a2221250d4b299e57fcd5750d7f0880bb274f3646f0f73170a0e"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Markup.Xaml.dll",
+      "sha256": "6889741c5c4bec6b3ee3a38dc6eae492f1dc37c16a5291d038dcbe8d4a99595e"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Markup.dll",
+      "sha256": "9f2743a1fb8ae3db614d2a13aeb950c687721fb64c142110251b8eead3170aad"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Metal.dll",
+      "sha256": "872b103371b2f2c6b2338dbcd462b3a2078b8022a034e1691b4751fbf80fe8cd"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.MicroCom.dll",
+      "sha256": "cb92d8725c9607c0308a52e018c1699fe752ae8f7467444961d7074010e11b42"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Native.dll",
+      "sha256": "4eb17f2b70249b88e168e2f654e851b626c374f0c9866b10f2b2811ac2730daa"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.OpenGL.dll",
+      "sha256": "7971c5e78d59063b278e67348be4a1fc53b61d2feed220444f81e17a49cfbc1b"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Remote.Protocol.dll",
+      "sha256": "12a09e2654124afac93056b23de64d5ab2f41040eb437c1a7844c146e8e758a2"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Skia.dll",
+      "sha256": "2d7d76cb69cd51c9b729574a9bfb6584ba6d59ab503f2d60b697801e7afd4082"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Themes.Fluent.dll",
+      "sha256": "ddf27918aec37d048688fd69f5551b2d108c604ef4b765ebeb84746c39dd89d4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Vulkan.dll",
+      "sha256": "7ef669b58ab02c38a9bd13bc5355eb547f361304eef2d5ef92cf0749dd08ded4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Win32.Automation.dll",
+      "sha256": "5610e4e8b9cacaabb3a86fe3536a77ce3d969c38a308591aa169b3a272f5f1cd"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Win32.dll",
+      "sha256": "14e1222f88c6a9b05dbbb62dbbcf347fdb45e6f072af2a967d73504f30523d8c"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.X11.dll",
+      "sha256": "aaef90d89ac1d174f2e8ee0f0df3afb0336c522607e4abd3dec5157aaeaddd51"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.dll",
+      "sha256": "7c42c94365003198583acc43cbb32d2b7bc419892310989fec6d78568fbd5535"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Core.dll",
+      "sha256": "abaa4d5519a3efb34229d6e97c11b0a61e3bfe81181b94b7d39076c60cadb0cf"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Language.dll",
+      "sha256": "750dcb7f7aa39d4467ca7e9ae3c6bf2ffe946d23b69476626866efc305280d32"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "sha256": "a59cee3089b5d8a22965177a13d2c32b2c67e2d94637e3ec5b39d367dd524220"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Themes.dll",
+      "sha256": "8c7ebb16af063b19178bca064f42ebfc23f777b0efc7409f3d3c211722c30516"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Den.dll",
+      "sha256": "6c8907d69e4f04f018deb10931f102e7492da18e37554660ff3afdde2b8d252f"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Dulche.Runtime.dll",
+      "sha256": "b31684f73245bc9d156ba096971b666e654843d58881ab7ee20347edd0313cfd"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/HarfBuzzSharp.dll",
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.Application.dll",
+      "sha256": "2595756a4916062e0e6a42bf6f8e44d144aa92dbbcb69ff97ecca08911e34796"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.Core.dll",
+      "sha256": "e387c367400d82c99622aa6bb518693e304ec75b7746eddb5b784d223cd4ef75"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.UI.dll",
+      "sha256": "50de4a894a012459f148e36358a7b663f118e713738ade00f9fc712d992fc4c6"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.dll",
+      "sha256": "5156b2b4401d7b3cf53c3c24799799ab84849311f3c016f7fbcb284191245dfe"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/HavenOS.Home.dll",
+      "sha256": "73289aec61b358f3012bf2d0ecfece4df2bdb3b2d9c130ff672693bd2b9ba7e1"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/MicroCom.Runtime.dll",
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/NineToOne.Cui.AI.dll",
+      "sha256": "6bfcc491aed31b96f05333df8889136065c2ba073b9801182c795c89604a7bfb"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/SkiaSharp.dll",
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Tmds.DBus.Protocol.dll",
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/runtimes/linux-x64/native/libSkiaSharp.so",
+      "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/runtimes/linux-x64/native/libHarfBuzzSharp.so",
+      "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/Montserrat-Italic-VariableFont_wght.ttf",
+      "sha256": "51607f316bc020e59f03cbf51543eecffbea501c0b31d73e5b82927c5cca442c"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/Montserrat-VariableFont_wght.ttf",
+      "sha256": "0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Black.ttf",
+      "sha256": "ea67b37f8776eebea135cd1fe9adeaf6f9427683e8dc11ab8398b6be5f102c60"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-BlackItalic.ttf",
+      "sha256": "ba072e896619782f65f2d4329b7de7326d253a905654981b8cb1a2f9a9ecd31b"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Bold.ttf",
+      "sha256": "bc6e854971cea46b463be6f9eef4d9cd52f51cfc1fc0dd90c9d3e6483dc0ec61"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-BoldItalic.ttf",
+      "sha256": "b4c121b337aaa977d711b6f397c5b9672d720af622555f1e3f9d3b87f2983665"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-ExtraBold.ttf",
+      "sha256": "d3ac6a843d3ba6d5cafd44cf39e437055c8aed7e261010f595f57d3c7b3e2c1b"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Italic.ttf",
+      "sha256": "b8fa0ea7f433669d94d27e66ea81cc627deb71861ed9d20f53d7afa1f33ba86a"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Medium.ttf",
+      "sha256": "dae47428bb041f9716604e0e07b5b0c8585b3bdd8183362f75c69fe7bb3cfaf4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-MediumItalic.ttf",
+      "sha256": "b544641c1fde7c5228a26ddade08870a9c1dc7426446828fc8aa8acab2521a45"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Regular.ttf",
+      "sha256": "3e8abe50c44c82e2242e97d1ec8c0d385c4890cdc50447bcdb8605c81a38cfb2"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-SemiBold.ttf",
+      "sha256": "b4e1563393d73fdff491a869441245aef31add2ec03d9c97a6dae4de07c52fd0"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-SemiBoldItalic.ttf",
+      "sha256": "210b2e7882fee6db983bab33a7c98418b709592189c128e3c7a40026f4ccb80e"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Assets/Roboto-Light.ttf",
+      "sha256": "db02096a91c20ab62d459001a1059bc8d78caa35d637dc91494c4440815a6ac1"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/Inter-Bold.ttf",
+      "sha256": "790c108befe859dac2ddbd20af3fbb6917c601b3d544c8a05761519f3b5508fe"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/Inter-Light.ttf",
+      "sha256": "c44ff7a5fde4816f94fc1e5e232b021a812a411339ddd08b0a475ca6e21db810"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/Inter-Medium.ttf",
+      "sha256": "10d48331f5b3c7362ca357b00c17ac4863ad35199b13b0eceb0962c8c1ad7dc9"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/Inter-Regular.ttf",
+      "sha256": "41ab0f707a2bfab8133ccdfcdab52282f5f79e5751f43a264805451c7bb95fb8"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/Inter-SemiBold.ttf",
+      "sha256": "e8cbc2b88bc4268237ff5e251776d3c54edcb14e015a9e66e4883bde4b55f13f"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/Inter-Thin.ttf",
+      "sha256": "b778a52b84f39ba1d3b08553a246643573b33453b5481b4d09c604bccced930d"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/BareMinimum.ttf",
+      "sha256": "f985d19c1dc170972c98f5847ec4cc03c1e7b9520cbf46a1e949978788f8491a"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Base.pdb",
+      "sha256": "88f79bccbcdb6927bb3bde49f456dde9b9c971798ef92484cc372fbf6c0687cb"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Base.xml",
+      "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Controls.pdb",
+      "sha256": "71868b8e8d3e0cc37322495fc156074850e51a3aebc694aee168682537decfc3"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Controls.xml",
+      "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.DesignerSupport.pdb",
+      "sha256": "9138331fd56a0f97bb06c61eda26f187340e50d9258c22ef45edd2c8e4ff9a47"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.DesignerSupport.xml",
+      "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Desktop.pdb",
+      "sha256": "a42e7c848a308276d3fb8380cc25dbffc829138a7de928782485ee77c7a22b51"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Desktop.xml",
+      "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Dialogs.pdb",
+      "sha256": "a5e323f756f163b6d22c972daccb8a13c541ef8a54fa8a42073acb9345b31f88"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Dialogs.xml",
+      "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Fonts.Inter.pdb",
+      "sha256": "5672f47ca96b620fe6735895ed9627694cdf1387ca38733f8442b99b5edbcd8e"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Fonts.Inter.xml",
+      "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.pdb",
+      "sha256": "505aa6ff00229b7e04a4a041219571c8d1224087a4d2a9736479a2cb845142c3"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.xml",
+      "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.FreeDesktop.pdb",
+      "sha256": "ae95873c95ff00642d74bf688cb723604e09d87b1b76c54c0f2e4f202c231775"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.FreeDesktop.xml",
+      "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.HarfBuzz.pdb",
+      "sha256": "b1cad3513186eeaa2404487b284e6c4dc17806517e2a609fde4459a79d6d25f4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.HarfBuzz.xml",
+      "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Headless.pdb",
+      "sha256": "76a46b9f91057991d189050fce4b57dd9395b154605a1c0c4f89f331f572af07"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Headless.xml",
+      "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Markup.Xaml.pdb",
+      "sha256": "2881808c125a1b8ad98948a503ff8ad1e048c7afc94d96a03170538d58cb08da"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Markup.Xaml.xml",
+      "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Markup.pdb",
+      "sha256": "6145ca15f13ef34edfcf61bc290719c45e88cbef209914c8abaa29b028176f11"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Markup.xml",
+      "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Metal.pdb",
+      "sha256": "ddd2bdb905e792f3b46930a9ed8ff6ac87aec6807822ed9d54a0fc1ffc9b7832"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Metal.xml",
+      "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.MicroCom.pdb",
+      "sha256": "ed2e90dbf8464c9bf0d69249abbf43b04fc0d3ab7afd3db707391e205a16a0e1"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.MicroCom.xml",
+      "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Native.pdb",
+      "sha256": "f77ff20f234427c78ec6e80e933dfd6826178af49f11ed5c5917e00375c52178"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Native.xml",
+      "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.OpenGL.pdb",
+      "sha256": "f0477401fd8d664668731c6c7855578b13816aae08dc51b4e133a3ba79f47889"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.OpenGL.xml",
+      "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Remote.Protocol.pdb",
+      "sha256": "58c2b803be5a6f1360bec31be7a305c57b8dd3a996e52aee7f4ff989448d5673"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Remote.Protocol.xml",
+      "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Skia.pdb",
+      "sha256": "44af33158a0d900604c031fd006bfb95c01b14041aae3e04849c83ec8d6a450a"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Skia.xml",
+      "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Themes.Fluent.pdb",
+      "sha256": "a7aabfefad7b5dc6e6e3749119a135985678e5b0449c57e21a9b33116f7d1052"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Themes.Fluent.xml",
+      "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Vulkan.pdb",
+      "sha256": "0f7cf4d009798f13580813a462246b7dfb16eba1de091b0d0e139ae0f424e4c3"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Vulkan.xml",
+      "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Win32.Automation.pdb",
+      "sha256": "f273f8ea4cbd4044355baa8ae218f7cb4ccd772f2a311952af63d0b0f25a7ed8"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Win32.Automation.xml",
+      "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Win32.pdb",
+      "sha256": "7cc07cbe5c00cd653996a08994aac29a8584fb8cf7de2a06dc3edb13a1df9bc4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.Win32.xml",
+      "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.X11.pdb",
+      "sha256": "0f573411a388cbf38ec8a757b11676f7f935e0b6ce6e1d1ee8d0d0c987dada73"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.X11.xml",
+      "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.pdb",
+      "sha256": "23e1bad577155a96e14d96ec394c64e8f2c15e8166b131c4abb021b9fbebed5b"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Avalonia.xml",
+      "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Core.pdb",
+      "sha256": "66b9db67af15c143c88e7a829ddf06051e8f38400ed4344e3e15fcb1e2904722"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Language.pdb",
+      "sha256": "89152ab6b8281f2f5682476ec0407719e17d864db5795afb81008651a4a6cce1"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Runtime.pdb",
+      "sha256": "a83277f4d04160ceb1ea4b5260020ddaedee726d071947b49dd4c9eb89797bc1"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/CakeOS.Cui.Themes.pdb",
+      "sha256": "9b87d1388befdce2c11e63cc01e91aee6918c3943b3c14118fc05fb9667676d8"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Den.pdb",
+      "sha256": "deaec6312ec28d2b95aad9b18c568ec742730cccedae3e398d20f3ca916e7017"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Dulche.Runtime.pdb",
+      "sha256": "cf11fbe887216d9c425d004c05eb77347089f83b83b50af273a2a10ef2275542"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.Application.pdb",
+      "sha256": "c365b2c8e47f8a46d3717ff86345960c307e16d7192d662e07320ca87e26d544"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.Core.pdb",
+      "sha256": "11800eb8afd272f3d2e1708845a8312415a2e74f0e46251bb7a27cfdc0302541"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.UI.pdb",
+      "sha256": "05b8b5df994a48975155ab4e7787d47748eeb8568cb315a68fd7bf0a03351c92"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.pdb",
+      "sha256": "6a32a6e459cf4e46879bb8f0c7d01ea7f396e4469a36dbfb4492dfa28738a72d"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/HavenOS.Home.pdb",
+      "sha256": "5fc0e82a73a12a3486c8ad0f63f8d59f0eb8295c271dc0b2980e0cf660fee795"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/NineToOne.Cui.AI.pdb",
+      "sha256": "2ee94e903fdc1a93f08033b79fde717c1cc9ba33aa1d0afc497dad736130d33b"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/HomeResponsiveJoint.Dll.Tests.csproj",
+      "sha256": "1673cc64627b3c48c104a3554cb53d448d7a20e82f7ce7064bdb230370c85f9f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.proposed",
+      "sha256": "74298cc25b631bb3a63902767abe6d17cbfc4aa4e134a65ec571762cba7dfb69"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Base.dll",
+      "sha256": "104b07f62c34a2e1d4848daef4d44605f943e79f725a4c1472bb8fa2ba2278c0"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Controls.dll",
+      "sha256": "8d8c0a6bd17d96dd2abc633fc2fd19a1a7fc9429c2506309f8ce76b08098d3b9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.DesignerSupport.dll",
+      "sha256": "a2f03e6bce3de4112749403210e456e5760f2d16ddd5c0e3537fb1964df40ae8"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Desktop.dll",
+      "sha256": "ba8e9c5bd5bad60fe10eb38b64a0103fb6845ddc4a15b9e7aa6b53eab2858cfd"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Dialogs.dll",
+      "sha256": "7f2fd8d88b3813d0eb425b7a58a126f590600e723113fc87858de275abd6316f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Fonts.Inter.dll",
+      "sha256": "ef4649e1d7076d37a6e2f3b2d426fbe66062552124cbfa9a4a53989e9bc29aef"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll",
+      "sha256": "1b912f4876b45ce31b20d9c145ecab391725e959f79890d663e74a8d88f665bf"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.FreeDesktop.dll",
+      "sha256": "6a2359f6c3de71cabbba1c82d4a54b33ce1d24e30aec895b5b0b4059db447d11"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.HarfBuzz.dll",
+      "sha256": "42ac862f59c801bdcd3f6ade1008cc53f98cfc9b18361df10e849628364f519d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Headless.dll",
+      "sha256": "d585aaa67ff0a2221250d4b299e57fcd5750d7f0880bb274f3646f0f73170a0e"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Markup.Xaml.dll",
+      "sha256": "6889741c5c4bec6b3ee3a38dc6eae492f1dc37c16a5291d038dcbe8d4a99595e"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Markup.dll",
+      "sha256": "9f2743a1fb8ae3db614d2a13aeb950c687721fb64c142110251b8eead3170aad"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Metal.dll",
+      "sha256": "872b103371b2f2c6b2338dbcd462b3a2078b8022a034e1691b4751fbf80fe8cd"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.MicroCom.dll",
+      "sha256": "cb92d8725c9607c0308a52e018c1699fe752ae8f7467444961d7074010e11b42"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Native.dll",
+      "sha256": "4eb17f2b70249b88e168e2f654e851b626c374f0c9866b10f2b2811ac2730daa"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.OpenGL.dll",
+      "sha256": "7971c5e78d59063b278e67348be4a1fc53b61d2feed220444f81e17a49cfbc1b"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Remote.Protocol.dll",
+      "sha256": "12a09e2654124afac93056b23de64d5ab2f41040eb437c1a7844c146e8e758a2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Skia.dll",
+      "sha256": "2d7d76cb69cd51c9b729574a9bfb6584ba6d59ab503f2d60b697801e7afd4082"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Themes.Fluent.dll",
+      "sha256": "ddf27918aec37d048688fd69f5551b2d108c604ef4b765ebeb84746c39dd89d4"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Vulkan.dll",
+      "sha256": "7ef669b58ab02c38a9bd13bc5355eb547f361304eef2d5ef92cf0749dd08ded4"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Win32.Automation.dll",
+      "sha256": "5610e4e8b9cacaabb3a86fe3536a77ce3d969c38a308591aa169b3a272f5f1cd"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.Win32.dll",
+      "sha256": "14e1222f88c6a9b05dbbb62dbbcf347fdb45e6f072af2a967d73504f30523d8c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.X11.dll",
+      "sha256": "aaef90d89ac1d174f2e8ee0f0df3afb0336c522607e4abd3dec5157aaeaddd51"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Avalonia.dll",
+      "sha256": "7c42c94365003198583acc43cbb32d2b7bc419892310989fec6d78568fbd5535"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/CakeOS.Cui.Core.dll",
+      "sha256": "abaa4d5519a3efb34229d6e97c11b0a61e3bfe81181b94b7d39076c60cadb0cf"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/CakeOS.Cui.Language.dll",
+      "sha256": "750dcb7f7aa39d4467ca7e9ae3c6bf2ffe946d23b69476626866efc305280d32"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "sha256": "a59cee3089b5d8a22965177a13d2c32b2c67e2d94637e3ec5b39d367dd524220"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/CakeOS.Cui.Themes.dll",
+      "sha256": "8c7ebb16af063b19178bca064f42ebfc23f777b0efc7409f3d3c211722c30516"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Den.dll",
+      "sha256": "6c8907d69e4f04f018deb10931f102e7492da18e37554660ff3afdde2b8d252f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Dulche.Runtime.dll",
+      "sha256": "b31684f73245bc9d156ba096971b666e654843d58881ab7ee20347edd0313cfd"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HarfBuzzSharp.dll",
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Haven.Application.dll",
+      "sha256": "2595756a4916062e0e6a42bf6f8e44d144aa92dbbcb69ff97ecca08911e34796"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Haven.Core.dll",
+      "sha256": "e387c367400d82c99622aa6bb518693e304ec75b7746eddb5b784d223cd4ef75"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Haven.UI.dll",
+      "sha256": "50de4a894a012459f148e36358a7b663f118e713738ade00f9fc712d992fc4c6"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Haven.dll",
+      "sha256": "5156b2b4401d7b3cf53c3c24799799ab84849311f3c016f7fbcb284191245dfe"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HavenOS.Home.dll",
+      "sha256": "73289aec61b358f3012bf2d0ecfece4df2bdb3b2d9c130ff672693bd2b9ba7e1"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/MicroCom.Runtime.dll",
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/NineToOne.Cui.AI.dll",
+      "sha256": "6bfcc491aed31b96f05333df8889136065c2ba073b9801182c795c89604a7bfb"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/SkiaSharp.dll",
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/Tmds.DBus.Protocol.dll",
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/libSkiaSharp.so",
+      "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/libHarfBuzzSharp.so",
+      "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.dll",
+      "sha256": "444372f3b1e2cd728be809f6ffa003b66466ea12f5126a3a56eec86eca2a9d29"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.deps.json",
+      "sha256": "f9a4bcef02bbf948a2f9fdc068bff3975d25e600cc817575bd2ef381183e1dd3"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.runtimeconfig.json",
+      "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/manifest.json",
+      "sha256": "adbb61e5e40d2ac13a58bdabf62031a30d51d03d6be9cd28e19a4cc71b2c16bf"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/executed-public-flag-results.json",
+      "sha256": "b55676d9fda621d86d3a21135fd5a23b0220260d2ca4b7bdc2c32b6032222ed4"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned03.py",
+      "sha256": "2292e7bdb8147a93726679b0a50632f0296a0f43c9ce58ee1bcda4d7805831b9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/owned-kernel-child-proof01.py",
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/allocation-run01/cohort/public-flag-360.json",
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/run-pinned-public-flag.py",
+      "sha256": "cfa7afc898b4454e8cad9a30770e799d4fd08049fe19a3b09b9e8ead6055ffef"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/kernel-child-helper3-first-results.json",
+      "sha256": "b4993f8443543345140ee6a304fbf2fcfa1e6b6535c675c866e5c2f0de9f8442"
+    }
+  ],
+  "scope": "Twoindependent fresh native processes and raw20criteria each only. No browser/AT/touch/theme/200percent/authority/fullHome or A1 adoption implied.",
+  "exact20CheckNames": [
+    "welcome-copy follows welcome-heading",
+    "dashboard-brief follows welcome-copy",
+    "home-hero follows dashboard-brief",
+    "operation-status follows home-hero",
+    "navigation-status follows operation-status",
+    "app-shortcuts follows navigation-status",
+    "upcoming-events follows app-shortcuts",
+    "dashboard-layout-controls follows upcoming-events",
+    "Complete hero explanation remains in actual native text layout",
+    "Hero full text range fits its assigned native width",
+    "Hero explanatory glyph ranges do not intersect observed-status column",
+    "Actual hero text remains within measured Home root width",
+    "Native client width matches the requested viewport",
+    "Native scroll viewport width matches native client width",
+    "Home native horizontal extent fits the scroll viewport",
+    "Home root fits the native scroll viewport width",
+    "Actual Home text inputs fit root horizontal bounds",
+    "Actual Home buttons fit root horizontal bounds",
+    "Every actual Home full text range fits its assigned width",
+    "Actual Home Library Events navigation remains enabled"
+  ],
+  "sourceCorrection": "Actual run02 captured CLR FIFO path with exact held native PID/birth; root approved metadata-only accounting of owned freshTMP exactCLR FIFOin/out and diagnostics socket names; allother special/symlink/IO failclosed. Resourcecaps/regularfilechecks/20 fixture unchanged."
+}

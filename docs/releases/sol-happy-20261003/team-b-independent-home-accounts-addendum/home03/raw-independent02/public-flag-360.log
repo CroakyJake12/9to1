@@ -1,0 +1,20 @@
+PASS: welcome-copy follows welcome-heading
+PASS: dashboard-brief follows welcome-copy
+PASS: home-hero follows dashboard-brief
+PASS: operation-status follows home-hero
+PASS: navigation-status follows operation-status
+PASS: app-shortcuts follows navigation-status
+PASS: upcoming-events follows app-shortcuts
+PASS: dashboard-layout-controls follows upcoming-events
+PASS: Complete hero explanation remains in actual native text layout
+PASS: Hero full text range fits its assigned native width
+PASS: Hero explanatory glyph ranges do not intersect observed-status column
+PASS: Actual hero text remains within measured Home root width
+PASS: Native client width matches the requested viewport
+PASS: Native scroll viewport width matches native client width
+PASS: Home native horizontal extent fits the scroll viewport
+PASS: Home root fits the native scroll viewport width
+PASS: Actual Home text inputs fit root horizontal bounds
+PASS: Actual Home buttons fit root horizontal bounds
+PASS: Every actual Home full text range fits its assigned width
+PASS: Actual Home Library Events navigation remains enabled

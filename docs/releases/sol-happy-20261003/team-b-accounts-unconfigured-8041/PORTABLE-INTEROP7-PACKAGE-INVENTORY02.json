@@ -1,0 +1,2749 @@
+{
+  "recordedUTC": "2026-10-04T05:02:58.638449+00:00",
+  "state": "FROZEN_NARROW_INVENTORY02_ROOT_EXCLUSIVE_WRITER_GRANTED",
+  "scope": "Portable public source and exact sealed8041 runtime evidence for actual unconfigured7 only; preserves original03 prelaunch failure/04HOLD and successor08normal7PASS. No provider/BFCache/AT/credential acceptance.",
+  "archiveMaximumBytes": 104857600,
+  "outputZip": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/portable-unconfigured-interop7-source-runtime02.zip",
+  "members": [
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-MANIFEST.json",
+      "bytes": 4589,
+      "sha256": "b537a7123d1a52b19c7db7a9a11caa9a0d26e4841737f597a86d565ad2f2bd3d",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-SUCCESSOR06-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-SUCCESSOR06-MANIFEST.json",
+      "bytes": 6061,
+      "sha256": "9d8c02f85f55a214a6982b5218d7a7ab201bde2cbb899bac15d155869d9f3de0",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-SUCCESSOR07-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-SUCCESSOR07-MANIFEST.json",
+      "bytes": 6068,
+      "sha256": "050d552ea859ec481017a11340efa0d8c123f5058ea34f4336ae0441ac3aedff",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-SUCCESSOR08-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/AUTHORED-INTEROP7-SUCCESSOR08-MANIFEST.json",
+      "bytes": 6904,
+      "sha256": "7eebbcf057993fb83e91ac511f78791eab005e7440534f4c05e0e29c5412bba6",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/AUTHORED-KERNEL-HELPER3-SOURCE-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/AUTHORED-KERNEL-HELPER3-SOURCE-MANIFEST.json",
+      "bytes": 1869,
+      "sha256": "a585fdcfb29cf31c4610cd2f2c0af0c59452e0b0c0f541387f880c2ddc4c8870",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/AUTHORED-WATCHDOG05-CLASSIFIER-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/AUTHORED-WATCHDOG05-CLASSIFIER-MANIFEST.json",
+      "bytes": 5279,
+      "sha256": "a17544f15eb89dba41a8d57cb0ad737d31ded75769875673b1f51748b41e9f1b",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-06.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-06.json",
+      "bytes": 474,
+      "sha256": "ec32c63b2b9a7c328671bfd248d45f633d547abda5ed7c5012321b6badbcc482",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-07.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-07.json",
+      "bytes": 474,
+      "sha256": "26f89278d497139ffb26d85375ae47dc4ab71eadc2452527e5209c626d61a09c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-08.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-08.json",
+      "bytes": 474,
+      "sha256": "53fbbff54111faa3d238185d88720928dea7b897789b656cd7f378813e394407",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING.json",
+      "bytes": 474,
+      "sha256": "f3e24a23c17b8bdc8370d41a6280b05410bab18869ce9e062a7a832192a735f7",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-02.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-02.json",
+      "bytes": 5582,
+      "sha256": "55b840f4e7132e04cf6f889bc02dc5bf8111276230dc86911ac40d4df06ab750",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-03.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-03.json",
+      "bytes": 5890,
+      "sha256": "8d73834ff4f9554f666823a1d9744114f9ba5ec3e3adc26554debc5cf7d8b55e",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-04.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-04.json",
+      "bytes": 6551,
+      "sha256": "e6909c8d0f9e8368d8868bf022829beaaebcf34e2a647d92de37d6d443b318dc",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-05.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-05.json",
+      "bytes": 7724,
+      "sha256": "7adae1d903832e73192298f5abe588cdf8c5ad167909c52d7a1ab10b53f8333a",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-06.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-06.json",
+      "bytes": 9040,
+      "sha256": "760b187c9b796c30b95db282a7b657a645d917b557d4e45fda685b2c4c2a6139",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-07.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-07.json",
+      "bytes": 10532,
+      "sha256": "1cc3c95130e8a347e99b33ce0e808261fae03e76122749467179bd335a9e3ac2",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-08.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN-08.json",
+      "bytes": 11467,
+      "sha256": "415b670cbd672db56289b072bc9d75800196fa7e86c4a26bd4a0739cc02c4b70",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-EXECUTION-PLAN.json",
+      "bytes": 5295,
+      "sha256": "901fa7e5839cc818ac765fddcd8c3a6151c302e8ef208aab4ece1ede66cd4218",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXECUTED-INTEROP7-SUCCESSOR08-RUN02-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXECUTED-INTEROP7-SUCCESSOR08-RUN02-MANIFEST.json",
+      "bytes": 18937,
+      "sha256": "218f4ac8e3f28a3d3d8b1a3609deabc37a65fca4d174c1f5871ff7dc8ba0d760",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXECUTED-INTEROP7-WATCHDOG04-RUN01-MANIFEST.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXECUTED-INTEROP7-WATCHDOG04-RUN01-MANIFEST.json",
+      "bytes": 16876,
+      "sha256": "4f351137a0860c88c8a8f676f2810b3bf6945200ac379150606094275cce9757",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/REVOKE-FRESH-SETTINGS-SOURCE-CONTRACT-CHALLENGE01.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/REVOKE-FRESH-SETTINGS-SOURCE-CONTRACT-CHALLENGE01.json",
+      "bytes": 3094,
+      "sha256": "11e146ff8f32a0b7425ae41e3521cff5aeeae5917c106a9429e8198b6d2cf314",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/STATUS-CAPTION-HYPOTHESIS-RESOLUTION.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/STATUS-CAPTION-HYPOTHESIS-RESOLUTION.json",
+      "bytes": 2809,
+      "sha256": "13f024d0c366ab1a3f0a066e6a296723270fe67ff198a6d66376b99f2979b7c0",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/kernel-child-helper3-exit-receipt.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/kernel-child-helper3-exit-receipt.json",
+      "bytes": 374,
+      "sha256": "200b92bdcbc91c3ebdec422fed773bc6325228583d2b0fef82d8d6382b1c434b",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/kernel-child-helper3-first-results.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/kernel-child-helper3-first-results.json",
+      "bytes": 2279,
+      "sha256": "b4993f8443543345140ee6a304fbf2fcfa1e6b6535c675c866e5c2f0de9f8442",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/kernel-child-helper3-first.log",
+      "member": "evidence/b5/account-unconfigured-interop8041/kernel-child-helper3-first.log",
+      "bytes": 410,
+      "sha256": "c273da7f555ad6a345dea78ad519ab0378e3f856163342e29f67544a0df160aa",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/owned-kernel-child-helper3.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/owned-kernel-child-helper3.py",
+      "bytes": 5081,
+      "sha256": "47c46fb50ed14916a28238d81c3fb17aadd002ddfdae18a42e22e29a35d7ea0c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/owned-kernel-child-proof01.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/root-helper3-actual-review.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/root-helper3-actual-review.json",
+      "bytes": 1127,
+      "sha256": "821e77fc4026421257dc32357ff3307a727dbab9a8b0ca2c65b2761374e85201",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/root-helper3-watchdog04-source-review.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/root-helper3-watchdog04-source-review.json",
+      "bytes": 1924,
+      "sha256": "f538e8c81bdc113cc9dfb5f6aecf0a6c3f758c6d9cf026197c6e46014c181541",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/root-run01-observed-family-release.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/root-run01-observed-family-release.json",
+      "bytes": 1628,
+      "sha256": "922d77af661b80c319c87cd59a111dd9b36947b0478a257d1c5f1db207cc4639",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/root-successor08-actual7-review-and-lane-release.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/root-successor08-actual7-review-and-lane-release.json",
+      "bytes": 1796,
+      "sha256": "2c2cbd52ac466785d15a920580dfb378c9203693a6e7851e5dac6431d6b9012c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/root-successor08-source-review-and-gui-grant.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/root-successor08-source-review-and-gui-grant.json",
+      "bytes": 1776,
+      "sha256": "86b14ad89bfc25b99ab53e11a9056082b4cc638eb449039f1728e75c7fddf2e6",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/root-watchdog04-gui-grant.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/root-watchdog04-gui-grant.json",
+      "bytes": 933,
+      "sha256": "4ef255f87a500caa0ad5db644d2e4b173ce83896a76c67087af85445ac18b3f9",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog01.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog01.py",
+      "bytes": 10930,
+      "sha256": "50fb151a1705dc21cff8a606507b92470cd962ac111cab2fab11485918d02ee4",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog02.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog02.py",
+      "bytes": 11244,
+      "sha256": "fbb02a1aa0ad58acb99847c200f187aa720b039ac9ebff6e53f7b2f09ba9c0f3",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog03.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog03.py",
+      "bytes": 12146,
+      "sha256": "1e4e6c782278511636ac376300022d0399643efe1b2e541d1990133a3956e05f",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog04.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog04.py",
+      "bytes": 12655,
+      "sha256": "eb5e32c73fd3314adce1794bcccc821a7095d087e548b990cc65a3a41ac0d144",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog05.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog05.py",
+      "bytes": 13578,
+      "sha256": "dca1f423d7678381c0a940cef3d5c5ef113dbaf79d8c4a95c3deab7354e1ea94",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog06.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog06.py",
+      "bytes": 13578,
+      "sha256": "6567d003707aa5cac4826800dd2c1a75e0a43985e6ef670b2b663c2400e486af",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog07.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog07.py",
+      "bytes": 13578,
+      "sha256": "3e28c10d932f7469d2dd300940043b021865dcca3f4e661195bc5263ec6f2d91",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog08.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog08.py",
+      "bytes": 13578,
+      "sha256": "a9c6fb94700b4fb289469502264068a5b8327506735fbf45c8dfc1ec1b39af9b",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor06.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor06.cjs",
+      "bytes": 15056,
+      "sha256": "65ff1406e080148a6fb6f920d94cfc26a6703216dcf701cbff4eced9b0ad2a8c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor07.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor07.cjs",
+      "bytes": 16521,
+      "sha256": "3703026f73b9cb716f82d291eb96c571d7124bb4842a988b7ca2aebbaadb144b",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor08.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor08.cjs",
+      "bytes": 16899,
+      "sha256": "a8dcabb4c56060c67d54a8c58faef71136078572736e10c6e30d35e1a969b21c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-unconfigured-interop7.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-unconfigured-interop7.cjs",
+      "bytes": 12423,
+      "sha256": "61dc099393b5d0b82982172f22e7f9e60f63920d018daf9e6a2e83afa2891e9c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/sealed-https-host-explicit-binding.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/sealed-https-host-explicit-binding.cjs",
+      "bytes": 3622,
+      "sha256": "43650700e8eaa35fab4a63a29c02572c1e89803b6f8bff6f357bde10d7cb553d",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/CUSTODY.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/CUSTODY.json",
+      "bytes": 4255,
+      "sha256": "6746fd8827cdd5d45ded39f592586ad3b1973d0abf9aa95f858032553f9a0e75",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "bytes": 23962,
+      "sha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Accounts/AccountSettingsFeature.cs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Accounts/AccountSettingsFeature.cs",
+      "bytes": 10474,
+      "sha256": "400a5537dff6b56d438e6dbbafa5f7b3f06f74caae4e0b8439e49b9454552d24",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Accounts/Accounts.cui",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Accounts/Accounts.cui",
+      "bytes": 6365,
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/BrowserAccessibilityBridge.cs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/BrowserAccessibilityBridge.cs",
+      "bytes": 6998,
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/BrowserApplication.cs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/BrowserApplication.cs",
+      "bytes": 18174,
+      "sha256": "1be15d72354c29ef04e1bac80d4fd8fd5b0c342123415489e028c115d7c0e140",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/BrowserFeatureComposition.cs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/BrowserFeatureComposition.cs",
+      "bytes": 1696,
+      "sha256": "d49cdf7d109eacb511299a678938dc3271c5ec6d28d382d831ef1bacb05d9b3f",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Program.cs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Program.cs",
+      "bytes": 3074,
+      "sha256": "68d8bb7f09be106303b8df9001704b8363e20cd7f26b6aee4867ad2f36982efa",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Services/account-service.js",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/Services/account-service.js",
+      "bytes": 3214,
+      "sha256": "2ca8fab3b99209fb0fcdc05105fb48a81bbe8158b54156685a7c2b4a609ccab9",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/wwwroot/browser-accessibility.js",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/wwwroot/browser-accessibility.js",
+      "bytes": 8891,
+      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/wwwroot/browser-private-context.js",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/wwwroot/browser-private-context.js",
+      "bytes": 4691,
+      "sha256": "77af4c31e4f81a22f6e8b290877f43443b443716b4af9f29c0b75b19bb8b8b98",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/apps/Web/wwwroot/main.js",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/apps/Web/wwwroot/main.js",
+      "bytes": 6186,
+      "sha256": "d10018571a6d4399ea2c225763080a512ee1f159a41bfb7438e5d6a94327d09d",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/harness/run-unconfigured-interop7.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/harness/run-unconfigured-interop7.cjs",
+      "bytes": 12423,
+      "sha256": "61dc099393b5d0b82982172f22e7f9e60f63920d018daf9e6a2e83afa2891e9c",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/source-custody01/harness/sealed-https-host-explicit-binding.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/source-custody01/harness/sealed-https-host-explicit-binding.cjs",
+      "bytes": 3622,
+      "sha256": "43650700e8eaa35fab4a63a29c02572c1e89803b6f8bff6f357bde10d7cb553d",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/watchdog-source-custody01/EXACT-8041-INTEROP7-EXECUTION-PLAN.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/watchdog-source-custody01/EXACT-8041-INTEROP7-EXECUTION-PLAN.json",
+      "bytes": 5295,
+      "sha256": "901fa7e5839cc818ac765fddcd8c3a6151c302e8ef208aab4ece1ede66cd4218",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/watchdog-source-custody01/run-owned-browser-watchdog01.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/watchdog-source-custody01/run-owned-browser-watchdog01.py",
+      "bytes": 10930,
+      "sha256": "50fb151a1705dc21cff8a606507b92470cd962ac111cab2fab11485918d02ee4",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/watchdog-source-custody02/EXACT-8041-INTEROP7-EXECUTION-PLAN-02.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/watchdog-source-custody02/EXACT-8041-INTEROP7-EXECUTION-PLAN-02.json",
+      "bytes": 5582,
+      "sha256": "55b840f4e7132e04cf6f889bc02dc5bf8111276230dc86911ac40d4df06ab750",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/watchdog-source-custody02/run-owned-browser-watchdog02.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/watchdog-source-custody02/run-owned-browser-watchdog02.py",
+      "bytes": 11244,
+      "sha256": "fbb02a1aa0ad58acb99847c200f187aa720b039ac9ebff6e53f7b2f09ba9c0f3",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/watchdog-source-custody03/EXACT-8041-INTEROP7-EXECUTION-PLAN-03.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/watchdog-source-custody03/EXACT-8041-INTEROP7-EXECUTION-PLAN-03.json",
+      "bytes": 5890,
+      "sha256": "8d73834ff4f9554f666823a1d9744114f9ba5ec3e3adc26554debc5cf7d8b55e",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/watchdog-source-custody03/run-owned-browser-watchdog03.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/watchdog-source-custody03/run-owned-browser-watchdog03.py",
+      "bytes": 12146,
+      "sha256": "1e4e6c782278511636ac376300022d0399643efe1b2e541d1990133a3956e05f",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/watchdog03-first-prelaunch-failure.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/watchdog03-first-prelaunch-failure.json",
+      "bytes": 4238,
+      "sha256": "f20b22478be9b7993576923ef1c4f3781b6a0527df20a9c369dc4e870f588b0b",
+      "role": "preserved source/procedure/root grant/initial failures/helper3/actual7 manifests; no browser data"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b5-interop-8041-run01/results.json",
+      "member": "evidence/raw/run01/results.json",
+      "bytes": 2241,
+      "sha256": "9869a347552fb87ec8df37c888aec6d8e123d6f2be674a2de3217a154fc915e9",
+      "role": "actual raw safe result/process receipt/stdout; profile excluded"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b5-interop-8041-control01/owned-family-receipt.json",
+      "member": "evidence/raw/run01/owned-family-receipt.json",
+      "bytes": 6244,
+      "sha256": "c9547e00eda3f767b836da0a45eb3eee999bece31b50a3bb4c04f4bc532f669b",
+      "role": "actual raw safe result/process receipt/stdout; profile excluded"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b5-interop-8041-control01/runner-safe-stdout.log",
+      "member": "evidence/raw/run01/runner-safe-stdout.log",
+      "bytes": 397,
+      "sha256": "c9c2a20857a7b90b58fa7fc0ea4adfb0dae57ac24cfd23e7e38f765edd13abfd",
+      "role": "actual raw safe result/process receipt/stdout; profile excluded"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b5-interop-8041-run02/results.json",
+      "member": "evidence/raw/run02/results.json",
+      "bytes": 2923,
+      "sha256": "2898abeaacfcac20008e7d39826a9469c5f71063afecd0e2643d2682464918dc",
+      "role": "actual raw safe result/process receipt/stdout; profile excluded"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b5-interop-8041-control02/owned-family-receipt.json",
+      "member": "evidence/raw/run02/owned-family-receipt.json",
+      "bytes": 5743,
+      "sha256": "940c6833a35e0da12b506bf5a95230d9093d3326aa65e265d5da923916996659",
+      "role": "actual raw safe result/process receipt/stdout; profile excluded"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b5-interop-8041-control02/runner-safe-stdout.log",
+      "member": "evidence/raw/run02/runner-safe-stdout.log",
+      "bytes": 397,
+      "sha256": "824ab28714aae19c3838697997520b1c55e3af1e51ad95c0cfca7527c25d6c6d",
+      "role": "actual raw safe result/process receipt/stdout; profile excluded"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-watchdog04-recorded-run01-review.json",
+      "member": "evidence/b6/accounts-interop7-watchdog04-recorded-run01-review.json",
+      "bytes": 18618,
+      "sha256": "bc58d1f347c0d121e199618ce53f2f2d54ca2ce5de88ac899fcba7a4285394fc",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-unconfigured-interop7-exact8041-binding-review01.json",
+      "member": "evidence/b6/accounts-unconfigured-interop7-exact8041-binding-review01.json",
+      "bytes": 860,
+      "sha256": "71dff05b5be332a923b58d52b8d74852e511fea8632b5aa2045e714d9996f5a1",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-successor08-source-oracle-review.json",
+      "member": "evidence/b6/accounts-interop7-successor08-source-oracle-review.json",
+      "bytes": 4306,
+      "sha256": "923b6bc8475a0aeb6c7a9062b02145d7083f6dc9ea60a19e42c19ded71c303d3",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-unconfigured-interop7-revocation-oracle-source-correction.json",
+      "member": "evidence/b6/accounts-unconfigured-interop7-revocation-oracle-source-correction.json",
+      "bytes": 6265,
+      "sha256": "892b6973e171fd613130f578d3059cdb045adabd0ec7ef9cb5854c0a232ea142",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-owned-family-watchdog03-source-review.json",
+      "member": "evidence/b6/accounts-interop7-owned-family-watchdog03-source-review.json",
+      "bytes": 2038,
+      "sha256": "61fd5f1e15210c72eb77c8f5e2f84d0077aade0d2022dd4b3024cb2680a48b01",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-watchdog05-classifier-source-review.json",
+      "member": "evidence/b6/accounts-watchdog05-classifier-source-review.json",
+      "bytes": 3888,
+      "sha256": "153b7cf9e8c160ed6f7b6b694b0a9644d6a7e18ecda6f2e0f90943aa606f0ec3",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/owned-kernel-helper3-watchdog04-source-review.json",
+      "member": "evidence/b6/owned-kernel-helper3-watchdog04-source-review.json",
+      "bytes": 1938,
+      "sha256": "e8af37186ba85b19cb2930277e5cde634b157227c11dcf27035e0e7c6665d8ed",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/owned-kernel-helper3-recorded-watchdog04-readiness.json",
+      "member": "evidence/b6/owned-kernel-helper3-recorded-watchdog04-readiness.json",
+      "bytes": 2031,
+      "sha256": "c6f581064adc4697aa6a86d888ab38f3f42980e2a3f1c9f34527927cc5e85678",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-status-native3-source-review01.json",
+      "member": "evidence/b6/accounts-status-native3-source-review01.json",
+      "bytes": 1285,
+      "sha256": "2442877f0c382afe75acabd2a170cf3169934cd2ca0e4f6095971b6d5d27e1f9",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-status-native3-recorded-review01.json",
+      "member": "evidence/b6/accounts-status-native3-recorded-review01.json",
+      "bytes": 2537,
+      "sha256": "92f658dff20fe44ce5c49ea4244203089bdda87503720676adecb450d58aee24",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-unconfigured-interop7-source-review01.json",
+      "member": "evidence/b6/accounts-unconfigured-interop7-source-review01.json",
+      "bytes": 2393,
+      "sha256": "3d84f74e652946f1d3f7ad7c9a862441d8b2cfab2dd470e57729b06184139c69",
+      "role": "independent reviewed source/runtime/canonical correction qualification"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/Program.cs",
+      "member": "source/selected-web-app/apps/Web/Program.cs",
+      "bytes": 3074,
+      "sha256": "68d8bb7f09be106303b8df9001704b8363e20cd7f26b6aee4867ad2f36982efa",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserApplication.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserApplication.cs",
+      "bytes": 18174,
+      "sha256": "1be15d72354c29ef04e1bac80d4fd8fd5b0c342123415489e028c115d7c0e140",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserAccessibilityBridge.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserAccessibilityBridge.cs",
+      "bytes": 6998,
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserFeatureComposition.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserFeatureComposition.cs",
+      "bytes": 1696,
+      "sha256": "d49cdf7d109eacb511299a678938dc3271c5ec6d28d382d831ef1bacb05d9b3f",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/wwwroot/main.js",
+      "member": "source/selected-web-app/apps/Web/wwwroot/main.js",
+      "bytes": 6186,
+      "sha256": "d10018571a6d4399ea2c225763080a512ee1f159a41bfb7438e5d6a94327d09d",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/wwwroot/browser-private-context.js",
+      "member": "source/selected-web-app/apps/Web/wwwroot/browser-private-context.js",
+      "bytes": 4691,
+      "sha256": "77af4c31e4f81a22f6e8b290877f43443b443716b4af9f29c0b75b19bb8b8b98",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/wwwroot/browser-accessibility.js",
+      "member": "source/selected-web-app/apps/Web/wwwroot/browser-accessibility.js",
+      "bytes": 8891,
+      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "member": "source/selected-web-app/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "bytes": 23962,
+      "sha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/Accounts/AccountSettingsFeature.cs",
+      "member": "source/selected-web-app/apps/Web/Accounts/AccountSettingsFeature.cs",
+      "bytes": 10474,
+      "sha256": "400a5537dff6b56d438e6dbbafa5f7b3f06f74caae4e0b8439e49b9454552d24",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/Accounts/Accounts.cui",
+      "member": "source/selected-web-app/apps/Web/Accounts/Accounts.cui",
+      "bytes": 6365,
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/Services/account-service.js",
+      "member": "source/selected-web-app/apps/Web/Services/account-service.js",
+      "bytes": 3214,
+      "sha256": "2ca8fab3b99209fb0fcdc05105fb48a81bbe8158b54156685a7c2b4a609ccab9",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/lib/coreBundle.js",
+      "member": "external/pinned-playwright/coreBundle.js",
+      "bytes": 3425603,
+      "sha256": "9393fa79e1c67c74edc26b610d65a4f7ed73d345a762465cc88340a33a2454ac",
+      "role": "installed browser launcher source pin; package is not a full Playwright distribution"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserRouteDispatcher.cs",
+      "bytes": 2559,
+      "sha256": "0deb17b239d0cabe89f0c65633ea00275a415761955c51b0dd7b827c73d06ae6",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserHomeContext.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserHomeContext.cs",
+      "bytes": 3223,
+      "sha256": "67d160a6cb30ed2bc5c1020235d02ba931fe276aeb23c83003263a4e48923829",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserSurfaceRegistry.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 14479,
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94",
+      "role": "selected native/public source cut; not exhaustive transitive source closure"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/publish-8041a70b/publish-manifest.json",
+      "member": "sealed8041/publish-manifest.original.json",
+      "bytes": 49878,
+      "sha256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70",
+      "role": "exact immutable8041 original seal; original absolute paths retained as provenance"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Base.eu6087krpv.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Base.eu6087krpv.wasm",
+      "bytes": 1553173,
+      "sha256": "5a59058901b54935bd6820abfca48fa8351a9563869952cdd90891d997f86c6a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Base.eu6087krpv.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Base.eu6087krpv.wasm.br",
+      "bytes": 425931,
+      "sha256": "de2487887cb6b51b77054c2c869bceb39b74f00b9ca549798f03c75133e830e9",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Base.eu6087krpv.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Base.eu6087krpv.wasm.gz",
+      "bytes": 527994,
+      "sha256": "e429e608cf399d309272e12f8c48ec6fb961cf9a53772c6ffea53e6470b78d14",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Browser.b19yp8hv35.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Browser.b19yp8hv35.wasm",
+      "bytes": 136469,
+      "sha256": "3f0bdf5c3cf2df9c2a8b543731bc054ef40e0b28a95ef1b8cd5ce136af01b12d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Browser.b19yp8hv35.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Browser.b19yp8hv35.wasm.br",
+      "bytes": 42613,
+      "sha256": "d646600d87719f24490bd173e730982d1354da609c65feabcc2ecdfec2c4f5e3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Browser.b19yp8hv35.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Browser.b19yp8hv35.wasm.gz",
+      "bytes": 51976,
+      "sha256": "d3ad0367c326f9024d20aa96afc38017a9aa0ddbf75765bd492eeb9443cf7f3d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Controls.jm6k0vwaq9.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Controls.jm6k0vwaq9.wasm",
+      "bytes": 802581,
+      "sha256": "8bba4603a22fa32d387279dca07587b8aa6a4e4422c3dc78de499988e5085fde",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Controls.jm6k0vwaq9.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Controls.jm6k0vwaq9.wasm.br",
+      "bytes": 259409,
+      "sha256": "b8e4f0002af79bcdd846880554bf0141bec9d3bb0be31b01b75ecc1e9eae9c03",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Controls.jm6k0vwaq9.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Controls.jm6k0vwaq9.wasm.gz",
+      "bytes": 315621,
+      "sha256": "ff1712a361c62300559654aacd648ada104b40e64eb2ec789b0bafaf62247f3e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Dialogs.1iab07fdp5.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Dialogs.1iab07fdp5.wasm",
+      "bytes": 189717,
+      "sha256": "e9b56ae51f02b1db65f1028a90e466fdaf67250ccbf64e222e7553b1c7cb3d4b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Dialogs.1iab07fdp5.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Dialogs.1iab07fdp5.wasm.br",
+      "bytes": 79698,
+      "sha256": "37b0a0661e61129a0d7f81b93386d6034e3d5aed4226961a2621f33bc5433dd8",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Dialogs.1iab07fdp5.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Dialogs.1iab07fdp5.wasm.gz",
+      "bytes": 97548,
+      "sha256": "2437d98cae23e603aea491b366d0b89641c5886238cf1340c58b041e543222d7",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Fonts.Inter.98x1y9nuqr.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Fonts.Inter.98x1y9nuqr.wasm",
+      "bytes": 1897237,
+      "sha256": "7974f468441741430bc42605bfbd2babde48a5e7f9eadcb916bd0b273b36bdd1",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Fonts.Inter.98x1y9nuqr.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Fonts.Inter.98x1y9nuqr.wasm.br",
+      "bytes": 476286,
+      "sha256": "be571a4f1b6f1140f10c926ad1909c4a0ba706a09f184ffe5df39d5a2bc74bd6",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Fonts.Inter.98x1y9nuqr.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Fonts.Inter.98x1y9nuqr.wasm.gz",
+      "bytes": 968406,
+      "sha256": "7259659dabd203efc099e9584c80e764014eb0c40c58ee1fa9ffcb4b65555a79",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.HarfBuzz.l8vy2g3f6u.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.HarfBuzz.l8vy2g3f6u.wasm",
+      "bytes": 21269,
+      "sha256": "5bbb38c664352410e9b9ac149b32ae7fe124c440ab7c954162cd0ada59159e3c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.HarfBuzz.l8vy2g3f6u.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.HarfBuzz.l8vy2g3f6u.wasm.br",
+      "bytes": 6613,
+      "sha256": "cc998accc2d2300c0fe1a2860a7fa0b9186c8bf2f1cfcd732377b6329998440d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.HarfBuzz.l8vy2g3f6u.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.HarfBuzz.l8vy2g3f6u.wasm.gz",
+      "bytes": 7623,
+      "sha256": "4521636568022aa32dcfa8101851922f8ccf03d30a13f49c4f68e47d93df598d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Markup.Xaml.kw0ifzljmu.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Markup.Xaml.kw0ifzljmu.wasm",
+      "bytes": 42261,
+      "sha256": "ec3fe50ac17ad009ba830f2ec73b45d1f7d0842437affded5a78fbfbd5d5bb04",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Markup.Xaml.kw0ifzljmu.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Markup.Xaml.kw0ifzljmu.wasm.br",
+      "bytes": 14238,
+      "sha256": "32b991bc453943b7da6d2e74994f6518f0d9cf90714261b84a6fdb273a3233a9",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Markup.Xaml.kw0ifzljmu.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Markup.Xaml.kw0ifzljmu.wasm.gz",
+      "bytes": 16830,
+      "sha256": "a83779eeeb86381bc69174bbd813087798eda9d07de81a9a41aa9f8b5f8d2c82",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Markup.mzxbrctlva.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Markup.mzxbrctlva.wasm",
+      "bytes": 18197,
+      "sha256": "2ec47c14aa0dea85fc51dfcb3105ee2430c9dac79f6509aee17db4324ffb05db",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Markup.mzxbrctlva.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Markup.mzxbrctlva.wasm.br",
+      "bytes": 4026,
+      "sha256": "55287b89abf176e291afe7bb8bed72923556b3277ac72fda330aa9eec6e9c3eb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Markup.mzxbrctlva.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Markup.mzxbrctlva.wasm.gz",
+      "bytes": 4790,
+      "sha256": "7aee44a3d037a8995c1c5e27be2f6f1938e492fbeaab07cfd24306273e5bd412",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Metal.kbjp9ma8tf.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Metal.kbjp9ma8tf.wasm",
+      "bytes": 14101,
+      "sha256": "f0705b72e59c19aa9204fc51768d933d0fcdf350cd6ea1b6cc03bcf50b0f8b2f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Metal.kbjp9ma8tf.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Metal.kbjp9ma8tf.wasm.br",
+      "bytes": 3081,
+      "sha256": "eb5c72d9c7b41d58c69e1c9547c9a5e5ae547f36f3bb5156c4a04b7d65e4e046",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Metal.kbjp9ma8tf.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Metal.kbjp9ma8tf.wasm.gz",
+      "bytes": 3652,
+      "sha256": "f25c472d44ac7c47238890ce002f3d2bb2e6bee2f5b6d83c1af931899554e8f8",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.OpenGL.kf2gjr6kr3.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.OpenGL.kf2gjr6kr3.wasm",
+      "bytes": 30997,
+      "sha256": "500f808083b35c3455dae15acef5ee0a0c6636cccad661ae3a3a55753c664be1",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.OpenGL.kf2gjr6kr3.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.OpenGL.kf2gjr6kr3.wasm.br",
+      "bytes": 8134,
+      "sha256": "fb81b9916b4a6ed28ee0532e16f7e9421d98998262cbef24588cd29ff48b5692",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.OpenGL.kf2gjr6kr3.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.OpenGL.kf2gjr6kr3.wasm.gz",
+      "bytes": 9860,
+      "sha256": "c178de68c9ab5236dc063c865e55e67524147b97e9745d53fa5231bcfc1fdc94",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Skia.xobr8phrw6.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Skia.xobr8phrw6.wasm",
+      "bytes": 96021,
+      "sha256": "0fb01c06226bdac6e3afada9514487cb106f4ee7ea34bbb9402836a96b8eed29",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Skia.xobr8phrw6.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Skia.xobr8phrw6.wasm.br",
+      "bytes": 39367,
+      "sha256": "eb7a77fa4a5aa38eaf59a5297c452844044e43b89b232e07fcaaeb4946d54d90",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Skia.xobr8phrw6.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Skia.xobr8phrw6.wasm.gz",
+      "bytes": 45753,
+      "sha256": "ebbfeda29c534c9c8ddb525f6e2cc4d826bfdf4d28ea780705b71c9a507b760a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Themes.Fluent.m9err6yv2l.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Themes.Fluent.m9err6yv2l.wasm",
+      "bytes": 645397,
+      "sha256": "06cc285865d10b5fda11196404e0427e95f6238a53fed8afc7d259b68b85d220",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Themes.Fluent.m9err6yv2l.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Themes.Fluent.m9err6yv2l.wasm.br",
+      "bytes": 75341,
+      "sha256": "e03302fb7b5a6b53968c256dc532bf1e50e9d73fa321787053989373b1a21829",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Themes.Fluent.m9err6yv2l.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Themes.Fluent.m9err6yv2l.wasm.gz",
+      "bytes": 104490,
+      "sha256": "c3945793986f94382f8a059457f04308c7d503e09e9cf2a98a75faa31e36fa1f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Vulkan.rp0rc60ewz.wasm",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Vulkan.rp0rc60ewz.wasm",
+      "bytes": 18197,
+      "sha256": "a1df65a2b05d9ea8b56108e99c9c1e477e367b9ab247308d76adfb29e9dccbb2",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Vulkan.rp0rc60ewz.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Vulkan.rp0rc60ewz.wasm.br",
+      "bytes": 4578,
+      "sha256": "c6731218a8f49c0ce87c86519f606052379313380dcc0d13338e3dc86f0e9c0a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Avalonia.Vulkan.rp0rc60ewz.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Avalonia.Vulkan.rp0rc60ewz.wasm.gz",
+      "bytes": 5585,
+      "sha256": "8c5efcb86ef3ed39b6a1fa92a46a4aa59745b11b84fbad468dfb10f91908224b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Core.slodhqamqq.wasm",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Core.slodhqamqq.wasm",
+      "bytes": 62741,
+      "sha256": "d03624c35b8c47f52361cd02476d38526490b5899b600d487a8e1d82e0b1b47c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Core.slodhqamqq.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Core.slodhqamqq.wasm.br",
+      "bytes": 21479,
+      "sha256": "21c134bc56899db7d18a254d38dcfea6ebb91d84e13c9fb3ad6a29446b53bf8b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Core.slodhqamqq.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Core.slodhqamqq.wasm.gz",
+      "bytes": 25968,
+      "sha256": "9644e12d0b6dcd5c908837dced8dba07f953265ea1ad2b640cabe28d69eac341",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Language.2iswm194io.wasm",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Language.2iswm194io.wasm",
+      "bytes": 8469,
+      "sha256": "b69d170c17b6578fd588cd0de16249478f2fb174c7dae5db458fe8155319f15a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Language.2iswm194io.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Language.2iswm194io.wasm.br",
+      "bytes": 3308,
+      "sha256": "18a4ecdeac490ecb9ac4a709917c45e3f41629774fd4981e78a2dd49bfd0b1c3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Language.2iswm194io.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Language.2iswm194io.wasm.gz",
+      "bytes": 3784,
+      "sha256": "ddff40f69c3b0c8db324dc702698bcddbb2409c50827af86bfc2314efb61921d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Runtime.ihfhs7au73.wasm",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Runtime.ihfhs7au73.wasm",
+      "bytes": 82709,
+      "sha256": "a6a069eb96146319666019d11e36c3215af0267fe0b5c801997a23644cde04ab",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Runtime.ihfhs7au73.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Runtime.ihfhs7au73.wasm.br",
+      "bytes": 32068,
+      "sha256": "ae42d53a41fa41c9cc81133cb12dd37d775cd17ac000dabf7955f019069fd64e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Runtime.ihfhs7au73.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Runtime.ihfhs7au73.wasm.gz",
+      "bytes": 37730,
+      "sha256": "2a00183d982ff68ae5b0a9bfd802fb9d20b063c5ed397ccc967171064de942dc",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Themes.4xnldp3g0o.wasm",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Themes.4xnldp3g0o.wasm",
+      "bytes": 55573,
+      "sha256": "a832f816d2c4ee03b09b7267ddcccd184dbe605842b7cb6491dd174b179d4a7f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Themes.4xnldp3g0o.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Themes.4xnldp3g0o.wasm.br",
+      "bytes": 17169,
+      "sha256": "9664bf7f9db6093f84edde21c02adb2263e951a0f2b653f590996ebc8fa9003b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/CakeOS.Cui.Themes.4xnldp3g0o.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/CakeOS.Cui.Themes.4xnldp3g0o.wasm.gz",
+      "bytes": 21368,
+      "sha256": "cebfcf9adcd75c3b6428059fcab15bbd1905f64b4b324fac8f4daa135fc0d20a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm",
+      "member": "sealed8041/wwwroot/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm",
+      "bytes": 29461,
+      "sha256": "ff091aded2500bb5c67dde69fc0f0d945ab83576ca0cc7a95ef467c80d736b66",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm.br",
+      "bytes": 11613,
+      "sha256": "55df6e93fb728f30ee048d9367a3ea152f18cb47c3c123ec0e2a36772a9d639c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm.gz",
+      "bytes": 13959,
+      "sha256": "5a29b9738446b3dcbbef1502b79a5e76cdd0ea4f38d798be8d8484c2bf37a448",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.Application.0hlismx7zw.wasm",
+      "member": "sealed8041/wwwroot/_framework/Haven.Application.0hlismx7zw.wasm",
+      "bytes": 4050201,
+      "sha256": "cc3ef39d989aaae2eb995c76eba396638f032b7d65802a30d08de4031c8fe6ec",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.Application.0hlismx7zw.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Haven.Application.0hlismx7zw.wasm.br",
+      "bytes": 1024194,
+      "sha256": "bbe3b11a57828d35c4a4f8dda37492e0812735f28bcc9e54c6454c86ffd0f25c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.Application.0hlismx7zw.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Haven.Application.0hlismx7zw.wasm.gz",
+      "bytes": 1366210,
+      "sha256": "505bb58b746fbc0dace5442c9290b6fdd3a7c62774784d18454e605187c8cdc3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.Core.j1f0g7vb4b.wasm",
+      "member": "sealed8041/wwwroot/_framework/Haven.Core.j1f0g7vb4b.wasm",
+      "bytes": 1818901,
+      "sha256": "2788247b1df48c3e688d1318e6342dcd26d31dbf74f6a08e416387344ac85c45",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.Core.j1f0g7vb4b.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Haven.Core.j1f0g7vb4b.wasm.br",
+      "bytes": 411260,
+      "sha256": "4e3e7ef7ba8bd760e9bf37a4391b243a5faafb6b10574375850cf55aea6ea6a5",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.Core.j1f0g7vb4b.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Haven.Core.j1f0g7vb4b.wasm.gz",
+      "bytes": 569917,
+      "sha256": "8347d3821275768628a34e77ed84fd6bd28b0c51db7a4d4cf4b2f1d8dcd040b6",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.UI.qvva0hopeh.wasm",
+      "member": "sealed8041/wwwroot/_framework/Haven.UI.qvva0hopeh.wasm",
+      "bytes": 214805,
+      "sha256": "1a9c93550694f0f3ebecea20c9fa5235225d46d8784b1ccf0755b86cab09fc2f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.UI.qvva0hopeh.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Haven.UI.qvva0hopeh.wasm.br",
+      "bytes": 67310,
+      "sha256": "bcd00ca66e56add0a5439c439ff203309d64cddca14b1428ac82a50ca3454454",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.UI.qvva0hopeh.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Haven.UI.qvva0hopeh.wasm.gz",
+      "bytes": 83614,
+      "sha256": "3b9882d358190140c68038e8d337ad3c8b0425035fd4cbb26d112e33c520eaa4",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.eeg9uug895.wasm",
+      "member": "sealed8041/wwwroot/_framework/Haven.eeg9uug895.wasm",
+      "bytes": 5168409,
+      "sha256": "46d186722d11b37a6990f2efeb97c959036d8af4c9587a73e64f04763e383f0b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.eeg9uug895.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/Haven.eeg9uug895.wasm.br",
+      "bytes": 1036145,
+      "sha256": "9584d007fc1150a578de2178e764d7a86b84d5a66cd4672923fd6275ddfaa6c0",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/Haven.eeg9uug895.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/Haven.eeg9uug895.wasm.gz",
+      "bytes": 2234206,
+      "sha256": "a4d2a79273cc7c671465d14b37941ad3fd8d7972fd7033892bea244edbe370e5",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/HavenOS.Home.ac5hqd1rwo.wasm",
+      "member": "sealed8041/wwwroot/_framework/HavenOS.Home.ac5hqd1rwo.wasm",
+      "bytes": 31509,
+      "sha256": "4ab3708ba799826b38bc63072da50ddb2bc1e3f630ca7712d0a6270b4046d1eb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/HavenOS.Home.ac5hqd1rwo.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/HavenOS.Home.ac5hqd1rwo.wasm.br",
+      "bytes": 11608,
+      "sha256": "0299f6f83d012542aba7a44d278dc8af74ff7a0e2d8d8b4eca35ddd356c9d3db",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/HavenOS.Home.ac5hqd1rwo.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/HavenOS.Home.ac5hqd1rwo.wasm.gz",
+      "bytes": 13997,
+      "sha256": "faa2bc9d66b399ba60c0997f4b122323bcd5cb5d4a055d76372740a38749e318",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Cui.AI.v59ijustad.wasm",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Cui.AI.v59ijustad.wasm",
+      "bytes": 17173,
+      "sha256": "1dd65b4e722ce65adf6d3992caebbaa2b5a6ab435d5775712acdea4579771ac3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Cui.AI.v59ijustad.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Cui.AI.v59ijustad.wasm.br",
+      "bytes": 6875,
+      "sha256": "cdfd8a519b060b1e5b1c7d60d9e9a52a61e5d245440de712c7398607973ce67e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Cui.AI.v59ijustad.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Cui.AI.v59ijustad.wasm.gz",
+      "bytes": 7824,
+      "sha256": "f2a22274ce1aadb2f8a7d5232d8f522584d5d4de0ba1200a9c82b5028af8e1fc",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Wave.BrowserEngine.04g2ap26be.wasm",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Wave.BrowserEngine.04g2ap26be.wasm",
+      "bytes": 71445,
+      "sha256": "f053ed0a2a80a316eaafc45d8ef1afee2163c23e62d84ed48212d36177c9d80e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Wave.BrowserEngine.04g2ap26be.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Wave.BrowserEngine.04g2ap26be.wasm.br",
+      "bytes": 24487,
+      "sha256": "9b24be0aa853f8275d8c3a8544dc75a51ff9b0c321f72496326f0a5a4aaee70c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Wave.BrowserEngine.04g2ap26be.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Wave.BrowserEngine.04g2ap26be.wasm.gz",
+      "bytes": 29852,
+      "sha256": "53908d88ef8b9199a37ed0c36d639cdc8cdffc3cef2498a924d20fc5ff7884ad",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Web.54bq8gzspy.wasm",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Web.54bq8gzspy.wasm",
+      "bytes": 363797,
+      "sha256": "3bcd667ecddb12d5fa46575b7cd76d596fdd521576baf4ca3e9deaa47fe45ea7",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Web.54bq8gzspy.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Web.54bq8gzspy.wasm.br",
+      "bytes": 111325,
+      "sha256": "e7d88ffd2a752c5be55c000290e738772030673fcd4caf2fb7c35fe2f57db525",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Web.54bq8gzspy.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Web.54bq8gzspy.wasm.gz",
+      "bytes": 138707,
+      "sha256": "76890c0d0c41aebb414be1d0bad2505518b5adbe447bc81aec684c80a14243ba",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Write.Packages.urdmib3vlx.wasm",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Write.Packages.urdmib3vlx.wasm",
+      "bytes": 31509,
+      "sha256": "3a3d828e0b5663d27fa376433863de2ec7d4b2cb60dcc3f4c13439bd19a2e4e9",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Write.Packages.urdmib3vlx.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Write.Packages.urdmib3vlx.wasm.br",
+      "bytes": 12037,
+      "sha256": "d88f0ffe3b77d5b0005828b8fc91b4f643b81e6187dd150b802abad37a00a726",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/NineToOne.Write.Packages.urdmib3vlx.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/NineToOne.Write.Packages.urdmib3vlx.wasm.gz",
+      "bytes": 13946,
+      "sha256": "450cfaf122c8c1273c8edb7941527640f00b4ea1e2a975b0e035826bcc8a1d71",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/SkiaSharp.jkodg4sju0.wasm",
+      "member": "sealed8041/wwwroot/_framework/SkiaSharp.jkodg4sju0.wasm",
+      "bytes": 120085,
+      "sha256": "5d22bfd5843d97ccc7810de6b9bf7b24bd5405f0ec55f6c372b93b3cebb62a84",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/SkiaSharp.jkodg4sju0.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/SkiaSharp.jkodg4sju0.wasm.br",
+      "bytes": 42022,
+      "sha256": "bbed9ffc2937a6794eb14ff47dce0fd17198804d1f36ed8b54e61db0ef33d21a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/SkiaSharp.jkodg4sju0.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/SkiaSharp.jkodg4sju0.wasm.gz",
+      "bytes": 52081,
+      "sha256": "43801ee3be8c24c564c96369fa764ac1dd69e5930e673a643e4e5d9ab39fcd53",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.400l3mulw9.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.400l3mulw9.wasm",
+      "bytes": 4885,
+      "sha256": "bcf126d8aaa05eaaee1b09f3ef5f224a0983a01f089a0ee21f71733b9edbd118",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.400l3mulw9.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.400l3mulw9.wasm.br",
+      "bytes": 1462,
+      "sha256": "628600b6e124b716e180a70d6a78325e5fa0aecf454e2d745d9590754a106e7e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.400l3mulw9.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.400l3mulw9.wasm.gz",
+      "bytes": 1688,
+      "sha256": "a4ccdaab0b61c3b4e59ccfab48c791d636090e2cb7c9f0cca20f8aa0f7dc1428",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Concurrent.qljnbhcln2.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Concurrent.qljnbhcln2.wasm",
+      "bytes": 30997,
+      "sha256": "fe919eb67581624a486b7805acb20d8a9fc0245b5a2ef1af15ed6f5e32a2f2d4",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Concurrent.qljnbhcln2.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Concurrent.qljnbhcln2.wasm.br",
+      "bytes": 12508,
+      "sha256": "9ed1b9555311bf3a26fa5cb498878e910d4afb998b0f5807880d46fb8f2a9057",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Concurrent.qljnbhcln2.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Concurrent.qljnbhcln2.wasm.gz",
+      "bytes": 14230,
+      "sha256": "d4b3f356cd452798564d3db664c2a54698b08cb62a31042fed0e3395d7730477",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Immutable.nqlsdd0ole.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Immutable.nqlsdd0ole.wasm",
+      "bytes": 35605,
+      "sha256": "f1213134347554e8a84718a30327490f61667114a8efdcaf7b9e9bfc852faf9c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Immutable.nqlsdd0ole.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Immutable.nqlsdd0ole.wasm.br",
+      "bytes": 14107,
+      "sha256": "06f3aa3d4a73349da453c4b275ce0e38d4eb24fdb53084586fdcb233b656dedd",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Immutable.nqlsdd0ole.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Immutable.nqlsdd0ole.wasm.gz",
+      "bytes": 16470,
+      "sha256": "fa95b9c58711a48c8166cef07d84d147a283a41ea721878558e6668976f76eea",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.NonGeneric.je1yo12j8p.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.NonGeneric.je1yo12j8p.wasm",
+      "bytes": 8469,
+      "sha256": "65284d5515120117e161edb5025bc12aca02090abe00aff279f098c70a2a2e74",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.NonGeneric.je1yo12j8p.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.NonGeneric.je1yo12j8p.wasm.br",
+      "bytes": 2968,
+      "sha256": "a11753a4fc64815481d0c1d1e417fa7ec4017a283b41622278cb444a25de4496",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.NonGeneric.je1yo12j8p.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.NonGeneric.je1yo12j8p.wasm.gz",
+      "bytes": 3384,
+      "sha256": "ad76323ef19fa5849b52bb598b0ad255f2221a5e7a9a1509e3211d2b22c6aa04",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Specialized.7he8s0bvug.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Specialized.7he8s0bvug.wasm",
+      "bytes": 11029,
+      "sha256": "b5f8fe9eef9e755c8360ed87c874c81638f6e006ab2880546154c5b8914f784b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Specialized.7he8s0bvug.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Specialized.7he8s0bvug.wasm.br",
+      "bytes": 4294,
+      "sha256": "31ad11b47a4bda81df4604e76a3428363956528b0dfbfeb3fb81b348b6188275",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.Specialized.7he8s0bvug.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.Specialized.7he8s0bvug.wasm.gz",
+      "bytes": 4891,
+      "sha256": "562e2bb49df0aedb244851e6f886c24437d1cb412b038492e76fc94f0e774491",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.c0h8jup0zd.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.c0h8jup0zd.wasm",
+      "bytes": 44821,
+      "sha256": "1cc3bbab89ef962e509052334ff95432461e17a04e6e0c04bd713c978cff7a45",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.c0h8jup0zd.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.c0h8jup0zd.wasm.br",
+      "bytes": 15902,
+      "sha256": "23f4ad95d9de6db6a3319a9f8340eacad313c92b6f86631e53e02e7b50a91433",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Collections.c0h8jup0zd.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Collections.c0h8jup0zd.wasm.gz",
+      "bytes": 18563,
+      "sha256": "e2cb74a5bbc19a843b9ab119cdaa74f267c3be6564a579d0e35e260350ff9a47",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.Primitives.ms2b1w0li8.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.Primitives.ms2b1w0li8.wasm",
+      "bytes": 11541,
+      "sha256": "1abc7cc6f00f188cf54237a76187363c8fb2b30505af1031a233d2c70134454e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.Primitives.ms2b1w0li8.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.Primitives.ms2b1w0li8.wasm.br",
+      "bytes": 4786,
+      "sha256": "4bdc73696681075d14e9d22de27114ad3c53001df9a4c96c369930eef840058d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.Primitives.ms2b1w0li8.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.Primitives.ms2b1w0li8.wasm.gz",
+      "bytes": 5442,
+      "sha256": "659da285cf531228033a470d740c069fe01c77ec747d3384a96ccd85e59a2cf0",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.TypeConverter.0u5hupk5xe.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.TypeConverter.0u5hupk5xe.wasm",
+      "bytes": 85269,
+      "sha256": "3866ab2a8c30dc7fe8f5a3b333e852bf8bc97d63cf0b242ab4efff9431e19b17",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.TypeConverter.0u5hupk5xe.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.TypeConverter.0u5hupk5xe.wasm.br",
+      "bytes": 29452,
+      "sha256": "308335be2b39bcbbcd56f20ad7d1c2e36a12f0ad2c029cfb34dc45b5431264b5",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.TypeConverter.0u5hupk5xe.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.TypeConverter.0u5hupk5xe.wasm.gz",
+      "bytes": 35122,
+      "sha256": "6b63dad20081ca92500a0313b5eed632a9a1e2544de85c26371c52f2e0ccf99e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.vi0jqinrst.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.vi0jqinrst.wasm",
+      "bytes": 5397,
+      "sha256": "99649d37904b49c0aa51b67ab927be049388376e708e220f4d45d6d116ac2043",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.vi0jqinrst.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.vi0jqinrst.wasm.br",
+      "bytes": 1871,
+      "sha256": "f30ad8095e59622e338c5038895e937ef80a61550956959bd0d544941b1f9237",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ComponentModel.vi0jqinrst.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.ComponentModel.vi0jqinrst.wasm.gz",
+      "bytes": 2109,
+      "sha256": "737f4ed1106f4531c4207e05e6113c3b368a8b3f6d6f4c641144cf69b0ea80b4",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Console.dh9uzpjt84.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Console.dh9uzpjt84.wasm",
+      "bytes": 14613,
+      "sha256": "7ffdab0d225bdc78bdd5a2e7ac37228f32232a7dc6624244aa3a21e7f9d38e7b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Console.dh9uzpjt84.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Console.dh9uzpjt84.wasm.br",
+      "bytes": 6240,
+      "sha256": "058fb78711d6dbe6077359a7fa11f2e9e659a713fb30788841694a628bf6dfeb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Console.dh9uzpjt84.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Console.dh9uzpjt84.wasm.gz",
+      "bytes": 7330,
+      "sha256": "1c7538fcaf7469a7e73aa51452c748f6cd61f8fc60725b2021e402a8faa6ea4a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm",
+      "bytes": 43797,
+      "sha256": "ba637b8031d68b8d9aaafe9e2ea1032dd5cc883726ebb4a4624db2e2b97643a4",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm.br",
+      "bytes": 18499,
+      "sha256": "0084f9455bad2638b70e94d910ca398781cea3664828d1eb380b2acb32c38096",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm.gz",
+      "bytes": 21523,
+      "sha256": "60c991f61b01c497f80e041dd1260b60278499110a99d71fcb7ed7c1648125d0",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Diagnostics.Process.e3hwynezdf.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Diagnostics.Process.e3hwynezdf.wasm",
+      "bytes": 5909,
+      "sha256": "7623bec801aa35bd93f657083c55f20c62f431ebd57aadb14534ca6b66729ddb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Diagnostics.Process.e3hwynezdf.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Diagnostics.Process.e3hwynezdf.wasm.br",
+      "bytes": 2206,
+      "sha256": "73ea3fdfdfe793a98470ed18cd48c8c411ec2e55b84f6d476d1fae37f96296a3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Diagnostics.Process.e3hwynezdf.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Diagnostics.Process.e3hwynezdf.wasm.gz",
+      "bytes": 2518,
+      "sha256": "2cb7f9307c5361f13524fe27dd55956827dd44d89ffd9c3fb22ae26e5e96c705",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Compression.1146pqk3e5.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Compression.1146pqk3e5.wasm",
+      "bytes": 112405,
+      "sha256": "1b45ac0109b4b10bef947b43dddc8f7064920d0496532b656ccee120aff5a0fa",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Compression.1146pqk3e5.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Compression.1146pqk3e5.wasm.br",
+      "bytes": 40881,
+      "sha256": "922529aba049151f4d8e9e8c9db38dd43977cc62658d5b4c10c2f14fa62e1a88",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Compression.1146pqk3e5.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Compression.1146pqk3e5.wasm.gz",
+      "bytes": 48240,
+      "sha256": "cc2be06c5b78c07f56997c3a17d9cc1899ae2ff46ab8b29b96c3c804c2e6a489",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Pipelines.a2z2jsctze.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Pipelines.a2z2jsctze.wasm",
+      "bytes": 6421,
+      "sha256": "020140e6ebfaade06a805153dc7562aaa8c6669e6da87ba529fd893bc08f7ecb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Pipelines.a2z2jsctze.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Pipelines.a2z2jsctze.wasm.br",
+      "bytes": 2606,
+      "sha256": "f6579300bb4edbba2856c94409fb1fc73c622375e36b438344c82f843482a181",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Pipelines.a2z2jsctze.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Pipelines.a2z2jsctze.wasm.gz",
+      "bytes": 3051,
+      "sha256": "1e4bea415bf48ecfbe194327177a8d8508b2cc2b2cd4df8bdd3c898179f4daa1",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Pipes.y59lyioav7.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Pipes.y59lyioav7.wasm",
+      "bytes": 6933,
+      "sha256": "5af4d63162bc5d129e589cdf8a4b4138942ffe7d6f71ca30d89e9b5930d7b861",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Pipes.y59lyioav7.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Pipes.y59lyioav7.wasm.br",
+      "bytes": 2605,
+      "sha256": "9742af2ca8f0eda0ef38f659fe94572c72a2d681d2c581c0a17e3e94e5f73b90",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.IO.Pipes.y59lyioav7.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.IO.Pipes.y59lyioav7.wasm.gz",
+      "bytes": 2966,
+      "sha256": "2b646b222a43add296d5bf118faa075e2797fb08070fa6ae69f3c75c9482cc97",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Linq.Expressions.mr78h9j7m3.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Linq.Expressions.mr78h9j7m3.wasm",
+      "bytes": 11029,
+      "sha256": "523e2db7664be9d253555ae164018022c257f8d0eef1c46dddc04bb0bd52c95b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Linq.Expressions.mr78h9j7m3.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Linq.Expressions.mr78h9j7m3.wasm.br",
+      "bytes": 4526,
+      "sha256": "014c5e077199006b3a54e2824fbc2d7a6a746927e7f94070a1061463cc45379b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Linq.Expressions.mr78h9j7m3.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Linq.Expressions.mr78h9j7m3.wasm.gz",
+      "bytes": 5200,
+      "sha256": "d0f555ce7b43800a936e62ef2390da8a3a54314c6f68999808a246155ad2d04f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Linq.sgcbz8y6vp.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Linq.sgcbz8y6vp.wasm",
+      "bytes": 95509,
+      "sha256": "dcd6f66fbd7e9895135b5e19538187a29a785eb9c822cc3bf0250d0dc7ddb8da",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Linq.sgcbz8y6vp.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Linq.sgcbz8y6vp.wasm.br",
+      "bytes": 33699,
+      "sha256": "d4f62e14297c06cd9f6e25c5a31a2e02cc5afc414ced2cc412b19abecc5307b8",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Linq.sgcbz8y6vp.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Linq.sgcbz8y6vp.wasm.gz",
+      "bytes": 40772,
+      "sha256": "4b6fcc4b56a31bf0219855aa4703099ff282cba5eba12a734adc790db1e8e7c2",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Memory.5ln0cz202h.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Memory.5ln0cz202h.wasm",
+      "bytes": 15637,
+      "sha256": "9770131f221bf1aa81323fd9c5ec0390cbad4a1b13428e6831dcd6e1e1d9e02c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Memory.5ln0cz202h.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Memory.5ln0cz202h.wasm.br",
+      "bytes": 6723,
+      "sha256": "a4f330ded69ff9e4b156553279ee6a5b5c66b617b5e9ff9d206191d5ea0af4cc",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Memory.5ln0cz202h.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Memory.5ln0cz202h.wasm.gz",
+      "bytes": 7670,
+      "sha256": "d1c2d4771972840820c8cc99166d7a1bae9821499987d63ec04bb73fcb2b72bd",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Http.w2b8hlfypi.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Http.w2b8hlfypi.wasm",
+      "bytes": 139541,
+      "sha256": "187f00d802f072b41af060b1091fad6066c62d892c35b56bdde6b54186fa20b7",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Http.w2b8hlfypi.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Http.w2b8hlfypi.wasm.br",
+      "bytes": 52120,
+      "sha256": "edb2d83578b86ea88c291d14f07438304f9c7f918d149b6a4dd38a96c1aba6e7",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Http.w2b8hlfypi.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Http.w2b8hlfypi.wasm.gz",
+      "bytes": 61057,
+      "sha256": "c94512027e17845d264998f4b6127bdab02a8a7d44c36c36ee557c09d281b8ac",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Mail.gix5p4t59m.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Mail.gix5p4t59m.wasm",
+      "bytes": 14101,
+      "sha256": "186ec3e9e864702fea42c73a1746c989836ce787c5139aa768f57c159bb21021",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Mail.gix5p4t59m.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Mail.gix5p4t59m.wasm.br",
+      "bytes": 5640,
+      "sha256": "501ee38052a2a7e4a7acdd31eed80f197067b273b24380c18d9514b126a2ff10",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Mail.gix5p4t59m.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Mail.gix5p4t59m.wasm.gz",
+      "bytes": 6487,
+      "sha256": "2e6e2e80592cf668c0b012c0521913178614ef842453b0ab8c0db3225656e24f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Ping.t1gutj9m79.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Ping.t1gutj9m79.wasm",
+      "bytes": 6421,
+      "sha256": "3fdacc9f5b52e5ef91c9d60afea2e15553046fff895babcbd92778488f5ef0cc",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Ping.t1gutj9m79.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Ping.t1gutj9m79.wasm.br",
+      "bytes": 2438,
+      "sha256": "96a162d90ba150811e89c985535ac4bd3d5783e700c7a2c56176b8205eb3a78b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Ping.t1gutj9m79.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Ping.t1gutj9m79.wasm.gz",
+      "bytes": 2811,
+      "sha256": "6c96ae8b3785fef4f4a2360d702ded91333f6e54b79f3fb9d5a6aad53437798f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Primitives.llz1zzlk2t.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Primitives.llz1zzlk2t.wasm",
+      "bytes": 7445,
+      "sha256": "7929262d69d9dd1912c104c7eddba715733053e04ce02df9afd76f773012bd49",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Primitives.llz1zzlk2t.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Primitives.llz1zzlk2t.wasm.br",
+      "bytes": 2906,
+      "sha256": "b57d44ca07a0a058e2f6c7bac45accf591f60a2add2cefa6bc253828b342d17a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Primitives.llz1zzlk2t.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Primitives.llz1zzlk2t.wasm.gz",
+      "bytes": 3451,
+      "sha256": "f2186987a744c037dc44329c87cead993365dfb3d1ae9e6b3ef2124fb554dcfb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Security.6wyayub5ga.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Security.6wyayub5ga.wasm",
+      "bytes": 5397,
+      "sha256": "265953f3538000ee4c5c63dccc340eabe3a351b8dfc74e229ba92f9619aa7aea",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Security.6wyayub5ga.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Security.6wyayub5ga.wasm.br",
+      "bytes": 1922,
+      "sha256": "e680f6ae4ef19a18eb66caf12f6ba1f6377efc69cb5f14a2a3fadea99f74e041",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Net.Security.6wyayub5ga.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Net.Security.6wyayub5ga.wasm.gz",
+      "bytes": 2175,
+      "sha256": "d3ea712badcde0b84d3300e7dd64905b27f3aa205aa7c14026e57fe0f015028a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ObjectModel.3ev9dflr6c.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.ObjectModel.3ev9dflr6c.wasm",
+      "bytes": 17685,
+      "sha256": "d51f69b830ea1e8defc74a9e6c8545a2d71c3b99ec3c7fac2826e7dd0f4007e2",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ObjectModel.3ev9dflr6c.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.ObjectModel.3ev9dflr6c.wasm.br",
+      "bytes": 6616,
+      "sha256": "ff9efee3833a9806e2b87487314fcfa00516134b85004e6c9b2af2ccca5575f0",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.ObjectModel.3ev9dflr6c.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.ObjectModel.3ev9dflr6c.wasm.gz",
+      "bytes": 7661,
+      "sha256": "764aa8b75939f8eebc00ff9beec97c54d946531445f5e65273f9b9e8b09546e5",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.CoreLib.65omij08i2.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Private.CoreLib.65omij08i2.wasm",
+      "bytes": 1955093,
+      "sha256": "465e4c0285ec64079fe979bba516264ee60e7da474c50433703c965c9afbde1b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.CoreLib.65omij08i2.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Private.CoreLib.65omij08i2.wasm.br",
+      "bytes": 599099,
+      "sha256": "3e80b24112e8ad3cf9d591f46b3348e3856625e37adb4511c70683a255836636",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.CoreLib.65omij08i2.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Private.CoreLib.65omij08i2.wasm.gz",
+      "bytes": 748274,
+      "sha256": "c49f21c69eb67c806ed0d76482c84d2516c7419aa123e70666843a9a75d78113",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Uri.40kr09wpgp.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Uri.40kr09wpgp.wasm",
+      "bytes": 74517,
+      "sha256": "04a26d57b52ada580452fb0fdc6c47edd65d27391290c41f4ec4bea082878697",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Uri.40kr09wpgp.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Uri.40kr09wpgp.wasm.br",
+      "bytes": 29742,
+      "sha256": "0aac84569213cc0b2cb283a9bd3b997dbccc237368dc37920b134f57028b2304",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Uri.40kr09wpgp.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Uri.40kr09wpgp.wasm.gz",
+      "bytes": 34093,
+      "sha256": "360eae11a50de51a7b507925c12e3c02766ce0fd147588f5b0c856d95a599ce7",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Xml.Linq.0xvf6e1dx8.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Xml.Linq.0xvf6e1dx8.wasm",
+      "bytes": 37653,
+      "sha256": "545d4393423500233772fe5226ae10eba59f5703bc227f433222bd42796c23cd",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Xml.Linq.0xvf6e1dx8.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Xml.Linq.0xvf6e1dx8.wasm.br",
+      "bytes": 14619,
+      "sha256": "cdebe69cf174348fb00d2e8dc88ccc1e9a234037cd827c156e7a31a1944d7009",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Xml.Linq.0xvf6e1dx8.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Xml.Linq.0xvf6e1dx8.wasm.gz",
+      "bytes": 17105,
+      "sha256": "3c36134d61b4ec90321970c9a58d15881ffb6e5fbee1ad05cef55a6ebaa7031c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Xml.qvxf4j97en.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Xml.qvxf4j97en.wasm",
+      "bytes": 549653,
+      "sha256": "465931b3312616ff341ea0014e092dc750d813948085b40c1698c084c7621441",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Xml.qvxf4j97en.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Xml.qvxf4j97en.wasm.br",
+      "bytes": 137500,
+      "sha256": "dd70e84b40ffcff27330e5e57ee2de363e31903ba4439c3d5e904ba973a1f01a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Private.Xml.qvxf4j97en.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Private.Xml.qvxf4j97en.wasm.gz",
+      "bytes": 171122,
+      "sha256": "289a60f831f9d50e3f827875f540f42787aff762963a49e221b75ac4d62e9f05",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.InteropServices.JavaScript.aniv2zoxah.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.InteropServices.JavaScript.aniv2zoxah.wasm",
+      "bytes": 49941,
+      "sha256": "da2194ea3b06b0a4f05b6d76a9c67fdb5403f65e1068dcd0be9b7bc0f94f6299",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.InteropServices.JavaScript.aniv2zoxah.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.InteropServices.JavaScript.aniv2zoxah.wasm.br",
+      "bytes": 18526,
+      "sha256": "3954dae3022678d1809b5ed63114b00b539c95c95ea1c25f9e8019f1cc19d959",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.InteropServices.JavaScript.aniv2zoxah.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.InteropServices.JavaScript.aniv2zoxah.wasm.gz",
+      "bytes": 21894,
+      "sha256": "01286267974afd8f35561bb7a9f304ae7823d2ad910353b068bc9baafccfc904",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm",
+      "bytes": 8981,
+      "sha256": "cd8029f312efb653b16a5868ce075dee557497d370561754deb39e4f8ecb0c86",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm.br",
+      "bytes": 2903,
+      "sha256": "06c86af75257e010b165049e9e1156762962036ed9ee5f9ca92a905b5bef7388",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm.gz",
+      "bytes": 3413,
+      "sha256": "b3c6935c7c6390bad9505c2ce07569ccdb656e70c11d22940313fadbdd4f36e2",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.Numerics.tsdr9g1yta.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.Numerics.tsdr9g1yta.wasm",
+      "bytes": 89365,
+      "sha256": "630893dbfa5c3c4ac4560a66a6da47ec9903085b67167e3bf9e23aa1e590b471",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.Numerics.tsdr9g1yta.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.Numerics.tsdr9g1yta.wasm.br",
+      "bytes": 31630,
+      "sha256": "7ce1e94b482bfe25c2d5fdec34b3e7429b6b1646bb9557aa04bd9db792775b3a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.Numerics.tsdr9g1yta.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.Numerics.tsdr9g1yta.wasm.gz",
+      "bytes": 36823,
+      "sha256": "1a6683ff512a1c3c94ee84e83d3bdcdbda9b7571fefa0434d3cd935455b31060",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.l9lu1w97ic.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.l9lu1w97ic.wasm",
+      "bytes": 13589,
+      "sha256": "2938e1fca11076c109dff16eb425c431ec18594c261cf2369859943fddf5113e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.l9lu1w97ic.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.l9lu1w97ic.wasm.br",
+      "bytes": 3833,
+      "sha256": "2c2387f66b82ab6f8cfbe45eb7d27e983cb0987511dd363629787288ff38ccfd",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Runtime.l9lu1w97ic.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Runtime.l9lu1w97ic.wasm.gz",
+      "bytes": 4640,
+      "sha256": "701435f4e3724e426db861f5b6fd3a99efd146cdffb198692da7e130807fdda6",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Security.Cryptography.ce8lx9y37g.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Security.Cryptography.ce8lx9y37g.wasm",
+      "bytes": 67349,
+      "sha256": "3c7da13282e3f262d8e5de1dfbe62b6ae9a310c65abaf38033f8aa630064abc2",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Security.Cryptography.ce8lx9y37g.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Security.Cryptography.ce8lx9y37g.wasm.br",
+      "bytes": 24714,
+      "sha256": "eea38ab121feddd3d2ecf2ea59be3d38b130af3d197cc716f95a0cbf5f40155e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Security.Cryptography.ce8lx9y37g.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Security.Cryptography.ce8lx9y37g.wasm.gz",
+      "bytes": 29277,
+      "sha256": "11870f575b3474c1e6b8ce3e965ac4bf35b69974bb76e0960f847f03f99adc23",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm",
+      "bytes": 29461,
+      "sha256": "c985076071a1725ab5eadcd76fa7e26108992d280329db82c28201fa52e92af2",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm.br",
+      "bytes": 9481,
+      "sha256": "65690b9ff319d15df0b18c046ba2399ae05dc8040dd566382af12659e8983378",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm.gz",
+      "bytes": 11066,
+      "sha256": "737d153a0bee1ab55a59d9c11be0dd5ca096ecdad91f3f037ef314ba1c08434c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.Json.7kp7ahcdfi.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Text.Json.7kp7ahcdfi.wasm",
+      "bytes": 414997,
+      "sha256": "27abffbb343153f731818bcfd229f39cb835fb5753bdca56cf418484d5ef408e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.Json.7kp7ahcdfi.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Text.Json.7kp7ahcdfi.wasm.br",
+      "bytes": 134238,
+      "sha256": "60956d965fc350c4d63fc9fbb8a055acfc1f814731ea0dddbc6a6b64ab56aed6",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.Json.7kp7ahcdfi.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Text.Json.7kp7ahcdfi.wasm.gz",
+      "bytes": 162721,
+      "sha256": "4ff5cf48a47291b7462ba8d9e54f2f5741479c324251c7c08216c2dfd9f1b139",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.RegularExpressions.htcsx84idt.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Text.RegularExpressions.htcsx84idt.wasm",
+      "bytes": 260885,
+      "sha256": "1b2f8b9b21cc9416df28eb9f1f759df2cedbf582cb86525fc29d3b812d98db6d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.RegularExpressions.htcsx84idt.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Text.RegularExpressions.htcsx84idt.wasm.br",
+      "bytes": 101997,
+      "sha256": "3d008a541a4f8790afb8515ca585ba59a883f3eea2fc44f8d3b81e102a9753ee",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Text.RegularExpressions.htcsx84idt.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Text.RegularExpressions.htcsx84idt.wasm.gz",
+      "bytes": 122769,
+      "sha256": "86c8861bb51d174ff1a7a640e32718aacd95f5609a6871736742274ba6947d59",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Threading.34q5llg1mx.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Threading.34q5llg1mx.wasm",
+      "bytes": 12053,
+      "sha256": "73fcc6368fa2f13a10929a4b518cd4357af27d32d49f0e34a70cd1ee6016c31c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Threading.34q5llg1mx.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Threading.34q5llg1mx.wasm.br",
+      "bytes": 3730,
+      "sha256": "43573933a0ee7a58cb89b67b0d86242f719bdabb8b9e6bd236b41e9510a4e27c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Threading.34q5llg1mx.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Threading.34q5llg1mx.wasm.gz",
+      "bytes": 4445,
+      "sha256": "21ad37d9d4e708b5d03c4df003ef2beba4b5cc5e0549c06377f9f367c32298fa",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Threading.Channels.n4at23s1db.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Threading.Channels.n4at23s1db.wasm",
+      "bytes": 38165,
+      "sha256": "79f9fae9c2391997de312fafc62dd7d0f860781a7fcd8285c6d09d948a551533",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Threading.Channels.n4at23s1db.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Threading.Channels.n4at23s1db.wasm.br",
+      "bytes": 14897,
+      "sha256": "8df3f931db21d1c3ba6f5a0e64ee081f3d779fdb270a0eb9cf9c10567d960f62",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Threading.Channels.n4at23s1db.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Threading.Channels.n4at23s1db.wasm.gz",
+      "bytes": 17317,
+      "sha256": "dbe59d286e15d9fdea150d43b8e56b311b066b70cdbb07231ed8711e7daea784",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Xml.Linq.pzw688hdq1.wasm",
+      "member": "sealed8041/wwwroot/_framework/System.Xml.Linq.pzw688hdq1.wasm",
+      "bytes": 4373,
+      "sha256": "7b9b71b657b457f8e567ee656b11defa4da8db17b01e1eba015a43ae3f325e57",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Xml.Linq.pzw688hdq1.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/System.Xml.Linq.pzw688hdq1.wasm.br",
+      "bytes": 1446,
+      "sha256": "ccf9d6b637f59bbce329a956d702392aaf4eb7c4f7586bf073442ab5b412dbd5",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/System.Xml.Linq.pzw688hdq1.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/System.Xml.Linq.pzw688hdq1.wasm.gz",
+      "bytes": 1630,
+      "sha256": "6a50b5b2d77ca3e4e8a111576a54883aae1332887284b13c22a921ea27d58ea4",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/avalonia.js",
+      "member": "sealed8041/wwwroot/_framework/avalonia.js",
+      "bytes": 29170,
+      "sha256": "e8782504d89cc1c41add8d99460369b2c04b4e486d43ff77bced979056791e84",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/avalonia.js.br",
+      "member": "sealed8041/wwwroot/_framework/avalonia.js.br",
+      "bytes": 8581,
+      "sha256": "725fd657ef6bedf925fe17261a777ab72f02fd8bea6b3c36ba437d2addedfd1c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/avalonia.js.gz",
+      "member": "sealed8041/wwwroot/_framework/avalonia.js.gz",
+      "bytes": 9774,
+      "sha256": "8be0513438ea8da0c1f75486e3dca392f7e422b04093f53e89966ceda3600864",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/avalonia.js.map",
+      "member": "sealed8041/wwwroot/_framework/avalonia.js.map",
+      "bytes": 110049,
+      "sha256": "95a063040e549acd9b9fd7f277dc47b5fd1222524c1e6ef200c4e483d172e2d2",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/avalonia.js.map.br",
+      "member": "sealed8041/wwwroot/_framework/avalonia.js.map.br",
+      "bytes": 23945,
+      "sha256": "3ad87d003d11d6e22e09fe9b1002aa198a10c321f1254754f5da4591fa6b7801",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/avalonia.js.map.gz",
+      "member": "sealed8041/wwwroot/_framework/avalonia.js.map.gz",
+      "bytes": 28190,
+      "sha256": "f77e1c26cee0220c63250f831211235f205342f096d88c384a105def492d7289",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.js",
+      "member": "sealed8041/wwwroot/_framework/dotnet.js",
+      "bytes": 56383,
+      "sha256": "5e75a2dee4d5dc876dd0d3b3b163ac16c2a8c1bd907d2d5917a159d2740730c5",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.js.br",
+      "member": "sealed8041/wwwroot/_framework/dotnet.js.br",
+      "bytes": 14989,
+      "sha256": "7cbb5ef967692b1c0cd3fe001ab627f0aa69ac5222f448daea367a2115af49c5",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.js.gz",
+      "member": "sealed8041/wwwroot/_framework/dotnet.js.gz",
+      "bytes": 17112,
+      "sha256": "80ab10d20be2097609a0e1342d539e5862870d25ef29a326b2c00c5a7e2387ca",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.native.9h5rp508ar.wasm",
+      "member": "sealed8041/wwwroot/_framework/dotnet.native.9h5rp508ar.wasm",
+      "bytes": 9169860,
+      "sha256": "83be6e410603c303f636c02afe487f0c4931f58afd7f24b22c97c9f2807c4e95",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.native.9h5rp508ar.wasm.br",
+      "member": "sealed8041/wwwroot/_framework/dotnet.native.9h5rp508ar.wasm.br",
+      "bytes": 2580846,
+      "sha256": "1ff52f9a76e6cd9d23a254ae56f0598e4070321b90e8534502c203215e0a270a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.native.9h5rp508ar.wasm.gz",
+      "member": "sealed8041/wwwroot/_framework/dotnet.native.9h5rp508ar.wasm.gz",
+      "bytes": 3413309,
+      "sha256": "89103c68562731c119bb339c34b2a7ee96a0922b088f9386eacdeb076ea40101",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.native.ykrhmjmwac.js",
+      "member": "sealed8041/wwwroot/_framework/dotnet.native.ykrhmjmwac.js",
+      "bytes": 377048,
+      "sha256": "1ef877e1ae1e55848ef53be41c3cbbbe0900cc6d77f4252be7f8b5f3970ad6a3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.native.ykrhmjmwac.js.br",
+      "member": "sealed8041/wwwroot/_framework/dotnet.native.ykrhmjmwac.js.br",
+      "bytes": 62540,
+      "sha256": "c6f381cce6ef2b77e4f339b9791f8e274d6c8f5f3824641f2ffa0ee39e7f246b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.native.ykrhmjmwac.js.gz",
+      "member": "sealed8041/wwwroot/_framework/dotnet.native.ykrhmjmwac.js.gz",
+      "bytes": 76391,
+      "sha256": "0567f14ca001acb97deeb21b773cb44a7ba418bdb59639ed6144932d2afa9e1f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.runtime.v06hirbjsv.js",
+      "member": "sealed8041/wwwroot/_framework/dotnet.runtime.v06hirbjsv.js",
+      "bytes": 198480,
+      "sha256": "41b9eaad9187b46abbc2e752d7bfc06043e91fd264a61aecc959650fa24799db",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.runtime.v06hirbjsv.js.br",
+      "member": "sealed8041/wwwroot/_framework/dotnet.runtime.v06hirbjsv.js.br",
+      "bytes": 47894,
+      "sha256": "e9299011201cb71ca6654ddb85b6607d419d7ab5ca212bb382aacc55dd8e9a16",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/dotnet.runtime.v06hirbjsv.js.gz",
+      "member": "sealed8041/wwwroot/_framework/dotnet.runtime.v06hirbjsv.js.gz",
+      "bytes": 57290,
+      "sha256": "ca2cef72c8552c63e6228b42a20f7f916e55af9e8ec6db76ba7b68318f31a02d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_CJK.tjcz0u77k5.dat",
+      "member": "sealed8041/wwwroot/_framework/icudt_CJK.tjcz0u77k5.dat",
+      "bytes": 956416,
+      "sha256": "4992ed42745cd09930a8769bd155153fb4f7b813d2798cf1cc39e9c4fa549c79",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_CJK.tjcz0u77k5.dat.br",
+      "member": "sealed8041/wwwroot/_framework/icudt_CJK.tjcz0u77k5.dat.br",
+      "bytes": 248840,
+      "sha256": "a8fcd127bbe9657ce07e7ff344de2c1350c290830e86fd2e86921effa50c623e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_CJK.tjcz0u77k5.dat.gz",
+      "member": "sealed8041/wwwroot/_framework/icudt_CJK.tjcz0u77k5.dat.gz",
+      "bytes": 359741,
+      "sha256": "f5fb50d83229560d2ecefaf4ac4ed2252b0cdc2c517a5ba4f1990d969265bd72",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat",
+      "member": "sealed8041/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat",
+      "bytes": 550832,
+      "sha256": "f1f22d7ad618f24434c30ea8c704cb893de85e50701caba66de3f6a51178c937",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat.br",
+      "member": "sealed8041/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat.br",
+      "bytes": 143983,
+      "sha256": "f02d24fa2b5ee677a3e0bd5b8e2789a7a5ac7fd0d8f369fa7fce6f09e7492bf6",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat.gz",
+      "member": "sealed8041/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat.gz",
+      "bytes": 220093,
+      "sha256": "11c5ec42756a38306568f116bea7fcb1350c3359c1839ae71b35f26d2e75f175",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat",
+      "member": "sealed8041/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat",
+      "bytes": 1107168,
+      "sha256": "2fbb15ecd1183f7eff42bd853c278fa39709a918135d1c061eec05e50fb435fb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat.br",
+      "member": "sealed8041/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat.br",
+      "bytes": 222250,
+      "sha256": "7eff6642a201babfc94327b17caad5623769c3bcdd696e33578ab1224ce0c652",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat.gz",
+      "member": "sealed8041/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat.gz",
+      "bytes": 347783,
+      "sha256": "0ade156472bcb6f392d1e8aac122e8d4e014df4ebd3d67542dce49b7a1161d48",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/storage.js",
+      "member": "sealed8041/wwwroot/_framework/storage.js",
+      "bytes": 43044,
+      "sha256": "b38d9247eed6e02e9b57f82997b66e603a2f71584d7c68cfd70b309a1cc3b6c1",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/storage.js.br",
+      "member": "sealed8041/wwwroot/_framework/storage.js.br",
+      "bytes": 12218,
+      "sha256": "fd45fcc2172d8b41bc08e929421401e75adb963afb33dd2e762639cc27e62b4e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/storage.js.gz",
+      "member": "sealed8041/wwwroot/_framework/storage.js.gz",
+      "bytes": 13858,
+      "sha256": "b0eff0a12ad335a5242a544521846b128101f06380c3e7a1d519f2fa0de43155",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/storage.js.map",
+      "member": "sealed8041/wwwroot/_framework/storage.js.map",
+      "bytes": 151518,
+      "sha256": "86afa660003f915c148e52c265c62a0f05b1fd5088032fd027b3eadda4b1d8ab",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/storage.js.map.br",
+      "member": "sealed8041/wwwroot/_framework/storage.js.map.br",
+      "bytes": 32756,
+      "sha256": "21ca7d4d8c54a8ef392f12e280d70ec553bad2eb6e14924013e6694d7363c2ff",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/storage.js.map.gz",
+      "member": "sealed8041/wwwroot/_framework/storage.js.map.gz",
+      "bytes": 38201,
+      "sha256": "33e9796a10c17c08395cfd8d1f4850f41d1ed44f96d3a96cda04362b4ba75045",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/sw.js",
+      "member": "sealed8041/wwwroot/_framework/sw.js",
+      "bytes": 971,
+      "sha256": "8e197b0f4175cd81d8bcc0921a41bcca5551777f6d3d42c612697c66ccd7e1dd",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/sw.js.br",
+      "member": "sealed8041/wwwroot/_framework/sw.js.br",
+      "bytes": 416,
+      "sha256": "517aa1f31040bfa007d433c8fcb4884fcdce9f2907d7fb354eaf8bf1c6c658e4",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/sw.js.gz",
+      "member": "sealed8041/wwwroot/_framework/sw.js.gz",
+      "bytes": 490,
+      "sha256": "c3f53bde86c33519db4b7fb85c3e39d85249a0abad620773d4b5aa1efc89bc19",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/sw.js.map",
+      "member": "sealed8041/wwwroot/_framework/sw.js.map",
+      "bytes": 3749,
+      "sha256": "4d30d6a176825a8747fc150b91a30437a7f82c4d6d18564aeeb08d3bc5d5133d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/sw.js.map.br",
+      "member": "sealed8041/wwwroot/_framework/sw.js.map.br",
+      "bytes": 1303,
+      "sha256": "f4b018274bf248b1647e8a4aa28112a0549d431e7308f1f25912ed8d8fb384f1",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/_framework/sw.js.map.gz",
+      "member": "sealed8041/wwwroot/_framework/sw.js.map.gz",
+      "bytes": 1526,
+      "sha256": "f0d1f9bad54f0e855ac2ec14633ce9ad6785337151d59ff76bcd43dbf9348ef9",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/account-service.js",
+      "member": "sealed8041/wwwroot/account-service.js",
+      "bytes": 3214,
+      "sha256": "2ca8fab3b99209fb0fcdc05105fb48a81bbe8158b54156685a7c2b4a609ccab9",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/account-service.js.br",
+      "member": "sealed8041/wwwroot/account-service.js.br",
+      "bytes": 1086,
+      "sha256": "cab4cb47984cf9eb06cff0365e61c0fa6d35955fa5c3e138b2389f9721818698",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/account-service.js.gz",
+      "member": "sealed8041/wwwroot/account-service.js.gz",
+      "bytes": 1301,
+      "sha256": "78f7027387b140a97a90003c046ae829a370ca32988fdbb07c17d8a00a759d52",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-accessibility.js",
+      "member": "sealed8041/wwwroot/browser-accessibility.js",
+      "bytes": 8891,
+      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-accessibility.js.br",
+      "member": "sealed8041/wwwroot/browser-accessibility.js.br",
+      "bytes": 2085,
+      "sha256": "24a4cae5a2f2bfd8d2c1a8df252ded3b333e25a712487323568ff7e2fe67e937",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-accessibility.js.gz",
+      "member": "sealed8041/wwwroot/browser-accessibility.js.gz",
+      "bytes": 2491,
+      "sha256": "74ad19f5950241621b875f210576cb0f3cd9c37978edb2cb9563db5b8363e009",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-platform.js",
+      "member": "sealed8041/wwwroot/browser-platform.js",
+      "bytes": 3009,
+      "sha256": "4ddcd9ffad1aac575dcb3aa5a176df8bb8e5747d57975d3bfc87e8241650cb80",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-platform.js.br",
+      "member": "sealed8041/wwwroot/browser-platform.js.br",
+      "bytes": 745,
+      "sha256": "65d83558869deb6eecdc15073b844389163f03acd2d154b0c036bfa75987f95a",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-platform.js.gz",
+      "member": "sealed8041/wwwroot/browser-platform.js.gz",
+      "bytes": 926,
+      "sha256": "3f2001fdc7eb58c8637e67f825c2ea5a60528a2d44cdec112ff7a42c96ea8b41",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-private-context.js",
+      "member": "sealed8041/wwwroot/browser-private-context.js",
+      "bytes": 4691,
+      "sha256": "77af4c31e4f81a22f6e8b290877f43443b443716b4af9f29c0b75b19bb8b8b98",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-private-context.js.br",
+      "member": "sealed8041/wwwroot/browser-private-context.js.br",
+      "bytes": 1257,
+      "sha256": "8d195a8e22b4ea64075c13ceab3c00e44922ea83d7bf54edead6da75d5efd0b1",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/browser-private-context.js.gz",
+      "member": "sealed8041/wwwroot/browser-private-context.js.gz",
+      "bytes": 1538,
+      "sha256": "b47edd1f68ce3debe27dbd7f42584bd561bebac8ca3f905bd9aa2a94d72e6e55",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/configured-accounts.bundle.js",
+      "member": "sealed8041/wwwroot/configured-accounts.bundle.js",
+      "bytes": 74759,
+      "sha256": "4d8801b4be087837763c3a23f117c74b4fd73a290a4ef6e7c2eaf8c4eab396d3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/configured-accounts.bundle.js.br",
+      "member": "sealed8041/wwwroot/configured-accounts.bundle.js.br",
+      "bytes": 15358,
+      "sha256": "48a687c66bef68e59daaec74116c99a69bc00288d776b6c2ba95fe8b0059a06b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/configured-accounts.bundle.js.gz",
+      "member": "sealed8041/wwwroot/configured-accounts.bundle.js.gz",
+      "bytes": 17391,
+      "sha256": "dcacc059721104297780353ce83bf9158d42938ea2001c387c7272006f4e37bb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/index.html",
+      "member": "sealed8041/wwwroot/index.html",
+      "bytes": 848,
+      "sha256": "bd45a95ede10706cb7d632affd5fccf6ca5931de08761139f19006149c76cead",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/index.html.br",
+      "member": "sealed8041/wwwroot/index.html.br",
+      "bytes": 333,
+      "sha256": "3ed5fa600a0be9670c82522197b4f0843c0db3d90e3a813c15a1f59ccd9f1604",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/index.html.gz",
+      "member": "sealed8041/wwwroot/index.html.gz",
+      "bytes": 517,
+      "sha256": "8afb4455f3838b306edd1487f34dfa9a2b03750bc718adcaee2bf4e6c2c2d1d4",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/main.js",
+      "member": "sealed8041/wwwroot/main.js",
+      "bytes": 6186,
+      "sha256": "d10018571a6d4399ea2c225763080a512ee1f159a41bfb7438e5d6a94327d09d",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/main.js.br",
+      "member": "sealed8041/wwwroot/main.js.br",
+      "bytes": 1773,
+      "sha256": "4c44a422ce8bee9048658101f1b16887b8125a37940f1625e21f4be20488813b",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/main.js.gz",
+      "member": "sealed8041/wwwroot/main.js.gz",
+      "bytes": 2109,
+      "sha256": "e4d08a49e41ee8c4efd76766c05eef9b214245696357cca87118684be08a9deb",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/notes-indexeddb.js",
+      "member": "sealed8041/wwwroot/notes-indexeddb.js",
+      "bytes": 11550,
+      "sha256": "931bca83e2963f205a7991ba605b9496e0d42c2536ea0e76af2f4d20baab14e9",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/notes-indexeddb.js.br",
+      "member": "sealed8041/wwwroot/notes-indexeddb.js.br",
+      "bytes": 2875,
+      "sha256": "2d9f3237484deffa8b99078e8871afdb9df80653f7edb74d11595c6b4b47a8f3",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/notes-indexeddb.js.gz",
+      "member": "sealed8041/wwwroot/notes-indexeddb.js.gz",
+      "bytes": 3303,
+      "sha256": "d042c63e269155ee97367ff569ade10c34f051acd57e77c7bf219b92d858768f",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/wave-browser.js",
+      "member": "sealed8041/wwwroot/wave-browser.js",
+      "bytes": 10466,
+      "sha256": "3bae37f83369874c0ca278518bcb1c459a2cf4447fc4e248d99d6a138af8069c",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/wave-browser.js.br",
+      "member": "sealed8041/wwwroot/wave-browser.js.br",
+      "bytes": 2703,
+      "sha256": "6bab82a41b281b4eb8330374e7ad07e50ca487aedac7aff7d71fc87c3bed3750",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/wave-browser.js.gz",
+      "member": "sealed8041/wwwroot/wave-browser.js.gz",
+      "bytes": 3190,
+      "sha256": "b1f113b9c837645e94af343c30ca9811ff39a72a5a0cab046284e36d432fa2b7",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/write-packages.js",
+      "member": "sealed8041/wwwroot/write-packages.js",
+      "bytes": 2367,
+      "sha256": "8e757506389202c46009090faa60a12831a290c804f34806fab09af64d4e73f0",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/write-packages.js.br",
+      "member": "sealed8041/wwwroot/write-packages.js.br",
+      "bytes": 855,
+      "sha256": "2c2ce97d041d935e38093830082dc24821726dd4b3ce88ac8ea3cef716f37c1e",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/tmp/team-b-artifacts/browser-8041a70b/wwwroot/write-packages.js.gz",
+      "member": "sealed8041/wwwroot/write-packages.js.gz",
+      "bytes": 1023,
+      "sha256": "b6b85d245299f548962257009821f38e55317e6da309c10eff2a585abc143afe",
+      "role": "standalone exact sealed public runtime asset"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/source/live-2137.json",
+      "member": "canonical/live-2137.original.json",
+      "bytes": 2346003,
+      "sha256": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+      "role": "exact8534 supplied canonical snapshot underlying review892b; original revision/provenance"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-successor08-recorded-run02-review.json",
+      "member": "evidence/b6/accounts-interop7-successor08-recorded-run02-review.json",
+      "bytes": 11364,
+      "sha256": "7615af40babd6adf0f1ef8c9d34b50eab07e4ec1f7a3ebdf5cf88fbc463d72ef",
+      "role": "latest independent actual successor08 recorded review; bounded7PASS/normalclosure, no provider/BFCache/AT acceptance"
+    }
+  ],
+  "memberCount": 372,
+  "totalUncompressedBytes": 63530677,
+  "sealedAssetCount": 270,
+  "sealedAssetBytes": 57029420,
+  "sealedManifestSha256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70",
+  "selected21PinsMap": [
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/Program.cs",
+      "member": "source/selected-web-app/apps/Web/Program.cs",
+      "sha256": "68d8bb7f09be106303b8df9001704b8363e20cd7f26b6aee4867ad2f36982efa"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserApplication.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserApplication.cs",
+      "sha256": "1be15d72354c29ef04e1bac80d4fd8fd5b0c342123415489e028c115d7c0e140"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserAccessibilityBridge.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserAccessibilityBridge.cs",
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserFeatureComposition.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserFeatureComposition.cs",
+      "sha256": "d49cdf7d109eacb511299a678938dc3271c5ec6d28d382d831ef1bacb05d9b3f"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/wwwroot/main.js",
+      "member": "source/selected-web-app/apps/Web/wwwroot/main.js",
+      "sha256": "d10018571a6d4399ea2c225763080a512ee1f159a41bfb7438e5d6a94327d09d"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/wwwroot/browser-private-context.js",
+      "member": "source/selected-web-app/apps/Web/wwwroot/browser-private-context.js",
+      "sha256": "77af4c31e4f81a22f6e8b290877f43443b443716b4af9f29c0b75b19bb8b8b98"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/wwwroot/browser-accessibility.js",
+      "member": "source/selected-web-app/apps/Web/wwwroot/browser-accessibility.js",
+      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "member": "source/selected-web-app/apps/Web/Accounts/AccountBrowserBindings.cs",
+      "sha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/Accounts/AccountSettingsFeature.cs",
+      "member": "source/selected-web-app/apps/Web/Accounts/AccountSettingsFeature.cs",
+      "sha256": "400a5537dff6b56d438e6dbbafa5f7b3f06f74caae4e0b8439e49b9454552d24"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/Accounts/Accounts.cui",
+      "member": "source/selected-web-app/apps/Web/Accounts/Accounts.cui",
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/Services/account-service.js",
+      "member": "source/selected-web-app/apps/Web/Services/account-service.js",
+      "sha256": "2ca8fab3b99209fb0fcdc05105fb48a81bbe8158b54156685a7c2b4a609ccab9"
+    },
+    {
+      "originalPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor08.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-unconfigured-interop7-successor08.cjs",
+      "sha256": "a8dcabb4c56060c67d54a8c58faef71136078572736e10c6e30d35e1a969b21c"
+    },
+    {
+      "originalPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/sealed-https-host-explicit-binding.cjs",
+      "member": "evidence/b5/account-unconfigured-interop8041/sealed-https-host-explicit-binding.cjs",
+      "sha256": "43650700e8eaa35fab4a63a29c02572c1e89803b6f8bff6f357bde10d7cb553d"
+    },
+    {
+      "originalPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-08.json",
+      "member": "evidence/b5/account-unconfigured-interop8041/EXACT-8041-INTEROP7-BINDING-08.json",
+      "sha256": "53fbbff54111faa3d238185d88720928dea7b897789b656cd7f378813e394407"
+    },
+    {
+      "originalPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/publish-8041a70b/publish-manifest.json",
+      "member": "sealed8041/publish-manifest.original.json",
+      "sha256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70"
+    },
+    {
+      "originalPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/run-owned-browser-watchdog08.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/run-owned-browser-watchdog08.py",
+      "sha256": "a9c6fb94700b4fb289469502264068a5b8327506735fbf45c8dfc1ec1b39af9b"
+    },
+    {
+      "originalPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-unconfigured-interop8041/owned-kernel-child-proof01.py",
+      "member": "evidence/b5/account-unconfigured-interop8041/owned-kernel-child-proof01.py",
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "originalPath": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/lib/coreBundle.js",
+      "member": "external/pinned-playwright/coreBundle.js",
+      "sha256": "9393fa79e1c67c74edc26b610d65a4f7ed73d345a762465cc88340a33a2454ac"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserRouteDispatcher.cs",
+      "sha256": "0deb17b239d0cabe89f0c65633ea00275a415761955c51b0dd7b827c73d06ae6"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserHomeContext.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserHomeContext.cs",
+      "sha256": "67d160a6cb30ed2bc5c1020235d02ba931fe276aeb23c83003263a4e48923829"
+    },
+    {
+      "originalPath": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserSurfaceRegistry.cs",
+      "member": "source/selected-web-app/apps/Web/BrowserSurfaceRegistry.cs",
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94"
+    }
+  ],
+  "exclusions": [
+    "all browser profile/temp/cache/cookies/history/storageState",
+    "issuer worktrees/private manifests/keys/passwords/tokens/signing material",
+    "certificate private key/root dev cert files",
+    "SDK/native outputs/NuGet/cache/traces/screenshots/HAR",
+    "production Git mutation"
+  ],
+  "portableExecutionQualification": "Original exact frozen runner/host/plans remain preserved with original absolute paths. Receiver must create separately reviewed path-map derivative for its own fresh output/profile/kernel authority and authorized HTTPS5096/SPKI certificate, retaining same exact sealed270 bytes and 7 privacy/lifecycle oracles. No private TLS keys or browser/provider configuration provided. Full Playwright/Chromium runtimes are external pinned dependencies. This package directly supports byte review; original environment execution already recorded, receiver launch requires explicit own GUI/custody setup.",
+  "receiverSetupRequired": [
+    "Linux Python3.12 pidfd/waitid__WALL/subreaper support and source guard own-child proof",
+    "Node/Playwright and Chromium151.0.7922.173 compatible original runtime",
+    "Authorized own loopback HTTPS certificate/key outside archive with exact peer-reviewed SPKI pin",
+    "Own fresh four dirs/externalwatchdog and singleGUI lane; optionalpublicaccountconfiguration remainsnull",
+    "Path-map derivative produces receiver manifest binding and plan with original source/asset SHA provenance; no altered product assets or oracle/source authority"
+  ],
+  "futureOwnArchiveVerification": "Fresh ZIP exact unique safe member set, noextras, stream SHA+bytes against every inventory row after write; rehash all original inputs after, include original21/all270 verification; max100MiB. Large write only after root explicit writer gate.",
+  "preservedInventory01Sha256": "13f10cdbc957ed8b82b72b5dbc5acb2465a3eab3c4697e67d5535ac44b65c34f",
+  "narrowAddition": {
+    "rootAuthorization": "Exact exclusive disk-writer grant plus only latest B6actual7615/rootactual2c2 receipts",
+    "newB6ReceiptSha256": "7615af40babd6adf0f1ef8c9d34b50eab07e4ec1f7a3ebdf5cf88fbc463d72ef",
+    "rootActualReceiptAlreadyInInventory01": "2c2cbd52ac466785d15a920580dfb378c9203693a6e7851e5dac6431d6b9012c",
+    "onlyNewSourceMember": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-successor08-recorded-run02-review.json",
+    "allOriginal371MemberMappingsAndBytesPreserved": true
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "state": "SOURCE_ONLY_NOT_RUN_PENDING_PEER_AND_ROOT_GUI",
+  "files": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/EXACT-8041-WAVE14-EXECUTION-PLAN-03.json",
+      "bytes": 23475,
+      "sha256": "4cb0573e8d15171426425e41fced53ba28c810a9cdbcd814860fbc564eb93100"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/run-owned-wave-watchdog03.py",
+      "bytes": 14470,
+      "sha256": "3ce9adde875ee1eff64c9a88f56b890df7aa04b8f458eb063029c1e91cbba6c2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/watchdog-02-to-03.patch",
+      "bytes": 343,
+      "sha256": "2ed75dc6247029d56314c1574b531a00cb24d782a45569a70213e47d4daa066e"
+    }
+  ],
+  "unchangedRunnerSha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f",
+  "freshPathsAbsent": true,
+  "sourceSyntax": "ASTPASS_ONLY_NO_SUBPROCESS_OR_KERNELCALLS"
+}

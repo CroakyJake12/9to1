@@ -1,0 +1,11 @@
+{
+  "recordedUTC": "2026-10-04T05:04:14.220248+00:00",
+  "reviewer": "root",
+  "decision": "SOURCE_CLEAR_PENDING_SOLE_GUI_AFTER_PACKET_WRITER_RELEASE",
+  "planSha256": "19011e63c349cfbfc48657e4fa24015c220401408847aa86c14e0a23118859ed",
+  "wrapperSha256": "d2cdf267cbb09b46ab63fb52a6ad92abdf6f1fdd896d222d69705c98fc711acb",
+  "all23PinsMatch": true,
+  "diffReview": "Only plan filename, separate B6 root GUI gate and gated forward of original B5 runner execution flag; same immutable08 runner/host/binding/f57 seal270/same7. No auth/config/production/oracle changes.",
+  "resources": "Fresh separate output/control/TMP/cache,240s/192MB/256MB runtimefloor, one actual bound top, heldbirthFD/subreaper/ECHILD normalclosure; forcedcleanupFAIL.",
+  "scope": "Independent actual unconfigured browser lifetime7 only, not provider/BFCache/AT."
+}

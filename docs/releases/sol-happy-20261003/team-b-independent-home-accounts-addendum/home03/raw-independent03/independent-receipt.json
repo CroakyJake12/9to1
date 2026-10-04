@@ -1,0 +1,176 @@
+{
+  "state": "PASS",
+  "scope": "Independent proposal Home native20x2 only, no shared adoption/browser/AT",
+  "identityFailures": [],
+  "forcedCleanup": false,
+  "deadlineFailure": false,
+  "budgetFailure": false,
+  "cases": [
+    {
+      "name": "public-flag-360",
+      "status": "PASS",
+      "nativeRoot": {
+        "pid": 128853,
+        "ppid": 128850,
+        "birth": 4359808
+      },
+      "exitCode": 0,
+      "closure": true,
+      "rawSHA256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86",
+      "counts": {
+        "executed": 20,
+        "passed": 20,
+        "failed": 0
+      }
+    },
+    {
+      "name": "public-flag-1440",
+      "status": "PASS",
+      "nativeRoot": {
+        "pid": 128866,
+        "ppid": 128850,
+        "birth": 4359947
+      },
+      "exitCode": 0,
+      "closure": true,
+      "rawSHA256": "bba1acc70098518850fa3cb404d93f47a1da66ba4ece44f6c41a5cc7608a6425",
+      "counts": {
+        "executed": 20,
+        "passed": 20,
+        "failed": 0
+      }
+    }
+  ],
+  "prelaunchKernel": {
+    "empty": true,
+    "flags": [
+      "WEXITED",
+      "WNOHANG",
+      "WNOWAIT",
+      "LINUX___WALL"
+    ],
+    "flagsValue": 1090519045,
+    "flagsAccepted": true,
+    "sigchldDisposition": "DEFAULT",
+    "nonreaping": true,
+    "status": "ECHILD"
+  },
+  "phase": "resource-inspection",
+  "observedOwnedClrIPC": {
+    "tmp/clr-debug-pipe-128853-4359808-out": {
+      "pid": 128853,
+      "birth": 4359808,
+      "capturedMode": "0o10700",
+      "logicalBytes": 0,
+      "allocatedBytes": 0
+    },
+    "tmp/dotnet-diagnostic-128853-4359808-socket": {
+      "pid": 128853,
+      "birth": 4359808,
+      "capturedMode": "0o140600",
+      "logicalBytes": 0,
+      "allocatedBytes": 0
+    },
+    "tmp/clr-debug-pipe-128853-4359808-in": {
+      "pid": 128853,
+      "birth": 4359808,
+      "capturedMode": "0o10700",
+      "logicalBytes": 0,
+      "allocatedBytes": 0
+    },
+    "tmp/dotnet-diagnostic-128866-4359947-socket": {
+      "pid": 128866,
+      "birth": 4359947,
+      "capturedMode": "0o140600",
+      "logicalBytes": 0,
+      "allocatedBytes": 0
+    },
+    "tmp/clr-debug-pipe-128866-4359947-in": {
+      "pid": 128866,
+      "birth": 4359947,
+      "capturedMode": "0o10700",
+      "logicalBytes": 0,
+      "allocatedBytes": 0
+    },
+    "tmp/clr-debug-pipe-128866-4359947-out": {
+      "pid": 128866,
+      "birth": 4359947,
+      "capturedMode": "0o10700",
+      "logicalBytes": 0,
+      "allocatedBytes": 0
+    }
+  },
+  "finalMeasuredFootprint": {
+    "logical": 1400610,
+    "allocated": 1495040
+  },
+  "finalMeasuredFree": {
+    "/workspace": 582893568,
+    "/tmp": 693530624
+  },
+  "lastObservedNativeExitCode": 0,
+  "lastFamilyClosure": {
+    "allHeldExit": true,
+    "allBirthsGone": true,
+    "kernel": {
+      "empty": true,
+      "flags": [
+        "WEXITED",
+        "WNOHANG",
+        "WNOWAIT",
+        "LINUX___WALL"
+      ],
+      "flagsValue": 1090519045,
+      "flagsAccepted": true,
+      "sigchldDisposition": "DEFAULT",
+      "nonreaping": true,
+      "status": "ECHILD"
+    },
+    "observedOwnClrIPCGone": true
+  },
+  "finalPinsUnchanged": true,
+  "ownedFamily": [
+    {
+      "pid": 128853,
+      "ppid": 128850,
+      "pgrp": 128853,
+      "session": 128853,
+      "birth": 4359808,
+      "state": "R",
+      "relation": "original owned Popen direct child",
+      "signalCount": 0,
+      "profileBound": null,
+      "cgroupSha256": "e57fd7b21104f091de366ace1464596378a498b0a5e63f1b21147a8998c20107",
+      "exeBasename": "dotnet"
+    },
+    {
+      "pid": 128866,
+      "ppid": 128850,
+      "pgrp": 128866,
+      "session": 128866,
+      "birth": 4359947,
+      "state": "R",
+      "relation": "original owned Popen direct child",
+      "signalCount": 0,
+      "profileBound": null,
+      "cgroupSha256": "e57fd7b21104f091de366ace1464596378a498b0a5e63f1b21147a8998c20107",
+      "exeBasename": "dotnet"
+    }
+  ],
+  "finalKernel": {
+    "empty": true,
+    "flags": [
+      "WEXITED",
+      "WNOHANG",
+      "WNOWAIT",
+      "LINUX___WALL"
+    ],
+    "flagsValue": 1090519045,
+    "flagsAccepted": true,
+    "sigchldDisposition": "DEFAULT",
+    "nonreaping": true,
+    "status": "ECHILD"
+  },
+  "recordedUTC": "2026-10-04T04:59:44.970605+00:00",
+  "planSHA256": "dc7e7659f1ac878ef45a50603072637140b6e60ebcab1628d57333ae1c904321"
+}

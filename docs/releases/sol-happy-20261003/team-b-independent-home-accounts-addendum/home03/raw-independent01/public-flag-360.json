@@ -1,0 +1,7653 @@
+{
+  "scope": "Actual native source-linked BrowserApplication.Render, anonymous existing Home projection and TextLayout geometry; not browser or full visible readability acceptance.",
+  "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.proposed",
+  "width": 360,
+  "height": 800,
+  "horizontalScroll": "Disabled",
+  "diagnosticPropertyMutation": false,
+  "declaredSurfaceConstraint": true,
+  "checks": [
+    {
+      "name": "welcome-copy follows welcome-heading",
+      "passed": true
+    },
+    {
+      "name": "dashboard-brief follows welcome-copy",
+      "passed": true
+    },
+    {
+      "name": "home-hero follows dashboard-brief",
+      "passed": true
+    },
+    {
+      "name": "operation-status follows home-hero",
+      "passed": true
+    },
+    {
+      "name": "navigation-status follows operation-status",
+      "passed": true
+    },
+    {
+      "name": "app-shortcuts follows navigation-status",
+      "passed": true
+    },
+    {
+      "name": "upcoming-events follows app-shortcuts",
+      "passed": true
+    },
+    {
+      "name": "dashboard-layout-controls follows upcoming-events",
+      "passed": true
+    },
+    {
+      "name": "Complete hero explanation remains in actual native text layout",
+      "passed": true
+    },
+    {
+      "name": "Hero full text range fits its assigned native width",
+      "passed": true
+    },
+    {
+      "name": "Hero explanatory glyph ranges do not intersect observed-status column",
+      "passed": true
+    },
+    {
+      "name": "Actual hero text remains within measured Home root width",
+      "passed": true
+    },
+    {
+      "name": "Native client width matches the requested viewport",
+      "passed": true
+    },
+    {
+      "name": "Native scroll viewport width matches native client width",
+      "passed": true
+    },
+    {
+      "name": "Home native horizontal extent fits the scroll viewport",
+      "passed": true
+    },
+    {
+      "name": "Home root fits the native scroll viewport width",
+      "passed": true
+    },
+    {
+      "name": "Actual Home text inputs fit root horizontal bounds",
+      "passed": true
+    },
+    {
+      "name": "Actual Home buttons fit root horizontal bounds",
+      "passed": true
+    },
+    {
+      "name": "Every actual Home full text range fits its assigned width",
+      "passed": true
+    },
+    {
+      "name": "Actual Home Library Events navigation remains enabled",
+      "passed": true
+    }
+  ],
+  "failures": 0,
+  "sections": [
+    {
+      "id": "welcome-heading",
+      "bounds": {
+        "X": 24,
+        "Y": 416,
+        "Width": 308,
+        "Height": 39,
+        "Position": {
+          "X": 24,
+          "Y": 416
+        },
+        "Size": {
+          "AspectRatio": 7.897435897435898,
+          "Width": 308,
+          "Height": 39
+        },
+        "Right": 332,
+        "Bottom": 455,
+        "Left": 24,
+        "Top": 416,
+        "TopLeft": {
+          "X": 24,
+          "Y": 416
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 416
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 455
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 455
+        },
+        "Center": {
+          "X": 178,
+          "Y": 435.5
+        }
+      }
+    },
+    {
+      "id": "welcome-copy",
+      "bounds": {
+        "X": 24,
+        "Y": 455,
+        "Width": 308,
+        "Height": 19,
+        "Position": {
+          "X": 24,
+          "Y": 455
+        },
+        "Size": {
+          "AspectRatio": 16.210526315789473,
+          "Width": 308,
+          "Height": 19
+        },
+        "Right": 332,
+        "Bottom": 474,
+        "Left": 24,
+        "Top": 455,
+        "TopLeft": {
+          "X": 24,
+          "Y": 455
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 455
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 474
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 474
+        },
+        "Center": {
+          "X": 178,
+          "Y": 464.5
+        }
+      }
+    },
+    {
+      "id": "dashboard-brief",
+      "bounds": {
+        "X": 24,
+        "Y": 474,
+        "Width": 308,
+        "Height": 59,
+        "Position": {
+          "X": 24,
+          "Y": 474
+        },
+        "Size": {
+          "AspectRatio": 5.220338983050848,
+          "Width": 308,
+          "Height": 59
+        },
+        "Right": 332,
+        "Bottom": 533,
+        "Left": 24,
+        "Top": 474,
+        "TopLeft": {
+          "X": 24,
+          "Y": 474
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 474
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 533
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 533
+        },
+        "Center": {
+          "X": 178,
+          "Y": 503.5
+        }
+      }
+    },
+    {
+      "id": "home-hero",
+      "bounds": {
+        "X": 24,
+        "Y": 533,
+        "Width": 308,
+        "Height": 224,
+        "Position": {
+          "X": 24,
+          "Y": 533
+        },
+        "Size": {
+          "AspectRatio": 1.375,
+          "Width": 308,
+          "Height": 224
+        },
+        "Right": 332,
+        "Bottom": 757,
+        "Left": 24,
+        "Top": 533,
+        "TopLeft": {
+          "X": 24,
+          "Y": 533
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 533
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 757
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 757
+        },
+        "Center": {
+          "X": 178,
+          "Y": 645
+        }
+      }
+    },
+    {
+      "id": "operation-status",
+      "bounds": {
+        "X": 24,
+        "Y": 757,
+        "Width": 308,
+        "Height": 34,
+        "Position": {
+          "X": 24,
+          "Y": 757
+        },
+        "Size": {
+          "AspectRatio": 9.058823529411764,
+          "Width": 308,
+          "Height": 34
+        },
+        "Right": 332,
+        "Bottom": 791,
+        "Left": 24,
+        "Top": 757,
+        "TopLeft": {
+          "X": 24,
+          "Y": 757
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 757
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 791
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 791
+        },
+        "Center": {
+          "X": 178,
+          "Y": 774
+        }
+      }
+    },
+    {
+      "id": "navigation-status",
+      "bounds": {
+        "X": 24,
+        "Y": 791,
+        "Width": 308,
+        "Height": 17,
+        "Position": {
+          "X": 24,
+          "Y": 791
+        },
+        "Size": {
+          "AspectRatio": 18.11764705882353,
+          "Width": 308,
+          "Height": 17
+        },
+        "Right": 332,
+        "Bottom": 808,
+        "Left": 24,
+        "Top": 791,
+        "TopLeft": {
+          "X": 24,
+          "Y": 791
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 791
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 808
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 808
+        },
+        "Center": {
+          "X": 178,
+          "Y": 799.5
+        }
+      }
+    },
+    {
+      "id": "app-shortcuts",
+      "bounds": {
+        "X": 24,
+        "Y": 808,
+        "Width": 308,
+        "Height": 146,
+        "Position": {
+          "X": 24,
+          "Y": 808
+        },
+        "Size": {
+          "AspectRatio": 2.1095890410958904,
+          "Width": 308,
+          "Height": 146
+        },
+        "Right": 332,
+        "Bottom": 954,
+        "Left": 24,
+        "Top": 808,
+        "TopLeft": {
+          "X": 24,
+          "Y": 808
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 808
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 954
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 954
+        },
+        "Center": {
+          "X": 178,
+          "Y": 881
+        }
+      }
+    },
+    {
+      "id": "upcoming-events",
+      "bounds": {
+        "X": 24,
+        "Y": 954,
+        "Width": 308,
+        "Height": 86,
+        "Position": {
+          "X": 24,
+          "Y": 954
+        },
+        "Size": {
+          "AspectRatio": 3.5813953488372094,
+          "Width": 308,
+          "Height": 86
+        },
+        "Right": 332,
+        "Bottom": 1040,
+        "Left": 24,
+        "Top": 954,
+        "TopLeft": {
+          "X": 24,
+          "Y": 954
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 954
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 1040
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 1040
+        },
+        "Center": {
+          "X": 178,
+          "Y": 997
+        }
+      }
+    },
+    {
+      "id": "dashboard-layout-controls",
+      "bounds": {
+        "X": 24,
+        "Y": 1040,
+        "Width": 308,
+        "Height": 321,
+        "Position": {
+          "X": 24,
+          "Y": 1040
+        },
+        "Size": {
+          "AspectRatio": 0.9595015576323987,
+          "Width": 308,
+          "Height": 321
+        },
+        "Right": 332,
+        "Bottom": 1361,
+        "Left": 24,
+        "Top": 1040,
+        "TopLeft": {
+          "X": 24,
+          "Y": 1040
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 1040
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 1361
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 1361
+        },
+        "Center": {
+          "X": 178,
+          "Y": 1200.5
+        }
+      }
+    }
+  ],
+  "textRanges": [
+    {
+      "name": "brand",
+      "text": "9-1",
+      "bounds": {
+        "X": 0,
+        "Y": 0,
+        "Width": 36,
+        "Height": 32,
+        "Position": {
+          "X": 0,
+          "Y": 0
+        },
+        "Size": {
+          "AspectRatio": 1.125,
+          "Width": 36,
+          "Height": 32
+        },
+        "Right": 36,
+        "Bottom": 32,
+        "Left": 0,
+        "Top": 0,
+        "TopLeft": {
+          "X": 0,
+          "Y": 0
+        },
+        "TopRight": {
+          "X": 36,
+          "Y": 0
+        },
+        "BottomLeft": {
+          "X": 0,
+          "Y": 32
+        },
+        "BottomRight": {
+          "X": 36,
+          "Y": 32
+        },
+        "Center": {
+          "X": 18,
+          "Y": 16
+        }
+      },
+      "assignedWidth": 36,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 4,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 35.6015625,
+          "Height": 26.625,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 1.3371478873239437,
+            "Width": 35.6015625,
+            "Height": 26.625
+          },
+          "Right": 35.6015625,
+          "Bottom": 26.625,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 35.6015625,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 26.625
+          },
+          "BottomRight": {
+            "X": 35.6015625,
+            "Y": 26.625
+          },
+          "Center": {
+            "X": 17.80078125,
+            "Y": 13.3125
+          }
+        }
+      ]
+    },
+    {
+      "name": "PART_Placeholder",
+      "text": "Search 9-1",
+      "bounds": {
+        "X": 47,
+        "Y": 7,
+        "Width": 72,
+        "Height": 19,
+        "Position": {
+          "X": 47,
+          "Y": 7
+        },
+        "Size": {
+          "AspectRatio": 3.789473684210526,
+          "Width": 72,
+          "Height": 19
+        },
+        "Right": 119,
+        "Bottom": 26,
+        "Left": 47,
+        "Top": 7,
+        "TopLeft": {
+          "X": 47,
+          "Y": 7
+        },
+        "TopRight": {
+          "X": 119,
+          "Y": 7
+        },
+        "BottomLeft": {
+          "X": 47,
+          "Y": 26
+        },
+        "BottomRight": {
+          "X": 119,
+          "Y": 26
+        },
+        "Center": {
+          "X": 83,
+          "Y": 16.5
+        }
+      },
+      "assignedWidth": 72,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 11,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 71.65056818181817,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.228873239436619,
+            "Width": 71.65056818181817,
+            "Height": 16.94318181818182
+          },
+          "Right": 71.65056818181817,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 71.65056818181817,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 71.65056818181817,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 35.825284090909086,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Open Studio",
+      "bounds": {
+        "X": 135,
+        "Y": 7,
+        "Width": 82,
+        "Height": 17,
+        "Position": {
+          "X": 135,
+          "Y": 7
+        },
+        "Size": {
+          "AspectRatio": 4.823529411764706,
+          "Width": 82,
+          "Height": 17
+        },
+        "Right": 217,
+        "Bottom": 24,
+        "Left": 135,
+        "Top": 7,
+        "TopLeft": {
+          "X": 135,
+          "Y": 7
+        },
+        "TopRight": {
+          "X": 217,
+          "Y": 7
+        },
+        "BottomLeft": {
+          "X": 135,
+          "Y": 24
+        },
+        "BottomRight": {
+          "X": 217,
+          "Y": 24
+        },
+        "Center": {
+          "X": 176,
+          "Y": 15.5
+        }
+      },
+      "assignedWidth": 82,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 12,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 81.99147727272728,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.839201877934272,
+            "Width": 81.99147727272728,
+            "Height": 16.94318181818182
+          },
+          "Right": 81.99147727272728,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 81.99147727272728,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 81.99147727272728,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 40.99573863636364,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Install apps",
+      "bounds": {
+        "X": 235,
+        "Y": 7,
+        "Width": 76,
+        "Height": 17,
+        "Position": {
+          "X": 235,
+          "Y": 7
+        },
+        "Size": {
+          "AspectRatio": 4.470588235294118,
+          "Width": 76,
+          "Height": 17
+        },
+        "Right": 311,
+        "Bottom": 24,
+        "Left": 235,
+        "Top": 7,
+        "TopLeft": {
+          "X": 235,
+          "Y": 7
+        },
+        "TopRight": {
+          "X": 311,
+          "Y": 7
+        },
+        "BottomLeft": {
+          "X": 235,
+          "Y": 24
+        },
+        "BottomRight": {
+          "X": 311,
+          "Y": 24
+        },
+        "Center": {
+          "X": 273,
+          "Y": 15.5
+        }
+      },
+      "assignedWidth": 76,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 13,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 75.05113636363636,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.429577464788732,
+            "Width": 75.05113636363636,
+            "Height": 16.94318181818182
+          },
+          "Right": 75.05113636363636,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 75.05113636363636,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 75.05113636363636,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 37.52556818181818,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Home",
+      "bounds": {
+        "X": 48,
+        "Y": 77,
+        "Width": 40,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 77
+        },
+        "Size": {
+          "AspectRatio": 2.3529411764705883,
+          "Width": 40,
+          "Height": 17
+        },
+        "Right": 88,
+        "Bottom": 94,
+        "Left": 48,
+        "Top": 77,
+        "TopLeft": {
+          "X": 48,
+          "Y": 77
+        },
+        "TopRight": {
+          "X": 88,
+          "Y": 77
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 94
+        },
+        "BottomRight": {
+          "X": 88,
+          "Y": 94
+        },
+        "Center": {
+          "X": 68,
+          "Y": 85.5
+        }
+      },
+      "assignedWidth": 40,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 39.03693181818181,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.303990610328638,
+            "Width": 39.03693181818181,
+            "Height": 16.94318181818182
+          },
+          "Right": 39.03693181818181,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 39.03693181818181,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 39.03693181818181,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 19.518465909090907,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Apps",
+      "bounds": {
+        "X": 48,
+        "Y": 107,
+        "Width": 34,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 107
+        },
+        "Size": {
+          "AspectRatio": 2,
+          "Width": 34,
+          "Height": 17
+        },
+        "Right": 82,
+        "Bottom": 124,
+        "Left": 48,
+        "Top": 107,
+        "TopLeft": {
+          "X": 48,
+          "Y": 107
+        },
+        "TopRight": {
+          "X": 82,
+          "Y": 107
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 124
+        },
+        "BottomRight": {
+          "X": 82,
+          "Y": 124
+        },
+        "Center": {
+          "X": 65,
+          "Y": 115.5
+        }
+      },
+      "assignedWidth": 34,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 33.84659090909091,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 1.997652582159624,
+            "Width": 33.84659090909091,
+            "Height": 16.94318181818182
+          },
+          "Right": 33.84659090909091,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 33.84659090909091,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 33.84659090909091,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 16.923295454545453,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Library",
+      "bounds": {
+        "X": 48,
+        "Y": 137,
+        "Width": 47,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 137
+        },
+        "Size": {
+          "AspectRatio": 2.764705882352941,
+          "Width": 47,
+          "Height": 17
+        },
+        "Right": 95,
+        "Bottom": 154,
+        "Left": 48,
+        "Top": 137,
+        "TopLeft": {
+          "X": 48,
+          "Y": 137
+        },
+        "TopRight": {
+          "X": 95,
+          "Y": 137
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 154
+        },
+        "BottomRight": {
+          "X": 95,
+          "Y": 154
+        },
+        "Center": {
+          "X": 71.5,
+          "Y": 145.5
+        }
+      },
+      "assignedWidth": 47,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 8,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 46.23579545454545,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.7288732394366195,
+            "Width": 46.23579545454545,
+            "Height": 16.94318181818182
+          },
+          "Right": 46.23579545454545,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 46.23579545454545,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 46.23579545454545,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 23.117897727272727,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Events",
+      "bounds": {
+        "X": 48,
+        "Y": 167,
+        "Width": 45,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 167
+        },
+        "Size": {
+          "AspectRatio": 2.6470588235294117,
+          "Width": 45,
+          "Height": 17
+        },
+        "Right": 93,
+        "Bottom": 184,
+        "Left": 48,
+        "Top": 167,
+        "TopLeft": {
+          "X": 48,
+          "Y": 167
+        },
+        "TopRight": {
+          "X": 93,
+          "Y": 167
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 184
+        },
+        "BottomRight": {
+          "X": 93,
+          "Y": 184
+        },
+        "Center": {
+          "X": 70.5,
+          "Y": 175.5
+        }
+      },
+      "assignedWidth": 45,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 7,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 44.50568181818182,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.6267605633802815,
+            "Width": 44.50568181818182,
+            "Height": 16.94318181818182
+          },
+          "Right": 44.50568181818182,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 44.50568181818182,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 44.50568181818182,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 22.25284090909091,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Discover",
+      "bounds": {
+        "X": 48,
+        "Y": 197,
+        "Width": 58,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 197
+        },
+        "Size": {
+          "AspectRatio": 3.411764705882353,
+          "Width": 58,
+          "Height": 17
+        },
+        "Right": 106,
+        "Bottom": 214,
+        "Left": 48,
+        "Top": 197,
+        "TopLeft": {
+          "X": 48,
+          "Y": 197
+        },
+        "TopRight": {
+          "X": 106,
+          "Y": 197
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 214
+        },
+        "BottomRight": {
+          "X": 106,
+          "Y": 214
+        },
+        "Center": {
+          "X": 77,
+          "Y": 205.5
+        }
+      },
+      "assignedWidth": 58,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 9,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 57.471590909090914,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 3.392018779342723,
+            "Width": 57.471590909090914,
+            "Height": 16.94318181818182
+          },
+          "Right": 57.471590909090914,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 57.471590909090914,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 57.471590909090914,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 28.735795454545457,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Mesh",
+      "bounds": {
+        "X": 48,
+        "Y": 227,
+        "Width": 37,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 227
+        },
+        "Size": {
+          "AspectRatio": 2.176470588235294,
+          "Width": 37,
+          "Height": 17
+        },
+        "Right": 85,
+        "Bottom": 244,
+        "Left": 48,
+        "Top": 227,
+        "TopLeft": {
+          "X": 48,
+          "Y": 227
+        },
+        "TopRight": {
+          "X": 85,
+          "Y": 227
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 244
+        },
+        "BottomRight": {
+          "X": 85,
+          "Y": 244
+        },
+        "Center": {
+          "X": 66.5,
+          "Y": 235.5
+        }
+      },
+      "assignedWidth": 37,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 36.19318181818182,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.136150234741784,
+            "Width": 36.19318181818182,
+            "Height": 16.94318181818182
+          },
+          "Right": 36.19318181818182,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 36.19318181818182,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 36.19318181818182,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 18.09659090909091,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Settings",
+      "bounds": {
+        "X": 48,
+        "Y": 257,
+        "Width": 55,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 257
+        },
+        "Size": {
+          "AspectRatio": 3.235294117647059,
+          "Width": 55,
+          "Height": 17
+        },
+        "Right": 103,
+        "Bottom": 274,
+        "Left": 48,
+        "Top": 257,
+        "TopLeft": {
+          "X": 48,
+          "Y": 257
+        },
+        "TopRight": {
+          "X": 103,
+          "Y": 257
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 274
+        },
+        "BottomRight": {
+          "X": 103,
+          "Y": 274
+        },
+        "Center": {
+          "X": 75.5,
+          "Y": 265.5
+        }
+      },
+      "assignedWidth": 55,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 9,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 54.62784090909091,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 3.224178403755868,
+            "Width": 54.62784090909091,
+            "Height": 16.94318181818182
+          },
+          "Right": 54.62784090909091,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 54.62784090909091,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 54.62784090909091,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 27.313920454545453,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Permissions",
+      "bounds": {
+        "X": 48,
+        "Y": 287,
+        "Width": 80,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 287
+        },
+        "Size": {
+          "AspectRatio": 4.705882352941177,
+          "Width": 80,
+          "Height": 17
+        },
+        "Right": 128,
+        "Bottom": 304,
+        "Left": 48,
+        "Top": 287,
+        "TopLeft": {
+          "X": 48,
+          "Y": 287
+        },
+        "TopRight": {
+          "X": 128,
+          "Y": 287
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 304
+        },
+        "BottomRight": {
+          "X": 128,
+          "Y": 304
+        },
+        "Center": {
+          "X": 88,
+          "Y": 295.5
+        }
+      },
+      "assignedWidth": 80,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 12,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 79.48579545454545,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.69131455399061,
+            "Width": 79.48579545454545,
+            "Height": 16.94318181818182
+          },
+          "Right": 79.48579545454545,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 79.48579545454545,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 79.48579545454545,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 39.74289772727273,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Notifications",
+      "bounds": {
+        "X": 48,
+        "Y": 317,
+        "Width": 84,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 317
+        },
+        "Size": {
+          "AspectRatio": 4.9411764705882355,
+          "Width": 84,
+          "Height": 17
+        },
+        "Right": 132,
+        "Bottom": 334,
+        "Left": 48,
+        "Top": 317,
+        "TopLeft": {
+          "X": 48,
+          "Y": 317
+        },
+        "TopRight": {
+          "X": 132,
+          "Y": 317
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 334
+        },
+        "BottomRight": {
+          "X": 132,
+          "Y": 334
+        },
+        "Center": {
+          "X": 90,
+          "Y": 325.5
+        }
+      },
+      "assignedWidth": 84,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 14,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 83.6619318181818,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.937793427230045,
+            "Width": 83.6619318181818,
+            "Height": 16.94318181818182
+          },
+          "Right": 83.6619318181818,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 83.6619318181818,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 83.6619318181818,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 41.8309659090909,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Spaces",
+      "bounds": {
+        "X": 48,
+        "Y": 347,
+        "Width": 49,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 347
+        },
+        "Size": {
+          "AspectRatio": 2.8823529411764706,
+          "Width": 49,
+          "Height": 17
+        },
+        "Right": 97,
+        "Bottom": 364,
+        "Left": 48,
+        "Top": 347,
+        "TopLeft": {
+          "X": 48,
+          "Y": 347
+        },
+        "TopRight": {
+          "X": 97,
+          "Y": 347
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 364
+        },
+        "BottomRight": {
+          "X": 97,
+          "Y": 364
+        },
+        "Center": {
+          "X": 72.5,
+          "Y": 355.5
+        }
+      },
+      "assignedWidth": 49,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 7,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 48.64204545454546,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.8708920187793425,
+            "Width": 48.64204545454546,
+            "Height": 16.94318181818182
+          },
+          "Right": 48.64204545454546,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 48.64204545454546,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 48.64204545454546,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 24.32102272727273,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Automations",
+      "bounds": {
+        "X": 48,
+        "Y": 377,
+        "Width": 84,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 377
+        },
+        "Size": {
+          "AspectRatio": 4.9411764705882355,
+          "Width": 84,
+          "Height": 17
+        },
+        "Right": 132,
+        "Bottom": 394,
+        "Left": 48,
+        "Top": 377,
+        "TopLeft": {
+          "X": 48,
+          "Y": 377
+        },
+        "TopRight": {
+          "X": 132,
+          "Y": 377
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 394
+        },
+        "BottomRight": {
+          "X": 132,
+          "Y": 394
+        },
+        "Center": {
+          "X": 90,
+          "Y": 385.5
+        }
+      },
+      "assignedWidth": 84,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 12,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 83.30397727272727,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.916666666666666,
+            "Width": 83.30397727272727,
+            "Height": 16.94318181818182
+          },
+          "Right": 83.30397727272727,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 83.30397727272727,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 83.30397727272727,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 41.65198863636363,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": "welcome-heading",
+      "text": "Welcome to 9-1",
+      "bounds": {
+        "X": 24,
+        "Y": 416,
+        "Width": 308,
+        "Height": 39,
+        "Position": {
+          "X": 24,
+          "Y": 416
+        },
+        "Size": {
+          "AspectRatio": 7.897435897435898,
+          "Width": 308,
+          "Height": 39
+        },
+        "Right": 332,
+        "Bottom": 455,
+        "Left": 24,
+        "Top": 416,
+        "TopLeft": {
+          "X": 24,
+          "Y": 416
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 416
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 455
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 455
+        },
+        "Center": {
+          "X": 178,
+          "Y": 435.5
+        }
+      },
+      "assignedWidth": 308,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 15,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 244.34090909090907,
+          "Height": 38.72727272727273,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 6.309272300469483,
+            "Width": 244.34090909090907,
+            "Height": 38.72727272727273
+          },
+          "Right": 244.34090909090907,
+          "Bottom": 38.72727272727273,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 244.34090909090907,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 38.72727272727273
+          },
+          "BottomRight": {
+            "X": 244.34090909090907,
+            "Y": 38.72727272727273
+          },
+          "Center": {
+            "X": 122.17045454545453,
+            "Y": 19.363636363636363
+          }
+        }
+      ]
+    },
+    {
+      "name": "welcome-copy",
+      "text": "Your day across 9-1",
+      "bounds": {
+        "X": 24,
+        "Y": 455,
+        "Width": 308,
+        "Height": 19,
+        "Position": {
+          "X": 24,
+          "Y": 455
+        },
+        "Size": {
+          "AspectRatio": 16.210526315789473,
+          "Width": 308,
+          "Height": 19
+        },
+        "Right": 332,
+        "Bottom": 474,
+        "Left": 24,
+        "Top": 455,
+        "TopLeft": {
+          "X": 24,
+          "Y": 455
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 455
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 474
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 474
+        },
+        "Center": {
+          "X": 178,
+          "Y": 464.5
+        }
+      },
+      "assignedWidth": 308,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 20,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 140.56107954545453,
+          "Height": 18.15340909090909,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 7.742957746478873,
+            "Width": 140.56107954545453,
+            "Height": 18.15340909090909
+          },
+          "Right": 140.56107954545453,
+          "Bottom": 18.15340909090909,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 140.56107954545453,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 18.15340909090909
+          },
+          "BottomRight": {
+            "X": 140.56107954545453,
+            "Y": 18.15340909090909
+          },
+          "Center": {
+            "X": 70.28053977272727,
+            "Y": 9.076704545454545
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Your briefing",
+      "bounds": {
+        "X": 24,
+        "Y": 474,
+        "Width": 308,
+        "Height": 25,
+        "Position": {
+          "X": 24,
+          "Y": 474
+        },
+        "Size": {
+          "AspectRatio": 12.32,
+          "Width": 308,
+          "Height": 25
+        },
+        "Right": 332,
+        "Bottom": 499,
+        "Left": 24,
+        "Top": 474,
+        "TopLeft": {
+          "X": 24,
+          "Y": 474
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 474
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 499
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 499
+        },
+        "Center": {
+          "X": 178,
+          "Y": 486.5
+        }
+      },
+      "assignedWidth": 308,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 14,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 124.35369318181819,
+          "Height": 24.204545454545453,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 5.137617370892019,
+            "Width": 124.35369318181819,
+            "Height": 24.204545454545453
+          },
+          "Right": 124.35369318181819,
+          "Bottom": 24.204545454545453,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 124.35369318181819,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 24.204545454545453
+          },
+          "BottomRight": {
+            "X": 124.35369318181819,
+            "Y": 24.204545454545453
+          },
+          "Center": {
+            "X": 62.17684659090909,
+            "Y": 12.102272727272727
+          }
+        }
+      ]
+    },
+    {
+      "name": "dashboard-brief-status",
+      "text": "Your briefing is unavailable. Connect your account services to load authorised activity.",
+      "bounds": {
+        "X": 24,
+        "Y": 499,
+        "Width": 308,
+        "Height": 34,
+        "Position": {
+          "X": 24,
+          "Y": 499
+        },
+        "Size": {
+          "AspectRatio": 9.058823529411764,
+          "Width": 308,
+          "Height": 34
+        },
+        "Right": 332,
+        "Bottom": 533,
+        "Left": 24,
+        "Top": 499,
+        "TopLeft": {
+          "X": 24,
+          "Y": 499
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 499
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 533
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 533
+        },
+        "Center": {
+          "X": 178,
+          "Y": 516
+        }
+      },
+      "assignedWidth": 308,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 89,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 277.81249999999994,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 16.39671361502347,
+            "Width": 277.81249999999994,
+            "Height": 16.94318181818182
+          },
+          "Right": 277.81249999999994,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 277.81249999999994,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 277.81249999999994,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 138.90624999999997,
+            "Y": 8.47159090909091
+          }
+        },
+        {
+          "X": 0,
+          "Y": 16.94318181818182,
+          "Width": 292.03125000000006,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "Size": {
+            "AspectRatio": 17.235915492957748,
+            "Width": 292.03125000000006,
+            "Height": 16.94318181818182
+          },
+          "Right": 292.03125000000006,
+          "Bottom": 33.88636363636364,
+          "Left": 0,
+          "Top": 16.94318181818182,
+          "TopLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "TopRight": {
+            "X": 292.03125000000006,
+            "Y": 16.94318181818182
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 33.88636363636364
+          },
+          "BottomRight": {
+            "X": 292.03125000000006,
+            "Y": 33.88636363636364
+          },
+          "Center": {
+            "X": 146.01562500000003,
+            "Y": 25.41477272727273
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Pick up where you left off",
+      "bounds": {
+        "X": 49,
+        "Y": 558,
+        "Width": 249,
+        "Height": 25,
+        "Position": {
+          "X": 49,
+          "Y": 558
+        },
+        "Size": {
+          "AspectRatio": 9.96,
+          "Width": 249,
+          "Height": 25
+        },
+        "Right": 298,
+        "Bottom": 583,
+        "Left": 49,
+        "Top": 558,
+        "TopLeft": {
+          "X": 49,
+          "Y": 558
+        },
+        "TopRight": {
+          "X": 298,
+          "Y": 558
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 583
+        },
+        "BottomRight": {
+          "X": 298,
+          "Y": 583
+        },
+        "Center": {
+          "X": 173.5,
+          "Y": 570.5
+        }
+      },
+      "assignedWidth": 249,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 27,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 245.60369318181813,
+          "Height": 24.204545454545453,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 10.14700704225352,
+            "Width": 245.60369318181813,
+            "Height": 24.204545454545453
+          },
+          "Right": 245.60369318181813,
+          "Bottom": 24.204545454545453,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 245.60369318181813,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 24.204545454545453
+          },
+          "BottomRight": {
+            "X": 245.60369318181813,
+            "Y": 24.204545454545453
+          },
+          "Center": {
+            "X": 122.80184659090907,
+            "Y": 12.102272727272727
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Open a Space, manage your apps, or review what needs attention.",
+      "bounds": {
+        "X": 49,
+        "Y": 583,
+        "Width": 249,
+        "Height": 34,
+        "Position": {
+          "X": 49,
+          "Y": 583
+        },
+        "Size": {
+          "AspectRatio": 7.323529411764706,
+          "Width": 249,
+          "Height": 34
+        },
+        "Right": 298,
+        "Bottom": 617,
+        "Left": 49,
+        "Top": 583,
+        "TopLeft": {
+          "X": 49,
+          "Y": 583
+        },
+        "TopRight": {
+          "X": 298,
+          "Y": 583
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 617
+        },
+        "BottomRight": {
+          "X": 298,
+          "Y": 617
+        },
+        "Center": {
+          "X": 173.5,
+          "Y": 600
+        }
+      },
+      "assignedWidth": 249,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 64,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 248.04261363636363,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 14.639671361502344,
+            "Width": 248.04261363636363,
+            "Height": 16.94318181818182
+          },
+          "Right": 248.04261363636363,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 248.04261363636363,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 248.04261363636363,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 124.02130681818181,
+            "Y": 8.47159090909091
+          }
+        },
+        {
+          "X": 0,
+          "Y": 16.94318181818182,
+          "Width": 191.64488636363632,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "Size": {
+            "AspectRatio": 11.31103286384976,
+            "Width": 191.64488636363632,
+            "Height": 16.94318181818182
+          },
+          "Right": 191.64488636363632,
+          "Bottom": 33.88636363636364,
+          "Left": 0,
+          "Top": 16.94318181818182,
+          "TopLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "TopRight": {
+            "X": 191.64488636363632,
+            "Y": 16.94318181818182
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 33.88636363636364
+          },
+          "BottomRight": {
+            "X": 191.64488636363632,
+            "Y": 33.88636363636364
+          },
+          "Center": {
+            "X": 95.82244318181816,
+            "Y": 25.41477272727273
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Open Spaces",
+      "bounds": {
+        "X": 58,
+        "Y": 623,
+        "Width": 114,
+        "Height": 17,
+        "Position": {
+          "X": 58,
+          "Y": 623
+        },
+        "Size": {
+          "AspectRatio": 6.705882352941177,
+          "Width": 114,
+          "Height": 17
+        },
+        "Right": 172,
+        "Bottom": 640,
+        "Left": 58,
+        "Top": 623,
+        "TopLeft": {
+          "X": 58,
+          "Y": 623
+        },
+        "TopRight": {
+          "X": 172,
+          "Y": 623
+        },
+        "BottomLeft": {
+          "X": 58,
+          "Y": 640
+        },
+        "BottomRight": {
+          "X": 172,
+          "Y": 640
+        },
+        "Center": {
+          "X": 115,
+          "Y": 631.5
+        }
+      },
+      "assignedWidth": 114,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 12,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 88.11647727272727,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 5.200704225352112,
+            "Width": 88.11647727272727,
+            "Height": 16.94318181818182
+          },
+          "Right": 88.11647727272727,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 88.11647727272727,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 88.11647727272727,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 44.05823863636363,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Apps",
+      "bounds": {
+        "X": 49,
+        "Y": 647,
+        "Width": 252,
+        "Height": 17,
+        "Position": {
+          "X": 49,
+          "Y": 647
+        },
+        "Size": {
+          "AspectRatio": 14.823529411764707,
+          "Width": 252,
+          "Height": 17
+        },
+        "Right": 301,
+        "Bottom": 664,
+        "Left": 49,
+        "Top": 647,
+        "TopLeft": {
+          "X": 49,
+          "Y": 647
+        },
+        "TopRight": {
+          "X": 301,
+          "Y": 647
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 664
+        },
+        "BottomRight": {
+          "X": 301,
+          "Y": 664
+        },
+        "Center": {
+          "X": 175,
+          "Y": 655.5
+        }
+      },
+      "assignedWidth": 252,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 35.30823863636363,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.0839201877934266,
+            "Width": 35.30823863636363,
+            "Height": 16.94318181818182
+          },
+          "Right": 35.30823863636363,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 35.30823863636363,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 35.30823863636363,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 17.654119318181817,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog-status",
+      "text": "Local app installation is unavailable in this browser.",
+      "bounds": {
+        "X": 49,
+        "Y": 664,
+        "Width": 252,
+        "Height": 34,
+        "Position": {
+          "X": 49,
+          "Y": 664
+        },
+        "Size": {
+          "AspectRatio": 7.411764705882353,
+          "Width": 252,
+          "Height": 34
+        },
+        "Right": 301,
+        "Bottom": 698,
+        "Left": 49,
+        "Top": 664,
+        "TopLeft": {
+          "X": 49,
+          "Y": 664
+        },
+        "TopRight": {
+          "X": 301,
+          "Y": 664
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 698
+        },
+        "BottomRight": {
+          "X": 301,
+          "Y": 698
+        },
+        "Center": {
+          "X": 175,
+          "Y": 681
+        }
+      },
+      "assignedWidth": 252,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 55,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 251.40340909090907,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 14.83802816901408,
+            "Width": 251.40340909090907,
+            "Height": 16.94318181818182
+          },
+          "Right": 251.40340909090907,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 251.40340909090907,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 251.40340909090907,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 125.70170454545453,
+            "Y": 8.47159090909091
+          }
+        },
+        {
+          "X": 0,
+          "Y": 16.94318181818182,
+          "Width": 84.89488636363636,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "Size": {
+            "AspectRatio": 5.010563380281689,
+            "Width": 84.89488636363636,
+            "Height": 16.94318181818182
+          },
+          "Right": 84.89488636363636,
+          "Bottom": 33.88636363636364,
+          "Left": 0,
+          "Top": 16.94318181818182,
+          "TopLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "TopRight": {
+            "X": 84.89488636363636,
+            "Y": 16.94318181818182
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 33.88636363636364
+          },
+          "BottomRight": {
+            "X": 84.89488636363636,
+            "Y": 33.88636363636364
+          },
+          "Center": {
+            "X": 42.44744318181818,
+            "Y": 25.41477272727273
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Runtime",
+      "bounds": {
+        "X": 49,
+        "Y": 698,
+        "Width": 252,
+        "Height": 17,
+        "Position": {
+          "X": 49,
+          "Y": 698
+        },
+        "Size": {
+          "AspectRatio": 14.823529411764707,
+          "Width": 252,
+          "Height": 17
+        },
+        "Right": 301,
+        "Bottom": 715,
+        "Left": 49,
+        "Top": 698,
+        "TopLeft": {
+          "X": 49,
+          "Y": 698
+        },
+        "TopRight": {
+          "X": 301,
+          "Y": 698
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 715
+        },
+        "BottomRight": {
+          "X": 301,
+          "Y": 715
+        },
+        "Center": {
+          "X": 175,
+          "Y": 706.5
+        }
+      },
+      "assignedWidth": 252,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 8,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 55.995028409090914,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 3.304870892018779,
+            "Width": 55.995028409090914,
+            "Height": 16.94318181818182
+          },
+          "Right": 55.995028409090914,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 55.995028409090914,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 55.995028409090914,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 27.997514204545457,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": "runtime-status",
+      "text": "Cloud model services are unavailable.",
+      "bounds": {
+        "X": 49,
+        "Y": 715,
+        "Width": 252,
+        "Height": 17,
+        "Position": {
+          "X": 49,
+          "Y": 715
+        },
+        "Size": {
+          "AspectRatio": 14.823529411764707,
+          "Width": 252,
+          "Height": 17
+        },
+        "Right": 301,
+        "Bottom": 732,
+        "Left": 49,
+        "Top": 715,
+        "TopLeft": {
+          "X": 49,
+          "Y": 715
+        },
+        "TopRight": {
+          "X": 301,
+          "Y": 715
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 732
+        },
+        "BottomRight": {
+          "X": 301,
+          "Y": 732
+        },
+        "Center": {
+          "X": 175,
+          "Y": 723.5
+        }
+      },
+      "assignedWidth": 252,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 38,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 249.41477272727272,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 14.720657276995302,
+            "Width": 249.41477272727272,
+            "Height": 16.94318181818182
+          },
+          "Right": 249.41477272727272,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 249.41477272727272,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 249.41477272727272,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 124.70738636363636,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": "operation-status",
+      "text": "Account services are unavailable. No changes have been saved.",
+      "bounds": {
+        "X": 24,
+        "Y": 757,
+        "Width": 308,
+        "Height": 34,
+        "Position": {
+          "X": 24,
+          "Y": 757
+        },
+        "Size": {
+          "AspectRatio": 9.058823529411764,
+          "Width": 308,
+          "Height": 34
+        },
+        "Right": 332,
+        "Bottom": 791,
+        "Left": 24,
+        "Top": 757,
+        "TopLeft": {
+          "X": 24,
+          "Y": 757
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 757
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 791
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 791
+        },
+        "Center": {
+          "X": 178,
+          "Y": 774
+        }
+      },
+      "assignedWidth": 308,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 62,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 307.8607954545454,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 18.170187793427225,
+            "Width": 307.8607954545454,
+            "Height": 16.94318181818182
+          },
+          "Right": 307.8607954545454,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 307.8607954545454,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 307.8607954545454,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 153.9303977272727,
+            "Y": 8.47159090909091
+          }
+        },
+        {
+          "X": 0,
+          "Y": 16.94318181818182,
+          "Width": 115.77840909090908,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "Size": {
+            "AspectRatio": 6.833333333333332,
+            "Width": 115.77840909090908,
+            "Height": 16.94318181818182
+          },
+          "Right": 115.77840909090908,
+          "Bottom": 33.88636363636364,
+          "Left": 0,
+          "Top": 16.94318181818182,
+          "TopLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "TopRight": {
+            "X": 115.77840909090908,
+            "Y": 16.94318181818182
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 33.88636363636364
+          },
+          "BottomRight": {
+            "X": 115.77840909090908,
+            "Y": 33.88636363636364
+          },
+          "Center": {
+            "X": 57.88920454545454,
+            "Y": 25.41477272727273
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Quick access",
+      "bounds": {
+        "X": 24,
+        "Y": 808,
+        "Width": 117,
+        "Height": 30,
+        "Position": {
+          "X": 24,
+          "Y": 808
+        },
+        "Size": {
+          "AspectRatio": 3.9,
+          "Width": 117,
+          "Height": 30
+        },
+        "Right": 141,
+        "Bottom": 838,
+        "Left": 24,
+        "Top": 808,
+        "TopLeft": {
+          "X": 24,
+          "Y": 808
+        },
+        "TopRight": {
+          "X": 141,
+          "Y": 808
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 838
+        },
+        "BottomRight": {
+          "X": 141,
+          "Y": 838
+        },
+        "Center": {
+          "X": 82.5,
+          "Y": 823
+        }
+      },
+      "assignedWidth": 117,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 13,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 116.26491477272728,
+          "Height": 21.78409090909091,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 5.337147887323944,
+            "Width": 116.26491477272728,
+            "Height": 21.78409090909091
+          },
+          "Right": 116.26491477272728,
+          "Bottom": 21.78409090909091,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 116.26491477272728,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 21.78409090909091
+          },
+          "BottomRight": {
+            "X": 116.26491477272728,
+            "Y": 21.78409090909091
+          },
+          "Center": {
+            "X": 58.13245738636364,
+            "Y": 10.892045454545455
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "View all",
+      "bounds": {
+        "X": 150,
+        "Y": 814,
+        "Width": 51,
+        "Height": 17,
+        "Position": {
+          "X": 150,
+          "Y": 814
+        },
+        "Size": {
+          "AspectRatio": 3,
+          "Width": 51,
+          "Height": 17
+        },
+        "Right": 201,
+        "Bottom": 831,
+        "Left": 150,
+        "Top": 814,
+        "TopLeft": {
+          "X": 150,
+          "Y": 814
+        },
+        "TopRight": {
+          "X": 201,
+          "Y": 814
+        },
+        "BottomLeft": {
+          "X": 150,
+          "Y": 831
+        },
+        "BottomRight": {
+          "X": 201,
+          "Y": 831
+        },
+        "Center": {
+          "X": 175.5,
+          "Y": 822.5
+        }
+      },
+      "assignedWidth": 51,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 9,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 50.78977272727272,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.9976525821596236,
+            "Width": 50.78977272727272,
+            "Height": 16.94318181818182
+          },
+          "Right": 50.78977272727272,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 50.78977272727272,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 50.78977272727272,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 25.39488636363636,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Write",
+      "bounds": {
+        "X": 33,
+        "Y": 844,
+        "Width": 130,
+        "Height": 45,
+        "Position": {
+          "X": 33,
+          "Y": 844
+        },
+        "Size": {
+          "AspectRatio": 2.888888888888889,
+          "Width": 130,
+          "Height": 45
+        },
+        "Right": 163,
+        "Bottom": 889,
+        "Left": 33,
+        "Top": 844,
+        "TopLeft": {
+          "X": 33,
+          "Y": 844
+        },
+        "TopRight": {
+          "X": 163,
+          "Y": 844
+        },
+        "BottomLeft": {
+          "X": 33,
+          "Y": 889
+        },
+        "BottomRight": {
+          "X": 163,
+          "Y": 889
+        },
+        "Center": {
+          "X": 98,
+          "Y": 866.5
+        }
+      },
+      "assignedWidth": 130,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 6,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 34.50284090909091,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.036384976525821,
+            "Width": 34.50284090909091,
+            "Height": 16.94318181818182
+          },
+          "Right": 34.50284090909091,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 34.50284090909091,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 34.50284090909091,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 17.251420454545453,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Browse",
+      "bounds": {
+        "X": 181,
+        "Y": 844,
+        "Width": 130,
+        "Height": 45,
+        "Position": {
+          "X": 181,
+          "Y": 844
+        },
+        "Size": {
+          "AspectRatio": 2.888888888888889,
+          "Width": 130,
+          "Height": 45
+        },
+        "Right": 311,
+        "Bottom": 889,
+        "Left": 181,
+        "Top": 844,
+        "TopLeft": {
+          "X": 181,
+          "Y": 844
+        },
+        "TopRight": {
+          "X": 311,
+          "Y": 844
+        },
+        "BottomLeft": {
+          "X": 181,
+          "Y": 889
+        },
+        "BottomRight": {
+          "X": 311,
+          "Y": 889
+        },
+        "Center": {
+          "X": 246,
+          "Y": 866.5
+        }
+      },
+      "assignedWidth": 130,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 7,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 49.01988636363636,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.89319248826291,
+            "Width": 49.01988636363636,
+            "Height": 16.94318181818182
+          },
+          "Right": 49.01988636363636,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 49.01988636363636,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 49.01988636363636,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 24.50994318181818,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Data",
+      "bounds": {
+        "X": 33,
+        "Y": 902,
+        "Width": 130,
+        "Height": 45,
+        "Position": {
+          "X": 33,
+          "Y": 902
+        },
+        "Size": {
+          "AspectRatio": 2.888888888888889,
+          "Width": 130,
+          "Height": 45
+        },
+        "Right": 163,
+        "Bottom": 947,
+        "Left": 33,
+        "Top": 902,
+        "TopLeft": {
+          "X": 33,
+          "Y": 902
+        },
+        "TopRight": {
+          "X": 163,
+          "Y": 902
+        },
+        "BottomLeft": {
+          "X": 33,
+          "Y": 947
+        },
+        "BottomRight": {
+          "X": 163,
+          "Y": 947
+        },
+        "Center": {
+          "X": 98,
+          "Y": 924.5
+        }
+      },
+      "assignedWidth": 130,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 30.943181818181817,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 1.8262910798122063,
+            "Width": 30.943181818181817,
+            "Height": 16.94318181818182
+          },
+          "Right": 30.943181818181817,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 30.943181818181817,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 30.943181818181817,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 15.471590909090908,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Boards",
+      "bounds": {
+        "X": 181,
+        "Y": 902,
+        "Width": 130,
+        "Height": 45,
+        "Position": {
+          "X": 181,
+          "Y": 902
+        },
+        "Size": {
+          "AspectRatio": 2.888888888888889,
+          "Width": 130,
+          "Height": 45
+        },
+        "Right": 311,
+        "Bottom": 947,
+        "Left": 181,
+        "Top": 902,
+        "TopLeft": {
+          "X": 181,
+          "Y": 902
+        },
+        "TopRight": {
+          "X": 311,
+          "Y": 902
+        },
+        "BottomLeft": {
+          "X": 181,
+          "Y": 947
+        },
+        "BottomRight": {
+          "X": 311,
+          "Y": 947
+        },
+        "Center": {
+          "X": 246,
+          "Y": 924.5
+        }
+      },
+      "assignedWidth": 130,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 7,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 46.33522727272727,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.7347417840375585,
+            "Width": 46.33522727272727,
+            "Height": 16.94318181818182
+          },
+          "Right": 46.33522727272727,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 46.33522727272727,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 46.33522727272727,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 23.167613636363637,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Upcoming events",
+      "bounds": {
+        "X": 24,
+        "Y": 954,
+        "Width": 308,
+        "Height": 22,
+        "Position": {
+          "X": 24,
+          "Y": 954
+        },
+        "Size": {
+          "AspectRatio": 14,
+          "Width": 308,
+          "Height": 22
+        },
+        "Right": 332,
+        "Bottom": 976,
+        "Left": 24,
+        "Top": 954,
+        "TopLeft": {
+          "X": 24,
+          "Y": 954
+        },
+        "TopRight": {
+          "X": 332,
+          "Y": 954
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 976
+        },
+        "BottomRight": {
+          "X": 332,
+          "Y": 976
+        },
+        "Center": {
+          "X": 178,
+          "Y": 965
+        }
+      },
+      "assignedWidth": 308,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 16,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 151.96448863636365,
+          "Height": 21.78409090909091,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 6.975938967136151,
+            "Width": 151.96448863636365,
+            "Height": 21.78409090909091
+          },
+          "Right": 151.96448863636365,
+          "Bottom": 21.78409090909091,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 151.96448863636365,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 21.78409090909091
+          },
+          "BottomRight": {
+            "X": 151.96448863636365,
+            "Y": 21.78409090909091
+          },
+          "Center": {
+            "X": 75.98224431818183,
+            "Y": 10.892045454545455
+          }
+        }
+      ]
+    },
+    {
+      "name": "events-status",
+      "text": "Activity is unavailable. Your events have not been loaded.",
+      "bounds": {
+        "X": 39,
+        "Y": 991,
+        "Width": 278,
+        "Height": 34,
+        "Position": {
+          "X": 39,
+          "Y": 991
+        },
+        "Size": {
+          "AspectRatio": 8.176470588235293,
+          "Width": 278,
+          "Height": 34
+        },
+        "Right": 317,
+        "Bottom": 1025,
+        "Left": 39,
+        "Top": 991,
+        "TopLeft": {
+          "X": 39,
+          "Y": 991
+        },
+        "TopRight": {
+          "X": 317,
+          "Y": 991
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1025
+        },
+        "BottomRight": {
+          "X": 317,
+          "Y": 1025
+        },
+        "Center": {
+          "X": 178,
+          "Y": 1008
+        }
+      },
+      "assignedWidth": 278,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 59,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 267.4517045454545,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 15.78521126760563,
+            "Width": 267.4517045454545,
+            "Height": 16.94318181818182
+          },
+          "Right": 267.4517045454545,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 267.4517045454545,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 267.4517045454545,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 133.72585227272725,
+            "Y": 8.47159090909091
+          }
+        },
+        {
+          "X": 0,
+          "Y": 16.94318181818182,
+          "Width": 111.66193181818181,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "Size": {
+            "AspectRatio": 6.590375586854459,
+            "Width": 111.66193181818181,
+            "Height": 16.94318181818182
+          },
+          "Right": 111.66193181818181,
+          "Bottom": 33.88636363636364,
+          "Left": 0,
+          "Top": 16.94318181818182,
+          "TopLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "TopRight": {
+            "X": 111.66193181818181,
+            "Y": 16.94318181818182
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 33.88636363636364
+          },
+          "BottomRight": {
+            "X": 111.66193181818181,
+            "Y": 33.88636363636364
+          },
+          "Center": {
+            "X": 55.83096590909091,
+            "Y": 25.41477272727273
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Dashboard controls",
+      "bounds": {
+        "X": 39,
+        "Y": 1055,
+        "Width": 278,
+        "Height": 17,
+        "Position": {
+          "X": 39,
+          "Y": 1055
+        },
+        "Size": {
+          "AspectRatio": 16.352941176470587,
+          "Width": 278,
+          "Height": 17
+        },
+        "Right": 317,
+        "Bottom": 1072,
+        "Left": 39,
+        "Top": 1055,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1055
+        },
+        "TopRight": {
+          "X": 317,
+          "Y": 1055
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1072
+        },
+        "BottomRight": {
+          "X": 317,
+          "Y": 1072
+        },
+        "Center": {
+          "X": 178,
+          "Y": 1063.5
+        }
+      },
+      "assignedWidth": 278,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 19,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 132.9005681818182,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 7.843896713615023,
+            "Width": 132.9005681818182,
+            "Height": 16.94318181818182
+          },
+          "Right": 132.9005681818182,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 132.9005681818182,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 132.9005681818182,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 66.4502840909091,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Allow AI tiles",
+      "bounds": {
+        "X": 48,
+        "Y": 1078,
+        "Width": 84,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1078
+        },
+        "Size": {
+          "AspectRatio": 4.9411764705882355,
+          "Width": 84,
+          "Height": 17
+        },
+        "Right": 132,
+        "Bottom": 1095,
+        "Left": 48,
+        "Top": 1078,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1078
+        },
+        "TopRight": {
+          "X": 132,
+          "Y": 1078
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1095
+        },
+        "BottomRight": {
+          "X": 132,
+          "Y": 1095
+        },
+        "Center": {
+          "X": 90,
+          "Y": 1086.5
+        }
+      },
+      "assignedWidth": 84,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 15,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 83.82102272727273,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.947183098591549,
+            "Width": 83.82102272727273,
+            "Height": 16.94318181818182
+          },
+          "Right": 83.82102272727273,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 83.82102272727273,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 83.82102272727273,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 41.91051136363637,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Keep AI tiles off",
+      "bounds": {
+        "X": 150,
+        "Y": 1078,
+        "Width": 105,
+        "Height": 17,
+        "Position": {
+          "X": 150,
+          "Y": 1078
+        },
+        "Size": {
+          "AspectRatio": 6.176470588235294,
+          "Width": 105,
+          "Height": 17
+        },
+        "Right": 255,
+        "Bottom": 1095,
+        "Left": 150,
+        "Top": 1078,
+        "TopLeft": {
+          "X": 150,
+          "Y": 1078
+        },
+        "TopRight": {
+          "X": 255,
+          "Y": 1078
+        },
+        "BottomLeft": {
+          "X": 150,
+          "Y": 1095
+        },
+        "BottomRight": {
+          "X": 255,
+          "Y": 1095
+        },
+        "Center": {
+          "X": 202.5,
+          "Y": 1086.5
+        }
+      },
+      "assignedWidth": 105,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 18,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 104.04545454545453,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 6.140845070422534,
+            "Width": 104.04545454545453,
+            "Height": 16.94318181818182
+          },
+          "Right": 104.04545454545453,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 104.04545454545453,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 104.04545454545453,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 52.022727272727266,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Allow AI rearrangement",
+      "bounds": {
+        "X": 48,
+        "Y": 1108,
+        "Width": 155,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1108
+        },
+        "Size": {
+          "AspectRatio": 9.117647058823529,
+          "Width": 155,
+          "Height": 17
+        },
+        "Right": 203,
+        "Bottom": 1125,
+        "Left": 48,
+        "Top": 1108,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1108
+        },
+        "TopRight": {
+          "X": 203,
+          "Y": 1108
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1125
+        },
+        "BottomRight": {
+          "X": 203,
+          "Y": 1125
+        },
+        "Center": {
+          "X": 125.5,
+          "Y": 1116.5
+        }
+      },
+      "assignedWidth": 155,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 23,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 154.43749999999997,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 9.1150234741784,
+            "Width": 154.43749999999997,
+            "Height": 16.94318181818182
+          },
+          "Right": 154.43749999999997,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 154.43749999999997,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 154.43749999999997,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 77.21874999999999,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Keep AI layout fixed",
+      "bounds": {
+        "X": 48,
+        "Y": 1138,
+        "Width": 131,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1138
+        },
+        "Size": {
+          "AspectRatio": 7.705882352941177,
+          "Width": 131,
+          "Height": 17
+        },
+        "Right": 179,
+        "Bottom": 1155,
+        "Left": 48,
+        "Top": 1138,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1138
+        },
+        "TopRight": {
+          "X": 179,
+          "Y": 1138
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1155
+        },
+        "BottomRight": {
+          "X": 179,
+          "Y": 1155
+        },
+        "Center": {
+          "X": 113.5,
+          "Y": 1146.5
+        }
+      },
+      "assignedWidth": 131,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 21,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 130.8721590909091,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 7.724178403755868,
+            "Width": 130.8721590909091,
+            "Height": 16.94318181818182
+          },
+          "Right": 130.8721590909091,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 130.8721590909091,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 130.8721590909091,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 65.43607954545455,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Undo AI layout",
+      "bounds": {
+        "X": 197,
+        "Y": 1138,
+        "Width": 97,
+        "Height": 17,
+        "Position": {
+          "X": 197,
+          "Y": 1138
+        },
+        "Size": {
+          "AspectRatio": 5.705882352941177,
+          "Width": 97,
+          "Height": 17
+        },
+        "Right": 294,
+        "Bottom": 1155,
+        "Left": 197,
+        "Top": 1138,
+        "TopLeft": {
+          "X": 197,
+          "Y": 1138
+        },
+        "TopRight": {
+          "X": 294,
+          "Y": 1138
+        },
+        "BottomLeft": {
+          "X": 197,
+          "Y": 1155
+        },
+        "BottomRight": {
+          "X": 294,
+          "Y": 1155
+        },
+        "Center": {
+          "X": 245.5,
+          "Y": 1146.5
+        }
+      },
+      "assignedWidth": 97,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 15,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 96.68749999999997,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 5.706572769953049,
+            "Width": 96.68749999999997,
+            "Height": 16.94318181818182
+          },
+          "Right": 96.68749999999997,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 96.68749999999997,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 96.68749999999997,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 48.343749999999986,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Reset layout",
+      "bounds": {
+        "X": 48,
+        "Y": 1168,
+        "Width": 82,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1168
+        },
+        "Size": {
+          "AspectRatio": 4.823529411764706,
+          "Width": 82,
+          "Height": 17
+        },
+        "Right": 130,
+        "Bottom": 1185,
+        "Left": 48,
+        "Top": 1168,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1168
+        },
+        "TopRight": {
+          "X": 130,
+          "Y": 1168
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1185
+        },
+        "BottomRight": {
+          "X": 130,
+          "Y": 1185
+        },
+        "Center": {
+          "X": 89,
+          "Y": 1176.5
+        }
+      },
+      "assignedWidth": 82,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 13,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 81.55397727272728,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.813380281690141,
+            "Width": 81.55397727272728,
+            "Height": 16.94318181818182
+          },
+          "Right": 81.55397727272728,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 81.55397727272728,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 81.55397727272728,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 40.77698863636364,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": "dashboard-tiles-summary",
+      "text": "Dashboard customisation requires account services.",
+      "bounds": {
+        "X": 39,
+        "Y": 1192,
+        "Width": 278,
+        "Height": 34,
+        "Position": {
+          "X": 39,
+          "Y": 1192
+        },
+        "Size": {
+          "AspectRatio": 8.176470588235293,
+          "Width": 278,
+          "Height": 34
+        },
+        "Right": 317,
+        "Bottom": 1226,
+        "Left": 39,
+        "Top": 1192,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1192
+        },
+        "TopRight": {
+          "X": 317,
+          "Y": 1192
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1226
+        },
+        "BottomRight": {
+          "X": 317,
+          "Y": 1226
+        },
+        "Center": {
+          "X": 178,
+          "Y": 1209
+        }
+      },
+      "assignedWidth": 278,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 51,
+      "wrapping": "Wrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 229.80681818181816,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 13.563380281690138,
+            "Width": 229.80681818181816,
+            "Height": 16.94318181818182
+          },
+          "Right": 229.80681818181816,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 229.80681818181816,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 229.80681818181816,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 114.90340909090908,
+            "Y": 8.47159090909091
+          }
+        },
+        {
+          "X": 0,
+          "Y": 16.94318181818182,
+          "Width": 116.41477272727275,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "Size": {
+            "AspectRatio": 6.870892018779343,
+            "Width": 116.41477272727275,
+            "Height": 16.94318181818182
+          },
+          "Right": 116.41477272727275,
+          "Bottom": 33.88636363636364,
+          "Left": 0,
+          "Top": 16.94318181818182,
+          "TopLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "TopRight": {
+            "X": 116.41477272727275,
+            "Y": 16.94318181818182
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 33.88636363636364
+          },
+          "BottomRight": {
+            "X": 116.41477272727275,
+            "Y": 33.88636363636364
+          },
+          "Center": {
+            "X": 58.207386363636374,
+            "Y": 25.41477272727273
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Add tile",
+      "bounds": {
+        "X": 48,
+        "Y": 1232,
+        "Width": 51,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1232
+        },
+        "Size": {
+          "AspectRatio": 3,
+          "Width": 51,
+          "Height": 17
+        },
+        "Right": 99,
+        "Bottom": 1249,
+        "Left": 48,
+        "Top": 1232,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1232
+        },
+        "TopRight": {
+          "X": 99,
+          "Y": 1232
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1249
+        },
+        "BottomRight": {
+          "X": 99,
+          "Y": 1249
+        },
+        "Center": {
+          "X": 73.5,
+          "Y": 1240.5
+        }
+      },
+      "assignedWidth": 51,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 9,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 50.67045454545455,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.9906103286384975,
+            "Width": 50.67045454545455,
+            "Height": 16.94318181818182
+          },
+          "Right": 50.67045454545455,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 50.67045454545455,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 50.67045454545455,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 25.335227272727273,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Remove selected",
+      "bounds": {
+        "X": 117,
+        "Y": 1232,
+        "Width": 114,
+        "Height": 17,
+        "Position": {
+          "X": 117,
+          "Y": 1232
+        },
+        "Size": {
+          "AspectRatio": 6.705882352941177,
+          "Width": 114,
+          "Height": 17
+        },
+        "Right": 231,
+        "Bottom": 1249,
+        "Left": 117,
+        "Top": 1232,
+        "TopLeft": {
+          "X": 117,
+          "Y": 1232
+        },
+        "TopRight": {
+          "X": 231,
+          "Y": 1232
+        },
+        "BottomLeft": {
+          "X": 117,
+          "Y": 1249
+        },
+        "BottomRight": {
+          "X": 231,
+          "Y": 1249
+        },
+        "Center": {
+          "X": 174,
+          "Y": 1240.5
+        }
+      },
+      "assignedWidth": 114,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 16,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 113.49147727272728,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 6.698356807511737,
+            "Width": 113.49147727272728,
+            "Height": 16.94318181818182
+          },
+          "Right": 113.49147727272728,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 113.49147727272728,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 113.49147727272728,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 56.74573863636364,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Move up",
+      "bounds": {
+        "X": 249,
+        "Y": 1232,
+        "Width": 57,
+        "Height": 17,
+        "Position": {
+          "X": 249,
+          "Y": 1232
+        },
+        "Size": {
+          "AspectRatio": 3.3529411764705883,
+          "Width": 57,
+          "Height": 17
+        },
+        "Right": 306,
+        "Bottom": 1249,
+        "Left": 249,
+        "Top": 1232,
+        "TopLeft": {
+          "X": 249,
+          "Y": 1232
+        },
+        "TopRight": {
+          "X": 306,
+          "Y": 1232
+        },
+        "BottomLeft": {
+          "X": 249,
+          "Y": 1249
+        },
+        "BottomRight": {
+          "X": 306,
+          "Y": 1249
+        },
+        "Center": {
+          "X": 277.5,
+          "Y": 1240.5
+        }
+      },
+      "assignedWidth": 57,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 8,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 56.79545454545454,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 3.352112676056337,
+            "Width": 56.79545454545454,
+            "Height": 16.94318181818182
+          },
+          "Right": 56.79545454545454,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 56.79545454545454,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 56.79545454545454,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 28.39772727272727,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Move down",
+      "bounds": {
+        "X": 48,
+        "Y": 1262,
+        "Width": 77,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1262
+        },
+        "Size": {
+          "AspectRatio": 4.529411764705882,
+          "Width": 77,
+          "Height": 17
+        },
+        "Right": 125,
+        "Bottom": 1279,
+        "Left": 48,
+        "Top": 1262,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1262
+        },
+        "TopRight": {
+          "X": 125,
+          "Y": 1262
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1279
+        },
+        "BottomRight": {
+          "X": 125,
+          "Y": 1279
+        },
+        "Center": {
+          "X": 86.5,
+          "Y": 1270.5
+        }
+      },
+      "assignedWidth": 77,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 10,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 76.48295454545453,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 4.514084507042252,
+            "Width": 76.48295454545453,
+            "Height": 16.94318181818182
+          },
+          "Right": 76.48295454545453,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 76.48295454545453,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 76.48295454545453,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 38.241477272727266,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Pin",
+      "bounds": {
+        "X": 143,
+        "Y": 1262,
+        "Width": 21,
+        "Height": 17,
+        "Position": {
+          "X": 143,
+          "Y": 1262
+        },
+        "Size": {
+          "AspectRatio": 1.2352941176470589,
+          "Width": 21,
+          "Height": 17
+        },
+        "Right": 164,
+        "Bottom": 1279,
+        "Left": 143,
+        "Top": 1262,
+        "TopLeft": {
+          "X": 143,
+          "Y": 1262
+        },
+        "TopRight": {
+          "X": 164,
+          "Y": 1262
+        },
+        "BottomLeft": {
+          "X": 143,
+          "Y": 1279
+        },
+        "BottomRight": {
+          "X": 164,
+          "Y": 1279
+        },
+        "Center": {
+          "X": 153.5,
+          "Y": 1270.5
+        }
+      },
+      "assignedWidth": 21,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 4,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 20.40340909090909,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 1.2042253521126758,
+            "Width": 20.40340909090909,
+            "Height": 16.94318181818182
+          },
+          "Right": 20.40340909090909,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 20.40340909090909,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 20.40340909090909,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 10.201704545454545,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Lock",
+      "bounds": {
+        "X": 182,
+        "Y": 1262,
+        "Width": 32,
+        "Height": 17,
+        "Position": {
+          "X": 182,
+          "Y": 1262
+        },
+        "Size": {
+          "AspectRatio": 1.8823529411764706,
+          "Width": 32,
+          "Height": 17
+        },
+        "Right": 214,
+        "Bottom": 1279,
+        "Left": 182,
+        "Top": 1262,
+        "TopLeft": {
+          "X": 182,
+          "Y": 1262
+        },
+        "TopRight": {
+          "X": 214,
+          "Y": 1262
+        },
+        "BottomLeft": {
+          "X": 182,
+          "Y": 1279
+        },
+        "BottomRight": {
+          "X": 214,
+          "Y": 1279
+        },
+        "Center": {
+          "X": 198,
+          "Y": 1270.5
+        }
+      },
+      "assignedWidth": 32,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 31.65909090909091,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 1.868544600938967,
+            "Width": 31.65909090909091,
+            "Height": 16.94318181818182
+          },
+          "Right": 31.65909090909091,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 31.65909090909091,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 31.65909090909091,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 15.829545454545455,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Hide",
+      "bounds": {
+        "X": 232,
+        "Y": 1262,
+        "Width": 31,
+        "Height": 17,
+        "Position": {
+          "X": 232,
+          "Y": 1262
+        },
+        "Size": {
+          "AspectRatio": 1.8235294117647058,
+          "Width": 31,
+          "Height": 17
+        },
+        "Right": 263,
+        "Bottom": 1279,
+        "Left": 232,
+        "Top": 1262,
+        "TopLeft": {
+          "X": 232,
+          "Y": 1262
+        },
+        "TopRight": {
+          "X": 263,
+          "Y": 1262
+        },
+        "BottomLeft": {
+          "X": 232,
+          "Y": 1279
+        },
+        "BottomRight": {
+          "X": 263,
+          "Y": 1279
+        },
+        "Center": {
+          "X": 247.5,
+          "Y": 1270.5
+        }
+      },
+      "assignedWidth": 31,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 30.52556818181818,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 1.8016431924882625,
+            "Width": 30.52556818181818,
+            "Height": 16.94318181818182
+          },
+          "Right": 30.52556818181818,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 30.52556818181818,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 30.52556818181818,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 15.26278409090909,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Refresh selected",
+      "bounds": {
+        "X": 48,
+        "Y": 1292,
+        "Width": 112,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1292
+        },
+        "Size": {
+          "AspectRatio": 6.588235294117647,
+          "Width": 112,
+          "Height": 17
+        },
+        "Right": 160,
+        "Bottom": 1309,
+        "Left": 48,
+        "Top": 1292,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1292
+        },
+        "TopRight": {
+          "X": 160,
+          "Y": 1292
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1309
+        },
+        "BottomRight": {
+          "X": 160,
+          "Y": 1309
+        },
+        "Center": {
+          "X": 104,
+          "Y": 1300.5
+        }
+      },
+      "assignedWidth": 112,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 17,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 111.34375000000001,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 6.571596244131455,
+            "Width": 111.34375000000001,
+            "Height": 16.94318181818182
+          },
+          "Right": 111.34375000000001,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 111.34375000000001,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 111.34375000000001,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 55.67187500000001,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Small",
+      "bounds": {
+        "X": 48,
+        "Y": 1322,
+        "Width": 36,
+        "Height": 17,
+        "Position": {
+          "X": 48,
+          "Y": 1322
+        },
+        "Size": {
+          "AspectRatio": 2.1176470588235294,
+          "Width": 36,
+          "Height": 17
+        },
+        "Right": 84,
+        "Bottom": 1339,
+        "Left": 48,
+        "Top": 1322,
+        "TopLeft": {
+          "X": 48,
+          "Y": 1322
+        },
+        "TopRight": {
+          "X": 84,
+          "Y": 1322
+        },
+        "BottomLeft": {
+          "X": 48,
+          "Y": 1339
+        },
+        "BottomRight": {
+          "X": 84,
+          "Y": 1339
+        },
+        "Center": {
+          "X": 66,
+          "Y": 1330.5
+        }
+      },
+      "assignedWidth": 36,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 6,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 35.63636363636364,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.103286384976526,
+            "Width": 35.63636363636364,
+            "Height": 16.94318181818182
+          },
+          "Right": 35.63636363636364,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 35.63636363636364,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 35.63636363636364,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 17.81818181818182,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Medium",
+      "bounds": {
+        "X": 102,
+        "Y": 1322,
+        "Width": 53,
+        "Height": 17,
+        "Position": {
+          "X": 102,
+          "Y": 1322
+        },
+        "Size": {
+          "AspectRatio": 3.1176470588235294,
+          "Width": 53,
+          "Height": 17
+        },
+        "Right": 155,
+        "Bottom": 1339,
+        "Left": 102,
+        "Top": 1322,
+        "TopLeft": {
+          "X": 102,
+          "Y": 1322
+        },
+        "TopRight": {
+          "X": 155,
+          "Y": 1322
+        },
+        "BottomLeft": {
+          "X": 102,
+          "Y": 1339
+        },
+        "BottomRight": {
+          "X": 155,
+          "Y": 1339
+        },
+        "Center": {
+          "X": 128.5,
+          "Y": 1330.5
+        }
+      },
+      "assignedWidth": 53,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 7,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 52.91761363636363,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 3.1232394366197176,
+            "Width": 52.91761363636363,
+            "Height": 16.94318181818182
+          },
+          "Right": 52.91761363636363,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 52.91761363636363,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 52.91761363636363,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 26.458806818181817,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Large",
+      "bounds": {
+        "X": 173,
+        "Y": 1322,
+        "Width": 38,
+        "Height": 17,
+        "Position": {
+          "X": 173,
+          "Y": 1322
+        },
+        "Size": {
+          "AspectRatio": 2.235294117647059,
+          "Width": 38,
+          "Height": 17
+        },
+        "Right": 211,
+        "Bottom": 1339,
+        "Left": 173,
+        "Top": 1322,
+        "TopLeft": {
+          "X": 173,
+          "Y": 1322
+        },
+        "TopRight": {
+          "X": 211,
+          "Y": 1322
+        },
+        "BottomLeft": {
+          "X": 173,
+          "Y": 1339
+        },
+        "BottomRight": {
+          "X": 211,
+          "Y": 1339
+        },
+        "Center": {
+          "X": 192,
+          "Y": 1330.5
+        }
+      },
+      "assignedWidth": 38,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 6,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 37.42613636363636,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 2.2089201877934266,
+            "Width": 37.42613636363636,
+            "Height": 16.94318181818182
+          },
+          "Right": 37.42613636363636,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 37.42613636363636,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 37.42613636363636,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 18.71306818181818,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    },
+    {
+      "name": null,
+      "text": "Wide",
+      "bounds": {
+        "X": 229,
+        "Y": 1322,
+        "Width": 34,
+        "Height": 17,
+        "Position": {
+          "X": 229,
+          "Y": 1322
+        },
+        "Size": {
+          "AspectRatio": 2,
+          "Width": 34,
+          "Height": 17
+        },
+        "Right": 263,
+        "Bottom": 1339,
+        "Left": 229,
+        "Top": 1322,
+        "TopLeft": {
+          "X": 229,
+          "Y": 1322
+        },
+        "TopRight": {
+          "X": 263,
+          "Y": 1322
+        },
+        "BottomLeft": {
+          "X": 229,
+          "Y": 1339
+        },
+        "BottomRight": {
+          "X": 263,
+          "Y": 1339
+        },
+        "Center": {
+          "X": 246,
+          "Y": 1330.5
+        }
+      },
+      "assignedWidth": 34,
+      "measureValid": true,
+      "arrangeValid": true,
+      "completeTextLength": 5,
+      "wrapping": "NoWrap",
+      "ranges": [
+        {
+          "X": 0,
+          "Y": 0,
+          "Width": 33.44886363636364,
+          "Height": 16.94318181818182,
+          "Position": {
+            "X": 0,
+            "Y": 0
+          },
+          "Size": {
+            "AspectRatio": 1.9741784037558685,
+            "Width": 33.44886363636364,
+            "Height": 16.94318181818182
+          },
+          "Right": 33.44886363636364,
+          "Bottom": 16.94318181818182,
+          "Left": 0,
+          "Top": 0,
+          "TopLeft": {
+            "X": 0,
+            "Y": 0
+          },
+          "TopRight": {
+            "X": 33.44886363636364,
+            "Y": 0
+          },
+          "BottomLeft": {
+            "X": 0,
+            "Y": 16.94318181818182
+          },
+          "BottomRight": {
+            "X": 33.44886363636364,
+            "Y": 16.94318181818182
+          },
+          "Center": {
+            "X": 16.72443181818182,
+            "Y": 8.47159090909091
+          }
+        }
+      ]
+    }
+  ],
+  "hiddenControls": [
+    {
+      "Name": "InlineDataValidationContentControl",
+      "type": "ContentControl",
+      "IsVisible": false,
+      "IsEffectivelyVisible": false,
+      "IsMeasureValid": true,
+      "IsArrangeValid": false
+    },
+    {
+      "Name": "PART_FloatingPlaceholder",
+      "type": "TextBlock",
+      "IsVisible": false,
+      "IsEffectivelyVisible": false,
+      "IsMeasureValid": true,
+      "IsArrangeValid": false
+    },
+    {
+      "Name": "PART_HorizontalScrollBar",
+      "type": "ScrollBar",
+      "IsVisible": false,
+      "IsEffectivelyVisible": false,
+      "IsMeasureValid": true,
+      "IsArrangeValid": true
+    },
+    {
+      "Name": "PART_VerticalScrollBar",
+      "type": "ScrollBar",
+      "IsVisible": false,
+      "IsEffectivelyVisible": false,
+      "IsMeasureValid": true,
+      "IsArrangeValid": true
+    }
+  ],
+  "hiddenControlCount": 4,
+  "unarrangedVisibleControls": [],
+  "unarrangedVisibleControlCount": 0,
+  "buttons": [
+    {
+      "Name": "open-studio",
+      "Content": "Open Studio",
+      "IsEnabled": false,
+      "Tag": "OpenStudio",
+      "bounds": {
+        "X": 126,
+        "Y": 1,
+        "Width": 100,
+        "Height": 30,
+        "Position": {
+          "X": 126,
+          "Y": 1
+        },
+        "Size": {
+          "AspectRatio": 3.3333333333333335,
+          "Width": 100,
+          "Height": 30
+        },
+        "Right": 226,
+        "Bottom": 31,
+        "Left": 126,
+        "Top": 1,
+        "TopLeft": {
+          "X": 126,
+          "Y": 1
+        },
+        "TopRight": {
+          "X": 226,
+          "Y": 1
+        },
+        "BottomLeft": {
+          "X": 126,
+          "Y": 31
+        },
+        "BottomRight": {
+          "X": 226,
+          "Y": 31
+        },
+        "Center": {
+          "X": 176,
+          "Y": 16
+        }
+      }
+    },
+    {
+      "Name": "install-all",
+      "Content": "Install apps",
+      "IsEnabled": false,
+      "Tag": "InstallAllUpdates",
+      "bounds": {
+        "X": 226,
+        "Y": 1,
+        "Width": 94,
+        "Height": 30,
+        "Position": {
+          "X": 226,
+          "Y": 1
+        },
+        "Size": {
+          "AspectRatio": 3.1333333333333333,
+          "Width": 94,
+          "Height": 30
+        },
+        "Right": 320,
+        "Bottom": 31,
+        "Left": 226,
+        "Top": 1,
+        "TopLeft": {
+          "X": 226,
+          "Y": 1
+        },
+        "TopRight": {
+          "X": 320,
+          "Y": 1
+        },
+        "BottomLeft": {
+          "X": 226,
+          "Y": 31
+        },
+        "BottomRight": {
+          "X": 320,
+          "Y": 31
+        },
+        "Center": {
+          "X": 273,
+          "Y": 16
+        }
+      }
+    },
+    {
+      "Name": "nav-home",
+      "Content": "Home",
+      "IsEnabled": true,
+      "Tag": "NavigateDashboard",
+      "bounds": {
+        "X": 39,
+        "Y": 71,
+        "Width": 58,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 71
+        },
+        "Size": {
+          "AspectRatio": 1.9333333333333333,
+          "Width": 58,
+          "Height": 30
+        },
+        "Right": 97,
+        "Bottom": 101,
+        "Left": 39,
+        "Top": 71,
+        "TopLeft": {
+          "X": 39,
+          "Y": 71
+        },
+        "TopRight": {
+          "X": 97,
+          "Y": 71
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 101
+        },
+        "BottomRight": {
+          "X": 97,
+          "Y": 101
+        },
+        "Center": {
+          "X": 68,
+          "Y": 86
+        }
+      }
+    },
+    {
+      "Name": "nav-apps",
+      "Content": "Apps",
+      "IsEnabled": false,
+      "Tag": "NavigateApps",
+      "bounds": {
+        "X": 39,
+        "Y": 101,
+        "Width": 52,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 101
+        },
+        "Size": {
+          "AspectRatio": 1.7333333333333334,
+          "Width": 52,
+          "Height": 30
+        },
+        "Right": 91,
+        "Bottom": 131,
+        "Left": 39,
+        "Top": 101,
+        "TopLeft": {
+          "X": 39,
+          "Y": 101
+        },
+        "TopRight": {
+          "X": 91,
+          "Y": 101
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 131
+        },
+        "BottomRight": {
+          "X": 91,
+          "Y": 131
+        },
+        "Center": {
+          "X": 65,
+          "Y": 116
+        }
+      }
+    },
+    {
+      "Name": "nav-library",
+      "Content": "Library",
+      "IsEnabled": true,
+      "Tag": "NavigateLibrary",
+      "bounds": {
+        "X": 39,
+        "Y": 131,
+        "Width": 65,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 131
+        },
+        "Size": {
+          "AspectRatio": 2.1666666666666665,
+          "Width": 65,
+          "Height": 30
+        },
+        "Right": 104,
+        "Bottom": 161,
+        "Left": 39,
+        "Top": 131,
+        "TopLeft": {
+          "X": 39,
+          "Y": 131
+        },
+        "TopRight": {
+          "X": 104,
+          "Y": 131
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 161
+        },
+        "BottomRight": {
+          "X": 104,
+          "Y": 161
+        },
+        "Center": {
+          "X": 71.5,
+          "Y": 146
+        }
+      }
+    },
+    {
+      "Name": "nav-events",
+      "Content": "Events",
+      "IsEnabled": true,
+      "Tag": "NavigateEvents",
+      "bounds": {
+        "X": 39,
+        "Y": 161,
+        "Width": 63,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 161
+        },
+        "Size": {
+          "AspectRatio": 2.1,
+          "Width": 63,
+          "Height": 30
+        },
+        "Right": 102,
+        "Bottom": 191,
+        "Left": 39,
+        "Top": 161,
+        "TopLeft": {
+          "X": 39,
+          "Y": 161
+        },
+        "TopRight": {
+          "X": 102,
+          "Y": 161
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 191
+        },
+        "BottomRight": {
+          "X": 102,
+          "Y": 191
+        },
+        "Center": {
+          "X": 70.5,
+          "Y": 176
+        }
+      }
+    },
+    {
+      "Name": "nav-discover",
+      "Content": "Discover",
+      "IsEnabled": false,
+      "Tag": "NavigateDiscover",
+      "bounds": {
+        "X": 39,
+        "Y": 191,
+        "Width": 76,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 191
+        },
+        "Size": {
+          "AspectRatio": 2.533333333333333,
+          "Width": 76,
+          "Height": 30
+        },
+        "Right": 115,
+        "Bottom": 221,
+        "Left": 39,
+        "Top": 191,
+        "TopLeft": {
+          "X": 39,
+          "Y": 191
+        },
+        "TopRight": {
+          "X": 115,
+          "Y": 191
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 221
+        },
+        "BottomRight": {
+          "X": 115,
+          "Y": 221
+        },
+        "Center": {
+          "X": 77,
+          "Y": 206
+        }
+      }
+    },
+    {
+      "Name": "nav-mesh",
+      "Content": "Mesh",
+      "IsEnabled": false,
+      "Tag": "NavigateMesh",
+      "bounds": {
+        "X": 39,
+        "Y": 221,
+        "Width": 55,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 221
+        },
+        "Size": {
+          "AspectRatio": 1.8333333333333333,
+          "Width": 55,
+          "Height": 30
+        },
+        "Right": 94,
+        "Bottom": 251,
+        "Left": 39,
+        "Top": 221,
+        "TopLeft": {
+          "X": 39,
+          "Y": 221
+        },
+        "TopRight": {
+          "X": 94,
+          "Y": 221
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 251
+        },
+        "BottomRight": {
+          "X": 94,
+          "Y": 251
+        },
+        "Center": {
+          "X": 66.5,
+          "Y": 236
+        }
+      }
+    },
+    {
+      "Name": "nav-settings",
+      "Content": "Settings",
+      "IsEnabled": false,
+      "Tag": "NavigateSettings",
+      "bounds": {
+        "X": 39,
+        "Y": 251,
+        "Width": 73,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 251
+        },
+        "Size": {
+          "AspectRatio": 2.433333333333333,
+          "Width": 73,
+          "Height": 30
+        },
+        "Right": 112,
+        "Bottom": 281,
+        "Left": 39,
+        "Top": 251,
+        "TopLeft": {
+          "X": 39,
+          "Y": 251
+        },
+        "TopRight": {
+          "X": 112,
+          "Y": 251
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 281
+        },
+        "BottomRight": {
+          "X": 112,
+          "Y": 281
+        },
+        "Center": {
+          "X": 75.5,
+          "Y": 266
+        }
+      }
+    },
+    {
+      "Name": "nav-permissions",
+      "Content": "Permissions",
+      "IsEnabled": false,
+      "Tag": "NavigatePermissions",
+      "bounds": {
+        "X": 39,
+        "Y": 281,
+        "Width": 98,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 281
+        },
+        "Size": {
+          "AspectRatio": 3.2666666666666666,
+          "Width": 98,
+          "Height": 30
+        },
+        "Right": 137,
+        "Bottom": 311,
+        "Left": 39,
+        "Top": 281,
+        "TopLeft": {
+          "X": 39,
+          "Y": 281
+        },
+        "TopRight": {
+          "X": 137,
+          "Y": 281
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 311
+        },
+        "BottomRight": {
+          "X": 137,
+          "Y": 311
+        },
+        "Center": {
+          "X": 88,
+          "Y": 296
+        }
+      }
+    },
+    {
+      "Name": "nav-notifications",
+      "Content": "Notifications",
+      "IsEnabled": false,
+      "Tag": "NavigateNotifications",
+      "bounds": {
+        "X": 39,
+        "Y": 311,
+        "Width": 102,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 311
+        },
+        "Size": {
+          "AspectRatio": 3.4,
+          "Width": 102,
+          "Height": 30
+        },
+        "Right": 141,
+        "Bottom": 341,
+        "Left": 39,
+        "Top": 311,
+        "TopLeft": {
+          "X": 39,
+          "Y": 311
+        },
+        "TopRight": {
+          "X": 141,
+          "Y": 311
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 341
+        },
+        "BottomRight": {
+          "X": 141,
+          "Y": 341
+        },
+        "Center": {
+          "X": 90,
+          "Y": 326
+        }
+      }
+    },
+    {
+      "Name": "nav-spaces",
+      "Content": "Spaces",
+      "IsEnabled": false,
+      "Tag": "NavigateSpaces",
+      "bounds": {
+        "X": 39,
+        "Y": 341,
+        "Width": 67,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 341
+        },
+        "Size": {
+          "AspectRatio": 2.2333333333333334,
+          "Width": 67,
+          "Height": 30
+        },
+        "Right": 106,
+        "Bottom": 371,
+        "Left": 39,
+        "Top": 341,
+        "TopLeft": {
+          "X": 39,
+          "Y": 341
+        },
+        "TopRight": {
+          "X": 106,
+          "Y": 341
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 371
+        },
+        "BottomRight": {
+          "X": 106,
+          "Y": 371
+        },
+        "Center": {
+          "X": 72.5,
+          "Y": 356
+        }
+      }
+    },
+    {
+      "Name": "nav-automations",
+      "Content": "Automations",
+      "IsEnabled": false,
+      "Tag": "NavigateAutomations",
+      "bounds": {
+        "X": 39,
+        "Y": 371,
+        "Width": 102,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 371
+        },
+        "Size": {
+          "AspectRatio": 3.4,
+          "Width": 102,
+          "Height": 30
+        },
+        "Right": 141,
+        "Bottom": 401,
+        "Left": 39,
+        "Top": 371,
+        "TopLeft": {
+          "X": 39,
+          "Y": 371
+        },
+        "TopRight": {
+          "X": 141,
+          "Y": 371
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 401
+        },
+        "BottomRight": {
+          "X": 141,
+          "Y": 401
+        },
+        "Center": {
+          "X": 90,
+          "Y": 386
+        }
+      }
+    },
+    {
+      "Name": "open-spaces",
+      "Content": "Open Spaces",
+      "IsEnabled": false,
+      "Tag": "NavigateSpaces",
+      "bounds": {
+        "X": 49,
+        "Y": 617,
+        "Width": 132,
+        "Height": 30,
+        "Position": {
+          "X": 49,
+          "Y": 617
+        },
+        "Size": {
+          "AspectRatio": 4.4,
+          "Width": 132,
+          "Height": 30
+        },
+        "Right": 181,
+        "Bottom": 647,
+        "Left": 49,
+        "Top": 617,
+        "TopLeft": {
+          "X": 49,
+          "Y": 617
+        },
+        "TopRight": {
+          "X": 181,
+          "Y": 617
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 647
+        },
+        "BottomRight": {
+          "X": 181,
+          "Y": 647
+        },
+        "Center": {
+          "X": 115,
+          "Y": 632
+        }
+      }
+    },
+    {
+      "Name": "view-all-apps",
+      "Content": "View all",
+      "IsEnabled": false,
+      "Tag": "NavigateApps",
+      "bounds": {
+        "X": 141,
+        "Y": 808,
+        "Width": 69,
+        "Height": 30,
+        "Position": {
+          "X": 141,
+          "Y": 808
+        },
+        "Size": {
+          "AspectRatio": 2.3,
+          "Width": 69,
+          "Height": 30
+        },
+        "Right": 210,
+        "Bottom": 838,
+        "Left": 141,
+        "Top": 808,
+        "TopLeft": {
+          "X": 141,
+          "Y": 808
+        },
+        "TopRight": {
+          "X": 210,
+          "Y": 808
+        },
+        "BottomLeft": {
+          "X": 141,
+          "Y": 838
+        },
+        "BottomRight": {
+          "X": 210,
+          "Y": 838
+        },
+        "Center": {
+          "X": 175.5,
+          "Y": 823
+        }
+      }
+    },
+    {
+      "Name": "shortcut-write",
+      "Content": "Write",
+      "IsEnabled": false,
+      "Tag": "OpenWrite",
+      "bounds": {
+        "X": 24,
+        "Y": 838,
+        "Width": 148,
+        "Height": 58,
+        "Position": {
+          "X": 24,
+          "Y": 838
+        },
+        "Size": {
+          "AspectRatio": 2.5517241379310347,
+          "Width": 148,
+          "Height": 58
+        },
+        "Right": 172,
+        "Bottom": 896,
+        "Left": 24,
+        "Top": 838,
+        "TopLeft": {
+          "X": 24,
+          "Y": 838
+        },
+        "TopRight": {
+          "X": 172,
+          "Y": 838
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 896
+        },
+        "BottomRight": {
+          "X": 172,
+          "Y": 896
+        },
+        "Center": {
+          "X": 98,
+          "Y": 867
+        }
+      }
+    },
+    {
+      "Name": "shortcut-browse",
+      "Content": "Browse",
+      "IsEnabled": false,
+      "Tag": "OpenBrowse",
+      "bounds": {
+        "X": 172,
+        "Y": 838,
+        "Width": 148,
+        "Height": 58,
+        "Position": {
+          "X": 172,
+          "Y": 838
+        },
+        "Size": {
+          "AspectRatio": 2.5517241379310347,
+          "Width": 148,
+          "Height": 58
+        },
+        "Right": 320,
+        "Bottom": 896,
+        "Left": 172,
+        "Top": 838,
+        "TopLeft": {
+          "X": 172,
+          "Y": 838
+        },
+        "TopRight": {
+          "X": 320,
+          "Y": 838
+        },
+        "BottomLeft": {
+          "X": 172,
+          "Y": 896
+        },
+        "BottomRight": {
+          "X": 320,
+          "Y": 896
+        },
+        "Center": {
+          "X": 246,
+          "Y": 867
+        }
+      }
+    },
+    {
+      "Name": "shortcut-data",
+      "Content": "Data",
+      "IsEnabled": false,
+      "Tag": "OpenData",
+      "bounds": {
+        "X": 24,
+        "Y": 896,
+        "Width": 148,
+        "Height": 58,
+        "Position": {
+          "X": 24,
+          "Y": 896
+        },
+        "Size": {
+          "AspectRatio": 2.5517241379310347,
+          "Width": 148,
+          "Height": 58
+        },
+        "Right": 172,
+        "Bottom": 954,
+        "Left": 24,
+        "Top": 896,
+        "TopLeft": {
+          "X": 24,
+          "Y": 896
+        },
+        "TopRight": {
+          "X": 172,
+          "Y": 896
+        },
+        "BottomLeft": {
+          "X": 24,
+          "Y": 954
+        },
+        "BottomRight": {
+          "X": 172,
+          "Y": 954
+        },
+        "Center": {
+          "X": 98,
+          "Y": 925
+        }
+      }
+    },
+    {
+      "Name": "shortcut-boards",
+      "Content": "Boards",
+      "IsEnabled": false,
+      "Tag": "OpenBoards",
+      "bounds": {
+        "X": 172,
+        "Y": 896,
+        "Width": 148,
+        "Height": 58,
+        "Position": {
+          "X": 172,
+          "Y": 896
+        },
+        "Size": {
+          "AspectRatio": 2.5517241379310347,
+          "Width": 148,
+          "Height": 58
+        },
+        "Right": 320,
+        "Bottom": 954,
+        "Left": 172,
+        "Top": 896,
+        "TopLeft": {
+          "X": 172,
+          "Y": 896
+        },
+        "TopRight": {
+          "X": 320,
+          "Y": 896
+        },
+        "BottomLeft": {
+          "X": 172,
+          "Y": 954
+        },
+        "BottomRight": {
+          "X": 320,
+          "Y": 954
+        },
+        "Center": {
+          "X": 246,
+          "Y": 925
+        }
+      }
+    },
+    {
+      "Name": "allow-ai-tiles",
+      "Content": "Allow AI tiles",
+      "IsEnabled": false,
+      "Tag": "EnableAIGeneratedTiles",
+      "bounds": {
+        "X": 39,
+        "Y": 1072,
+        "Width": 102,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1072
+        },
+        "Size": {
+          "AspectRatio": 3.4,
+          "Width": 102,
+          "Height": 30
+        },
+        "Right": 141,
+        "Bottom": 1102,
+        "Left": 39,
+        "Top": 1072,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1072
+        },
+        "TopRight": {
+          "X": 141,
+          "Y": 1072
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1102
+        },
+        "BottomRight": {
+          "X": 141,
+          "Y": 1102
+        },
+        "Center": {
+          "X": 90,
+          "Y": 1087
+        }
+      }
+    },
+    {
+      "Name": "disallow-ai-tiles",
+      "Content": "Keep AI tiles off",
+      "IsEnabled": false,
+      "Tag": "DisableAIGeneratedTiles",
+      "bounds": {
+        "X": 141,
+        "Y": 1072,
+        "Width": 123,
+        "Height": 30,
+        "Position": {
+          "X": 141,
+          "Y": 1072
+        },
+        "Size": {
+          "AspectRatio": 4.1,
+          "Width": 123,
+          "Height": 30
+        },
+        "Right": 264,
+        "Bottom": 1102,
+        "Left": 141,
+        "Top": 1072,
+        "TopLeft": {
+          "X": 141,
+          "Y": 1072
+        },
+        "TopRight": {
+          "X": 264,
+          "Y": 1072
+        },
+        "BottomLeft": {
+          "X": 141,
+          "Y": 1102
+        },
+        "BottomRight": {
+          "X": 264,
+          "Y": 1102
+        },
+        "Center": {
+          "X": 202.5,
+          "Y": 1087
+        }
+      }
+    },
+    {
+      "Name": "allow-ai-reorder",
+      "Content": "Allow AI rearrangement",
+      "IsEnabled": false,
+      "Tag": "EnableAIReorder",
+      "bounds": {
+        "X": 39,
+        "Y": 1102,
+        "Width": 173,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1102
+        },
+        "Size": {
+          "AspectRatio": 5.766666666666667,
+          "Width": 173,
+          "Height": 30
+        },
+        "Right": 212,
+        "Bottom": 1132,
+        "Left": 39,
+        "Top": 1102,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1102
+        },
+        "TopRight": {
+          "X": 212,
+          "Y": 1102
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1132
+        },
+        "BottomRight": {
+          "X": 212,
+          "Y": 1132
+        },
+        "Center": {
+          "X": 125.5,
+          "Y": 1117
+        }
+      }
+    },
+    {
+      "Name": "disallow-ai-reorder",
+      "Content": "Keep AI layout fixed",
+      "IsEnabled": false,
+      "Tag": "DisableAIReorder",
+      "bounds": {
+        "X": 39,
+        "Y": 1132,
+        "Width": 149,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1132
+        },
+        "Size": {
+          "AspectRatio": 4.966666666666667,
+          "Width": 149,
+          "Height": 30
+        },
+        "Right": 188,
+        "Bottom": 1162,
+        "Left": 39,
+        "Top": 1132,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1132
+        },
+        "TopRight": {
+          "X": 188,
+          "Y": 1132
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1162
+        },
+        "BottomRight": {
+          "X": 188,
+          "Y": 1162
+        },
+        "Center": {
+          "X": 113.5,
+          "Y": 1147
+        }
+      }
+    },
+    {
+      "Name": "undo-ai-layout",
+      "Content": "Undo AI layout",
+      "IsEnabled": false,
+      "Tag": "UndoAiDashboardLayout",
+      "bounds": {
+        "X": 188,
+        "Y": 1132,
+        "Width": 115,
+        "Height": 30,
+        "Position": {
+          "X": 188,
+          "Y": 1132
+        },
+        "Size": {
+          "AspectRatio": 3.8333333333333335,
+          "Width": 115,
+          "Height": 30
+        },
+        "Right": 303,
+        "Bottom": 1162,
+        "Left": 188,
+        "Top": 1132,
+        "TopLeft": {
+          "X": 188,
+          "Y": 1132
+        },
+        "TopRight": {
+          "X": 303,
+          "Y": 1132
+        },
+        "BottomLeft": {
+          "X": 188,
+          "Y": 1162
+        },
+        "BottomRight": {
+          "X": 303,
+          "Y": 1162
+        },
+        "Center": {
+          "X": 245.5,
+          "Y": 1147
+        }
+      }
+    },
+    {
+      "Name": "reset-dashboard-layout",
+      "Content": "Reset layout",
+      "IsEnabled": false,
+      "Tag": "ResetDashboardLayout",
+      "bounds": {
+        "X": 39,
+        "Y": 1162,
+        "Width": 100,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1162
+        },
+        "Size": {
+          "AspectRatio": 3.3333333333333335,
+          "Width": 100,
+          "Height": 30
+        },
+        "Right": 139,
+        "Bottom": 1192,
+        "Left": 39,
+        "Top": 1162,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1162
+        },
+        "TopRight": {
+          "X": 139,
+          "Y": 1162
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1192
+        },
+        "BottomRight": {
+          "X": 139,
+          "Y": 1192
+        },
+        "Center": {
+          "X": 89,
+          "Y": 1177
+        }
+      }
+    },
+    {
+      "Name": "add-dashboard-tile",
+      "Content": "Add tile",
+      "IsEnabled": false,
+      "Tag": "AddDashboardTile",
+      "bounds": {
+        "X": 39,
+        "Y": 1226,
+        "Width": 69,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1226
+        },
+        "Size": {
+          "AspectRatio": 2.3,
+          "Width": 69,
+          "Height": 30
+        },
+        "Right": 108,
+        "Bottom": 1256,
+        "Left": 39,
+        "Top": 1226,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1226
+        },
+        "TopRight": {
+          "X": 108,
+          "Y": 1226
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1256
+        },
+        "BottomRight": {
+          "X": 108,
+          "Y": 1256
+        },
+        "Center": {
+          "X": 73.5,
+          "Y": 1241
+        }
+      }
+    },
+    {
+      "Name": "remove-dashboard-tile",
+      "Content": "Remove selected",
+      "IsEnabled": false,
+      "Tag": "RemoveSelectedDashboardTile",
+      "bounds": {
+        "X": 108,
+        "Y": 1226,
+        "Width": 132,
+        "Height": 30,
+        "Position": {
+          "X": 108,
+          "Y": 1226
+        },
+        "Size": {
+          "AspectRatio": 4.4,
+          "Width": 132,
+          "Height": 30
+        },
+        "Right": 240,
+        "Bottom": 1256,
+        "Left": 108,
+        "Top": 1226,
+        "TopLeft": {
+          "X": 108,
+          "Y": 1226
+        },
+        "TopRight": {
+          "X": 240,
+          "Y": 1226
+        },
+        "BottomLeft": {
+          "X": 108,
+          "Y": 1256
+        },
+        "BottomRight": {
+          "X": 240,
+          "Y": 1256
+        },
+        "Center": {
+          "X": 174,
+          "Y": 1241
+        }
+      }
+    },
+    {
+      "Name": "move-dashboard-tile-up",
+      "Content": "Move up",
+      "IsEnabled": false,
+      "Tag": "MoveSelectedDashboardTileUp",
+      "bounds": {
+        "X": 240,
+        "Y": 1226,
+        "Width": 75,
+        "Height": 30,
+        "Position": {
+          "X": 240,
+          "Y": 1226
+        },
+        "Size": {
+          "AspectRatio": 2.5,
+          "Width": 75,
+          "Height": 30
+        },
+        "Right": 315,
+        "Bottom": 1256,
+        "Left": 240,
+        "Top": 1226,
+        "TopLeft": {
+          "X": 240,
+          "Y": 1226
+        },
+        "TopRight": {
+          "X": 315,
+          "Y": 1226
+        },
+        "BottomLeft": {
+          "X": 240,
+          "Y": 1256
+        },
+        "BottomRight": {
+          "X": 315,
+          "Y": 1256
+        },
+        "Center": {
+          "X": 277.5,
+          "Y": 1241
+        }
+      }
+    },
+    {
+      "Name": "move-dashboard-tile-down",
+      "Content": "Move down",
+      "IsEnabled": false,
+      "Tag": "MoveSelectedDashboardTileDown",
+      "bounds": {
+        "X": 39,
+        "Y": 1256,
+        "Width": 95,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1256
+        },
+        "Size": {
+          "AspectRatio": 3.1666666666666665,
+          "Width": 95,
+          "Height": 30
+        },
+        "Right": 134,
+        "Bottom": 1286,
+        "Left": 39,
+        "Top": 1256,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1256
+        },
+        "TopRight": {
+          "X": 134,
+          "Y": 1256
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1286
+        },
+        "BottomRight": {
+          "X": 134,
+          "Y": 1286
+        },
+        "Center": {
+          "X": 86.5,
+          "Y": 1271
+        }
+      }
+    },
+    {
+      "Name": "pin-dashboard-tile",
+      "Content": "Pin",
+      "IsEnabled": false,
+      "Tag": "PinSelectedDashboardTile",
+      "bounds": {
+        "X": 134,
+        "Y": 1256,
+        "Width": 39,
+        "Height": 30,
+        "Position": {
+          "X": 134,
+          "Y": 1256
+        },
+        "Size": {
+          "AspectRatio": 1.3,
+          "Width": 39,
+          "Height": 30
+        },
+        "Right": 173,
+        "Bottom": 1286,
+        "Left": 134,
+        "Top": 1256,
+        "TopLeft": {
+          "X": 134,
+          "Y": 1256
+        },
+        "TopRight": {
+          "X": 173,
+          "Y": 1256
+        },
+        "BottomLeft": {
+          "X": 134,
+          "Y": 1286
+        },
+        "BottomRight": {
+          "X": 173,
+          "Y": 1286
+        },
+        "Center": {
+          "X": 153.5,
+          "Y": 1271
+        }
+      }
+    },
+    {
+      "Name": "lock-dashboard-tile",
+      "Content": "Lock",
+      "IsEnabled": false,
+      "Tag": "LockSelectedDashboardTile",
+      "bounds": {
+        "X": 173,
+        "Y": 1256,
+        "Width": 50,
+        "Height": 30,
+        "Position": {
+          "X": 173,
+          "Y": 1256
+        },
+        "Size": {
+          "AspectRatio": 1.6666666666666667,
+          "Width": 50,
+          "Height": 30
+        },
+        "Right": 223,
+        "Bottom": 1286,
+        "Left": 173,
+        "Top": 1256,
+        "TopLeft": {
+          "X": 173,
+          "Y": 1256
+        },
+        "TopRight": {
+          "X": 223,
+          "Y": 1256
+        },
+        "BottomLeft": {
+          "X": 173,
+          "Y": 1286
+        },
+        "BottomRight": {
+          "X": 223,
+          "Y": 1286
+        },
+        "Center": {
+          "X": 198,
+          "Y": 1271
+        }
+      }
+    },
+    {
+      "Name": "hide-dashboard-tile",
+      "Content": "Hide",
+      "IsEnabled": false,
+      "Tag": "HideSelectedDashboardTile",
+      "bounds": {
+        "X": 223,
+        "Y": 1256,
+        "Width": 49,
+        "Height": 30,
+        "Position": {
+          "X": 223,
+          "Y": 1256
+        },
+        "Size": {
+          "AspectRatio": 1.6333333333333333,
+          "Width": 49,
+          "Height": 30
+        },
+        "Right": 272,
+        "Bottom": 1286,
+        "Left": 223,
+        "Top": 1256,
+        "TopLeft": {
+          "X": 223,
+          "Y": 1256
+        },
+        "TopRight": {
+          "X": 272,
+          "Y": 1256
+        },
+        "BottomLeft": {
+          "X": 223,
+          "Y": 1286
+        },
+        "BottomRight": {
+          "X": 272,
+          "Y": 1286
+        },
+        "Center": {
+          "X": 247.5,
+          "Y": 1271
+        }
+      }
+    },
+    {
+      "Name": "refresh-dashboard-tile",
+      "Content": "Refresh selected",
+      "IsEnabled": false,
+      "Tag": "RefreshSelectedDashboardTile",
+      "bounds": {
+        "X": 39,
+        "Y": 1286,
+        "Width": 130,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1286
+        },
+        "Size": {
+          "AspectRatio": 4.333333333333333,
+          "Width": 130,
+          "Height": 30
+        },
+        "Right": 169,
+        "Bottom": 1316,
+        "Left": 39,
+        "Top": 1286,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1286
+        },
+        "TopRight": {
+          "X": 169,
+          "Y": 1286
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1316
+        },
+        "BottomRight": {
+          "X": 169,
+          "Y": 1316
+        },
+        "Center": {
+          "X": 104,
+          "Y": 1301
+        }
+      }
+    },
+    {
+      "Name": "resize-dashboard-tile-small",
+      "Content": "Small",
+      "IsEnabled": false,
+      "Tag": "ResizeSelectedDashboardTileSmall",
+      "bounds": {
+        "X": 39,
+        "Y": 1316,
+        "Width": 54,
+        "Height": 30,
+        "Position": {
+          "X": 39,
+          "Y": 1316
+        },
+        "Size": {
+          "AspectRatio": 1.8,
+          "Width": 54,
+          "Height": 30
+        },
+        "Right": 93,
+        "Bottom": 1346,
+        "Left": 39,
+        "Top": 1316,
+        "TopLeft": {
+          "X": 39,
+          "Y": 1316
+        },
+        "TopRight": {
+          "X": 93,
+          "Y": 1316
+        },
+        "BottomLeft": {
+          "X": 39,
+          "Y": 1346
+        },
+        "BottomRight": {
+          "X": 93,
+          "Y": 1346
+        },
+        "Center": {
+          "X": 66,
+          "Y": 1331
+        }
+      }
+    },
+    {
+      "Name": "resize-dashboard-tile-medium",
+      "Content": "Medium",
+      "IsEnabled": false,
+      "Tag": "ResizeSelectedDashboardTileMedium",
+      "bounds": {
+        "X": 93,
+        "Y": 1316,
+        "Width": 71,
+        "Height": 30,
+        "Position": {
+          "X": 93,
+          "Y": 1316
+        },
+        "Size": {
+          "AspectRatio": 2.3666666666666667,
+          "Width": 71,
+          "Height": 30
+        },
+        "Right": 164,
+        "Bottom": 1346,
+        "Left": 93,
+        "Top": 1316,
+        "TopLeft": {
+          "X": 93,
+          "Y": 1316
+        },
+        "TopRight": {
+          "X": 164,
+          "Y": 1316
+        },
+        "BottomLeft": {
+          "X": 93,
+          "Y": 1346
+        },
+        "BottomRight": {
+          "X": 164,
+          "Y": 1346
+        },
+        "Center": {
+          "X": 128.5,
+          "Y": 1331
+        }
+      }
+    },
+    {
+      "Name": "resize-dashboard-tile-large",
+      "Content": "Large",
+      "IsEnabled": false,
+      "Tag": "ResizeSelectedDashboardTileLarge",
+      "bounds": {
+        "X": 164,
+        "Y": 1316,
+        "Width": 56,
+        "Height": 30,
+        "Position": {
+          "X": 164,
+          "Y": 1316
+        },
+        "Size": {
+          "AspectRatio": 1.8666666666666667,
+          "Width": 56,
+          "Height": 30
+        },
+        "Right": 220,
+        "Bottom": 1346,
+        "Left": 164,
+        "Top": 1316,
+        "TopLeft": {
+          "X": 164,
+          "Y": 1316
+        },
+        "TopRight": {
+          "X": 220,
+          "Y": 1316
+        },
+        "BottomLeft": {
+          "X": 164,
+          "Y": 1346
+        },
+        "BottomRight": {
+          "X": 220,
+          "Y": 1346
+        },
+        "Center": {
+          "X": 192,
+          "Y": 1331
+        }
+      }
+    },
+    {
+      "Name": "resize-dashboard-tile-wide",
+      "Content": "Wide",
+      "IsEnabled": false,
+      "Tag": "ResizeSelectedDashboardTileWide",
+      "bounds": {
+        "X": 220,
+        "Y": 1316,
+        "Width": 52,
+        "Height": 30,
+        "Position": {
+          "X": 220,
+          "Y": 1316
+        },
+        "Size": {
+          "AspectRatio": 1.7333333333333334,
+          "Width": 52,
+          "Height": 30
+        },
+        "Right": 272,
+        "Bottom": 1346,
+        "Left": 220,
+        "Top": 1316,
+        "TopLeft": {
+          "X": 220,
+          "Y": 1316
+        },
+        "TopRight": {
+          "X": 272,
+          "Y": 1316
+        },
+        "BottomLeft": {
+          "X": 220,
+          "Y": 1346
+        },
+        "BottomRight": {
+          "X": 272,
+          "Y": 1346
+        },
+        "Center": {
+          "X": 246,
+          "Y": 1331
+        }
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "Name": "global-search",
+      "IsEnabled": false,
+      "bounds": {
+        "X": 36,
+        "Y": 0,
+        "Width": 90,
+        "Height": 32,
+        "Position": {
+          "X": 36,
+          "Y": 0
+        },
+        "Size": {
+          "AspectRatio": 2.8125,
+          "Width": 90,
+          "Height": 32
+        },
+        "Right": 126,
+        "Bottom": 32,
+        "Left": 36,
+        "Top": 0,
+        "TopLeft": {
+          "X": 36,
+          "Y": 0
+        },
+        "TopRight": {
+          "X": 126,
+          "Y": 0
+        },
+        "BottomLeft": {
+          "X": 36,
+          "Y": 32
+        },
+        "BottomRight": {
+          "X": 126,
+          "Y": 32
+        },
+        "Center": {
+          "X": 81,
+          "Y": 16
+        }
+      }
+    }
+  ],
+  "nativeClientSize": {
+    "AspectRatio": 0.45,
+    "Width": 360,
+    "Height": 800
+  },
+  "nativeRoot": {
+    "X": 0,
+    "Y": 0,
+    "Width": 360,
+    "Height": 1385,
+    "Position": {
+      "X": 0,
+      "Y": 0
+    },
+    "Size": {
+      "AspectRatio": 0.259927797833935,
+      "Width": 360,
+      "Height": 1385
+    },
+    "Right": 360,
+    "Bottom": 1385,
+    "Left": 0,
+    "Top": 0,
+    "TopLeft": {
+      "X": 0,
+      "Y": 0
+    },
+    "TopRight": {
+      "X": 360,
+      "Y": 0
+    },
+    "BottomLeft": {
+      "X": 0,
+      "Y": 1385
+    },
+    "BottomRight": {
+      "X": 360,
+      "Y": 1385
+    },
+    "Center": {
+      "X": 180,
+      "Y": 692.5
+    }
+  },
+  "scrollExtent": {
+    "AspectRatio": 0.259927797833935,
+    "Width": 360,
+    "Height": 1385
+  },
+  "scrollViewport": {
+    "AspectRatio": 0.45,
+    "Width": 360,
+    "Height": 800
+  },
+  "heroCopy": {
+    "text": "Open a Space, manage your apps, or review what needs attention.",
+    "wrapping": "Wrap",
+    "bounds": {
+      "X": 49,
+      "Y": 583,
+      "Width": 249,
+      "Height": 34,
+      "Position": {
+        "X": 49,
+        "Y": 583
+      },
+      "Size": {
+        "AspectRatio": 7.323529411764706,
+        "Width": 249,
+        "Height": 34
+      },
+      "Right": 298,
+      "Bottom": 617,
+      "Left": 49,
+      "Top": 583,
+      "TopLeft": {
+        "X": 49,
+        "Y": 583
+      },
+      "TopRight": {
+        "X": 298,
+        "Y": 583
+      },
+      "BottomLeft": {
+        "X": 49,
+        "Y": 617
+      },
+      "BottomRight": {
+        "X": 298,
+        "Y": 617
+      },
+      "Center": {
+        "X": 173.5,
+        "Y": 600
+      }
+    },
+    "nativeWidth": 249,
+    "clipToBounds": true,
+    "layoutWidth": 248.04261363636363,
+    "layoutHeight": 33.88636363636364,
+    "lineCount": 2,
+    "glyphs": [
+      {
+        "X": 0,
+        "Y": 0,
+        "Width": 248.04261363636363,
+        "Height": 16.94318181818182,
+        "Position": {
+          "X": 0,
+          "Y": 0
+        },
+        "Size": {
+          "AspectRatio": 14.639671361502344,
+          "Width": 248.04261363636363,
+          "Height": 16.94318181818182
+        },
+        "Right": 248.04261363636363,
+        "Bottom": 16.94318181818182,
+        "Left": 0,
+        "Top": 0,
+        "TopLeft": {
+          "X": 0,
+          "Y": 0
+        },
+        "TopRight": {
+          "X": 248.04261363636363,
+          "Y": 0
+        },
+        "BottomLeft": {
+          "X": 0,
+          "Y": 16.94318181818182
+        },
+        "BottomRight": {
+          "X": 248.04261363636363,
+          "Y": 16.94318181818182
+        },
+        "Center": {
+          "X": 124.02130681818181,
+          "Y": 8.47159090909091
+        }
+      },
+      {
+        "X": 0,
+        "Y": 16.94318181818182,
+        "Width": 191.64488636363632,
+        "Height": 16.94318181818182,
+        "Position": {
+          "X": 0,
+          "Y": 16.94318181818182
+        },
+        "Size": {
+          "AspectRatio": 11.31103286384976,
+          "Width": 191.64488636363632,
+          "Height": 16.94318181818182
+        },
+        "Right": 191.64488636363632,
+        "Bottom": 33.88636363636364,
+        "Left": 0,
+        "Top": 16.94318181818182,
+        "TopLeft": {
+          "X": 0,
+          "Y": 16.94318181818182
+        },
+        "TopRight": {
+          "X": 191.64488636363632,
+          "Y": 16.94318181818182
+        },
+        "BottomLeft": {
+          "X": 0,
+          "Y": 33.88636363636364
+        },
+        "BottomRight": {
+          "X": 191.64488636363632,
+          "Y": 33.88636363636364
+        },
+        "Center": {
+          "X": 95.82244318181816,
+          "Y": 25.41477272727273
+        }
+      }
+    ],
+    "rangeBounds": [
+      {
+        "X": 49,
+        "Y": 583,
+        "Width": 248.04261363636363,
+        "Height": 16.94318181818182,
+        "Position": {
+          "X": 49,
+          "Y": 583
+        },
+        "Size": {
+          "AspectRatio": 14.639671361502344,
+          "Width": 248.04261363636363,
+          "Height": 16.94318181818182
+        },
+        "Right": 297.0426136363636,
+        "Bottom": 599.9431818181819,
+        "Left": 49,
+        "Top": 583,
+        "TopLeft": {
+          "X": 49,
+          "Y": 583
+        },
+        "TopRight": {
+          "X": 297.0426136363636,
+          "Y": 583
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 599.9431818181819
+        },
+        "BottomRight": {
+          "X": 297.0426136363636,
+          "Y": 599.9431818181819
+        },
+        "Center": {
+          "X": 173.0213068181818,
+          "Y": 591.4715909090909
+        }
+      },
+      {
+        "X": 49,
+        "Y": 599.9431818181819,
+        "Width": 191.64488636363632,
+        "Height": 16.94318181818182,
+        "Position": {
+          "X": 49,
+          "Y": 599.9431818181819
+        },
+        "Size": {
+          "AspectRatio": 11.31103286384976,
+          "Width": 191.64488636363632,
+          "Height": 16.94318181818182
+        },
+        "Right": 240.64488636363632,
+        "Bottom": 616.8863636363637,
+        "Left": 49,
+        "Top": 599.9431818181819,
+        "TopLeft": {
+          "X": 49,
+          "Y": 599.9431818181819
+        },
+        "TopRight": {
+          "X": 240.64488636363632,
+          "Y": 599.9431818181819
+        },
+        "BottomLeft": {
+          "X": 49,
+          "Y": 616.8863636363637
+        },
+        "BottomRight": {
+          "X": 240.64488636363632,
+          "Y": 616.8863636363637
+        },
+        "Center": {
+          "X": 144.82244318181816,
+          "Y": 608.4147727272727
+        }
+      }
+    ]
+  },
+  "observedStatus": {
+    "X": 49,
+    "Y": 647,
+    "Width": 252,
+    "Height": 85,
+    "Position": {
+      "X": 49,
+      "Y": 647
+    },
+    "Size": {
+      "AspectRatio": 2.9647058823529413,
+      "Width": 252,
+      "Height": 85
+    },
+    "Right": 301,
+    "Bottom": 732,
+    "Left": 49,
+    "Top": 647,
+    "TopLeft": {
+      "X": 49,
+      "Y": 647
+    },
+    "TopRight": {
+      "X": 301,
+      "Y": 647
+    },
+    "BottomLeft": {
+      "X": 49,
+      "Y": 732
+    },
+    "BottomRight": {
+      "X": 301,
+      "Y": 732
+    },
+    "Center": {
+      "X": 175,
+      "Y": 689.5
+    }
+  }
+}

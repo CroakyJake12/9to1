@@ -1,0 +1,14 @@
+{
+  "recordedUTC": "2026-10-04T05:23:53.629250+00:00",
+  "state": "ROOT_INDEPENDENT_FULL_PORTABLE_PACKET_VERIFICATION_PASS",
+  "zip": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/portable-unconfigured-interop7-source-runtime02.zip",
+  "zipBytes": 36489326,
+  "zipSha256": "74b2a8d42cb428d249d80b3653395002bca266556bbb703708599c405d5dfcc6",
+  "members": 375,
+  "rawBytes": 63696403,
+  "safeUniqueRelativeNames": true,
+  "allCRCAndSHAAndSizeAndSourceAfterVerified": true,
+  "runtimeFiles": 270,
+  "candidate": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "qualification": "Public unconfigured seven only; exact preserved original failures; no issuer/BFCache/AT/provider acceptance; no production/shared adoption"
+}

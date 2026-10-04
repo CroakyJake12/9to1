@@ -1,0 +1,99 @@
+{
+  "recordedUTC": "2026-10-04T04:30:11.878860+00:00",
+  "state": "SOURCE_ONLY_COMMAND_RESOURCE_PLAN_NO_RUNTIME_BUILD_OR_RESTORE; ROOT_NATIVE_LANE_REQUIRED_AFTER_GUI_CLOSED",
+  "sourceDependencyCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "proposalScope": "Unadopted exact intrinsic ownerCUI+optionalperHome native flag; existingactual compiledB1fixture unchanged, production sharedHome untouched.",
+  "compiledRuntimePins": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.dll",
+      "bytes": 151552,
+      "sha256": "444372f3b1e2cd728be809f6ffa003b66466ea12f5126a3a56eec86eca2a9d29"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.deps.json",
+      "bytes": 14930,
+      "sha256": "f9a4bcef02bbf948a2f9fdc068bff3975d25e600cc817575bd2ef381183e1dd3"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.runtimeconfig.json",
+      "bytes": 330,
+      "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+    }
+  ],
+  "exactSourceManifest": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/manifest.json",
+    "sha256": "adbb61e5e40d2ac13a58bdabf62031a30d51d03d6be9cd28e19a4cc71b2c16bf"
+  },
+  "recordedNativeResults": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/executed-public-flag-results.json",
+    "sha256": "b55676d9fda621d86d3a21135fd5a23b0220260d2ca4b7bdc2c32b6032222ed4"
+  },
+  "newOutputRoot": "/workspace/team-b-b6-home-public-flag-native2-independent01",
+  "outputRootExists": false,
+  "commands": [
+    {
+      "name": "public-flag-360",
+      "argv": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.dll",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.proposed",
+        "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-360.json",
+        "360",
+        "800",
+        "home-constrained-proposal"
+      ],
+      "log": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-360.log",
+      "environment": {
+        "DOTNET_ROOT": "/workspace/.tools/dotnet",
+        "DOTNET_CLI_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent01/cli-home",
+        "XDG_CACHE_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent01/font-cache",
+        "TMPDIR": "/workspace/team-b-b6-home-public-flag-native2-independent01/tmp",
+        "HAVEN_DATA_DIR": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-360-data"
+      },
+      "maximumSeconds": 120,
+      "expectedChecks": 20,
+      "requiredPassed": 20,
+      "requiredFailed": 0,
+      "requiredExitCode": 0,
+      "declaredSurfaceConstraint": true,
+      "diagnosticPropertyMutation": false
+    },
+    {
+      "name": "public-flag-1440",
+      "argv": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.dll",
+        "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.proposed",
+        "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-1440.json",
+        "1440",
+        "954",
+        "home-constrained-proposal"
+      ],
+      "log": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-1440.log",
+      "environment": {
+        "DOTNET_ROOT": "/workspace/.tools/dotnet",
+        "DOTNET_CLI_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent01/cli-home",
+        "XDG_CACHE_HOME": "/workspace/team-b-b6-home-public-flag-native2-independent01/font-cache",
+        "TMPDIR": "/workspace/team-b-b6-home-public-flag-native2-independent01/tmp",
+        "HAVEN_DATA_DIR": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-1440-data"
+      },
+      "maximumSeconds": 120,
+      "expectedChecks": 20,
+      "requiredPassed": 20,
+      "requiredFailed": 0,
+      "requiredExitCode": 0,
+      "declaredSurfaceConstraint": true,
+      "diagnosticPropertyMutation": false
+    }
+  ],
+  "prePostCustody": "Require all original142selected/source/managed/native/fonts pins +42actuallycopied DLL/native +owncompiledDLL/deps/runtimeconfig unchanged before/finallyafter; source proposal/schema20 assertion block unchanged.",
+  "resource": {
+    "maximumNewOutputAllocatedAndLogicalBytes": 67108864,
+    "minimumFreeWorkspaceBytes": 268435456,
+    "minimumFreeTmpBytes": 268435456,
+    "noBuildInstallRestoreOrCopiedRuntime": true,
+    "noCacheHistoryCleanup": true
+  },
+  "executionControl": "Owned native-family supervisor adapted from reviewed/ordinary3validated B5watchdog04; exact source/pins must be frozen and reviewed before launch. Actualkernelparent/birthheldFD/subreaper/ECHILD; no numeric/globalPIDsignals; forced/unproven/deadline/resourceFAIL.",
+  "qualification": "Twoindependent fresh native processes and raw20criteria each only. No browser/AT/touch/theme/200percent/authority/fullHome or A1 adoption implied."
+}

@@ -1,0 +1,21 @@
+{
+  "recordedUTC": "2026-10-04T05:26:21.798018+00:00",
+  "state": "ROOT_INDEPENDENT_RECORDED_RAW_SOURCE_VERIFICATION_PASS",
+  "records": [
+    {
+      "manifest": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "sha256": "248b85a3c1c8544f661cdd4cf914bc50a99760cb2bbbbb24b5239410aa14745c",
+      "sourceChecksVerified": 187,
+      "rawFilesVerified": 35,
+      "actualExit": 0
+    },
+    {
+      "manifest": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent01-executed-manifest.json",
+      "sha256": "4f53bf4522338284a8f129597e71a595440867091f18a078be959f9276a056ee",
+      "sourceChecksVerified": 23,
+      "rawFilesVerified": 3,
+      "actualExit": 0
+    }
+  ],
+  "qualification": "Home atomic joint proposal remains unadopted until exact A ACK; account seven public null configuration lifecycle only, no provider/BFCache/AT/full parity."
+}

@@ -1,0 +1,98 @@
+{
+  "scope": "Actual source8041 sealed WASM/native account surface with null public configuration; controlled actual native lifecycle exports. No issuer/private actor/profile/session/token or real BFCache/AT acceptance.",
+  "outcomes": {
+    "actual-unconfigured-native-account-read": {
+      "status": "PASS",
+      "observed": {
+        "actualRenderReady": true,
+        "nullConfiguration": true,
+        "privateDataAbsent": true,
+        "signInUnavailable": true
+      }
+    },
+    "physical-check-truthful-unavailable": {
+      "status": "PASS",
+      "observed": {
+        "physicalNativeCheck": true,
+        "truthfulUnavailable": true,
+        "noPrivateGrant": true
+      }
+    },
+    "native-revoke-immediate-fence": {
+      "status": "PASS",
+      "observed": {
+        "immediateEmpty": true,
+        "immediateGeneration": 2,
+        "staleAccepted": false,
+        "settledEmpty": true
+      }
+    },
+    "retained-stale-native-peer-refused": {
+      "status": "PASS",
+      "observed": {
+        "oldPeerRefusedBeforeAndAfterFreshRoute": true,
+        "newOwnerGeneration": true,
+        "revokedSettingsUnavailable": true,
+        "explicitRootReplacement": true,
+        "noIdentityFabricated": true
+      }
+    },
+    "native-invalidation-fresh-owner-route": {
+      "status": "PASS",
+      "observed": {
+        "actualNativeInvalidationJoined": true,
+        "immediateEmpty": true,
+        "oldPeersRefused": true,
+        "newOwnerGeneration": true,
+        "freshCanonicalSettingsAvailable": true,
+        "noIdentityFabricated": true,
+        "brokerDrainNotClaimed": true
+      }
+    },
+    "terminal-close-true-native-and-JS-release": {
+      "status": "PASS",
+      "observed": {
+        "actualCloseReturnedTrue": true,
+        "nativeAXEmpty": true,
+        "JSProjectionRemoved": true,
+        "stalePeerRefused": true,
+        "terminalRouteCannotReopen": true,
+        "repeatCloseTrue": true
+      }
+    },
+    "exact-assets-runtime-cleanup-integrity": {
+      "status": "PASS",
+      "observed": {
+        "exactCustodyAndCleanup": true
+      }
+    }
+  },
+  "unexpected": {
+    "pageError": 0,
+    "consoleError": 0,
+    "requestFailed": 0,
+    "nonClientRequests": 0
+  },
+  "cleanupFailures": [],
+  "providerAccepted": false,
+  "bindingSha256": "53fbbff54111faa3d238185d88720928dea7b897789b656cd7f378813e394407",
+  "sealStart": {
+    "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+    "manifestSha256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70",
+    "fileCount": 270
+  },
+  "browserVersion": "151.0.7922.173",
+  "sealEnd": {
+    "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+    "manifestSha256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70",
+    "fileCount": 270
+  },
+  "port5096RebindClosed": true,
+  "counts": {
+    "discovered": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "notRun": 0
+  }
+}

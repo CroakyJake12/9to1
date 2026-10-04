@@ -1,0 +1,92 @@
+{
+  "state": "FAIL",
+  "scope": "Independent proposal Home native20x2 only, no shared adoption/browser/AT",
+  "identityFailures": [],
+  "forcedCleanup": false,
+  "deadlineFailure": false,
+  "budgetFailure": false,
+  "cases": [
+    {
+      "name": "public-flag-360",
+      "status": "RUNNING",
+      "nativeRoot": {
+        "pid": 128569,
+        "ppid": 128566,
+        "birth": 4303596
+      }
+    }
+  ],
+  "prelaunchKernel": {
+    "empty": true,
+    "flags": [
+      "WEXITED",
+      "WNOHANG",
+      "WNOWAIT",
+      "LINUX___WALL"
+    ],
+    "flagsValue": 1090519045,
+    "flagsAccepted": true,
+    "sigchldDisposition": "DEFAULT",
+    "nonreaping": true,
+    "status": "ECHILD"
+  },
+  "failureType": "RuntimeError",
+  "lastFamilyClosure": {
+    "allHeldExit": true,
+    "allBirthsGone": true,
+    "kernel": {
+      "empty": true,
+      "flags": [
+        "WEXITED",
+        "WNOHANG",
+        "WNOWAIT",
+        "LINUX___WALL"
+      ],
+      "flagsValue": 1090519045,
+      "flagsAccepted": true,
+      "sigchldDisposition": "DEFAULT",
+      "nonreaping": true,
+      "status": "ECHILD"
+    }
+  },
+  "finalPinsUnchanged": true,
+  "finalMeasuredFootprint": {
+    "logical": 1241511,
+    "allocated": 1331200
+  },
+  "finalMeasuredFree": {
+    "/workspace": 586186752,
+    "/tmp": 693637120
+  },
+  "ownedFamily": [
+    {
+      "pid": 128569,
+      "ppid": 128566,
+      "pgrp": 128569,
+      "session": 128569,
+      "birth": 4303596,
+      "state": "R",
+      "relation": "original owned Popen direct child",
+      "signalCount": 0,
+      "profileBound": null,
+      "cgroupSha256": "e57fd7b21104f091de366ace1464596378a498b0a5e63f1b21147a8998c20107",
+      "exeBasename": "dotnet"
+    }
+  ],
+  "finalKernel": {
+    "empty": true,
+    "flags": [
+      "WEXITED",
+      "WNOHANG",
+      "WNOWAIT",
+      "LINUX___WALL"
+    ],
+    "flagsValue": 1090519045,
+    "flagsAccepted": true,
+    "sigchldDisposition": "DEFAULT",
+    "nonreaping": true,
+    "status": "ECHILD"
+  },
+  "recordedUTC": "2026-10-04T04:50:21.532550+00:00",
+  "planSHA256": "ae82f0416660ffc95a4234708143e065a4795d20caadf6710c60561f8783f51d"
+}

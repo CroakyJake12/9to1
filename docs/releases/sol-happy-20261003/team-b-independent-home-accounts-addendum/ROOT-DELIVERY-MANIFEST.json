@@ -1,0 +1,604 @@
+{
+  "recordedUTC": "2026-10-04T05:30:57.160896+00:00",
+  "state": "ROOT_EXACT_BOUNDED_ARTIFACT_COPY_VERIFIED",
+  "sourceCandidate": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "copiedOriginalRows": [
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/portable-unconfigured-interop7-source-runtime02.zip",
+      "path": "team-b-accounts-unconfigured-8041/portable-unconfigured-interop7-source-runtime02.zip",
+      "bytes": 36489326,
+      "sha256": "74b2a8d42cb428d249d80b3653395002bca266556bbb703708599c405d5dfcc6"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/PORTABLE-INTEROP7-PACKAGE-INVENTORY02.json",
+      "path": "team-b-accounts-unconfigured-8041/PORTABLE-INTEROP7-PACKAGE-INVENTORY02.json",
+      "bytes": 158413,
+      "sha256": "9cdcf53dd00f70f76718982257052cd2fcfd281c8f7a0239f1e68116a307d21d"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/PORTABLE-INTEROP7-BUILD-RECEIPT02.json",
+      "path": "team-b-accounts-unconfigured-8041/PORTABLE-INTEROP7-BUILD-RECEIPT02.json",
+      "bytes": 150687,
+      "sha256": "361d78eb214ec0886576ae86ad01ceea09e5ed21e83c38564980c51a9a7982ac"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/PORTABLE-INTEROP7-FINAL-ARTIFACT-RECEIPT02.json",
+      "path": "team-b-accounts-unconfigured-8041/PORTABLE-INTEROP7-FINAL-ARTIFACT-RECEIPT02.json",
+      "bytes": 2790,
+      "sha256": "869a6d5339fc5e49151fd75976916531929779da8500818dc1b5407a0edb852d"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/build-portable-packet02.py",
+      "path": "team-b-accounts-unconfigured-8041/build-portable-packet02.py",
+      "bytes": 4372,
+      "sha256": "f91869258cc60b22f1c0c4c8a9499979e9e5a374fe0c0d7a72e94c5017553d3a"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/portable-account-interop7-plan01/README.md",
+      "path": "team-b-accounts-unconfigured-8041/README.md",
+      "bytes": 2941,
+      "sha256": "d5c5647c9753cd8d89eefba5d6e8decd801db3b47350cd84fabf5fe4bd872194"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/accounts-interop7-portable375-root-verification.json",
+      "path": "team-b-accounts-unconfigured-8041/accounts-interop7-portable375-root-verification.json",
+      "bytes": 765,
+      "sha256": "c18f9108711375252d0dc84e6e6941c6080643b99df9afe1572ef06d26f1a42e"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/independent-home03-accounts7-root-review.json",
+      "path": "team-b-accounts-unconfigured-8041/independent-home03-accounts7-root-review.json",
+      "bytes": 974,
+      "sha256": "88375a80f5fde700417ef61d9a41ac8b68a98e57ff460c2e85a59d5415111f57"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/independent-home03-accounts7-small-addendum-selection01.json",
+      "path": "team-b-independent-home-accounts-addendum/independent-home03-accounts7-small-addendum-selection01.json",
+      "bytes": 20691,
+      "sha256": "7e23058a9bf92598d870d691e77d6ebb60719eae42634e67f18bbd010c810435"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "bytes": 79541,
+      "sha256": "248b85a3c1c8544f661cdd4cf914bc50a99760cb2bbbbb24b5239410aa14745c"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-independent-command-plan.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-public-flag-native2-independent-command-plan.json",
+      "bytes": 5706,
+      "sha256": "c5ccd3b436826243b10233985135aaaddcddda1e7e9ea15204459758d4255728"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan03.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-public-flag-native2-owned-execution-plan03.json",
+      "bytes": 47764,
+      "sha256": "dc7e7659f1ac878ef45a50603072637140b6e60ebcab1628d57333ae1c904321"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-native2-source03-owned-clr-ipc-freeze.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-native2-source03-owned-clr-ipc-freeze.json",
+      "bytes": 1931,
+      "sha256": "3d57a47847a6c2b3786e8cf29a61331013c0691c4cf7fa68c36f625232a84963"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned03.py",
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/run-home-public-flag-native2-owned03.py",
+      "bytes": 13300,
+      "sha256": "2292e7bdb8147a93726679b0a50632f0296a0f43c9ce58ee1bcda4d7805831b9"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/owned-kernel-child-proof01.py",
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/root-home-native2-source03-review-and-runtime-grant.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/root-home-native2-source03-review-and-runtime-grant.json",
+      "bytes": 978,
+      "sha256": "4a6cae3f6b779f4377f33cf150c229f1e583753a0a9b8a9c6a2850f840285821"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent01/independent-receipt.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent01/independent-receipt.json",
+      "bytes": 2111,
+      "sha256": "b74a52fd38a2cd27adab42e1cec88f8d6a7c2da41afcc2220e11896de15f9b20"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-360.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent01/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent01/public-flag-360.log",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent01/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent02/independent-receipt.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent02/independent-receipt.json",
+      "bytes": 2410,
+      "sha256": "4a108a840b6e5722347e25ad7cd01c9a9d5decef0bea74b5cbc2bcbd9b0a0838"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent02/public-flag-360.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent02/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent02/public-flag-360.log",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent02/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/independent-receipt.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/independent-receipt.json",
+      "bytes": 4315,
+      "sha256": "f90a48d42cad4e3c31f99492f9fd3c1231f9d00d9e9bab4792c93af012a1920e"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-1440.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-1440.json",
+      "bytes": 158002,
+      "sha256": "bba1acc70098518850fa3cb404d93f47a1da66ba4ece44f6c41a5cc7608a6425"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-1440.log",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-1440.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-360.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-home-public-flag-native2-independent03/public-flag-360.log",
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned.py",
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/run-home-public-flag-native2-owned.py",
+      "bytes": 11386,
+      "sha256": "a0e2c87a34dc7cd6970e1671b40440cb92c5765eee089bd4e2a666ede8a62c3c"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-public-flag-native2-owned-execution-plan.json",
+      "bytes": 47467,
+      "sha256": "ae82f0416660ffc95a4234708143e065a4795d20caadf6710c60561f8783f51d"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-source-freeze.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-public-flag-native2-owned-source-freeze.json",
+      "bytes": 1518,
+      "sha256": "4409e6dcd05886d09c71c9c1d3bacf7d82056974e05da818cc2e86086ddccaf5"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned02.py",
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/run-home-public-flag-native2-owned02.py",
+      "bytes": 12147,
+      "sha256": "a3a66888b644e260012d633070b06af68d7a0817b119ced62417e1d4f348bfbd"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan02.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-public-flag-native2-owned-execution-plan02.json",
+      "bytes": 47679,
+      "sha256": "f8fe1091de01c5f5e237cfa18cd703fec7dcda4b253897d210a6258dafd10e42"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-native2-first-control-failure-and-source02.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-native2-first-control-failure-and-source02.json",
+      "bytes": 2371,
+      "sha256": "746dd5e0b2f32ae9f415f290eb29ce7ef39306304e2b0d5592743a8e647f9071"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/root-home-native2-source02-review-and-runtime-grant.json",
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/root-home-native2-source02-review-and-runtime-grant.json",
+      "bytes": 972,
+      "sha256": "d3a19130ecbb7fb069a5d012acfb78c24f9c59387c42e1942553184ebd1a804d"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent01-executed-manifest.json",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent01-executed-manifest.json",
+      "bytes": 84218,
+      "sha256": "4f53bf4522338284a8f129597e71a595440867091f18a078be959f9276a056ee"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent-owned-source-freeze01.json",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent-owned-source-freeze01.json",
+      "bytes": 1408,
+      "sha256": "8ec253cdf8de10e588c43c4193e9f8606fe67aa98349ce36985407e944780ce2"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent-owned-execution-plan01.json",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent-owned-execution-plan01.json",
+      "bytes": 12160,
+      "sha256": "19011e63c349cfbfc48657e4fa24015c220401408847aa86c14e0a23118859ed"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-independent-accounts-interop7-owned01.py",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/run-independent-accounts-interop7-owned01.py",
+      "bytes": 13797,
+      "sha256": "d2cdf267cbb09b46ab63fb52a6ad92abdf6f1fdd896d222d69705c98fc711acb"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/accounts-interop7-independent-root-source-review01.json",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent-root-source-review01.json",
+      "bytes": 838,
+      "sha256": "4da5a8ad5782ff056d58e29e8de7075e9237a0d0efa1342fef7997a098e97e28"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-interop-8041-independent01/results.json",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/raw-independent01/run/results.json",
+      "bytes": 2923,
+      "sha256": "2898abeaacfcac20008e7d39826a9469c5f71063afecd0e2643d2682464918dc"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-interop-8041-independent01-control/owned-family-receipt.json",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/raw-independent01/control/owned-family-receipt.json",
+      "bytes": 5743,
+      "sha256": "19ccdbf4fdd98280923fc282c176a29123f91baeeaf068f4365c02f2bae10834"
+    },
+    {
+      "sourcePath": "/workspace/team-b-b6-interop-8041-independent01-control/runner-safe-stdout.log",
+      "path": "team-b-independent-home-accounts-addendum/accounts7/raw-independent01/control/runner-safe-stdout.log",
+      "bytes": 397,
+      "sha256": "824ab28714aae19c3838697997520b1c55e3af1e51ad95c0cfca7527c25d6c6d"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run02/results.json",
+      "path": "team-b-wave-recorded-8041/actual-run02/results.json",
+      "bytes": 115013,
+      "sha256": "e266659619d98b7a722fdca1c90bcb00b166dbe6a54ebbdef931c18459c594a5"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run02/cleanup-source-receipt.json",
+      "path": "team-b-wave-recorded-8041/actual-run02/cleanup-source-receipt.json",
+      "bytes": 26473,
+      "sha256": "77b9536da3a17a9cd4bb6e14007b4c42caa41c3a08da24d5ab86ef14a24dc29a"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run02/browser-export.wav",
+      "path": "team-b-wave-recorded-8041/actual-run02/browser-export.wav",
+      "bytes": 288044,
+      "sha256": "71a6402a78f20031a04fd757749cc440f22db5c3ab8efad307b5426407b72882"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-browser-8041a70b-cold05-run02/wave-narrow.png",
+      "path": "team-b-wave-recorded-8041/actual-run02/wave-narrow.png",
+      "bytes": 88489,
+      "sha256": "272f17d3e64ffc33c60522912c5a5fdc1b7b03fd18b7e11f26ee9ac815cd8252"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/executed-run02-manifest.json",
+      "path": "team-b-wave-recorded-8041/source-and-manifests/executed-run02-manifest.json",
+      "bytes": 67217,
+      "sha256": "e75307a4b218bca073237a7125020869d1a02e4ad83ab5b68d9cfeef78c0a9ba"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/EXACT-8041-WAVE14-EXECUTION-PLAN-03.json",
+      "path": "team-b-wave-recorded-8041/source-and-manifests/EXACT-8041-WAVE14-EXECUTION-PLAN-03.json",
+      "bytes": 23475,
+      "sha256": "4cb0573e8d15171426425e41fced53ba28c810a9cdbcd814860fbc564eb93100"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/run-owned-wave-watchdog03.py",
+      "path": "team-b-wave-recorded-8041/source-and-manifests/run-owned-wave-watchdog03.py",
+      "bytes": 14470,
+      "sha256": "3ce9adde875ee1eff64c9a88f56b890df7aa04b8f458eb063029c1e91cbba6c2"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/owned-kernel-child-proof01.py",
+      "path": "team-b-wave-recorded-8041/source-and-manifests/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution03/manifest03.json",
+      "path": "team-b-wave-recorded-8041/source-and-manifests/manifest03.json",
+      "bytes": 1287,
+      "sha256": "b58806d63bf0bc654d68b6ea53b7c4558021aa04d82e49c65f348e5a55571374"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-8041-owned-execution02/executed-run01-manifest.json",
+      "path": "team-b-wave-recorded-8041/preserved-run01-failure/executed-run01-manifest.json",
+      "bytes": 1336,
+      "sha256": "af84d4835569f64308c09a4362cff8c17a1c18239ec8d614ee58370471c21140"
+    },
+    {
+      "sourcePath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave8041-14-root-raw-review.json",
+      "path": "team-b-wave-recorded-8041/root-raw-review.json",
+      "bytes": 1387,
+      "sha256": "28dcf93685a885c879c4a8b7444b8fae3fe750fe82e2dcd51d709941918b2249"
+    }
+  ],
+  "artifactFiles": [
+    {
+      "path": "team-b-accounts-unconfigured-8041/PORTABLE-INTEROP7-BUILD-RECEIPT02.json",
+      "bytes": 150687,
+      "sha256": "361d78eb214ec0886576ae86ad01ceea09e5ed21e83c38564980c51a9a7982ac"
+    },
+    {
+      "path": "team-b-accounts-unconfigured-8041/PORTABLE-INTEROP7-FINAL-ARTIFACT-RECEIPT02.json",
+      "bytes": 2790,
+      "sha256": "869a6d5339fc5e49151fd75976916531929779da8500818dc1b5407a0edb852d"
+    },
+    {
+      "path": "team-b-accounts-unconfigured-8041/PORTABLE-INTEROP7-PACKAGE-INVENTORY02.json",
+      "bytes": 158413,
+      "sha256": "9cdcf53dd00f70f76718982257052cd2fcfd281c8f7a0239f1e68116a307d21d"
+    },
+    {
+      "path": "team-b-accounts-unconfigured-8041/README.md",
+      "bytes": 2941,
+      "sha256": "d5c5647c9753cd8d89eefba5d6e8decd801db3b47350cd84fabf5fe4bd872194"
+    },
+    {
+      "path": "team-b-accounts-unconfigured-8041/accounts-interop7-portable375-root-verification.json",
+      "bytes": 765,
+      "sha256": "c18f9108711375252d0dc84e6e6941c6080643b99df9afe1572ef06d26f1a42e"
+    },
+    {
+      "path": "team-b-accounts-unconfigured-8041/build-portable-packet02.py",
+      "bytes": 4372,
+      "sha256": "f91869258cc60b22f1c0c4c8a9499979e9e5a374fe0c0d7a72e94c5017553d3a"
+    },
+    {
+      "path": "team-b-accounts-unconfigured-8041/independent-home03-accounts7-root-review.json",
+      "bytes": 974,
+      "sha256": "88375a80f5fde700417ef61d9a41ac8b68a98e57ff460c2e85a59d5415111f57"
+    },
+    {
+      "path": "team-b-accounts-unconfigured-8041/portable-unconfigured-interop7-source-runtime02.zip",
+      "bytes": 36489326,
+      "sha256": "74b2a8d42cb428d249d80b3653395002bca266556bbb703708599c405d5dfcc6"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/README.md",
+      "bytes": 808,
+      "sha256": "ce482b7cf8b229ee5f0a3079717cc03098fe711b10d9ed0c20e7defd2f89d55e"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/raw-independent01/control/owned-family-receipt.json",
+      "bytes": 5743,
+      "sha256": "19ccdbf4fdd98280923fc282c176a29123f91baeeaf068f4365c02f2bae10834"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/raw-independent01/control/runner-safe-stdout.log",
+      "bytes": 397,
+      "sha256": "824ab28714aae19c3838697997520b1c55e3af1e51ad95c0cfca7527c25d6c6d"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/raw-independent01/run/results.json",
+      "bytes": 2923,
+      "sha256": "2898abeaacfcac20008e7d39826a9469c5f71063afecd0e2643d2682464918dc"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent-owned-execution-plan01.json",
+      "bytes": 12160,
+      "sha256": "19011e63c349cfbfc48657e4fa24015c220401408847aa86c14e0a23118859ed"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent-owned-source-freeze01.json",
+      "bytes": 1408,
+      "sha256": "8ec253cdf8de10e588c43c4193e9f8606fe67aa98349ce36985407e944780ce2"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent-root-source-review01.json",
+      "bytes": 838,
+      "sha256": "4da5a8ad5782ff056d58e29e8de7075e9237a0d0efa1342fef7997a098e97e28"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/accounts-interop7-independent01-executed-manifest.json",
+      "bytes": 84218,
+      "sha256": "4f53bf4522338284a8f129597e71a595440867091f18a078be959f9276a056ee"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/accounts7/source-and-receipts/run-independent-accounts-interop7-owned01.py",
+      "bytes": 13797,
+      "sha256": "d2cdf267cbb09b46ab63fb52a6ad92abdf6f1fdd896d222d69705c98fc711acb"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-native2-first-control-failure-and-source02.json",
+      "bytes": 2371,
+      "sha256": "746dd5e0b2f32ae9f415f290eb29ce7ef39306304e2b0d5592743a8e647f9071"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-public-flag-native2-owned-execution-plan.json",
+      "bytes": 47467,
+      "sha256": "ae82f0416660ffc95a4234708143e065a4795d20caadf6710c60561f8783f51d"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-public-flag-native2-owned-execution-plan02.json",
+      "bytes": 47679,
+      "sha256": "f8fe1091de01c5f5e237cfa18cd703fec7dcda4b253897d210a6258dafd10e42"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/home-public-flag-native2-owned-source-freeze.json",
+      "bytes": 1518,
+      "sha256": "4409e6dcd05886d09c71c9c1d3bacf7d82056974e05da818cc2e86086ddccaf5"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/root-home-native2-source02-review-and-runtime-grant.json",
+      "bytes": 972,
+      "sha256": "d3a19130ecbb7fb069a5d012acfb78c24f9c59387c42e1942553184ebd1a804d"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/run-home-public-flag-native2-owned.py",
+      "bytes": 11386,
+      "sha256": "a0e2c87a34dc7cd6970e1671b40440cb92c5765eee089bd4e2a666ede8a62c3c"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/original-control-failures/run-home-public-flag-native2-owned02.py",
+      "bytes": 12147,
+      "sha256": "a3a66888b644e260012d633070b06af68d7a0817b119ced62417e1d4f348bfbd"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent01/independent-receipt.json",
+      "bytes": 2111,
+      "sha256": "b74a52fd38a2cd27adab42e1cec88f8d6a7c2da41afcc2220e11896de15f9b20"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent01/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent01/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent02/independent-receipt.json",
+      "bytes": 2410,
+      "sha256": "4a108a840b6e5722347e25ad7cd01c9a9d5decef0bea74b5cbc2bcbd9b0a0838"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent02/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent02/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/independent-receipt.json",
+      "bytes": 4315,
+      "sha256": "f90a48d42cad4e3c31f99492f9fd3c1231f9d00d9e9bab4792c93af012a1920e"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-1440.json",
+      "bytes": 158002,
+      "sha256": "bba1acc70098518850fa3cb404d93f47a1da66ba4ece44f6c41a5cc7608a6425"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-1440.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/raw-independent03/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-native2-source03-owned-clr-ipc-freeze.json",
+      "bytes": 1931,
+      "sha256": "3d57a47847a6c2b3786e8cf29a61331013c0691c4cf7fa68c36f625232a84963"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-public-flag-native2-independent-command-plan.json",
+      "bytes": 5706,
+      "sha256": "c5ccd3b436826243b10233985135aaaddcddda1e7e9ea15204459758d4255728"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-public-flag-native2-owned-execution-plan03.json",
+      "bytes": 47764,
+      "sha256": "dc7e7659f1ac878ef45a50603072637140b6e60ebcab1628d57333ae1c904321"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/home-public-flag-native20x2-independent03-executed-manifest.json",
+      "bytes": 79541,
+      "sha256": "248b85a3c1c8544f661cdd4cf914bc50a99760cb2bbbbb24b5239410aa14745c"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/root-home-native2-source03-review-and-runtime-grant.json",
+      "bytes": 978,
+      "sha256": "4a6cae3f6b779f4377f33cf150c229f1e583753a0a9b8a9c6a2850f840285821"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/home03/source-and-receipts/run-home-public-flag-native2-owned03.py",
+      "bytes": 13300,
+      "sha256": "2292e7bdb8147a93726679b0a50632f0296a0f43c9ce58ee1bcda4d7805831b9"
+    },
+    {
+      "path": "team-b-independent-home-accounts-addendum/independent-home03-accounts7-small-addendum-selection01.json",
+      "bytes": 20691,
+      "sha256": "7e23058a9bf92598d870d691e77d6ebb60719eae42634e67f18bbd010c810435"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/README.md",
+      "bytes": 1004,
+      "sha256": "54f12699096fc773360ae21b760b17e26b7171b10fa13c807d1476b72423f078"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/actual-run02/browser-export.wav",
+      "bytes": 288044,
+      "sha256": "71a6402a78f20031a04fd757749cc440f22db5c3ab8efad307b5426407b72882"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/actual-run02/cleanup-source-receipt.json",
+      "bytes": 26473,
+      "sha256": "77b9536da3a17a9cd4bb6e14007b4c42caa41c3a08da24d5ab86ef14a24dc29a"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/actual-run02/results.json",
+      "bytes": 115013,
+      "sha256": "e266659619d98b7a722fdca1c90bcb00b166dbe6a54ebbdef931c18459c594a5"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/actual-run02/wave-narrow.png",
+      "bytes": 88489,
+      "sha256": "272f17d3e64ffc33c60522912c5a5fdc1b7b03fd18b7e11f26ee9ac815cd8252"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/preserved-run01-failure/executed-run01-manifest.json",
+      "bytes": 1336,
+      "sha256": "af84d4835569f64308c09a4362cff8c17a1c18239ec8d614ee58370471c21140"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/root-raw-review.json",
+      "bytes": 1387,
+      "sha256": "28dcf93685a885c879c4a8b7444b8fae3fe750fe82e2dcd51d709941918b2249"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/source-and-manifests/EXACT-8041-WAVE14-EXECUTION-PLAN-03.json",
+      "bytes": 23475,
+      "sha256": "4cb0573e8d15171426425e41fced53ba28c810a9cdbcd814860fbc564eb93100"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/source-and-manifests/executed-run02-manifest.json",
+      "bytes": 67217,
+      "sha256": "e75307a4b218bca073237a7125020869d1a02e4ad83ab5b68d9cfeef78c0a9ba"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/source-and-manifests/manifest03.json",
+      "bytes": 1287,
+      "sha256": "b58806d63bf0bc654d68b6ea53b7c4558021aa04d82e49c65f348e5a55571374"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/source-and-manifests/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "team-b-wave-recorded-8041/source-and-manifests/run-owned-wave-watchdog03.py",
+      "bytes": 14470,
+      "sha256": "3ce9adde875ee1eff64c9a88f56b890df7aa04b8f458eb063029c1e91cbba6c2"
+    }
+  ],
+  "totalBytes": 38518078,
+  "qualification": "Scope recorded in all packet readmes; originalfailures preserved, exactAACK missing, global release/integrated acceptance unset."
+}

@@ -1,0 +1,13 @@
+{
+  "recordedUTC": "2026-10-04T04:55:02.087015+00:00",
+  "reviewer": "root",
+  "state": "SOLE_NATIVE_NO_BUILD_GRANTED",
+  "scriptSha256": "a3a66888b644e260012d633070b06af68d7a0817b119ced62417e1d4f348bfbd",
+  "planSha256": "f8fe1091de01c5f5e237cfa18cd703fec7dcda4b253897d210a6258dafd10e42",
+  "all187PinsMatch": true,
+  "review": "Atomic captured lstatmode and FileNotFound-only tolerance avoid second-stat race; other special entries/IO still fail with safe mode/relativepath/phase diagnostics. Actual child exit now recorded during finally. Same compiledfixture20x2/kernelfamily/64MiB+256MiB budgets unchanged.",
+  "firstRunRetained": "360 raw20PASS but childexit unrecorded and wrapperFAIL;1440NOTRUN, not whole native2 pass",
+  "sourceLeadQualification": "Original failure could be a second-stat race or actual native TMP IPC special; exact cause unrecorded, no causal claim.",
+  "otherSDKGuiArchiveWritersHeld": true,
+  "scope": "No browser/AT/owneradoption proof."
+}

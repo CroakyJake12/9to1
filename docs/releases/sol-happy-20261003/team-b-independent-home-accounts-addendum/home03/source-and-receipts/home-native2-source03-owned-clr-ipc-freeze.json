@@ -1,0 +1,49 @@
+{
+  "recordedUTC": "2026-10-04T04:57:52.124081+00:00",
+  "state": "ROOT_APPROVED_SOURCE03_ACCOUNTING_AUTHORED_NOT_EXECUTED; RUNTIME_GRANT_REQUIRED",
+  "source": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/run-home-public-flag-native2-owned03.py",
+    "sha256": "2292e7bdb8147a93726679b0a50632f0296a0f43c9ce58ee1bcda4d7805831b9"
+  },
+  "plan": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/home-public-flag-native2-owned-execution-plan03.json",
+    "sha256": "dc7e7659f1ac878ef45a50603072637140b6e60ebcab1628d57333ae1c904321"
+  },
+  "all187PinsMatch": true,
+  "freshOutputAbsent": true,
+  "preservedActual02": {
+    "receiptSHA256": "4a108a840b6e5722347e25ad7cd01c9a9d5decef0bea74b5cbc2bcbd9b0a0838",
+    "nativeExitCode": 0,
+    "firstUnsupportedIPC": {
+      "relativePath": "tmp/clr-debug-pipe-128736-4334071-in",
+      "capturedMode": "0o10700",
+      "isSymlink": false,
+      "isSocket": false
+    },
+    "phase": "resource-inspection",
+    "360Executed": 20,
+    "360Passed": 20,
+    "1440Executed": false,
+    "closure": {
+      "allHeldExit": true,
+      "allBirthsGone": true,
+      "kernel": {
+        "empty": true,
+        "flags": [
+          "WEXITED",
+          "WNOHANG",
+          "WNOWAIT",
+          "LINUX___WALL"
+        ],
+        "flagsValue": 1090519045,
+        "flagsAccepted": true,
+        "sigchldDisposition": "DEFAULT",
+        "nonreaping": true,
+        "status": "ECHILD"
+      }
+    },
+    "sourceUnchanged": true,
+    "controlState": "FAIL"
+  },
+  "guard": "No IPCread/follow/signals. CapturedlstatFIFO/socket mode only; uidown, exactfreshTMP parent +already held originalnativePID/birth named. Every IPCmetadata byte/block counted, named endpoints must disappear at normalfamily closure/final. Unknownspecial/symlink/IO failclosed. No environment/CLRdiagnostics disable or fixture changes. Nativecount/scopes original20 exact."
+}
