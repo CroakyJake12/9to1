@@ -67,14 +67,25 @@ public interface INotesAttachmentStore
 /// <summary>
 /// Represents notes validation issue and keeps its related state and behavior together.
 /// </summary>
-public sealed record NotesValidationIssue(string Path, string Message, bool IsError);
+public sealed record NotesValidationIssue(string Path, string Message, bool IsError)
+{
+    /// <summary>Retains the actual owned-content refusal so persistence cannot misclassify it as corrupt legacy storage.</summary>
+    public NotesCardContentException? ContentRefusal { get; init; }
+}
 
 /// <summary>
 /// Represents notes validation result and keeps its related state and behavior together.
 /// </summary>
 public sealed record NotesValidationResult(
     bool IsValid,
-    IReadOnlyList<NotesValidationIssue> Issues);
+    IReadOnlyList<NotesValidationIssue> Issues)
+{
+    public void ThrowIfOwnedContentRefused()
+    {
+        var original = Issues.FirstOrDefault(issue => issue.IsError && issue.ContentRefusal is not null)?.ContentRefusal;
+        if (original is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original).Throw();
+    }
+}
 
 /// <summary>
 /// Represents notes flashcard scheduler and keeps its related state and behavior together.
@@ -202,6 +213,7 @@ public static class NotesTextStatistics
                         yield return block.Flashcard.Back;
                         yield return block.Flashcard.Hint;
                     }
+                    foreach (var richText in NotesCardContentCodec.EnumerateSearchText(block)) yield return richText;
                 }
             }
         }
@@ -248,6 +260,7 @@ public static class NotesTextStatistics
                         yield return block.Flashcard.Back;
                         yield return block.Flashcard.Hint;
                     }
+                    foreach (var richText in NotesCardContentCodec.EnumerateSearchText(block)) yield return richText;
                 }
             }
         }

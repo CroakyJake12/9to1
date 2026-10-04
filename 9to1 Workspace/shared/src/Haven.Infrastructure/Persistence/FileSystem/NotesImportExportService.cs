@@ -79,6 +79,7 @@ public sealed partial class NotesImportExportService(
             CreatedAt = DateTimeOffset.UtcNow
         });
         var validation = validator.Validate(document);
+        validation.ThrowIfOwnedContentRefused();
         if (!validation.IsValid) throw new InvalidDataException("Imported Notes content failed validation: " + string.Join(" | ", validation.Issues.Where(issue => issue.IsError).Take(10).Select(issue => issue.Path + ": " + issue.Message)));
         await diagnostics.WriteAsync(
             ReliabilitySeverity.Information,
@@ -102,10 +103,12 @@ public sealed partial class NotesImportExportService(
         ArgumentNullException.ThrowIfNull(document);
         if (string.IsNullOrWhiteSpace(destinationPath)) throw new ArgumentException("An export destination is required.", nameof(destinationPath));
         var validation = validator.Validate(document);
+        validation.ThrowIfOwnedContentRefused();
         if (!validation.IsValid) throw new InvalidDataException("Notes export was blocked because the document is invalid.");
         var extension = EffectiveExtension(destinationPath);
         if (!ExportExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             throw new NotSupportedException($"Notes cannot export '{extension}'. Supported formats: {string.Join(", ", ExportExtensions)}");
+        if (extension is not ".haven-notes.json" and not ".json") RefuseRichCardFlattening(document);
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(destinationPath))!);
         var temporary = destinationPath + ".tmp-" + Guid.NewGuid().ToString("N");
         try
@@ -168,6 +171,10 @@ public sealed partial class NotesImportExportService(
     public async Task PrintAsync(NotesDocument document, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
+        var validation = validator.Validate(document);
+        validation.ThrowIfOwnedContentRefused();
+        if (!validation.IsValid) throw new InvalidDataException("Notes printing was blocked because the document is invalid.");
+        RefuseRichCardFlattening(document);
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Printing Haven Notes currently requires the Windows desktop host.");
         var directory = Path.Combine(Path.GetTempPath(), "Haven", "Print");
         Directory.CreateDirectory(directory);
@@ -194,6 +201,16 @@ public sealed partial class NotesImportExportService(
         {
             throw new InvalidOperationException("Haven created the print-ready PDF, but Windows could not open a print handler. The file remains at: " + path, ex);
         }
+    }
+
+    // Native Notes JSON preserves the complete editable versioned metadata payload. Until a
+    // format has a real rich-face renderer, refuse before creating directories or destination bytes.
+    private static void RefuseRichCardFlattening(NotesDocument document)
+    {
+        foreach (var block in document.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks))
+            if (NotesCardContentCodec.Read(block) is not null)
+                throw new NotesCardContentException("UnsupportedCardContent",
+                    "This format cannot preserve editable rich Cards faces. Export the owning native Notes JSON instead.");
     }
 
     /// <summary>

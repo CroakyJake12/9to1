@@ -7,6 +7,7 @@
  * Maintenance: Preserve the layer boundary, nullability annotations, cancellation flow, and existing public signatures when changing this file.
  */
 
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -38,7 +39,12 @@ public sealed class NotesRepository(
     /// <summary>
     /// Stores gate locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> RootGates = new(
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+    // Every owning repository instance for the same normalized configured root serializes mutations and reads.
+    // This is same-process coordination, not a cross-process storage authority claim.
+    private readonly SemaphoreSlim _gate = RootGates.GetOrAdd(
+        Path.GetFullPath(Path.Combine(paths.DataDirectory, "Notes", "Documents")), static _ => new(1, 1));
     /// <summary>
     /// Stores root locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -107,13 +113,75 @@ public sealed class NotesRepository(
     public async Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
+        var originalRequestId = document.Id; var originalRequestVersion = document.Version;
+        var richRequestCaptured = HasStructuredCards(document);
+        if (richRequestCaptured)
+        {
+            // Capture the complete new owning request before the first await. The actual
+            // NotesSaveResult acknowledges that snapshot; never rewrite a newer caller.
+            document = CaptureStructuredRequest(document, originalRequestId, originalRequestVersion, cancellationToken);
+        }
         var validation = validator.Validate(document);
+        validation.ThrowIfOwnedContentRefused();
         if (!validation.IsValid)
             throw new InvalidDataException("Notes document validation failed: " + string.Join(" | ", validation.Issues.Where(issue => issue.IsError).Take(12).Select(issue => issue.Path + ": " + issue.Message)));
 
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // Compare the actual current physical revision while the canonical root is held.
+            // Recovery still uses this repository's actual validated backup/version search; an
+            // independently committed valid current is never replaced by a stale editor.
+            var originalCurrentPresent = File.Exists(CurrentPath(document.Id));
+            NotesDocument? persisted;
+            if (originalCurrentPresent)
+            {
+                try { persisted = await ReadAndValidateAsync(CurrentPath(document.Id), cancellationToken).ConfigureAwait(false); }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+                {
+                    persisted = null;
+                    // Supported legacy schemas are valid migration origins, not corrupt current
+                    // documents. Read/validate their canonical migrated revision under this same
+                    // root gate; the normal ID/revision CAS and backup publication remain below.
+                    try
+                    {
+                        var legacy = await new NotesDocumentMigrator().ReadAndMigrateAsync(CurrentPath(document.Id), cancellationToken).ConfigureAwait(false);
+                        await using var originalInput = File.OpenRead(CurrentPath(document.Id));
+                        if (originalInput.Length is <= 0 or > 256L * 1024 * 1024)
+                            throw new InvalidDataException("The original legacy Notes file exceeds the migration bounds.");
+                        var original = await JsonSerializer.DeserializeAsync<NotesDocument>(originalInput,
+                            new JsonSerializerOptions(JsonOptions) { AllowTrailingCommas = true, ReadCommentHandling = JsonCommentHandling.Skip, MaxDepth = 256 },
+                            cancellationToken).ConfigureAwait(false);
+                        if (legacy.SourceSchemaVersion >= 0 && legacy.SourceSchemaVersion < NotesDocument.CurrentSchemaVersion &&
+                            legacy.TargetSchemaVersion == NotesDocument.CurrentSchemaVersion && original is not null &&
+                            original.Id == legacy.Document.Id && original.Version >= 0 && original.Version == legacy.Document.Version &&
+                            validator.Validate(legacy.Document).IsValid)
+                            persisted = legacy.Document;
+                    }
+                    catch (Exception legacyError) when (legacyError is IOException or UnauthorizedAccessException or JsonException or InvalidDataException) { }
+                    persisted ??= await RecoverCoreAsync(document.Id, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else persisted = await RecoverCoreAsync(document.Id, cancellationToken).ConfigureAwait(false);
+            // CAS admission reads never quarantine or remove the original current before denying.
+            if (persisted is null && originalCurrentPresent)
+                throw new InvalidDataException("The current Notes document has no valid recovery copy; it cannot be replaced by this save.");
+            if (persisted is not null && persisted.Id != document.Id)
+                throw new InvalidDataException("The current Notes document identity differs from its canonical directory.");
+            if ((persisted?.Version ?? 0) != document.Version)
+                throw new NotesRevisionConflictException(document.Id, document.Version, persisted?.Version ?? 0);
+            if (persisted is not null && HasStructuredCards(persisted))
+            {
+                // A retained canonical card cannot silently become a scalar-only copy.
+                // The SAME physical current and request are inspected under the original root gate.
+                if (!richRequestCaptured)
+                    document = CaptureStructuredRequest(document, originalRequestId, originalRequestVersion, cancellationToken);
+                var capturedValidation = validator.Validate(document);
+                capturedValidation.ThrowIfOwnedContentRefused();
+                if (!capturedValidation.IsValid)
+                    throw new NotesCardContentException("UnsupportedCardContent", "The complete retained Cards request is invalid; retain the original source.");
+                RefuseImplicitStructuredCardLoss(persisted, document);
+            }
             var directory = DocumentDirectory(document.Id);
             var versions = VersionsDirectory(document.Id);
             Directory.CreateDirectory(directory);
@@ -129,6 +197,7 @@ public sealed class NotesRepository(
             document.Recovery.RecoveryReason = string.Empty;
 
             var temporary = currentPath + ".tmp-" + Guid.NewGuid().ToString("N");
+            NotesSaveResult? canonicalReceipt = null;
             try
             {
                 await WriteJsonDurablyAsync(temporary, document, cancellationToken).ConfigureAwait(false);
@@ -149,12 +218,16 @@ public sealed class NotesRepository(
 
                 var versionId = VersionFileName(document.Version, now);
                 var versionPath = Path.Combine(versions, versionId + ".haven-notes.json");
+                // Only the actual acknowledged atomic current publication creates this receipt.
+                canonicalReceipt = new NotesSaveResult(document.Id, document.Version, now, hash, currentPath, versionPath)
+                    { VersionHistoryComplete = false };
                 await CopyDurablyAsync(currentPath, versionPath, cancellationToken).ConfigureAwait(false);
                 await WriteJsonDurablyAsync(
                     Path.Combine(versions, versionId + ".meta.json"),
                     new NotesVersionManifest(document.Version, now, NormalizeReason(reason), new FileInfo(versionPath).Length, hash),
                     cancellationToken).ConfigureAwait(false);
                 ApplyRetention(versions);
+                canonicalReceipt = canonicalReceipt with { VersionHistoryComplete = true };
 
                 await diagnostics.WriteAsync(
                     ReliabilitySeverity.Information,
@@ -169,7 +242,15 @@ public sealed class NotesRepository(
                         ["reason"] = NormalizeReason(reason)
                     },
                     cancellationToken: cancellationToken).ConfigureAwait(false);
-                return new NotesSaveResult(document.Id, document.Version, now, hash, currentPath, versionPath);
+                return canonicalReceipt;
+            }
+            catch (Exception) when (canonicalReceipt is not null)
+            {
+                // Ancillary history/diagnostics failure or cancellation cannot undo known current.
+                // Preserve the committed version; no retry of the document effect is necessary.
+                return canonicalReceipt with { PostCommitWarning = canonicalReceipt.VersionHistoryComplete
+                    ? "The document saved, but local diagnostics could not finish."
+                    : "The document saved, but its version history could not finish." };
             }
             catch
             {
@@ -374,13 +455,34 @@ public sealed class NotesRepository(
     /// </summary>
     private async Task<NotesDocument> ReadAndValidateAsync(string path, CancellationToken cancellationToken)
     {
-        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
-        var document = await JsonSerializer.DeserializeAsync<NotesDocument>(stream, JsonOptions, cancellationToken).ConfigureAwait(false)
+        FileStream? original = null; NotesDocument? document = null;
+        var failures = new List<Exception>();
+        try
+        {
+            original = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024,
+                FileOptions.Asynchronous | FileOptions.SequentialScan);
+            document = await JsonSerializer.DeserializeAsync<NotesDocument>(original, JsonOptions, cancellationToken).ConfigureAwait(false)
                        ?? throw new InvalidDataException("The Notes document was empty.");
-        var validation = validator.Validate(document);
-        if (!validation.IsValid)
-            throw new InvalidDataException("The Notes document failed validation: " + string.Join(" | ", validation.Issues.Where(issue => issue.IsError).Take(8).Select(issue => issue.Path + ": " + issue.Message)));
-        return document;
+            var validation = validator.Validate(document);
+            validation.ThrowIfOwnedContentRefused();
+            if (!validation.IsValid)
+                throw new InvalidDataException("The Notes document failed validation: " + string.Join(" | ", validation.Issues.Where(issue => issue.IsError).Take(8).Select(issue => issue.Path + ": " + issue.Message)));
+        }
+        catch (Exception error) { failures.Add(error); }
+        if (original is not null)
+        {
+            try { await original.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception error)
+            {
+                if (!failures.Any(previous => ReferenceEquals(previous, error))) failures.Add(error);
+            }
+        }
+        // Single failures retain their exact old classification and original object.
+        // If independent input/body and close errors coexist, retain both outside
+        // legacy IO recovery so an owned-content refusal cannot become quarantine.
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Original Notes input and independent close failed.", failures);
+        return document ?? throw new InvalidDataException("The Notes document was empty.");
     }
 
     /// <summary>
@@ -467,6 +569,7 @@ public sealed class NotesRepository(
         if (block.Equation is not null) builder.AppendLine(block.Equation.Source).AppendLine(block.Equation.AccessibleAlternative);
         if (block.Html is not null) builder.AppendLine(block.Html.FallbackText).AppendLine(block.Html.HtmlSource);
         if (block.Flashcard is not null) builder.AppendLine(block.Flashcard.Front).AppendLine(block.Flashcard.Back).AppendLine(block.Flashcard.Hint);
+        foreach (var richText in NotesCardContentCodec.EnumerateSearchText(block)) builder.AppendLine(richText);
         return builder.ToString();
     }
 
@@ -478,6 +581,62 @@ public sealed class NotesRepository(
         var start = Math.Max(0, offset - 70);
         var end = Math.Min(text.Length, offset + length + 110);
         return (start > 0 ? "…" : string.Empty) + text[start..end].ReplaceLineEndings(" ") + (end < text.Length ? "…" : string.Empty);
+    }
+
+    private static IEnumerable<NotesBlock> OwningBlocks(NotesDocument document)
+    {
+        if (document.Sections is null) yield break;
+        foreach (var section in document.Sections)
+        {
+            if (section?.Pages is null) continue;
+            foreach (var page in section.Pages)
+            {
+                if (page?.Blocks is null) continue;
+                foreach (var block in page.Blocks)
+                    if (block is not null) yield return block;
+            }
+        }
+    }
+
+    private static bool HasStructuredCards(NotesDocument document) => OwningBlocks(document).Any(block =>
+        block.Metadata is not null && block.Metadata.Keys.Any(key =>
+            key.StartsWith("9to1.Cards.content.", StringComparison.OrdinalIgnoreCase)));
+
+    private static NotesDocument CaptureStructuredRequest(NotesDocument source, Guid originalId,
+        long originalVersion, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(source, JsonOptions);
+        if (bytes.Length > 64 * 1024 * 1024)
+            throw new NotesCardContentException("UnsupportedCardContent", "The complete owning rich Cards snapshot exceeds 64 MiB.");
+        var captured = JsonSerializer.Deserialize<NotesDocument>(bytes, JsonOptions)
+            ?? throw new NotesCardContentException("UnsupportedCardContent", "The complete rich Cards snapshot is unavailable.");
+        if (captured.Id != originalId || captured.Version != originalVersion)
+            throw new NotesCardContentException("RevisionConflict", "The original rich Cards identity or revision changed during capture.");
+        cancellationToken.ThrowIfCancellationRequested();
+        return captured;
+    }
+
+    private static void RefuseImplicitStructuredCardLoss(NotesDocument original, NotesDocument candidate)
+    {
+        var candidateBlocks = OwningBlocks(candidate).ToArray();
+        var byBlock = candidateBlocks.ToLookup(block => block.Id);
+        var byCard = candidateBlocks.Where(block => block.Flashcard is not null)
+            .ToLookup(block => block.Flashcard!.CardId);
+        foreach (var originalBlock in OwningBlocks(original))
+        {
+            if (NotesCardContentCodec.Read(originalBlock) is null) continue;
+            var sameEntities = new HashSet<NotesBlock>(ReferenceEqualityComparer.Instance);
+            sameEntities.UnionWith(byBlock[originalBlock.Id]);
+            sameEntities.UnionWith(byCard[originalBlock.Flashcard!.CardId]);
+            if (sameEntities.Count == 0) continue; // Explicit removal of the whole card is an ordinary versioned edit.
+            if (sameEntities.Count != 1)
+                throw new NotesCardContentException("RevisionConflict", "The retained rich Cards identity is ambiguous; retain the original source.");
+            var retained = sameEntities.Single();
+            if (retained.Id != originalBlock.Id || retained.Flashcard?.CardId != originalBlock.Flashcard!.CardId ||
+                NotesCardContentCodec.Read(retained) is null)
+                throw new NotesCardContentException("RevisionConflict", "A retained canonical card cannot implicitly lose or rebind its rich faces; retain the original source.");
+        }
     }
 
     /// <summary>

@@ -9,6 +9,8 @@
 
 using System.Text.RegularExpressions;
 using Haven.Core;
+using Haven.Core.Mathematics;
+using System.Text;
 
 namespace Haven.Application;
 
@@ -58,6 +60,13 @@ public sealed partial class NotesDocumentValidator : INotesDocumentValidator
         ValidatePageSetup(document.PageSetup);
 
         var identifiers = new HashSet<Guid>();
+        var hasStructuredCards = document.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
+            .Any(block => block.Metadata is not null && block.Metadata.Keys.Any(key =>
+                key.StartsWith("9to1.Cards.content.", StringComparison.OrdinalIgnoreCase)));
+        long structuredContentBytes = 0;
+        var structuredFaceItems = 0;
+        var retainedGraphs = new Dictionary<(Guid, long), byte[]>();
+        var retainedExpressions = new Dictionary<(Guid, long), byte[]>();
         AddId(document.Id, "id");
         foreach (var section in document.Sections)
         {
@@ -138,6 +147,11 @@ public sealed partial class NotesDocumentValidator : INotesDocumentValidator
         }
 
         foreach (var conflict in document.Collaboration.Conflicts) AddId(conflict.Id, $"conflicts[{conflict.Id}].id");
+        if (hasStructuredCards && issues.Any(issue => issue.IsError) &&
+            !issues.Any(issue => issue.ContentRefusal is not null))
+            issues.Add(new NotesValidationIssue("cards", "The owning structured Cards document is invalid; retain the complete original.", true)
+                { ContentRefusal = new NotesCardContentException("UnsupportedCardContent",
+                    "Structured card validation refused the complete owning Notes document; retain its current bytes.") });
         return new NotesValidationResult(!issues.Any(issue => issue.IsError), issues);
 
         void AddId(Guid id, string path)
@@ -164,6 +178,16 @@ public sealed partial class NotesDocumentValidator : INotesDocumentValidator
 
         void ValidateBlock(NotesBlock block, Guid pageId)
         {
+            try
+            {
+                // A hidden rich payload cannot be silently ignored after a legacy kind change.
+                if (block.Kind != NotesBlockKind.Flashcard) _ = NotesCardContentCodec.Read(block);
+            }
+            catch (NotesCardContentException refusal)
+            {
+                issues.Add(new NotesValidationIssue($"blocks[{block.Id}].metadata", refusal.Message, true)
+                    { ContentRefusal = refusal });
+            }
             if (!Enum.IsDefined(block.Kind)) { Error($"pages[{pageId}].blocks[{block.Id}].kind", "Unknown block kind."); return; }
             if (block.Order < 0) Error($"blocks[{block.Id}].order", "Block order cannot be negative.");
             if (block.PlainText.Length > 10_000_000) Error($"blocks[{block.Id}].plainText", "A single text block is limited to ten million characters.");
@@ -298,6 +322,54 @@ public sealed partial class NotesDocumentValidator : INotesDocumentValidator
             if (block.Flashcard.CardId == Guid.Empty) Error($"blocks[{block.Id}].flashcard.cardId", "Flashcard IDs are required.");
             if (string.IsNullOrWhiteSpace(block.Flashcard.Front)) Error($"blocks[{block.Id}].flashcard.front", "Flashcard fronts cannot be empty.");
             if (string.IsNullOrWhiteSpace(block.Flashcard.Back)) Error($"blocks[{block.Id}].flashcard.back", "Flashcard backs cannot be empty.");
+            if (hasStructuredCards) AddId(block.Flashcard.CardId, $"blocks[{block.Id}].flashcard.cardId");
+            try
+            {
+                var content = NotesCardContentCodec.Read(block);
+                if (content is not null)
+                {
+                    var raw = block.Metadata[NotesCardContentCodec.MetadataKey];
+                    structuredContentBytes = checked(structuredContentBytes + Encoding.UTF8.GetByteCount(raw));
+                    if (structuredContentBytes > 32L * 1024 * 1024)
+                        throw new NotesCardContentException("UnsupportedCardContent", "Cards exceed the whole-document content byte bound.");
+                    foreach (var face in new[] { content.Front, content.Back })
+                        foreach (var item in face.Items)
+                        {
+                            if (++structuredFaceItems > 4096)
+                                throw new NotesCardContentException("UnsupportedCardContent", "Cards exceed the whole-document face item bound.");
+                            if (item.Kind == NotesCardFaceItemKind.Graph)
+                            {
+                                AddId(item.ItemId, $"blocks[{block.Id}].flashcard.graphItem.id");
+                                var graph = item.Graph!;
+                                var encoded = MathObjectCodec.Encode(graph);
+                                var key = (graph.GraphID, graph.Revision);
+                                if (retainedGraphs.TryGetValue(key, out var prior) && !prior.AsSpan().SequenceEqual(encoded))
+                                    throw new NotesCardContentException("RevisionConflict", "Different graph bodies share one canonical graph identity and revision.");
+                                retainedGraphs.TryAdd(key, encoded);
+                                foreach (var expression in graph.Expressions)
+                                {
+                                    var expressionBody = MathObjectCodec.Encode(expression);
+                                    var expressionKey = (expression.ExpressionID, expression.Revision);
+                                    if (retainedExpressions.TryGetValue(expressionKey, out var original) &&
+                                        !original.AsSpan().SequenceEqual(expressionBody))
+                                        throw new NotesCardContentException("RevisionConflict", "Different expression bodies share one canonical expression identity and revision.");
+                                    retainedExpressions.TryAdd(expressionKey, expressionBody);
+                                }
+                            }
+                            else
+                            {
+                                var child = item.Block!;
+                                AddId(child.Id, $"blocks[{block.Id}].flashcard.content.id");
+                                ValidateBlock(child, block.Id);
+                            }
+                        }
+                }
+            }
+            catch (NotesCardContentException refusal)
+            {
+                issues.Add(new NotesValidationIssue($"blocks[{block.Id}].flashcard", refusal.Message, true)
+                    { ContentRefusal = refusal });
+            }
             if (block.Flashcard.Schedule.EaseFactor is < 1.3 or > 3.2) Error($"blocks[{block.Id}].flashcard.schedule.easeFactor", "Ease factor must be between 1.3 and 3.2.");
             foreach (var mask in block.Flashcard.OcclusionMasks)
             {
