@@ -1,5 +1,5 @@
 {
-  "recordedUTC": "2026-10-04T10:33:05.391213+00:00",
+  "recordedUTC": "2026-10-04T11:19:01.588881+00:00",
   "releaseStatus": "BLOCKED_PENDING_FULL_REQUIRED_ACCEPTANCE",
   "acceptedHead": null,
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
@@ -458,5 +458,15 @@
     "currentProviderRead": "https-anonymous-preparation/provider-readback.json",
     "actualHTTPS": "NOT_RUN: current enforced attachednetworkrevision24 omitsworkerhostname; userpublishingconfiguration",
     "qualification": "Anonymous phase only; credentials omitted, redirects notfollowed, inheritedproxy+CA retained. No user/client/admin/email fixture or mail request. JWKS GET may initialize maintained issuerkey; same-time actualprovider read required. No authenticatedPKCE/profile/session/mail/native/fullservice acceptance."
-  }
+  },
+  "continuationHandoff": "CONTINUE-IN-9TO1.md",
+  "requestedSuccessorEnvironment": "9to1",
+  "requestedSuccessorGoal": true,
+  "successorCreated": false,
+  "successorGoalStarted": false,
+  "latestLocalIntegratedEvidence": "root-current-local-checks/record.json",
+  "latestIndependentReview": "c6/final-bounded-handoff-review/audit.json",
+  "latestCoordinationRead": "fb37491118091396ac67282ae09ac89d9dc55e2a",
+  "activeDurableCancelFailure": "durable-cancel-regression/owner-fix-request.json; actual1fail2pass independently reproduced; sourcefix unadopted",
+  "cloudflareSourceUnchanged": "d643d723 producer/deployed713 unchanged; no newremote seed/HTTPS"
 }

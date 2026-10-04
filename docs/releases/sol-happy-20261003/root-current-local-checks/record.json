@@ -1,0 +1,64 @@
+{
+  "recordedUTC": "2026-10-04T11:19:01.588881+00:00",
+  "scope": "Fresh root local checks on integrated filebytes; hosted and whole-platform gates remain open",
+  "checks": [
+    {
+      "command": "node --test cloud/billing/test/*.test.mjs",
+      "log": "billing-node.log",
+      "exitCode": 0,
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "cwd": "cloud/cake-id-auth",
+      "command": "node --check deployment/https/validate.mjs && node deployment/https/validate.test.mjs",
+      "log": "https-anonymous.log",
+      "exitCode": 0,
+      "boundedControls": 7
+    },
+    {
+      "cwd": "cloud/cake-id-auth",
+      "command": "node --check deployment/https/authenticated.mjs && node --check deployment/https/prepare-fixture.mjs && node deployment/https/authenticated.test.mjs",
+      "log": "https-authenticated.log",
+      "exitCode": 0,
+      "scope": "Real hash/SQLite seed equivalence/duplicate/rollback/privatecustody/transport controls; not hostedflow"
+    },
+    {
+      "command": "CAKE_RECOVERY_MIGRATIONS=/workspace/team-c/integration/cloud/cake-id-auth/migrations python3 -B cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+      "log": "recovery.log",
+      "exitCode": 0,
+      "boundedControls": 10
+    }
+  ],
+  "sourceManifestsChecked": 2,
+  "filePinsChecked": 20,
+  "hashErrors": 0,
+  "independentFinalScope": "c6/final-bounded-handoff-review/audit.json retains Files4pass/guard-negative1fail and durable-cancel1fail2pass; no sourcefix adopted",
+  "globalAcceptance": "BLOCKED",
+  "acceptedHead": null,
+  "logs": {
+    "recovery.log": {
+      "bytes": 461,
+      "sha256": "bc6ddc264550a7b47d376a91f80b2f6697c780e3747606f2ef1de376b0d5710f"
+    },
+    "https-anonymous.log": {
+      "bytes": 93,
+      "sha256": "552ce492c1ed199f76b8a74bce2f5b3f5c14f1e010af698bb43f9cd3b8613d9f"
+    },
+    "billing-node.log": {
+      "bytes": 1738,
+      "sha256": "8f48b9f0e7ce73c7b69ba4fac1a7cc325c37989f8bb4dd685a9f7bcd92bbb83c"
+    },
+    "https-authenticated.log": {
+      "bytes": 243,
+      "sha256": "8b21aac3fa77324c23d96720680ff92997f665be740f0fce3cd3d970ac4f01f8"
+    }
+  },
+  "executedCandidate": "8978aaf925fc09807f20687b2310ff0ec37b1c08",
+  "laterPublicationCandidate": "e86b46c4c62c466923520a1f2127c4e4e0941b51",
+  "laterChanges": "Only later evidence/test-only Files and failingdurable-job proposal publication; checked billing/identity/recovery filebytes unchanged. No normalSDK/fullsuite rerun claimed.",
+  "billingSourceSHA256": "2b2f7fbdb33a3ead5b4fe115014bfd3e715ba7610372c0d5d50a3fc831b8f63b",
+  "recoverySourceSHA256": "64b3f43bdbeb03ef5bbef559126b3e02a05cfe501024ca811644e0e5e40e7350"
+}

@@ -1,8 +1,6 @@
 {
-  "recordedUTC": "2026-10-04T11:19:01.588881+00:00",
-  "workerHost": "cake-id-release-validation.jcbailey008.workers.dev",
-  "state": "OLD_CHAT_BINDING_UNCHANGED_AFTER_PUBLISH_NEW_9TO1_CHAT_REQUESTED",
-  "observation": {
+  "recordedUTC": "2026-10-04T11:02:53.173Z",
+  "environment": {
     "environment_id": "ccarenv_b64_Y2NhcmVudl9kZDA0M2RjZWNhMzA4MTkxOWE0YzE2N2ZkYzg3ODFhOQ",
     "source_config_id": "467f0c48-9ccf-40cd-996e-0175446d11c3~cecfg_6abc704046bc8199aded61f34613d5fe",
     "source_config_version_id": "467f0c48-9ccf-40cd-996e-0175446d11c3~cecfgver_6abc8d3fed348199a8a77692dbeb5ac7",
@@ -34,6 +32,8 @@
     "runtime_variables": [],
     "outbound_identities": []
   },
-  "previousObservedSpecRevision": "20",
-  "qualification": "Anonymous inheritedproxy retry CONNECT403/HTTP000. User requested a new published9to1 chat+Goal; neither creation nor Goal-start tools are exposed here, official CLI cloudlisting request failed. No successor/newGoal started."
+  "readinessReceipt": "anonymous-readiness.json",
+  "scope": "One anonymous exact-host HTTPS probe with inherited proxy and CA; not identity or service acceptance",
+  "rootConclusion": "Chat-bound enforced policy still lacks isolated Worker hostname; Cloudflare origin not reached",
+  "cloudflareOAuth": "Authenticated provider control-plane reads already succeed; this receipt is not a Cloudflare authentication failure"
 }
