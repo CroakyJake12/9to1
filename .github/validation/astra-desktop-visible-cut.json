@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "fdcf8d1e21b051d983d07375ccaca9ffbe0ea256",
+  "baselineCommit": "7b711a7f8e01eb0ff82917000743d11ef82ec08f",
   "programTree": "a1495094b0e463f0bfdeb591d6faf4a85c940f3f",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-agents-compiler09-original.py",
       "mode": "100644",
-      "object": "c6f3d086887bd2a1b6067ba9a2c19dfa6f627c0d",
-      "bytes": 53891,
-      "sha256": "9283e268bb04c80198ed5230a339afdcc02430641d49f69722a3a9c9a3068ebb"
+      "object": "d26848e37f44b7d594602787458f2c608ec2579e",
+      "bytes": 82479,
+      "sha256": "6314b0988039fa71839bd5532018906b1c86c924792d836f2d7655ee9cba2fe9"
     },
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
@@ -218,9 +218,9 @@
     {
       "path": ".github/validation/astra-agents-compiler09-sources.json",
       "mode": "100644",
-      "object": "54985791c61d905faedc2bef4f3fb4c25ead1d28",
-      "bytes": 121351,
-      "sha256": "ea5ee79233a98196661fb852e9649354f59c784a4305cb2a4efb3add317275b8"
+      "object": "4a9b369744c3bc2d939f4d3d6ca6e1c307a65344",
+      "bytes": 128386,
+      "sha256": "763a7aedc8bd2afa5917c0d1a86f0a4d33b5e794dbd974d2a869af48ee829c60"
     },
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
@@ -66895,7 +66895,7 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Root alone may seed the unique diagnostic branch to exact actualfdcf parent after all source/config/workflow/control and custody peers, then invoke unchanged strong54ac constructor and643 launcher. No owner Git/build/test/restore/network/SDK invocation.",
+    "Root alone may invoke unchanged strong54ac constructor and643 launcher on the SAME exact current7b711 diagnostic branch with nonforce current-parent CAS, fresh evidenceRoot and only two changed validation overlays; no owner Git/SDK/helper/process invocation.",
     "Only one new corrected-v3 Debug original compiler/document diagnostic lane is selected. The whole prior six independent baseline/corrected v2/v3 Debug/Release jobs remain byte-exact and skip the diagnostic branch. Their outcomes are not inferred or rerun. No tests/native or full SDK acceptance; old jobs/guards/215-12-48 cohort callers stay byte-exact.",
     "Seven cause-specific Agents targets only: five current fixture source bodies, v3-only DefineConstants marker and new conditional maintained-context accessor. Exactly51 analyzer sites16+14+11+8+2; explicit None/owned/retired cancellation assertions preserved, no warnings suppression or framework migration.",
     "Full later joint catalogue106 source rows/31 fixtures/204 methods251 authored minima and38 prerequisites preserved as source-only inventory. Four new explicit inherited rows add14 existing cases; zero new methods or test cases. This job compiles only actual selected v2/v3 dependency graph, not all106 sources or11 suites.",
@@ -66909,7 +66909,9 @@
     "Actual1beb corrected-v3 Debug original compiler command exited0 with0 warnings/errors, then unchanged restore helper rejected isolated lane evidence_output. Only a canonical same-checkout restore-diagnostic adapter is selected; helper/managed/host/task/current graph/package/source/doc/drain guards remain exact.",
     "Exact Compiler05 canonical restore context adapter stays byte-exact within the driver except one downstream diagnostic span. Immediately after physical_symbols retain SAME actual PE/PDB and full parsed document observations before unchanged strict source mapping; record exact refused document/candidates without alias/waiver/select-first. Original mapping primary plus all independent retained/body/close/save/currentness/budget faults remain.",
     "Catalogue106/31/204/251/38 and original six lanes remain historical source inventory only. A single selected corrected-v3 Debug diagnostic compile does not establish all catalogue sources or sibling compatibility. Actual generated source availability/PDB identity/restores/strict command and caller drains remain mandatory.",
-    "Sole original caller GITHUB_REF admission is an exact two-value old-isolated/new-diagnostic allowlist; repository/workflow_dispatch and every original conservative prefix/tuple/PIDfd/session/inner command/drain guard remain byte-exact. No broad startsWith/prefix/foreign ref admission. One diagnostic lane only; old6 jobs remain unchanged and skipped."
+    "Sole original caller GITHUB_REF admission is an exact two-value old-isolated/new-diagnostic allowlist; repository/workflow_dispatch and every original conservative prefix/tuple/PIDfd/session/inner command/drain guard remain byte-exact. No broad startsWith/prefix/foreign ref admission. One diagnostic lane only; old6 jobs remain unchanged and skipped.",
+    "Exact selected xUnit v3 project/package3.2.2/content only. Genuine current post-build target/item observation, original full imports/restore/package/archive/regular-nofollow source bytes and PDB checksum are required. The official target body is maintained provenance, not an observed original activation. Repository/generated/product-source guards remain unchanged; no foreign blanket waiver, select-first, basename lookup or package guessing.",
+    "Source08 sequential post-probe collector hold remains immutable history. Source09 independently collects target output, managed/generated/cache output and source-task closure checks from their SAME original before baselines; original probe error plus all distinct comparison/read faults are retained. No package/source mapping or acceptance relaxation."
   ],
   "inputManifests": [
     {
@@ -67271,6 +67273,61 @@
       "path": "/workspace/astra-source/root-compiler06-exact-physical-document-memory-controls995.json",
       "bytes": 3558,
       "sha256": "628e17052d6f6d108bde64e8832f9f4387389a1991ad7472bc3829d27fa8ca7c"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source08-exact-current-nuget-compile-content/astra-agents-compiler09-original.py",
+      "bytes": 82257,
+      "sha256": "cc96ce036038d124b22e0de4e038832514774c91ddc1039caf3bb59ee708a819"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source08-exact-current-nuget-compile-content/original-nuget-content-memory-controls.py",
+      "bytes": 9850,
+      "sha256": "23f5b9bf2485edaf48154b445c699e115085db082ad61562db2eb292e17f20db"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source08-exact-current-nuget-compile-content/official-xunit-v3-core-mtp-v1-3.2.2-whole-source-provenance.json",
+      "bytes": 15091,
+      "sha256": "eaf61619a5f573455a12472ac22dc89a5cf0015fcfbefdd6d55cf2561e421c39"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source08-exact-current-nuget-compile-content/astra-agents-compiler09-sources.json",
+      "bytes": 128375,
+      "sha256": "9ab50cc93cf3f7e7f822380b2f1768837b9fa13326caab5845b263b2cc56eae6"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source08-exact-current-nuget-compile-content/whole-compiler07-nuget-content-source-and-metadata-inverse.json",
+      "bytes": 139469,
+      "sha256": "7b0c6a042086ff99ba4a1271327d841855163f6bbe4a39e0371458ba00838a91"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source07-exact-original-two-branch-admission/manifest.json",
+      "bytes": 56931,
+      "sha256": "037ce1096522c6927d9f6ef24847b8e8d992e1d34fd7dafe4cfe1f6c97140d60"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source09-independent-original-postprobe-output-custody/astra-agents-compiler09-original.py",
+      "bytes": 82479,
+      "sha256": "6314b0988039fa71839bd5532018906b1c86c924792d836f2d7655ee9cba2fe9"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source09-independent-original-postprobe-output-custody/original-nuget-content-memory-controls.py",
+      "bytes": 13552,
+      "sha256": "00ff8ef16f8c941c50bc662a754bcc2d9db8fd8fca03764e9777fb75a6de00cf"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source09-independent-original-postprobe-output-custody/astra-agents-compiler09-sources.json",
+      "bytes": 128386,
+      "sha256": "763a7aedc8bd2afa5917c0d1a86f0a4d33b5e794dbd974d2a869af48ee829c60"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source09-independent-original-postprobe-output-custody/whole-compiler08-independent-output-custody-source-and-metadata-inverse.json",
+      "bytes": 98698,
+      "sha256": "bfb5f4292938d1a33b43d8a4bc62412b9bfbf9bf55f4658966211fff2d34a370"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source08-exact-current-nuget-compile-content/manifest.json",
+      "bytes": 61731,
+      "sha256": "b624cb3206a538ca20681e2209bd9ad09e902226767f8ebd8a99ac46eed5c9b3"
     }
   ],
   "sharedCakeIdContract": null

@@ -2990,8 +2990,8 @@
       "status": "SOURCE_ONLY_CONTEXT_ADAPTER_UNRUN",
       "driver": {
         "path": ".github/scripts/astra-agents-compiler09-original.py",
-        "bytes": 53891,
-        "sha256": "9283e268bb04c80198ed5230a339afdcc02430641d49f69722a3a9c9a3068ebb"
+        "bytes": 82479,
+        "sha256": "6314b0988039fa71839bd5532018906b1c86c924792d836f2d7655ee9cba2fe9"
       },
       "unchangedOriginalHelper": {
         "path": ".github/scripts/astra-joint-sdk-restore-evidence.py",
@@ -3027,8 +3027,8 @@
       },
       "driver": {
         "path": ".github/scripts/astra-agents-compiler09-original.py",
-        "bytes": 53891,
-        "sha256": "9283e268bb04c80198ed5230a339afdcc02430641d49f69722a3a9c9a3068ebb"
+        "bytes": 82479,
+        "sha256": "6314b0988039fa71839bd5532018906b1c86c924792d836f2d7655ee9cba2fe9"
       },
       "selectedLane": {
         "comparison": "corrected",
@@ -3071,6 +3071,169 @@
         },
         "qualification": "Sole GITHUB_REF exact-value predicate extends to both explicitly issued branches. Repository/event/argv/lane/guarded child/session/pidfd/whole command/caller drain predicates are byte exact. No prefix admission, CI or compiler acceptance."
       }
+    },
+    "nugetCompileContentProof": {
+      "status": "SOURCE_ONLY_CURRENT_TARGET_WITNESS_UNINVOKED",
+      "project": "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "package": "xunit.v3.core.mtp-v1/3.2.2",
+      "source": "_content/DefaultRunnerReporters.cs",
+      "assetsContentHash": "Ga5aA2Ca9ktz+5k3g5ukzwfexwoqwDUpV6z7atSEUvqtd6JuybU1XopHqg1oFd78QdTfZgZE9h5sHpO4qYIi5w==",
+      "archive": {
+        "bytes": 434820,
+        "sha256": "817f93844cbfdd923a1cb417fb0ed302008811f4a5fdc607da1c9a1895a86083",
+        "physicalSha512": "RXqPTvA2VW0BgbtW1UpFlQ78a7y2nt2+w0HwlyrAhkGM5rtIZVQ1v6mH3cDNW5fZfiaw1XpYlFXEJIxUQEsWSw=="
+      },
+      "members": [
+        {
+          "path": "_rels/.rels",
+          "bytes": 514,
+          "sha256": "cb4e9f9c9b1b6eb46dcf0589ad4363778993e41a4c87b37c74a5fb0ba3ef075f",
+          "crc32": 3243971973
+        },
+        {
+          "path": "xunit.v3.core.mtp-v1.nuspec",
+          "bytes": 2287,
+          "sha256": "49858dd97bcc0dfcad21d68a288ab6a7e318de68ade67c4c104d468186e05859",
+          "crc32": 3784147156
+        },
+        {
+          "path": "_content/DefaultRunnerReporters.cs",
+          "bytes": 1018,
+          "sha256": "e110bb9fe21ca6c3120a00382c773a086d62a008a0b0d2b76d08416f27d92bf2",
+          "crc32": 2410921701
+        },
+        {
+          "path": "_content/DefaultRunnerReporters.fs",
+          "bytes": 1069,
+          "sha256": "635fcd3e378c14a524aa98e4237f4f743731bb7fed4bd3b745956293ea44ea75",
+          "crc32": 1458708784
+        },
+        {
+          "path": "_content/DefaultRunnerReporters.vb",
+          "bytes": 1009,
+          "sha256": "6a04137693ef38d7eb74d6aaaf269345c8f8c255ccaf4ec31ade72168ca1aa26",
+          "crc32": 160905238
+        },
+        {
+          "path": "_content/logo-128-transparent.png",
+          "bytes": 1895,
+          "sha256": "bf9c034bc8a7080f0cece43c8969a39e8e480671c5b7b7282289fc8fc9194e94",
+          "crc32": 3462949829
+        },
+        {
+          "path": "_content/README.md",
+          "bytes": 5695,
+          "sha256": "8042e1345e3589d196979e3d9fdfa743717e2a4711ce322f03db2b95ab66c961",
+          "crc32": 2013256406
+        },
+        {
+          "path": "_content/runners/netcore/xunit.abstractions.dll",
+          "bytes": 21928,
+          "sha256": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c",
+          "crc32": 2207166975
+        },
+        {
+          "path": "_content/runners/netcore/xunit.v3.runner.utility.netcore.dll",
+          "bytes": 174856,
+          "sha256": "abce062185b0d72b665aae07d76c681aff1cd794525a34cfa1b3b0137af76aff",
+          "crc32": 3218552401
+        },
+        {
+          "path": "_content/runners/netfx/xunit.abstractions.dll",
+          "bytes": 21928,
+          "sha256": "7c07e3bce3e1794cffc033302fcf13a003fd320b16e1c09e9d9a221f495566a4",
+          "crc32": 2146922406
+        },
+        {
+          "path": "_content/runners/netfx/xunit.v3.runner.utility.netfx.dll",
+          "bytes": 213768,
+          "sha256": "16bcb56338612ad9a5205de481e1e693847334157a6d613c05d7d1d3bdea365c",
+          "crc32": 3396758294
+        },
+        {
+          "path": "_content/tasks/netcore/xunit.v3.msbuildtasks.dll",
+          "bytes": 41736,
+          "sha256": "fa150368f3b4665fb06553511489a08907651dfd2a29f8e0ab7ac768df437c9b",
+          "crc32": 97300274
+        },
+        {
+          "path": "_content/tasks/netfx/xunit.v3.msbuildtasks.dll",
+          "bytes": 40712,
+          "sha256": "e558ee718d404eb1848bb90c764326bc97d748b4852267b073c51c97cb335c4e",
+          "crc32": 2833472694
+        },
+        {
+          "path": "buildTransitive/xunit.v3.core.mtp-v1.props",
+          "bytes": 810,
+          "sha256": "c2046c74871c8c7632570323e266f0dc4a22fa08c0abc0988c80974288832e7c",
+          "crc32": 1310261682
+        },
+        {
+          "path": "buildTransitive/xunit.v3.core.mtp-v1.targets",
+          "bytes": 6864,
+          "sha256": "61a38d72b5e3178ead0ed89e68d1ec0d9074712510cedad0a7faf6d8f2732020",
+          "crc32": 3134804548
+        },
+        {
+          "path": "lib/net472/xunit.v3.mtp-v1.dll",
+          "bytes": 123144,
+          "sha256": "fb1d504e693333dbeb66587223deeb1ad46ee82de9a3cce2d7776a5800104403",
+          "crc32": 519990641
+        },
+        {
+          "path": "lib/net8.0/xunit.v3.mtp-v1.dll",
+          "bytes": 123144,
+          "sha256": "69903f4e48e5794350154d97bc911909974469780cd1931e23da3af419a1f2e7",
+          "crc32": 941982293
+        },
+        {
+          "path": "[Content_Types].xml",
+          "bytes": 908,
+          "sha256": "15b82032b4ed4dfdbadf6c3f9643bedf4993166a188cc0006c437762e58b750e",
+          "crc32": 68046507
+        },
+        {
+          "path": "package/services/metadata/core-properties/e0d5e47f499d409ea10a21527d40abae.psmdcp",
+          "bytes": 879,
+          "sha256": "4ad0efff9ba6ad66c4ece1951b6b2062f986d122efc7b267f0edadf5b6bd8e48",
+          "crc32": 1796109211
+        },
+        {
+          "path": ".signature.p7s",
+          "bytes": 25937,
+          "sha256": "b3d37d7d7e5d42da96cf14e582edeafe21579167f98fea0078bb8fc748858985",
+          "crc32": 1752436081
+        }
+      ],
+      "retainedTextMembers": [
+        "xunit.v3.core.mtp-v1.nuspec",
+        "_content/DefaultRunnerReporters.cs",
+        "buildTransitive/xunit.v3.core.mtp-v1.props",
+        "buildTransitive/xunit.v3.core.mtp-v1.targets"
+      ],
+      "officialWholeReference": {
+        "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source08-exact-current-nuget-compile-content/official-xunit-v3-core-mtp-v1-3.2.2-whole-source-provenance.json",
+        "bytes": 15091,
+        "sha256": "eaf61619a5f573455a12472ac22dc89a5cf0015fcfbefdd6d55cf2561e421c39"
+      },
+      "currentProbe": {
+        "target": "_XunitAttachSourceFiles",
+        "sameOriginalGlobalProperties": true,
+        "newResolveReferencesOrCompileInvocation": false,
+        "coldCompileObservationUnchanged": true,
+        "originalBuildTargetActivation": "UNKNOWN_NOT_RETAINED",
+        "currentTargetActivation": "REQUIRES_ACTUAL_CURRENT_COMPILE_ITEM_AND_EXACT_DEFINING_TARGET"
+      },
+      "controls": {
+        "source": {
+          "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source09-independent-original-postprobe-output-custody/original-nuget-content-memory-controls.py",
+          "bytes": 13552,
+          "sha256": "00ff8ef16f8c941c50bc662a754bcc2d9db8fd8fca03764e9777fb75a6de00cf"
+        },
+        "count": 23,
+        "status": "SOURCE_BOUND_PURE_MEMORY_UNINVOKED"
+      },
+      "qualification": "Exact selected xUnit v3 project/package3.2.2/content only. Genuine current post-build target/item observation, original full imports/restore/package/archive/regular-nofollow source bytes and PDB checksum are required. The official target body is maintained provenance, not an observed original activation. Repository/generated/product-source guards remain unchanged; no foreign blanket waiver, select-first, basename lookup or package guessing."
     }
   }
 }

@@ -1,6 +1,8 @@
 """Isolated original Agents compiler verification; no test/native/full-SDK acceptance."""
 import argparse, base64, hashlib, importlib.util, json, os, pathlib, re, shutil
 import signal, stat, struct, subprocess, sys, time, types, zlib
+import io, zipfile
+import xml.etree.ElementTree as ET
 
 sys.dont_write_bytecode = True
 P = pathlib.Path
@@ -38,6 +40,147 @@ def fail(primary, errors):
     for error in ([primary] if primary is not None else []) + errors: add(all_errors, error)
     if len(all_errors) > 1: raise BaseExceptionGroup('Original joint SDK and independent custody failures', all_errors)
     if all_errors: raise all_errors[0]
+
+def read_original_regular(path, maximum, observation=None):
+    """Read one original file through a retained no-follow directory chain."""
+    path = P(path)
+    if not path.is_absolute() or str(path) != str(path.absolute()) or '..' in path.parts:
+        raise RuntimeError('Original absolute lexical path required')
+    descriptors = []; links = []; primary = None; cleanup = []; body = None
+    if observation is not None:
+        observation.update({'path': str(path), 'state': 'NOT_OPENED'})
+    def directory_identity(value):
+        return (value.st_dev, value.st_ino, stat.S_IFMT(value.st_mode),
+                value.st_uid, value.st_gid)
+    def file_identity(value):
+        return (value.st_dev, value.st_ino, value.st_mode, value.st_uid, value.st_gid,
+                value.st_nlink, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+    try:
+        current = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        descriptors.append(current)
+        if not stat.S_ISDIR(os.fstat(current).st_mode):
+            raise RuntimeError('Original root directory refused')
+        for component in path.parts[1:-1]:
+            before = os.stat(component, dir_fd=current, follow_symlinks=False)
+            if not stat.S_ISDIR(before.st_mode):
+                raise RuntimeError('Original directory is indirect/non-directory')
+            child = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                            dir_fd=current)
+            descriptors.append(child)
+            if directory_identity(before) != directory_identity(os.fstat(child)):
+                raise RuntimeError('Original directory identity changed')
+            links.append((current, component, child, directory_identity(before)))
+            current = child
+        name = path.name
+        before = os.stat(name, dir_fd=current, follow_symlinks=False)
+        if (not stat.S_ISREG(before.st_mode) or before.st_uid != os.getuid()
+                or before.st_nlink != 1 or before.st_size < 0 or before.st_size > maximum):
+            raise RuntimeError('Original regular owned bounded file refused')
+        if observation is not None:
+            observation.update({'state': 'LEAF_OBSERVED', 'device': before.st_dev,
+                'inode': before.st_ino, 'mode': before.st_mode, 'uid': before.st_uid,
+                'gid': before.st_gid, 'links': before.st_nlink, 'bytes': before.st_size,
+                'mtimeNs': before.st_mtime_ns, 'ctimeNs': before.st_ctime_ns,
+                'ancestors': [{'component': component, 'device': identity[0],
+                    'inode': identity[1], 'type': identity[2], 'uid': identity[3],
+                    'gid': identity[4]} for _, component, _, identity in links]})
+        handle = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=current)
+        descriptors.append(handle)
+        if file_identity(before) != file_identity(os.fstat(handle)):
+            raise RuntimeError('Original regular file identity changed before read')
+        blocks = []; remaining = before.st_size
+        while remaining:
+            block = os.read(handle, min(65536, remaining))
+            if not block: raise RuntimeError('Original regular file short read')
+            blocks.append(block); remaining -= len(block)
+        if os.read(handle, 1):
+            raise RuntimeError('Original regular file grew during read')
+        body = b''.join(blocks)
+        if (file_identity(before) != file_identity(os.fstat(handle))
+                or file_identity(before) != file_identity(os.stat(name,
+                    dir_fd=current, follow_symlinks=False))):
+            raise RuntimeError('Original regular file changed during read')
+        for parent, component, child, identity in links:
+            if (directory_identity(os.fstat(child)) != identity
+                    or directory_identity(os.stat(component, dir_fd=parent,
+                        follow_symlinks=False)) != identity):
+                raise RuntimeError('Original directory link changed during read')
+    except BaseException as error: primary = error
+    finally:
+        for descriptor in reversed(descriptors):
+            collect(cleanup, lambda descriptor=descriptor: os.close(descriptor))
+    if observation is not None:
+        observation.update({'primaryType': None if primary is None else type(primary).__name__,
+            'closeFailureTypes': [type(error).__name__ for error in cleanup]})
+    fail(primary, cleanup)
+    if observation is not None: observation['state'] = 'WHOLE_READ_LINKS_AND_CLOSE_PROVEN'
+    return body
+
+
+def original_package_archive(raw, archive_pin, expected_members):
+    """Validate a whole bounded physical archive; retain no executable payload."""
+    if (len(raw) > 1048576 or len(raw) != archive_pin['bytes']
+            or hashlib.sha256(raw).hexdigest() != archive_pin['sha256']
+            or base64.b64encode(hashlib.sha512(raw).digest()).decode() !=
+                archive_pin['physicalSha512']):
+        raise RuntimeError('Exact original package archive bytes/hash differ')
+    expected = {row['path']: row for row in expected_members}
+    if len(expected) != len(expected_members) or len(expected) > 64:
+        raise RuntimeError('Exact package archive member table refused')
+    found = {}; bodies = {}; total = 0; archive = None; primary = None; cleanup = []
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(raw))
+        infos = archive.infolist()
+        if len(infos) != len(expected):
+            raise RuntimeError('Exact package archive member count differs')
+        for info in infos:
+            path = P(info.filename); mode = info.external_attr >> 16
+            if (info.is_dir() or path.is_absolute() or '..' in path.parts
+                    or str(path) != info.filename or '\\' in info.filename
+                    or info.filename in found or info.filename not in expected
+                    or stat.S_IFMT(mode) not in (0, stat.S_IFREG)
+                    or info.flag_bits & 1 or info.file_size < 0):
+                raise RuntimeError('Exact package archive path/type refused')
+            total += info.file_size
+            if total > 1048576: raise RuntimeError('Exact package expansion refused')
+            data = archive.read(info)
+            row = {'path': info.filename, 'bytes': len(data),
+                   'sha256': hashlib.sha256(data).hexdigest(), 'crc32': info.CRC}
+            if len(data) != info.file_size or row != expected[info.filename]:
+                raise RuntimeError('Whole original package member differs')
+            found[info.filename] = row; bodies[info.filename] = data
+    except BaseException as error: primary = error
+    finally:
+        if archive is not None: collect(cleanup, archive.close)
+    fail(primary, cleanup)
+    if set(found) != set(expected): raise RuntimeError('Whole package member missing')
+    return bodies
+
+
+def original_xunit_compile_item(probe, project_path, package_root, target_path,
+                                source_path, configuration):
+    values = probe['Properties']
+    if (values['MSBuildProjectFullPath'] != str(project_path)
+            or values['Configuration'] != configuration
+            or values['TargetFramework'] != 'net10.0'
+            or values['DefaultLanguageSourceExtension'] != '.cs'
+            or values['Language'] != 'C#'
+            or str(values['XunitRegisterBuiltInRunnerReporters']).strip().lower() == 'false'
+            or P(values['NuGetPackageRoot']) / 'xunit.v3.core.mtp-v1/3.2.2' != package_root):
+        raise RuntimeError('Exact current package Compile target properties differ')
+    matches = [item for item in probe.get('Items', {}).get('Compile', [])
+               if item.get('FullPath') == str(source_path)]
+    if len(matches) != 1:
+        raise RuntimeError('Exact current package Compile source is missing/ambiguous')
+    item = matches[0]
+    if (item.get('DefiningProjectFullPath') != str(target_path)
+            or not P(item.get('Identity', '').replace('\\', '/')).is_absolute()
+            or os.path.normpath(item.get('Identity', '').replace('\\', '/')) != str(source_path)
+            or source_path != package_root / '_content/DefaultRunnerReporters.cs'
+            or target_path != package_root /
+                'buildTransitive/xunit.v3.core.mtp-v1.targets'):
+        raise RuntimeError('Exact current package Compile defining import differs')
+    return item
 
 
 def load_module(path, name):
@@ -528,6 +671,228 @@ def main():
                     '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation,IsTestProject,OutputType,DebugType,DefineConstants,LangVersion']
                 if items: argv += ['-target:ResolveReferences', '-getItem:Compile,ProjectReference,ReferencePath']
                 return json.loads(command(phase + '-evaluate-' + label, argv))
+
+            def capture_xunit_compile_source(project, props, evaluated, graph, pair,
+                                            symbol_storage, diagnostic):
+                package_key = 'xunit.v3.core.mtp-v1/3.2.2'
+                exact_project = '9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj'
+                if project != exact_project or args.compiler_branch != 'v3':
+                    raise RuntimeError('Package Compile witness is not selected product authority')
+                spec = compiler_catalog['compilerVerification']['nugetCompileContentProof']
+                if (spec['package'] != package_key or spec['source'] !=
+                        '_content/DefaultRunnerReporters.cs'
+                        or spec['project'] != exact_project):
+                    raise RuntimeError('Exact maintained package content scope required')
+                package = graph['packages'][package_key]
+                package_root = P(package['root'])
+                if (not package_root.is_absolute()
+                        or package_root.parts[-2:] != ('xunit.v3.core.mtp-v1', '3.2.2')
+                        or package['assetsSha512'] != package['metadataContentHash']
+                        or package['assetsSha512'] != spec['assetsContentHash']
+                        or package['physicalArchiveSha512'] != spec['archive']['physicalSha512']
+                        or package['sha512'] != spec['archive']['physicalSha512']):
+                    raise RuntimeError('Current restored package root/hash provenance differs')
+                file_pins = {row['path']: row for row in package['files']}
+                if len(file_pins) != len(package['files']):
+                    raise RuntimeError('Duplicate current restored package file descriptor')
+                project_rows = [row for row in graph['projects']
+                    if row['path'] == project and row['hostContext'] is False]
+                if len(project_rows) != 1:
+                    raise RuntimeError('Exact current original restored project missing')
+                project_row = project_rows[0]
+                if project_row['sourceSha256'] != paths[project]['sha256']:
+                    raise RuntimeError('Current original project source pin differs')
+                originals = {}; physical = []; package_source = None
+                primary = None; cleanup = []; result = None
+                closure_before = None; task_before_probe = None; managed_before_probe = None; read_pins = []
+                witness = {'scope': package_key + '/_content/DefaultRunnerReporters.cs',
+                    'originalBuildTargetActivation': 'UNKNOWN_NOT_RETAINED',
+                    'currentTargetActivation': 'NOT_YET_OBSERVED',
+                    'sourceAuthority': 'EXACT_CURRENT_NUGET_BUILD_CONTENT_ONLY',
+                    'project': project, 'originalProjectSourceSha256': project_row['sourceSha256'],
+                    'restoreDescriptor': package, 'physicalBodies': physical,
+                    'restoredProjectMetadata': originals, 'originalReadObservations': [],
+                    'qualification': 'The maintained official target body is provenance; only the current original command can observe target/item activation.'}
+                diagnostic.setdefault('packageCompileSourceWitnesses', []).append(witness)
+                def pin_read(path, pin, maximum):
+                    observation = {}; witness['originalReadObservations'].append(observation)
+                    data = read_original_regular(path, maximum, observation)
+                    if (len(data), hashlib.sha256(data).hexdigest()) != (pin['bytes'], pin['sha256']):
+                        raise RuntimeError('Current original package/import body differs from restore')
+                    read_pins.append((P(path), pin, maximum, observation))
+                    return data
+                archive_name = 'xunit.v3.core.mtp-v1.3.2.2.nupkg'
+                try:
+                    archive = pin_read(package_root / archive_name,
+                        file_pins[archive_name], 1048576)
+                    archive_bodies = original_package_archive(archive,
+                        spec['archive'], spec['members'])
+                    for relative in spec['retainedTextMembers']:
+                        pin = file_pins[relative]
+                        data = pin_read(package_root / relative, pin, 1048576)
+                        if data != archive_bodies[relative]:
+                            raise RuntimeError('Current package source/import differs from physical archive')
+                        physical.append({'path': str(package_root / relative), **pin,
+                            'wholeOriginalUtf8': data.decode('utf-8', 'strict'),
+                            'archiveMember': relative})
+                        if relative == spec['source']: package_source = data
+                    task_file = '_content/tasks/netcore/xunit.v3.msbuildtasks.dll'
+                    task_data = pin_read(package_root / task_file, file_pins[task_file], 1048576)
+                    if task_data != archive_bodies[task_file]:
+                        raise RuntimeError('Current original package build task differs from archive')
+                    witness['packageBuildTaskPhysicalCheck'] = {
+                        'path': str(package_root / task_file), **file_pins[task_file],
+                        'rawBytesRetained': False}
+                    if package_source is None:
+                        raise RuntimeError('Exact package content bytes unavailable')
+                    sidecar_name = archive_name + '.sha512'
+                    sidecar = pin_read(package_root / sidecar_name, file_pins[sidecar_name], 4096)
+                    metadata = pin_read(package_root / '.nupkg.metadata',
+                        file_pins['.nupkg.metadata'], 4096)
+                    if (sidecar.decode('ascii').strip() != spec['archive']['physicalSha512']
+                            or json.loads(metadata)['contentHash'] != spec['assetsContentHash']):
+                        raise RuntimeError('Current NuGet physical versus content hash provenance differs')
+                    witness['physicalArchive'] = spec['archive']
+                    witness['wholeArchiveMemberChecks'] = spec['members']
+                    witness['nupkgMetadataWholeUtf8'] = metadata.decode('utf-8', 'strict')
+                    witness['physicalSha512SidecarWholeAscii'] = sidecar.decode('ascii')
+                    for row in project_row['metadata']:
+                        relative = P(row['path'])
+                        if relative.is_absolute() or '..' in relative.parts:
+                            raise RuntimeError('Current original restore metadata path refused')
+                        data = pin_read(root / relative, row, 2 * 1024 * 1024)
+                        originals[row['path']] = {'bytes': len(data),
+                            'sha256': hashlib.sha256(data).hexdigest(),
+                            'wholeOriginalUtf8': data.decode('utf-8', 'strict')}
+                    assets_rows = [path for path in originals if path.endswith('/project.assets.json')]
+                    if len(assets_rows) != 1:
+                        raise RuntimeError('Exact current project assets missing')
+                    assets = json.loads(originals[assets_rows[0]]['wholeOriginalUtf8'])
+                    library = assets['libraries'][package_key]
+                    if (library['type'] != 'package' or library['path'] != package_key
+                            or library['sha512'] != spec['assetsContentHash']
+                            or str(package_root.parent.parent) + '/' not in assets['packageFolders']):
+                        raise RuntimeError('Current project assets package/folder provenance differs')
+                    requested_target = 'net10.0/linux-x64'
+                    current_library = assets['targets'][requested_target][package_key]
+                    build_items = set()
+                    for section in ('build', 'buildTransitive', 'buildMultiTargeting'):
+                        build_items.update(current_library.get(section, {}))
+                    target_relative = 'buildTransitive/xunit.v3.core.mtp-v1.targets'
+                    props_relative = 'buildTransitive/xunit.v3.core.mtp-v1.props'
+                    if (current_library['type'] != 'package'
+                            or not {target_relative, props_relative}.issubset(build_items)):
+                        raise RuntimeError('Current restored assets do not include exact package imports')
+                    target_path = package_root / target_relative
+                    source_path = package_root / spec['source']
+                    import_observations = []
+                    for suffix, required in [('.nuget.g.props', package_root / props_relative),
+                                             ('.nuget.g.targets', target_path)]:
+                        rows = [path for path in originals if path.endswith(suffix)]
+                        if len(rows) != 1:
+                            raise RuntimeError('Exact current generated NuGet import file missing')
+                        tree = ET.fromstring(originals[rows[0]]['wholeOriginalUtf8'])
+                        matches = []
+                        for group in tree:
+                            for child in group:
+                                if child.tag.rsplit('}', 1)[-1] != 'Import': continue
+                                expression = child.attrib.get('Project', '').replace('\\', '/')
+                                marker = '$(NuGetPackageRoot)'
+                                if not expression.startswith(marker) or '$(' in expression[len(marker):]:
+                                    continue
+                                candidate = package_root.parent.parent / expression[len(marker):]
+                                if os.path.normpath(str(candidate)) == str(required):
+                                    matches.append({'metadataPath': rows[0], 'projectExpression': expression,
+                                        'condition': child.attrib.get('Condition'),
+                                        'groupCondition': group.attrib.get('Condition'),
+                                        'physicalPath': str(required)})
+                        if len(matches) != 1:
+                            raise RuntimeError('Current generated NuGet import is missing/ambiguous')
+                        import_observations.extend(matches)
+                    witness['generatedImportObservations'] = import_observations
+                    closure_before = regular_closure(P(evaluated['Properties']['TargetPath']).parent)
+                    task_before_probe = regular_closure(task_target.parent)
+                    managed_before_probe = regular_closure(managed)
+                    witness['wholeManagedOutputBeforeProbe'] = managed_before_probe
+                    witness['wholeSourceTaskOutputBeforeProbe'] = task_before_probe
+                    witness['parsedPhysicalPairBeforeProbe'] = symbol_storage['physicalFiles']
+                    argv = ['dotnet', 'msbuild', project, '-nologo', *props,
+                        '-target:_XunitAttachSourceFiles',
+                        '-getProperty:MSBuildProjectFullPath,Configuration,TargetFramework,RuntimeIdentifier,NuGetPackageRoot,ProjectAssetsFile,Language,DefaultLanguageSourceExtension,XunitRegisterBuiltInRunnerReporters,AvaloniaBuildTasksLocation,_XunitEntryPointPath,MSBuildRuntimeType',
+                        '-getItem:Compile']
+                    witness['actualCurrentProbeArgv'] = argv
+                    witness['probeTargetDependencyProof'] = {
+                        'target': '_XunitAttachSourceFiles',
+                        'dependsOn': ['_XunitGenerateEntryPoint', '_XunitCreateEntryPointCache'],
+                        'wholeTargetsSha256': file_pins[target_relative]['sha256'],
+                        'qualification': 'Exact maintained targets contain no Build, CoreCompile or ResolveProjectReferences call in this dependency chain; ordinary generation/cache work is independently checked for unchanged physical outputs.'}
+                    stdout = command(phase + '-observe-current-xunit-content-' + str(len(seen)), argv)
+                    probe = json.loads(stdout)
+                    witness['currentOriginalProbeEvaluation'] = probe
+                    item = original_xunit_compile_item(probe, root / project, package_root,
+                        target_path, source_path, configuration)
+                    values = probe['Properties']
+                    if (values['MSBuildRuntimeType'] != 'Core'
+                            or values['RuntimeIdentifier'] != 'linux-x64'
+                            or P(values['ProjectAssetsFile']) != root / assets_rows[0]
+                            or P(values['AvaloniaBuildTasksLocation']) != task_target):
+                        raise RuntimeError('Current package probe assets/task/property tuple differs')
+                    witness['currentTargetActivation'] = 'OBSERVED_EXACT_DEFINING_TARGET_COMPILE_ITEM'
+                    witness['currentOriginalCompileItem'] = item
+                    result = (source_path, package_source, witness)
+                except BaseException as error: primary = error
+                finally:
+                    def check_target_output():
+                        if (closure_before is not None and regular_closure(
+                                P(evaluated['Properties']['TargetPath']).parent) != closure_before):
+                            raise RuntimeError('Current package source probe changed physical outputs')
+                    def check_managed_output():
+                        if (managed_before_probe is not None and regular_closure(managed) != managed_before_probe):
+                            raise RuntimeError('Current package source probe changed managed/generated/cache outputs')
+                    def check_task_output():
+                        if (task_before_probe is not None and
+                                regular_closure(task_target.parent) != task_before_probe):
+                            raise RuntimeError('Current package source probe changed source-built tasks')
+                    collect(cleanup, check_target_output)
+                    collect(cleanup, check_managed_output)
+                    collect(cleanup, check_task_output)
+                    def check_pair(physical_file):
+                        data = read_original_regular(P(physical_file['path']), physical_file['bytes'])
+                        if (len(data), hashlib.sha256(data).hexdigest()) != (
+                                physical_file['bytes'], physical_file['sha256']):
+                            raise RuntimeError('Parsed original physical pair changed during package probe')
+                    for physical_file in symbol_storage['physicalFiles']:
+                        collect(cleanup, lambda physical_file=physical_file: check_pair(physical_file))
+                    def check_original_read(path, pin, maximum, original_observation):
+                        observation = {}; witness['originalReadObservations'].append(observation)
+                        data = read_original_regular(path, maximum, observation)
+                        keys = ('device', 'inode', 'mode', 'uid', 'gid', 'links', 'bytes',
+                            'mtimeNs', 'ctimeNs', 'ancestors')
+                        if (any(observation[key] != original_observation[key] for key in keys)
+                                or (len(data), hashlib.sha256(data).hexdigest()) != (pin['bytes'], pin['sha256'])):
+                            raise RuntimeError('SAME original package/import identity/body changed during probe')
+                    for path, pin, maximum, original_observation in read_pins:
+                        collect(cleanup, lambda path=path, pin=pin, maximum=maximum,
+                            original_observation=original_observation:
+                            check_original_read(path, pin, maximum, original_observation))
+                    def check_restore():
+                        after = snapshot_original_restore(suite, phase,
+                            'package-content-' + str(len(seen)), managed, host)
+                        if after != graph:
+                            raise RuntimeError('Whole original restored graph/package changed during probe')
+                        witness['wholeRestoreGraphUnchanged'] = True
+                    collect(cleanup, check_restore)
+                    collect(cleanup, protect_selected)
+                    collect(cleanup, budget)
+                    witness['primaryType'] = None if primary is None else type(primary).__name__
+                    witness['primaryText'] = None if primary is None else collect(cleanup, lambda: str(primary))
+                    witness['independentFailureTypesBeforeFinalSave'] = [type(error).__name__ for error in cleanup]
+                    witness['contentCompileProof'] = 'OBSERVATIONS_ONLY_NOT_ACCEPTED_BEFORE_ALL_COLLECTORS'
+                    collect(cleanup, lambda: save(out / phase /
+                        ('current-xunit-content-' + str(len(seen)) + '.json'), witness))
+                fail(primary, cleanup)
+                if result is None: raise RuntimeError('Exact original package source witness unavailable')
+                return result
             task_evaluated = query(TASK_PROJECT, host_props, 'source-tasks', True)
             task_target = P(task_evaluated['Properties']['TargetPath']).resolve()
             if task_evaluated['Properties']['Configuration'] != configuration or task_evaluated['Properties']['TargetFramework'] != 'netstandard2.0' or not task_target.is_relative_to(root):
@@ -640,19 +1005,50 @@ def main():
                                 'directResolvedPath': str(source), 'evaluatedCompileSuffixCandidates': [],
                                 'qualification': 'Strict actual mapping candidates only; no select-first, alias, generated-source waiver or document proof.'}
                             symbol_diagnostic['lastMappingAttempt'] = mapping_attempt
-                            if not source.is_relative_to(root) or not source.is_file():
-                                matches = [root / item['path'] for item in inputs
-                                    if name_in_pdb.replace('\\', '/').endswith('/' + item['path'])]
-                                mapping_attempt['evaluatedCompileSuffixCandidates'] = [str(candidate) for candidate in matches]
-                                if len(matches) != 1: raise RuntimeError('Mapped actual PDB document ambiguous/missing')
-                                source = matches[0]
+                            package_source_proof = None
+                            package_key = 'xunit.v3.core.mtp-v1/3.2.2'
+                            package = before.get('packages', {}).get(package_key)
+                            expected_package_source = (None if package is None else
+                                P(package['root']) / '_content/DefaultRunnerReporters.cs')
+                            if (not source.is_relative_to(root)
+                                    and project == '9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj'
+                                    and args.compiler_branch == 'v3'
+                                    and expected_package_source is not None
+                                    and name_in_pdb == str(expected_package_source)):
+                                source, package_bytes, package_source_proof = capture_xunit_compile_source(
+                                    project, props, evaluated, before, pair, symbol_storage, symbol_diagnostic)
+                                if (source.is_relative_to(root)
+                                        or source != expected_package_source
+                                        or hashlib.new(row['hashName'], package_bytes).hexdigest() != row['digest']):
+                                    raise RuntimeError('Exact observed package content differs from original PDB')
+                                mapping_attempt['currentPackageCompileWitness'] = {
+                                    'scope': package_source_proof['scope'],
+                                    'currentTargetActivation': package_source_proof['currentTargetActivation'],
+                                    'originalBuildTargetActivation': package_source_proof['originalBuildTargetActivation'],
+                                    'observedOriginalCompileItem': package_source_proof['currentOriginalCompileItem']}
+                            else:
+                                if not source.is_relative_to(root) or not source.is_file():
+                                    matches = [root / item['path'] for item in inputs
+                                        if name_in_pdb.replace('\\\\', '/').endswith('/' + item['path'])]
+                                    mapping_attempt['evaluatedCompileSuffixCandidates'] = [str(candidate) for candidate in matches]
+                                    if len(matches) != 1: raise RuntimeError('Mapped actual PDB document ambiguous/missing')
+                                    source = matches[0]
                             mapping_attempt['selectedStrictPath'] = str(source)
-                            if not source.is_relative_to(root) or source.is_symlink() or not source.is_file() or hashlib.new(row['hashName'], source.read_bytes()).hexdigest() != row['digest']:
-                                raise RuntimeError('Complete actual PDB document missing/different/foreign: ' + name_in_pdb)
-                            relative = str(source.relative_to(root))
-                            owned_pdb_sources.add(relative)
-                            source_pin = None if relative in paths else retained(source, out / phase / 'original-generated-or-materialized-sources')
-                            proof_docs.append({'document': name_in_pdb, 'source': relative, 'retainedOriginalSource': source_pin, **row})
+                            if package_source_proof is not None:
+                                proof_docs.append({'document': name_in_pdb,
+                                    'source': package_source_proof['scope'],
+                                    'sourceKind': 'EXACT_CURRENT_MAINTAINED_NUGET_COMPILE_CONTENT',
+                                    'retainedOriginalSource': {
+                                        'witness': phase + '/current-xunit-content-' + str(len(seen)) + '.json',
+                                        'bytes': len(package_bytes), 'sha256': hashlib.sha256(package_bytes).hexdigest()},
+                                    **row})
+                            else:
+                                if not source.is_relative_to(root) or source.is_symlink() or not source.is_file() or hashlib.new(row['hashName'], source.read_bytes()).hexdigest() != row['digest']:
+                                    raise RuntimeError('Complete actual PDB document missing/different/foreign: ' + name_in_pdb)
+                                relative = str(source.relative_to(root))
+                                owned_pdb_sources.add(relative)
+                                source_pin = None if relative in paths else retained(source, out / phase / 'original-generated-or-materialized-sources')
+                                proof_docs.append({'document': name_in_pdb, 'source': relative, 'retainedOriginalSource': source_pin, **row})
                         if not inputs or not proof_docs: raise RuntimeError('Actual complete source/PDB evidence empty')
                         compiled.append({'suite': suite['name'], 'project': project, 'evaluated': evaluated,
                             'physicalAssembly': values['AssemblyName'], 'identity': identity, 'pairs': original_pairs,
