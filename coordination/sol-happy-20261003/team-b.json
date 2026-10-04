@@ -92,7 +92,7 @@
     "Team C acknowledge B-owned claims and confirmed candidate baseline; Team C remains sole release integrator.",
     "C4 publish acknowledged authenticated Files/Sites transport contracts, authoritative metadata/revision commit proofs and staging frontend/backend deployment identities; existing IFilesService lacks browser byte-reference transport.",
     "Team C publish authenticated session/account/permission/tenant/AI/job/billing service protocols and isolated test accounts; no staging or provider credentials configured here.",
-    "Team A provide tested desktop candidate for required browser→desktop→browser continuity; no desktop build may be inferred correct.",
+    "Team A provide tested desktop candidate for required browser\u2192desktop\u2192browser continuity; no desktop build may be inferred correct.",
     "Confirm supported browser versions/performance targets via explicit SH-13 decision; do not infer support from one Chromium result.",
     "Team A clarify/implement Write independent Continuous/Pages/Book viewing and Locked/Unlocked layout states: current Document.LayoutMode/SetLayout combines modes and cannot satisfy all six combinations; no browser-only schema fork.",
     "Team A/test owner review BrowserPrivateProfileManagerTests symbolic-link test return on unsupported setup: present Fact can report green without running security assertions. Keep skip/environment outcome separate from PASS.",
@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T14:04:28.621233+00:00",
+  "updatedUTC": "2026-10-04T14:46:04.764840+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -205,7 +205,7 @@
     "currentStatus": "Real isolated compile/publish and bounded local browser behavior pass. Parent A63 and global/native/full-product acceptance remain provisional."
   },
   "reviewHoldRepairs": {
-    "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2→green2/2. Incorrect originalfixture revision1→2 corrected with acknowledged Worker SQL CAS and independent review.",
+    "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2\u2192green2/2. Incorrect originalfixture revision1\u21922 corrected with acknowledged Worker SQL CAS and independent review.",
     "homeDispatch": "d4c1816: actual production selector now used by BrowserApplication prefers registeredowner for all canonicalHome routes; owner denial/error/unavailable never fallback. Originalpriorselector fails newownercontrol after16oldpass; fixed22/22/root+B6pass. SDK10 static asset sourcecontract/GL export wiring and sharedCUI primitives/fonts fixed; missing generatedJS actualtarget failure provesguard.",
     "acceptance": "LOCAL_SUBSET_ONLY; awaiting actualbuiltbrowser runtime; full services/deployment/crossclient/browsermatrix NOT_RUN/BLOCKED",
     "status": "THREE_ORIGINAL_P2_SOURCE_DEFECTS_C_INDEPENDENTLY_CLOSED_AT_830F747; ORIGINAL_FAILURES_PRESERVED",
@@ -317,7 +317,7 @@
     "localExecution": "Historical Write65 actualfreshprocess and Scene22 retained. Current actualtoolbar48PASS +sameoriginalred11 precedingassertions; actualowner glyph-layout red beta assigned31.36 width/23.625lineheight actualFormattedText34.132 height. Storage17scripted unitPASS latest actualbrowser17queued, old real14PASS retained. CurrentFiles17PASS, Sites13PASS164assertions plus separatefreshprocessseed17assertions/reopen6assertions; successfulcohort4111sourcehashes unchanged. Allnarrowcounts distinctfromfullappcriteria.",
     "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation",
     "inProgress": "Reactive enabled-state public Avalonia priority diagnostic; common observer lifetime composition; sealed fresh actual Wave/accessibility browser candidate next; real Write device-local feature registration, canonical library recovery; Files17/Sites12 queued. Actual maintained Worker local fixture currently held before Workerd spawn, receiver HTTPS prerequisite ready.",
-    "initialCompile": "Actual bounded Wave/AX/Accounts build exit0 20:51:42→20:52:20,10warnings retained (IL2026 serializer + native Win32 PInvoke); README changed during compile, no immutable acceptance. Actual exact43669e2 publish next, before/after committedsource hashes.",
+    "initialCompile": "Actual bounded Wave/AX/Accounts build exit0 20:51:42\u219220:52:20,10warnings retained (IL2026 serializer + native Win32 PInvoke); README changed during compile, no immutable acceptance. Actual exact43669e2 publish next, before/after committedsource hashes.",
     "nativeAvailability": "Native disposable priority diagnostic10, live observer26, actualautomation17 PASS; three same26 controlled helper regressions fail as expected. Root owner lifetime source independentlyreviewed; freshactualbrowserAX remainsunrun.",
     "actualBrowser": "Immutable43669 firstactualbrowser red JsonSerializerIsReflectionDisabled; sourcefix8b4f2a0 published with SDKreflection+actualowner metadata roots and SGpeer snapshot. Exactsealed8b4 publish222files40302332B SHAe9f5a46cb521f51cd4cc753383201150b6b4e8723c997eaf1db4762d7b177bd7 sourcebefore/afterunchanged. HomeactualAX5structuralPASS0errors, strict40Tab diagnostic provesMAINtrap; Enter/SpaceNOTRUN. Wave14current3executed2PASS1FAIL11NOTRUN,0runtimeerrors: actualcanonicalcreation+persistence passes, immediate0.5 input/import usesoldtimeline0 ratherthanexpected24000. No oracles weakened."
   },
@@ -380,7 +380,7 @@
     },
     {
       "owner": "A1 shared CUI two-way input",
-      "request": "ActualpublishedWave imports atframe0 immediatelyafter nativevalue0.5 despite expected24000,0runtimeerrors, exact8b4candidate. Concrete shared race: CuiControlLoader.cs955 subscribes TextChanged; pinnedAvaloniaTextBox.cs2427–2442 setsText then synchronouslyTextChanging but postsTextChanged toNormal. Immediateaction setsBusy+Notify and restoresoldhostvalue before deferredwriteback. Please boundedOWNER_ACK one-line TextChanging subscription or provideownerfix preserving _applyingHostValues suppression/validation; exactnative same-turn setter→action red/green being prepared. B doesnoteditsharedRuntime withoutACK, no harnessdelay/lowerexpectation/duplicatebindingmodel."
+      "request": "ActualpublishedWave imports atframe0 immediatelyafter nativevalue0.5 despite expected24000,0runtimeerrors, exact8b4candidate. Concrete shared race: CuiControlLoader.cs955 subscribes TextChanged; pinnedAvaloniaTextBox.cs2427\u20132442 setsText then synchronouslyTextChanging but postsTextChanged toNormal. Immediateaction setsBusy+Notify and restoresoldhostvalue before deferredwriteback. Please boundedOWNER_ACK one-line TextChanging subscription or provideownerfix preserving _applyingHostValues suppression/validation; exactnative same-turn setter\u2192action red/green being prepared. B doesnoteditsharedRuntime withoutACK, no harnessdelay/lowerexpectation/duplicatebindingmodel."
     },
     {
       "owner": "A2 shared Write retained renderer",
@@ -1201,7 +1201,7 @@
     "snapshotSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
     "previousFull8534ParagraphSnapshot": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
     "activeSubstantiveRequirementChanges": 0,
-    "actualChanges": "Nine numbered completion clauses238..246 retain exact text; explicitly OUT_OF_SCOPE tan90 name8531 Choo Choo→Dulche Decorum. All8524 other normalized paragraphs exact. New structural Docs revision/indices not inferred.",
+    "actualChanges": "Nine numbered completion clauses238..246 retain exact text; explicitly OUT_OF_SCOPE tan90 name8531 Choo Choo\u2192Dulche Decorum. All8524 other normalized paragraphs exact. New structural Docs revision/indices not inferred.",
     "rootDiffSHA256": "11ca0414e2957744556f994c742222ce552749cc1f6d02600d1641a6fbe5f61e",
     "independentFullDiffSHA256": "caa41671d264e7e64085b3e949c4cc33c194dcff94aa9893e8c75f9ae1dc7819"
   },
@@ -1288,50 +1288,168 @@
     "owners": "LatestA03:40 record815a13bf preserves historicalACKfields byimmutable5e153eb; no newexact193c/742/35c/Glyph/PictureACK. C23:48 no newhostedports. NewA CardsStudy32/sourcecontracts remainunrun/unpublished; no fabricatedfrontendBank/Burrows. RootsoleBwriter Csoleglobalrelease unchanged."
   },
   "currentExecutableCheckpoint": {
-    "UTC": "2026-10-04T14:04:28.621233+00:00",
-    "sourceHead": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
-    "state": "CONTINUING_REAL_APP_WORKFLOWS_AND_INDEPENDENT_REPRODUCTION",
+    "UTC": "2026-10-04T14:46:04.764840+00:00",
+    "sourceHead": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+    "state": "CONTINUING_REAL_WORKFLOWS_AND_INDEPENDENT_REPRODUCTION",
     "PictureBrowser9": {
-      "run": 37206507446,
-      "url": "https://github.com/CroakyJake12/9to1/actions/runs/37206507446",
+      "firstRun": 37206507446,
+      "firstSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
       "counts": {
         "executed": 9,
         "passed": 9,
         "failed": 0
       },
-      "primaryFullRawReview": {
-        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-22d-recorded-review01/review02.json",
-        "bytes": 24753,
-        "sha256": "a20d797b2df86fa5095e60fb5e1e7ba39cee26117d1372b69ed25f26496da36d"
+      "criticalIndependentRun": 37207768958,
+      "criticalIndependentReview": {
+        "path": "/tmp/team-b-b6-picture-browser22d-independent-ci-review01/review.json",
+        "bytes": 11216,
+        "sha256": "eb07e9c8ccb8c0b990e2ca8f7e085b4e871b95454b83c93200286410b03c0d55"
       },
-      "artifact": {
-        "id": 11304832599,
-        "bytes": 28690701,
-        "sha256": "571dfec74b3cb889ff7f6f4e6c6c2242e7c1782da8f92e7e5afeb6870ff90b75"
+      "scope": "Actual native CUI/local IndexedDB import/crop/history/save/close/reopen/exact15RGBA export/new-process restart/two-tab canonical CAS/dirty-close/beforeunload consent. Full Picture156/FilesID/providers/ACL/AT/quota open.",
+      "recordedResponseCustody": {
+        "localGET200Rows": 348,
+        "recordedBodiesRehashed": 296,
+        "traceReferencesWithNoRecordedBody": 52
       },
-      "scope": "Actual native CUI and real local IndexedDB PNG import/crop/undo/redo/save/close/reopen/exact15 RGBA export/new-browser-process restart/two-tab canonical ID/revision CAS and dirty refusal/native beforeunload consent. Full Picture156 criteria, canonical Files FileID, provider/ACL/AT/quota remain open.",
-      "independentReproduction": {
-        "run": 37207768958,
-        "event": "workflow_dispatch",
-        "sourceHead": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
-        "status": "IN_PROGRESS",
-        "owner": "B6",
-        "localSDKGUI": false
-      }
+      "fixedSourceBrowserRun": 37209306466,
+      "fixedSourceBrowserStatus": "METADATA_SUCCESS_FULL_RAW_BEING_ACQUIRED"
     },
     "PictureNative": {
-      "run": 37206507463,
-      "state": "CURRENT14_PASS_1_FAIL_REPAIRED_ADMISSION12_PASS_3_FAIL_ORIGINAL_REPAIRED_EXPECTED_RED_MATCHED",
-      "failure": "Current actual raster-crop-history-save-close-reopen-and-pixel-export combined crop assertion; exact state diagnostic proposed, cause not yet established. Browser9 success remains separate.",
-      "preserved": "Original and admission01 old markup parser CUI029 failures remain failed; current four authored label IDs repair source collision. Repaired snapshots are additive and retain old session/test bodies."
+      "causalRedRun": 37208074600,
+      "countsBefore": {
+        "executed": 15,
+        "passed": 14,
+        "failed": 1
+      },
+      "cause": "Same-session offer scheduled deferred retirement although no previous session existed to retire; only Feature.HasUnsavedChanges true after canonical crop/save completed.",
+      "causalReview": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-b8-remote-review01/current-review.json",
+        "bytes": 14902,
+        "sha256": "539d6e21f2699c0255541cedd3742b60237036427e10921f87dcb1373be2751e"
+      },
+      "productRepairSource": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+      "productChange": "Exactly one early return when Previous and Candidate are the same instance, before Task.Yield; original15 test assertions and historical controls unchanged.",
+      "actualFixedRun": 37209306469,
+      "countsAfter": {
+        "executed": 15,
+        "passed": 15,
+        "failed": 0,
+        "assertionCheckpoints": 138
+      },
+      "fixedReview": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-7f-remote-review01/current-review.json",
+        "bytes": 16169,
+        "sha256": "d724af1b2602aab1dc8320269f2f6c663b5b431ed6472c47b044860055c2877b"
+      },
+      "canonicalReceipts": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-7f-remote-review01/current-canonical-receipts.json",
+        "bytes": 57204,
+        "sha256": "a6c8931a8cb6cca551f5d3e7ee4caf7c6f68a5a604d35d1635dfee62ff12a3d2"
+      },
+      "independentReplay": "B6 fixed ref team-b/picture-fixed-7f-independent-20261004; pending dispatch/review",
+      "historicalControls": "Old parser/CUI029 and older repairedAdmission12PASS3FAIL retained. Additive oldSession/Feature-only-noopfix control authored with strict13PASS2sameObserverFAIL; not yet run."
     },
-    "Chat": "Actual current10/10; same original9/10 exact denied-refresh privacy failure; B2+B6 whole recorded review complete. Narrow scripted backend unit scope, no provider/browser/ACL acceptance.",
+    "Boards": {
+      "run": 37207970188,
+      "source": "1b05262b6adb025ba56850f566c91d0de4cf1772",
+      "counts": "47 assertion checkpoints =seed24+fresh real apphost verify23, not47 testcases",
+      "primary": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/boards-notebook-ci-recorded-review01/REVIEW.json",
+        "bytes": 31575,
+        "sha256": "471465c62c7f260ef689caa2cf65997a6165ed353ef5f61eaff555f82dba4e71"
+      },
+      "independent": {
+        "path": "/tmp/team-b-b6-boards-notebook1b05-recorded-review01/review.json",
+        "bytes": 12521,
+        "sha256": "b42b622e0f95f52f331dfcecc165bee8d4672c3fe24230db9e26f90d8dc7fdcf"
+      },
+      "scope": "Same original WriteDocumentEditor coupled to real BoardsWorkspaceService/NotesRepository; rich selection bold/undo/redo/revisions/history/coldprocess/CAS/dirty-close/readOnly. Browser seamless renderer/guarded ownerfactory/rawSpace held."
+    },
+    "Mathematics": {
+      "run": 37208598089,
+      "source": "23eb00d488de2b519b722f8817dc3849bb2c8a93",
+      "counts": {
+        "executed": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0
+      },
+      "primary": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/mathematics-native4-ci23eb-primary-review01/review.json",
+        "bytes": 46805,
+        "sha256": "afb86fd24599d1a294cbfac65c561a7e7f4dd61ad4d1122ad917b9cf430fc030"
+      },
+      "independent": "B6 queued",
+      "scope": "Actual original Math/Graph controls, native keyboard/pointer, invalid input preserves displayed bitmap/canonical model, real renderframe/datarect, dense precision pixel refusal. Browser/Forms embedding/realhoststore/ACL open."
+    },
+    "WriteFormats": {
+      "run": 37209563662,
+      "source": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+      "counts": {
+        "discovered": 7,
+        "executed": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "primary": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-original-formats-ci-recorded-review01/REVIEW.json",
+        "bytes": 36956,
+        "sha256": "4fee69ae3b3ddb25053eef919fb6c7ba6e8085cc496e16cadcb435f469d36a60"
+      },
+      "independent": {
+        "path": "/tmp/team-b-b6-write-formats7-f7c-recorded-review01/review.json",
+        "bytes": 6744,
+        "sha256": "30fb9e51ad43cb3e0250368575b122d11da3d6a781119b24c22bb312fe5c6bea"
+      },
+      "scope": "Original2DOCX ZIP/XML/supportedroundtrip/externalWordML and5nativepackage identity/tampered digest/unsupportedversion/failedsavepreservesbytes/traversal; fullLO/ODT/PDF/render/browser/rawSpace open."
+    },
+    "Accounts7": {
+      "run": 37208724474,
+      "driverSource": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+      "runtimeSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "counts": {
+        "executed": 7,
+        "passed": 7,
+        "failed": 0
+      },
+      "independent": {
+        "path": "/tmp/team-b-b6-sealed-accounts7-22d-recorded-review01/review.json",
+        "bytes": 9454,
+        "sha256": "90eeec0ce0db7961f452cbd835a069b83b39ea7bcbe4687bed4145f818ee9aae"
+      },
+      "scope": "Actual Check caption awaited truthfully/unavailable, revoke/privatefield empty/staleID refusal/explicitownerreplacement/terminal close. No issuer/provider/privatebroker/AT/authority grant."
+    },
+    "Wave14": {
+      "run": 37208724474,
+      "artifact": 11305985932,
+      "metadataBytes": 44609461,
+      "metadataSha256": "06f052a445f157e8d7e1eb11664b0b5d28d4db2dfaf379dde26963331141d99a",
+      "counts": "Actual complete driverstdout14PASS/jobSUCCESS; detailed44MB raw pending official bounded existingartifact custody export",
+      "exportSource": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave-existing-diagnostics-export-proposal01/SOURCE-FREEZE01.json",
+        "bytes": 3589,
+        "sha256": "68dde785c359fc7e6dc6ff30b8554c48dcd5d58e0e1e53225de2c640ca4aa8e6"
+      },
+      "exportIndependentSourcePeer": {
+        "path": "/tmp/team-b-b6-wave-existing-export-source01-review/review.json",
+        "bytes": 3842,
+        "sha256": "2a0c8300321d83fe70d0f8468d24b68e2debbfaa5a298c27919a29350b3bcc5c"
+      },
+      "qualification": "No full14/rawfamily/body acceptance until read; original outerZIP byteidentity unverified in recontainer export. Runtime remains normal22d bundle, distinct Picture publication."
+    },
     "FilesSitesLifecycle": "04ae actual current14/14 plus existingFiles17/Sites18=49 positive native local cases; original01 same14 has6PASS8 intendedFAIL, original02 same14 has12PASS2 intendedFAIL. B4+B6 full5ZIP81member review complete; actual issuer ports remain absent/registration off.",
-    "Write": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
+    "Chat": "Actual current10/10; same original9/10 exact denied-refresh privacy failure; B2+B6 whole recorded review complete. Narrow scripted backend unit scope, no provider/browser/ACL acceptance.",
+    "WriteAuthoring": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
     "Planner": "Actual selected original SQLite1/1 PASS; B2+B6 full recorded review complete.",
-    "Boards": "Real owner notebook editor/repository source proposal03+thinCI01 seven targets peer-clear; root review/adoption then seed24/freshverify23 assertion checkpoints. Browser seamless renderer/guarded close/Space held for A.",
-    "Mathematics": "Four genuine native input/precision/pixel cases source02 correct displayed bitmap and render-frame fixture gaps; B5 peer-clear, relative portable project/CI being prepared. All4 NOT_RUN.",
-    "completion": "Full active31 requirement scope outstanding. No full-parity or accepted integrated-head claim."
+    "nextExecutables": [
+      "Study4 originalpersisted realSQLite scheduling/tasklink selectedoriginal4 of24; source02 peerCLEAR pendingrootadoption",
+      "Chat3 realSQLite ownerdurable/version/export seed/freshverify, no inference/catalog/authority; sourcepeers pending",
+      "Additive oldAdmission-only same-session retirement control strict13/2 negative",
+      "Independent fixedPicture native15/browser9",
+      "ExistingWave detailedraw custody export/fullnormal285bodycustody"
+    ],
+    "completion": "Full active31 requirement scope still outstanding. No accepted integrated head/fullparity claim."
   },
   "executableCheckpointHistory": [
     {
@@ -1380,7 +1498,7 @@
       "Data17Actual": {
         "stages": "0UIcachedrestorePASS/1Data cachedrestorePASS;2actualbuildSDK0/0warning0error butwrapper2 custodyFAIL",
         "tests": "17required/0discovered0executed/17NOTRUN, noTRXgenerated;stages3/4unrun",
-        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b→8041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
+        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b\u21928041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
         "recovery": "OriginalMath138portable runtimepacket intact; exact16old22 generatedbody matchesfound there;6ref/refint exactoldbodies notyetfound. PreserveallNEW22bytesbeforerecovery; never substituteimplementationforreferenceDLL. OriginalcustodyFAIL remainsFAIL. SeparatecurrentData17compiledruntime/sourcebeforeafter continuation awaitingexactpeer/grant."
       },
       "sharedOwnerOpen": [
@@ -1446,7 +1564,7 @@
       "Data17Actual": {
         "stages": "0UIcachedrestorePASS/1Data cachedrestorePASS;2actualbuildSDK0/0warning0error butwrapper2 custodyFAIL",
         "tests": "Actual original17 unique methods discovered and executed17PASS, zero fail/skip/error/notrun. Continuation05 commands3/4 eachSDK0/wrapper0; no restore/build/acquisition.",
-        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b→8041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
+        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b\u21928041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
         "recovery": {
           "state": "Executed18 recovery; four original generated ref/refint bodies LOST/HOLD",
           "receiptSHA256": "3d9bd2b7b740680f6067c1119e3f86052fb5265f359f22d0bed5dc77c6cc3208",
@@ -1576,7 +1694,7 @@
       "Data17Actual": {
         "stages": "0UIcachedrestorePASS/1Data cachedrestorePASS;2actualbuildSDK0/0warning0error butwrapper2 custodyFAIL",
         "tests": "Actual original17 unique methods discovered and executed17PASS, zero fail/skip/error/notrun. Continuation05 commands3/4 eachSDK0/wrapper0; no restore/build/acquisition.",
-        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b→8041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
+        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b\u21928041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
         "recovery": {
           "state": "Executed18 recovery; four original generated ref/refint bodies LOST/HOLD",
           "receiptSHA256": "3d9bd2b7b740680f6067c1119e3f86052fb5265f359f22d0bed5dc77c6cc3208",
@@ -1767,7 +1885,7 @@
       "Data17Actual": {
         "stages": "0UIcachedrestorePASS/1Data cachedrestorePASS;2actualbuildSDK0/0warning0error butwrapper2 custodyFAIL",
         "tests": "Actual original17 unique methods discovered and executed17PASS, zero fail/skip/error/notrun. Continuation05 commands3/4 eachSDK0/wrapper0; no restore/build/acquisition.",
-        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b→8041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
+        "cause": "OriginalsharedgeneratedAssemblyInformationalVersion59ab970b\u21928041a70b normalgitmetadatarebuild changed22 oldMathintermediate/runtimeDLL/PDBs. Source657/cache44 unchanged; noresource/familyfailure.",
         "recovery": {
           "state": "Executed18 recovery; four original generated ref/refint bodies LOST/HOLD",
           "receiptSHA256": "3d9bd2b7b740680f6067c1119e3f86052fb5265f359f22d0bed5dc77c6cc3208",
@@ -2025,6 +2143,52 @@
       "Planner": "ActualselectedoriginalSQLite1PASS; B2+B6fullrecordedreviewcomplete",
       "FilesSitesLifecycle": "Source03/current14/original01-02exactfailurecontrols07/thinsharedimport08 independentlyCLEAR; rootfulladoption inprogress then normalCI; actualissuerportsstillBLOCKED",
       "completion": "Fullactive31criteria outstanding; no fullparity/deployed/acceptedhead claim"
+    },
+    {
+      "UTC": "2026-10-04T14:04:28.621233+00:00",
+      "sourceHead": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "state": "CONTINUING_REAL_APP_WORKFLOWS_AND_INDEPENDENT_REPRODUCTION",
+      "PictureBrowser9": {
+        "run": 37206507446,
+        "url": "https://github.com/CroakyJake12/9to1/actions/runs/37206507446",
+        "counts": {
+          "executed": 9,
+          "passed": 9,
+          "failed": 0
+        },
+        "primaryFullRawReview": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-22d-recorded-review01/review02.json",
+          "bytes": 24753,
+          "sha256": "a20d797b2df86fa5095e60fb5e1e7ba39cee26117d1372b69ed25f26496da36d"
+        },
+        "artifact": {
+          "id": 11304832599,
+          "bytes": 28690701,
+          "sha256": "571dfec74b3cb889ff7f6f4e6c6c2242e7c1782da8f92e7e5afeb6870ff90b75"
+        },
+        "scope": "Actual native CUI and real local IndexedDB PNG import/crop/undo/redo/save/close/reopen/exact15 RGBA export/new-browser-process restart/two-tab canonical ID/revision CAS and dirty refusal/native beforeunload consent. Full Picture156 criteria, canonical Files FileID, provider/ACL/AT/quota remain open.",
+        "independentReproduction": {
+          "run": 37207768958,
+          "event": "workflow_dispatch",
+          "sourceHead": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+          "status": "IN_PROGRESS",
+          "owner": "B6",
+          "localSDKGUI": false
+        }
+      },
+      "PictureNative": {
+        "run": 37206507463,
+        "state": "CURRENT14_PASS_1_FAIL_REPAIRED_ADMISSION12_PASS_3_FAIL_ORIGINAL_REPAIRED_EXPECTED_RED_MATCHED",
+        "failure": "Current actual raster-crop-history-save-close-reopen-and-pixel-export combined crop assertion; exact state diagnostic proposed, cause not yet established. Browser9 success remains separate.",
+        "preserved": "Original and admission01 old markup parser CUI029 failures remain failed; current four authored label IDs repair source collision. Repaired snapshots are additive and retain old session/test bodies."
+      },
+      "Chat": "Actual current10/10; same original9/10 exact denied-refresh privacy failure; B2+B6 whole recorded review complete. Narrow scripted backend unit scope, no provider/browser/ACL acceptance.",
+      "FilesSitesLifecycle": "04ae actual current14/14 plus existingFiles17/Sites18=49 positive native local cases; original01 same14 has6PASS8 intendedFAIL, original02 same14 has12PASS2 intendedFAIL. B4+B6 full5ZIP81member review complete; actual issuer ports remain absent/registration off.",
+      "Write": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
+      "Planner": "Actual selected original SQLite1/1 PASS; B2+B6 full recorded review complete.",
+      "Boards": "Real owner notebook editor/repository source proposal03+thinCI01 seven targets peer-clear; root review/adoption then seed24/freshverify23 assertion checkpoints. Browser seamless renderer/guarded close/Space held for A.",
+      "Mathematics": "Four genuine native input/precision/pixel cases source02 correct displayed bitmap and render-frame fixture gaps; B5 peer-clear, relative portable project/CI being prepared. All4 NOT_RUN.",
+      "completion": "Full active31 requirement scope outstanding. No full-parity or accepted integrated-head claim."
     }
   ],
   "previousSpecificationMetadataRecheck": {
@@ -2108,12 +2272,12 @@
       "EuropeLondon": "2026-10-04T11:20:40.799940+01:00",
       "Checkpoint": "Root and existing six workers remain active. Source8041 and artifact188684 are pushed/unmerged. Independent B6-authored Audio13 replay executed by root: unchanged production1PASS1FAIL11NOTRUN; proposed33661 all13PASS, matching prior actual results. All13 observations/raw logs reviewed; both normal12 held identities/strictECHILD/zero signals/source unchanged. Files proposed17/17 and all three omission mutants16/17 retained. Sites original13/18 with five receipt defects; complete-capture replay remains unrun after two preserved JSON-shape comparison failures, minimal source15 repair ready.",
       "implementationEstimates": {
-        "B1": "75–90%, medium confidence, four inspected browser foundation groups only",
-        "B2": "20–35%, low confidence, assigned productivity workflow groups; full browser/donor coverage unknown",
+        "B1": "75\u201390%, medium confidence, four inspected browser foundation groups only",
+        "B2": "20\u201335%, low confidence, assigned productivity workflow groups; full browser/donor coverage unknown",
         "B3": "Picture12 source workflow groups present; behavioural implementation percentage/full specialist denominator unknown, browser0/12 validated",
-        "B4": "60–80%, medium confidence, three authored local Files/Sites/Forms verticals only",
-        "B5": "Account/profile/session70–90%, localWrite80–95%, excludedAI/Chat0–15%; medium/low confidence by source/actual bounded controls, commercial/provider unknown",
-        "B6": "80–90%, medium confidence, inspected shell retirement and anonymous account groups only; independent role, not additive implementation credit"
+        "B4": "60\u201380%, medium confidence, three authored local Files/Sites/Forms verticals only",
+        "B5": "Account/profile/session70\u201390%, localWrite80\u201395%, excludedAI/Chat0\u201315%; medium/low confidence by source/actual bounded controls, commercial/provider unknown",
+        "B6": "80\u201390%, medium confidence, inspected shell retirement and anonymous account groups only; independent role, not additive implementation credit"
       },
       "verifiedCoverage": "No fully accepted31-app/global percentage claimed; denominator unknown. Explicit critical subset: proposed isolated Audio13=13/13 actualPASS; actual original=1/13PASS,1FAIL,11NOTRUN. Source presence/compile/custody/test counts do not establish complete app/provider/platform/AT acceptance.",
       "WhatChanged": "New independent audio red/green reproduction and full raw review; exact230 archived-generated recovery helper and current Navigation17 full-pipeline guide in preparation. Current live specification metadata unchanged2026-10-03T21:06:10.712Z in actual root recheck10:18UTC.",
@@ -2431,7 +2595,7 @@
       "Nominate exactintegratedbrowserbaseline/source+dependency closure: PR4 isolated against8041, currentC release has noWebsource. Do not broadmerge unrelated60ahead256behind. Csolecandidate/index/main owner.",
       "Deliver authenticatedprotectedFiles HTTP/readpublication/session owner authority and Sitesnativeimport/trustedFiles/deploymentports alreadyrequested. MissingrealissuerrevokeAllIssuedOwnerWork +drainAllIssuedOwnerWork explicit failure remains blocked; noBfake authority.",
       "Accounts maintainedactorbridge/authstage+actualtestaccount provisioning remainsrequired; anonymouspublic6 cannot close signedprovider/CUI193caller gates.",
-      "WorkersAImetadata exactowner65fprovider35576b3fec/tests101517a4d/fixture1339205f+772ACK receivedverified. REQUIRED1665Bprojectc04a3520→sole90Bresourceinsert1755Be80f49d notdelivered; 1665 isbytecount, notcommit. CurrentB1572/e8be+provider29923/80ec differ; no sourceprojectreconstruction/launderedfullclosure. No inference/funding/outputtokens/pricequote grant."
+      "WorkersAImetadata exactowner65fprovider35576b3fec/tests101517a4d/fixture1339205f+772ACK receivedverified. REQUIRED1665Bprojectc04a3520\u2192sole90Bresourceinsert1755Be80f49d notdelivered; 1665 isbytecount, notcommit. CurrentB1572/e8be+provider29923/80ec differ; no sourceprojectreconstruction/launderedfullclosure. No inference/funding/outputtokens/pricequote grant."
     ],
     "classification": "ImplementationdefectsBfixedwhenpossible; native/sharedAexactrequests andhostedCportrequests scopedindividually. No allbrowserblocked or acceptancewaiver."
   },
@@ -2535,8 +2699,8 @@
     "url": "https://github.com/CroakyJake12/9to1/pull/6",
     "draft": true,
     "base": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
-    "head": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
-    "scope": "B-owned Picture/Chat/private view lifetime product repairs and scoped actual/native CI, immutable controls. C sole release integrator; main untouched; no merge approval implied."
+    "head": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+    "scope": "B-owned Picture/Chat/private-view lifecycle repairs, canonical Boards editor coupling and original scoped CI; C sole release/main writer, no merge approval implied."
   },
   "latestTeamCIntegrationReceived1405": {
     "coordCommit": "53299e8686d6903e9a60111bb1610a3ed0e10264",
@@ -2555,5 +2719,79 @@
     "A_Boards": "Exact request03 6f22ba2c public guarded portable workspace factory/typed close and seamless same owner renderer; existing native shadow/paper cannot be admitted as canonical seamless Boards.",
     "C_Auth": "Actual isolated0f6 provider exposure reclosed. For B physical CUI need exact temporary B origin CORS plus fictional PKCE private-custody context and rollback, or confirmed existing local EF fixture custody. Same-issuer C138 does not prove B5096 CORS.",
     "C_Integration": "Please review draftPR6 exact22d product/CI successor; preserve current native14/15 failure while browser9 and independent replay proceed. Full receiving browser/native acceptance against exact integrated candidate remains required."
+  },
+  "currentRetrievableActualEvidenceDelivery": {
+    "UTC": "2026-10-04T14:46:04.764840+00:00",
+    "branch": "artifact/team-b-browser-83c24b2",
+    "head": "5a14854dded75c1c0551d66e1ffbfe397b802945",
+    "packetManifest": {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/manifest.json",
+      "bytes": 21132,
+      "sha256": "41a4b32328a28a567aa828f73dbb7e28d27601e74f91117a76820646fed14f19"
+    },
+    "packetZip": {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/reviewed-evidence.zip",
+      "bytes": 7993418,
+      "sha256": "69a65c37810102f68d3f2531d7d60cbe799aa4443c87197e4c611ab14fdcfc92"
+    },
+    "packetFullPeer": {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d-peer.json",
+      "bytes": 44133,
+      "sha256": "591eabd1839d6feb3995d38edec5deb6c32d85add1b56758d512d19bda52fb28"
+    },
+    "addendaIndex": {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-app-review-addenda/index.json",
+      "bytes": 3902,
+      "sha256": "9b82b817db7b357a13c0bf2661ec976ae930c9c74aaf808b70ff9010618c85e0"
+    },
+    "manifestURL": "https://github.com/CroakyJake12/9to1/blob/5a14854dded75c1c0551d66e1ffbfe397b802945/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/manifest.json",
+    "packetURL": "https://github.com/CroakyJake12/9to1/blob/5a14854dded75c1c0551d66e1ffbfe397b802945/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/reviewed-evidence.zip",
+    "addendaURL": "https://github.com/CroakyJake12/9to1/tree/5a14854dded75c1c0551d66e1ffbfe397b802945/docs/releases/sol-happy-20261003/team-b-scoped-actual-app-review-addenda",
+    "scope": "62logical files/16wholeoriginalarchives in7.99MB reviewedpacket; fullwhole primary/independent addenda separately208KB. Two largePicture traces referenced exactoriginal publicartifact, not duplicated. Older packet pending-state is historical as-of packaging; independent actual9 reproduction nowcomplete."
+  },
+  "latestTeamCIntegrationReceived1450": {
+    "wholeRecord": {
+      "path": "/workspace/team-b-coordination/coordination/sol-happy-20261003/team-c.json",
+      "bytes": 127868,
+      "sha256": "2038eac058c2f6c8f7c00fe8cf1d97c8114dae7930fadce45060d6e28fa3eb6b"
+    },
+    "coordCommit": "f33525231bc049c9ee209f03f1ffb9b22c5e59bc",
+    "updatedUTC": "2026-10-04T14:32:28.468445+00:00",
+    "provisionalCandidate": {
+      "branch": "integration/team-c-unaccepted-20261004",
+      "head": "de52ec43b8020ef3752e65621bd228d0d31391f2",
+      "base": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+      "state": "LATEST_DE52_RECEIPTS_LOCAL_NATIVE_R2_REVIEWED_COMPOSED_REMOTE_D511_DRAFT_PR5",
+      "contents": [
+        "31 exact reviewed Accounts core/spec bodies from f7b65b8c",
+        "Durable cancellation CAS source/test a4be0cd0 plus retained 67636bb0 evidence",
+        "161 exact Team B apps/Web additions from aef50b9b, including baseline8041",
+        "Reviewed local recovery source67a46825 and evidence5a5b8cee",
+        "Bounded read-only billing recovery88c4c2d2 + external diagnostic redactionf3529fd2",
+        "373 exact reviewed EEC/native dependency closure paths with four current Sites bodies preserved at c8783e04",
+        "Three maintained test API contract corrections8f0b3ad0 and real SQLite migration fixture10eff17d; all original assertions retained",
+        "Four exact EEC Write scene dependencies/Unicode resource + single logical EmbeddedResource line3b0bdf4d",
+        "Exact public93/5 receiving matrix and25 supplemental independent reviews; indexed logs/TRX explicitly retained"
+      ],
+      "qualification": "No active Team A/B files edited; no main promotion; no acceptance inferred from composition.",
+      "pullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
+      "remoteVerifiedHead": "d5111d6a73fbd489b52e010096e0d960dcb2a594"
+    },
+    "qualification": "C still sole integrator; B latest PR6 f7/sourcefix7f/Boards47 not inferred integrated from existing161 aef bodies. acceptedHead remains null.",
+    "WriteOwnerMeasurementRequest": "C actual Write scene layout failure: beta bold34.132px height vs available23.625 at31.36width. Actual originalsurface approx0.56char differs weightedMontserrat measure; require exact A canonical measure/layout/caret/hit-test port; no B fontfallback/MaxWidthshim/assertionweakening."
+  },
+  "specificationMetadataRecheck1450": {
+    "observedUTC": "2026-10-04T14:20:00Z",
+    "nativeDoc": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "modifiedTime": "2026-10-04T11:47:25.349Z",
+    "unchangedSinceFullExport": true,
+    "currentFullTextBytes": 1402519,
+    "currentFullTextSha256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
+    "active31AndLE01Through15Unchanged": true,
+    "wholeDiff": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/source/live-1217-text-diff01.json",
+      "bytes": 2106,
+      "sha256": "11ca0414e2957744556f994c742222ce552749cc1f6d02600d1641a6fbe5f61e"
+    }
   }
 }
