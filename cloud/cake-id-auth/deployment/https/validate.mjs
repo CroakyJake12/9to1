@@ -3,8 +3,14 @@ import {writeFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 
 export const origin='https://cake-id-release-validation.jcbailey008.workers.dev';
+export const defaultDeploymentVersion='713c1695-7e21-489b-bc97-906450972cfa';
+export function deploymentPin(value=defaultDeploymentVersion) {
+  if(typeof value!=='string'||value.length!==36||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value))throw new TypeError('Deployment version must be a lowercase UUIDv4 from actual provider readback');
+  return value;
+}
 const issuer=`${origin}/api/auth`;
-export async function validate({request=fetch,output}={}) {
+export async function validate({request=fetch,output,deploymentVersion=defaultDeploymentVersion}={}) {
+  const operatorPinnedDeploymentVersion=deploymentPin(deploymentVersion);
   const observations=[];
   let assertions=0;
   const equal=(actual,expected,message)=>{assert.equal(actual,expected,message);assertions++;};
@@ -50,16 +56,16 @@ export async function validate({request=fetch,output}={}) {
     const rejection=await invalid.json();ok(['invalid_client','invalid_grant','invalid_request'].includes(rejection.error),'Maintained OAuth error denies an unregistered client/invalid code');ok(!rejection.access_token&&!rejection.refresh_token&&!rejection.id_token);
     // Schema validation rejects before reset-token consumption, password changes or delivery.
     const reset=await get('/api/auth/reset-password',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'});equal(reset.status,400);
-    const result={result:'passed',assertions,observations,issuer,operatorPinnedDeploymentVersion:'713c1695-7e21-489b-bc97-906450972cfa',qualification:'Anonymous deployed HTTPS phase only; deployment version is operator-pinned, not observed by HTTP. Root must bind same-time provider readback. No users/client provisioning, email delivery, valid OAuth tokens, session journeys or native interoperability accepted.'};
+    const result={result:'passed',assertions,observations,issuer,operatorPinnedDeploymentVersion,qualification:'Anonymous deployed HTTPS phase only; deployment version is operator-pinned, not observed by HTTP. Root must bind same-time provider readback. No users/client provisioning, email delivery, valid OAuth tokens, session journeys or native interoperability accepted.'};
     if(output) await writeFile(output,JSON.stringify(result,null,2)+'\n',{flag:'wx'});
     return result;
   } catch(error) {
     primary=error;
-    if(output) try {await writeFile(output,JSON.stringify({result:'failed',assertions,observations,error:{name:error.name,message:error.message}},null,2)+'\n',{flag:'wx'});}catch(cleanup){throw new AggregateError([primary,cleanup],'Validation and evidence write failed');}
+    if(output) try {await writeFile(output,JSON.stringify({result:'failed',assertions,observations,operatorPinnedDeploymentVersion,error:{name:error.name,message:error.message}},null,2)+'\n',{flag:'wx'});}catch(cleanup){throw new AggregateError([primary,cleanup],'Validation and evidence write failed');}
     throw primary;
   }
 }
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url) {
-  if(process.argv.length!==3) throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/validate.mjs NEW_PUBLIC_RESULT.json');
-  console.log(JSON.stringify(await validate({output:process.argv[2]})));
+  if(![3,4].includes(process.argv.length)) throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/validate.mjs NEW_PUBLIC_RESULT.json [PROVIDER_VERSION_UUID]');
+  console.log(JSON.stringify(await validate({output:process.argv[2],deploymentVersion:process.argv[3]})));
 }

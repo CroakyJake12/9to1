@@ -1,5 +1,7 @@
 Second-stage package: offline preparation, NOT_RUN against hosted HTTPS. It preserves production source, schema, roles, PKCE, resource enforcement, mail failures and reserved authority. Root alone performs remote mutations under the existing isolated-test authorization.
 
+The retained historical version713 run has a separate failed current-account bearer assertion; this document's original source-only history is not a new pass claim. For a reviewed new provider version, append its actual same-time readback UUID to the driver command: `node --use-env-proxy --use-system-ca deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json PROVIDER_VERSION_UUID`. The original713 version remains the compatibility default. Pin validation occurs before output acquisition or any authenticated request; new evidence retains the explicit pin. This label remains operator-provided provenance, requiring actual provider readback.
+
 Fixture preconditions are exactly two fictional nonadmin users, two credential accounts, one public PKCE client and one canonical resource link. Seeded `emailVerified=1` is explicitly a fictional fixture assumption, not evidence of verification delivery, registration or recovery. The public client is seeded as a fixture; administrator registration remains NOT_RUN. Roles remain NULL, no canonical admin is promoted, no actual person is impersonated, no CroakyJake reservation/grant is bound and no local outbox is enabled.
 
 Root sequence after network policy and isolated endpoint readiness:

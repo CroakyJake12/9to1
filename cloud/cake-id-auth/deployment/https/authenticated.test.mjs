@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import {mkdtemp,readFile,writeFile,chmod,symlink,rm} from 'node:fs/promises';
+import {mkdtemp,readFile,writeFile,chmod,symlink,rm,stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {prepare,resourcePrecondition} from './prepare-fixture.mjs';
 import {privateFixture,authenticated,runAuthenticated} from './authenticated.mjs';
-import {origin} from './validate.mjs';
+import {origin,defaultDeploymentVersion} from './validate.mjs';
 const receipt={databaseId:'fb094287-efab-4d3c-b9d5-c588a83d6f42',response:{status:200,success:true,result:[{success:true,results:[{identifier:origin}]}]}};
 // This synthetic readback is an offline structural control, never provider evidence.
 for(const value of [{},{...receipt,databaseId:'foreign'},{...receipt,response:{...receipt.response,result:[]}},{...receipt,response:{...receipt.response,result:[{success:true,results:[{identifier:'https://foreign.example.test'}]}]}}])assert.throws(()=>resourcePrecondition(value));
@@ -14,6 +14,17 @@ try {
   const directory=join(owned,'new');const manifest=await prepare(directory,receipt);assert.deepEqual(manifest.rows,{users:2,credentials:2,clients:1,resourceLinks:1});
   await assert.rejects(prepare(directory,receipt),error=>error.code==='EEXIST');
   const path=join(directory,'fixture.json');const fixture=await privateFixture(path);assert.equal(fixture.accounts.length,2);
+  const newVersion='8c60f7a9-9f8a-4e4c-97d3-d806d1507e31';let pinRequests=0,pinJourneys=0;
+  for(const deploymentVersion of ['',null,42,newVersion.toUpperCase(),` ${newVersion}`,`${newVersion}\n`,'00000000-0000-0000-0000-000000000000','https://foreign.example.test']) {
+    await assert.rejects(authenticated(fixture,{deploymentVersion,request:async()=>{pinRequests++;throw new Error('Unexpected request');}}),/Deployment version/);
+    await assert.rejects(runAuthenticated(path,join(owned,'invalid-pin-result.json'),{deploymentVersion,journey:async()=>{pinJourneys++;}}),/Deployment version/);
+  }
+  assert.equal(pinRequests,0);assert.equal(pinJourneys,0);await assert.rejects(stat(join(owned,'invalid-pin-result.json')),error=>error.code==='ENOENT');
+  for(const [label,deploymentVersion,expected] of [['default',undefined,defaultDeploymentVersion],['explicit',newVersion,newVersion]]) {
+    const output=join(owned,`pin-${label}-result.json`);
+    const result=await runAuthenticated(path,output,{deploymentVersion,journey:async(actual,options)=>{assert.equal(actual.clientId,fixture.clientId);assert.equal(options.deploymentVersion,expected);return {result:'passed',operatorPinnedDeploymentVersion:options.deploymentVersion,qualification:'Offline propagation control only'};}});
+    assert.equal(result.operatorPinnedDeploymentVersion,expected);assert.equal(JSON.parse(await readFile(output)).operatorPinnedDeploymentVersion,expected);
+  }
   await chmod(path,0o644);await assert.rejects(privateFixture(path),/private bounded/);await chmod(path,0o600);
   const alias=join(owned,'alias');await symlink(path,alias);await assert.rejects(privateFixture(alias),error=>error.code==='ELOOP');
   const existingOutput=join(owned,'existing-result.json');await writeFile(existingOutput,'preserved');let journeys=0;await assert.rejects(runAuthenticated(path,existingOutput,{journey:async()=>{journeys++;}}),error=>error.code==='EEXIST');assert.equal(journeys,0);assert.equal(await readFile(existingOutput,'utf8'),'preserved');

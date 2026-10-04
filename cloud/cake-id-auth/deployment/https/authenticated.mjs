@@ -7,7 +7,7 @@ import {dirname,join} from 'node:path';
 import {createAuthClient} from 'better-auth/client';
 import {oauthProviderClient} from '@better-auth/oauth-provider/client';
 import {createLocalJWKSet,jwtVerify} from 'jose';
-import {origin} from './validate.mjs';
+import {origin,defaultDeploymentVersion,deploymentPin} from './validate.mjs';
 
 const issuer=`${origin}/api/auth`;
 const callback='https://client.example.test:5096/callback';
@@ -34,7 +34,8 @@ export async function privateFixture(path) {
   let closing;try{await file.close();}catch(error){closing=error;}
   if(primary&&closing)throw new AggregateError([primary,closing],'Private fixture read and close failed');if(primary)throw primary;if(closing)throw closing;return result;
 }
-export async function authenticated(fixture,{request=fetch}={}) {
+export async function authenticated(fixture,{request=fetch,deploymentVersion=defaultDeploymentVersion}={}) {
+  const operatorPinnedDeploymentVersion=deploymentPin(deploymentVersion);
   let count=0;const assert=new Proxy(nodeAssert,{get(target,key){const fn=target[key];return typeof fn==='function'? (...args)=>{count++;return fn(...args)}:fn}});
   const cookies=new Map();let activeURL=new URL(origin);
   const savedFetch=globalThis.fetch,savedWindow=globalThis.window;
@@ -120,19 +121,20 @@ export async function authenticated(fixture,{request=fetch}={}) {
     assert.equal((await api(`/api/account/sessions/${access.sid}`,tokens.access_token,{method:'DELETE'})).status,204);
     assert.equal((await api('/api/account/current',tokens.access_token)).status,401);
     const revokedRefresh=await token({grant_type:'refresh_token',client_id:fixture.clientId,refresh_token:rotated.refresh_token,resource:origin});assert.equal(revokedRefresh.status,400);assert.equal((await revokedRefresh.json()).error,'invalid_grant');
-    return {result:'passed',assertions:count,observations,operatorPinnedDeploymentVersion:'713c1695-7e21-489b-bc97-906450972cfa',qualification:'Actual Node HTTPS transport with maintained client hooks and real library tokens; seeded fictional identities/client are preconditions. No browser UI/native/registration/mail/admin provisioning acceptance.'};
+    return {result:'passed',assertions:count,observations,operatorPinnedDeploymentVersion,qualification:'Actual Node HTTPS transport with maintained client hooks and real library tokens; seeded fictional identities/client are preconditions. No browser UI/native/registration/mail/admin provisioning acceptance.'};
   } finally {globalThis.fetch=savedFetch;globalThis.window=savedWindow;cookies.clear();}
 }
-export async function runAuthenticated(fixturePath,resultPath,{journey=authenticated}={}) {
+export async function runAuthenticated(fixturePath,resultPath,{journey=authenticated,deploymentVersion=defaultDeploymentVersion}={}) {
+  const operatorPinnedDeploymentVersion=deploymentPin(deploymentVersion);
   // Acquire the new evidence file before any authenticated request/mutation.
   const file=await open(resultPath,'wx',0o600);let primary,result;
-  try {const fixture=await privateFixture(fixturePath);result=await journey(fixture);await file.writeFile(JSON.stringify(result,null,2)+'\n');await file.sync();}catch(error){primary=error;}
+  try {const fixture=await privateFixture(fixturePath);result=await journey(fixture,{deploymentVersion:operatorPinnedDeploymentVersion});await file.writeFile(JSON.stringify(result,null,2)+'\n');await file.sync();}catch(error){primary=error;}
   let closing;try{await file.close();}catch(error){closing=error;}
   if(primary&&closing)throw new AggregateError([primary,closing],'Journey/evidence and close failed');if(primary)throw primary;if(closing)throw closing;return result;
 }
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url) {
-  if(process.argv.length!==4)throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json');
-  try {const result=await runAuthenticated(process.argv[2],process.argv[3]);console.log(JSON.stringify({result:result.result,assertions:result.assertions}));}
+  if(![4,5].includes(process.argv.length))throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json [PROVIDER_VERSION_UUID]');
+  try {const result=await runAuthenticated(process.argv[2],process.argv[3],{deploymentVersion:process.argv[4]});console.log(JSON.stringify({result:result.result,assertions:result.assertions}));}
   catch(error){
     let evidenceError;const filename=`private-run-error-${randomBytes(8).toString('hex')}.json`;
     const describe=e=>({name:e.name,message:e.message,stack:e.stack,...(e instanceof AggregateError?{errors:e.errors.map(describe)}:{})});

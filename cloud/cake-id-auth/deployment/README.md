@@ -1,5 +1,7 @@
 This package prepares the new isolated `cake-id-release-validation` Worker. It never targets the existing email-only `cake` Worker. The proposed issuer, API resource and initial allowed web origin are exactly `https://cake-id-release-validation.jcbailey008.workers.dev`. No OAuth client or callback is provisioned by this package.
 
+The prepared/build configurations enable `global_fetch_strictly_public` alongside `nodejs_compat` so the maintained bearer verifier's exact issuer JWKS fetch reaches the public Worker. [Cloudflare documents](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public) that own-zone requests otherwise bypass Workers and route to the origin. This configuration proposal preserves the approved 1000ms CPU limit, bindings, secrets, producer/verifier source and closed exposure. Root must review and retain actual configuration/version readback before a bounded new hosted run; this source change alone does not prove the cause of the retained original hosted 401.
+
 Compile locally from `cloud/cake-id-auth`:
 
 ```
@@ -23,4 +25,4 @@ Real HTTPS acceptance still requires provider creation/deployment receipts, secr
 
 Initial provider observability is disabled: authorization URLs can contain codes/state. Enable logging or tracing only after a reviewed redaction policy; never publish raw authentication URLs or secrets.
 
-`upload-manifest.json` enumerates both actual module parts; uploading only index.js would omit its maintained auth UI text import. `artifact-manifest.json` binds their SHA256 hashes. CPU limits remain an operator budget decision; local wall-clock password timings do not establish Cloudflare CPU usage. Root must set the approved explicit limit before live upload.
+`upload-manifest.json` enumerates both actual module parts; uploading only index.js would omit its maintained auth UI text import. `artifact-manifest.json` binds their SHA256 hashes. This continuation records the existing approved explicit 1000ms CPU limit in generated/build configuration; local wall-clock password timings do not establish Cloudflare CPU usage. Root must verify that exact limit in actual provider readback before live execution.
