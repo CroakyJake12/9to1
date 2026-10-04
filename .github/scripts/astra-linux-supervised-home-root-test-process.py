@@ -29,7 +29,43 @@ if not task.is_relative_to(root/'artifacts') or task.is_symlink() or not task.is
 args=['dotnet','test',str(project),'-c','Release','-r','linux-x64','-f','net10.0','--no-build','--no-restore','--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:AvaloniaBuildTasksLocation='+str(task),'--logger','trx;LogFileName=root.trx','--results-directory',str(out/'trx')]
 receipt={'argv':args,'administratorUid':os.geteuid(),'syntheticIssuerOnly':True,'releasePublisherAccepted':False,'installedUserAccepted':False,'nativeHelper':{'path':str(nativeHelper),'sha256':nativeSha},'targetUid':int(os.environ['ASTRA_SUPERVISED_TEST_UID']),'targetGid':int(os.environ['ASTRA_SUPERVISED_TEST_GID']),'targetUserHome':os.environ['ASTRA_SUPERVISED_TEST_HOME']}
 process=None;session=None;primary=None
+policyGuard=None
+policyFailures=[]
+def retain_policy_failure(error):
+ if not any(original is error for original in policyFailures):policyFailures.append(error)
+def load_actual_policy_guard():
+ source=root/'.github/scripts/astra_hosted_credential_policy_guard.py'
+ fd=None;loadFailures=[];captured=None
+ try:
+  fd=os.open(source,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC);before=os.fstat(fd)
+  if not __import__('stat').S_ISREG(before.st_mode) or before.st_size!=17597:
+   raise RuntimeError('Exact complete policy guard source required')
+  chunks=[];length=0
+  while length<=17597:
+   part=os.read(fd,min(8192,17597+1-length));length+=len(part)
+   if length>17597:raise RuntimeError('Bounded whole policy source capture required')
+   if not part:break
+   chunks.append(part)
+  captured=b''.join(chunks)
+  sourceIdentity=lambda value:(value.st_dev,value.st_ino,value.st_mode,value.st_uid,value.st_gid,value.st_nlink,value.st_size,value.st_mtime_ns,value.st_ctime_ns)
+  if len(captured)!=17597 or hashlib.sha256(captured).hexdigest()!='c1817be52e8fa16f6280dfe7736e8887d603e2eb1e4ae0578c45ce43a9cce964' or sourceIdentity(before)!=sourceIdentity(os.fstat(fd)) or sourceIdentity(before)!=sourceIdentity(os.lstat(source)):
+   raise RuntimeError('Same source FD/path and complete guard bytes required')
+ except BaseException as error:loadFailures.append(error)
+ finally:
+  if fd is not None:
+   try:os.close(fd)
+   except BaseException as error:
+    if not any(original is error for original in loadFailures):loadFailures.append(error)
+ if len(loadFailures)==1:raise loadFailures[0]
+ if loadFailures:raise BaseExceptionGroup('Original policy source and independent source close failed',loadFailures)
+ spec=spec_from_file_location('root_test_hosted_kernel_policy_guard',source)
+ policy=module_from_spec(spec);sys.modules[spec.name]=policy
+ exec(compile(captured,str(source),'exec'),policy.__dict__)
+ setup=pathlib.Path(os.environ['RUNNER_TEMP']).resolve()/('astra-synthetic-home-setup-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'])
+ return policy.HostedCredentialPolicyGuard(root,setup,os.environ['GITHUB_RUN_ID'],os.environ['GITHUB_RUN_ATTEMPT'])
 try:
+ policyGuard=load_actual_policy_guard()
+ receipt['hostedCredentialPolicyBeforeRootTests']=policyGuard.observe('before-root-tests')['status']
  with (out/'root-test.log').open('wb') as log:
   process=subprocess.Popen(args,cwd=root,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
   session=module.OriginalSession(process,out)
@@ -41,13 +77,20 @@ try:
   receipt['exitCode']=process.returncode
 except BaseException as error:primary=error
 finally:
+ originalRootDrained=False
  try:
   if session is not None:session.drain()
   if not json.loads(seal.read_text()).get('drained'):raise RuntimeError('reviewed helper did not seal actual cleanup')
- except BaseException as cleanup:
-  if primary is not None:raise BaseExceptionGroup('Root whole test and actual original cleanup both failed',[primary,cleanup])
-  raise
- finally:(out/'root-process-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+  originalRootDrained=True
+ except BaseException as cleanup:retain_policy_failure(cleanup)
+ if originalRootDrained and policyGuard is not None:
+  try:receipt['hostedCredentialPolicyAfterOriginalRootDrain']=policyGuard.observe('after-root-drain')['status']
+  except BaseException as observation:retain_policy_failure(observation)
+ try:(out/'root-process-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+ except BaseException as persistence:retain_policy_failure(persistence)
+ if primary is not None and not any(original is primary for original in policyFailures):policyFailures.insert(0,primary)
+ if len(policyFailures)==1:raise policyFailures[0]
+ if policyFailures:raise BaseExceptionGroup('Root whole test and independent original drain/kernel observation/receipt failures',policyFailures)
 if primary is not None:raise primary
 if not json.loads(seal.read_text()).get('drained'):raise SystemExit('original root-test cleanup unproven')
 raise SystemExit(receipt.get('exitCode',1))

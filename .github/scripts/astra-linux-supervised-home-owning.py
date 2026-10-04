@@ -10,6 +10,7 @@ def digest(path):
 def command(args,name):
  if name=='root' and args[:2]==['dotnet','test']:
   environment={'ASTRA_ISOLATED_SYNTHETIC_ROOT_FIXTURE':'1','COHORT':'owning','GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'safe.directory','GIT_CONFIG_VALUE_0':str(root),'DOTNET_CLI_TELEMETRY_OPTOUT':'1','DOTNET_SKIP_FIRST_TIME_EXPERIENCE':'1','DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER':'1','MSBUILDDISABLENODEREUSE':'1','AVALONIA_TELEMETRY_OPTOUT':'1','ASTRA_ACTUAL_AVALONIA_BUILD_TASKS':str(taskTarget)}
+  environment.update({k:os.environ[k] for k in ('GITHUB_WORKSPACE','RUNNER_TEMP','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','GITHUB_ACTIONS','RUNNER_ENVIRONMENT')})
   environment.update({'ASTRA_ROOT_TEST_UID':str(setupReceipt['uid']),'ASTRA_ROOT_TEST_GID':str(setupReceipt['gid']),'ASTRA_ROOT_TEST_USER_HOME':setupReceipt['userHome'],'ASTRA_ROOT_TEST_HOME_STATE_PATH':setupReceipt['homeStatePath'],'ASTRA_ROOT_TEST_RUNTIME_DIRECTORY':setupReceipt['runtimeDirectory'],'ASTRA_ROOT_TEST_PROFILE_TOOL':setupReceipt['profileTool'],'ASTRA_ROOT_TEST_PROFILE_TOOL_MANIFEST_SHA256':setupReceipt['fixtureToolPayloadManifestSha256']})
   environment.update({'ASTRA_SUPERVISED_TEST_UID':str(setupReceipt['uid']),'ASTRA_SUPERVISED_TEST_GID':str(setupReceipt['gid']),'ASTRA_SUPERVISED_TEST_HOME':setupReceipt['userHome'],'ASTRA_NATIVE_ATOMIC_HELPER_PATH':str(nativeHelper),'ASTRA_NATIVE_ATOMIC_HELPER_SHA256':nativeSha})
   if digest(nativeHelper)!=nativeSha or digest(compiler)!=compilerBefore:raise RuntimeError('Actual source-built native helper/compiler changed before root test launch')
@@ -102,6 +103,9 @@ def verify():
  # Independent existing repository check validates all three trackedclean pins/header inputs;
  # --check never updates clones or rewrites tracked source.
  if subprocess.run(['bash','9to1 Workspace/shared/eng/prepare-cui-source.sh','--check'],check=False).returncode:raise SystemExit('independent clean pinned source check failed')
+verify()
+controlArgs=[sys.executable,str(root/'.github/scripts/astra_hosted_credential_policy_guard_controls.py'),'--source',str(root/'.github/scripts/astra_hosted_credential_policy_guard.py'),'--source-sha256','c1817be52e8fa16f6280dfe7736e8887d603e2eb1e4ae0578c45ce43a9cce964']
+if command(controlArgs,'hosted-credential-policy-inert-controls'):raise SystemExit('Source-bound inert kernel-policy controls failed')
 verify();command(['dotnet','--info'],'toolchain');command(['dotnet','workload','list'],'workloads')
 env={'AVALONIA_TELEMETRY_OPTOUT':'1','DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER':'1','DOTNET_SKIP_FIRST_TIME_EXPERIENCE':'1','MSBUILDDISABLENODEREUSE':'1','DOTNET_CLI_TELEMETRY_OPTOUT':'1','DOTNET_CLI_USE_MSBUILD_SERVER':'0'};os.environ.update(env)
 base=['-c','Release','-r','linux-x64','--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True']

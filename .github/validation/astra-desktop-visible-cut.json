@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "7c8c2e4a2692c4e662da4dfd021cf330aff0ea93",
+  "baselineCommit": "aa03b6a0724cad0798af9e2415e7dd6933cfd293",
   "programTree": "539fdac9e67c7159c126eb432fdac8298e7839c7",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
@@ -71,9 +71,9 @@
     {
       "path": ".github/scripts/astra-linux-supervised-home-owning.py",
       "mode": "100644",
-      "object": "e687e94917b9cf087310564b1131ead2da0c5bef",
-      "bytes": 38731,
-      "sha256": "667c9d3dbeff7ca2523b9ccc8542e98d5f724cafe9495721964b42e293056c6f"
+      "object": "890e3f539aca88f7ad47444ade922f0638c540f2",
+      "bytes": 39304,
+      "sha256": "919fa1feb826f0f0b98b3712744ba797ca955f6a8989b6e11832df43efed0f83"
     },
     {
       "path": ".github/scripts/astra-linux-supervised-home-publish.py",
@@ -92,16 +92,30 @@
     {
       "path": ".github/scripts/astra-linux-supervised-home-root-test-process.py",
       "mode": "100644",
-      "object": "aab9caa0fb7bbf86ea96b2e0f93991c1296d0d61",
-      "bytes": 5419,
-      "sha256": "ff336db091b38aeea3f5193ae117560876f38e61c3275949d57482a62198402a"
+      "object": "4bd4ab2234abfc4a7cb9b07000303c79c155a7ee",
+      "bytes": 8290,
+      "sha256": "8d1732e6ae8ca3b253d12b3c351a20c0f3fb3d26085946484f11b4b1aeeef584"
     },
     {
       "path": ".github/scripts/astra-linux-supervised-home-synthetic-setup.py",
       "mode": "100644",
-      "object": "cd333be50381103d2385bc047245bea943191710",
-      "bytes": 42068,
-      "sha256": "7d63a93fc3288c1cdabaa566917ddfbabcb1fddac2fb9b8150810767f4f31ede"
+      "object": "7f303f434181ed534f1d16aecce08a65fb7096b2",
+      "bytes": 43863,
+      "sha256": "760a6b1f4355a974127e204d4d32357dbf6b747eb112791eee4b4ca73e69e76a"
+    },
+    {
+      "path": ".github/scripts/astra_hosted_credential_policy_guard.py",
+      "mode": "100644",
+      "object": "0b2274e7bec87ea3514d35941df7de8edcb8284d",
+      "bytes": 17597,
+      "sha256": "c1817be52e8fa16f6280dfe7736e8887d603e2eb1e4ae0578c45ce43a9cce964"
+    },
+    {
+      "path": ".github/scripts/astra_hosted_credential_policy_guard_controls.py",
+      "mode": "100644",
+      "object": "b97ab0998d2fd0aae0fe9fb1fe5ba3441d62e53d",
+      "bytes": 11961,
+      "sha256": "b134d5b875422369f841d478bf0aefd7f9eef8c9e4c29fdae59646c7138689a7"
     },
     {
       "path": ".github/scripts/astra_original_native_session_drain.py",
@@ -66765,7 +66779,8 @@
     "Actual15 existing-directory protection refusal remains opaque about which phase/ancestor. Sole additive TEST observation records exact fixed three phases and original descriptor/path identities, flags/statx/UID/mode/type. No trust/permission/location/assertion changes or observer acceptance. Other104 overlays and all112/Home62+12/36/native16/signed/native5/oldProcess3/65s/PDB/task/restore/drain/workflow bytes remain exact15; current30 accepted union exact. Full native/signed runtime remains mandatory.",
     "Actual16 records root-owned /usr/share and /usr/share/applications mode0777, correctly refused by unchanged production ancestor protection. Sole TEST setup protects the SAME exact directory FDs to0755, preserves immutable original modes before changes, holds protection through genuine native work, and restores only after fresh authentication of ALL current original setup/root/cleanup sessions. Missing marker status is truthful, unproved restoration refuses, original causes retained. All other104 overlay bytes,84 product bindings/exact83 changes,112 Home62+12/36 classes/native16/signed triple/native5/oldProcess3/65s/helperdeath/source/PDB/task/restore/drain/workflow/constructor remain exact16. Bundle00/original native/whole signed acceptance remains mandatory and unreviewed; no authority from diagnostics.",
     "Actual17 completed the unchanged three signed first enrollments, then the same target-user fixture apphost exec was refused with EACCES. This bounded TEST successor stages the SAME complete source-built published payload under fresh unique root-owned0755 /run, verifies complete original and copied apphost/DLL/PDB/table bytes before-after and before both target-user invocations, and binds the exact protected manifest through the original setup/caller/wrapper environment. Cleanup removes only exact issued files after current original setup/root/userdel seals, retaining changed/incomplete payloads. No workspace ancestor chmod or inferred cause/trust relaxation. Original four Root facts and all positive trust/body/cleanup semantics survive whole inverses. Whole112 Home62+12/36/native16/signed triple/native5/oldProcess3/65s/helperdeath/receivedFD/source/PDB/task/restore/drain remain mandatory and unverified.",
-    "The complete Linux19 original root32 run built with zero warnings/errors and executed20PASS12FAIL. All12 paired/supervised failures are canceled socket accepts; original TRX reports the generic early administrator Home startup refusal. Complete newly published root-test.log/pending/expected/receipt originals preserve the missing exact predicate. This sole Program diagnostic emits fixed type/reason labels at the original catch, preserving every protection predicate, caught type, generic line, order and return1. No kernel policy, path, permission, syscall or thread cause is inferred. Whole112/Home62+12/36/native16/signed/nativepair5/oldProcess3/65s/caller/task/PDB/restore/strict drains remain unchanged; Supervisor02, shutdown02 and OS222 SDK union are unselected. Full signed/native/installed/runtime acceptance remains mandatory."
+    "The complete Linux19 original root32 run built with zero warnings/errors and executed20PASS12FAIL. All12 paired/supervised failures are canceled socket accepts; original TRX reports the generic early administrator Home startup refusal. Complete newly published root-test.log/pending/expected/receipt originals preserve the missing exact predicate. This sole Program diagnostic emits fixed type/reason labels at the original catch, preserving every protection predicate, caught type, generic line, order and return1. No kernel policy, path, permission, syscall or thread cause is inferred. Whole112/Home62+12/36/native16/signed/nativepair5/oldProcess3/65s/caller/task/PDB/restore/strict drains remain unchanged; Supervisor02, shutdown02 and OS222 SDK union are unselected. Full signed/native/installed/runtime acceptance remains mandatory.",
+    "Actual20 complete causal TRX records12 fixed NonDumpableCredentialPolicyRequired refusals before paired socket accepts. Production exact0 newline+EOF policy remains byte-exact. This TEST-only hosted ephemeral Ubuntu fixture records the observed original0/1/2 complete value and same endpoint before root-owned fixed0 provisioning, observes0 around original root/native credential journeys, and restores only the recorded value after fresh current setup/root/userdel seals and SAME original drains. Procfs observations do not prove namespace isolation, durable fsync or exclusion of unrelated privileged writers. All product/cohort/native/signature/task/PDB/restore/drain guards remain unchanged. Real policy/kernel/signed-native/runtime remains UNRUN."
   ],
   "inputManifests": [
     {
@@ -67484,6 +67499,46 @@
       "path": "/workspace/astra-source/worker5-linux19-fixed-controlled-startup-refusal-diagnostic-source01/manifest.json",
       "bytes": 3373,
       "sha256": "a3dda54c1ac9388bc8ec6d4092300426319c7d2b149c88696c712bbc6a90fd1a"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/manifest.json",
+      "bytes": 22974,
+      "sha256": "274637c642f86a3c571904352d33196df83972b2d31db9d793dbd67a8493a6f2"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/preflight.json",
+      "bytes": 4173,
+      "sha256": "70b9ec0beb6b13e51bcd01e82d7dee51061546fd6f918b142a12d3e11567792f"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/whole-actual20-ci-inverse.json",
+      "bytes": 9915,
+      "sha256": "b6ab95ca85d92cfdff554470662ddc99ce481f82be2b9d74e0a2d2dc3b2eb3aa"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/sources/astra_hosted_credential_policy_guard.py",
+      "bytes": 17597,
+      "sha256": "c1817be52e8fa16f6280dfe7736e8887d603e2eb1e4ae0578c45ce43a9cce964"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/sources/astra_hosted_credential_policy_guard_controls.py",
+      "bytes": 11961,
+      "sha256": "b134d5b875422369f841d478bf0aefd7f9eef8c9e4c29fdae59646c7138689a7"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/sources/astra-linux-supervised-home-synthetic-setup.py",
+      "bytes": 43863,
+      "sha256": "760a6b1f4355a974127e204d4d32357dbf6b747eb112791eee4b4ca73e69e76a"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/sources/astra-linux-supervised-home-root-test-process.py",
+      "bytes": 8290,
+      "sha256": "8d1732e6ae8ca3b253d12b3c351a20c0f3fb3d26085946484f11b4b1aeeef584"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/sources/astra-linux-supervised-home-owning.py",
+      "bytes": 39304,
+      "sha256": "919fa1feb826f0f0b98b3712744ba797ca955f6a8989b6e11832df43efed0f83"
     }
   ],
   "sharedCakeIdContract": null

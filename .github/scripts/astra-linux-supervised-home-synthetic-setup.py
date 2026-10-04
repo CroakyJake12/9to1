@@ -327,6 +327,21 @@ def cleanup_exact_fixture_tool_stage_after_original_drains(cleanup):
  for child in sorted((path for path in directory.rglob('*') if path.is_dir()),key=lambda path:len(path.parts),reverse=True):child.rmdir()
  directory.rmdir();cleanup['removed'].append(fixtureToolsRuntime)
 
+# Fixed global-kernel policy is changed only in this exact ephemeral hosted TEST fixture.
+credentialPolicyGuard=None
+def hosted_credential_policy_guard():
+ global credentialPolicyGuard
+ if credentialPolicyGuard is None:
+  source=root/'.github/scripts/astra_hosted_credential_policy_guard.py'
+  captured=fixture_file(source,captureBytes=True)
+  if captured['bytes']!=17597 or captured['sha256']!='c1817be52e8fa16f6280dfe7736e8887d603e2eb1e4ae0578c45ce43a9cce964':
+   raise RuntimeError('Exact source-bound hosted kernel policy guard required')
+  spec=importlib.util.spec_from_file_location('hosted_kernel_policy_guard',source)
+  module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module
+  exec(compile(captured['content'],str(source),'exec'),module.__dict__)
+  credentialPolicyGuard=module.HostedCredentialPolicyGuard(root,out,runId,attempt)
+ return credentialPolicyGuard
+
 def run(argv,name,env=None):
  records=out/'owned-session-drain'/name;records.mkdir(parents=True,exist_ok=False)
  write(records/'expected-managed-launch.json',{'expectedManagedLaunch':True,'drained':False,'scope':'sampled original setup process session'})
@@ -417,6 +432,16 @@ if a.cleanup:
   elif os.path.lexists(desktopParentModesPath):
    desktop_failure(originalCleanupFailures,RuntimeError('Original task/session drains unproved; retain hosted directory protection'))
    cleanup['desktopParentPermissionRestoration']='UNPROVED-DRAINS-RETAINED-PROTECTION'
+  # Independently reauthenticate CURRENT original setup/root/userdel seals
+  # immediately before restoring the actual recorded global kernel value.
+  try:
+   if originalDrainsAuthorized:
+    cleanup['hostedCredentialPolicyRestoration']=hosted_credential_policy_guard().restore_after_original_drains(reauthenticate_original_hosted_drains_before_permission_restoration)
+   elif any(os.path.lexists(out/('hosted-credential-policy-'+phase+'.json')) for phase in ('attempt','original','protection')):
+    raise RuntimeError('Same original task/session drains unproved; retain current hosted kernel policy')
+   else:cleanup['hostedCredentialPolicyRestoration']='not-created-not-required'
+  except BaseException as error:
+   desktop_failure(originalCleanupFailures,error);cleanup['hostedCredentialPolicyRestoration']='FAILED-OR-UNPROVED-DRAINS-RETAINED-CURRENT-POLICY'
   try:
    write(out/'protected-state-cleanup.json',cleanup)
    retained=root/'artifacts/desktop-visible-owning/synthetic-setup-public-proof'
@@ -440,6 +465,7 @@ publish=pathlib.Path(a.publish).resolve();tool=pathlib.Path(a.fixture_tool).reso
 for path,expected in [(product,a.expected_product_sha),(tool,a.expected_tool_sha),(native,a.expected_helper_sha)]:
  if not path.is_relative_to(root/'artifacts') or not re.fullmatch('[0-9a-f]{64}',expected or '') or path.is_symlink() or not path.is_file() or digest(path)!=expected:raise SystemExit('Exact fresh compiled artifact pin mismatch')
 if native.name!='atomic-spawn' or len(list(native.parent.iterdir()))!=1 or native.read_bytes()[:4]!=b'\x7fELF':raise SystemExit('Sole actual freshly compiled helper ELF required')
+hosted_credential_policy_guard().protect()
 env=dict(os.environ,ASTRA_ISOLATED_SYNTHETIC_ROOT_FIXTURE='1');packages=[];trusts=[]
 for label,command,payload,envelope,desktop,appId in [('home','--produce-synthetic-home-package',publish,'synthetic-home.9to1-install',desktops[0],'os.shell'),('owner','--produce-synthetic-widget-owner-package',publish,'synthetic-widget-owner.9to1-install',desktops[1],'os.installed-application-widget-owner'),('helper','--produce-synthetic-atomic-helper-package',native.parent,'synthetic-atomic-helper.9to1-install',desktops[2],'os.atomic-spawn-supervisor')]:
  synthetic=out/('synthetic-'+label);run([str(tool),command,str(payload),str(synthetic)],'synthetic-sign-'+label,env)
