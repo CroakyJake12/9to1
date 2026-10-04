@@ -54,6 +54,11 @@
       "path": "rollback-exercise.json",
       "bytes": 2280,
       "sha256": "d6663935b605ed3b81e11d622d18329f0c921215bc0a2167b8d04332d0c70cf0"
+    },
+    {
+      "path": "root-bounded-checks.json",
+      "bytes": 2729,
+      "sha256": "f80c159a1c827816c6c5cda38b3462d0d9b72b2307b99ef12b7b3a66daf49c6a"
     }
   ],
   "qualification": "Actual isolated provider receipts; no credential values, author identity or hosted journey acceptance."

@@ -1,0 +1,26 @@
+{
+  "testedRootCommit": "23c8fd64",
+  "productionRuntime": "Maintained billing src/schema unchanged; local unit cohort only",
+  "command": "node --test test/*.test.mjs",
+  "cwd": "/workspace/team-c/integration/cloud/billing",
+  "exit": 0,
+  "tests": 14,
+  "passed": 14,
+  "failed": 0,
+  "skipped": 0,
+  "cancelled": 0,
+  "logSHA256": "63e599ffa241eef54e915710f37396294cfecd0ef2d06e2e492e268d594db68f",
+  "rawLog": "\u2714 explicit verified identities produce numeric Worker bindings without secret values (1.50653ms)\n\u2714 missing, extra, placeholder, invalid mode and unbounded inputs refuse preparation (0.873091ms)\n\u2714 C3-WH-01: verified receipt survives restart; replay does not duplicate receipt (no allocation consumer exists) (41.735058ms)\n\u2714 C3-WH-02: byte tampering, stale/future signatures and duplicate timestamps cannot persist (2.277086ms)\n\u2714 C3-WH-03: rotation accepts a matching v1 without JSON normalisation (1.564648ms)\n\u2714 C3-WH-04: test/live separation fails closed, configuration required (1.873775ms)\n\u2714 C3-WH-05: conflicting event identity cannot replace durable accepted facts (2.08792ms)\n\u2714 C3-WH-06: database failure does not acknowledge delivery; retry recovers (3.177347ms)\n\u2714 C3-WH-07: old events are receipts only and cannot overwrite newer subscription facts (2.349445ms)\n\u2714 C3-WH-08: bounded body and malformed verified events leave no receipt (3.494989ms)\n\u2714 C3-WH-09: concurrent claims have one owner; stale claim cannot complete after restart/recovery (3.841872ms)\n\u2714 C3-WH-10: failed consumer becomes reconciliation-required, mode/token cannot steal ownership (1.937933ms)\n\u2714 C3-WH-11: actual Worker fetch ignores execution context and durably accepts valid receipt (1.473019ms)\n\u2714 C3-WH-12: lost acknowledgement after commit is safely retried against existing receipt (1.841867ms)\n\u2139 tests 14\n\u2139 suites 0\n\u2139 pass 14\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 134.354301\n",
+  "schemaReproduction": {
+    "command": "python3 cloud/cake-id-auth/deployment/compare-schema.py",
+    "exit": 0,
+    "maintainedSchemaObjects": 35,
+    "providerForeignKeys": 1,
+    "qualification": "Actual D1 metadata comparison; no HTTPS behavior acceptance"
+  },
+  "integrationPatchCheck": {
+    "beforeBillingEvidenceAdoption": "Exit2 for original raw whitespace before narrow evidence attributes existed in receiving checkout; original bytes preserved",
+    "afterEvidenceAdoption": "git diff --check db463042 HEAD exit0 with narrowly scoped raw evidence attributes; no source or log normalization"
+  },
+  "authority": "No broader provider, payment, entitlement or full release acceptance"
+}
