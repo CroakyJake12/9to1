@@ -1,0 +1,228 @@
+[
+  {
+    "name": "git-head",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49203,
+        "birth": 845271,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.014,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49204,
+        "birth": 845272,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.456,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "source-tree-pins",
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49227,
+        "birth": 845318,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.066,
+    "bytes": 2459544,
+    "familyClosed": true
+  },
+  {
+    "name": "native-submodule-pins",
+    "argv": [
+      "git",
+      "submodule",
+      "status",
+      "--recursive",
+      "--",
+      "framework/CUI/vendor/Avalonia/external/XamlX",
+      "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49228,
+        "birth": 845324,
+        "gone": true
+      },
+      {
+        "pid": 49229,
+        "birth": 845325,
+        "gone": true
+      },
+      {
+        "pid": 49254,
+        "birth": 845327,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.057,
+    "bytes": 319,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-version",
+    "argv": [
+      "dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49265,
+        "birth": 845330,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.217,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-info",
+    "argv": [
+      "dotnet",
+      "--info"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49273,
+        "birth": 845352,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.258,
+    "bytes": 1450,
+    "familyClosed": true
+  },
+  {
+    "name": "restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "apps/Web/Tests/BrowserNavigationCancellation.Tests.csproj",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/navigation5-3b0b/artifacts",
+      "-r",
+      "linux-x64",
+      "--configfile",
+      "/workspace/team-c-c4-browser-receiving-3b0b/NuGet.Config",
+      "--disable-build-servers",
+      "-p:Configuration=Release",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/navigation5-3b0b/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 1,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49281,
+        "birth": 845378,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 1,
+    "seconds": 8.481,
+    "bytes": 368,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 49515,
+        "birth": 846226,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.467,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]

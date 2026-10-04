@@ -1,0 +1,33 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "test",
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts",
+    "--logger",
+    "trx;LogFileName=whole-infrastructure-debug.trx",
+    "--results-directory",
+    "/workspace/team-c-resume-evidence/c3-preview-environment-20261004/whole-debug-results",
+    "--nologo",
+    "--no-build"
+  ],
+  "configuration": "Debug",
+  "wholeNormalProject": true,
+  "filterUsed": false,
+  "startedUTC": "2026-10-04T14:08:29.911087+00:00",
+  "environmentOverrides": {
+    "DOTNET_CLI_HOME": "/workspace/team-c-resume-evidence/c3-preview-environment-20261004/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/.tools/nuget/packages",
+    "AVALONIA_TELEMETRY_OPTOUT": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false"
+  },
+  "profilePolicy": "Unchanged caller HOME/USERPROFILE. Explicit validation host CLI location and selected actual SDK PATH; no production fallback paths.",
+  "exit": 1,
+  "seconds": 14.317,
+  "finishedUTC": "2026-10-04T14:08:44.228353+00:00"
+}

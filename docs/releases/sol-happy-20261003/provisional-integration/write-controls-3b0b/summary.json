@@ -1,0 +1,403 @@
+{
+  "recordedAtUTC": "2026-10-04T14:13:44.389317+00:00",
+  "testedCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "testedTree": "ef556415d4097a27c6bc2d6b0df3468808b5bb71",
+  "worktree": "/workspace/team-c-c4-write-scene-3b0b",
+  "sourceCleanBeforeAfter": true,
+  "normalSourceBuilds": {
+    "scene": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "carrier": {
+      "warnings": 0,
+      "errors": 0
+    }
+  },
+  "existingWriteSceneModes": {
+    "native-input": {
+      "status": "PASS",
+      "exit": 0,
+      "observedPassedAssertions": 22,
+      "completed": true,
+      "rawLogSha256": "6d76781a680aa781e73c662af3faea38d3f5332cb3034a8142133a95c9c717ae",
+      "originalSummary": {
+        "assertions": 22,
+        "mode": "native-input",
+        "scope": "actual headless retained CUI/owner/local durable backend; browser GUI not executed",
+        "delayedClipboardCompletion": "NOT_RUN"
+      }
+    },
+    "navigation": {
+      "status": "PASS",
+      "exit": 0,
+      "observedPassedAssertions": 19,
+      "completed": true,
+      "rawLogSha256": "d25eb0228e06438980d90a6018d5afbfc7f31dd75b52e567faee38297f9673eb",
+      "originalSummary": {
+        "assertions": 19,
+        "mode": "navigation",
+        "scope": "actual headless retained CUI/owner/local durable backend; browser GUI not executed",
+        "delayedClipboardCompletion": "NOT_RUN"
+      }
+    },
+    "picker": {
+      "status": "PASS",
+      "exit": 0,
+      "observedPassedAssertions": 28,
+      "completed": true,
+      "rawLogSha256": "b9931da5f74fc95ddeb4088c8bb05946946b38cee982c3dce4e1b903aafc7ab5",
+      "originalSummary": {
+        "assertions": 28,
+        "mode": "picker",
+        "scope": "actual headless retained CUI/owner/local durable backend; browser GUI not executed",
+        "delayedClipboardCompletion": "NOT_RUN"
+      }
+    },
+    "toolbar": {
+      "status": "PASS",
+      "exit": 0,
+      "observedPassedAssertions": 48,
+      "completed": true,
+      "rawLogSha256": "d34235e0c5a489e22f1a3b681eff2abbb19218ccb42c811f079db74c49bbbd57",
+      "originalSummary": {
+        "assertions": 48,
+        "mode": "toolbar",
+        "scope": "actual headless retained CUI/owner/local durable backend; browser GUI not executed",
+        "delayedClipboardCompletion": "NOT_RUN"
+      }
+    },
+    "layout": {
+      "status": "FAIL",
+      "exit": -6,
+      "observedPassedAssertions": 12,
+      "completed": false,
+      "rawLogSha256": "264495042f7b7fe9c3cd0047a60f792b58fa4499e853f9801950d017c908192b",
+      "failure": {
+        "checkSource": "apps/Web/Write/Tests/SceneProgram.cs:396",
+        "actualFormattedRun": "beta",
+        "width": 31.360000000000003,
+        "assignedHeight": 23.625000000000004,
+        "actualFormattedHeight": 34.132,
+        "check": "actual formatted run fits assigned single line without spurious wrapping",
+        "processSelfExit": -6,
+        "laterModeChecks": "NOT_RUN; mode never reached its original complete summary"
+      }
+    }
+  },
+  "canonicalEmojiCarrier": {
+    "kind": "emoji",
+    "project": "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b/CanonicalEmojiCarrier.csproj",
+    "sourceCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+    "status": "PASS",
+    "scope": "Actual controlled source-built local/headless checks only; GUI/browser/provider/Windows/full parity NOT_RUN",
+    "originalDesktopTestProject": "NOT_RUN",
+    "nativeStarted": true,
+    "canonicalEmojiControl": {
+      "method": "Haven.Desktop.Tests.ChatComposerControllerTests.Bundled_catalogue_includes_joined_sequences_modifiers_and_accessible_names",
+      "total": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "trxSha256": "dc85f8e1d77073261eb3ff1828308603649a103f34e3a493a4eb026ba1624a8e",
+      "scope": "Exact unchanged canonical single Fact against actual source-built production catalogue and own-assembly embedded resource; full original project NOT_RUN"
+    },
+    "carrierSourceUnchanged": true
+  },
+  "processCustody": {
+    "write-scene-3b0b": {
+      "commands": 15,
+      "allNormalEOF": true,
+      "allFamilyClosed": true,
+      "allFinalECHILD": true,
+      "forcedSignalsSent": 0,
+      "allExitZero": false
+    },
+    "emoji-carrier-3b0b-run": {
+      "commands": 11,
+      "allNormalEOF": true,
+      "allFamilyClosed": true,
+      "allFinalECHILD": true,
+      "forcedSignalsSent": 0,
+      "allExitZero": true
+    }
+  },
+  "sourcePins": [
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "bytes": 19584
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+      "gitBlob": "815435708262734ebdd1b203f9cb26481d29121a",
+      "sha256": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+      "bytes": 1974
+    },
+    {
+      "path": "apps/Web/Write/Tests/SceneProgram.cs",
+      "gitBlob": "253536374290715c4bb90b24c06c5dcf4d732613",
+      "sha256": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202",
+      "bytes": 34469
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "gitBlob": "5f4fdfc067396c5882c854e9240acaefc88ce1d6",
+      "sha256": "86650af50a937fe36e89ad74f17f348f861da1cd79e22966373601f2b9e3d8fc",
+      "bytes": 6779
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ChatComposerController.cs",
+      "gitBlob": "85a53e4d93a64c1388222a6a8fab37e38248385a",
+      "sha256": "b4bf7954d1a7a16fd0add1dd6811a5b1d1b806da8120920cb78d5dd204f63612",
+      "bytes": 8129
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ComposerEmojiCatalogue.cs",
+      "gitBlob": "0f9c9a428058fa45df66b99ae0f5e84d2d41a5b5",
+      "sha256": "5b749c15a76da1d5fa7f871362962dcf4b6927b954f832a562188a9cb6beb436",
+      "bytes": 1967
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Preferences/LocalMotionPreferencesService.cs",
+      "gitBlob": "37c9aee3ae6a2a4410862d8ddfa3ac1f9124bb74",
+      "sha256": "80eb1fad1628e0ecd7e13fb2a9133bb51e1146d893e5eda4aeef4075294abb28",
+      "bytes": 6820
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/emoji-test-17.0.txt",
+      "gitBlob": "e42fdef494399d2a05b9b75930a3231fe81b2436",
+      "sha256": "1d8a944f88d7952f7ef7c5167fef3c67995bcae24543949710231b03a201acda",
+      "bytes": 669326
+    }
+  ],
+  "sourceTreeReceipts": {
+    "write-scene-3b0b": {
+      "bytes": 2459544,
+      "sha256": "de0c87862ff0ae061b95ab537ca8f56b1654c420f12269cd8a3fd1801b25826d"
+    },
+    "emoji-carrier-3b0b-run": {
+      "bytes": 2459544,
+      "sha256": "de0c87862ff0ae061b95ab537ca8f56b1654c420f12269cd8a3fd1801b25826d"
+    }
+  },
+  "safeFiles": [
+    {
+      "path": "write-scene-3b0b/result.json",
+      "bytes": 415,
+      "sha256": "2c0138bde77ac29bc440df5537b1bf96980eae78eb09d327e945cd9f4660369b"
+    },
+    {
+      "path": "write-scene-3b0b/commands.json",
+      "bytes": 13624,
+      "sha256": "cf892f45f5bc76aeed8f35ab92f18d7a7f7d880e9a8252916eb77547907146b0"
+    },
+    {
+      "path": "write-scene-3b0b/target-properties.json",
+      "bytes": 595,
+      "sha256": "761cc24c7ca1c37af8d05ad40b7d3a3bc4dd388c2899a40763e31d48ff0dda56"
+    },
+    {
+      "path": "write-scene-3b0b/artifact-identities.json",
+      "bytes": 727,
+      "sha256": "13c758877501d371bb34ad781587d5039e0e696555af8770346d1b460f371a84"
+    },
+    {
+      "path": "write-scene-3b0b/build.log",
+      "bytes": 7415,
+      "sha256": "f7684009c99a93864d1efc904f7bed0a0607c2ece1784bfac3b2cca69bbcf6fe"
+    },
+    {
+      "path": "write-scene-3b0b/restore.log",
+      "bytes": 5793,
+      "sha256": "6aaa2d7e42d67610b857b560b42ec4e4dc000c1615dea5c4d30d255639d20249"
+    },
+    {
+      "path": "write-scene-3b0b/git-head.log",
+      "bytes": 41,
+      "sha256": "1b94b676ec1e2e50bc39059363866be08502a3af12f8e143ab3b9e4d399c63b4"
+    },
+    {
+      "path": "write-scene-3b0b/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "write-scene-3b0b/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "write-scene-3b0b/dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "write-scene-3b0b/dotnet-info.log",
+      "bytes": 1444,
+      "sha256": "6c2e19b59354f834f1243ded4b83ceb0d62ca11cb1a10b88fd5159c9bf495ff7"
+    },
+    {
+      "path": "write-scene-3b0b/native-submodule-pins.log",
+      "bytes": 319,
+      "sha256": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382"
+    },
+    {
+      "path": "write-scene-3b0b/target-properties.log",
+      "bytes": 629,
+      "sha256": "91e3c75f771368204c45f6f3f2a311cad929433a785cd91f7350cfc35edab61b"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/result.json",
+      "bytes": 943,
+      "sha256": "3a61dce19c43825175fb6e8e6dd67ce7120eec4af4ba759d02b7070c2aba4574"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/commands.json",
+      "bytes": 13143,
+      "sha256": "874fe1c7df743e4950641f033d14f47b4241c68f7a3d4fc1f0d13c8d08cdbf38"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/target-properties.json",
+      "bytes": 604,
+      "sha256": "d0fb72603893c35518557fc4423b7c240c094291b0709ed616020a7c19264005"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/artifact-identities.json",
+      "bytes": 712,
+      "sha256": "b5315a820fd0e8f2b5745d60e0b97983915b0fe9f4d7aace98568a671f770043"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/build.log",
+      "bytes": 7237,
+      "sha256": "2df8820e4f4c0b11f85cafa51169273d8ff096e2f0e1bfcdc1a9fc17b767acc0"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/restore.log",
+      "bytes": 5805,
+      "sha256": "ba6876d5a96c87e3d15c7a96bad36987675f0009fc05e1c76ba574d16c69b495"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/git-head.log",
+      "bytes": 41,
+      "sha256": "1b94b676ec1e2e50bc39059363866be08502a3af12f8e143ab3b9e4d399c63b4"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/dotnet-info.log",
+      "bytes": 1450,
+      "sha256": "f7bb3c0828f676defe0d5f372cc3ecb66f670a7f3fadd005819313f0185f3d88"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/native-submodule-pins.log",
+      "bytes": 319,
+      "sha256": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382"
+    },
+    {
+      "path": "emoji-carrier-3b0b-run/target-properties.log",
+      "bytes": 638,
+      "sha256": "b418601c86aedfaf567e592a0d03796075f2804ac5e01443d48a4600509cea2a"
+    },
+    {
+      "path": "canonical-emoji-carrier/CanonicalEmojiControl.cs",
+      "bytes": 641,
+      "sha256": "6462547ccd2d9ab4a49bf4b857f1fd64ecf6e6b474a942e3d4493414c1c8b237"
+    },
+    {
+      "path": "canonical-emoji-carrier/CanonicalEmojiCarrier.csproj",
+      "bytes": 884,
+      "sha256": "49f80aa6bc808219c21aea3fe0d9fba5b0874d38255ed8d5d003683b0bdf4c75"
+    },
+    {
+      "path": "canonical-emoji-carrier/source-manifest.json",
+      "bytes": 2396,
+      "sha256": "9c1a169290ecf8023ea41f66ab8d13a2062c1c5a14810c4afb2219ed0f24bd26"
+    }
+  ],
+  "privateRawLogAndTrxHashReferences": [
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/diagnostics/native-submodule-pins.log",
+      "bytes": 319,
+      "sha256": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/diagnostics/native-picker.log",
+      "bytes": 2279,
+      "sha256": "b9931da5f74fc95ddeb4088c8bb05946946b38cee982c3dce4e1b903aafc7ab5",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/diagnostics/native-layout.log",
+      "bytes": 2087,
+      "sha256": "264495042f7b7fe9c3cd0047a60f792b58fa4499e853f9801950d017c908192b",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/diagnostics/native-native-input.log",
+      "bytes": 1667,
+      "sha256": "6d76781a680aa781e73c662af3faea38d3f5332cb3034a8142133a95c9c717ae",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/diagnostics/native-navigation.log",
+      "bytes": 2223,
+      "sha256": "d25eb0228e06438980d90a6018d5afbfc7f31dd75b52e567faee38297f9673eb",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/diagnostics/native-toolbar.log",
+      "bytes": 2394,
+      "sha256": "d34235e0c5a489e22f1a3b681eff2abbb19218ccb42c811f079db74c49bbbd57",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/diagnostics/native-submodule-pins.log",
+      "bytes": 319,
+      "sha256": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/diagnostics/canonical-emoji-control.log",
+      "bytes": 525,
+      "sha256": "571f85c5d8889e62dfdcf1e2d19dd75e4ed629e3ab38dca5b13f6244fcce3e67",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    },
+    {
+      "source": "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/diagnostics/test-results/canonical-emoji-control.trx",
+      "bytes": 3182,
+      "sha256": "dc85f8e1d77073261eb3ff1828308603649a103f34e3a493a4eb026ba1624a8e",
+      "disposition": "Raw local evidence retained; body not copied to public package"
+    }
+  ],
+  "independentC6EmojiSourceAndRuntimeReviews": [
+    {
+      "path": "/workspace/team-c-c6-durable-validation-20261004/dependency-closure/emoji-canonical-carrier-source-review.json",
+      "sha256": "0b2eb024acebb1270a0688d5c836b153236b56c8e692038ee231bf89c141176b"
+    },
+    {
+      "path": "/workspace/team-c-c6-durable-validation-20261004/dependency-closure/emoji-canonical-runtime-independent-readback.json",
+      "sha256": "5d6dfa83a1b37abde8a35c8f1be02a3ccc61b713c143f5518d48da846a29ec8b"
+    }
+  ],
+  "runner": {
+    "path": "../run_write_controls.py",
+    "sha256": "297a69e0ddabf3b36ac02345e0f4324911047ae48ece06c04698b03177631083"
+  },
+  "qualification": "Exact normal source-built maintained WriteScene program: four original modes PASS; original layout FAIL retained and investigated separately. Exact canonical existing EEC emoji Fact carrier PASS1/1 against production own-assembly embedded resource. Full original Desktop project, excluded formatting AvaloniaFact, GUI/browser/provider/Windows/full parity NOT_RUN. No mutated expectations/source/stubs or copied binaries; raw native fixture GUIDs/images/stores remain private and excluded."
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "scene",
+  "project": "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+  "sourceCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "status": "FAIL",
+  "scope": "Actual controlled source-built local/headless checks only; GUI/browser/provider/Windows/full parity NOT_RUN",
+  "originalDesktopTestProject": "NOT_RUN",
+  "nativeStarted": true,
+  "error": "RuntimeError('native-layout exit -6')"
+}

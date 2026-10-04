@@ -1,0 +1,10 @@
+Unhandled exception. System.IO.FileNotFoundException: No .9to1board was found at the requested path.
+File name: 'C:\Users\runneradmin\Documents\9to1 Boards\Board.9to1board'
+   at CakeOS.Apps.Boards.Contract.RichBoardSession.OpenAtPathAsync(JsonFileHavenBoardStore store, String path, CancellationToken cancellationToken) in /_/9to1 Workspace/Boards/contract/RichBoardSession.cs:line 83
+   at CakeOS.Apps.Boards.App.ContractSessionAdapter.OpenAsync(JsonFileHavenBoardStore store, String path, CancellationToken cancellationToken) in /_/9to1 Workspace/Boards/app/ContractSessionAdapter.cs:line 40
+   at CakeOS.Apps.Boards.App.BoardsApp.OnFrameworkInitializationCompleted() in /_/9to1 Workspace/Boards/app/Program.cs:line 119
+   at Avalonia.AppBuilder.SetupUnsafe() in /_/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/AppBuilder.cs:line 375
+   at Avalonia.AppBuilder.Setup() in /_/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/AppBuilder.cs:line 353
+   at Avalonia.AppBuilder.SetupWithLifetime(IApplicationLifetime lifetime) in /_/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/AppBuilder.cs:line 208
+   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action`1 lifetimeBuilder) in /_/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ClassicDesktopStyleApplicationLifetime.cs:line 264
+   at CakeOS.Apps.Boards.App.Program.Main(String[] args) in /_/9to1 Workspace/Boards/app/Program.cs:line 49

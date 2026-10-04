@@ -1,0 +1,1 @@
+{"scenario":"corrupt-primary-good-backup","status":"PASS","assertions":6,"platform":"Unix","qualification":"Actual source-linked adapter/contract persistence; no graphical app/native Windows acceptance."}

@@ -1,0 +1,303 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Haven.PluginFixture -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.PluginFixture/release/Haven.PluginFixture.dll
+  Haven.Core -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Core/release/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/NineToOne.Cui.AI/release/NineToOne.Cui.AI.dll
+  Haven.Application -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Application/release/Haven.Application.dll
+  Haven.Browser -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Browser/release/Haven.Browser.dll
+  Haven.Infrastructure -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Infrastructure/release/Haven.Infrastructure.dll
+  Haven.Infrastructure.Tests -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll
+Test run for /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.35]     Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_ConfinesSenderFileNameToMeshInboxAndVerifiesHash [FAIL]
+  Failed Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_ConfinesSenderFileNameToMeshInboxAndVerifiesHash [6 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_ConfinesSenderFileNameToMeshInboxAndVerifiesHash() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshFileTransferStoreTests.cs:line 29
+   at Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_ConfinesSenderFileNameToMeshInboxAndVerifiesHash() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshFileTransferStoreTests.cs:line 30
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:01.82]     Haven.Infrastructure.Tests.PresentProductionTests.Infrastructure_registers_present_repository_and_exporter [FAIL]
+  Failed Haven.Infrastructure.Tests.PresentProductionTests.Infrastructure_registers_present_repository_and_exporter [24 ms]
+  Error Message:
+   System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'
+  Stack Trace:
+     at System.IO.FileSystem.CreateDirectory(String fullPath, UnixFileMode unixCreateMode)
+   at System.IO.Directory.CreateDirectory(String path)
+   at Haven.Infrastructure.AppPaths..ctor() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs:line 30
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Constructor(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.Tests.PresentProductionTests.Infrastructure_registers_present_repository_and_exporter() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs:line 21
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.90]     Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks [FAIL]
+  Failed Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks [19 ms]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: [PresentCompatibilityIssue { IssueId = 337f342b-8d8b-498e-8c64-0bb736b09997, Severity = Warning, Direction = Export, FeatureType = slide-layout, SourceTargetId = 8f8da684-b227-4561-864e-7a130332408c, Description = The source slide layout relationship is replaced by a blank PPTX layout., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = 639d92fc-6748-4ce7-b8da-5e9012bf912c, Severity = Warning, Direction = Export, FeatureType = object-type, SourceTargetId = f0c88fca-9267-4035-bceb-11e440710c72, Description = The GenUi object is represented by explanatory text; its interactive or visual behavior is not preserved., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = b8480547-8039-4cc2-9c27-44753f3874bd, Severity = Warning, Direction = Export, FeatureType = object-type, SourceTargetId = 54fd9620-8318-4886-abaf-185039d43acf, Description = The Image object is represented by explanatory text; its interactive or visual behavior is not preserved., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = dc47f9a0-3b3b-46bd-82a0-3bc49384698f, Severity = Warning, Direction = Export, FeatureType = slide-layout, SourceTargetId = 1dba0e7d-5d66-42d6-ad13-7a89a3366e71, Description = The source slide layout relationship is replaced by a blank PPTX layout., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = fbdb2d07-7fdd-4e4d-8185-4a88351cf304, Severity = Warning, Direction = Export, FeatureType = presentation-structure, SourceTargetId = b75747d9-bb2b-458b-9c04-242195f0729d, Description = Source themes, masters, layouts, and sections are not preserved by the PPTX writer., Resolution = Degraded }]
+  Stack Trace:
+     at Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs:line 278
+   at Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs:line 279
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.06]     Haven.Infrastructure.Tests.DocumentShapeGalleryTests.Infrastructure_registers_one_shared_shape_gallery [FAIL]
+  Failed Haven.Infrastructure.Tests.DocumentShapeGalleryTests.Infrastructure_registers_one_shared_shape_gallery [2 ms]
+  Error Message:
+   System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'
+  Stack Trace:
+     at System.IO.FileSystem.CreateDirectory(String fullPath, UnixFileMode unixCreateMode)
+   at System.IO.Directory.CreateDirectory(String path)
+   at Haven.Infrastructure.AppPaths..ctor() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs:line 30
+   at InvokeStub_AppPaths..ctor(Object, Object, IntPtr*)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.Tests.DocumentShapeGalleryTests.Infrastructure_registers_one_shared_shape_gallery() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DocumentShapeGalleryTests.cs:line 19
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:02.29]     Haven.Infrastructure.Tests.MeshRegistrationTests.MeshServicesResolveWithoutCircularDependencyAndJoinProviderCollections [FAIL]
+  Failed Haven.Infrastructure.Tests.MeshRegistrationTests.MeshServicesResolveWithoutCircularDependencyAndJoinProviderCollections [11 ms]
+  Error Message:
+   System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'
+  Stack Trace:
+     at System.IO.FileSystem.CreateDirectory(String fullPath, UnixFileMode unixCreateMode)
+   at System.IO.Directory.CreateDirectory(String path)
+   at Haven.Infrastructure.AppPaths..ctor() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs:line 30
+   at InvokeStub_AppPaths..ctor(Object, Object, IntPtr*)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.Tests.MeshRegistrationTests.MeshServicesResolveWithoutCircularDependencyAndJoinProviderCollections() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshRegistrationTests.cs:line 23
+   at Haven.Infrastructure.Tests.MeshRegistrationTests.MeshServicesResolveWithoutCircularDependencyAndJoinProviderCollections() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshRegistrationTests.cs:line 26
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:04.28]     Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run [FAIL]
+  Failed Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run [25 ms]
+  Error Message:
+   System.UnauthorizedAccessException : All requested package permissions must be reviewed and granted explicitly.
+  Stack Trace:
+     at Haven.Application.ExtensionManager.InstallCoreAsync(DiscoveredExtensionPackage discovered, ExtensionPermission explicitlyGrantedPermissions, CancellationToken cancellationToken) in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionManager.cs:line 165
+   at Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs:line 290
+   at Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs:line 325
+   at Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs:line 325
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:07.21]     Haven.Infrastructure.Tests.ProviderRoutingRegistrationTests.RoutedAndLocalClientsResolveWithoutCircularDependency [FAIL]
+  Failed Haven.Infrastructure.Tests.ProviderRoutingRegistrationTests.RoutedAndLocalClientsResolveWithoutCircularDependency [27 ms]
+  Error Message:
+   System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'
+  Stack Trace:
+     at System.IO.FileSystem.CreateDirectory(String fullPath, UnixFileMode unixCreateMode)
+   at System.IO.Directory.CreateDirectory(String path)
+   at Haven.Infrastructure.AppPaths..ctor() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs:line 30
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Constructor(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.ServiceCollectionExtensions.<>c.<AddHavenInfrastructure>b__0_26(IServiceProvider provider) in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs:line 214
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitFactory(FactoryCallSite factoryCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitIEnumerable(IEnumerableCallSite enumerableCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.ServiceCollectionExtensions.<>c.<AddHavenInfrastructure>b__0_27(IServiceProvider provider) in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs:line 224
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitFactory(FactoryCallSite factoryCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.ServiceCollectionExtensions.<>c.<AddHavenInfrastructure>b__0_28(IServiceProvider provider) in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs:line 229
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitFactory(FactoryCallSite factoryCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.Tests.ProviderRoutingRegistrationTests.RoutedAndLocalClientsResolveWithoutCircularDependency() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ProviderRoutingRegistrationTests.cs:line 39
+   at Haven.Infrastructure.Tests.ProviderRoutingRegistrationTests.RoutedAndLocalClientsResolveWithoutCircularDependency() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ProviderRoutingRegistrationTests.cs:line 45
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:09.97]     Haven.Infrastructure.Tests.PlannerServiceRegistrationTests.Desktop_startup_composition_resolves_the_study_planner_service [FAIL]
+  Failed Haven.Infrastructure.Tests.PlannerServiceRegistrationTests.Desktop_startup_composition_resolves_the_study_planner_service [5 ms]
+  Error Message:
+   System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'
+  Stack Trace:
+     at System.IO.Directory.CreateDirectory(String path)
+   at Haven.Infrastructure.AppPaths..ctor() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs:line 30
+   at InvokeStub_AppPaths..ctor(Object, Object, IntPtr*)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.ServiceCollectionExtensions.<>c.<AddHavenInfrastructure>b__0_8(IServiceProvider provider) in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs:line 68
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitFactory(FactoryCallSite factoryCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.PlannerServiceCollectionExtensions.<>c.<AddHavenPlannerInfrastructure>b__0_0(IServiceProvider provider) in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/CalendarSyncProviders.cs:line 109
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitFactory(FactoryCallSite factoryCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.Tests.PlannerServiceRegistrationTests.Desktop_startup_composition_resolves_the_study_planner_service() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PlannerServiceRegistrationTests.cs:line 18
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:10.23]     Haven.Infrastructure.Tests.DataProductionTests.Infrastructure_registers_data_repository_format_and_query_services [FAIL]
+  Failed Haven.Infrastructure.Tests.DataProductionTests.Infrastructure_registers_data_repository_format_and_query_services [2 ms]
+  Error Message:
+   System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'
+  Stack Trace:
+     at System.IO.Directory.CreateDirectory(String path)
+   at Haven.Infrastructure.AppPaths..ctor() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs:line 30
+   at InvokeStub_AppPaths..ctor(Object, Object, IntPtr*)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Haven.Infrastructure.Tests.DataProductionTests.Infrastructure_registers_data_repository_format_and_query_services() in /workspace/team-c-c3-preview-environment/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataProductionTests.cs:line 21
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Results File: /workspace/team-c-resume-evidence/c3-preview-environment-20261004/whole-release-results/whole-infrastructure-release.trx
+
+Failed!  - Failed:     9, Passed:   406, Skipped:     0, Total:   415, Duration: 12 s - Haven.Infrastructure.Tests.dll (net10.0)
