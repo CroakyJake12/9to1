@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "sourceBasis": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "repository": "CroakyJake12/9to1",
+  "producerRunId": 37208129079,
+  "artifacts": [
+    {
+      "id": 11305857645,
+      "name": "windows-unaccepted-present-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 116852068,
+      "digest": "sha256:93770579f185627177c4d6565b779f09bb22596fc1a019d76a2d50c92c4f78f2"
+    },
+    {
+      "id": 11305708165,
+      "name": "windows-observation-present-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 37000,
+      "digest": "sha256:9680c67603f14ce917f30fceeb5cd9bf6f40399c3ddccea6916d9ce0aeb47e29"
+    }
+  ],
+  "package": {
+    "file": "present-win-x64-unaccepted.zip",
+    "bytes": 117349056,
+    "sha256": "086f2a4633753e9d8c7ba942fc00b0fcbd85a871e54f8b4b2644795873b233a5"
+  },
+  "packageFileCount": 466,
+  "packageUncompressedBytes": 321660999,
+  "originalResultSha256": "7f338ad76cee6927b6891150cd8defd83097e1dca5bd4b8676185b6774e68aec",
+  "executable": "HavenOS.Present.exe",
+  "harnessPaths": [
+    ".github/workflows/team-c-present-packaged-ui-controls.yml",
+    ".github/scripts/present-packaged-ui-controls.ps1",
+    ".github/validation/present-packaged-ui-controls.json",
+    "eng/release-validation/present-packaged-ui/README.md"
+  ],
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Present/Program.cs",
+      "sha256": "8d88ed2961c9e94a8d3315a0548ce1658635971f2eeacffdda56ce4250d968c4",
+      "gitBlob": "e891a2e1fe13a4a4b250bf29eaa5a78e4e002f43",
+      "gitMode": "100644",
+      "bytes": 375
+    },
+    {
+      "path": "9to1 Workspace/Present/PresentApplication.cs",
+      "sha256": "3fbaa1362401b866a8120e2809c1570d64438570a2716561cc1224a6cbd56c09",
+      "gitBlob": "8c883b1d3c5628597bf55570a454fe505b4b80b5",
+      "gitMode": "100644",
+      "bytes": 2043
+    },
+    {
+      "path": "9to1 Workspace/Present/PresentAppHost.cs",
+      "sha256": "a88b895b180db9dddec75b74db2b2ab09c62a7b8ebd7f1a5c933b3fb7b093425",
+      "gitBlob": "0ef07b7ef1f7c6875b4e8add3225b0b4d9bb97f7",
+      "gitMode": "100644",
+      "bytes": 3398
+    },
+    {
+      "path": "9to1 Workspace/Present/HavenOS.Present.csproj",
+      "sha256": "a48cdfb6733e68278d3de0abdffd3be98be8d1e608d3371334da9f0b42fa678f",
+      "gitBlob": "9e18307e9fe11ed768e126f086926a52990f479f",
+      "gitMode": "100644",
+      "bytes": 1091
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.axaml",
+      "sha256": "38681717e61ee0e1e7a685978127e397ab4c3a3bba0d271146720e5c4f002cf8",
+      "gitBlob": "0a74b625e7008d5285760f09602174c23c46f7ba",
+      "gitMode": "100644",
+      "bytes": 413
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.axaml.cs",
+      "sha256": "7db5ba9d63f261339ffcb8223c3fccdeb86a93c7e83dcf2584c26ce346449b47",
+      "gitBlob": "3ca961b798ef6a409f3b23ca0cdfd6c08ee1d3d4",
+      "gitMode": "100644",
+      "bytes": 15300
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.Phase2.cs",
+      "sha256": "ee3c324e0a9068eff9a1378260382db12a391091e3e103b15317ddcc36e3d9bf",
+      "gitBlob": "2d21791680f2b148b36c70c31b936b0f842a2773",
+      "gitMode": "100644",
+      "bytes": 22089
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.Workspace.cs",
+      "sha256": "4d594974bebaba3ca2efc509566d46be2522192b1333d21cbb3b855d826bdc81",
+      "gitBlob": "426a14cf70f15b859649e2c88227a11ba4524fc1",
+      "gitMode": "100644",
+      "bytes": 16922
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.cs",
+      "sha256": "0137cdac5cae83407be62c9893ce335d54d1168f7186c7974986dded258c9e79",
+      "gitBlob": "f8d2cea9c3ebc19f5a064240654231d28cee8850",
+      "gitMode": "100644",
+      "bytes": 16797
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Workspace.cs",
+      "sha256": "0f69a2fb7487fc7660a8a17204a29e81c54ed69ea94024e52f7a44aba71ebbec",
+      "gitBlob": "d5aadfcabf45125d1dd87d3ac269ebcfc9b0a2bb",
+      "gitMode": "100644",
+      "bytes": 47478
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Polish.cs",
+      "sha256": "4833d44077ca18bf1888e300e46496d616f7443825f550115be40f02190994f6",
+      "gitBlob": "f7f735a7554fed9fcde74d1e6d2385031521551e",
+      "gitMode": "100644",
+      "bytes": 21841
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Phase2.cs",
+      "sha256": "c2f1f26a4adc5780a8fc0cba1d99b781cdc13339b311f89e9989e36aece3c210",
+      "gitBlob": "1779926c40014d9f3bff0aaec3535188f72415fe",
+      "gitMode": "100644",
+      "bytes": 15995
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentDocument.cs",
+      "sha256": "debb6570efe7c653aa7d625ebe495350a20fa4ed62732f487a7e37341f109b75",
+      "gitBlob": "ae91aa98c1d4389eeeda9a2be756752b07e51ab0",
+      "gitMode": "100644",
+      "bytes": 11759
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.cs",
+      "sha256": "adc059303793a48e4aa2f7f7062cdd6979be7f28aec41891893c863991cfc1f0",
+      "gitBlob": "d1e7e8704d42f3d20072b9b3cc109ab6bfeb9581",
+      "gitMode": "100644",
+      "bytes": 32824
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs",
+      "sha256": "f5c56fc195126c9eadcca468c44123c0f1409acc649d5cce3051060a245085d5",
+      "gitBlob": "b1ef9eff0158bf4a10977b4ebb1e83bf45ccd898",
+      "gitMode": "100644",
+      "bytes": 11032
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs",
+      "sha256": "9454fdd9956fbe034a6b642436567791e8a4120612eb7119b60863d5f193ddc6",
+      "gitBlob": "0e36a122320b443cd16ea456aa30388e136ac9da",
+      "gitMode": "100644",
+      "bytes": 2916
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs",
+      "sha256": "115601c40f13f9944b60c6f889cd0caea7d0e0599807aef2cf8bab9ebf6c367e",
+      "gitBlob": "a2431379ccc992b96924376c3c7e3aa1e02507d1",
+      "gitMode": "100644",
+      "bytes": 32570
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
+      "sha256": "87a76ce5c3c0c3ca457300503eb992d396f4e2ec3a010b11c9379257624d31b3",
+      "gitBlob": "5f1c5e6b1d924f82d1284da34a4b9a98ecc2fe22",
+      "gitMode": "100644",
+      "bytes": 44574
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneAutomationPeer.cs",
+      "sha256": "8c2d8957371c014892c4c6b606d9673389b13048f94c9f02516060ee5e285cda",
+      "gitBlob": "b6b596ef7ed59972290170969ba3802b8eeef81d",
+      "gitMode": "100644",
+      "bytes": 10119
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenInteractiveAutomationPeers.cs",
+      "sha256": "9eb59d8180b2334d8c6d41e7449cb71a901f9012493a80d5129d897a9efa29f8",
+      "gitBlob": "6715294bc3a7988582944a4241389ca25a8e177c",
+      "gitMode": "100644",
+      "bytes": 6933
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.UI/Components/Popup/PopupMenu.cs",
+      "sha256": "4259917066db61c3ebd639157dc61447a3d69935d12bfc3f74891068f32eb30f",
+      "gitBlob": "77f2f3a9bc0b9f2816a8f906be473df8d7c7f773",
+      "gitMode": "100644",
+      "bytes": 5442
+    }
+  ],
+  "scope": "UNACCEPTED original immutable unsigned package, SDK-present disposable Windows runner; native local UIA/keyboard/save/open/reopen/picker cancellation only. Ordinary current profile, no injected environment/config, no installed Home tuple or clean-PC/full-app acceptance. Donor import/export, backup/corruption/CAS/native authority and complete accessibility matrix NOT_RUN.",
+  "profilePolicy": "Refuse existing ApplicationData/Haven or LocalCode and any HAVEN_DATA_DIR override; never delete/replace prior profile. App alone creates/writes its ordinary default repository; harness only reads/hash-checks it.",
+  "publicOutputPolicy": "Result/check/hash/source metadata, bounded synthetic-app stdout/stderr and two synthetic native-window PNGs only. No repository/current/backup database/document bodies, native package/exe, or ordinary user profile upload."
+}
