@@ -1,5 +1,5 @@
 {
-  "state": "ROOT_B6_DIAGNOSTIC_WHOLE_BODY_PROOF_ALL_KNOWN_READERS_CLOSED",
+  "state": "EXACT_FIVE_FAILED_ORIGINAL_DIAGNOSTIC_BODIES_DURABLE_ROOT_FULL_PROOF_B6_PENDING",
   "scope": "Existing failed original transport diagnostics only; does not receive full1495261 original or claim browser/native acceptance.",
   "official": {
     "artifact": 11314750816,
@@ -161,5 +161,56 @@
     "owner": "B3",
     "scope": "Single local diagnostic ZIP fullCRC RAM read before restriction message arrived; tool exit0 and explicit READER_CLOSED. No write/extract/copy; will not reopen.",
     "planDeviationRecorded": true
+  },
+  "firstDiagnosticTemporaryRetirement": {
+    "rootActualResult": "After fullB6ACK persisted42f8e668b1aa90f4d864dcee878718e88782e0c1, freshpermanentbody/localSHA readback exact, onlynew5406Bduplicate and emptynewdirectory retired. Root/B6/B3closed. Olderprotected/private originals untouched."
+  },
+  "selectedRaw": {
+    "official": {
+      "artifact": 11314748325,
+      "bytes": 8599,
+      "sha256": "91f3eb8c7756ccf4c47bc2941634d647dd1cdc8d99129231283e32b0409291e2",
+      "run": 37234753520,
+      "job": 111531522358,
+      "head": "fca8c373d4eaeb732cbbe20d7e86072ca42d667c",
+      "jobConclusion": "success"
+    },
+    "path": "docs/releases/sol-happy-20261003/team-b-original-transport-diagnostics/wave-e90-selected-original-source-diagnostics.zip",
+    "blob": "4b123f3091266c88d28f0dadf07e886834fc37c5",
+    "members": [
+      {
+        "path": "original-members.json",
+        "bytes": 8308,
+        "sha256": "95a693a655c7aa012480a682de93047cdf95690e5fb09d3f059613f5ed3594b4",
+        "crc32": 3210244456
+      },
+      {
+        "path": "selected-source-diagnostics.json",
+        "bytes": 32973,
+        "sha256": "72913b78d2c468055499a0766892149f939a52fc4ab1b3c2d5f94ecffd6d0f8d",
+        "crc32": 1144039989
+      },
+      {
+        "path": "result.json",
+        "bytes": 974,
+        "sha256": "9abe9847256c91c6126802fa606b85edea9d94916c00caac960145e182a15b42",
+        "crc32": 1094517385
+      }
+    ],
+    "decodedFiveBytes": 23364,
+    "wholeOriginalVerifiedByExactCISource": true,
+    "wholeOriginalIndependentlyReceivedByRoot": false,
+    "original": {
+      "sourceRun": 37230828986,
+      "sourceArtifact": 11313603170,
+      "sourceCommit": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+      "archiveBytes": 1495261,
+      "archiveSha256": "e794fb5e3ab92b8019876f14bb908c340bd0a88be1be53a585ac36122b35fcc7"
+    },
+    "sourceSHA256": "9c117aa68a1095f67e25ce080d82944b5d812547774e7e8b9f2005f5d1fbaa1d",
+    "memberMapSHA256": "3197a6839bd8bbeb98b415c432a33a7fe6b5dcb0e3687266b503c6e8ff4c2446",
+    "readerPhase": "RootONLY localreader nowclosed; B3/B6/B1 REMOTE-only reading; newtemporary retaineduntil independentB6wholebodyCRC+allreaderclosure/freshrootproof.",
+    "onlyNewTemporaryPath": "/workspace/attachments/beae8c35-ac84-47fb-a534-61016b9d88a9/wave-e90-selected-original-source-diagnostics.zip",
+    "browser14New3Acceptance": false
   }
 }
