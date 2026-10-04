@@ -1,0 +1,215 @@
+{
+  "UTC": "2026-10-04T12:21:54.169420+00:00",
+  "scope": "Actual aef50 native98/63boundary+35durable-owner; actual old8041 public anonymous BFcache6 ROOT+independent B6; exact source-only dependency requests. No full app/provider/deployment acceptance.",
+  "sourceCommit": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+  "workflowRun": "https://github.com/CroakyJake12/9to1/actions/runs/37199870480",
+  "draftReview": "https://github.com/CroakyJake12/9to1/pull/4",
+  "browserSourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "files": [
+    {
+      "path": "authority/fresh-text-diff.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/source/live-1217-text-diff01.json",
+      "bytes": 2106,
+      "sha256": "11ca0414e2957744556f994c742222ce552749cc1f6d02600d1641a6fbe5f61e"
+    },
+    {
+      "path": "authority/independent-full-text-review.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/live-authority-1217-independent-review01/review.json",
+      "bytes": 4335,
+      "sha256": "caa41671d264e7e64085b3e949c4cc33c194dcff94aa9893e8c75f9ae1dc7819"
+    },
+    {
+      "path": "javascript/actual73.tap",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/provisional-browser-fixes-js-actual02.tap",
+      "bytes": 6754,
+      "sha256": "44d8a6c58c290a07c6d0e9390a34a82c3ce4b8f691020707d76f6af7b6cc63a6"
+    },
+    {
+      "path": "javascript/first-wrong-invocation-preserved.tap",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/provisional-browser-fixes-js-actual01.tap",
+      "bytes": 9276,
+      "sha256": "956b42dc6eeb7a6193d020eea009a26ffe74544f8e0254f303fc5a2b0039de3b"
+    },
+    {
+      "path": "javascript/platform10.log",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/provisional-browser-fixes-platform10-actual01.log",
+      "bytes": 530,
+      "sha256": "7c0b0cf1b88ec8d79e7622e8d9c0465426e7db7ec4533f57f503eaf01d493d24"
+    },
+    {
+      "path": "native-ci/bindings15.zip",
+      "source": "/workspace/attachments/06ba6ed6-22eb-4fcf-ad08-59216c7e99f5/github-actions-artifact-11301764541.zip",
+      "bytes": 331508,
+      "sha256": "ddd584c6c009fffd581fb1c75ea83abde7dfee8c1308182dfb8906a69ea4a777"
+    },
+    {
+      "path": "native-ci/factory6.zip",
+      "source": "/workspace/attachments/9c5bfa06-0c2b-4f76-8892-a25d5491af25/team-b-native-factory6-aef50b9b.zip",
+      "bytes": 332842,
+      "sha256": "c3503bc96fa5c512ed568a5be172c01244b7410543fb7d55385819642fdd3b60"
+    },
+    {
+      "path": "native-ci/files17.zip",
+      "source": "/workspace/attachments/fe9d5e30-ec16-4a2c-bc92-7e7c369e6506/github-actions-artifact-11302252549.zip",
+      "bytes": 333256,
+      "sha256": "758550cf86f01192a2290938afedfd5cc34265917a4676129b21e12e75ae98e7"
+    },
+    {
+      "path": "native-ci/full91-member-inventory.json",
+      "source": "/tmp/team-b-b6-ordinary-native-ci-actual-six-recorded-review01/full91-member-inventory.json",
+      "bytes": 17444,
+      "sha256": "58f872b581a8e7368f6d68d8f5b2a109c06de0eff25abc7238ed7208d204c548"
+    },
+    {
+      "path": "native-ci/independent-full-recorded-review.json",
+      "source": "/tmp/team-b-b6-ordinary-native-ci-actual-six-recorded-review01/review.json",
+      "bytes": 25206,
+      "sha256": "a3679317c1c3d3085212b391365e09b1970b0390e9ecda6c64418509f96576dd"
+    },
+    {
+      "path": "native-ci/navigation5.zip",
+      "source": "/workspace/attachments/d70a250e-21d1-49bb-9c03-bfb764419b77/github-actions-artifact-11301839472.zip",
+      "bytes": 333124,
+      "sha256": "ee88f510dc713453b131ec0dab9dfd3142261bbd8c468594ee542ba30d84452d"
+    },
+    {
+      "path": "native-ci/registry37.zip",
+      "source": "/workspace/attachments/e0d6d746-f662-40eb-8e9e-344cf0d884a8/github-actions-artifact-11302122588.zip",
+      "bytes": 333319,
+      "sha256": "1e1378355701b80759ef66b584dc95038061dbe38ae14971d2f8f6b63a8fd887"
+    },
+    {
+      "path": "native-ci/sites18.zip",
+      "source": "/workspace/attachments/7825156c-75cb-4a92-8495-8b0c3d83ef86/github-actions-artifact-11301934459.zip",
+      "bytes": 334415,
+      "sha256": "1b3d5d88c5aa873157c710ae2f6baaf20795898efe7fffb3891e35c98779869c"
+    },
+    {
+      "path": "public-bfcache6/b5-control01/owned-family-receipt.json",
+      "source": "/workspace/team-b-b5-public-context-8041-control01/owned-family-receipt.json",
+      "bytes": 6146,
+      "sha256": "6e15b9013d577d686cc31b1dbe80625e3023d11b9c08cbb3d57503f93490a467"
+    },
+    {
+      "path": "public-bfcache6/b5-control01/runner-safe-stdout.log",
+      "source": "/workspace/team-b-b5-public-context-8041-control01/runner-safe-stdout.log",
+      "bytes": 552,
+      "sha256": "a6cea06a69b89c61dd7e2231a3c9fda3d98f366ede51bcbdf03e460116fe7fe2"
+    },
+    {
+      "path": "public-bfcache6/b5-run01/results.json",
+      "source": "/workspace/team-b-b5-public-context-8041-run01/results.json",
+      "bytes": 3502,
+      "sha256": "9131df01508b3b00402f708a40454b0ba856b16332b2a46498d709b3a81646e5"
+    },
+    {
+      "path": "public-bfcache6/b6-control01/owned-family-receipt.json",
+      "source": "/workspace/team-b-b6-public-context-8041-control01/owned-family-receipt.json",
+      "bytes": 6146,
+      "sha256": "6e0f598ac761a19e0f758ed1054182c22d438ac3c57d9502e1c06572ec5ebaf6"
+    },
+    {
+      "path": "public-bfcache6/b6-control01/runner-safe-stdout.log",
+      "source": "/workspace/team-b-b6-public-context-8041-control01/runner-safe-stdout.log",
+      "bytes": 552,
+      "sha256": "a6cea06a69b89c61dd7e2231a3c9fda3d98f366ede51bcbdf03e460116fe7fe2"
+    },
+    {
+      "path": "public-bfcache6/b6-run01/results.json",
+      "source": "/workspace/team-b-b6-public-context-8041-run01/results.json",
+      "bytes": 3502,
+      "sha256": "9131df01508b3b00402f708a40454b0ba856b16332b2a46498d709b3a81646e5"
+    },
+    {
+      "path": "public-bfcache6/independent-executed-manifest.json",
+      "source": "/tmp/team-b-b6-public-bfcache6-independent-source01/EXECUTED-INDEPENDENT-PUBLIC-BFCACHE6-MANIFEST01.json",
+      "bytes": 5411,
+      "sha256": "c141805521e65226074adb330ad1415689dcc3510c7ad9d05513502c44f2d4bc"
+    },
+    {
+      "path": "public-bfcache6/independent-final-audit.json",
+      "source": "/tmp/team-b-b6-public-bfcache6-independent-source01/final-postcapture-resource-audit.json",
+      "bytes": 779,
+      "sha256": "134d732202e0fb46381e668908d9682e1bc4ae8184760ee7ccf17218354a140a"
+    },
+    {
+      "path": "public-bfcache6/root-family.json",
+      "source": "/workspace/team-b-b5-public-context-8041-control01/owned-family-receipt.json",
+      "bytes": 6146,
+      "sha256": "6e15b9013d577d686cc31b1dbe80625e3023d11b9c08cbb3d57503f93490a467"
+    },
+    {
+      "path": "public-bfcache6/root-postcapture-audit.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/public-bfcache03-root-actual01-postcapture-audit.json",
+      "bytes": 2163,
+      "sha256": "4df7db9d482ca4d5eed6a45b0837480aea5d016338b11e87428adcf5f6290e57"
+    },
+    {
+      "path": "public-bfcache6/root-results.json",
+      "source": "/workspace/team-b-b5-public-context-8041-run01/results.json",
+      "bytes": 3502,
+      "sha256": "9131df01508b3b00402f708a40454b0ba856b16332b2a46498d709b3a81646e5"
+    },
+    {
+      "path": "recovery/generated121-independent-review.json",
+      "source": "/tmp/team-b-b6-recovery121-recorded-review01/review.json",
+      "bytes": 2031,
+      "sha256": "17b39f4ec5e890e05bc0394feeea3b3dde41e651ef460b4b06e0c9e3067169fd"
+    },
+    {
+      "path": "recovery/runtime80-actual-receipt.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/public-runtime80-root-recovery02/actual-exact80-recovery-receipt.json",
+      "bytes": 137769,
+      "sha256": "c77c70fe0526d05060d3c398d82bf4760eaae7e25bcbaf5125dd09c97e775737"
+    },
+    {
+      "path": "recovery/runtime80-durable-map.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/public-runtime80-root-recovery02/current80-durable-restoration-and-wrapper-retirement-before-unlink.json",
+      "bytes": 3240695,
+      "sha256": "8f290530d003696c3a9c19cefd24e64966a6f7ef201eb19c6f98bebfc3ac7107"
+    },
+    {
+      "path": "recovery/runtime80-independent-review.json",
+      "source": "/tmp/team-b-b6-runtime80-recorded-review01/review.json",
+      "bytes": 2020,
+      "sha256": "a0d26942595ab27ca4494c2aabc933f557f7c1e4a0fd767fc9716832e66d6002"
+    },
+    {
+      "path": "requests/AI-Chat-owner-ports.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/ai-maintained-guards-proposal01/OWNER-PORT-REQUEST02.json",
+      "bytes": 7871,
+      "sha256": "03d61ee7f48c335bd367dcabd2d37bb36198d66fe382db44ac8924351e259bba"
+    },
+    {
+      "path": "requests/Data-guarded-browser-authoring.json",
+      "source": "/workspace/team-b-astra-browser-validation/apps/Web/Productivity/Data/OwnerEvidence/BROWSER-GUARDED-AUTHORING-CODEC-PROVIDER-REQUEST01.json",
+      "bytes": 14859,
+      "sha256": "8b503ba3e3c6eb6311cf079a2fe35649474145b029d79480c9c6854de164e9b9"
+    },
+    {
+      "path": "requests/Files-Sites-private-lifecycle-owner-contract.json",
+      "source": "/tmp/team-b-files-sites-private-lifecycle-proposal-03/OWNER-CONTRACT-REQUEST.json",
+      "bytes": 6314,
+      "sha256": "d5087ea168745b6af92901d4a570ee16777d9aba1297f9bbb2f9aaa945535bc2"
+    },
+    {
+      "path": "requests/TerraForm-real-owner-readiness.json",
+      "source": "/tmp/team-b-terraform-owner-readiness-aef01/OWNER-READINESS-AND-REQUEST01.json",
+      "bytes": 247906,
+      "sha256": "497f81b2f39b1b244bf6bc6efd3cebc4eca044bc8dba9b6b6c506d0bf518b18e"
+    },
+    {
+      "path": "requests/Workers-AI-exact-project-closure.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/worker-ai-metadata-source-65f/NARROW-METADATA-AND-ORDINARY-CI-CLOSURE-REVIEW02.json",
+      "bytes": 9684,
+      "sha256": "e4a6a81b7923d7837c7db7363ed0f58e42a6aeed94552e81d1c35385e4655a0b"
+    },
+    {
+      "path": "source/provisional-adoption.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/provisional-browser-fixes-adoption01.json",
+      "bytes": 3375,
+      "sha256": "828b72ccb29197257c07bfe5810bfcc912578848eaa79272707a0701294625d4"
+    }
+  ],
+  "failurePreservation": "All original failures remain. First broad JS invocation misuse retained; local03/17 resource holds unchanged; old public no-store BFcache NOT_RUN unchanged. Recovery preserves archives and source bodies; deletion never resets positive/deleted peaks."
+}

@@ -1,0 +1,5 @@
+This bounded packet preserves the actual six-job native CI evidence for aef50b9b (98 cases:63 unit/boundary and35 durable-owner), plus root and independent anonymous public BFcache six-case runs on the historical8041 browser bundle. PR4 is a fixed one-commit review against the browser baseline; Team C remains sole release integrator.
+
+Every listed file is present in reviewed-evidence.zip under its manifest path. All ZIP members passed full CRC, size and SHA readback. Native artifacts contain logs/identities/results, not test binaries or caches. Recovery maps preserve exact restoration requirements; old wrappers require explicit restore or reviewed rebind. Dependency requests describe missing real owner ports, not implemented APIs.
+
+No complete app, signed provider, deployed service, donor, platform or accessibility acceptance is claimed. Existing failures and not-run criteria remain outstanding. Fresh canonical modified11:47:25Z changed only numbering and an explicitly out-of-scope name; all active substantive requirements are unchanged.
