@@ -1,0 +1,227 @@
+name: Team C current Present workspace Windows validation (unaccepted)
+
+on:
+  push:
+    branches: [team-c/sol-happy-c1-present-workspace-wiring-20261004]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: present-workspace-current-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  current-present:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    env:
+      AVALONIA_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+    steps:
+      - name: Preserve reviewed Windows source bytes
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Acquire the two exact current maintained source gitlinks
+        shell: pwsh
+        run: |
+          git submodule update --init --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Select repository SDK on disposable runner
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Build current source, original15/shared7, new package and original native UI criteria
+        id: probe
+        shell: pwsh
+        env:
+          PRESENT_WORKSPACE_OUTPUT: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          & .github/scripts/present-workspace-windows.ps1 -ExpectedCommit '${{ github.sha }}' -OutputDirectory $env:PRESENT_WORKSPACE_OUTPUT
+          exit $LASTEXITCODE
+      - name: Retain safe first compact managed and native observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-observations-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics/result.json
+            ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics/*-discovery.json
+            ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics/*-test-results/*.trx
+            ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/native-ui/result.json
+            ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/native-ui/*.log
+            ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/native-ui/*.png
+            ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-artifact/*.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Retain original source and runtime custody and command logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-custody-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Retain complete original sealed new package independently from transport or UI outcome
+        if: always() && steps.probe.outputs.package_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-package-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-artifact
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 01
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part01-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part01
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 02
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part02-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part02
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 03
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 3
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part03-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part03
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 04
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 4
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part04-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part04
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 05
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 5
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part05-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part05
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 06
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 6
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part06-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part06
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 07
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 7
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part07-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part07
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 08
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 8
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part08-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part08
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 09
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 9
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part09-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part09
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 10
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 10
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part10-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part10
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 11
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 11
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part11-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part11
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 12
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 12
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part12-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part12
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 13
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 13
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part13-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part13
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 14
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 14
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part14-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part14
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 15
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 15
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part15-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part15
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original ZIP transport part 16
+        if: always() && steps.probe.outputs.parts_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 16
+        uses: actions/upload-artifact@v4
+        with:
+          name: present-workspace-part16-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/present-workspace-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part16
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
