@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-04T13:40:47.827945+00:00",
+  "updatedUTC": "2026-10-04T14:44:13.045212+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -1366,7 +1366,7 @@
     },
     "qualification": "EntirepreviouscurrentExecution979 remainsinimmutablefullrecord; latest progress belongs canonicalcurrentExecution989."
   },
-  "canonicalExecutionField": "currentExecution1027",
+  "canonicalExecutionField": "currentExecution1041",
   "currentExecution989": {
     "historicalFullRecordPreserved": {
       "commit": "9b37814cc31716c8b7e6b59a82327eed8da695ed",
@@ -1826,5 +1826,843 @@
       "bytes": 21565,
       "sha256": "06031385e8fb85c64b70840c93d83ff49399cc819635c722e7bc59fa12e7ccae"
     }
+  },
+  "currentExecution1041": {
+    "status": "ACTIVE_TEAM_A_NATIVE_SOURCE_AND_ORIGINAL_CAUSE_WORK_NOT_ACCEPTED",
+    "updatedUTC": "2026-10-04T14:44:13.045212+00:00",
+    "scope": "Adopted Team A assignment native apps/shared provider-neutral foundations/OS/mobile across passes1-3; finish Astra actual native acceptance, usable PC artifact and Team C exact handoff before Terra-form then Sol Happy. Team C sole global/main/release integrator.",
+    "previousWholePublishedRecord": {
+      "commit": "3d47ae3fe9659af47b99b1178e143d344e0c795e",
+      "path": "coordination/sol-happy-20261003/team-a.json",
+      "bytes": 134256,
+      "sha256": "bcd57270fc788065512e5b5358bf4bef4a38b25576f03733d4c1f7d969c51615",
+      "canonicalExecutionField": "currentExecution1027"
+    },
+    "allPriorRequirementsOwnershipAndRestrictionsRetained": true,
+    "Windows1040": {
+      "sourceOnlyExploratoryBuildBasisOwnerResponse": {
+        "schemaVersion": 1,
+        "owner": "Team A / A1 source owner",
+        "status": "BOUNDED_SOURCE_ONLY_EXPLORATORY_WINDOWS_BUILD_BASIS_ACK",
+        "responsePath": "root-teamA-windows-exploratory-basis-owner-response1040.json",
+        "request": {
+          "commit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+          "bytes": 34609,
+          "sha256": "7303104188d41ef11d1e43c2eb9faa3a9ae69143f3ac2f47eefaaf8c93dc527b",
+          "gitBlob": "a664289904ee03424dfe50ec658fc475afcba859",
+          "deadline": "2026-10-04T19:00:00Z",
+          "path": ".github/validation/windows-package-owner-request.json",
+          "requiredWindowsProducts": 29,
+          "windowsExcludedOnly": {
+            "name": "Launcher",
+            "scope": "Android/9to1-OS only; still required on those platforms"
+          }
+        },
+        "immutableLineage": {
+          "nativeNormal": {
+            "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+            "sourceAcceptance": "PROVISIONAL_NOT_ACCEPTED"
+          },
+          "ownerDelivery": {
+            "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+            "tree": "c612dd3058a3101ece13e3d389ad9def43496fa4",
+            "directParent": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+            "changedPaths": 33,
+            "split": {
+              "accountsWebSourceAndTests": 17,
+              "validation": 6,
+              "handoffEvidenceAndReference": 10
+            },
+            "homeOrSharedOrGuiEntrypointProductOverlays": 0
+          },
+          "currentOwner": {
+            "commit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+            "tree": "67b19879e9dadf7bef4a259d5a843bcf54c11040",
+            "directParent": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+            "changedPaths": 4,
+            "onlyValidation": true
+          },
+          "independentVerification": "A1 authenticated read-only commit/compare metadata verifies both direct parent links and complete33/4 path sets; all22 current request project body pins and14 current probe target source pins match entire actual A63 bytes/SHA/Git blobs.",
+          "fullDeliveryBytes": {
+            "attribution": "Root838 full33 remote byte verification; A1 read entire receipt, not a new independent full33 remote content review",
+            "receipt": {
+              "path": "teamA-reviewed-source-delivery838-receipt.json",
+              "sha256": "7127c8d3456efa8efc9ea75a3e9a2e6be396836ffe37869dd0ed25298cb63ea7"
+            }
+          },
+          "handoffHomeTrust": "Selected HomePermissionTrustService is a reference-only handoff text, not an adopted Home implementation."
+        },
+        "exactExploratoryBuildAck": {
+          "sourceOnly": true,
+          "basisCommit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+          "ridObservation": "win-x64",
+          "targetDeclaration": {
+            "path": ".github/validation/windows-package-probe.json",
+            "bytes": 9047,
+            "sha256": "4b47f31dc05b2567ab0db4172ec8c0e9c4bed8d36f7e422a438de678d396761a",
+            "gitBlob": "0ddb2c4b49b91b5e7fb21af8cf72fe966bf3df36"
+          },
+          "targets": [
+            {
+              "key": "home",
+              "productGroup": "Home",
+              "project": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+              "program": "apps/Home/src/AvaloniaHome/Program.cs",
+              "framework": "net10.0-windows",
+              "executableObservation": "AvaloniaHome.exe",
+              "sourceOnlyExploratoryBuildAck": true,
+              "installedAcceptance": false
+            },
+            {
+              "key": "boards",
+              "productGroup": "Boards",
+              "project": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+              "program": "9to1 Workspace/Boards/app/Program.cs",
+              "framework": "net10.0-windows",
+              "executableObservation": "CakeOS.Apps.Boards.App.exe",
+              "sourceOnlyExploratoryBuildAck": true,
+              "installedAcceptance": false
+            },
+            {
+              "key": "canvas",
+              "productGroup": "Canvas",
+              "project": "9to1 Workspace/Canvas/Host/HavenOS.Canvas.Host.csproj",
+              "program": "9to1 Workspace/Canvas/Host/Program.cs",
+              "framework": "net10.0",
+              "executableObservation": "HavenOS.Canvas.Host.exe",
+              "sourceOnlyExploratoryBuildAck": true,
+              "installedAcceptance": false
+            },
+            {
+              "key": "studio",
+              "productGroup": "AI Studio",
+              "project": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+              "program": "9to1 Workspace/Studio/HavenOS.Studio/Program.cs",
+              "framework": "net10.0",
+              "executableObservation": "HavenOS.Studio.exe",
+              "sourceOnlyExploratoryBuildAck": true,
+              "installedAcceptance": false
+            },
+            {
+              "key": "present",
+              "productGroup": "Present",
+              "project": "9to1 Workspace/Present/HavenOS.Present.csproj",
+              "program": "9to1 Workspace/Present/Program.cs",
+              "framework": "net10.0",
+              "executableObservation": "HavenOS.Present.exe",
+              "sourceOnlyExploratoryBuildAck": true,
+              "installedAcceptance": false
+            },
+            {
+              "key": "picture",
+              "productGroup": "Picture",
+              "project": "9to1 Workspace/Picture/HavenOS.Images.csproj",
+              "program": "9to1 Workspace/Picture/Program.cs",
+              "framework": "net10.0",
+              "executableObservation": "HavenOS.Images.exe",
+              "sourceOnlyExploratoryBuildAck": true,
+              "installedAcceptance": false
+            },
+            {
+              "key": "shared-desktop",
+              "productGroup": "Shared legacy desktop dependency/route candidate",
+              "project": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+              "program": "9to1 Workspace/shared/src/Haven.Desktop/Program.cs",
+              "framework": "net10.0-windows10.0.19041.0",
+              "executableObservation": "Haven.exe",
+              "sourceOnlyExploratoryBuildAck": true,
+              "installedAcceptance": false
+            }
+          ],
+          "targetSourcePins": [
+            {
+              "path": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+              "bytes": 2315,
+              "sha256": "ab1a0ab1fa185d4b66ef6f75d66546be457481947cc655cb164a9842a6b5344c",
+              "gitBlob": "8c2170917986fddc4160e5d3a388e4b7d196f3b8"
+            },
+            {
+              "path": "apps/Home/src/AvaloniaHome/Program.cs",
+              "bytes": 10725,
+              "sha256": "808580096627894af27d5a6f52ed6d41ee2b3385885159ea053de0f9f59ed9cc",
+              "gitBlob": "bfc82f6f825fe282f35485e29f935824dfa115a2"
+            },
+            {
+              "path": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+              "bytes": 2290,
+              "sha256": "ff6d497c337d5ce440d95814b360505206a7d7138bb447b3a1cd5498f59c98fa",
+              "gitBlob": "b0d7475a54fa5632547f86496b4003017d2b2e4c"
+            },
+            {
+              "path": "9to1 Workspace/Boards/app/Program.cs",
+              "bytes": 44045,
+              "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740",
+              "gitBlob": "706f36e47d9ddf9f30c36b3411f81c72aecb7adc"
+            },
+            {
+              "path": "9to1 Workspace/Canvas/Host/HavenOS.Canvas.Host.csproj",
+              "bytes": 809,
+              "sha256": "53750fb532fd6765e836bcbaad126c936251b54030ab8b89a7e7bdf753ef112d",
+              "gitBlob": "d76beebfd0e8e1f66c950098e0aa86cc1e0a348f"
+            },
+            {
+              "path": "9to1 Workspace/Canvas/Host/Program.cs",
+              "bytes": 391,
+              "sha256": "16fb5e5c08b0e9cb5716cd1bf917ca436deceb13cf75af37395ca793a6ba30e0",
+              "gitBlob": "03c671f850ac817b3d133e4506a3ed9360a56fb1"
+            },
+            {
+              "path": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+              "bytes": 1169,
+              "sha256": "43bebd9ec4587e9e471fed79ef677c10436cf9c0458d758a195f3073f2f6858c",
+              "gitBlob": "44100e15aee2ffb529762c86a80bd3f66837553f"
+            },
+            {
+              "path": "9to1 Workspace/Studio/HavenOS.Studio/Program.cs",
+              "bytes": 313,
+              "sha256": "909f62c83a32a79e9dfa054ec7d39ec90499459da470c70bd88b16cf342cfb3b",
+              "gitBlob": "35f5f8019fb5efd155b1404bd1dc43eed128f7b3"
+            },
+            {
+              "path": "9to1 Workspace/Present/HavenOS.Present.csproj",
+              "bytes": 1091,
+              "sha256": "a48cdfb6733e68278d3de0abdffd3be98be8d1e608d3371334da9f0b42fa678f",
+              "gitBlob": "9e18307e9fe11ed768e126f086926a52990f479f"
+            },
+            {
+              "path": "9to1 Workspace/Present/Program.cs",
+              "bytes": 375,
+              "sha256": "8d88ed2961c9e94a8d3315a0548ce1658635971f2eeacffdda56ce4250d968c4",
+              "gitBlob": "e891a2e1fe13a4a4b250bf29eaa5a78e4e002f43"
+            },
+            {
+              "path": "9to1 Workspace/Picture/HavenOS.Images.csproj",
+              "bytes": 1270,
+              "sha256": "34edbb4866b2e5838f1552d95e0dd4f24d07bce80e96dadc18126b5c6cfec20e",
+              "gitBlob": "80c146c49f0ad7d63d237b4c1eac40e19aa3c556"
+            },
+            {
+              "path": "9to1 Workspace/Picture/Program.cs",
+              "bytes": 428,
+              "sha256": "def314227374ed5f68a474c4c44544baa954ed53d45ef6a828624780b3222686",
+              "gitBlob": "413c310648133b627474c2f848861a8212f1ce71"
+            },
+            {
+              "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+              "bytes": 6312,
+              "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9",
+              "gitBlob": "60a07f89fbe75d944105b4e158625b90530b5aee"
+            },
+            {
+              "path": "9to1 Workspace/shared/src/Haven.Desktop/Program.cs",
+              "bytes": 5398,
+              "sha256": "b2c59a97af4e1faa5e92fd327d56caef5b240d051f88523e620885446b51d01d",
+              "gitBlob": "c50f0172933c1c0a75fb6068d77e93a0bb08e639"
+            }
+          ],
+          "caveat": "Seven existing graphical source entrypoints, one the shared legacy dependency host. This acknowledges the exact source basis only. The C probe helper/workflow are not newly accepted by this bounded review; no source modification, installer/installed identity, signing, service or delivery grant follows."
+        },
+        "productRouteObservations": [
+          {
+            "name": "Home",
+            "observedProject": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+            "sourceRouteObservation": "Standalone AvaloniaHome Main GUI; shared MainView.OpenHomeAsync. Standalone authorization DenyAll; installed Windows service composition unavailable.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 2315,
+            "projectSha256": "ab1a0ab1fa185d4b66ef6f75d66546be457481947cc655cb164a9842a6b5344c",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": null
+          },
+          {
+            "name": "9to1 Admin",
+            "observedProject": "9to1 Workspace/Admin/NineToOne.Admin.csproj",
+            "sourceRouteObservation": "CuiNativeHost.Run(AdminNativeScene); exact entry returns HomeBridgeUnavailable until authenticated separate Home transport. Graphical readiness not satisfied.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 704,
+            "projectSha256": "842bd298990927a3dfb9b6483207420c0d94eaedd729ba24f31807eea4246875",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": "NineToOne.Admin"
+          },
+          {
+            "name": "Files",
+            "observedProject": "9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj",
+            "sourceRouteObservation": "CUI library; Files/NativeUI/FilesNativeBrowserSurface is a callable UI source. No explicit files built-in launch key in read A63 route policy; canonical standalone/shared entry remains unresolved.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 1664,
+            "projectSha256": "2631aa150cf1d2a71bbe7b1473604f7b975fcc03447f83fcbe1f8824a7a65762",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Files.CUI"
+          },
+          {
+            "name": "Connect",
+            "observedProject": "9to1 Workspace/Connect/HavenOS.Connect.csproj",
+            "sourceRouteObservation": "Library; no declared GUI entry or explicit connect built-in route in read A63 routing sources.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 195,
+            "projectSha256": "c77756a03e2a233a5e5da12552a946148e9e9cabca79d5cb8b2024d2f4b44a49",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": null
+          },
+          {
+            "name": "Mail",
+            "observedProject": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+            "sourceRouteObservation": "Shared MainView.OpenMail creates MailPage; no explicit mail seeded app key in read BuiltInModeSeed.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 925,
+            "projectSha256": "a81002c51c9716e6208c805d57ed3a73df68157fbf6d108b79266e01ec8ba245",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Mail"
+          },
+          {
+            "name": "Games",
+            "observedProject": "9to1 Workspace/Games/CUI/HavenOS.Games.csproj",
+            "sourceRouteObservation": "CUI library; MainView.Spaces embeds SpaceGamesCuiSurface for canonical space-source selection. That is not a canonical standalone Games app entry.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 614,
+            "projectSha256": "91d4ec9ffbcc8479a9b661cbb882df0309100b68f1385790e8e13b94b7eee9f3",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Games"
+          },
+          {
+            "name": "Spaces",
+            "observedProject": "9to1 Workspace/Spaces/HavenOS.Spaces.csproj",
+            "sourceRouteObservation": "Shared seeded spaces key -> MainView.OpenSpacesAsync.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 940,
+            "projectSha256": "2da9b5abdf6382ec6356da77b0e322b47a3acedfcccc57c08fca2aa11b882725",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Spaces"
+          },
+          {
+            "name": "Vision & Voice",
+            "observedProject": null,
+            "sourceRouteObservation": "Shared seeded vision -> OpenCreativeModeWorkspaceAsync; voice is an in-chat Call action removed as a mode. Canonical combined installed product entry remains unresolved.",
+            "canonicalInstalledEntryAccepted": false
+          },
+          {
+            "name": "AI Studio",
+            "observedProject": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+            "sourceRouteObservation": "StudioNativeApplication GUI executable; shared seeded studio falls through BaseMode.Studio. A standalone/source route does not establish installed identity.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 1169,
+            "projectSha256": "43bebd9ec4587e9e471fed79ef677c10436cf9c0458d758a195f3073f2f6858c",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": null
+          },
+          {
+            "name": "Play",
+            "observedProject": null,
+            "sourceRouteObservation": "Shared seeded play -> MainView.OpenPlay -> PlayPage.",
+            "canonicalInstalledEntryAccepted": false
+          },
+          {
+            "name": "Write",
+            "observedProject": null,
+            "sourceRouteObservation": "Shared seeded write -> NotesExperienceNavigation.OpenAsync -> WritePage.",
+            "canonicalInstalledEntryAccepted": false
+          },
+          {
+            "name": "Present",
+            "observedProject": "9to1 Workspace/Present/HavenOS.Present.csproj",
+            "sourceRouteObservation": "PresentApplication GUI executable; shared present document route -> PresentPage.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 1091,
+            "projectSha256": "a48cdfb6733e68278d3de0abdffd3be98be8d1e608d3371334da9f0b42fa678f",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": "HavenOS.Present"
+          },
+          {
+            "name": "Canvas",
+            "observedProject": "9to1 Workspace/Canvas/HavenOS.Canvas.csproj",
+            "sourceRouteObservation": "Existing additional Canvas/Host/HavenOS.Canvas.Host.csproj GUI executable; shared canvas document route -> CanvasPage. C observed Canvas project itself is a library.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 916,
+            "projectSha256": "6467996dcd62281c2ae52596ea02436216bad2998bc020e6f64a3c93305c264f",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Canvas"
+          },
+          {
+            "name": "Boards",
+            "observedProject": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+            "sourceRouteObservation": "Standalone Win32 BoardsApp GUI; shared boards document route -> BoardsPage.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 2290,
+            "projectSha256": "ff6d497c337d5ce440d95814b360505206a7d7138bb447b3a1cd5498f59c98fa",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": "CakeOS.Apps.Boards.App"
+          },
+          {
+            "name": "Planner",
+            "observedProject": null,
+            "sourceRouteObservation": "Shared plan key -> OpenPlan -> OpenLegacyPlan -> PlanPageViewModel. No invented planner package/key alias is adopted.",
+            "canonicalInstalledEntryAccepted": false
+          },
+          {
+            "name": "Automations",
+            "observedProject": null,
+            "sourceRouteObservation": "Shared seeded automations -> OpenAutomationsDashboard.",
+            "canonicalInstalledEntryAccepted": false
+          },
+          {
+            "name": "Picture",
+            "observedProject": "9to1 Workspace/Picture/HavenOS.Images.csproj",
+            "sourceRouteObservation": "Standalone Avalonia Picture App GUI; no explicit picture seeded key in read A63 routing sources.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 1270,
+            "projectSha256": "34edbb4866b2e5838f1552d95e0dd4f24d07bce80e96dadc18126b5c6cfec20e",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": "HavenOS.Images"
+          },
+          {
+            "name": "Wave",
+            "observedProject": "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+            "sourceRouteObservation": "Observed standalone Exe Main is console-only Wave commands/rendered text; no explicit wave built-in shared route found in read source.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 716,
+            "projectSha256": "2da8e3ee74e4ec341ac55625da8016dbe85b670abdce7616b12917a1401305ec",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": "HavenOS.Wave"
+          },
+          {
+            "name": "Motion",
+            "observedProject": "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+            "sourceRouteObservation": "Observed standalone Exe Main is console status/inspect/project commands; shared seeded motion -> ModeWorkspace NewChatPage, seeded declaration states editing/render/export unavailable.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 720,
+            "projectSha256": "f96c1e19cedaeee54fafb15ee4b9ebf55b6c781ea4e3c0cce312e4f0088eca2e",
+            "declaredOutputType": "Exe",
+            "declaredAssemblyName": "HavenOS.Motion"
+          },
+          {
+            "name": "Data",
+            "observedProject": "9to1 Workspace/Data/App/HavenOS.Data.App.csproj",
+            "sourceRouteObservation": "Shared data/data-database/data-spreadsheet document routes -> DataPage; library App project is not a standalone GUI entry.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 314,
+            "projectSha256": "7490472f8b3254b416d8390fffb948783e24af081d49b7e1865b66285166a442",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": null
+          },
+          {
+            "name": "Forms",
+            "observedProject": "9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj",
+            "sourceRouteObservation": "Shared seeded forms -> OpenFormsAsync -> FormPublicationService private host session -> FormsNativeWorkspaceHost + FormsCuiWorkspace.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 548,
+            "projectSha256": "5748b8c956dcac887640f1581ce02b118d5809871ddb54dfef731e25863060c6",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Forms"
+          },
+          {
+            "name": "Dev",
+            "observedProject": "9to1 Workspace/Dev/HavenOS.Dev.csproj",
+            "sourceRouteObservation": "Library; no explicit dev built-in shared key in read A63 policy/seed. DeveloperAppSurface source is not by itself an installed GUI entry.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 847,
+            "projectSha256": "229518e3e06da8be382ea6ba92209fb62f839b7299d7ffc5df81b6ceb25c4024",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Apps.Dev"
+          },
+          {
+            "name": "Stacks",
+            "observedProject": "9to1 Workspace/Stacks/HavenOS.Stacks.csproj",
+            "sourceRouteObservation": "Library plus NativeUI browser source; no explicit stacks built-in shared key in read A63 policy/seed.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 285,
+            "projectSha256": "bc0675b3e69db657a7d17600ddc30cfd6ad2c0b887eff3267759085c50903267",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Apps.Stacks"
+          },
+          {
+            "name": "Sites",
+            "observedProject": "9to1 Workspace/Sites/HavenOS.Sites.csproj",
+            "sourceRouteObservation": "Library; no explicit sites built-in key in A63 policy/seed (current 4f route has sites, so versions must not be merged implicitly).",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 601,
+            "projectSha256": "f507b445cf59bbf9b45c700ea80f4da08ac080ccce8135c886011f9807a53ec3",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Sites"
+          },
+          {
+            "name": "Terminal",
+            "observedProject": "9to1 Workspace/Terminal/HavenOS.Terminal.csproj",
+            "sourceRouteObservation": "Shared seeded terminal -> OpenTerminalAsync -> HomeTerminalPageFactory. TerminalViewportCapability.Check explicitly unavailable unless Linux; native screen .so build/copy is Linux-only.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 1086,
+            "projectSha256": "a873f9e4c5a67528949b35de7a9c1b98cc71999e604fb9653a45b81e27f2b3d9",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Terminal"
+          },
+          {
+            "name": "Mini Computer",
+            "observedProject": "9to1 Workspace/MiniComputer/HavenOS.MiniComputer.csproj",
+            "sourceRouteObservation": "Library; no explicit mini-computer built-in key in read A63 policy/seed.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 523,
+            "projectSha256": "0601a41f7f551f8e18d3965a9be189c3010cc127b95331aff9a804954a186727",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.MiniComputer"
+          },
+          {
+            "name": "Browse",
+            "observedProject": "9to1 Workspace/Browse/HavenOS.Apps.Browse.csproj",
+            "sourceRouteObservation": "Shared seeded browse/browser/web -> OpenBrowser -> BrowserPage.",
+            "canonicalInstalledEntryAccepted": false,
+            "projectBytes": 2572,
+            "projectSha256": "e78f74ae82a8f7c2a9d2217fb7721a4421051a5d4816fe0cfab983d1f3e7c812",
+            "declaredOutputType": "Library default",
+            "declaredAssemblyName": "HavenOS.Apps.Browse"
+          },
+          {
+            "name": "Maps",
+            "observedProject": null,
+            "sourceRouteObservation": "Shared seeded maps -> OpenMaps -> MapsPage + MapsNativeJourneyHost; owner/services required.",
+            "canonicalInstalledEntryAccepted": false
+          },
+          {
+            "name": "Shelf",
+            "observedProject": null,
+            "sourceRouteObservation": "Shared seeded shelf -> OpenShelfLibraryAsync -> HomeShelfLibraryOwner private display -> ShelfNativeWorkspaceHost.",
+            "canonicalInstalledEntryAccepted": false
+          }
+        ],
+        "homeDeclaration": {
+          "independentServiceContract": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "canonicalDeclaredServiceIds": [
+            "home.core",
+            "home.state",
+            "home.widgets",
+            "dulche.runtime",
+            "permissions.trust",
+            "productivity.engine",
+            "packages",
+            "notifications",
+            "search.index",
+            "mesh",
+            "account.session",
+            "settings",
+            "action-graph.renderer"
+          ],
+          "standaloneBootstrap": "FileHomeCoreStateStore default + productivity + DenyAll authorization; install/current caller/bootstrap not registered",
+          "nativeTransportObservation": "Read native endpoint locator/discovery are explicitly Linux-only; no Windows authenticated installed service tuple was established",
+          "windowsInstalledTuple": {
+            "packageId": null,
+            "appId": null,
+            "productVersion": null,
+            "publisher": null,
+            "channel": null,
+            "platformAbi": null,
+            "installedHomeCompatibility": null,
+            "authenticatedWindowsBootstrap": null
+          },
+          "caveat": "Null is absent/unestablished in this read, never a fabricated default. The service contract1.0.0 is not a product release version, installed tuple or service readiness proof."
+        },
+        "wholeSourcePins": [
+          {
+            "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+            "bytes": 21849,
+            "sha256": "fd3cf639b5b92bea5cda526610e0bf0f40b7c018e08ac4e943fcf26820f22444",
+            "gitBlob": "e2e3205a7f69fcd6ebf7d203b5f709d7b50b89a1"
+          },
+          {
+            "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+            "bytes": 7402,
+            "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3",
+            "gitBlob": "e96d5d09d8262e08cc0db9b43e1a9326015105a6"
+          },
+          {
+            "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeServiceHost.cs",
+            "bytes": 6504,
+            "sha256": "bedfe3a73a5cd8f9feb8df0a5402c1316903421a9ff24a78698de501c1413343",
+            "gitBlob": "3c3a8ea3855dbbadc9d8c19fbd60901d752d0d44"
+          },
+          {
+            "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeEndpointLocation.cs",
+            "bytes": 3156,
+            "sha256": "f1e8d9546757a728b2491eb8c9e0a74002874cf26b64f8f711cefe5a575e1652",
+            "gitBlob": "643174117d3ec7a1a151342436551821c23cf7e9"
+          },
+          {
+            "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixDiscoveryTransport.cs",
+            "bytes": 3420,
+            "sha256": "b9cf113f3efa4c745b445683e8a4ede4f46f741203993f75bb8deb3c8f9eb7ed",
+            "gitBlob": "c2736db21a049dc59b9e3aab5a37394364bc47b8"
+          },
+          {
+            "path": "apps/Home/src/AvaloniaHome/Program.cs",
+            "bytes": 10725,
+            "sha256": "808580096627894af27d5a6f52ed6d41ee2b3385885159ea053de0f9f59ed9cc",
+            "gitBlob": "bfc82f6f825fe282f35485e29f935824dfa115a2"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+            "bytes": 6312,
+            "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9",
+            "gitBlob": "60a07f89fbe75d944105b4e158625b90530b5aee"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Program.cs",
+            "bytes": 5398,
+            "sha256": "b2c59a97af4e1faa5e92fd327d56caef5b240d051f88523e620885446b51d01d",
+            "gitBlob": "c50f0172933c1c0a75fb6068d77e93a0bb08e639"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.axaml.cs",
+            "bytes": 170316,
+            "sha256": "ba6474d21b0d62a00af51c8e5ee042b05dd2088d0f79f20f840b182adb5c9d56",
+            "gitBlob": "5d0ba314fa89457495e5d643e20883d7a64e09ba"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Shell/HavenAppRoutePolicy.cs",
+            "bytes": 3552,
+            "sha256": "eac9c57ce547c2ec922871ea4f0ededc671799673438eab64169f9e3f9887747",
+            "gitBlob": "d69f03641de4424690bb0a68430052cb6435ff27"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Application/Modes/BuiltInModeSeed.cs",
+            "bytes": 19053,
+            "sha256": "fb0f3013f22faf1476f0783dc7e207313057053839873278bae650ea2b206420",
+            "gitBlob": "118bc43c306f2e729878d73cdbe484e6acb596fe"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.DocumentWorkspaces.cs",
+            "bytes": 3957,
+            "sha256": "464346aba9d1a48118b2e804b6e1ae32a520b33bd29e7498cb33e1eb47e50e5a",
+            "gitBlob": "2e310c3d2229e8ca73d7db0cca25a1189479d045"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Forms.cs",
+            "bytes": 4386,
+            "sha256": "bd1eeb4bb1ee79ebd5ea8143cdd2cef9e47de438604114f72d992b6e6c91f090",
+            "gitBlob": "50c25886369de34ca0e2a9952046d5b4e87a33af"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Maps.cs",
+            "bytes": 1929,
+            "sha256": "dc768b06d13410333222e29b792a13f790a9968aac9e953c865a7fb4ea3f504a",
+            "gitBlob": "07517be408243ea6ce1d74bd76ac7b383ebb4fee"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Shelf.cs",
+            "bytes": 4404,
+            "sha256": "baed8fc33ea454d90e685548ae3db557e41271ac15147e341f602a1079309866",
+            "gitBlob": "09eecd7ac65508a41930c909d5d5c92df19376bd"
+          },
+          {
+            "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/NotesExperienceNavigation.cs",
+            "bytes": 6227,
+            "sha256": "c701f422de99d0967ba5b310e00da33f9dca8a2e525fccee401a355b2e02833b",
+            "gitBlob": "4d623019e76dc1631b540f417fd8110105b74ad5"
+          },
+          {
+            "path": "9to1 Workspace/Canvas/Host/HavenOS.Canvas.Host.csproj",
+            "bytes": 809,
+            "sha256": "53750fb532fd6765e836bcbaad126c936251b54030ab8b89a7e7bdf753ef112d",
+            "gitBlob": "d76beebfd0e8e1f66c950098e0aa86cc1e0a348f"
+          },
+          {
+            "path": "9to1 Workspace/Canvas/Host/CanvasHostApp.cs",
+            "bytes": 1591,
+            "sha256": "f871a4facf7845f2769e90f3dce31866ccf92fe1cdb5a41fbdfc4afccf8049fe",
+            "gitBlob": "c64199f9f72f2c3cde3bdeb7223404cb3e6e4585"
+          },
+          {
+            "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+            "bytes": 1107,
+            "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff",
+            "gitBlob": "6ffdb4b8863ee938320aa9daf418f9a111a067f7"
+          },
+          {
+            "path": "9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj",
+            "bytes": 2531,
+            "sha256": "e7341fcf9401b426ea18b6f4579d517878d056e5cefa36a1f962c17e52eb9a2c",
+            "gitBlob": "a905121b1509e5d4095274029abce1761ba54aae"
+          },
+          {
+            "path": "9to1 Workspace/Terminal/NativeUI/TerminalViewportCapability.cs",
+            "bytes": 1439,
+            "sha256": "3abfab2d489438d74e211d94354c84edce5d4be80c4e942c81ce8f684ce0333f",
+            "gitBlob": "8c652f4985f3e0c7772352a144a79eb979db4d33"
+          }
+        ],
+        "sourceDonorDeclarations": [
+          "Home/Boards standalone project refs source Avalonia Win32/Skia/HarfBuzz/Inter and packaged .cui lookup; clean published closure unrun.",
+          "Home.NativeUI declares CSharpMath package trio and full ThirdParty license/font resources copied to output/publish.",
+          "Shared Haven declares Avalonia Desktop/WebView, Windows WebView2 .NET462 reference, ScottPlot copy, KokoroSharp CPU and Inter resources; actual evaluated/native output manifests unrun.",
+          "Terminal native screen/libvterm source and .so generation/copy only on Linux; source explicitly refuses Windows viewport.",
+          "Existing source AppUserModelID fallback Haven/ProductWindowsAppId is observable build metadata, not a signed installed release identity or caller grant."
+        ],
+        "concreteWindowsGaps": [
+          {
+            "product": "Admin",
+            "path": "9to1 Workspace/Admin/Program.cs",
+            "bytes": 702,
+            "sha256": "47036b3b870a2785e4dc78d6f6df5d497654c5ee2024ff58f7d858e4a30d6278",
+            "observation": "Actual CUI entrypoint uses HomeBridgeRequired returning HomeBridgeUnavailable until compatible authenticated separate-process Home; no Ready grant."
+          },
+          {
+            "product": "Wave",
+            "path": "9to1 Workspace/Wave/Program.cs",
+            "bytes": 38203,
+            "sha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f",
+            "observation": "Main is console commands and text waveform output, not a GUI executable claim."
+          },
+          {
+            "product": "Motion",
+            "path": "9to1 Workspace/Motion/Program.cs",
+            "bytes": 7900,
+            "sha256": "08d54f7c6b764eb6a6159472ba48c931911e1d41f10d2f7cf6058bd4bf6db4ca",
+            "observation": "Main is console status/inspect/project commands; shared seeded workspace separately declares editing/render/export unavailable."
+          },
+          {
+            "product": "Terminal",
+            "path": "9to1 Workspace/Terminal/NativeUI/TerminalViewportCapability.cs",
+            "bytes": 1439,
+            "sha256": "3abfab2d489438d74e211d94354c84edce5d4be80c4e942c81ce8f684ce0333f",
+            "observation": "Check explicitly refuses non-Linux; project native screen/libvterm .so production and copy conditions are Linux-only."
+          }
+        ],
+        "sourceOnlyClaims": {
+          "canonicalInstalledAcceptedProducts": 0,
+          "installedProductEntriesAdopted": false,
+          "normalAcceptedHead": false,
+          "newer4fProductCorrectionsImplicitlyAdopted": false,
+          "buildOrRuntimeExecuted": false,
+          "packageOutputsVerified": false,
+          "installerOrRootPrivilegeGranted": false,
+          "signingOrPublisherDefaultsInvented": false,
+          "pcMutationOrDelivery": false,
+          "invocation": "Only explicitly authorized read-only root-github-api-runtime.py GET plus read-only Git/file inspection. No product/validation helper, control, SDK/compiler/test/native/protocol payload was invoked."
+        },
+        "outstanding": [
+          "Bounded declaration and exact source routing read, not whole native/provider/lifetime/security review or 29-product installed acceptance.",
+          "Unknown canonical PackageId/AppID/version/publisher/channel/ABI/Home compatibility and trusted Windows installer/IPC composition require genuine current owner values; ModeDefinition seed IDs/version1.0.0 never supply them.",
+          "No donor-derived default identity, route alias or synthetic Home readiness was invented.",
+          "Current normal and eec remain provisional source-only; selected newer 4f SDK08 corrections are not implicitly adopted into eec/A63.",
+          "Architecture on actual college laptop and authorized clean no-repository/no-SDK interactive acceptance machine remain unknown.",
+          "Actual default Windows installed Home service/transport and caller identity, signed package tuple, trusted runtime/donor output manifests and owner-selected29 canonical entrypoints remain unresolved.",
+          "Hosted windows-2022 Release win-x64 exploratory source probing does not establish clean no-repository/no-SDK install/launch, actual college laptop architecture, interactive/accessibility/security/donor/cross-app acceptance or Windows0/29 delivery completion.",
+          "Source observations do not remove any normal/native/package/gesture/installed acceptance gate; Root/Team C remain sole publication/build/delivery owners."
+        ]
+      },
+      "localWholeEvidence": {
+        "path": "/workspace/astra-source/root-teamA-windows-exploratory-basis-owner-response1040.json",
+        "bytes": 28501,
+        "sha256": "f901c5ee982905c2106eed2656574e2ed103360dfd903cc683a10a7994908f49"
+      },
+      "rootIndependentReview": "All29 route rows/7 targets/gaps/13 Home service IDs reviewed and34 unique entire A63 source bodies independently hash/size checked. Source declarations only; C remains actual packaging/global release owner.",
+      "actualExploratoryRun": {
+        "runId": 37203799923,
+        "source": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+        "observedUTC": "2026-10-04T14:44:13.045212+00:00",
+        "completedSevenJobs": true,
+        "successfulBuilds": [
+          "picture",
+          "canvas",
+          "shared-desktop"
+        ],
+        "failedBuilds": [
+          "home",
+          "boards",
+          "present",
+          "studio"
+        ],
+        "installedOrDeliveredAcceptedProducts": 0,
+        "requiredProducts": 29
+      }
+    },
+    "Compiler09": {
+      "manifest": {
+        "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source09-independent-original-postprobe-output-custody/manifest.json",
+        "bytes": 65545,
+        "sha256": "6d976c25eb80c2ede3d6c63ee950813f74ff69223b5af520f67ba2a58fd98eb5"
+      },
+      "fullSourcePeers": "A1+A6 fullcorrective CLEAR; Root full sole span plus3 entire predecessor metadata inverses/all109 manifest file hashes CLEAR",
+      "rootOnceMemoryControls": {
+        "path": "/workspace/astra-source/root-compiler09-exact-once-memory-controls1037.json",
+        "bytes": 3119,
+        "sha256": "723045ebe276ab8ce52c43c26e03cf9c87f1d7d9f4d2c069afc95d5a4fd2a841",
+        "cases": 23,
+        "qualification": "MEMORY_SOURCE_GUARDS_ONLY_NO_ACTUAL_TARGET_ACTIVATION"
+      },
+      "oneActualCorrectedV3Debug": "UNRUN_CAPACITY_BEING_RESTORED_UNCHANGED643_FLOOR"
+    },
+    "Linux23": {
+      "originalHead": "bdfd3d2aea584370917a863d59f9b1e311473fb7",
+      "originalRun": 37199367227,
+      "originalOutcomes": {
+        "OSPass": 210,
+        "HomePass": 340,
+        "rootPass": 20,
+        "rootFail": 12
+      },
+      "custody": {
+        "head": "59a2016ae55a47bae7d19c378d6dee8e1cdc1cb1",
+        "run": 37206938690,
+        "job": 111449976685,
+        "status": "SUCCESS_FINAL_COMPLETE_ORIGINAL_CUSTODY_NO_RUNTIME_ACCEPTANCE",
+        "localCausalZip": {
+          "path": "/workspace/attachments/9b5a6da8-24d5-4df9-a26a-c75273d8c99e/github-actions-artifact-11304589989.zip",
+          "bytes": 740495,
+          "sha256": "7acafefa83a09621e23a1ec0c4f431a061e833beb0289aded2916aaec4a97eea"
+        },
+        "wholeMembers": 200,
+        "wholeOriginals": 197,
+        "RootA5A6WholeCRCAndSHAClosure": true
+      },
+      "cause": "Eight compose capture and four service-body UnauthorizedAccessException refusals source-correspond to root-owned0711 runtime directories inspected through O_RDONLY|DIRECTORY|NOFOLLOW by dropped1002 children. Original errno/message unavailable; precise source correspondence, not yet actual corrected runtime acceptance.",
+      "correctionSource": {
+        "path": "/workspace/astra-source/worker5-linux23-search-only-root-directory-path-descriptor-source01/manifest.json",
+        "bytes": 5766,
+        "sha256": "2d41f6372213e60dcd284cbf70291dac83a1ffe019481bd6e7441818dd1dcb51",
+        "delta": "Two singleton edits addO_PATH only to directory descriptors; leaf reading/rootUID/no-write/inode/mode/ancestry/no-follow checks unchanged.",
+        "localMechanismProbe": "INERT_UNRUN_OWN_NONROOT0111_DIRECTORY_ONLY",
+        "actualCorrectedRoot32": "UNRUN_REQUIRED_ALL12_FAILURES_AND_ALL_OLD_GATES"
+      }
+    },
+    "Forms17": {
+      "originalHead": "8252cfe22696c218479fbf7a0f88e52ea4047b5c",
+      "originalRun": 37197248753,
+      "owningAndResourceOriginals": "FAILED_CAUSES_UNKNOWN_PENDING_WHOLE_CAUSAL_TEXT_READS",
+      "fourCompleteControlProjection": {
+        "head": "0a7bf52601ec799c929ff066c6df59f36544fc19",
+        "tree": "9824e0cb87d9d7b6871c636d57e565815da123b7",
+        "run": 37208034405,
+        "status": "SUCCESS_DIAGNOSTIC_CUSTODY_ONLY",
+        "artifactId": 11304962638,
+        "localPath": "/workspace/attachments/4918ed72-8638-4028-b8a1-4bf5772b98db/forms17-four-complete-control-reports.zip",
+        "bytes": 255354,
+        "sha256": "e279d138e5ccd45ac620bccf0577d1cb284a8f10b4c5e8cfd2ad07ac2f5889a4",
+        "owningWholeMembers": 639,
+        "resourceWholeMembers": 192,
+        "wholeTextRows": 771
+      },
+      "narrowWholeOriginalFailureProjection": "A2_RAM_PREPARATION_NO_PAYLOAD_EXECUTION"
+    },
+    "HomeB48": {
+      "head": "b48b75d3841e52c7d81277c3258f53eb11cd32c5",
+      "run": 37203061447,
+      "Debug": "FAILED_INNER_CAUSE_UNKNOWN",
+      "Release": "FAILED_INNER_CAUSE_UNKNOWN",
+      "frozenReader1031": {
+        "manifestPath": "/workspace/astra-source/worker5-homeb48-original-evidence-reader-source01-fixed-both-original-families/manifest.json",
+        "bytes": 36417,
+        "sha256": "99a4536d64446dd6f741dbad81114f5c705b1b09769970626e3a6f9e0b6bbeb7",
+        "fullPeers": "IN_PROGRESS_METADATA_CENSUS33_MUST_BE_TRUTHFULLY41",
+        "actualReader": "UNRUN"
+      }
+    },
+    "remainingSourceWork": {
+      "Tabs05": "RAM_ONLY_6FILES580934LOGICAL598016ALLOCATED_FULLCORRECTIVE_PEERS_UNRUN",
+      "NotesSuccessor": "RAM_COHERENT_CORRECTIONS_OF7_FULLPEER_FINDINGS_PLUS_RESOURCE_RETIREMENT",
+      "FirstInstall01": "FULL_SOURCE_PEERS_HELD_SCRIPTED_INTEGRITY_FIXTURE_ONLY_REAL_RUNTIME_UNRUN",
+      "FirstInstall02": "RAM_FIXTURE_ONLY279B_CORRECTION_18PRODUCTION_BODIES_UNCHANGED",
+      "FilesOwningCarrier": "RAM6INDEPENDENT_PROJECT_CONFIGURATION_LANES_ACTUAL_EVALUATEDCOMPILE_PEPDB_AND_NATIVEUNRUN"
+    },
+    "restrictions": "No production/WP/DNS/cloud deployment/new paid service; no existing WordPress users or linked data export/backup/import/transfer. Local/free/SaveFirstLocal/offdevice opt-in/model-access rules and all original native/installed/donor/fullspec gates retained. No whole-product completion or percentage claim."
   }
 }
