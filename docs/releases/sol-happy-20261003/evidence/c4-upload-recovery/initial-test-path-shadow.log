@@ -1,0 +1,4 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+/workspace/team-c/c4/docs/releases/sol-happy-20261003/evidence/c4-upload-recovery/FilesUploadRecoveryTests.cs(11,40): error CS0236: A field initializer cannot reference the non-static field, method, or property 'FilesUploadRecoveryTests.Store.Path' [/workspace/team-c/evidence/c4/upload-recovery/ActualUpload.Tests.csproj]
+/workspace/team-c/c4/docs/releases/sol-happy-20261003/evidence/c4-upload-recovery/FilesUploadRecoveryTests.cs(11,53): error CS0236: A field initializer cannot reference the non-static field, method, or property 'FilesUploadRecoveryTests.Store.Path' [/workspace/team-c/evidence/c4/upload-recovery/ActualUpload.Tests.csproj]

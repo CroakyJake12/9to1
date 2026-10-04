@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="e1a958f8-ade1-4fd7-bdc4-4c750bfe2d1f" name="@5f26f397bc73 2026-10-04 11:05:25" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T11:05:25.9019833+00:00" queuing="2026-10-04T11:05:25.9019834+00:00" start="2026-10-04T11:05:24.7093772+00:00" finish="2026-10-04T11:05:25.9130418+00:00" />
+  <TestSettings name="default" id="4860991c-84a5-45e7-b08d-2ad7ca07afd6">
+    <Deployment runDeploymentRoot="_5f26f397bc73_2026-10-04_11_05_25" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="b97cdd70-5053-4f93-a490-9fce61f1eb34" testId="a71a4e4f-0c5d-44a9-43eb-4eb248425dae" testName="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.ChangedStoreFenceRefusesEvenPreviouslyCommittedReplay" computerName="5f26f397bc73" duration="00:00:00.0048902" startTime="2026-10-04T11:05:25.7141567+00:00" endTime="2026-10-04T11:05:25.7142232+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b97cdd70-5053-4f93-a490-9fce61f1eb34" />
+    <UnitTestResult executionId="b27172e9-5ae1-4825-8d3b-6824e758f56f" testId="b1c74349-f833-5180-dcd9-0931b29ec916" testName="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.RetirementAtFinalPublicationRefusesEffectAndRetryAfterReopenCommitsOnce" computerName="5f26f397bc73" duration="00:00:00.0146902" startTime="2026-10-04T11:05:25.7350182+00:00" endTime="2026-10-04T11:05:25.7526036+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b27172e9-5ae1-4825-8d3b-6824e758f56f" />
+    <UnitTestResult executionId="d731f08b-dcca-4717-8090-d72a6b06530d" testId="3120bd4d-3896-01aa-f44d-11056b8268dd" testName="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.ChangedReplayIsDeniedAndOriginalBytesRemainPersisted" computerName="5f26f397bc73" duration="00:00:00.2551233" startTime="2026-10-04T11:05:25.4331634+00:00" endTime="2026-10-04T11:05:25.7020902+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d731f08b-dcca-4717-8090-d72a6b06530d" />
+    <UnitTestResult executionId="c419cd6e-ba88-49b8-b755-5e91882c6f26" testId="2121fffc-b2f0-d777-6f11-481f7c4176d2" testName="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.ReopenAfterUnobservedAcknowledgmentReplaysSameRevisionWithoutDuplicateEvents" computerName="5f26f397bc73" duration="00:00:00.0226478" startTime="2026-10-04T11:05:25.7147833+00:00" endTime="2026-10-04T11:05:25.7347358+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c419cd6e-ba88-49b8-b755-5e91882c6f26" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.ChangedStoreFenceRefusesEvenPreviouslyCommittedReplay" storage="/workspace/team-c/evidence/c4/upload-recovery/bin/debug/net10.0/actualupload.tests.dll" id="a71a4e4f-0c5d-44a9-43eb-4eb248425dae">
+      <Execution id="b97cdd70-5053-4f93-a490-9fce61f1eb34" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c4/upload-recovery/bin/Debug/net10.0/ActualUpload.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests" name="ChangedStoreFenceRefusesEvenPreviouslyCommittedReplay" />
+    </UnitTest>
+    <UnitTest name="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.ChangedReplayIsDeniedAndOriginalBytesRemainPersisted" storage="/workspace/team-c/evidence/c4/upload-recovery/bin/debug/net10.0/actualupload.tests.dll" id="3120bd4d-3896-01aa-f44d-11056b8268dd">
+      <Execution id="d731f08b-dcca-4717-8090-d72a6b06530d" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c4/upload-recovery/bin/Debug/net10.0/ActualUpload.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests" name="ChangedReplayIsDeniedAndOriginalBytesRemainPersisted" />
+    </UnitTest>
+    <UnitTest name="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.RetirementAtFinalPublicationRefusesEffectAndRetryAfterReopenCommitsOnce" storage="/workspace/team-c/evidence/c4/upload-recovery/bin/debug/net10.0/actualupload.tests.dll" id="b1c74349-f833-5180-dcd9-0931b29ec916">
+      <Execution id="b27172e9-5ae1-4825-8d3b-6824e758f56f" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c4/upload-recovery/bin/Debug/net10.0/ActualUpload.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests" name="RetirementAtFinalPublicationRefusesEffectAndRetryAfterReopenCommitsOnce" />
+    </UnitTest>
+    <UnitTest name="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests.ReopenAfterUnobservedAcknowledgmentReplaysSameRevisionWithoutDuplicateEvents" storage="/workspace/team-c/evidence/c4/upload-recovery/bin/debug/net10.0/actualupload.tests.dll" id="2121fffc-b2f0-d777-6f11-481f7c4176d2">
+      <Execution id="c419cd6e-ba88-49b8-b755-5e91882c6f26" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c4/upload-recovery/bin/Debug/net10.0/ActualUpload.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HostedFiles.Recovery.Tests.FilesUploadRecoveryTests" name="ReopenAfterUnobservedAcknowledgmentReplaysSameRevisionWithoutDuplicateEvents" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="a71a4e4f-0c5d-44a9-43eb-4eb248425dae" executionId="b97cdd70-5053-4f93-a490-9fce61f1eb34" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b1c74349-f833-5180-dcd9-0931b29ec916" executionId="b27172e9-5ae1-4825-8d3b-6824e758f56f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3120bd4d-3896-01aa-f44d-11056b8268dd" executionId="d731f08b-dcca-4717-8090-d72a6b06530d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2121fffc-b2f0-d777-6f11-481f7c4176d2" executionId="c419cd6e-ba88-49b8-b755-5e91882c6f26" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="4" executed="4" passed="4" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.11]   Discovering: ActualUpload.Tests
+[xUnit.net 00:00:00.17]   Discovered:  ActualUpload.Tests
+[xUnit.net 00:00:00.21]   Starting:    ActualUpload.Tests
+[xUnit.net 00:00:00.57]   Finished:    ActualUpload.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
