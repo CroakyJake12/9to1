@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+  "baselineCommit": "910ecec8780bfdfad1b44495c9e4e38d0b00fd86",
   "programTree": "a195bc888c2a02ba1be35c3a3aed5559bdad6352",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
@@ -120,9 +120,9 @@
     {
       "path": ".github/scripts/astra-home437-original.py",
       "mode": "100644",
-      "object": "7df558eea8f41df9df8b212ea69264c05da82c4e",
-      "bytes": 60274,
-      "sha256": "a6751025f51bcc1d17148c908a7f568c673d24f4b2641ac52941eb6facc21e14"
+      "object": "bb1568aa78a09a3e69b228654c62541a02a6192d",
+      "bytes": 63576,
+      "sha256": "9de08f74ba32b50da6d5d7794aa2b3d1035b8086640cb9965e40cf9a2cf8fafa"
     },
     {
       "path": ".github/scripts/astra-joint-native-sdk01-owning.py",
@@ -66895,8 +66895,8 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Root alone selects/constructs/pushes/dispatches unique isolated Home branch from exact actual4f/tree de2e/programTree27f with unchanged54ac constructor/643 launcher. No source owner tool/build/runtime invocation.",
-    "Exactly four preferred Home26 product targets; three entire actual4f inverse source bodies and one newfixture. All existing source/cohort/native helpers and original workflow prefix remain pinned, no Den lock/timeouts/protocol/trust guard relaxation.",
+    "Root alone constructs/pushes/dispatches the SAME existing original Home branch from exact actual910/tree7596090/programTreea195bc, using unchanged54ac constructor and unchanged Home caller/workflow. Only the reviewed diagnostic driver plus canonical self-manifest change; no source owner build/runtime/helper invocation.",
+    "Zero product overlays: all four preferred Home26 targets and every existing product/native/cohort/caller/workflow body remain byte-exact actual910. Capture the SAME parsed physical pair, complete original document table and evaluated Compile evidence before strict mapping; preserve all strict direct/suffix/hash guards and primary plus independent retention/save/currentness/budget errors.",
     "Two independent fresh Debug/Release checkouts/output/task contexts execute full unfiltered Home project: all432 original exact display/class/method cases plusfive new meaningful outcomes;71 sources334 methods437 cases, allPassed/no skips. Original330 methods remain exact.",
     "Inherited selected source catalogue104 rows/30fixture files194methods242minima preserves entire102/29/190/237 base,38 prerequisites,11 entry projects,22 default command templates. It is a source inventory; only actual Home graph is claimed compiled by this lane.",
     "Full evaluated Compile/ReferencePath/DefineConstants/DebugType/source-built task/restored NuGet/output closure and physical PE/actual embedded-or-external Portable PDB CodeView/#Pdb/all-document hash proof required before/after whole tests. No absent/generated-file waiver or producer flags.",
@@ -66905,7 +66905,8 @@
     "Whole lane byte/piece manifest plus12 conditional bounded artifact parts:26MiB payload/29MiB inner/<32MiB outer/max12, no filtered evidence or fictitious external PDB.",
     "Original215 owning/12 regression/48 resource cohort tables/callers/native probe/TLS/CRL/Java/profile/restore/task/PDB/drains and fullSDK16+2+4 matrix remain separately mandatory and are not executed/promoted by isolated Home results.",
     "Truthful current semantic product map has131 differences: actual4f already129 including three inherited Desktop diagnostic source witnesses previously omitted from126, plus preferred Factory and newfixture. All three diagnostics stay byte-exact.",
-    "No Agents51/OS225/platform module/privacy/attachment/Cloud/Terra product sources or test additions selected. No fullSDK/native/installed/ACK/once/default provider/authority acceptance."
+    "No Agents51/OS225/platform module/privacy/attachment/Cloud/Terra product sources or test additions selected. No fullSDK/native/installed/ACK/once/default provider/authority acceptance.",
+    "Actual Home1009 full original Debug/Release custody proves102 commands exited0 and both900-byte callers refused strict mapping at actualdriver746; exact offending document and physical target pair were not retained, Home437 runtime was unreached. This diagnostic successor must not infer an offending source/generator, waive mappings, substitute task221docs, or promote Build succeeded to runtime acceptance."
   ],
   "inputManifests": [
     {
@@ -67157,6 +67158,21 @@
       "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source04-main-marker-control-scope/manifest.json",
       "bytes": 36786,
       "sha256": "1645d76887f607420c0d386b34fb7c29a69b2bde7509268824d1d7dd4992c147"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-home437-owning-validation-source01-actual4f-original-den-currentness/manifest.json",
+      "bytes": 38884,
+      "sha256": "d24c3cffcb824dc6b2abfddeb0e3ef1935ccb8939f5663faf03c5f103100d007"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home437-original-document-diagnostics-source01-same-physical-before-strict-mapping/manifest.json",
+      "bytes": 7710,
+      "sha256": "15f7c5a46f9c47c2e637351157896ffc951a2c2c3dfbf470265e6b70a1a3495e"
+    },
+    {
+      "path": "/workspace/astra-source/root-home437-complete-original-custody-proof1009.json",
+      "bytes": 6331,
+      "sha256": "959b85041dd8e5be5b6c416bd1255cc804fb3b615334af29574c03eed2c01437"
     }
   ],
   "sharedCakeIdContract": null
