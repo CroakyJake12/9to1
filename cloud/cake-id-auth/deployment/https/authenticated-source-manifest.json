@@ -3,9 +3,9 @@
   "producer": "d643d723d15ec20d70263a408b0cfefbd5be69ae",
   "sha256": {
     "deployment/https/prepare-fixture.mjs": "4c410a07f34a9d77d5e93f217ac0ed6c172335118f210a3d37d8b5522a21e343",
-    "deployment/https/authenticated.mjs": "660b8e0c77a605035ffb58dc5de14548e7b2271c612be168cf4e1c4bee8a24ac",
+    "deployment/https/authenticated.mjs": "a7ac20b568df6655de57491d59ba06cd378d6f52f3e10f7981a226c179c235b1",
     "deployment/https/authenticated.test.mjs": "e726681fca645b881bd3552f8a043a51cae502bf581c7c0cc637923a7ceafd56",
-    "deployment/https/AUTHENTICATED.md": "cbcac83414eea0f3107249655821a1e6ba8f02c3a300cc4eb69f7c0318c840dd",
+    "deployment/https/AUTHENTICATED.md": "7f8823023807c33d01532cf584686872854b6a24e0ba33bb05b7feff5881b204",
     "src/index.ts": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
     "src/auth.ts": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
     "src/resource-api.ts": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
@@ -25,5 +25,10 @@
   "offlineExitCode": 0,
   "actualRemoteMutationOrJourney": "NOT_RUN",
   "lifecycleCorrection": "Exclusive result acquisition before requests; original+close exception objects preserved; fresh private diagnostic filenames",
-  "SQLControl": "All canonical rows equal between generated parameter batch and private SQL script on actual pinned local SQLite schema"
+  "SQLControl": "All canonical rows equal between generated parameter batch and private SQL script on actual pinned local SQLite schema",
+  "rootRunNodeFlags": [
+    "--use-env-proxy",
+    "--use-system-ca"
+  ],
+  "qualification": "Source-only handoff; no hosted execution. Inherited proxy/CA are honored; no TLS fallback or overrides."
 }

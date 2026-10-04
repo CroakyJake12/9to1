@@ -60,6 +60,6 @@ export async function validate({request=fetch,output}={}) {
   }
 }
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url) {
-  if(process.argv.length!==3) throw new Error('Usage: node deployment/https/validate.mjs NEW_PUBLIC_RESULT.json');
+  if(process.argv.length!==3) throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/validate.mjs NEW_PUBLIC_RESULT.json');
   console.log(JSON.stringify(await validate({output:process.argv[2]})));
 }

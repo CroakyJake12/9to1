@@ -131,7 +131,7 @@ export async function runAuthenticated(fixturePath,resultPath,{journey=authentic
   if(primary&&closing)throw new AggregateError([primary,closing],'Journey/evidence and close failed');if(primary)throw primary;if(closing)throw closing;return result;
 }
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url) {
-  if(process.argv.length!==4)throw new Error('Usage: node deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json');
+  if(process.argv.length!==4)throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json');
   try {const result=await runAuthenticated(process.argv[2],process.argv[3]);console.log(JSON.stringify({result:result.result,assertions:result.assertions}));}
   catch(error){
     let evidenceError;const filename=`private-run-error-${randomBytes(8).toString('hex')}.json`;
