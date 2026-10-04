@@ -186,4 +186,152 @@ public sealed class HomeNativeWindowsProtectedPeerLifetimeTests
         if (!OperatingSystem.IsWindows()) return;
         HomeNativeWindowsProtectedPeerEvidence.RequireNativeAbi();
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Same_refusal_and_close_object_is_retained_exactly_once(bool ioRefusal)
+    {
+        Exception same = ioRefusal ? new IOException("same original body and release")
+            : new UnauthorizedAccessException("same original body and release");
+        var observed = await Record.ExceptionAsync(() =>
+            HomeNativeWindowsOriginalEvidenceLifetime.VerifyAsync<object>(
+                () => ValueTask.FromException<object?>(same), () => throw same).AsTask());
+        Assert.Same(same, observed);
+        Assert.IsNotType<AggregateException>(observed);
+    }
+
+    [Fact]
+    public async Task Genuine_original_lease_retirement_during_profile_read_refuses_after_the_await()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-verifier-lease-" + Guid.NewGuid().ToString("N"));
+        HomeNativeSessionLease? lease = null;
+        Task? original = null;
+        CancellationTokenSource? deadline = null;
+        var principal = new HoldingPrincipal();
+        Exception? expected = null;
+        Exception? primary = null;
+        var cleanup = new List<Exception>();
+        try
+        {
+            deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            Directory.CreateDirectory(root);
+            var profiles = new HomeLocalProfileIdentity(
+                new FileHomeCoreStateStore(Path.Combine(root, "profile.json")), principal);
+            var actor = await profiles.GetCurrentAsync(deadline.Token)
+                ?? throw new InvalidOperationException("The actual isolated profile is unavailable.");
+            lease = await HomeNativeSessionLease.TryAcquireAsync(profiles, new OriginalPaths(root), deadline.Token)
+                ?? throw new InvalidOperationException("The actual isolated lease is unavailable.");
+            var identity = lease.LeaseIdentity;
+            principal.HoldNextRead();
+            original = HomeNativeWindowsOriginalEvidenceLifetime.RequireOriginalActorAsync(
+                profiles, lease, identity, actor, deadline.Token).AsTask();
+            await principal.Entered.Task.WaitAsync(deadline.Token);
+            Assert.False(original.IsCompleted);
+            Assert.True(lease.IsHeld);
+            lease.Dispose();
+            principal.Release.TrySetResult();
+            expected = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => original!);
+            Assert.False(lease.IsHeld);
+            Assert.Equal(identity, lease.LeaseIdentity);
+        }
+        catch (Exception error) { primary = error; }
+        finally
+        {
+            principal.Release.TrySetResult();
+            if (original is not null)
+                try { await original; }
+                catch (Exception error) { if (!ReferenceEquals(expected, error)) cleanup.Add(error); }
+            try { lease?.Dispose(); } catch (Exception error) { cleanup.Add(error); }
+            try { deadline?.Dispose(); } catch (Exception error) { cleanup.Add(error); }
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); }
+            catch (Exception error) { cleanup.Add(error); }
+        }
+        ThrowFixtureOriginals(primary, cleanup);
+    }
+
+    [Fact]
+    public async Task Launch_retirement_during_final_receipt_await_prevents_publication()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var launchCurrent = true;
+        var launchChecks = 0;
+        var actorChecks = 0;
+        var physicalChecks = 0;
+        Task<bool>? original = null;
+        Exception? primary = null;
+        var cleanup = new List<Exception>();
+        try
+        {
+            original = HomeNativeWindowsOriginalEvidenceLifetime.RequireFinalCurrentAsync(async () =>
+            {
+                entered.TrySetResult();
+                await release.Task.ConfigureAwait(false);
+                return true; // Managed ordering fixture only; no protected receipt is authenticated.
+            }, () => { launchChecks++; return ValueTask.FromResult(launchCurrent); },
+                () => { actorChecks++; return ValueTask.CompletedTask; },
+                () => physicalChecks++).AsTask();
+            await entered.Task;
+            Assert.False(original.IsCompleted);
+            Assert.Equal(0, launchChecks);
+            launchCurrent = false;
+            release.TrySetResult();
+            Assert.False(await original);
+            Assert.Equal(1, launchChecks);
+            Assert.Equal(0, actorChecks);
+            Assert.Equal(0, physicalChecks);
+        }
+        catch (Exception error) { primary = error; }
+        finally
+        {
+            release.TrySetResult();
+            if (original is not null)
+                try { await original; } catch (Exception error) { cleanup.Add(error); }
+        }
+        ThrowFixtureOriginals(primary, cleanup);
+    }
+
+    private sealed class HoldingPrincipal : ITrustedHostPrincipalSource
+    {
+        private bool _hold;
+        internal TaskCompletionSource Entered { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource Release { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal void HoldNextRead() => _hold = true;
+        public async ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if (_hold)
+            {
+                _hold = false;
+                Entered.TrySetResult();
+                await Release.Task.WaitAsync(token).ConfigureAwait(false);
+            }
+            token.ThrowIfCancellationRequested();
+            return "explicit-isolated-profile-fixture-only";
+        }
+    }
+
+    private sealed class OriginalPaths(string root) : IAppPaths
+    {
+        public string DataDirectory => root;
+        public string DatabasePath => Path.Combine(root, "database");
+        public string BrowserProfileDirectory => Path.Combine(root, "browser");
+        public string AttachmentsDirectory => Path.Combine(root, "attachments");
+        public string LogsDirectory => Path.Combine(root, "logs");
+        public string LegacyStatePath => Path.Combine(root, "legacy");
+    }
+
+    private static void ThrowFixtureOriginals(Exception? primary, List<Exception> cleanup)
+    {
+        if (primary is not null && !cleanup.Any(error => ReferenceEquals(error, primary)))
+            cleanup.Insert(0, primary);
+        var originals = cleanup.Distinct(ReferenceEqualityComparer.Instance).ToArray();
+        if (originals.Length == 1) ExceptionDispatchInfo.Capture((Exception)originals[0]).Throw();
+        if (originals.Length > 1)
+            throw new AggregateException("Original verifier fixture and independent cleanup failed.",
+                originals.Cast<Exception>());
+    }
 }

@@ -168,23 +168,21 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             original.RequireSame();
             if (!original.ReadBounded(descriptorFile, 1024 * 1024).AsSpan().SequenceEqual(descriptorBytes) ||
                 !original.ReadBounded(receiptFile, 2 * 1024 * 1024).AsSpan().SequenceEqual(receiptBytes)) return null;
-            if (!await _receipts.IsCurrentAsync(receiptObservation, ct).ConfigureAwait(false)) return null;
-            await RequireActorAsync(actor, ct).ConfigureAwait(false);
-            original.RequireSame();
+            // This is a late sequential observation, not an atomic cross-owner grant.
+            // The SAME launch must be observed after the last receipt-owner await.
+            if (!await HomeNativeWindowsOriginalEvidenceLifetime.RequireFinalCurrentAsync(
+                () => _receipts.IsCurrentAsync(receiptObservation, ct),
+                () => _launches.IsCurrentAsync(launch, ct),
+                () => RequireActorAsync(actor, ct), original.RequireSame).ConfigureAwait(false)) return null;
             return new HomeNativeInstalledPeer(descriptor.AppId, receipt.InstalledApplicationId, receipt.InstallationRevision,
                 imageDigest, receipt.AllowedServiceIds.ToFrozenSet(StringComparer.Ordinal))
                 { Roles = receipt.Roles.ToFrozenSet(StringComparer.Ordinal) };
         }
     }
 
-    private async ValueTask RequireActorAsync(AuthenticatedResourceActor original, CancellationToken ct)
-    {
-        ct.ThrowIfCancellationRequested();
-        if (!_lease.IsHeld || _lease.LeaseIdentity != _originalLease ||
-            _lease.ProfileId != original.ProfileId ||
-            await _profiles.GetCurrentAsync(ct).ConfigureAwait(false) != original)
-            throw new UnauthorizedAccessException("The original Home actor or held lease retired.");
-    }
+    private ValueTask RequireActorAsync(AuthenticatedResourceActor original, CancellationToken ct) =>
+        HomeNativeWindowsOriginalEvidenceLifetime.RequireOriginalActorAsync(
+            _profiles, _lease, _originalLease, original, ct);
 
     private static HomeNativeObservedPeer Capture(HomeNativeObservedPeer observed)
     {
@@ -251,6 +249,8 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             receipt.Platform != descriptor.Platform || receipt.Abi != descriptor.Abi ||
             !Text(receipt.InstallationRevision, 256) || receipt.PackageEntryRevision < 1 ||
             receipt.PackageEntryRevision == long.MaxValue ||
+            !HomePackageArtifactSelection.Sha256(descriptor.PayloadSha256) ||
+            !HomePackageArtifactSelection.Sha256(descriptor.SignedInstallationReceiptSha256) ||
             !StringComparer.OrdinalIgnoreCase.Equals(receipt.PayloadSha256, descriptor.PayloadSha256) ||
             receipt.PayloadBytes != descriptor.PayloadBytes ||
             descriptor.PayloadBytes is < 1 or > 8L * 1024 * 1024 * 1024 ||
@@ -484,9 +484,42 @@ internal static class HomeNativeWindowsOriginalEvidenceLifetime
         }
         // An ordinary refusal returns unavailable only after successful cleanup.
         // A failed close retains that SAME refusal as well as the independent close.
-        if (refusal is not null && errors.Count != 0) errors.Insert(0, refusal);
+        if (refusal is not null && errors.Count != 0 &&
+            !errors.Any(original => ReferenceEquals(original, refusal))) errors.Insert(0, refusal);
         ThrowOriginals(errors);
         return result;
+    }
+
+    internal static async ValueTask RequireOriginalActorAsync(HomeLocalProfileIdentity profiles,
+        HomeNativeSessionLease lease, Guid originalLease, AuthenticatedResourceActor original,
+        CancellationToken ct)
+    {
+        void RequireLease()
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!lease.IsHeld || lease.LeaseIdentity != originalLease || lease.ProfileId != original.ProfileId)
+                throw new UnauthorizedAccessException("The original Home actor or held lease retired.");
+        }
+        RequireLease();
+        var current = await profiles.GetCurrentAsync(ct).ConfigureAwait(false);
+        RequireLease(); // The original lease may retire while the actual profile read is pending.
+        if (current != original)
+            throw new UnauthorizedAccessException("The original Home actor or held lease retired.");
+    }
+
+    internal static async ValueTask<bool> RequireFinalCurrentAsync(
+        Func<ValueTask<bool>> receiptCurrent, Func<ValueTask<bool>> launchCurrent,
+        Func<ValueTask> actorCurrent, Action physicalCurrent)
+    {
+        ArgumentNullException.ThrowIfNull(receiptCurrent);
+        ArgumentNullException.ThrowIfNull(launchCurrent);
+        ArgumentNullException.ThrowIfNull(actorCurrent);
+        ArgumentNullException.ThrowIfNull(physicalCurrent);
+        if (!await receiptCurrent().ConfigureAwait(false)) return false;
+        if (!await launchCurrent().ConfigureAwait(false)) return false;
+        await actorCurrent().ConfigureAwait(false);
+        physicalCurrent();
+        return true;
     }
 
     internal static void RunWithCleanup(Action body, Action close) =>
