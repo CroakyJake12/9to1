@@ -1,0 +1,5 @@
+{
+  "sourceCommit": "680f1301c3ae255a645822adb55be36ec11bb146",
+  "scope": "Diagnostic copy with exact unchanged original assertions and sole pre-assert state observation; no maintained source edit/no native acceptance",
+  "firstError": "RuntimeError('build exit 1')"
+}

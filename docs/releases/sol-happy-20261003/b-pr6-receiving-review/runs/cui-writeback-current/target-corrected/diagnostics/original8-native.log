@@ -1,0 +1,10 @@
+PASS Initial actual owner binding lowers native Start
+PASS Actual native value provider sets textbox synchronously
+Same-turn actual owner action received Start=0.5; native Text=0.5.
+PASS Same-turn actual CUI action receives latest native input
+PASS Action-triggered actual host refresh preserves newest native input
+PASS Host binding refresh does not duplicate writeback
+PASS Synchronous actual type validation rejects invalid numeric value
+PASS Synchronous actual type conversion clears validation error
+PASS Disposed owning loader stops native input writeback
+8/8 actual native same-turn writeback checks PASS; owner proposal not accepted/shipped.

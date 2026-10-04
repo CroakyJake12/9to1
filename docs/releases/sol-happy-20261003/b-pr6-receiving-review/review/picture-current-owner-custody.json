@@ -1,0 +1,90 @@
+{
+  "actualCoordinationHead": "f33525231bc049c9ee209f03f1ffb9b22c5e59bc",
+  "teamABodySHA256": "bcd57270fc788065512e5b5358bf4bef4a38b25576f03733d4c1f7d969c51615",
+  "reviewedSourceDelivery": {
+    "branch": "handoff/team-a-admin-sdk03-20261003",
+    "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "tree": "c612dd3058a3101ece13e3d389ad9def43496fa4",
+    "parent": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "sourceProducts": 17,
+    "validationTargets": 6,
+    "portableManifestPath": "handoff/team-a/reviewed-source-delivery-manifest.json",
+    "portableManifestSha256": "c9cf6441874a8f6f38de5623954d7fb835cbf03533bdf6e540550eb81c6705cd",
+    "currentC2NormalOwnerAck": "b73a45b4a319fe619f517e9bd1ed1f262ba00b33",
+    "futureSourceIsReferenceOnly": true,
+    "qualification": "Source-only handoff. Admin SDK03 source/driver peers are clear; original SDK Debug/Release, source/PDB, restore/task/creator/session/process drains and real HTTP outcomes have not run. Exact original configs/manifests retain their local absolute pins for audit and need a verified receiving environment mapping before execution. No self-cut, executable acceptance or release claim. Future trust body is reference delivery only, not an overlay of current Home service. Existing auth/cloud/deployment holds and Team C sole global integration remain unchanged.",
+    "receipt": {
+      "path": "/workspace/astra-source/teamA-reviewed-source-delivery838-receipt.json",
+      "bytes": 9705,
+      "sha256": "7127c8d3456efa8efc9ea75a3e9a2e6be396836ffe37869dd0ed25298cb63ea7"
+    },
+    "all33RemoteBlobsVerified": true,
+    "receivingTeamCAll33AckReceived": true,
+    "remaining": "Genuine issuer/auth_revision/installed/provider/native/fullSDK acceptance remains; source receipt/currentC2/C5 body holds closed."
+  },
+  "claims": [
+    {
+      "worker": "A1",
+      "owner": "worker1_resume",
+      "paths": [
+        "9to1 Workspace/Home/Source/Home/HomeNativeCoreApiSessions.cs",
+        "9to1 Workspace/shared/src/Haven.Core/**",
+        "9to1 Workspace/shared/src/Haven.Application/Chat/**",
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Agents/**",
+        "9to1 Workspace/shared/src/Haven.Desktop/Components/**"
+      ],
+      "task": "Canonical Home/Core/CUI lifecycle, current actor/session/Den/model permissions, same original task execution and settlement; acyclic shared engines. Exact frozen package target lists remain authoritative; no blanket permission for unrelated edits.",
+      "state": "SOURCE_FIXES_PREFERRED_HOME_APP_WORK_COMPLETE_PEERS_CLEAR; CANVAS03_FULLPEER_CLEAR; CUI_ONE_LINE_OWNER_ACK_CLEAR; API_CONTRACTS_RAM"
+    },
+    {
+      "worker": "A2",
+      "owner": "worker3_resume",
+      "paths": [
+        "native Mathematics/Forms/Graph existing owned source targets",
+        "Data/Wave/Motion/Maps/Shelf existing native claims"
+      ],
+      "task": "Productivity and creative native authoring, persistence, donor parity and typed APIs. Existing W2 Write/Present/Boards/Planner and W6 Canvas/Picture/Games claims transfer only by explicit acknowledgement.",
+      "state": "CANVAS13_DISPATCHED; GRAPH03_ORIGINAL_ANALYZER_CAUSE_CONFIRMED; PRESENT_NATIVE_PAGE_LIFETIME_VERSION_FIX_RAM"
+    },
+    {
+      "worker": "A3",
+      "owner": "worker4_resume",
+      "paths": [
+        "native AI/Spaces/Studio/Agents/Automations/Dev/Stack/Terminal and connected app claims after explicit handoff"
+      ],
+      "task": "Preserve existing owner sources; finish bounded Admin SDK correction and hosted/browser handoff before taking native AI/developer ownership. Studio authored by W6 transfers after independent peers.",
+      "state": "ADMIN_HOSTED_OWNERSHIP_HANDED_TO_C; NEW_TOOLING_OWNER_REVIEW_HELD; NATIVE_STUDIO_STARTUP_AND_SPACES_LE_CONSUMER_GATES"
+    },
+    {
+      "worker": "A4",
+      "owner": "worker2_resume",
+      "paths": [
+        "canonical Files native agent rename and current permission/SafeMode owner targets",
+        "Files organisation/Link/Prototype/Paths/Replay/Variants native integrations after pass-start gates"
+      ],
+      "task": "Finish Files03 and current Den presentation handoff, inventory all ten organisation types and existing engines; no parallel models, fabricated grants or duplicated hosted transport.",
+      "state": "FILES03_SOURCE_FROZEN_CLEAR; SOLE_JOINT_SDK05_PACKAGE_FROZEN_PEERS_PENDING; TERRA_INVENTORY_ONLY"
+    },
+    {
+      "worker": "A5",
+      "owner": "worker5_resume",
+      "paths": [
+        "9to1 OS",
+        "9-1 OS (Android)",
+        "owned Linux packaging/native guards and Home socket transport"
+      ],
+      "task": "Actual install/update/repair/bootstrap/OS/mobile/hardware validation; same original shutdown tasks and controlled launch authority.",
+      "state": "LINUX19_OWNFAIL_UNKNOWN_CAUSE; OSCORE_SOURCE01_FROZEN_FULLPEERS_PENDING; GENUINE_BOOTSTRAP_PLATFORM_ARTIFACT_GATES"
+    },
+    {
+      "worker": "A6",
+      "owner": "worker6_resume",
+      "paths": [
+        "Team A validation/evidence records and isolated acceptance callers"
+      ],
+      "task": "Independent requirement/test coverage, native/donor/installed app journeys, failure evidence and final candidate verification. Existing authored Canvas/Studio changes require other reviewers and explicit handoff.",
+      "state": "INDEPENDENT_HOME_APP_WORK_CANVAS_SOURCE_CHALLENGE; SDK05_UNION_AND_OSCORE_PEERS; LE_INHERITED_DENOMINATOR_CHALLENGE"
+    }
+  ],
+  "scope": "Read actual current published owner metadata only. Existing EEC source-only SDK33 receipt is not Picture runtime/adoption ACK. A2 transfer note preserves W6 Canvas/Picture/Games claims until explicit acknowledgement."
+}
