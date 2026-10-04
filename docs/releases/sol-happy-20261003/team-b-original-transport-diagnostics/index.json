@@ -1,5 +1,5 @@
 {
-  "state": "EXACT_FIVE_FAILED_ORIGINAL_DIAGNOSTIC_BODIES_DURABLE_ROOT_FULL_PROOF_B6_PENDING",
+  "state": "SELECTED_FIVE_RAW_ROOT_B6_FULL_PROOF_ALL_KNOWN_READERS_CLOSED",
   "scope": "Existing failed original transport diagnostics only; does not receive full1495261 original or claim browser/native acceptance.",
   "official": {
     "artifact": 11314750816,
@@ -211,6 +211,171 @@
     "memberMapSHA256": "3197a6839bd8bbeb98b415c432a33a7fe6b5dcb0e3687266b503c6e8ff4c2446",
     "readerPhase": "RootONLY localreader nowclosed; B3/B6/B1 REMOTE-only reading; newtemporary retaineduntil independentB6wholebodyCRC+allreaderclosure/freshrootproof.",
     "onlyNewTemporaryPath": "/workspace/attachments/beae8c35-ac84-47fb-a534-61016b9d88a9/wave-e90-selected-original-source-diagnostics.zip",
-    "browser14New3Acceptance": false
+    "browser14New3Acceptance": false,
+    "B6FullACK": {
+      "state": "B6_SELECTED_FIVE_ORIGINAL_DIAGNOSTICS_REMOTE_FULLACK_READERS_CLOSED",
+      "UTC": "2026-10-04T21:16:42.744273+00:00",
+      "branch": "artifact/team-b-original-transport-diagnostics-20261004",
+      "head": "9e7ac886822b4c111e8ea0177637cd86d77c7339",
+      "parent": "42f8e668b1aa90f4d864dcee878718e88782e0c1",
+      "path": "docs/releases/sol-happy-20261003/team-b-original-transport-diagnostics/wave-e90-selected-original-source-diagnostics.zip",
+      "blob": "4b123f3091266c88d28f0dadf07e886834fc37c5",
+      "outerBytes": 8599,
+      "outerSHA256": "91f3eb8c7756ccf4c47bc2941634d647dd1cdc8d99129231283e32b0409291e2",
+      "indexBlob": "756e7a7d70d1f87965d2ba5c1a5e73a37e62408c",
+      "indexSHA256": "6f0de03ed7be9a1e2c4930a4060908de34dc70331f71a605e796c7a7a98151cb",
+      "exactOnlyTwoLeafChanges": true,
+      "allInheritedLeavesConserved": true,
+      "officialRootCaptured": {
+        "artifact": 11314748325,
+        "bytes": 8599,
+        "sha256": "91f3eb8c7756ccf4c47bc2941634d647dd1cdc8d99129231283e32b0409291e2",
+        "run": 37234753520,
+        "job": 111531522358,
+        "head": "fca8c373d4eaeb732cbbe20d7e86072ca42d667c",
+        "jobConclusion": "success"
+      },
+      "allThreeCRCFullBodiesGitSHA1Tree100644": true,
+      "members": [
+        {
+          "path": "original-members.json",
+          "bytes": 8308,
+          "sha256": "95a693a655c7aa012480a682de93047cdf95690e5fb09d3f059613f5ed3594b4",
+          "crc32": 3210244456,
+          "mode": 33188
+        },
+        {
+          "path": "selected-source-diagnostics.json",
+          "bytes": 32973,
+          "sha256": "72913b78d2c468055499a0766892149f939a52fc4ab1b3c2d5f94ecffd6d0f8d",
+          "crc32": 1144039989,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 974,
+          "sha256": "9abe9847256c91c6126802fa606b85edea9d94916c00caac960145e182a15b42",
+          "crc32": 1094517385,
+          "mode": 33188
+        }
+      ],
+      "fixedOriginal": {
+        "sourceRun": 37230828986,
+        "sourceArtifact": 11313603170,
+        "sourceCommit": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+        "archiveBytes": 1495261,
+        "archiveSha256": "e794fb5e3ab92b8019876f14bb908c340bd0a88be1be53a585ac36122b35fcc7"
+      },
+      "originalMapCount": 36,
+      "originalMapSHA256": "3197a6839bd8bbeb98b415c432a33a7fe6b5dcb0e3687266b503c6e8ff4c2446",
+      "selectedCount": 5,
+      "selectedDecodedBytes": 23364,
+      "selectedPins": [
+        {
+          "path": "wr-run/diagnostics/status-before.log",
+          "bytes": 538,
+          "sha256": "932916bb1844b0abc740ac4b810c65e43674e3107a055e800b7aa739c8ac232a",
+          "crc32": 1628630904,
+          "mode": 33188,
+          "directory": false
+        },
+        {
+          "path": "wr-run/diagnostics/status-after.log",
+          "bytes": 538,
+          "sha256": "932916bb1844b0abc740ac4b810c65e43674e3107a055e800b7aa739c8ac232a",
+          "crc32": 1628630904,
+          "mode": 33188,
+          "directory": false
+        },
+        {
+          "path": "wr-run/diagnostics/commands.json",
+          "bytes": 2517,
+          "sha256": "dfb9a95a853a6cdf36143c08120a5c00134acbdc0e02d68dafbb0e6e2f118e47",
+          "crc32": 3715577370,
+          "mode": 33188,
+          "directory": false
+        },
+        {
+          "path": "wr-publish/diagnostics/owner-built-assets.json",
+          "bytes": 1272,
+          "sha256": "3cba4f74f796c7f0637d64ca1313e36928caa6fa2625d1902d7f8e379e20b1a2",
+          "crc32": 4050175919,
+          "mode": 33188,
+          "directory": false
+        },
+        {
+          "path": "wr-publish/diagnostics/commands.json",
+          "bytes": 18499,
+          "sha256": "b9d275ffa0e9954a6329e40e2e58b63df97480a23d13df08acbc2b71b7b9ff30",
+          "crc32": 3098900699,
+          "mode": 33188,
+          "directory": false
+        }
+      ],
+      "commandFamilies": [
+        {
+          "path": "wr-run/diagnostics/commands.json",
+          "commands": 6,
+          "birthRecords": 6,
+          "allNormalExit0EOFNoSignalsGoneECHILD": true,
+          "commandNames": [
+            "git-head",
+            "clean-before",
+            "status-before",
+            "head-after",
+            "clean-after",
+            "status-after"
+          ]
+        },
+        {
+          "path": "wr-publish/diagnostics/commands.json",
+          "commands": 19,
+          "birthRecords": 119,
+          "allNormalExit0EOFNoSignalsGoneECHILD": true,
+          "commandNames": [
+            "git-head",
+            "git-clean-before",
+            "tracked-source-tree",
+            "native-submodule-pins",
+            "dotnet-version",
+            "dotnet-info",
+            "wasm-tools-install",
+            "wasm-tools-list",
+            "bun-tool-install",
+            "bun-version",
+            "locked-assets-install",
+            "owner-assets-build",
+            "restore",
+            "build",
+            "publish",
+            "git-clean-after",
+            "git-head-after",
+            "receipt-verify",
+            "git-clean-final"
+          ]
+        }
+      ],
+      "actualStatusBeforeAfterExact": true,
+      "statusUnknownSixExactlyOwnerBuiltAssetPaths": true,
+      "exportSource": {
+        "path": "apps/Web/Wave/Tests/ci/export-existing-wave-browser-selected-diagnostics.py",
+        "gitBlob": "21cb18809e8f79374b9d6798d619080929fe0c28",
+        "bytes": 13440,
+        "sha256": "9c117aa68a1095f67e25ce080d82944b5d812547774e7e8b9f2005f5d1fbaa1d",
+        "fixedFailedOriginalWholeSHAAllCRCBeforeExactFiveSelectionSourceRead": true
+      },
+      "allReadersClosed": true,
+      "noLocalFilesTempReadsWatchRestartOrExecution": true,
+      "whole1495261OriginalIndependentlyRead": false,
+      "browser14New3Acceptance": false,
+      "qualification": "Selected raw source-status and normal command closure only. Six generated assets are unknown at replay preflight and match publisher inventory paths; their asset bodies were not exported. Full original ZIP/source ledger/browser cases not independently received. Analyst intermediate used members instead of actual selected key; corrected before ACK; no outcome changed."
+    },
+    "allKnownReadersClosed": [
+      "root",
+      "B3",
+      "B4",
+      "B6"
+    ],
+    "additionalActualReader": "B4 independently read rootnewtemp once before remote-only locator arrived; explicit allZIP readersclosed; no copies/extract/writes. Phase deviation retained."
   }
 }
