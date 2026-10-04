@@ -29,10 +29,11 @@
     "actualStudioGifMetadataOriginalThreeJobs": "137fd22e4cf0379d04adcd6da4c82a1443f5c911",
     "currentReviewedHomeOriginalProducer": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
     "originalCurrentHomeNativeControlFailure": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
-    "isolatedOwnedCanonicalHomeGuiSelection": "e5305818cb70459610f7957ae58255cff85d07ea"
+    "isolatedOwnedCanonicalHomeGuiSelection": "e5305818cb70459610f7957ae58255cff85d07ea",
+    "actualOriginalHomeSixAndTwoCanonicalGuiQuits": "e5305818cb70459610f7957ae58255cff85d07ea"
   },
-  "payloadCount": 633,
-  "totalBytes": 122884702,
+  "payloadCount": 653,
+  "totalBytes": 126786890,
   "entries": [
     {
       "path": "README.md",
@@ -2738,6 +2739,144 @@
       "originalSha256": "43f67ce73486360b577eab136630d9c88d89aa42c73c88a07bca46d5314084e9"
     },
     {
+      "path": "runs/home-e530-original/actual-original-home-six-two-native-quits-and-package.json",
+      "bytes": 7720,
+      "sha256": "c574142f3a26c49c413159f8bf61d9fdae8d3f370f9c85318a374ee2edaf3895",
+      "originalBytes": 7720,
+      "originalSha256": "c574142f3a26c49c413159f8bf61d9fdae8d3f370f9c85318a374ee2edaf3895"
+    },
+    {
+      "path": "runs/home-e530-original/audit-original-current-home.py",
+      "bytes": 10520,
+      "sha256": "0dd04881273d313a363a0688be6f1c2e89656475b1bbffcd2706376c1a859702",
+      "originalBytes": 10520,
+      "originalSha256": "0dd04881273d313a363a0688be6f1c2e89656475b1bbffcd2706376c1a859702"
+    },
+    {
+      "path": "runs/home-e530-original/closed-wave9cd-whole-source-before.json.gz",
+      "bytes": 1189484,
+      "sha256": "6450fd42f7d099b91fa09ea8fb88cce5f1e5956e3bcb69242462eb7e89df4174",
+      "originalBytes": 5492334,
+      "originalSha256": "49f8f7268d5e028d14ec62c44ff9eb31bbe8b06b2af98796934bf59deff3056f"
+    },
+    {
+      "path": "runs/home-e530-original/home-e530-original-diagnostics.zip",
+      "bytes": 2581021,
+      "sha256": "16d1e659ef58d3af4b5ecbdd057c732b63e8eb9adfabd84b793f9af4dd482819",
+      "originalBytes": 2581021,
+      "originalSha256": "16d1e659ef58d3af4b5ecbdd057c732b63e8eb9adfabd84b793f9af4dd482819"
+    },
+    {
+      "path": "runs/home-e530-original/home-e530-original-six-package-and-two-gui-quits-independent-review.json",
+      "bytes": 3921,
+      "sha256": "833025dbc3568630e0493033db72b91c98fdb9b96e935697bd4c3a95053d3bb7",
+      "originalBytes": 3921,
+      "originalSha256": "833025dbc3568630e0493033db72b91c98fdb9b96e935697bd4c3a95053d3bb7"
+    },
+    {
+      "path": "runs/home-e530-original/home-original-six.trx",
+      "bytes": 10906,
+      "sha256": "95f214dd0a00c2bf6d28d3bd57c6787398d9a2de8fe4a7857a2b6f50bcc29924",
+      "originalBytes": 10906,
+      "originalSha256": "95f214dd0a00c2bf6d28d3bd57c6787398d9a2de8fe4a7857a2b6f50bcc29924"
+    },
+    {
+      "path": "runs/home-e530-original/official-artifacts.json",
+      "bytes": 5544,
+      "sha256": "67f35a5751dcf54dc21245ff0973fa12948a262d398fb6f2d8fa6973ac2b1145",
+      "originalBytes": 5544,
+      "originalSha256": "67f35a5751dcf54dc21245ff0973fa12948a262d398fb6f2d8fa6973ac2b1145"
+    },
+    {
+      "path": "runs/home-e530-original/official-jobs-final.json",
+      "bytes": 4473,
+      "sha256": "ac2955cf85a4b191f388e6c34477a3dc2f77766a9fc96cd9c585c8a147fc9822",
+      "originalBytes": 4473,
+      "originalSha256": "ac2955cf85a4b191f388e6c34477a3dc2f77766a9fc96cd9c585c8a147fc9822"
+    },
+    {
+      "path": "runs/home-e530-original/official-run-final.json",
+      "bytes": 12195,
+      "sha256": "6e7bc4b92ef16bc2880e20b5f95c252e9d280d882b68ffc61fa6589161ead7f1",
+      "originalBytes": 12195,
+      "originalSha256": "6e7bc4b92ef16bc2880e20b5f95c252e9d280d882b68ffc61fa6589161ead7f1"
+    },
+    {
+      "path": "runs/home-e530-original/one-further-closed-wave-source-replica-retirement.json",
+      "bytes": 1006,
+      "sha256": "ceab282a9d11f1031d8c939faf75239b70135798521b108ab587af5b7717f5c9",
+      "originalBytes": 1006,
+      "originalSha256": "ceab282a9d11f1031d8c939faf75239b70135798521b108ab587af5b7717f5c9"
+    },
+    {
+      "path": "runs/home-e530-original/original-diagnostic-acquisition.json",
+      "bytes": 4718,
+      "sha256": "e72dc3d11b7a786182bec162656b66c26b46a90f2e732fb91c4713d8c61664fd",
+      "originalBytes": 4718,
+      "originalSha256": "e72dc3d11b7a786182bec162656b66c26b46a90f2e732fb91c4713d8c61664fd"
+    },
+    {
+      "path": "runs/home-e530-original/original-result.json",
+      "bytes": 14112,
+      "sha256": "09015fc84152e4147e207dc5c8f781064fc5df6bcc989b6e35d5dbd5e15bbf3b",
+      "originalBytes": 14112,
+      "originalSha256": "09015fc84152e4147e207dc5c8f781064fc5df6bcc989b6e35d5dbd5e15bbf3b"
+    },
+    {
+      "path": "runs/home-e530-original/parts-manifest.json",
+      "bytes": 1336,
+      "sha256": "242ad51dd5e3430da47e942815989b881d93c456d4bdda4d0fdae8cfb0617abd",
+      "originalBytes": 1336,
+      "originalSha256": "242ad51dd5e3430da47e942815989b881d93c456d4bdda4d0fdae8cfb0617abd"
+    },
+    {
+      "path": "runs/home-e530-original/prior-59ef-seven-publication-independent-review.json",
+      "bytes": 1404,
+      "sha256": "f6c7a703a7b09ac3380b1f3147792f3d50cc0f711c72ad3b1f6a58d3876dc93e",
+      "originalBytes": 1404,
+      "originalSha256": "f6c7a703a7b09ac3380b1f3147792f3d50cc0f711c72ad3b1f6a58d3876dc93e"
+    },
+    {
+      "path": "runs/home-e530-original/profile-after-first-hashes.json",
+      "bytes": 157,
+      "sha256": "92136e072c53343e84757eb07daca0f06307e036f4aeccdb9c4766ec58cb551b",
+      "originalBytes": 157,
+      "originalSha256": "92136e072c53343e84757eb07daca0f06307e036f4aeccdb9c4766ec58cb551b"
+    },
+    {
+      "path": "runs/home-e530-original/profile-after-second-hashes.json",
+      "bytes": 157,
+      "sha256": "92136e072c53343e84757eb07daca0f06307e036f4aeccdb9c4766ec58cb551b",
+      "originalBytes": 157,
+      "originalSha256": "92136e072c53343e84757eb07daca0f06307e036f4aeccdb9c4766ec58cb551b"
+    },
+    {
+      "path": "runs/home-e530-original/profile-initial-hashes.json",
+      "bytes": 157,
+      "sha256": "92136e072c53343e84757eb07daca0f06307e036f4aeccdb9c4766ec58cb551b",
+      "originalBytes": 157,
+      "originalSha256": "92136e072c53343e84757eb07daca0f06307e036f4aeccdb9c4766ec58cb551b"
+    },
+    {
+      "path": "runs/home-e530-original/public-continuation-summary.json",
+      "bytes": 2848,
+      "sha256": "24771d95a1c456ee971d55bedfb36d2f8d04a7557234da3078270c8b7093a1d8"
+    },
+    {
+      "path": "runs/home-e530-original/publish-manifest.json",
+      "bytes": 50235,
+      "sha256": "b686c009002b0e4ca6d7b060b906e6658ec2bf57f69a3207597cfe99b304189c",
+      "originalBytes": 50235,
+      "originalSha256": "b686c009002b0e4ca6d7b060b906e6658ec2bf57f69a3207597cfe99b304189c"
+    },
+    {
+      "path": "runs/home-e530-original/seal.json",
+      "bytes": 274,
+      "sha256": "2dc57c6f731ccbc4a7fa43322edeb7ab8d2502a479b0f44951e22360a097ea0f",
+      "originalBytes": 274,
+      "originalSha256": "2dc57c6f731ccbc4a7fa43322edeb7ab8d2502a479b0f44951e22360a097ea0f"
+    },
+    {
       "path": "runs/home-e530-owned-gui-source/c1-independent-preinvoke-review.json",
       "bytes": 2576,
       "sha256": "2d496ca679d9dbbe3c11e91d9583ab79d199c283119bfb53bea8e6573becec01",
@@ -3792,6 +3931,6 @@
       "originalSha256": "77dd4a62810febb1ae2139d345de47d48666cb5214bfda92365722c35430e736"
     }
   ],
-  "previousImmutableEvidenceCommit": "a37ca5ebcce2de732d130c81b7b8173a63db9436",
-  "previousImmutableIndexSHA256": "2e793cdc921d779bdacfa31792160849946bbdbfe96baba457e8b3e04dc6eaf5"
+  "previousImmutableEvidenceCommit": "59ef0f58d0e64f115d5a0eaba65db53d6beb526f",
+  "previousImmutableIndexSHA256": "97dfd915a8bbda79d44b2b95acad73c1d4ac5b14848ec4e5aaf009e5c738fbc5"
 }
