@@ -355,6 +355,32 @@ public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
         _editorHost = null; _editor = null; _session = null; _originalEditor = null;
     }
 
+    public Task StartOriginalInitializationAsync(CancellationToken caller = default)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (_originalInitialization is not null) return _originalInitialization;
+        RequireOriginalPublication(caller);
+        return _callbacks.Run(InitializeAsync, caller, actual =>
+        {
+            _originalInitialization = actual; Initialization = actual;
+        });
+    }
+
+    public Task? OriginalNativeCloseObservationTask => _nativeCloseObservation;
+
+    public void AuthorizeOriginalNativeClose(Task actualNativeOwnerClose)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var produced = _nativeOwnerTask ?? _nativeOwnerClose?.Invoke()
+            ?? throw new InvalidOperationException("The original native owner close is absent.");
+        if (!ReferenceEquals(produced, actualNativeOwnerClose) || !produced.IsCompletedSuccessfully ||
+            _close is not { IsCompletedSuccessfully: true } || _nativeCallbackFailures.Count != 0 ||
+            _nativeCloseObservation is { IsCompletedSuccessfully: false })
+            throw new InvalidOperationException("The original native-owner/window observer proof is incomplete.");
+        _nativeOwnerTask = produced;
+        _nativeCloseAuthorized = true;
+    }
+
     public Task? OriginalInitializationTask => _originalInitialization;
     public Task? OriginalCloseTask => _close;
     public Task? OriginalNativeOwnerCloseTask => _nativeOwnerTask;
@@ -374,10 +400,7 @@ public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
         if (_retiring) return;
         try
         {
-            _callbacks.Run(InitializeAsync, originalPublished: actual =>
-            {
-                _originalInitialization = actual; Initialization = actual;
-            });
+            _ = StartOriginalInitializationAsync();
         }
         catch (Exception error) { RetainNativeCallbackFailure(error); }
     }
