@@ -191,3 +191,328 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+
+  linux20-original-custody:
+    name: Linux20 original evidence custody only
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/validation/sol-happy-linux20-original-custody-20261004' && inputs.expected_commit == github.sha && inputs.cut_manifest_sha256 == '01120010e98be5e3b47f06a8036235efdb5df24a433db4f06e79419d48458599'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Verify root-owned reader source and replay only three pinned original artifacts
+        timeout-minutes: 20
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import base64, hashlib, json, os, re, sys, urllib.request
+          class Refusal(Exception):
+              pass
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, message, headers, newurl):
+                  return None
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def settle(errors):
+              if len(errors) == 1:
+                  raise errors[0]
+              if errors:
+                  raise BaseExceptionGroup('Trusted reader bootstrap and independent IO failures.', errors)
+          def safe(errors):
+              result=[]
+              for error in errors:
+                  row={'type':type(error).__name__,'code':'BOOTSTRAP_OR_FINAL_IO_FAILURE'}
+                  if isinstance(error, BaseExceptionGroup):
+                      row['causes']=safe(error.exceptions)
+                  result.append(row)
+              return result
+          def unique(pairs):
+              output={}
+              for key,value in pairs:
+                  require(key not in output,'BOOTSTRAP_DUPLICATE_JSON')
+                  output[key]=value
+              return output
+          requests_attempted=0
+          bytes_reserved=0
+          def source(path, expected_bytes, expected_sha):
+              global requests_attempted,bytes_reserved
+              require(requests_attempted<2,'BOOTSTRAP_REQUEST_CAP')
+              requests_attempted+=1
+              bytes_reserved+=131072
+              require(bytes_reserved<=262144,'BOOTSTRAP_ATTEMPT_BYTES_CAP')
+              require(os.environ.get('GITHUB_REPOSITORY')=='CroakyJake12/9to1' and os.environ.get('GITHUB_REF')=='refs/heads/validation/sol-happy-linux20-original-custody-20261004' and os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch','BOOTSTRAP_CONTEXT_REFUSED')
+              revision=os.environ['GITHUB_SHA']
+              require(re.fullmatch('[0-9a-f]{40}',revision) is not None,'BOOTSTRAP_OWN_COMMIT_REFUSED')
+              token=os.environ.get('GH_TOKEN','')
+              require(token and '\n' not in token and '\r' not in token,'BOOTSTRAP_API_TOKEN_REFUSED')
+              url='https://api.github.com/repos/CroakyJake12/9to1/contents/'+path+'?ref='+revision
+              request=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'sol-happy-linux20-trusted-reader-bootstrap','Accept-Encoding':'identity'})
+              opener=urllib.request.build_opener(NoRedirect())
+              response=None;errors=[];raw=None
+              try:
+                  response=opener.open(request,timeout=60)
+                  require(response.status==200 and response.headers.get('Content-Encoding','identity').lower()=='identity','BOOTSTRAP_API_RESPONSE_REFUSED')
+                  held=bytearray()
+                  while True:
+                      part=response.read(min(65536,131072-len(held)+1))
+                      if not part:
+                          break
+                      held.extend(part)
+                      require(len(held)<=131072,'BOOTSTRAP_SOURCE_JSON_CAP')
+                  value=json.loads(bytes(held).decode('utf-8',errors='strict'),object_pairs_hook=unique)
+                  require(value['type']=='file' and value['path']==path and value['size']==expected_bytes and value['encoding']=='base64','BOOTSTRAP_SOURCE_DESCRIPTOR_REFUSED')
+                  encoded=''.join(value['content'].split())
+                  raw=base64.b64decode(encoded,validate=True)
+                  require(len(raw)==expected_bytes and hashlib.sha256(raw).hexdigest()==expected_sha,'BOOTSTRAP_SOURCE_WHOLE_HASH_REFUSED')
+                  require(hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==value['sha'],'BOOTSTRAP_SOURCE_GIT_BLOB_REFUSED')
+              except BaseException as error:
+                  if response is None and isinstance(error,urllib.error.HTTPError):
+                      response=error
+                  add(errors,error)
+              if response is not None:
+                  try:
+                      response.close()
+                  except BaseException as error:
+                      add(errors,error)
+              settle(errors)
+              return raw
+          errors=[]
+          namespace=None
+          try:
+              require(sys.version_info>=(3,11) and sys.flags.optimize==0,'BOOTSTRAP_PYTHON_REFUSED')
+              code=source('.github/scripts/sol-happy-linux20-original-custody.py',54089,'09cfbe45f8b0cc902efce657e6d6e59e4a08e1e31a6de59bb54b08d1ed324c4f')
+              configuration=source('.github/validation/sol-happy-linux20-original-custody.json',4328,'01120010e98be5e3b47f06a8036235efdb5df24a433db4f06e79419d48458599')
+              namespace={'__name__':'sol_happy_owned_original_custody_reader'}
+              # Only exact root-owned reader source is executed; original artifact payloads are data.
+              exec(compile(code,'root-owned-linux20-original-custody-reader','exec'),namespace)
+              namespace['main'](json.loads(configuration.decode('utf-8',errors='strict'),object_pairs_hook=unique))
+          except BaseException as error:
+              add(errors,error)
+          if errors:
+              try:
+                  project=namespace['projections'](errors) if namespace is not None and 'projections' in namespace else safe(errors)
+                  print(json.dumps({'status':'Linux20_ORIGINAL_CUSTODY_REFUSED','originalCauses':project,'bootstrapRequestsAttempted':requests_attempted,'bootstrapBytesReserved':bytes_reserved},ensure_ascii=True,sort_keys=True),flush=True)
+              except BaseException as error:
+                  add(errors,error)
+              # Never allow Python to print raw network exceptions, tracebacks or temporary signed URLs.
+              sys.exit(1)
+          PY
+      - name: Retain complete original causal text and replay diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-linux20-original-custody-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain complete Linux20 causal originals for separate bounded admission
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-linux20-complete-causal-originals-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/diagnostic.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/replay-report.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/manifest.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/actual-native-compiler-version.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/actual-native-kernel.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/actual-native-required16.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/actual-synthetic-root-setup.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/atomic-spawn.c
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/avalonia-build-tasks-build.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/avalonia-build-tasks-compiled-after.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/avalonia-build-tasks-compiled-before.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/avalonia-build-tasks-restore.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/avalonia-build-tasks-target.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/avalonia-build-tasks-target.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/fixture-tool-actual-published-payload.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/fixture-tool-publish-build.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/fixture-tool-publish-query.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/fixture-tool-publish-query.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/fixture-tool-publish.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/fresh-native-helper-compile.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/home-actual-entry-compile.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/home-actual-matching-pdb.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/home-build.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/home-compiled.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/home-target-path.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/home-target-path.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/home.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/main-restore-HavenOS.Home.Tests.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/main-restore-NineToOne.Os.Shell.Tests.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/main-restore-NineToOne.Os.Supervisor.Root.Tests.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/native-compile-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/native-hosted-packages.txt
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/native-required16/result.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/ordinary-process-drain/home/19040-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/ordinary-process-drain/home/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/ordinary-process-drain/os/15001-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/ordinary-process-drain/os/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/os-actual-entry-compile.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/os-actual-matching-pdb.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/os-build.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/os-compiled.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/os-target-path.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/os-target-path.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/os.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/prebuild-input-admission.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/protected-cleanup.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-restore-NineToOne.Os.Shell.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-restore-NineToOne.Os.Supervisor.FixtureTools.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Analyzers.CSharp.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Analyzers.CSharp.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Analyzers.VisualBasic.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Analyzers.VisualBasic.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.DBus.Generators.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.DBus.Generators.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Generators.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-Avalonia.Generators.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-DevAnalyzers.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-DevAnalyzers.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-DevGenerators.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-framework-DevGenerators.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restore-Avalonia.Analyzers.CSharp.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restore-Avalonia.Analyzers.CodeFixes.CSharp.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restore-Avalonia.Analyzers.VisualBasic.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restore-Avalonia.DBus.Generators.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restore-Avalonia.Generators.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restore-DevAnalyzers.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restore-DevGenerators.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/publish-tool-restores.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-actual-entry-compile.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-actual-matching-pdb.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-build.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-compiled.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-process/23552-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-process/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-process/root-process-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-process/root-test.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-process/trx/root.trx
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-target-path.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-target-path.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/root-wrapper.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/shell-actual-published-payload.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/shell-publish-build.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/shell-publish-query.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/shell-publish-query.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/shell-publish.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/actual-target-user-home-path.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/actual-target-user-home-path.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/caller-drain-authorized.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/cleanup-exact-user.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/cleanup-exact-user.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/commands.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/fixture-tool-stage-ownership.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/fresh-target-user.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/fresh-target-user.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/hosted-desktop-parent-original-modes.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/hosted-desktop-parent-permission-restoration.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/hosted-desktop-parent-protection.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/maintained-first-install-helper.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/maintained-first-install-helper.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/maintained-first-install-home.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/maintained-first-install-home.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/maintained-first-install-owner.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/maintained-first-install-owner.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/actual-target-user-home-path/22419-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/actual-target-user-home-path/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/cleanup-exact-user/25693-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/cleanup-exact-user/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/fresh-target-user/22409-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/fresh-target-user/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-helper/22399-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-helper/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-home/22377-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-home/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-owner/22388-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-owner/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/public-all-three-test-policies-before-preparation/22376-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/public-all-three-test-policies-before-preparation/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/public-test-policy-directory/22375-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/public-test-policy-directory/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/root-immutable-runtime-directory/22424-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/root-immutable-runtime-directory/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-helper/22367-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-helper/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-home/22349-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-home/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-owner/22358-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-owner/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/target-user-xdg-directories/22418-pending.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/owned-session-drain/target-user-xdg-directories/expected-managed-launch.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/protected-directory-before-enrollment.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/protected-state-cleanup.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/protected-state-ownership.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/public-all-three-test-policies-before-preparation.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/public-all-three-test-policies-before-preparation.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/public-test-policy-directory.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/public-test-policy-directory.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/root-immutable-runtime-directory.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/root-immutable-runtime-directory.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/setup-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/staged-fixture-tool-payload.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-helper/9to1-os-atomic-spawn-supervisor.desktop
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-helper/producer-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-helper/synthetic-atomic-helper.9to1-install
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-helper/synthetic-test-trust.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-home/9to1-os-shell.desktop
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-home/producer-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-home/synthetic-home.9to1-install
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-home/synthetic-test-trust.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-owner/9to1-os-installed-application-widget-owner.desktop
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-owner/producer-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-owner/synthetic-test-trust.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-owner/synthetic-widget-owner.9to1-install
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-sign-helper.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-sign-helper.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-sign-home.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-sign-home.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-sign-owner.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-sign-owner.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/synthetic-three-public-policies.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/target-user-xdg-directories.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-public-proof/target-user-xdg-directories.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/synthetic-setup-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Analyzers.CSharp.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Analyzers.CSharp.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Analyzers.VisualBasic.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Analyzers.VisualBasic.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.DBus.Generators.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.DBus.Generators.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Generators.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-Avalonia.Generators.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-DevAnalyzers.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-DevAnalyzers.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-DevGenerators.stderr
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-framework-DevGenerators.stdout
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-restore-Avalonia.Analyzers.CSharp.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-restore-Avalonia.Analyzers.CodeFixes.CSharp.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-restore-Avalonia.Analyzers.VisualBasic.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-restore-Avalonia.DBus.Generators.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-restore-Avalonia.Generators.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-restore-DevAnalyzers.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/tool-restore-DevGenerators.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/toolchain.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/trx/home.trx
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/trx/os.trx
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/trx/root.trx
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/whole-caller-receipt.json
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/whole-caller.log
+            ${{ runner.temp }}/linux20-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/originals/owning/workloads.log
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14

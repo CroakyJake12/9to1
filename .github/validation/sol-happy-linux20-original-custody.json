@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "repository": "CroakyJake12/9to1",
+  "head": "aa03b6a0724cad0798af9e2415e7dd6933cfd293",
+  "tree": "0aaa00bfb7b5c403c48c9aefc7c55e593a88ef13",
+  "runId": 37166222783,
+  "runAttempt": 1,
+  "sourceBranch": "validation/astra-linux-native-signed-current22-full-20",
+  "artifacts": [
+    {
+      "lane": "owning",
+      "role": "index",
+      "id": 11289907568,
+      "name": "astra-linux-native-owning-manifest-aa03b6a0724cad0798af9e2415e7dd6933cfd293",
+      "bytes": 39724,
+      "sha256": "121722750b11c209aff804ee2080afef137651d5d767e96562cfa9188c90ec0c",
+      "member": "manifest.json",
+      "innerBytes": 273274,
+      "innerSha256": "ba51d85358ca88fe58058d6eb0deefe82ce2bdcdc6370906e0dc893d17d79d45"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "id": 11289707996,
+      "name": "astra-linux-native-owning-bundle-00-aa03b6a0724cad0798af9e2415e7dd6933cfd293",
+      "bytes": 27279528,
+      "sha256": "4e3d8d816ccc97e0a84af607c60de24a5b5ab9fd3cc5910584dd27cdccf9b588",
+      "member": "bundle-00.zip",
+      "innerBytes": 27279388,
+      "innerSha256": "709a0d1dde71bbca1246b55379897dfad5675defb33dbd16f8b0d6439dd4cfaa",
+      "part": 0
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "id": 11290821173,
+      "name": "astra-linux-native-owning-bundle-01-aa03b6a0724cad0798af9e2415e7dd6933cfd293",
+      "bytes": 20548445,
+      "sha256": "ff04b99ea06cd674a80e6a5e95726443e43f5c4c9fb3a78d183102aac4325b8f",
+      "member": "bundle-01.zip",
+      "innerBytes": 20548305,
+      "innerSha256": "7fe536e7e2d2f54276673cb8554760718ac0a4eef71201aa8ff368f6327e7646",
+      "part": 1
+    }
+  ],
+  "expectedCounts": {
+    "owning": {
+      "files": 551,
+      "pieces": 507,
+      "nonempty": 506,
+      "bytes": 47771879
+    }
+  },
+  "required": {
+    "owning": [
+      "receipt.json",
+      "whole-caller-receipt.json",
+      "root-build.log",
+      "root-process/root-test.log",
+      "root-process/trx/root.trx",
+      "root-process/23552-pending.json",
+      "root-process/expected-managed-launch.json",
+      "root-process/root-process-receipt.json",
+      "synthetic-setup-public-proof/setup-receipt.json",
+      "synthetic-setup-public-proof/protected-state-cleanup.json",
+      "synthetic-setup-public-proof/hosted-desktop-parent-permission-restoration.json",
+      "synthetic-setup-public-proof/cleanup-exact-user.stderr",
+      "native-compile-receipt.json",
+      "atomic-spawn.c",
+      "actual-sdk-input-pins.json",
+      "actual-generated-output-pins.json",
+      "trx/home.trx",
+      "trx/os.trx"
+    ]
+  },
+  "taskPe": {
+    "lane": "owning",
+    "path": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "bytes": 754176,
+    "sha256": "45e7c72fd839a70cc606a3e3d9386e95d59255246a00cac9876e997dd90b9f40"
+  },
+  "limits": {
+    "archiveAttemptBytes": 134217728,
+    "expandedAttemptBytes": 402653184,
+    "ramWorkingSetBytes": 536870912,
+    "ramAvailableFloorBytes": 536870912,
+    "filesystemFreeFloorBytes": 943718400,
+    "outputAttemptBytes": 67108864,
+    "outputAllocationReservationBytes": 67108864,
+    "maxOutputFiles": 768,
+    "apiBodyBytes": 131072,
+    "apiAttempts": 16,
+    "pdbExpandedBytes": 16777216,
+    "reportSlotBytes": 2097152,
+    "diagnosticSlotBytes": 262144
+  },
+  "downloadHosts": {
+    "regex": "^productionresultssa[0-9]{1,3}\\.blob\\.core\\.windows\\.net$",
+    "pathPrefix": "/actions-results/",
+    "redirectsAllowed": 1,
+    "authorizationForwarded": false
+  },
+  "selection": {
+    "wholeSuffixes": [
+      ".log",
+      ".json",
+      ".stdout",
+      ".stderr",
+      ".txt",
+      ".xml",
+      ".trx",
+      ".py",
+      ".cs",
+      ".props",
+      ".targets",
+      ".yml",
+      ".yaml",
+      ".pem",
+      ".c",
+      ".desktop",
+      ".9to1-install"
+    ],
+    "wholePrefixes": [],
+    "binarySuffixesNotPublished": [
+      ".dll",
+      ".pdb",
+      ".so",
+      ".a",
+      ".der",
+      ".exe",
+      ".zip"
+    ],
+    "qualification": "All551 original owning full files and507 pieces must replay before full selected text publication. Each of19 nontext original binary bodies remains fully hashed and represented, never executed or emitted. Regression/resource families and unavailable additional source are not admitted. Complete original task physical symbol witness is observational only."
+  }
+}
