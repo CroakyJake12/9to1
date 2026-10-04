@@ -2,7 +2,7 @@
   "sourceCommit": "29e33a1a019f51c83ef16bb8810ad381526fb8c4",
   "productionUnchangedFrom": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
   "publicationCommit": "b69d8b8815ebb62e425d70fe78d6bf9deb4c9e3f",
-  "publicationPayloadsVerified": 47,
+  "publicationPayloadsVerified": 9,
   "runs": [
     {
       "command": [
@@ -53,5 +53,63 @@
       "bytes": 513,
       "sha256": "f9a4267bbff456cdab2fd36d99cb30c55149c47f5ba3d674de75cef2a69fce15"
     }
-  ]
+  ],
+  "publicationIndex": "docs/releases/sol-happy-20261003/evidence/c3-accounts-cancellation-cleanup/artifact-index.json",
+  "publicationVerifiedPayloads": [
+    {
+      "path": "README.md",
+      "bytes": 1450,
+      "sha256": "fd1bd82637ad9a12c2293d3f9074f77606bf62be51994fd7fcca3dabb4198027"
+    },
+    {
+      "path": "cancel-cleanup-debug-build/receipt.json",
+      "bytes": 946,
+      "sha256": "9bffab5c457fc4ea7402d00975ff189fcdd6e28a5429cda83ae2ed2f9b5f8f98"
+    },
+    {
+      "path": "cancel-cleanup-debug-build.log",
+      "bytes": 640,
+      "sha256": "1644af9398348475b190c510522b81299a4396cedcd14ad8e723429a94e5a0ea"
+    },
+    {
+      "path": "cancel-cleanup-debug-run/receipt.json",
+      "bytes": 772,
+      "sha256": "44bc9e1a2e6477277aeccf19e2dd8fb3e36f9de69ec8c9da71e832462aea37df"
+    },
+    {
+      "path": "cancel-cleanup-debug-run.log",
+      "bytes": 709,
+      "sha256": "7c3b71db8fd7f99033a2c3f86c2c2ad2f91d0e206eecc27db959c78be2af63fb"
+    },
+    {
+      "path": "cancel-cleanup-release-build/receipt.json",
+      "bytes": 948,
+      "sha256": "ce539f0d3a0564431f31aeb83821134bb19a0eaebc0c3acef124146abcd849e7"
+    },
+    {
+      "path": "cancel-cleanup-release-build.log",
+      "bytes": 644,
+      "sha256": "1bf5528154e74006fef7c13db0b25866f390bcaf27971bd7a4a0224293efb7e8"
+    },
+    {
+      "path": "cancel-cleanup-release-run/receipt.json",
+      "bytes": 774,
+      "sha256": "4d646b6f692ed1af9eeb497b16925c766b8e0c2ace238ecf72b4fbd91ef213f7"
+    },
+    {
+      "path": "cancel-cleanup-release-run.log",
+      "bytes": 709,
+      "sha256": "7c3b71db8fd7f99033a2c3f86c2c2ad2f91d0e206eecc27db959c78be2af63fb"
+    }
+  ],
+  "separateHistoricalPublicationCheck": {
+    "commit": "b69d8b8815ebb62e425d70fe78d6bf9deb4c9e3f",
+    "index": "docs/releases/sol-happy-20261003/evidence/c3-accounts-narrow-integration/artifact-index.json",
+    "payloadsVerified": 47,
+    "qualification": "Separate historical narrow-integration payloads also remain present and rehashed at b69; these are not the cleanup publication denominator."
+  },
+  "scopeCorrection": {
+    "priorAuditCommit": "874c9944",
+    "reason": "Prior audit incorrectly described separate47 historical narrow-integration hashes as cleanup publication scope; actual cleanup index has9 payloads. All raw run/source evidence unchanged; no runtime rerun."
+  }
 }
