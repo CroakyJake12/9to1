@@ -16,17 +16,25 @@ Existing subagents send short updates to their existing coordinator. Teams A and
 
 Record an acknowledgement in your own team record with this file path, log document ID and the real acknowledgement time. Do not mark another team acknowledged. Team C may add this directive to its owned index; this request does not edit that index or the accepted-head pointer. If a writer handover is needed, make it explicit before another team changes combined log entries.
 
-## Required checkpoint
+## Required checkpoint — Jacob's exact format
 
-Use the existing per-pass Checkpoint / % Progress / What Changed layout. Add:
+Use the following layout under each relevant pass. This supersedes the former single-line progress / What Changed / Evidence-tested-revision / Blockers-next-action layout.
 
-- Actual date and time in Europe/London, reporting team, owned scope and current source/evidence identities.
-- Rough implementation percentage or range, confidence, and one sentence explaining the basis.
-- Acceptance-verified percentage or range against the applicable specification criteria, or verified n/N for a clearly identified subset; show unknown coverage separately.
-- What materially changed since the previous checkpoint, including no change when appropriate.
-- Tests actually executed: relevant pass/fail/not-run results and links to existing exact-source logs, artifacts or runs. Do not paste large logs.
-- Significant blocker with owner/action needed, and next implementation or validation step.
-- Whether the work is local/unpushed, pushed but unmerged, integrated, deployed, or commercially enabled. Do not conflate those states.
+```text
+Checkpoint 11:07
+% Progress:
+    Implementation - … ;
+    Acceptance Verified - … ;
+Change Summary: …
+Evidence: …
+Next Action: …
+```
+
+In Google Docs, use Heading 1 for `Checkpoint HH:MM`. Make every following line bold, with `Implementation` and `Acceptance Verified` on separate indented lines. Preserve the displayed labels, capitalisation, hyphens, semicolons and field order. Use the actual Europe/London checkpoint time instead of copying 11:07.
+
+When there is a blocker, the value of `Next Action:` MUST begin `BLOCKED`, for example `Next Action: BLOCKED — [blocker]; [owner and action needed to unblock].` Do not add a separate Blockers field. Name the affected scope; do not imply independent work is also blocked. When unblocked, state the next implementation or validation action normally.
+
+Keep supporting detail inside these fields, not extra headings: scope/confidence and a brief estimate basis alongside the two progress values; the actual date and reporting team/scope in Change Summary when needed; exact source/tested revisions, executed pass/fail/not-run results and evidence links in Evidence. Distinguish local/unpushed, pushed-but-unmerged, integrated, deployed and commercially enabled work wherever relevant. Do not paste large logs.
 
 Aim for about 80–150 words per affected pass checkpoint. Preserve previous entries; correct mistakes in a new labelled correction rather than rewriting history. Existing ellipses and 11:07 blocks are templates, not past measurements. Use fresh document readback/revision guards and re-resolve insertion positions on conflict. No secrets, private test accounts, tokens or credentials belong in the log or Git.
 
