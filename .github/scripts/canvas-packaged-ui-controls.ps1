@@ -200,13 +200,62 @@ function Observe-OwnedPicker {
     Check ([CanvasPackageInput]::ForegroundMatches([IntPtr]$dialog.Current.NativeWindowHandle)) 'Native picker observation binds exact current owned foreground HWND'
     Record-OwnedPickerTreeWitness;return $dialog
 }
+function Read-PickerPeerWitness($Peer,[IntPtr]$PickerHandle,[IntPtr]$KernelHandle=[IntPtr]::Zero) {
+    $w=[ordered]@{kernelWindowHandle=$KernelHandle.ToInt64();kernelProcessId=0;kernelClass='UNOBSERVED';kernelIsPickerChild=$false;uiaProcessId=0;uiaWindowHandle=0;uiaHandleIsZero=$true;uiaMatchesKernelHandle=$false;uiaKernelProcessId=0;uiaIsPickerChild=$false;role='UNOBSERVED';enabled=$false;offscreen=$true;rectangle=$null;nameMatchesCancel=$false;nameMatchesSelectFolder=$false;nativeCaptionMatchesCancel=$false;nativeCaptionMatchesSelectFolder=$false;valuePattern=$false;invokePattern=$false;legacyPattern=$false;legacyDefaultButton=$false;readFailure=$null}
+    if($KernelHandle -ne [IntPtr]::Zero) {
+        $w.kernelProcessId=[CanvasPackageInput]::WindowPid($KernelHandle)
+        $w.kernelIsPickerChild=[CanvasPackageInput]::IsChild($PickerHandle,$KernelHandle)
+        if($w.kernelProcessId -eq $process.Id){$w.kernelClass=[CanvasPackageInput]::WindowClass($KernelHandle);$w.nativeCaptionMatchesCancel=[CanvasPackageInput]::WindowTitleEquals($KernelHandle,'Cancel');$w.nativeCaptionMatchesSelectFolder=[CanvasPackageInput]::WindowTitleEquals($KernelHandle,'Select Folder')}
+    }
+    try {
+        if($null -eq $Peer){throw 'No observed native UIA peer.'};$c=$Peer.Current;$r=$c.BoundingRectangle
+        $w.uiaProcessId=$c.ProcessId;$w.uiaWindowHandle=[long]$c.NativeWindowHandle;$w.uiaHandleIsZero=$w.uiaWindowHandle -eq 0
+        $w.uiaMatchesKernelHandle=$KernelHandle -ne [IntPtr]::Zero -and $w.uiaWindowHandle -eq $KernelHandle.ToInt64()
+        if(-not $w.uiaHandleIsZero){$w.uiaKernelProcessId=[CanvasPackageInput]::WindowPid([IntPtr]$w.uiaWindowHandle);$w.uiaIsPickerChild=[CanvasPackageInput]::IsChild($PickerHandle,[IntPtr]$w.uiaWindowHandle)}
+        $w.role=$c.ControlType.ProgrammaticName;$w.enabled=$c.IsEnabled;$w.offscreen=$c.IsOffscreen;$w.rectangle=@($r.X,$r.Y,$r.Width,$r.Height)
+        $w.nameMatchesCancel=$c.Name -ceq 'Cancel';$w.nameMatchesSelectFolder=$c.Name -ceq 'Select Folder'
+        $pattern=$null;$w.valuePattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern,[ref]$pattern)
+        $pattern=$null;$w.invokePattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern,[ref]$pattern)
+        $pattern=$null;$w.legacyPattern=$Peer.TryGetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern,[ref]$pattern)
+        if($w.legacyPattern){$w.legacyDefaultButton=($pattern.Current.State -band 0x100)-ne 0}
+    }catch{$w.readFailure=$_.Exception.GetType().FullName}
+    return $w
+}
+function Record-PickerControlWitness($Dialog,[string]$Phase) {
+    $handle=[IntPtr]$Dialog.Current.NativeWindowHandle
+    $snapshot=[ordered]@{phase=$Phase;completed=$false;foregroundMatchesPicker=[CanvasPackageInput]::ForegroundMatches($handle);pickerKernelProcessId=[CanvasPackageInput]::WindowPid($handle);globalUiaFocus=$null;kernelFocus=$null;uiaDescendants=@();nativeDescendants=@();nativeEnumerationStoppedAtBound=$false}
+    if($Phase -ceq 'focused-address-timeout'){$result.pickerFocusedControlWitness=$snapshot}else{$result.pickerCancelControlWitness=$snapshot}
+    $focus=[System.Windows.Automation.AutomationElement]::FocusedElement
+    $snapshot.globalUiaFocus=Read-PickerPeerWitness $focus $handle
+    $kernelFocus=[CanvasPackageInput]::FocusHandle($handle,$process.Id)
+    $peer=$null
+    if($kernelFocus -ne [IntPtr]::Zero -and [CanvasPackageInput]::WindowPid($kernelFocus) -eq $process.Id){try{$peer=[System.Windows.Automation.AutomationElement]::FromHandle($kernelFocus)}catch{}}
+    $snapshot.kernelFocus=Read-PickerPeerWitness $peer $handle $kernelFocus
+    $count=0
+    foreach($peer in $Dialog.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)) {
+        if($count -ge 128){throw 'Picker UIA diagnostic exceeds bounded descendant count.'};$count++
+        $snapshot.uiaDescendants+=Read-PickerPeerWitness $peer $handle
+    }
+    $children=[CanvasPackageInput]::ChildHandles($handle);$snapshot.nativeEnumerationStoppedAtBound=$children.Length -ge 128
+    foreach($child in $children) {
+        $peer=$null
+        if([CanvasPackageInput]::WindowPid($child) -eq $process.Id){try{$peer=[System.Windows.Automation.AutomationElement]::FromHandle($child)}catch{}}
+        $snapshot.nativeDescendants+=Read-PickerPeerWitness $peer $handle $child
+    }
+    $snapshot.completed=$true
+    Write-Result
+}
 function Cancel-OwnPickerOnFailure {
     $dialog=Find-OwnedForegroundPicker $true
     if($null -eq $dialog){return}
     Require-OwnedControl $dialog 'ControlType.Window'
     $handle=[IntPtr]$dialog.Current.NativeWindowHandle
-    $cancel=Find-Unique 'Cancel' 'ControlType.Button' $false $dialog
-    Require-OwnedControl $cancel 'ControlType.Button'
+    try{$cancel=Find-Unique 'Cancel' 'ControlType.Button' $false $dialog;Require-OwnedControl $cancel 'ControlType.Button'}
+    catch{
+        $originalCancelFailure=$_
+        try{Record-PickerControlWitness $dialog 'cancel-refusal'}catch{$result.pickerCancelWitnessFailure=$_.Exception.GetType().FullName}
+        throw $originalCancelFailure
+    }
     Check ((Is-InSurface $cancel $dialog) -and [CanvasPackageInput]::ForegroundMatches($handle)) 'Failure Cancel targets exact proven owned native picker'
     $cancel.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     $result.pickerCancellation=[ordered]@{admitted=$true;windowHandle=$handle.ToInt64();closed=$false};Write-Result
@@ -219,7 +268,12 @@ function Choose-OwnFolder {
     $handle=[IntPtr]$dialog.Current.NativeWindowHandle
     Check ([CanvasPackageInput]::SetForegroundWindow($handle) -and [CanvasPackageInput]::ForegroundMatches($handle)) 'Native folder address input targets exact owned picker HWND'
     [CanvasPackageInput]::Chord(0x11,0x4C)
-    $address=Wait-Observed {$f=[System.Windows.Automation.AutomationElement]::FocusedElement;if($f.Current.ProcessId -eq $process.Id -and $f.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit){$f}} 'Actual focused OS folder-address Edit'
+    try{$address=Wait-Observed {$f=[System.Windows.Automation.AutomationElement]::FocusedElement;if($f.Current.ProcessId -eq $process.Id -and $f.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit){$f}} 'Actual focused OS folder-address Edit'}
+    catch{
+        $originalAddressFailure=$_
+        try{Record-PickerControlWitness $dialog 'focused-address-timeout'}catch{$result.pickerFocusWitnessFailure=$_.Exception.GetType().FullName}
+        throw $originalAddressFailure
+    }
     Require-OwnedControl $address 'ControlType.Edit'
     Check (Is-InSurface $address $dialog) 'Actual focused folder-address editor belongs to exact native picker tree'
     [CanvasPackageInput]::TypeText($filesRoot)
@@ -376,6 +430,14 @@ public static class CanvasPackageInput {
     public static bool WindowExists(IntPtr window) { return IsWindow(window); }
     public static bool WindowTitleEquals(IntPtr window,string expected) { var text=new System.Text.StringBuilder(512); GetWindowText(window,text,text.Capacity); return string.Equals(text.ToString(),expected,StringComparison.Ordinal); }
     public static string WindowClass(IntPtr window) { var text=new System.Text.StringBuilder(256); GetClassName(window,text,text.Capacity); return text.ToString(); }
+    [DllImport("user32.dll")] public static extern bool IsChild(IntPtr parent,IntPtr child);
+    [StructLayout(LayoutKind.Sequential)] struct RECT { public int left,top,right,bottom; }
+    [StructLayout(LayoutKind.Sequential)] struct GUIINFO { public uint size,flags; public IntPtr active,focus,capture,menuOwner,moveSize,caret; public RECT caretRect; }
+    [DllImport("user32.dll")] static extern bool GetGUIThreadInfo(uint thread,ref GUIINFO info);
+    public static IntPtr FocusHandle(IntPtr window,int expected) { uint pid; var thread=GetWindowThreadProcessId(window,out pid); if(pid!=(uint)expected) return IntPtr.Zero; var info=new GUIINFO {size=(uint)Marshal.SizeOf(typeof(GUIINFO))}; return GetGUIThreadInfo(thread,ref info) ? info.focus : IntPtr.Zero; }
+    delegate bool ENUMCHILD(IntPtr window,IntPtr state);
+    [DllImport("user32.dll")] static extern bool EnumChildWindows(IntPtr parent,ENUMCHILD callback,IntPtr state);
+    public static IntPtr[] ChildHandles(IntPtr parent) { var children=new System.Collections.Generic.List<IntPtr>(); ENUMCHILD callback=(window,state)=> {children.Add(window);return children.Count<128;}; EnumChildWindows(parent,callback,IntPtr.Zero); GC.KeepAlive(callback); return children.ToArray(); }
     public static bool OwnsPoint(int x,int y,int expected) { uint pid; GetWindowThreadProcessId(WindowFromPoint(new POINT(x,y)),out pid); return pid==(uint)expected; }
     public static void Press(ushort key) { Send(new[] { Key(key,0,0),Key(key,0,2) }); }
     public static void Move(int x,int y,int sx,int sy,int sw,int sh) {

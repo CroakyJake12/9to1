@@ -73,3 +73,17 @@ actual HWND disappearance. A cancellation refusal/failure is retained; normal
 app cleanup still proceeds, and forced or failed cleanup blocks success. This
 never submits or retries a request. Original one-shot operations, gesture points,
 source pins, manifest, timeout, commit/reopen and all other criteria stay intact.
+
+Original63 run37221336623 proves the native foreground picker owner, kernel/UIA
+PID/title/Window/handle and original main HWND relationship. It then times out
+after20seconds at the unchanged global UIA focused Edit criterion; the screenshot
+shows selected Documents address text, which cannot prove the focused peer. Its
+Cancel refusal/CloseMainWindow=false/forced cleanup/exit-1 remain a failure.
+This diagnostic successor preserves those original criteria and exceptions,
+recording only actual global UIA focus versus GetGUIThreadInfo native focus and
+bounded128 picker descendants/native child HWNDs. Roles, process/handle/IsChild
+relationships, pattern support, enabled/offscreen/geometry and exact observed
+Cancel/Select Folder name flags are retained; no values, text, paths, directory
+listings or profile payloads are dumped. Read-only diagnostics cannot replace
+the original timeout/refusal if they themselves fail. There is no focus, target,
+request, field/value, wait-threshold, approval or document-state correction here.
