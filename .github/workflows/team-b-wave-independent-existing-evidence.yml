@@ -1,0 +1,77 @@
+name: Team B independent existing Wave diagnostic custody export
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - team-b/astra-browser-validation-20261003
+    paths:
+      - .github/workflows/team-b-wave-independent-existing-evidence.yml
+      - apps/Web/Tests/ci/sealed-browser-replay/export-independent-wave-diagnostics.py
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export:
+    if: startsWith(github.ref, 'refs/heads/team-b/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Receive only existing sealed Wave diagnostic artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: "11306648191"
+          run-id: "37212388505"
+          repository: CroakyJake12/9to1
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/existing-wave-7f695636/input
+      - name: Verify existing raw records and preserve complete extracted member bodies
+        run: >-
+          python3 apps/Web/Tests/ci/sealed-browser-replay/export-independent-wave-diagnostics.py
+          --input "$RUNNER_TEMP/existing-wave-7f695636/input"
+          --output "$RUNNER_TEMP/existing-wave-7f695636/output"
+      - name: Retain complete small causal JSON and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-independent-existing-wave-causal-11306648191-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7f695636/output/causal
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain complete diagnostic member transport part one
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-independent-existing-wave-member-part01-11306648191-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7f695636/output/transport-parts/part01
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain complete diagnostic member transport part two
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-independent-existing-wave-member-part02-11306648191-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7f695636/output/transport-parts/part02
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain complete diagnostic member transport part three
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-independent-existing-wave-member-part03-11306648191-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7f695636/output/transport-parts/part03
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
