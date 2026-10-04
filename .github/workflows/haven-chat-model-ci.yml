@@ -543,3 +543,126 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           retention-days: 14
+
+  compiler05-original-custody:
+    name: Compiler05 original evidence custody only
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/validation/astra-compiler05-original-custody-20261004' && inputs.expected_commit == github.sha && inputs.cut_manifest_sha256 == '59597e80e8cb8285f38105ad7b1abfde82c0eb48373ccc1c5dad99e0090bcbe7'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Verify root-owned reader source and replay only two pinned compiler05 artifacts
+        timeout-minutes: 20
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import base64, hashlib, json, os, re, sys, urllib.request
+          class Refusal(Exception):
+              pass
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, message, headers, newurl):
+                  return None
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def settle(errors):
+              if len(errors) == 1:
+                  raise errors[0]
+              if errors:
+                  raise BaseExceptionGroup('Trusted reader bootstrap and independent IO failures.', errors)
+          def safe(errors):
+              result=[]
+              for error in errors:
+                  row={'type':type(error).__name__,'code':'BOOTSTRAP_OR_FINAL_IO_FAILURE'}
+                  if isinstance(error, BaseExceptionGroup):
+                      row['causes']=safe(error.exceptions)
+                  result.append(row)
+              return result
+          def unique(pairs):
+              output={}
+              for key,value in pairs:
+                  require(key not in output,'BOOTSTRAP_DUPLICATE_JSON')
+                  output[key]=value
+              return output
+          requests_attempted=0
+          bytes_reserved=0
+          def source(path, expected_bytes, expected_sha):
+              global requests_attempted,bytes_reserved
+              require(requests_attempted<2,'BOOTSTRAP_REQUEST_CAP')
+              requests_attempted+=1
+              bytes_reserved+=131072
+              require(bytes_reserved<=262144,'BOOTSTRAP_ATTEMPT_BYTES_CAP')
+              require(os.environ.get('GITHUB_REPOSITORY')=='CroakyJake12/9to1' and os.environ.get('GITHUB_REF')=='refs/heads/validation/astra-compiler05-original-custody-20261004' and os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch','BOOTSTRAP_CONTEXT_REFUSED')
+              revision=os.environ['GITHUB_SHA']
+              require(re.fullmatch('[0-9a-f]{40}',revision) is not None,'BOOTSTRAP_OWN_COMMIT_REFUSED')
+              token=os.environ.get('GH_TOKEN','')
+              require(token and '\n' not in token and '\r' not in token,'BOOTSTRAP_API_TOKEN_REFUSED')
+              url='https://api.github.com/repos/CroakyJake12/9to1/contents/'+path+'?ref='+revision
+              request=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'astra-compiler05-trusted-reader-bootstrap','Accept-Encoding':'identity'})
+              opener=urllib.request.build_opener(NoRedirect())
+              response=None;errors=[];raw=None
+              try:
+                  response=opener.open(request,timeout=60)
+                  require(response.status==200 and response.headers.get('Content-Encoding','identity').lower()=='identity','BOOTSTRAP_API_RESPONSE_REFUSED')
+                  held=bytearray()
+                  while True:
+                      part=response.read(min(65536,131072-len(held)+1))
+                      if not part:
+                          break
+                      held.extend(part)
+                      require(len(held)<=131072,'BOOTSTRAP_SOURCE_JSON_CAP')
+                  value=json.loads(bytes(held).decode('utf-8',errors='strict'),object_pairs_hook=unique)
+                  require(value['type']=='file' and value['path']==path and value['size']==expected_bytes and value['encoding']=='base64','BOOTSTRAP_SOURCE_DESCRIPTOR_REFUSED')
+                  encoded=''.join(value['content'].split())
+                  raw=base64.b64decode(encoded,validate=True)
+                  require(len(raw)==expected_bytes and hashlib.sha256(raw).hexdigest()==expected_sha,'BOOTSTRAP_SOURCE_WHOLE_HASH_REFUSED')
+                  require(hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==value['sha'],'BOOTSTRAP_SOURCE_GIT_BLOB_REFUSED')
+              except BaseException as error:
+                  if response is None and isinstance(error,urllib.error.HTTPError):
+                      response=error
+                  add(errors,error)
+              if response is not None:
+                  try:
+                      response.close()
+                  except BaseException as error:
+                      add(errors,error)
+              settle(errors)
+              return raw
+          errors=[]
+          namespace=None
+          try:
+              require(sys.version_info>=(3,11) and sys.flags.optimize==0,'BOOTSTRAP_PYTHON_REFUSED')
+              code=source('.github/scripts/astra-compiler05-original-custody.py',57135,'f077b0c5c3ee02aa917f0a5ac8d22e4fa30c12789568cbbf8eaf62534b3719d0')
+              configuration=source('.github/validation/astra-compiler05-original-custody.json',20014,'59597e80e8cb8285f38105ad7b1abfde82c0eb48373ccc1c5dad99e0090bcbe7')
+              namespace={'__name__':'sol_happy_owned_original_custody_reader'}
+              # Only exact root-owned reader source is executed; original artifact payloads are data.
+              exec(compile(code,'root-owned-compiler05-original-custody-reader','exec'),namespace)
+              namespace['main'](json.loads(configuration.decode('utf-8',errors='strict'),object_pairs_hook=unique))
+          except BaseException as error:
+              add(errors,error)
+          if errors:
+              try:
+                  project=namespace['projections'](errors) if namespace is not None and 'projections' in namespace else safe(errors)
+                  print(json.dumps({'status':'COMPILER05_ORIGINAL_CUSTODY_REFUSED','originalCauses':project,'bootstrapRequestsAttempted':requests_attempted,'bootstrapBytesReserved':bytes_reserved},ensure_ascii=True,sort_keys=True),flush=True)
+              except BaseException as error:
+                  add(errors,error)
+              # Never allow Python to print raw network exceptions, tracebacks or temporary signed URLs.
+              sys.exit(1)
+          PY
+      - name: Retain complete original causal text and replay diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: astra-compiler05-original-custody-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/compiler05-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
