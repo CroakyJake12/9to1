@@ -18,7 +18,10 @@ public enum MailUiState
 public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 {
     private object _selectedMessageLifetime = new();
+    private object? _updatingSelectedMessageFlagsLifetime;
     private bool _disposed;
+    internal event Action? SelectedMessageFlagsUpdating;
+    internal event Action<bool>? SelectedMessageFlagsUpdated;
     internal Task Initialization { get; }
     internal Task SelectedMessageLoad { get; private set; } = Task.CompletedTask;
     private readonly IMailService _mail;
@@ -125,6 +128,8 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         get => _selectedSummary;
         set
         {
+            // Native selection bindings report transient rows while the acknowledged row is replaced.
+            if (ReferenceEquals(_updatingSelectedMessageFlagsLifetime, _selectedMessageLifetime)) return;
             if (!SetProperty(ref _selectedSummary, value)) return;
             RetireSelectedMessage();
             SelectedMessageLoad = LoadSelectedMessageAsync();
@@ -522,35 +527,100 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
     {
         if (SelectedMessage is null) return;
         var target = !SelectedMessage.IsRead;
-        await MutateSelectedAsync((account, id) => _mail.SetReadAsync(account, id, target, CancellationToken.None), reload: false);
-        if (SelectedMessage is not null) SelectedMessage = SelectedMessage with { IsRead = target };
+        await MutateSelectedAsync((account, id) => _mail.SetReadAsync(account, id, target, CancellationToken.None),
+            reload: false, onSuccess: () => UpdateSelectedMessageFlags(isRead: target));
     }
 
     private async Task ToggleFlagAsync()
     {
         if (SelectedMessage is null) return;
         var target = !SelectedMessage.IsFlagged;
-        await MutateSelectedAsync((account, id) => _mail.SetFlaggedAsync(account, id, target, CancellationToken.None), reload: false);
-        if (SelectedMessage is not null) SelectedMessage = SelectedMessage with { IsFlagged = target };
+        await MutateSelectedAsync((account, id) => _mail.SetFlaggedAsync(account, id, target, CancellationToken.None),
+            reload: false, onSuccess: () => UpdateSelectedMessageFlags(isFlagged: target));
     }
 
-    private async Task MutateSelectedAsync(Func<Guid, string, Task<MailOperationResult>> action, bool reload = true)
+    private void UpdateSelectedMessageFlags(bool? isRead = null, bool? isFlagged = null, bool? isImportant = null)
     {
-        if (SelectedAccount is null || SelectedMessage is null) return;
+        if (SelectedMessage is not { } message) return;
+        var account = SelectedAccount;
+        var originalLifetime = _selectedMessageLifetime;
+        bool Current() => !_disposed && ReferenceEquals(originalLifetime, _selectedMessageLifetime) &&
+            ReferenceEquals(account, SelectedAccount) && SelectedMessage?.Id == message.Id;
+        var updated = message with
+        {
+            IsRead = isRead ?? message.IsRead,
+            IsFlagged = isFlagged ?? message.IsFlagged,
+            IsImportant = isImportant ?? message.IsImportant
+        };
+        _updatingSelectedMessageFlagsLifetime = originalLifetime;
         try
         {
-            var result = await action(SelectedAccount.AccountId, SelectedMessage.Id);
-            Status = result.Message;
+            SelectedMessageFlagsUpdating?.Invoke();
+            if (!Current()) return;
+            for (var index = 0; index < ThreadMessages.Count; index++)
+            {
+                if (ThreadMessages[index].Id == message.Id) ThreadMessages[index] = updated;
+                if (!Current()) return;
+            }
+            for (var index = 0; index < Messages.Count; index++)
+            {
+                var summary = Messages[index];
+                if (summary.Id != message.Id) continue;
+                Messages[index] = summary with
+                {
+                    IsRead = isRead ?? summary.IsRead,
+                    IsFlagged = isFlagged ?? summary.IsFlagged,
+                    IsImportant = isImportant ?? summary.IsImportant
+                };
+                if (!Current()) return;
+            }
+            if (SelectedSummary is { } selected && selected.Id == message.Id)
+            {
+                var summary = Messages.FirstOrDefault(row => row.Id == message.Id) ?? selected with
+                {
+                    IsRead = isRead ?? selected.IsRead,
+                    IsFlagged = isFlagged ?? selected.IsFlagged,
+                    IsImportant = isImportant ?? selected.IsImportant
+                };
+                // A flag acknowledgement updates the same selection; it must not retire or reread its thread.
+                SetProperty(ref _selectedSummary, summary, nameof(SelectedSummary));
+            }
+            if (!Current()) return;
+            SelectedMessage = updated;
+            if (Current()) NotifyMessageSelectionChanged();
+        }
+        finally
+        {
+            try { SelectedMessageFlagsUpdated?.Invoke(Current()); }
+            finally { _updatingSelectedMessageFlagsLifetime = null; }
+        }
+    }
+
+    private async Task MutateSelectedAsync(Func<Guid, string, Task<MailOperationResult>> action, bool reload = true, Action? onSuccess = null)
+    {
+        var account = SelectedAccount;
+        var message = SelectedMessage;
+        var originalLifetime = _selectedMessageLifetime;
+        bool Current() => !_disposed && ReferenceEquals(originalLifetime, _selectedMessageLifetime) &&
+            ReferenceEquals(account, SelectedAccount) && SelectedMessage?.Id == message?.Id;
+        if (account is null || message is null || !Current()) return;
+        try
+        {
+            var result = await action(account.AccountId, message.Id);
+            if (!Current()) return;
             if (!result.Succeeded)
             {
                 ApplyFailure(result, preserveMessages: true);
                 return;
             }
-            if (reload) await LoadMessagesAsync();
+            Status = result.Message;
+            if (!Current()) return;
+            onSuccess?.Invoke();
+            if (reload && Current()) await LoadMessagesAsync();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            ApplyFailure(ex, preserveMessages: true);
+            if (Current()) ApplyFailure(ex, preserveMessages: true);
         }
     }
 

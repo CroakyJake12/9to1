@@ -150,9 +150,8 @@ public sealed partial class MailPageViewModel
     {
         if (SelectedMessage is null) return;
         var target = !SelectedMessage.IsImportant;
-        await MutateSelectedAsync((account, id) => _mail.SetImportantAsync(account, id, target, CancellationToken.None), reload: false);
-        if (SelectedMessage is not null) SelectedMessage = SelectedMessage with { IsImportant = target };
-        NotifyMessageSelectionChanged();
+        await MutateSelectedAsync((account, id) => _mail.SetImportantAsync(account, id, target, CancellationToken.None),
+            reload: false, onSuccess: () => UpdateSelectedMessageFlags(isImportant: target));
     }
 
     private async Task ExecuteBulkAsync(MailBulkActionKind action)
