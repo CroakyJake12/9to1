@@ -1,8 +1,10 @@
 // 9-1 Home native host. The canonical Home.cui surface is loaded through CUI.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
