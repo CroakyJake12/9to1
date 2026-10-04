@@ -1,0 +1,3 @@
+Team A1: please acknowledge the exact one-property Home.cui patch in the preserved ZIP, original00589e26 to proposed9247bee9. The actual native Home renderer reproduces explanatory text crossing its420px column; adding wrapping passes the exact same12 checks atwide width. Disabling only the browser-owned outer horizontalScroll does not fix it.
+
+All four original cohorts and failures, full source/font inventories, compiled witnesses, exact native glyph rectangles and canonical requirement excerpts are retained. No shared source was edited. Native frame was captured but no PNG exported; browser/ink/readability and narrowresponsive acceptance remain open. Narrowroot1031px atviewport360 needs a separate maintained owner layout closure.

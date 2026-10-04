@@ -1,0 +1,246 @@
+{
+  "recordedUTC": "2026-10-04T01:10:40.779815+00:00",
+  "zip": {
+    "path": "home-hero-wrap-owner-request.zip",
+    "bytes": 1023153,
+    "sha256": "f25073a34aaf6c48edde9cc4da3d09c784987545eca430d6c8235b9081256d3b"
+  },
+  "members": [
+    {
+      "path": "Home.hero-wrap.proposed.cui",
+      "bytes": 11976,
+      "sha256": "9247bee96e0b7a6caba1ec74f3cc3ae99420dfec2deaea2d7828a459fbfb33fd"
+    },
+    {
+      "path": "Home.original.cui",
+      "bytes": 11955,
+      "sha256": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571"
+    },
+    {
+      "path": "OWNER-ACK-REQUEST.md",
+      "bytes": 2149,
+      "sha256": "6f0093d24d1ac45eb2264e2706d22e48c9655c7039e16485ac2b68f4593586ee"
+    },
+    {
+      "path": "actual-source/9to1 Workspace/Home/HavenOS.Home.csproj",
+      "bytes": 1745,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserAccessibilityBridge.cs",
+      "bytes": 6998,
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserAccessibilityJsonContext.cs",
+      "bytes": 389,
+      "sha256": "86b6b7b9aa6d39f4b0f51157322fd93ed599a9655c02d8d73ac7f662ab97d851"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserActionAvailability.cs",
+      "bytes": 7180,
+      "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserApplication.cs",
+      "bytes": 14521,
+      "sha256": "80826b95eecbfcb047654cf5dd3aa3033e9aaef7bc89080f93a4db90d7d3971e"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserHomeContext.cs",
+      "bytes": 3223,
+      "sha256": "67d160a6cb30ed2bc5c1020235d02ba931fe276aeb23c83003263a4e48923829"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserRouteCodec.cs",
+      "bytes": 4164,
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserRouteDispatcher.cs",
+      "bytes": 2559,
+      "sha256": "0deb17b239d0cabe89f0c65633ea00275a415761955c51b0dd7b827c73d06ae6"
+    },
+    {
+      "path": "actual-source/apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 8412,
+      "sha256": "e329dd3847875a596eb46e9aaa108aad3d6821ee24cace034d1082f0b76d3ece"
+    },
+    {
+      "path": "actual-source/apps/Web/Tests/BrowserRenderPlatformShims.cs",
+      "bytes": 1183,
+      "sha256": "d261718ea1a2a991c29afe9736c4e247a57d4ed045ea331ef7eedd37dd26347d"
+    },
+    {
+      "path": "actual-source/apps/Web/Tests/HomeGlyphLayout.Tests.csproj",
+      "bytes": 1153,
+      "sha256": "1944be3d7b1be12b24669ce1ad2d3ca0258f023e18104dc656cd8e2a03c55bce"
+    },
+    {
+      "path": "actual-source/apps/Web/Tests/HomeGlyphLayoutRegression.cs",
+      "bytes": 7197,
+      "sha256": "18ff4577f3bc535cc6d0b4ba53c28225e64a99119fbacde1ea637ec40fcb51f2"
+    },
+    {
+      "path": "actual-source/apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    {
+      "path": "actual-source/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "actual-source/framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    },
+    {
+      "path": "actual-source/framework/CUI/Runtime/CuiNativeHost.cs",
+      "bytes": 4202,
+      "sha256": "fe6b426a09c72f3ffe59ea6e1225d10b077da0f6869701dbe323e81f17d47b0c"
+    },
+    {
+      "path": "actual-source/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Media/TextFormatting/TextLayout.cs",
+      "bytes": 25307,
+      "sha256": "990dba419db414b2373c10fd9152085a76772cc1495dad59e3f6d90620debe3e"
+    },
+    {
+      "path": "actual-source/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Presenters/ScrollContentPresenter.cs",
+      "bytes": 44679,
+      "sha256": "3967b62e867bfde0799660c610ae96bd7246196cd67a89612a2f0a30312737af"
+    },
+    {
+      "path": "actual-source/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/StackPanel.cs",
+      "bytes": 18890,
+      "sha256": "c4325c6c722dc84a5254ce2d0aa7fa391d03d33e771ad5ce821f889d96fd741f"
+    },
+    {
+      "path": "actual-source/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TextBlock.cs",
+      "bytes": 34179,
+      "sha256": "408cd0ef2f97ff51c7b4901f42c63ad73f767373dc030016887d722da5ee0dd7"
+    },
+    {
+      "path": "canonical-relevant-paragraphs.json",
+      "bytes": 5312,
+      "sha256": "b29ad3f0db6f9ba4130b55ebbf823b26a574e3c751c14c35dbfcebfe9d011f23"
+    },
+    {
+      "path": "direct-closure-preflight.json",
+      "bytes": 2837,
+      "sha256": "6724987f46f64f7809fc08f654063cca112bc5068e064198714615a0c0c0cc10"
+    },
+    {
+      "path": "executed-native-results.json",
+      "bytes": 46161,
+      "sha256": "4698b5de2afa00b51a23ecaac431243bec7a5251728fce298b6b93596e564346"
+    },
+    {
+      "path": "font-source-pins.json",
+      "bytes": 4918,
+      "sha256": "c9504d695052582e310a746d31d9be7b1b735d0294a86d99f754252b5e4d1144"
+    },
+    {
+      "path": "hero-wrap-owner-request.patch",
+      "bytes": 913,
+      "sha256": "0c0d55c54fd00db992a02393620e6d990100059bedd7fcc92af0080c36cd0ed4"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 8612,
+      "sha256": "6edfdf96ddd617384638323fb1c8b9eff3163a57a5df8cbeaad631872b45cd5c"
+    },
+    {
+      "path": "native-run01/HomeGlyphLayout.Tests.dll",
+      "bytes": 123392,
+      "sha256": "42cdb5d58b3729d6a18867b4a4db6a9de37f34936d9af2d1417e12a2bb4dca7f"
+    },
+    {
+      "path": "native-run01/build.log",
+      "bytes": 13143,
+      "sha256": "b992eb677d0f34761b9ba51f78577767b0cb7395b2cf55cee68ff483df056f3b"
+    },
+    {
+      "path": "native-run01/canonical-1440.json",
+      "bytes": 13029,
+      "sha256": "45267ca7068d3180605f4ad8852ae673e98ff076232c8dc4266a72dd78796601"
+    },
+    {
+      "path": "native-run01/canonical-1440.log",
+      "bytes": 1035,
+      "sha256": "80c4c5e901d9881bd3573a1092ebcc5b8b3b8459168588d50473504b4c8c476f"
+    },
+    {
+      "path": "native-run01/canonical-360.json",
+      "bytes": 12982,
+      "sha256": "8c31d8ab3cf8c807ae80a53ad868a2655f528e68eefcfd0d445c0394da3e4853"
+    },
+    {
+      "path": "native-run01/canonical-360.log",
+      "bytes": 1035,
+      "sha256": "80c4c5e901d9881bd3573a1092ebcc5b8b3b8459168588d50473504b4c8c476f"
+    },
+    {
+      "path": "native-run01/canonical-outer-disabled.json",
+      "bytes": 13032,
+      "sha256": "b8407b010a50bf88c38b0cd421405024d153390a914b592be67408947e8986f6"
+    },
+    {
+      "path": "native-run01/canonical-outer-disabled.log",
+      "bytes": 1035,
+      "sha256": "80c4c5e901d9881bd3573a1092ebcc5b8b3b8459168588d50473504b4c8c476f"
+    },
+    {
+      "path": "native-run01/cohort-commands-results.json",
+      "bytes": 2533,
+      "sha256": "908e855bebd0cbd577ff056bd3c93080943cf4c97cf26add83e9cbec0837e1c5"
+    },
+    {
+      "path": "native-run01/gate-context.json",
+      "bytes": 443,
+      "sha256": "70aefc54632f67ffe9113f82814cc9de249ed37f6c4da3c147e3ede5fb5c8ad5"
+    },
+    {
+      "path": "native-run01/proposal-1440.json",
+      "bytes": 15012,
+      "sha256": "73dc2621e4f8932cecde62278d71bf2e652c6e46b11dc4f18e4c4ff1b72661c0"
+    },
+    {
+      "path": "native-run01/proposal-1440.log",
+      "bytes": 628,
+      "sha256": "292c4532ad7b7b121624f468bc548707bdfbf00f064db437a6f075c5891acd95"
+    },
+    {
+      "path": "native-run01/source-after.json",
+      "bytes": 1590927,
+      "sha256": "5ea9cb5e307409ad4e7daf0620fb88caa6af1ceb2ce3bc9d1554b487bc0af364"
+    },
+    {
+      "path": "native-run01/source-before.json",
+      "bytes": 1590927,
+      "sha256": "5ea9cb5e307409ad4e7daf0620fb88caa6af1ceb2ce3bc9d1554b487bc0af364"
+    },
+    {
+      "path": "review.json",
+      "bytes": 9822,
+      "sha256": "414bcd7f1a886c24a7506e420e7e407b2f984442c85e1660e7a32884a3e6d335"
+    },
+    {
+      "path": "sdk-commands.json",
+      "bytes": 3601,
+      "sha256": "795a9c9ecf89fe69c5ac9326aea281f75ea460475b67258eb93b8cdf537d31d4"
+    },
+    {
+      "path": "source-diagnosis-proposal.json",
+      "bytes": 5430,
+      "sha256": "430da93b7e8fce455d72288453b53a9a5ed67ec13ada8b1491fe498fbf3298f5"
+    }
+  ],
+  "sourceOriginalSha256": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571",
+  "sourceProposedSha256": "9247bee96e0b7a6caba1ec74f3cc3ae99420dfec2deaea2d7828a459fbfb33fd",
+  "request": "A1 exactACK to one existingTextBlock text-wrapping=Wrap addition. No shared source applied.",
+  "actual": "Same12nativechecks originalwide10PASS2FAIL, narrow10PASS2FAIL, browserhosthorizontalDisable10PASS2FAIL; proposalwide12PASS0FAIL. Actualcopyrange439.6875 inside420px.",
+  "qualification": "NativeactualBrowserApplication.Render80826/currentCUI/font/sourceclosure7789beforeafter unchanged. NoPNG exported/noink/readability/browseracceptance. Narrowroot1031px atviewport360 stillseparateownerresponsivehold.",
+  "productionApplied": false
+}
