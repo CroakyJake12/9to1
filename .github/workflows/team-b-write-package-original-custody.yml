@@ -1,0 +1,488 @@
+name: Team B exact existing Write package original ZIP custody
+
+on:
+  push:
+    branches: [custody/team-b-write-package-69cff-original-parts400k-20261004]
+    paths:
+      - .github/workflows/team-b-write-package-original-custody.yml
+      - apps/Web/Write/Tests/ci/export-existing-write-package-original-parts.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-archive:
+    if: github.ref == 'refs/heads/custody/team-b-write-package-69cff-original-parts400k-20261004' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact custody source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify and split exact existing original archive
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Write/Tests/ci/export-existing-write-package-original-parts.py
+          --output "$RUNNER_TEMP/team-b-write-original-custody"
+      - name: Upload bounded custody diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-custody-diagnostics-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload original bytes fragment01
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part01-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part01/original-outer-part01.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment02
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part02-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part02/original-outer-part02.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment03
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part03-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part03/original-outer-part03.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment04
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part04-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part04/original-outer-part04.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment05
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part05-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part05/original-outer-part05.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment06
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part06-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part06/original-outer-part06.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment07
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part07-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part07/original-outer-part07.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment08
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part08-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part08/original-outer-part08.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment09
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part09-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part09/original-outer-part09.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment10
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part10-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part10/original-outer-part10.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment11
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part11-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part11/original-outer-part11.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment12
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part12-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part12/original-outer-part12.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment13
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part13-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part13/original-outer-part13.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment14
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part14-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part14/original-outer-part14.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment15
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part15-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part15/original-outer-part15.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment16
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part16-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part16/original-outer-part16.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment17
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part17-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part17/original-outer-part17.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment18
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part18-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part18/original-outer-part18.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment19
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part19-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part19/original-outer-part19.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment20
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part20-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part20/original-outer-part20.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment21
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part21-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part21/original-outer-part21.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment22
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part22-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part22/original-outer-part22.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment23
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part23-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part23/original-outer-part23.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment24
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part24-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part24/original-outer-part24.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment25
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part25-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part25/original-outer-part25.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment26
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part26-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part26/original-outer-part26.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment27
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part27-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part27/original-outer-part27.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment28
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part28-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part28/original-outer-part28.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment29
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part29-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part29/original-outer-part29.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment30
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part30-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part30/original-outer-part30.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment31
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part31-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part31/original-outer-part31.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment32
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part32-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part32/original-outer-part32.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment33
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part33-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part33/original-outer-part33.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment34
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part34-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part34/original-outer-part34.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment35
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part35-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part35/original-outer-part35.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment36
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part36-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part36/original-outer-part36.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment37
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part37-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part37/original-outer-part37.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment38
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part38-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part38/original-outer-part38.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment39
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part39-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part39/original-outer-part39.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment40
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part40-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part40/original-outer-part40.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment41
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part41-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part41/original-outer-part41.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment42
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part42-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part42/original-outer-part42.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment43
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part43-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part43/original-outer-part43.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment44
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part44-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part44/original-outer-part44.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment45
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part45-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part45/original-outer-part45.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment46
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part46-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part46/original-outer-part46.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment47
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part47-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part47/original-outer-part47.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment48
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part48-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part48/original-outer-part48.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment49
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part49-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part49/original-outer-part49.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment50
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part50-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part50/original-outer-part50.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment51
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part51-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part51/original-outer-part51.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment52
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part52-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part52/original-outer-part52.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment53
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part53-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part53/original-outer-part53.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment54
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part54-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part54/original-outer-part54.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment55
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part55-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part55/original-outer-part55.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment56
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part56-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part56/original-outer-part56.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment57
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part57-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part57/original-outer-part57.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment58
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part58-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part58/original-outer-part58.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment59
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part59-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part59/original-outer-part59.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment60
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part60-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part60/original-outer-part60.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment61
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part61-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part61/original-outer-part61.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment62
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part62-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part62/original-outer-part62.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment63
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part63-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part63/original-outer-part63.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment64
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-original-outer-part64-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-write-original-custody/part64/original-outer-part64.zip
+          if-no-files-found: error
+          retention-days: 7
