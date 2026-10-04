@@ -7,7 +7,7 @@ namespace NineToOne.Web;
 /// <summary>Platform presentation binding for a successful, owner-provided domain route.</summary>
 public sealed record BrowserCuiSurface(CuiDocument Document, ICuiBindingContext Bindings,
     ICuiActionDispatcher Actions, IDisposable? Lifetime = null, CuiControlRegistry? ControlRegistry = null,
-    IBrowserPresentationAdmission? Admission = null, bool ConstrainHorizontalLayout = false);
+    IBrowserPresentationAdmission? Admission = null);
 
 /// <summary>Commit a prepared owner view only after the candidate CUI successfully loads.</summary>
 public interface IBrowserPresentationAdmission

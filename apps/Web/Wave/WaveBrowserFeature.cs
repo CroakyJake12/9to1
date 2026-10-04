@@ -60,7 +60,7 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
     {
         if (view.RouteId != RouteId || view.ViewId != "wave.local-editor") throw new ArgumentException("Invalid Wave surface.");
         _view?.Dispose(); _view = new(_session);
-        return new(_document, _session, _session, _view);
+        return new(_document, _session, _session, _view, ConstrainHorizontalLayout: true);
     }
 
     public void Dispose()

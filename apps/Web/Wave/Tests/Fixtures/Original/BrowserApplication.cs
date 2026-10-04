@@ -198,10 +198,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                     _scrollOffsets.Remove(_scrollOffsets.Keys.First());
                 _scrollOffsets[_currentAddress] = previousScroll.Offset;
             }
-            // The surface owner may opt into finite-width reflow; other surfaces retain their authored extent.
-            var scroll = new ScrollViewer { Content = root, HorizontalScrollBarVisibility = surface.ConstrainHorizontalLayout
-                ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled
-                : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
+            var scroll = new ScrollViewer { Content = root, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
             if (_scrollOffsets.TryGetValue(address, out var offset))
                 scroll.Loaded += (_, _) => scroll.Offset = offset;
             _view.Content = scroll;
