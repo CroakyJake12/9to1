@@ -52,6 +52,18 @@ internal static class Program
             .WithInterFont();
     }
 
+    /// <summary>The trusted native producer supplies the protected verifier and registered owners;
+    /// no command-line app claim or compatibility response constructs this composition.</summary>
+    internal static AppBuilder BuildOriginalWindowsApp(HomeNativeWindowsComposition originalComposition)
+    {
+        ArgumentNullException.ThrowIfNull(originalComposition);
+        return AppBuilder.Configure(() => new HomeApp(originalComposition))
+            .UseWin32()
+            .UseSkia()
+            .UseHarfBuzz()
+            .WithInterFont();
+    }
+
     internal static string? FindCuiFile()
     {
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -89,6 +101,7 @@ internal sealed class HomeApp : Application
     private readonly CuiViewModel _viewModel = new();
     private readonly HomeDashboard _dashboard = new();
     private readonly IHomeCoreStateStore _coreStateStore;
+    private readonly HomeNativeWindowsComposition _nativeComposition;
     private readonly HomeProductivityEngineService _productivityEngine;
     private readonly HomeCoreRuntime _homeCore;
     private readonly HomeCoreApi _homeCoreApi;
@@ -98,57 +111,80 @@ internal sealed class HomeApp : Application
     private CuiControlLoader? _loader;
     private readonly HomeHostOriginalLifetime _originalLifetime;
     private IClassicDesktopStyleApplicationLifetime? _desktop;
+    private bool _nativeInitializationFailed;
 
-    public HomeApp()
+    public HomeApp() : this(HomeNativeWindowsComposition.CreateCandidate()) { }
+
+    internal HomeApp(HomeNativeWindowsComposition originalComposition)
     {
-        _coreStateStore = FileHomeCoreStateStore.CreateDefault();
-        var authorization = new DenyAllHomeCoreAuthorization();
-        _productivityEngine = new HomeProductivityEngineService();
-        _homeCore = new HomeCoreRuntime([new HomeCoreStateService(_coreStateStore), _productivityEngine], authorization);
-        _homeCoreApi = new HomeCoreApi(_homeCore, authorization);
+        _nativeComposition = originalComposition ?? throw new ArgumentNullException(nameof(originalComposition));
+        _coreStateStore = originalComposition.StateStore;
+        _productivityEngine = originalComposition.Productivity;
+        _homeCore = originalComposition.Runtime;
+        _homeCoreApi = originalComposition.Api;
         _controller = new HomeCuiController(_dashboard);
         _originalLifetime = new HomeHostOriginalLifetime(CloseOriginalCoreAsync, ExitOriginalDesktopAsync);
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Home Core is ready before Home presents its normal shell. State corruption leaves the
-        // control plane explicitly degraded while preserving the original state for repair.
-        _ = _homeCore.StartAsync().GetAwaiter().GetResult();
-        ApplySnapshot(_controller.ShowCurrent());
-        _homeCoreSubscription = _homeCore.Subscribe(OnHomeCoreChanged);
-        _viewModel.On("InstallAllUpdates", _ => _ = RunOriginalNativeWork(InstallAllAsync));
-        RegisterUnavailableAction("OpenStudio", "Studio navigation is not connected in this host.");
-        RegisterUnavailableAction("OpenWrite", "Write navigation is not connected in this host.");
-        RegisterUnavailableAction("OpenBrowse", "Browse navigation is not connected in this host.");
-        RegisterUnavailableAction("OpenData", "Data navigation is not connected in this host.");
-        RegisterUnavailableAction("OpenBoards", "Boards navigation is not connected in this host.");
-        _viewModel.On("NavigateHome", _ => ReportUnavailable("Home is already open."));
-        _viewModel.SetActionAvailability("NavigateHome", true);
-        RegisterUnavailableAction("NavigateSpaces", "Spaces navigation is not connected in this host.");
-        RegisterUnavailableAction("NavigateApps", "Apps navigation is not connected in this host.");
-        RegisterUnavailableAction("NavigateLibrary", "Library navigation is not connected in this host.");
-        RegisterUnavailableAction("NavigateEvents", "Events navigation is not connected in this host.");
-        RegisterUnavailableAction("NavigateAutomations", "Automations navigation is not connected in this host.");
-        RegisterUnavailableAction("NavigateDiscover", "Discover navigation is not connected in this host.");
-        RegisterUnavailableAction("NavigateSettings", "Settings navigation is not connected in this host.");
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        try
         {
-            // Closing the visible shell must not tear down the shared service lifetime. The core
-            // stops only when the process receives an explicit application shutdown request.
-            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            _desktop = desktop;
-            desktop.ShutdownRequested += (_, request) =>
-            {
-                request.Cancel = true;
-                _ = RequestProcessShutdownAsync();
-            };
-            var window = BuildWindow();
-            desktop.MainWindow = window;
-        }
+            // Home Core is ready before Home presents its normal shell. State corruption leaves the
+            // control plane explicitly degraded while preserving the original state for repair.
+            var originalStart = _originalLifetime.TryRunOriginal(_nativeComposition.StartOriginalAsync)
+                ?? throw new InvalidOperationException("The original native Home startup was refused.");
+            originalStart.GetAwaiter().GetResult();
+            if (!_nativeComposition.InstalledPeerAdmissionConfigured)
+                Console.WriteLine("[9-1 Home] Protected installed-peer verification is not configured; app admission is unavailable.");
+            ApplySnapshot(_controller.ShowCurrent());
+            _homeCoreSubscription = _homeCore.Subscribe(OnHomeCoreChanged);
+            _viewModel.On("InstallAllUpdates", _ => _ = RunOriginalNativeWork(InstallAllAsync));
+            RegisterUnavailableAction("OpenStudio", "Studio navigation is not connected in this host.");
+            RegisterUnavailableAction("OpenWrite", "Write navigation is not connected in this host.");
+            RegisterUnavailableAction("OpenBrowse", "Browse navigation is not connected in this host.");
+            RegisterUnavailableAction("OpenData", "Data navigation is not connected in this host.");
+            RegisterUnavailableAction("OpenBoards", "Boards navigation is not connected in this host.");
+            _viewModel.On("NavigateHome", _ => ReportUnavailable("Home is already open."));
+            _viewModel.SetActionAvailability("NavigateHome", true);
+            RegisterUnavailableAction("NavigateSpaces", "Spaces navigation is not connected in this host.");
+            RegisterUnavailableAction("NavigateApps", "Apps navigation is not connected in this host.");
+            RegisterUnavailableAction("NavigateLibrary", "Library navigation is not connected in this host.");
+            RegisterUnavailableAction("NavigateEvents", "Events navigation is not connected in this host.");
+            RegisterUnavailableAction("NavigateAutomations", "Automations navigation is not connected in this host.");
+            RegisterUnavailableAction("NavigateDiscover", "Discover navigation is not connected in this host.");
+            RegisterUnavailableAction("NavigateSettings", "Settings navigation is not connected in this host.");
 
-        base.OnFrameworkInitializationCompleted();
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                // Closing the visible shell must not tear down the shared service lifetime. The core
+                // stops only when the process receives an explicit application shutdown request.
+                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                _desktop = desktop;
+                desktop.ShutdownRequested += (_, request) =>
+                {
+                    request.Cancel = true;
+                    _ = RequestProcessShutdownAsync();
+                };
+                var window = BuildWindow();
+                desktop.MainWindow = window;
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
+        catch (Exception original)
+        {
+            // No native loop has started. Drain the original Home owner without queuing an
+            // exit callback to a dispatcher whose initialization just failed.
+            _nativeInitializationFailed = true;
+            Exception? cleanup = null;
+            try { _originalLifetime.RequestShutdownAsync().GetAwaiter().GetResult(); }
+            catch (Exception error) { cleanup = error; }
+            if (cleanup is not null && !ReferenceEquals(original, cleanup))
+                throw new AggregateException("Original native Home initialization and shutdown failed.", original, cleanup);
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original).Throw();
+            throw;
+        }
     }
 
     internal Window BuildWindow()
@@ -313,7 +349,7 @@ internal sealed class HomeApp : Application
         Exception? coreFailure = null;
         try
         {
-            var original = _homeCore.DisposeAsync().AsTask();
+            var original = _nativeComposition.CloseAndDrainAsync();
             await original.ConfigureAwait(false);
         }
         catch (Exception error) { coreFailure = error; }
@@ -328,7 +364,8 @@ internal sealed class HomeApp : Application
     }
 
     private Task ExitOriginalDesktopAsync(int exitCode) =>
-        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => _desktop!.Shutdown(exitCode)).GetTask();
+        _nativeInitializationFailed ? Task.CompletedTask :
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => _desktop!.Shutdown(exitCode)).GetTask();
 
     internal HomeCoreRuntime HomeCore => _homeCore;
     internal IHomeCoreApi HomeCoreApi => _homeCoreApi;
