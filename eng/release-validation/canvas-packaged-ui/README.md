@@ -188,3 +188,14 @@ contains current binding booleans/role/PID plus bounded32768-character value/
 expected lengths/SHA/equality, never either text or private paths. Real async
 input/value timing is a hypothesis pending actual observation; new native success
 still requires all original package/setup/approval/stroke/durability/reopen gates.
+
+This branch runs a separate three-minute Windows PowerShell 5.1 setup-only
+argument-binding witness. Controlled ordinary CLR classes copy only the documented
+public Equals(object) cast/null shape and typed Compare parameter shape. They are
+never UIA providers and never represent an app control; no installed AutomationElement
+method is exercised, and no package, native app, profile, input or state is touched.
+Versions, fixed type booleans, method-call counts and controlled equality results
+are retained. The original c434 20-second refusal, Equals identity criterion and
+value guard remain byte-exact. PS7 controls did not reproduce wrapping; the actual
+PS5 result remains unobserved. Neither controlled result proves the original
+Canvas failure cause or authorizes a speculative identity-API replacement.

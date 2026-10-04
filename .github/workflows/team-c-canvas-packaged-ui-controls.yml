@@ -1,73 +1,120 @@
-name: Team C immutable Canvas native workflow controls (unaccepted)
+name: Team C Canvas PS5 public signature binding witness (setup only)
 on:
   push:
-    branches: [team-c/sol-happy-c3-canvas-address-observation-20261004]
+    branches: [team-c/sol-happy-c3-canvas-ps51-identity-signature-20261004]
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
 concurrency:
-  group: team-c-canvas-native-workflow-${{ github.ref }}
+  group: team-c-canvas-ps51-signature-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  packaged-ui:
+  signature-witness:
     runs-on: windows-2022
-    timeout-minutes: 12
-    env:
-      GIT_OPTIONAL_LOCKS: '0'
+    timeout-minutes: 3
     steps:
-      - name: Preserve exact source line endings
-        shell: powershell
-        run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Verify immutable original producer and read-only inspector metadata
+      - name: Observe actual Windows PowerShell object and typed CLR signatures
         shell: powershell
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          PROBE_OUTPUT: ${{ runner.temp }}/canvas-ps51-signature-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          $ErrorActionPreference = 'Stop'
-          $c = Get-Content -Raw .github/validation/canvas-packaged-ui-controls.json | ConvertFrom-Json
-          if ($env:GITHUB_REPOSITORY -cne $c.repository) { throw 'Wrong repository.' }
-          $headers = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28' }
-          $base = "https://api.github.com/repos/$($c.repository)/actions"
-          foreach ($expected in $c.artifacts) {
-            $run = Invoke-RestMethod -Headers $headers -Uri "$base/runs/$($expected.runId)"
-            if ($run.head_sha -cne $expected.headSha) { throw 'Pinned original run source mismatch.' }
-            $a = Invoke-RestMethod -Headers $headers -Uri "$base/artifacts/$($expected.id)"
-            if ($a.id -ne $expected.id -or $a.name -cne $expected.name -or $a.size_in_bytes -ne $expected.size_in_bytes -or $a.digest -cne $expected.digest -or $a.expired -or $a.workflow_run.id -ne $expected.runId -or $a.workflow_run.head_sha -cne $expected.headSha) { throw 'Immutable original artifact tuple mismatch or expiry.' }
+          $ErrorActionPreference='Stop'
+          Set-StrictMode -Version Latest
+          $result=[ordered]@{schemaVersion=1;status='NOT_RUN';sourceCommit=$env:GITHUB_SHA;runId=$env:GITHUB_RUN_ID;powerShellVersion=$PSVersionTable.PSVersion.ToString();powerShellEdition=$PSVersionTable.PSEdition;clrVersion=[Environment]::Version.ToString();windowsVersion=[Environment]::OSVersion.VersionString;runnerImage=$env:ImageVersion;checks=@();observations=@();failure=$null;nativeApplication='NOT_RUN';actualAutomationElementMethods='NOT_RUN';registration='NOT_RUN';privateValue='NOT_READ';qualification='Controlled ordinary CLR copies of documented public object/typed method signatures only. Actual Windows PowerShell argument-binding witness; not installed UIAutomation methods, UI identity, provider or Canvas acceptance. No package, app, profile, OS input, Home request or canonical state.'}
+          function Write-Witness {$result|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $env:PROBE_OUTPUT 'result.json') -Encoding UTF8}
+          function Assert-Witness([bool]$Condition,[string]$Name){$result.checks+=[ordered]@{name=$Name;passed=$Condition};if(-not $Condition){throw $Name}}
+          $exitCode=1
+          try{
+              if(Test-Path -LiteralPath $env:PROBE_OUTPUT){throw 'Witness output must be new.'}
+              [void][IO.Directory]::CreateDirectory($env:PROBE_OUTPUT)
+              Assert-Witness ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) 'Actual Windows operating system'
+              Assert-Witness ($PSVersionTable.PSVersion.Major -eq 5 -and $PSVersionTable.PSEdition -ceq 'Desktop') 'Actual Windows PowerShell5 desktop host'
+              # This controlled class deliberately has a different namespace and is never
+              # registered as a UIA provider or passed to a real UIA API. Equals(object)
+              # follows the documented public cast/null shape. Both comparison methods
+              # then use the same controlled equality operation, with no UIA substitution.
+              Add-Type -TypeDefinition @'
+          using System;
+          namespace TeamCCanvasSignatureWitness {
+              public sealed class ControlledElement {
+                  public int ControlledIdentity;
+                  public static ControlledElement FocusedElement {get;set;}
+                  public static object LastObjectArgument;
+                  public static int ObjectCalls;
+                  public static int TypedCalls;
+                  public override bool Equals(object obj) {
+                      ObjectCalls++;LastObjectArgument=obj;
+                      ControlledElement el=obj as ControlledElement;
+                      if(obj==null || el==null) return false;
+                      return SameControlledIdentity(this,el);
+                  }
+                  public override int GetHashCode(){return ControlledIdentity;}
+                  public static bool Compare(ControlledElement a,ControlledElement b) {
+                      TypedCalls++;
+                      if(a==null)throw new ArgumentNullException("a");
+                      if(b==null)throw new ArgumentNullException("b");
+                      return SameControlledIdentity(a,b);
+                  }
+                  static bool SameControlledIdentity(ControlledElement a,ControlledElement b){return a.ControlledIdentity==b.ControlledIdentity;}
+              }
           }
-      - name: Download exact original package inside Windows runner
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: 37203799923
-          artifact-ids: 11304710012
-          path: ${{ runner.temp }}/canvas-package-input
-      - name: Download exact original read-only manifest observations
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: 37205514551
-          artifact-ids: 11303769280
-          path: ${{ runner.temp }}/canvas-observation-input
-      - name: Observe actual native Files setup, Canvas creation, stroke commit and reopen
-        shell: powershell
-        env:
-          PROBE_OUTPUT: ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}
-        run: |
-          & .github/scripts/canvas-packaged-ui-controls.ps1 -PackageInput '${{ runner.temp }}/canvas-package-input' -ObservationInput '${{ runner.temp }}/canvas-observation-input' -OutputDirectory $env:PROBE_OUTPUT
-          exit $LASTEXITCODE
-      - name: Retain original bounded observations and failures only
+          '@
+              $elementType=[TeamCCanvasSignatureWitness.ControlledElement]
+              $objectMethod=$elementType.GetMethod('Equals',[type[]]@([object]))
+              $typedMethod=$elementType.GetMethod('Compare',[type[]]@($elementType,$elementType))
+              Assert-Witness ($objectMethod.IsPublic -and -not $objectMethod.IsStatic -and $objectMethod.GetParameters()[0].ParameterType -eq [object]) 'Controlled public instance object signature'
+              Assert-Witness ($typedMethod.IsPublic -and $typedMethod.IsStatic -and $typedMethod.GetParameters()[0].ParameterType -eq $elementType -and $typedMethod.GetParameters()[1].ParameterType -eq $elementType) 'Controlled public static typed signature'
+              function New-ControlledElement([int]$Identity){$e=[TeamCCanvasSignatureWitness.ControlledElement]::new();$e.ControlledIdentity=$Identity;return $e}
+              function Observe-ControlledSignatures($Editor,[string]$Label,[bool]$Expected){
+                  # Same untyped function parameter and typed static-property focus read
+                  # as the preserved Canvas observation; no underlying UI is simulated.
+                  $focus=[TeamCCanvasSignatureWitness.ControlledElement]::FocusedElement
+                  $beforeObject=[TeamCCanvasSignatureWitness.ControlledElement]::ObjectCalls
+                  $beforeTyped=[TeamCCanvasSignatureWitness.ControlledElement]::TypedCalls
+                  $instance=$Editor.Equals($focus)
+                  $argument=[TeamCCanvasSignatureWitness.ControlledElement]::LastObjectArgument
+                  $typed=[TeamCCanvasSignatureWitness.ControlledElement]::Compare($Editor,$focus)
+                  $argumentIsExactElement=$argument -is [TeamCCanvasSignatureWitness.ControlledElement]
+                  $argumentIsPowerShellWrapper=$argument -is [System.Management.Automation.PSObject]
+                  $result.observations+=[ordered]@{case=$Label;instanceEquals=$instance;typedCompare=$typed;argumentIsExactControlledElement=$argumentIsExactElement;argumentIsPowerShellWrapper=$argumentIsPowerShellWrapper;expectedControlledEquality=$Expected;objectCallCountDelta=([TeamCCanvasSignatureWitness.ControlledElement]::ObjectCalls-$beforeObject);typedCallCountDelta=([TeamCCanvasSignatureWitness.ControlledElement]::TypedCalls-$beforeTyped)}
+                  Assert-Witness ($typed -eq $Expected) ($Label+': typed signature preserved controlled equality')
+                  Assert-Witness ($instance -eq ($argumentIsExactElement -and $Expected)) ($Label+': object result matches actually observed argument cast')
+                  Assert-Witness ([TeamCCanvasSignatureWitness.ControlledElement]::ObjectCalls-$beforeObject -eq 1 -and [TeamCCanvasSignatureWitness.ControlledElement]::TypedCalls-$beforeTyped -eq 1) ($Label+': one object call and one typed call')
+              }
+              $editor=New-ControlledElement 7
+              [TeamCCanvasSignatureWitness.ControlledElement]::FocusedElement=$editor
+              Observe-ControlledSignatures $editor 'same-clr-reference-untyped-function' $true
+              [TeamCCanvasSignatureWitness.ControlledElement]::FocusedElement=New-ControlledElement 7
+              Observe-ControlledSignatures $editor 'distinct-clr-instances-same-controlled-identity' $true
+              [TeamCCanvasSignatureWitness.ControlledElement]::FocusedElement=New-ControlledElement 8
+              Observe-ControlledSignatures $editor 'distinct-controlled-identity' $false
+              [TeamCCanvasSignatureWitness.ControlledElement]::FocusedElement=New-ControlledElement 7
+              $holder=[pscustomobject]@{Value=$editor}
+              Observe-ControlledSignatures $holder.Value 'note-property-function-argument' $true
+              $returned=& {$editor}
+              Observe-ControlledSignatures $returned 'pipeline-returned-function-argument' $true
+              Observe-ControlledSignatures ([object]$editor) 'explicit-object-function-argument' $true
+              Observe-ControlledSignatures ([System.Management.Automation.PSObject]::AsPSObject($editor)) 'explicit-psobject-function-argument' $true
+              $same=@($result.observations|Where-Object {$_.expectedControlledEquality})
+              $result.sameControlledIdentityCases=$same.Count
+              $result.observedObjectWrappingRefusals=@($same|Where-Object {-not $_.instanceEquals -and $_.typedCompare}).Count
+              $originalShape=@($same|Where-Object {$_.case -in @('same-clr-reference-untyped-function','distinct-clr-instances-same-controlled-identity')})
+              $result.originalShapeObjectWrappingRefusals=@($originalShape|Where-Object {-not $_.instanceEquals -and $_.typedCompare}).Count
+              $result.actualCanvasFailureCause='UNESTABLISHED_BY_CONTROLLED_SIGNATURES'
+              $result.status='OBSERVED_CONTROLLED_CLR_SIGNATURES_ONLY'
+              $exitCode=0
+          }catch{
+              $result.status='FAILED_OR_BLOCKED_SETUP_ONLY'
+              $result.failure=[ordered]@{type=$_.Exception.GetType().FullName;rawExceptionText='WITHHELD'}
+          }finally{
+              if(Test-Path -LiteralPath $env:PROBE_OUTPUT){Write-Witness}
+          }
+          exit $exitCode
+      - name: Retain original bounded setup witness only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: canvas-native-workflow-unaccepted-${{ github.sha }}-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/result.json
-            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.log
-            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.png
+          name: canvas-ps51-signature-setup-only-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/canvas-ps51-signature-${{ github.run_id }}-${{ github.run_attempt }}/result.json
           if-no-files-found: warn
           retention-days: 7
