@@ -38,7 +38,7 @@
   },
   "transportProtocol": "Fetch current coord branch before each update; each team edits only its own records; commit and non-force push. On non-fast-forward fetch and rebase disjoint records; verify remote readback. Team C alone edits index.json and accepted-head.json.",
   "blockers": [
-    "No configured Cloudflare, Stripe, transactional-email or AI provider credentials/deployment identities",
+    "Deployed CAKE ID signing/auth_revision and configured email/Stripe/AI provider deployment identities/journeys unverified; Cloudflare authenticated account/resource metadata reads now HTTP200",
     "Sandbox plugin and skill unavailable in discovered tools/catalogue",
     "Full specification, platform and installed artifact acceptance not yet passed",
     "SH-13 commercial, architecture, browser isolation and operational decisions OPEN",
@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "4d2cbba252cb4c827985e679ba177ad30394ba50",
+  "candidateHead": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -124,5 +124,19 @@
     "audit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
     "globalAdoption": false
   },
-  "finalHandoff": "Root final source/evidence handoff published, open draft PR, release BLOCKED. No accepted global executable/deployed services/installedPC delivery or background completion claim."
+  "finalHandoff": "Current Cloudflare authenticated account/resource metadata reads verified, browser bridge HTTP404, latest Sites/Files owner source receipts published in draft candidate. Release BLOCKED; no accepted global executable/deployed services/installedPC delivery or background completion claim.",
+  "cloudflareConnection": {
+    "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
+    "accountMatch": true,
+    "independentRead": "C6 1f67e77c",
+    "resourceMetadata": "Workers/D1/KV/R2 HTTP200; returned2/0/0/1, R2 bounded list completeness unverified",
+    "browser": "Post-restart available connector MCP SSE HTTP404; no DOM control",
+    "qualification": "No write/CLI/deployment/paid entitlement/allocation/quota/service journey/fullrelease acceptance; resources unchanged"
+  },
+  "currentOwnerSourceReviews": {
+    "coordSource": "a3535c87d64a3ea08dbdc04815f303af6d54e4bc",
+    "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
+    "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
+  },
+  "updatedUTC": "2026-10-04T07:58:02.424114+00:00"
 }

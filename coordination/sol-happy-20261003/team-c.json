@@ -108,13 +108,14 @@
     "Team A: newly read e9ce028b persistence hold addressed in exactc814daac. Actual original native fsync/close negative preserved; independent4 same-handle plus18symbol+17Sites controls pass and root all-line review. Freshd302 complete map independently root+C1 verified; external root pin authorizes isolated complete SDK7 now running only. New whole-tooling source-owner ACK remains requested before global adoption. Unissuedde683 and every original refusal remain retained.",
     "SDK7 COMPLETE local maintained Debug/Release all6 whole suites,379/379 actual commands and strict drains; independent C6 complete publication/physical-output audit at release 7236b58fbdfa45bac720b249ddffea6212cce41e. No source-only owner ACK promoted to global adoption/acceptance. Four requested Linux19 root process originals now remotely delivered at c6/linux19-root-process-originals (complete34137B log SHA3bc806...). B old receiver fixture HELD; controlled isolated8799 custody successor under review, no recovery from lost handles/numeric IDs. Canvas03 tiny-index-first bounded custody underway; no payload execution.",
     "A Canvas03 complete originals are remotely delivered at release 7a7dc8b44d04fe6f6e23e78df6e5d4a48d04f894:c6/canvas03-original-custody; all295whole/284piece/34originalalias hashes0errors and root independent read-only replay. Complete46849Blog/fullTRX/receipt/all10sessionrecords preserved; Canvas94/96 pass2fail remains, no payloadexecution/fullnativeacceptance. B Forms exact0dce request verified but FormsBrowserRoute.cs and FormsBrowserSession.cs absent bothdeclaredf8debaseline anddelivery; please publish exact immutable bodies matching requestedpins before sourceACK. Full source-only Forms/Present receipt at C5-forms-present-owner-request-review.{json,md}; no invented Cschema/API.",
-    "Final C handoff remotely readback release 4d2cbba252cb4c827985e679ba177ad30394ba50 /draftPR3: SDK7 original all6DebugRelease suites/379strictdrainedcommands PASS; publicOAuth117+27+222 priorimmutable04ff actualindex unchanged. B fresh fixture EF source/final457 portable handoff ready and C6 audited; receiver own8799/authissuer/resource/private manifest/HTTPS5096 and SAME fresh session stop newline/EOF per handoff/team-c/browser-fixture-recovery/README.md. OldB8798/63118 HELD/retained/no recovery actions. Native Canvas03 complete originals/root replay published,94pass2fail held; fourLinux19 originals delivered. Forms missing2adapterbody sourcepins hold. All owner/provider/native/browser/SH13/PC/fullsemantic gates remain; acceptedHeadnull and PRdraft, no deployment/mainmerge."
+    "Final C handoff remotely readback release 4d2cbba252cb4c827985e679ba177ad30394ba50 /draftPR3: SDK7 original all6DebugRelease suites/379strictdrainedcommands PASS; publicOAuth117+27+222 priorimmutable04ff actualindex unchanged. B fresh fixture EF source/final457 portable handoff ready and C6 audited; receiver own8799/authissuer/resource/private manifest/HTTPS5096 and SAME fresh session stop newline/EOF per handoff/team-c/browser-fixture-recovery/README.md. OldB8798/63118 HELD/retained/no recovery actions. Native Canvas03 complete originals/root replay published,94pass2fail held; fourLinux19 originals delivered. Forms missing2adapterbody sourcepins hold. All owner/provider/native/browser/SH13/PC/fullsemantic gates remain; acceptedHeadnull and PRdraft, no deployment/mainmerge.",
+    "Current C follow-up handoff at release db463042bdefda5697d6ec7d461dda12ebc1dcc6 /draftPR3: Cloudflare after-restart account read HTTP200/count1/fullonepage/account match independently C6verified; Workers/D1/KV/R2 metadata GETs HTTP200, returned2/0/0/1, R2completeness unverified. No writes/deploy/billableactions/contentreads; CLI/service/signing/auth_revision/paid/allocation/quota/fullrelease gates unchanged. Available browser connector stillHTTP404. Exact Sites663B/7708... explicitUseArtifactsOutput=true C1SOURCEACK5d63ef2e only, unadopted/unrun/newcompletecut/evaluatedownerroots/original17source/symbol/task/drain controls required. Filesactuale0c guardedsource/currentA4receipt source-only ACK9a0e74c2 consumed; originalsessionasync/readpublication and LE07 quota/entitlement/transfer ports OPEN,12transportNOT_RUN. Historical failures unchanged; acceptedHeadnull, no deployment/mainmerge/PCdelivery."
   ],
   "testStatus": "Partial local source-bound validation. Historical Sites39/billing12/auth222 pass; adopted public OAuth117+27+222 and C1 independent27 pass. Actual isolated SDK7 d302 driver exit0, all six original Accounts/OrgPools/Web Debug/Release suites pass,379/379 commands exit0 and strict drains TRUE; C6 independently verifies publication/source/output/physical symbols/restore pairs. No global shared source adoption, provider/browser/installed/full release or PC acceptance.",
   "evidenceLocation": "Remote release 7fc259f1b3aaa02952e2d32a8316fd9d0650a814: exact adopted public OAuth and raw identity failures, SDK6 original refusal, source-owned Sites/persistence controls, SDK7 external issuance, new source-only CUI owner receipt and original native custody.",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "4d2cbba252cb4c827985e679ba177ad30394ba50",
+  "candidateCommit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -163,24 +164,48 @@
   "cloudflareSetup": {
     "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
     "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
-    "state": "16_SKILLS_LOADED; Cloudflare account tools absent; OAuth/account access UNVERIFIED",
+    "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED; no deployed-service/write/entitlement acceptance",
     "sourceGuide": "https://developers.cloudflare.com/agent-setup/prompt.md",
     "skills": 16,
     "mcpServers": 5,
     "resourcesProvisioned": false,
-    "userSelectedReference": "cloudflare@openai-curated-remote",
+    "userSelectedReference": "app-6a99ceead2c481919fb44845267235c4@openai-curated-remote",
     "equivalenceToPrivatePlugin": "UNESTABLISHED",
-    "currentEnvironment": "observedrev11 enforced/current/running/connected; no capabilities,secrets,runtimevariables,outboundidentities; no Cloudflare endpointallowances",
+    "currentEnvironment": "Last managed-executor observation rev14 running/connected; no capabilities/secrets/runtimevariables/outboundidentities. These executor bindings are separate from functional connector authentication.",
     "cloudflareSkillsDiscovered": 16,
-    "cloudflareToolsExposed": 0,
-    "readOnlyBrowserFallback": "browseragent_list_tabs returned UNAVAILABLE/MCP SSE HTTP404. No account page read or changes made; does not prove logout or explain absent account tools.16skills/0Cloudflare account tools still observed; OAuth/account access unverified."
+    "cloudflareToolsExposed": 3,
+    "readOnlyBrowserFallback": "Post-restart browseragent_list_tabs still UNAVAILABLE/MCP SSE HTTP404; no tab DOM read/control. Earlier404/429 retained; no authentication/cause inference.",
+    "callableAccountApiExecutionTools": 1,
+    "authenticatedReadFollowup": {
+      "recordedUTC": "2026-10-04T07:56:41.739657+00:00",
+      "account": "Actual GET/accounts HTTP200/success/one account/fullonepage/matches selected dashboard",
+      "resourceMetadata": "Actual Workers/D1/KV/R2 GETs each HTTP200; returned counts2/0/0/1. R2 bounded-list completeness unverified.",
+      "independentAccountRead": "C6 1f67e77c2c26f594c13d254b4e068ad55aff7682; HTTP200/oneaccount/fullonepage/account match",
+      "evidence": "docs/releases/sol-happy-20261003/cloudflare-authenticated-read-20261004.json and c6/cloudflare-account-read-20261004-audit.json",
+      "qualification": "Authenticated metadata reads verified only. No writes/provision/billable enablement/data-content reads; CLI credentials, deployed CAKE ID signing/auth_revision, email/Stripe/AI journeys, paid app entitlement/allocation/quota, browser DOM and fullrelease remain unverified. Public docs exclude owner name/email/secrets. Root observation is a result summary, independent filtered response retained privately; neither claims fullwire capture."
+    },
+    "historicalDiscoveryBeforeRestart": {
+      "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
+      "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
+      "state": "16_SKILLS_LOADED; Cloudflare account tools absent; OAuth/account access UNVERIFIED",
+      "sourceGuide": "https://developers.cloudflare.com/agent-setup/prompt.md",
+      "skills": 16,
+      "mcpServers": 5,
+      "resourcesProvisioned": false,
+      "userSelectedReference": "cloudflare@openai-curated-remote",
+      "equivalenceToPrivatePlugin": "UNESTABLISHED",
+      "currentEnvironment": "observedrev11 enforced/current/running/connected; no capabilities,secrets,runtimevariables,outboundidentities; no Cloudflare endpointallowances",
+      "cloudflareSkillsDiscovered": 16,
+      "cloudflareToolsExposed": 0,
+      "readOnlyBrowserFallback": "browseragent_list_tabs returned UNAVAILABLE/MCP SSE HTTP404. No account page read or changes made; does not prove logout or explain absent account tools.16skills/0Cloudflare account tools still observed; OAuth/account access unverified."
+    }
   },
   "browserSourceReview": {
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586": "Reviewed all603 lines by root/C3;32/32 independent unit PASS. Bounded evidence-integrity tooling approved for preparatory integration only; no semantic/runtime truth proof.",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-03T23:48:21.261055+00:00",
+  "updatedUTC": "2026-10-04T07:56:41.739657+00:00",
   "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -449,7 +474,14 @@
     "browserAck": "B conditional browser-consumer ACK at005d393e, exact wire/defaultserializer/operationreceipt semantics retained. Not shared provider/session/ACL adoption.",
     "pending": "A4 guarded original-store atomic overload/source-delivery hold cleared by exact3a52 receipt. B wire conditional. C2/A1 async current-session lease order/lifetime and revocation-versus-commit linearisation plus A4/C2 read/publication authority remain open;12 real transport procedures NOT_RUN.",
     "evidence": "release f8f3c6aa938f897c83de5596f84fd24130fc5436:semantic/c4-files-folder-b-ack-successor.{json,md}",
-    "tests": "12 proposed realHTTP/durability/negative tests NOT_RUN; byte/quota/Projects/Workeractor seams remain separate."
+    "tests": "12 proposed realHTTP/durability/negative tests NOT_RUN; byte/quota/Projects/Workeractor seams remain separate.",
+    "currentSourceReview": {
+      "source": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "review": "9a0e74c2",
+      "path": "docs/releases/sol-happy-20261003/semantic/c4-files-current-e0c-guard-review.{json,md}",
+      "state": "QUALIFIED_SOURCE_ACK_ONLY; actual current provider/guard/store plus whole7bodies and portable A4receipt consumed",
+      "pending": "No approved async held original-session port; current session expiry/revocation/disposal/lease order and revoke-versus-publication/read-response suppression remain owner-held. LE07 needs server paid entitlement AND allocation strictly >10000000000B plus separate availablequota/admission/reservation/release/idempotency, destination/device/transfer hooks. All12 transport procedures NOT_RUN."
+    }
   },
   "nativeCustodyFollowup": {
     "linux19Originals": {
@@ -487,7 +519,7 @@
     "qualification": "No new approved C-owned executable schema/store/endpoint/media-ID contract delivered. AportableForms store authority/CAS/currentserver commit admission plus lifecycle/recovery/publicrespondent contracts and Present canonicalvalidator/assetbroker/rendering/C4exactresource transport remain ownergates. No runtime/adoption/acceptance."
   },
   "finalEvidenceHandoff": {
-    "releaseHead": "4d2cbba252cb4c827985e679ba177ad30394ba50",
+    "releaseHead": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
     "state": "OPEN_DRAFT/BLOCKED_PREPARATORY_SOURCE_HANDOFF",
     "acceptedHead": null,
@@ -495,12 +527,21 @@
     "remainingGates": [
       "Current approved owner APIs/Files async session read/publication authority; Forms missing2sourcebodies; Cards/Present owner schemas/asset contracts",
       "Configured real browser/client/sign-in/disposal/focus/input/AX/Wave/crossproduct journeys",
-      "Genuine signing/auth_revision/HTTPS issuer-to-native and authenticated real provider deployments",
+      "Genuine signing/auth_revision/HTTPS issuer-to-native and configured email/Stripe/AI provider deployments/journeys; Cloudflare metadata reads verified only",
       "Full mandatory/default-SHOULD/donor/platform/installed/security/recovery acceptance; complete semantic denominator",
       "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
       "Verified exact tested artifacts delivered to Jacob PC"
     ],
-    "qualification": "All local successes source-bound, originals preserved; no global native/browser/shared adoption, deployment/commercialactivation/DNS/WordPress retirement/mainmerge/PCdelivery. Provider/account capabilities remain unavailable/unverified. No background completion claim.",
-    "handoffStatus": "PUBLISHED_READBACK_VERIFIED; remaining required owner/provider/platform/PC decisions keep goal blocked."
+    "qualification": "All local successes source-bound, originals preserved; no global native/browser/shared adoption, deployment/commercialactivation/DNS/WordPress retirement/mainmerge/PCdelivery. Cloudflare account/resource metadata connectivity now verified; deployed services, genuine issuer/provider journeys and remaining owner/platform/SH13/PC gates remain open. No background completion claim.",
+    "handoffStatus": "PUBLISHED_RELEASE_READBACK_VERIFIED; Cloudflare metadata connection verified. Remaining approved owner/provider/platform/SH13/PC gates keep release blocked."
+  },
+  "sitesArtifactIsolationOwnerReview": {
+    "coordSource": "a3535c87d64a3ea08dbdc04815f303af6d54e4bc",
+    "review": "5d63ef2e",
+    "path": "docs/releases/sol-happy-20261003/c1-sites-artifact-isolation-owner-review.md",
+    "proposalBytes": 663,
+    "proposalSha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c",
+    "state": "NARROW_SOURCE_ACK_ONLY; explicit earlyUseArtifactsOutput=true and unchangedfalse/unset legacy",
+    "qualification": "Only3legacy outputprops gaincondition. ArtifactsPath-only SDKauto-opt-in/import timing outsideACK/unverified. Sourceunadopted/unrun; originald302/cut910068 still original. Newcompletecut/evaluatedownerroots/all17originalcontrols/PEPDBdocs/task/restore/drains beforeexecution. SDK10.0.401 variance retained."
   }
 }
