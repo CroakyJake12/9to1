@@ -522,6 +522,16 @@ function Choose-OwnFolder {
     $defaults[0].GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     [void](Wait-Observed {Test-Path -LiteralPath (Join-Path $filesRoot '.9to1-files/drive.json') -PathType Leaf} 'Actual Files owner created private workspace after native picker choice')
 }
+function Read-OwnedFilesConfigurationCompletion([bool]$Diagnostics=$false) {
+    $observedState=Read-BoundedJson $homePath
+    $currentProfiles=@($observedState.records | Where-Object {$_.recordId -ceq 'home.local-profile'})
+    $currentConfigurations=@($observedState.records | Where-Object {$_.recordType -ceq 'files.native-workspace'})
+    $witness=[ordered]@{profileCount=$currentProfiles.Count;configurationCount=$currentConfigurations.Count;currentProfileMatchesOriginal=$false;currentPrincipalMatchesOriginal=$false;configurationProfileMatchesOriginal=$false;exactRootMatchesOwnedFixture=$false}
+    if($currentProfiles.Count -eq 1){$witness.currentProfileMatchesOriginal=[Guid]$currentProfiles[0].payload.ProfileId -eq $privateProfileId;$witness.currentPrincipalMatchesOriginal=$currentProfiles[0].payload.PrincipalDigest -ceq $principalDigest}
+    if($currentConfigurations.Count -eq 1){$witness.configurationProfileMatchesOriginal=[Guid]$currentConfigurations[0].payload.ProfileId -eq $privateProfileId;$witness.exactRootMatchesOwnedFixture=$currentConfigurations[0].payload.RootDirectory -ceq $filesRoot}
+    if($Diagnostics){return $witness}
+    if($witness.profileCount -eq 1 -and $witness.configurationCount -eq 1 -and $witness.currentProfileMatchesOriginal -and $witness.currentPrincipalMatchesOriginal -and $witness.configurationProfileMatchesOriginal -and $witness.exactRootMatchesOwnedFixture){return [pscustomobject]@{homeState=$observedState}}
+}
 function Read-CurrentCanvas {
     $observedHomeState=Read-BoundedJson $homePath
     $profiles=@($observedHomeState.records | Where-Object {$_.recordId -ceq 'home.local-profile'})
@@ -706,6 +716,17 @@ public static class CanvasPackageInput {
     Check ($profiles[0].payload.PrincipalDigest -ceq $principalDigest) 'Actual private Home profile binds the original OS process principal'
     $profileBytes=[Text.Encoding]::UTF8.GetBytes([string]$profiles[0].payload.ProfileId);$sha=[Security.Cryptography.SHA256]::Create()
     try{$result.privateProfileIdentitySha256=([BitConverter]::ToString($sha.ComputeHash($profileBytes))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+    try{
+        # drive.json exists before canonical setup publishes its final guarded
+        # Home record. Observe that completion without further native input.
+        $completedConfiguration=Wait-Observed {Read-OwnedFilesConfigurationCompletion} 'Actual original-profile Files configuration completion'
+        $observedHomeState=$completedConfiguration.homeState
+    }catch{
+        $originalConfigurationCompletionFailure=$_
+        try{$result.filesConfigurationCompletionFailureObservation=Read-OwnedFilesConfigurationCompletion $true;Write-Result}
+        catch{$result.filesConfigurationCompletionDiagnosticFailureType=$_.Exception.GetType().FullName}
+        throw $originalConfigurationCompletionFailure
+    }
     $configs=@($observedHomeState.records | Where-Object {$_.recordType -ceq 'files.native-workspace'})
     Check ($configs.Count -eq 1 -and $configs[0].payload.RootDirectory -ceq $filesRoot) 'Real native picker configured exactly the owned empty Files directory'
     $result.stage='actual-native-create';$name=Observe-Control 'canvas-host-new-name' 'ControlType.Edit';Type-Edit $name $controlledName

@@ -250,3 +250,24 @@ to `$observedHomeState`. The operating system profile variables are never set or
 repurposed. Original read-only JSON acquisition, profile/principal/configuration
 checks and all GUI/approval/durable/reopen/cleanup criteria stay unchanged. The
 new receiving native workflow remains NOT_RUN before its single invocation.
+
+### Canonical Files setup completion observation
+
+Original 157471 run 37235102082 preserves 77 passing checks and the failed exact
+Files configuration Check. Actual Home profile and OS principal binding pass;
+configuration count versus exact-root mismatch was not separately observed.
+Canonical ConfigureNewCoreAsync creates drive.json before awaiting ownership and
+eight app-folder creations, then publishes its final guarded Home record. The
+existing early drive-file wait can therefore precede that final publication.
+This is a source-grounded timing hypothesis, not a proven original record count.
+
+This successor observes fresh canonical Home snapshots with the existing
+20-second Wait-Observed bound until exactly one configuration has the original
+profile and exactly the same owned filesRoot. The current Home profile and its
+original OS-principal digest must also match. It retains that admitted snapshot
+for the byte-exact original combined configuration Check. No path normalization,
+weaker equality/count, additional input, setup/request retry or private authority
+is introduced. Failure-only metadata contains six fixed count/equality flags;
+no private path/profile values or hashes are exported. Diagnostic read/output
+failures preserve the first completion failure. Original native Canvas approvals,
+stroke, durable save, normal close/reopen and cleanup remain receiving gates.
