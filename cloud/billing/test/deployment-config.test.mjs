@@ -7,6 +7,8 @@ test('explicit verified identities produce numeric Worker bindings without secre
  assert.equal(config.vars.MAX_WEBHOOK_BYTES,65536);
  assert.equal(config.d1_databases[0].binding,'BILLING_DB');
  assert.equal(config.workers_dev,false);
+ assert.equal(config.preview_urls,false,'Version preview URLs must remain closed independently of workers.dev');
+ assert.equal(deploymentConfig({...explicit,workersDev:true}).preview_urls,false);
  assert.deepEqual(config.secrets,{required:['STRIPE_WEBHOOK_SECRET']});
  assert.equal(config.observability.enabled,false);
 });
