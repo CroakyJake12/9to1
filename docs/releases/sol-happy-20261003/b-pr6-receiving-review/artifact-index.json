@@ -31,8 +31,8 @@
     "originalCurrentHomeNativeControlFailure": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
     "isolatedOwnedCanonicalHomeGuiSelection": "e5305818cb70459610f7957ae58255cff85d07ea"
   },
-  "payloadCount": 626,
-  "totalBytes": 122868382,
+  "payloadCount": 633,
+  "totalBytes": 122884702,
   "entries": [
     {
       "path": "README.md",
@@ -2316,6 +2316,20 @@
       "sha256": "48a486545762c204656f28bd61362eb85e54d27cb715fea407786e02f1b6a192"
     },
     {
+      "path": "runs/closed-own-source-and-original-package-custody/home4dd-original-archive-and-parts-relocation.json",
+      "bytes": 3203,
+      "sha256": "485448412eac7fa32993b3767991f23b33cb9ee9b2112bc4ce2d31a0eb73f501",
+      "originalBytes": 3203,
+      "originalSha256": "485448412eac7fa32993b3767991f23b33cb9ee9b2112bc4ce2d31a0eb73f501"
+    },
+    {
+      "path": "runs/closed-own-source-and-original-package-custody/one-additional-original-write-source-replica-retirement.json",
+      "bytes": 739,
+      "sha256": "fd51a6b0edc49c2e4298586ef56be81d979a767fa188afd3d686c8da006992d6",
+      "originalBytes": 739,
+      "originalSha256": "fd51a6b0edc49c2e4298586ef56be81d979a767fa188afd3d686c8da006992d6"
+    },
+    {
       "path": "runs/cui-writeback-current/CuiSameTurn.Current.csproj",
       "originalBytes": 700,
       "originalSha256": "7de0269c36521f758b86186e47d3428b87629668f0fc99589891f2c11d65d59f",
@@ -2475,6 +2489,41 @@
       "originalSha256": "75ce18f1b09eb28bb1a94fd440eb8f76f941cb6ef1b15d7d5515a16692489983",
       "bytes": 821,
       "sha256": "75ce18f1b09eb28bb1a94fd440eb8f76f941cb6ef1b15d7d5515a16692489983"
+    },
+    {
+      "path": "runs/current-home-web-studio-final-peer/c6-home4dd-actual-original-six-package-negative-review.json",
+      "bytes": 3430,
+      "sha256": "37146281a2e75d447f5713d6ea684861c7c0a243c50218b8dc514495dce163f4",
+      "originalBytes": 3430,
+      "originalSha256": "37146281a2e75d447f5713d6ea684861c7c0a243c50218b8dc514495dce163f4"
+    },
+    {
+      "path": "runs/current-home-web-studio-final-peer/c6-new17-publication-review.json",
+      "bytes": 1510,
+      "sha256": "0b2dca33246d57fedcec2bc44aa19e5287766ce74a5b1a9ac420c30914cd6d7e",
+      "originalBytes": 1510,
+      "originalSha256": "0b2dca33246d57fedcec2bc44aa19e5287766ce74a5b1a9ac420c30914cd6d7e"
+    },
+    {
+      "path": "runs/current-home-web-studio-final-peer/c6-new30-publication-review.json",
+      "bytes": 1992,
+      "sha256": "c5a3aa3607509cc2962d2ca70100054a1559830138c137f66e3b193a1f8e903c",
+      "originalBytes": 1992,
+      "originalSha256": "c5a3aa3607509cc2962d2ca70100054a1559830138c137f66e3b193a1f8e903c"
+    },
+    {
+      "path": "runs/current-home-web-studio-final-peer/c6-studio137-actual-original-three-review.json",
+      "bytes": 3302,
+      "sha256": "a755a4966d40158d01053c4d3fa685b35275fcbf1d53d1ac3ddd2583522dcd5f",
+      "originalBytes": 3302,
+      "originalSha256": "a755a4966d40158d01053c4d3fa685b35275fcbf1d53d1ac3ddd2583522dcd5f"
+    },
+    {
+      "path": "runs/current-home-web-studio-final-peer/c6-web9af-actual-nine-review.json",
+      "bytes": 2144,
+      "sha256": "17beee2121d815dbeb0ae864c72feca290e9e3e136643cbfa7722a8c5f41f4a9",
+      "originalBytes": 2144,
+      "originalSha256": "17beee2121d815dbeb0ae864c72feca290e9e3e136643cbfa7722a8c5f41f4a9"
     },
     {
       "path": "runs/current-home-web-studio-peer/c1-home4dd-preinvoke-review.json",
@@ -3743,6 +3792,6 @@
       "originalSha256": "77dd4a62810febb1ae2139d345de47d48666cb5214bfda92365722c35430e736"
     }
   ],
-  "previousImmutableEvidenceCommit": "2d76cd3aa0c8f2cdffe43639c6220234c7064bf5",
-  "previousImmutableIndexSHA256": "8b5719cc9e777d3210db4654def0c1f4f3fe49c3f738d441eea92086efb36ddf"
+  "previousImmutableEvidenceCommit": "a37ca5ebcce2de732d130c81b7b8173a63db9436",
+  "previousImmutableIndexSHA256": "2e793cdc921d779bdacfa31792160849946bbdbfe96baba457e8b3e04dc6eaf5"
 }
