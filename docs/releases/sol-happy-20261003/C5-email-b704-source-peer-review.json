@@ -1,0 +1,49 @@
+{
+  "reviewer": "C5",
+  "scope": "email adapter source only; does not review18filedeployment package",
+  "sourceCommit": "b70412898297cce6dcc906a97a6a93b2810a6d80",
+  "sourcePins": [
+    {
+      "path": "cloud/cake-id-auth/src/email.ts",
+      "bytes": 1509,
+      "sha256": "ed288123118c4a65ecb6037cfa4d66b5c875a24268906e575354ce14ab940cec"
+    },
+    {
+      "path": "cloud/cake-id-auth/src/env.ts",
+      "bytes": 431,
+      "sha256": "ae38af78db91b0da3d1a98e516f0409ec81588ab37ccb49d50d7a59c508d03ad"
+    },
+    {
+      "path": "cloud/cake-id-auth/src/auth.ts",
+      "bytes": 6164,
+      "sha256": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/email-delivery.mjs",
+      "bytes": 1976,
+      "sha256": "024e582228e28d3005c1bbbf3d57a62a231512b28c08e252c34e4c8a5496c751"
+    }
+  ],
+  "completeTechnicalRead": true,
+  "independentCommand": "node tests/email-delivery.mjs",
+  "cwd": "/workspace/team-c/c2-hosted-package/cloud/cake-id-auth",
+  "exitCode": 0,
+  "reportedAssertions": 18,
+  "transport": "local double only; no email sent",
+  "log": "/workspace/team-c/evidence/c5/email-b704-review.log",
+  "logSha256": "9f12aa012287d04b4c1a9ccdef47eb28fe88a022abe9b37d75558effb38efe4a",
+  "result": "bounded email adapter source ACK; no actionable regression found",
+  "officialAPI": "https://developers.cloudflare.com/email-service/api/send-emails/workers-api/ SendEmail.send(EmailMessageBuilder) from/to string supported",
+  "facts": [
+    "Explicitmode+binding+plainfrom+matchinglowercaseconfigured domain needed; no defaultsender.",
+    "Production EMAIL_CAPTURE=true alone cannot write captureoutbox; missing/invalidconfig throws.",
+    "Reset/verification callbacks import same awaiteddeliverEmail; original subject/text recipients unchanged.",
+    "Providerrejection object retained; no capturefallback or fabricateddelivery result."
+  ],
+  "holds": [
+    "Actualzones no onboarded sending subdomains; quota/usage null atread; actualsend readiness remains unverified.",
+    "No DNS/send_email/resource activation or message issued.",
+    "User Paid confirmation relayed by C2 does not by itself establish domain/recipientreadiness or actualdelivery; no spending authority inferred."
+  ],
+  "validationQualification": "Initial source-bytecheck used wrongcwd path and failedbeforecheck; corrected read-only4filebyte verification succeeded. No runtimeacceptance inferred from localcontrols."
+}
