@@ -2,6 +2,31 @@
   "sourceCommit": "10eff17d6341fe36093bbb6622a0f68e076c55ca",
   "files": [
     {
+      "path": "C2-source-ack.json",
+      "bytes": 807,
+      "sha256": "60882d0b0e672efa03ad71ff5255977d8a2948e3f629ef8afa1e46a70a29ee6e"
+    },
+    {
+      "path": "C6/independent-review.json",
+      "bytes": 1791,
+      "sha256": "af8b05944c9a67b17d2ac0bde47707d83e69edd56c1e6a18606fef3f9304ad7c"
+    },
+    {
+      "path": "C6/results/affected-test.trx",
+      "bytes": 3123,
+      "sha256": "c067477d917cc0ae84003b74a20c33bacced5e65494d8f5a2bc41a5890107956"
+    },
+    {
+      "path": "C6/run.log",
+      "bytes": 3126,
+      "sha256": "a666aeeb612b2ceac83adeef74403bb6caa94f831e08ca2a8e14aadb21747525"
+    },
+    {
+      "path": "C6/source-review.json",
+      "bytes": 603,
+      "sha256": "42e9c3a049de547cbb548f357de63c1f8c250ed747996b3a448b6d78bc71dda9"
+    },
+    {
       "path": "focused-Debug/command.json",
       "bytes": 2575,
       "sha256": "b7dda0cc3fccae1519d00fa56a1dc195f5358baae739fc783a11e6c993139ade"
@@ -43,13 +68,13 @@
     },
     {
       "path": "owner-adoption-request.json",
-      "bytes": 2429,
-      "sha256": "660bacdce551b634748aff9da4061ac7f4ed1116c74f29056143733b10906d72"
+      "bytes": 2688,
+      "sha256": "48421ef0400fcd03d7fecac05412d0ea4d0b42b366bcb6666e44da4ca39f5eaa"
     },
     {
       "path": "proposal.json",
-      "bytes": 1761,
-      "sha256": "579a72974df544137e563ac981db845dc4a1e696e5337ec095a1ca1264ea66ba"
+      "bytes": 1910,
+      "sha256": "98bb6463c8167d60d5cd103698b431e90f23840538cd3dd4cade517acc5c5e1f"
     },
     {
       "path": "run-review.json",

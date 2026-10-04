@@ -1,5 +1,5 @@
 {
-  "status": "PROVISIONAL_SQLITE_TEST_FIXTURE_REPAIR_VALIDATED_REVIEW_PENDING_FULL_SUITE_STILL_FAILED",
+  "status": "PROVISIONAL_SQLITE_TEST_FIXTURE_REPAIR_SOURCE_AND_INDEPENDENT_RUNTIME_ACK_FULL_SUITE_STILL_FAILED",
   "sourceCommit": "10eff17d6341fe36093bbb6622a0f68e076c55ca",
   "basisCommit": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
   "branch": "team-c/sol-happy-c5-sqlite-legacy-fixture-provisional-20261004",
@@ -14,8 +14,12 @@
   "originalFailureCustody": "Separate563e60bd full normal source8f evidence untouched.",
   "actualRuns": "run-review.json",
   "reviewStatus": {
-    "C2": "REQUESTED_EXACT_SOURCE_REVIEW",
-    "C6": "REQUESTED_EXACT_SOURCE_AND_FOCUSED_RUNTIME_REVIEW"
+    "C2": "EXACT_SINGLE_METHOD_SOURCE_ONLY_ACK",
+    "C6": "EXACT_SOURCE_ACK_AND_INDEPENDENT_MAINTAINED_NORMAL_RELEASE_ONE_AFFECTED_TEST_1PASS_0FAIL_0SKIP",
+    "receipts": [
+      "C2-source-ack.json",
+      "C6/independent-review.json"
+    ]
   },
   "ownerAdoptionRequest": "owner-adoption-request.json",
   "qualification": [

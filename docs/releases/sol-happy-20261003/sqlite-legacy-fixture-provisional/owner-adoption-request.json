@@ -23,7 +23,12 @@
     "wholeNormalRelease": "415/411PASS/4FAIL/0skip",
     "wholeReleaseStillFailed": true
   },
-  "pending": "C2/C6 independent source/runtime review and exact Team A source adoption/current shared authority ACK",
+  "pending": "Exact Team A current source adoption/shared-authority ACK; C2 exact source ACK and C6 independent affected maintained-normal Release1/0 source/runtime ACK are complete.",
   "noProductionChanges": true,
-  "noAssertionRemovalAnalyzerDisableTestExclusionOrFakeSchema": true
+  "noAssertionRemovalAnalyzerDisableTestExclusionOrFakeSchema": true,
+  "independentReview": {
+    "C2": "C2-source-ack.json",
+    "C6": "C6/independent-review.json",
+    "C6ReceiptSHA256": "af8b05944c9a67b17d2ac0bde47707d83e69edd56c1e6a18606fef3f9304ad7c"
+  }
 }
