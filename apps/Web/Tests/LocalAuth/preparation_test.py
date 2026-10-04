@@ -111,6 +111,29 @@ class PreparationControls(unittest.TestCase):
         self.assertEqual(safe['PATH'], inherited['PATH'])
         self.assertEqual(inherited['DEBUG'], 'pw:api')
 
+    def test_socket_temp_path_boundary_and_unicode_refuse_before_creation(self):
+        # execution/tmp62 bytes leaves45 bytes for Chromium's actual singleton suffix.
+        base = len(os.fsencode(self.root)) + 1 + len('/tmp')
+        safe = self.root / ('a' * (62 - base))
+        long = self.root / ('b' * (63 - base))
+        self.assertEqual(prepare.chromium_socket_temp_root(safe)['socketPathBytes'], 107)
+        with self.assertRaises(RuntimeError):
+            prepare.chromium_socket_temp_root(long)
+        unicode = self.root / ('é' * ((63 - base + 1) // 2))
+        self.assertLess(len(str(unicode / 'tmp')), 63)
+        with self.assertRaises(RuntimeError):
+            prepare.chromium_socket_temp_root(unicode)
+        self.assertFalse(safe.exists())
+        self.assertFalse(long.exists())
+        self.assertFalse(unicode.exists())
+
+    def test_overlength_setup_refuses_before_commands_tools_or_private_paths(self):
+        args = argparse.Namespace(candidate='a' * 40, test_source_commit='e' * 40, fixture_source_commit='f' * 40, manifest_sha='b' * 64, seal_sha='c' * 64, archive_sha='d' * 64, execution_root=str(self.root / ('z' * 70)))
+        with patch.object(prepare, 'command', side_effect=AssertionError('No subprocess permitted')):
+            with self.assertRaises(RuntimeError):
+                prepare.prepare(args)
+        self.assertFalse(Path(args.execution_root).exists())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -47,6 +47,24 @@ function classifyFormError(error) {
   } catch {}
   return 'OTHER';
 }
+function verifyChromiumSocketTempRoot(tempRoot) {
+  fixed(typeof tempRoot === 'string' && path.isAbsolute(tempRoot) && !tempRoot.includes('\0'));
+  const stat = fs.lstatSync(tempRoot);
+  fixed(stat.isDirectory() && !stat.isSymbolicLink() && fs.realpathSync(tempRoot) === tempRoot);
+  // Chromium151 POSIX source: TMPDIR/org.chromium.Chromium.XXXXXX/SingletonSocket.
+  // Linux SetupSockAddr NUL-terminates its108-byte sun_path and refuses >=108.
+  const tempRootBytes = Buffer.byteLength(tempRoot), socketPathBytes = tempRootBytes + Buffer.byteLength('/org.chromium.Chromium.XXXXXX/SingletonSocket');
+  fixed(socketPathBytes < 108);
+  return { tempRootBytes, socketPathBytes, socketPathLimitBytes: 108 };
+}
+function classifyLaunchError(error) {
+  // The only retained signature comes from Chromium's actual singleton FATAL;
+  // neither its private path nor arbitrary launch output is retained.
+  try {
+    if (typeof error?.message === 'string' && error.message.includes('Socket path too long:') && error.message.includes('SingletonSocket')) return 'SINGLETON_SOCKET_PATH_TOO_LONG';
+  } catch {}
+  return 'OTHER';
+}
 async function probeNativeFetchReceiver() {
   // A malformed absolute URL is rejected locally before any request. Never
   // pass auth configuration, credentials or a usable endpoint to this probe.
@@ -201,7 +219,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
   const mark = stage => { substep = stage; };
   const safeError = error => ({ stage: active, substep, type: ['Error', 'TypeError', 'AssertionError', 'TimeoutError'].includes(error?.name) ? error.name : 'Error', elapsedMs: Math.min(240000, Math.max(0, Date.now() - started)) });
   const observed = { discovery: 0, jwks: 0, authorize: 0, callback: 0, token: 0, current: 0, profile: 0, sessions: 0, signout: 0, apiRequests: 0, protocolValid: true, sameSubject: true };
-  const diagnostic = { formError: null, fetchReceiver: null, popupOpened: false, popupClosed: false, popupClosePhase: 'NOT_OBSERVED', popupNavigations: { blank: 0, issuer: 0, client: 0, other: 0 }, discoveryRequests: 0, discoveryResponses: 0, discoveryStatusCounts: {}, discoveryFinished: 0, discoveryFailed: 0, publicStatusCodes: [], publicStatusTruncated: false, publicStatusReadFailed: false };
+  const diagnostic = { socketTempRoot: null, launchError: null, formError: null, fetchReceiver: null, popupOpened: false, popupClosed: false, popupClosePhase: 'NOT_OBSERVED', popupNavigations: { blank: 0, issuer: 0, client: 0, other: 0 }, discoveryRequests: 0, discoveryResponses: 0, discoveryStatusCounts: {}, discoveryFinished: 0, discoveryFailed: 0, publicStatusCodes: [], publicStatusTruncated: false, publicStatusReadFailed: false };
   const popupPhases = new Set(['actual-issuer-signin-form', 'actual-issuer-consent', 'actual-callback-exchange-and-broker-close']);
   async function capturePublicStatus() {
     if (!page || page.isClosed()) { diagnostic.publicStatusReadFailed = true; return; }
@@ -241,28 +259,42 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
   }
   async function test(name, action) { active = name; substep = 'entered'; started = Date.now(); write(); try { report.outcomes[name] = { status: 'PASS', observed: await action() }; } catch (error) { report.outcomes[name] = { status: 'FAIL', error: safeError(error) }; throw error; } finally { write(); } }
   try {
+    mark('public-binding-source-and-seal');
     gate = verifyPublicBinding(bindingPath, expectedCommit);
+    mark('explicit-gui-and-tool-contract');
     fixed(process.env.B5_ACCOUNT_INTEROP_GUI_GRANTED === 'granted');
     fixed(typeof process.env.PLAYWRIGHT_MODULE === 'string' && typeof process.env.CHROMIUM_EXECUTABLE === 'string' && /^[A-Za-z0-9+/]{43}=$/.test(process.env.B5_CLIENT_TLS_SPKI || ''));
+    mark('fresh-results-directory');
     fixed(!fs.existsSync(output)); fs.mkdirSync(output, { mode: 0o700 });
-    active = 'owned-fixture-preflight'; owned = readOwnedFixture(manifestPath, runRoot, gate);
+    active = 'owned-fixture-preflight'; mark('chromium-socket-temp-path');
+    diagnostic.socketTempRoot = verifyChromiumSocketTempRoot(process.env.TMPDIR);
+    mark('owned-fixture-contract-read'); owned = readOwnedFixture(manifestPath, runRoot, gate);
     const fixture = owned.fixture;
     report.sourceCommit = expectedCommit; report.testSourceCommit = gate.binding.testSourceCommit; report.fixtureSourceCommit = gate.binding.fixtureSourceCommit; report.bindingSha256 = gate.bindingSha256;
     report.seal = { sourceCommit: gate.seal.sourceCommit, manifestSha256: gate.seal.manifestSha256, fileCount: gate.seal.fileCount };
     const configuration = { issuer: fixture.issuer, apiResource: fixture.apiResource, clientId: fixture.clientId, redirectUri: fixture.redirectUri, scopes: fixture.scopes, allowLoopbackForIsolatedTests: true };
-    const { chromium } = require(process.env.PLAYWRIGHT_MODULE);
+    mark('playwright-import'); const { chromium } = require(process.env.PLAYWRIGHT_MODULE);
+    mark('private-tls-key-metadata');
     const keyStat = fs.lstatSync(process.env.B5_CLIENT_TLS_KEY);
     fixed(keyStat.isFile() && !keyStat.isSymbolicLink() && keyStat.uid === process.getuid() && (keyStat.mode & 0o777) === 0o600);
     keyMetadata = { dev: keyStat.dev, ino: keyStat.ino, size: keyStat.size, mtimeMs: keyStat.mtimeMs, uid: keyStat.uid };
-    server = await startSealedHost(gate.seal);
+    mark('sealed-https-server-start'); server = await startSealedHost(gate.seal);
     const append = value => [...new Set([...(value || '').split(',').map(x => x.trim()).filter(Boolean), 'client.example.test', '127.0.0.1', 'localhost'])].join(',');
-    browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE, headless: true, env: { ...withoutCredentialDiagnostics(process.env), NO_PROXY: append(process.env.NO_PROXY), no_proxy: append(process.env.no_proxy) }, args: ['--proxy-bypass-list=client.example.test;127.0.0.1;localhost', '--host-resolver-rules=MAP client.example.test 127.0.0.1', '--ignore-certificate-errors-spki-list=' + process.env.B5_CLIENT_TLS_SPKI, '--disable-dev-shm-usage', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    mark('chromium-launch');
+    try { browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE, headless: true, env: { ...withoutCredentialDiagnostics(process.env), NO_PROXY: append(process.env.NO_PROXY), no_proxy: append(process.env.no_proxy) }, args: ['--proxy-bypass-list=client.example.test;127.0.0.1;localhost', '--host-resolver-rules=MAP client.example.test 127.0.0.1', '--ignore-certificate-errors-spki-list=' + process.env.B5_CLIENT_TLS_SPKI, '--disable-dev-shm-usage', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); }
+    catch (error) { diagnostic.launchError = classifyLaunchError(error); throw error; }
+    mark('chromium-version');
     report.browserVersion = browser.version();
+    mark('chromium-context-create');
     context = await browser.newContext({ viewport: { width: 1440, height: 2200 }, serviceWorkers: 'block' });
     // Public host configuration only. No credentials, native export/function override, fake state or asset edits.
+    mark('public-origin-configuration');
     await context.addInitScript(({ configuration, origin }) => { if (location.origin === origin) window.nineToOneBrowserConfiguration = { account: configuration }; }, { configuration, origin });
+    mark('public-status-observer');
     await context.addInitScript(installPublicStatusObserver, { origin });
+    mark('local-origin-network-route');
     await context.route('**/*', async route => { let allowed = false; try { allowed = [origin, issuerOrigin].includes(new URL(route.request().url()).origin); } catch {} if (allowed) await route.continue(); else { report.unexpected.foreignRequest++; await route.abort('blockedbyclient'); } });
+    mark('network-observers');
     context.on('page', opened => { opened.on('pageerror', () => report.unexpected.pageError++); opened.on('console', message => { if (message.type() === 'error') report.unexpected.consoleError++; }); });
     const discoveryRequest = request => request.method() === 'GET' && request.url() === fixture.issuer + '/.well-known/openid-configuration';
     context.on('requestfailed', request => { report.unexpected.requestFailed++; if (discoveryRequest(request)) diagnostic.discoveryFailed++; });
@@ -314,7 +346,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
       })().catch(() => { report.unexpected.observationFailure++; });
       pending.add(observation); observation.finally(() => pending.delete(observation));
     });
-    page = await context.newPage();
+    mark('browser-page-create'); page = await context.newPage();
     await test(names[0], async () => {
       const deadline = Date.now() + 45000;
       await page.goto(origin + '/#/home.settings', { waitUntil: 'domcontentloaded', timeout: Math.max(1, deadline - Date.now()) });
@@ -322,7 +354,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
       await wait(() => page.evaluate(() => document.querySelector('#browser-status')?.dataset.code === 'Ready'), Math.max(1, deadline - Date.now()));
       const current = await snapshot(), signs = current.elements.filter(peer => peer.name === 'Open trusted CAKE ID sign-in' && peer.role === 'button');
       fixed(signs.length === 1 && signs[0].enabled && privateAbsent(current));
-      diagnostic.fetchReceiver = await page.evaluate(probeNativeFetchReceiver);
+      mark('actual-native-fetch-receiver-control'); diagnostic.fetchReceiver = await page.evaluate(probeNativeFetchReceiver);
       return { actualNativeReady: true, privateDataAbsent: true, actualConfiguredSignInEnabled: true };
     });
     await test(names[1], async () => {
@@ -405,5 +437,5 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     state = nonce = challenge = callbackCode = null;
   }
 }
-module.exports = { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics, classifyFormError, probeNativeFetchReceiver, installPublicStatusObserver };
+module.exports = { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver };
 if (require.main === module) run(...process.argv.slice(2)).catch(() => { console.log(JSON.stringify({ status: 'FAIL', stage: 'bounded-runner' })); process.exitCode = 1; });

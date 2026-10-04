@@ -62,6 +62,19 @@ def reviewed_checkout(checkout, expected_commit, rows):
     return pins
 
 
+def chromium_socket_temp_root(execution):
+    # Matching Chromium151 Linux singleton source uses the45-byte suffix below.
+    # SetupSockAddr refuses >=108 bytes, reserving the final NUL byte.
+    if execution.resolve(strict=False) != execution:
+        raise RuntimeError('Canonical owned execution root required')
+    temp = execution / 'tmp'
+    suffix = '/org.chromium.Chromium.XXXXXX/SingletonSocket'
+    size = len(os.fsencode(temp)) + len(os.fsencode(suffix))
+    if size >= 108:
+        raise RuntimeError('Owned Chromium temporary socket path exceeds Linux bound')
+    return {'tempRootBytes': len(os.fsencode(temp)), 'socketPathBytes': size, 'socketPathLimitBytes': 108}
+
+
 def receive_public_archive(archive_path, manifest, destination):
     # Exact received producer bodies only; no guessed files, patches or extraction shortcuts.
     rows = manifest['publishFiles']
@@ -99,6 +112,7 @@ def prepare(args):
     if any(not re.fullmatch('[0-9a-f]{40}', value) for value in [args.candidate, args.test_source_commit, args.fixture_source_commit]) or any(not re.fullmatch('[0-9a-f]{64}', value) for value in [args.manifest_sha, args.seal_sha, args.archive_sha]):
         raise RuntimeError('Explicit immutable candidate and manifest hash required')
     execution = Path(args.execution_root).absolute()
+    socket_temp_root = chromium_socket_temp_root(execution)
     if execution.exists():
         raise RuntimeError('Fresh private execution root required')
     node = Path(args.node).resolve(strict=True)
@@ -219,6 +233,7 @@ def prepare(args):
                    'B5_CLIENT_TLS_KEY': str(key), 'B5_CLIENT_TLS_SPKI': spki})
     invocation = {'scope': 'PREPARED only: fresh root-owned issuer original TTY remains separate; existing browser custodian reused unchanged. Its legacy unconfigured caption is retained and conveys browser-family custody only.',
                   'candidateSourceCommit': args.candidate, 'testSourceCommit': args.test_source_commit, 'fixtureSourceCommit': fixture_head, 'bindingSha256': sha(binding_path),
+                  'chromiumSocketTempRoot': socket_temp_root,
                   'planSha256': sha(plan_path), 'planPath': str(plan_path), 'environment': environment,
                   'argv': ['python3', '-B', str(REPLAY / 'run-owned-account-replay01.py'), str(plan_path), sha(plan_path)],
                   'keyMetadata': {'path': str(key), 'mode': stat.st_mode & 0o777, 'bytes': stat.st_size, 'dev': stat.st_dev, 'ino': stat.st_ino, 'mtimeNs': stat.st_mtime_ns},

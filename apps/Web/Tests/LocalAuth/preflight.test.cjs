@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
-const { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, withoutCredentialDiagnostics, classifyFormError, probeNativeFetchReceiver, installPublicStatusObserver } = require('./run-local-auth-current.cjs');
+const { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver } = require('./run-local-auth-current.cjs');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const contract = JSON.parse(fs.readFileSync(path.join(__dirname, 'source-contract.json')));
 const repo = path.resolve(__dirname, '../../../..');
@@ -124,6 +124,27 @@ test('form errors produce fixed categories only, even with credential-bearing te
   assert.equal(classifyFormError(Object.assign(new Error(marker), { name: 'TimeoutError' })), 'TIMEOUT');
   assert.equal(classifyFormError(new Error(marker)), 'OTHER');
   assert.equal(classifyFormError({ get message() { throw new Error(marker); } }), 'OTHER');
+});
+test('actual canonical Chromium TMPDIR accepts62 UTF8 bytes and refuses63 before spawn', () => {
+  const base = Buffer.byteLength(sandbox) + 1;
+  const safe = path.join(sandbox, 'a'.repeat(62 - base)), long = path.join(sandbox, 'b'.repeat(63 - base));
+  fs.mkdirSync(safe); fs.mkdirSync(long);
+  assert.equal(verifyChromiumSocketTempRoot(safe).socketPathBytes, 107);
+  assert.throws(() => verifyChromiumSocketTempRoot(long));
+  const redirected = path.join(sandbox, 'tmp-alias'); fs.symlinkSync(safe, redirected);
+  assert.throws(() => verifyChromiumSocketTempRoot(redirected));
+});
+test('actual Unicode TMPDIR is measured by UTF8 bytes rather than character count', () => {
+  const name = path.join(sandbox, 'é'.repeat(Math.ceil((63 - Buffer.byteLength(sandbox) - 1) / 2)));
+  fs.mkdirSync(name);
+  assert(name.length < 63 && Buffer.byteLength(name) >= 63);
+  assert.throws(() => verifyChromiumSocketTempRoot(name));
+});
+test('only exact singleton launch marker survives otherwise private error output', () => {
+  const marker = 'PRIVATE_TRIPWIRE_NOT_FOR_OUTPUT';
+  assert.equal(classifyLaunchError(new Error('Socket path too long: /' + marker + '/SingletonSocket.')), 'SINGLETON_SOCKET_PATH_TOO_LONG');
+  assert.equal(classifyLaunchError(new Error(marker)), 'OTHER');
+  assert.equal(classifyLaunchError({ get message() { throw new Error(marker); } }), 'OTHER');
 });
 test('fetch receiver probe uses only an invalid absolute URL and redacts both error boundaries', async () => {
   const vm = require('node:vm'); const marker = 'PRIVATE_TRIPWIRE_NOT_FOR_OUTPUT'; let calls = 0;
