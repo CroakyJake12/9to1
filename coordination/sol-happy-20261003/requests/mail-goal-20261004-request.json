@@ -1,7 +1,7 @@
 {
   "schema": "9to1-mail-goal-coordination-request/v1",
   "status": "REQUESTED_NOT_ACKNOWLEDGED",
-  "requestedAtUTC": "2026-10-04T16:39:00Z",
+  "requestedAtUTC": "2026-10-04T16:30:00Z",
   "userAuthorization": "User explicitly replied Yes, coordinate with Team A/C in this Mail chat.",
   "recipients": [
     "Team A / Astra la Vista / A3 worker4_resume",
@@ -32,12 +32,14 @@
     "sdk": "Linux .NET 10.0.401",
     "originalMailRelease": "13 passed, 3 failed, 16 total; real TLS fixtures require HAVEN_MAIL_FIXTURE_HOST. Original failures preserved; no remote mail performed.",
     "package": "Mail project is a library; no accepted installed graphical entrypoint or Mail package supplied.",
-    "proposalWork": "Reproduce/fix remaining domain idempotency/currentness/journal defects and encrypted-store concurrency/error handling in isolated proposal; earlier reviewed eec journal/reconciliation repairs retained."
+    "proposalWork": "Reproduce/fix remaining domain idempotency/currentness/journal defects and encrypted-store concurrency/error handling in isolated proposal; earlier reviewed eec journal/reconciliation repairs retained.",
+    "graphBoundary": "Confirmed at exact eec production sources with synthetic token/in-memory handler: foreign HTTPS and HTTP continuation each dispatch Bearer; valid Graph control passes. Baseline 2 failed / 1 passed. No external requests. Strict cursor validation proposal underway."
   },
   "blockers": [
     "No current source handover ACK",
     "No accepted Mail graphical package/installed Home tuple",
     "No authorized connected-provider fixture",
     "No independently reviewed Windows acceptance/delivery"
-  ]
+  ],
+  "updatedUTC": "2026-10-04T16:32:02.350520+00:00"
 }
