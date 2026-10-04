@@ -21,7 +21,7 @@ $catalog = Get-Content -LiteralPath '.github/validation/home-windows-original-sh
 $result = [ordered]@{
     schemaVersion = 1; status = 'NOT_RUN'; stage = 'source'; sourceCommit = $ExpectedCommit
     sourceBasis = $catalog.sourceBasis; platform = 'Windows/win-x64'; commands = @(); nativeProcesses = @()
-    managedCases = $null; buildTaskSHA256 = $null; package = $null; sourceAfterUnchanged = $false
+    managedCases = $null; buildTaskSHA256 = $null; avaloniaBuildTaskSHA256 = $null; package = $null; sourceAfterUnchanged = $false
     acceptedNativeShutdownScope = $false; processSignals = @(); forcedCleanup = $false
     originalForcedFailure = $catalog.originalForcedFailure
     qualification = 'Original owning six tests and current unaccepted Home package/visible-window explicit quit only; no installed identity, signing, clean-PC, provider, all-theme or full Home/release acceptance.'
@@ -218,10 +218,18 @@ try {
     if (-not (Test-Path -LiteralPath $tasks -PathType Leaf)) { throw 'Actual source-built current Task DLL is missing.' }
     $result.buildTaskSHA256 = (Get-FileHash -LiteralPath $tasks -Algorithm SHA256).Hash.ToLowerInvariant()
     $taskFlag = "-p:CuiBuildTasksLocation=$tasks"
+    # The same ordinary dependency graph builds this original task before Fonts/Dialogs resources.
+    # Bind its public maintained override to the source-evaluated owned artifacts path.
+    $avaloniaTaskProject = 'framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
+    $avaloniaTask = (Invoke-DotNet 'avalonia-task-target-property' @('msbuild',$avaloniaTaskProject,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",'-getProperty:TargetPath')).Trim()
+    if (-not [IO.Path]::IsPathFullyQualified($avaloniaTask) -or -not $avaloniaTask.StartsWith($artifacts + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Original evaluated Avalonia Task path must be within owned artifacts.' }
+    $flags += "-p:AvaloniaBuildTasksLocation=$avaloniaTask"
     $project = 'apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj'
     $result.stage = 'ordinary-owning-six'
     [void](Invoke-DotNet 'owning-restore' (@('restore',$project,'--configfile','NuGet.Config','--disable-parallel','-p:Configuration=Release',$taskFlag) + $flags))
     [void](Invoke-DotNet 'owning-build-release' (@('build',$project,'--no-restore','-c','Release',$taskFlag) + $flags))
+    if (-not (Test-Path -LiteralPath $avaloniaTask -PathType Leaf)) { throw 'The normal original dependency graph did not build its evaluated Avalonia Task DLL.' }
+    $result.avaloniaBuildTaskSHA256 = (Get-FileHash -LiteralPath $avaloniaTask -Algorithm SHA256).Hash.ToLowerInvariant()
     $testProperties = Invoke-DotNet 'test-target-properties' @('msbuild',$project,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",$taskFlag,'-getProperty:TargetPath')
     $testAssembly = $testProperties.Trim()
     if (-not (Test-Path -LiteralPath $testAssembly -PathType Leaf)) { throw 'Actual original owning test assembly is missing.' }
