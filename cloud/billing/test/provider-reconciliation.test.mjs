@@ -257,3 +257,51 @@ test('C3-PR-15: redirected/unexpected response origin and non-Response transport
   await rejectsCode(() => f.read(), 'ProviderReadResponseInvalid');
   assert.equal(f.requests.length, 3); assert.deepEqual(f.rows(), before);
 });
+
+test('C3-PR-16: externally constructed ProviderReadError from transport is redacted', async t => {
+  const f = await fixture(t); const before = f.rows();
+  f.respond(() => { throw new ProviderReadError('CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL'); });
+  await rejectsCode(() => f.read(), 'ProviderReadTransportFailed', true);
+  assert.deepEqual(f.rows(), before);
+});
+
+test('C3-PR-17: externally constructed ProviderReadError from response stream is redacted', async t => {
+  const f = await fixture(t); const before = f.rows();
+  f.respond(() => new Response(new ReadableStream({ pull(controller) {
+    controller.error(new ProviderReadError('CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL'));
+  } }), { headers: { 'content-type': 'application/json' } }));
+  await rejectsCode(() => f.read(), 'ProviderReadResponseInvalid');
+  assert.deepEqual(f.rows(), before);
+});
+
+test('C3-PR-18: externally constructed ProviderReadError from database is redacted', async t => {
+  const f = await fixture(t); const before = f.rows();
+  const externalDB = { prepare() { throw new ProviderReadError('CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL'); } };
+  await rejectsCode(() => readClaimedStripeState(externalDB, f.mode, f.event.id, f.claim.claim_token, f.config), 'ProviderReadPersistenceUnavailable', true);
+  assert.equal(f.requests.length, 0); assert.deepEqual(f.rows(), before);
+});
+
+test('C3-PR-19: externally constructed ProviderReadError from clock is redacted', async t => {
+  const f = await fixture(t); const before = f.rows();
+  f.config.clock = () => { throw new ProviderReadError('CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL'); };
+  await rejectsCode(() => f.read(), 'ProviderReadPersistenceUnavailable', true);
+  assert.equal(f.requests.length, 0); assert.deepEqual(f.rows(), before);
+});
+
+test('C3-PR-20: externally constructed ProviderReadError while reading configuration is redacted', async t => {
+  const f = await fixture(t); const before = f.rows();
+  Object.defineProperty(f.config, 'apiVersion', { get() { throw new ProviderReadError('CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL'); } });
+  await rejectsCode(() => f.read(), 'ProviderReadConfigurationUnavailable');
+  assert.equal(f.requests.length, 0); assert.deepEqual(f.rows(), before);
+});
+
+test('C3-PR-21: a module-created refusal cannot be relabelled with a private diagnostic', async t => {
+  const f = await fixture(t); const before = f.rows(); let refusal;
+  try { await readClaimedStripeState(f.binding, f.mode, f.event.id, f.claim.claim_token, { ...f.config, timeoutMs: 0 }); }
+  catch (error) { refusal = error; }
+  assert.ok(refusal instanceof ProviderReadError); assert.equal(Object.isFrozen(refusal), true);
+  assert.equal(Reflect.set(refusal, 'code', 'CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL'), false);
+  assert.equal(Reflect.set(refusal, 'message', 'CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL'), false);
+  assert.equal(refusal.code, 'ProviderReadConfigurationUnavailable');
+  assert.equal(f.requests.length, 0); assert.deepEqual(f.rows(), before);
+});

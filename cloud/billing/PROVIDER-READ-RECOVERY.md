@@ -17,7 +17,10 @@ The request never carries the receipt's claim token. At most three provider
 requests execute, without automatic retries. Each response is bounded to the
 explicit configured size (supported maximum 1 MiB); the explicit whole-read
 timeout has a supported maximum of 120 seconds. Configuration is captured before
-awaiting. Provider error bodies and raw exception text are discarded.
+awaiting. Provider error bodies and raw exception text are discarded. Only immutable
+module-created refusals have a private diagnostic brand; constructing the public
+error class in an external transport, stream, database or clock cannot make its
+private message a trusted output.
 
 Identity, event type/creation, mode, optional connected-account identity and
 current-object ID/type/mode must agree. Unsupported event families or provider
