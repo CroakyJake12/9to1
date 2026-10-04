@@ -144,7 +144,7 @@
       "remaining": "HTTPS NOT_RUN: executor enforced restricted network revision19 lacks hostname allowance; no bypass. Mail/admin/client/nativeRSA-auth_revision/Turnstile/fulljourneys remain unconfigured/open. No complete service/release acceptance."
     },
     "existingServices": "Existingcake/migrationpreview/DNS/WordPress unchanged by root pass",
-    "browser": "Available browser connector postrestart stillHTTP404; no DOM/nativebrowser accepted",
+    "browser": "Latest actual browseragent_list_tabs retry HTTP429/UNAVAILABLE; earlier HTTP404 historical. No DOM/control/nativebrowser acceptance or authentication/cause inference.",
     "qualification": "No CLIcredential/currentpaidusageheadroom/nativeproviderjourney/fullrelease acceptance inferred"
   },
   "currentOwnerSourceReviews": {
@@ -152,7 +152,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T09:16:47.592485+00:00",
+  "updatedUTC": "2026-10-04T09:18:27.819450+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,

@@ -205,7 +205,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-04T09:16:47.592485+00:00",
+  "updatedUTC": "2026-10-04T09:18:27.819450+00:00",
   "candidateStatus": "REVIEWABLE_SOURCE_PLUS_ACTUAL_ISOLATED_CLOSED_IDENTITY_DEPLOYMENT_NOT_FULL_ACCEPTANCE",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -637,5 +637,12 @@
     "workersAi": "Owner09067/current35k drift review queued after installer peer; no current selected body/narrow integration ACK delivered.",
     "canonicalSitesFiles": "Original authority/import/manifest/currentCAS/full theme parity request acknowledged; owner review pending; no new executable session/project binding or composition contract.",
     "qualification": "Root and C1/C5 actual remote readback; existing scoped FilesCommitAuthorityGuard is not a complete current binding. A/B records preserved."
+  },
+  "currentBrowserRetry": {
+    "recordedUTC": "2026-10-04T09:18:27.819450+00:00",
+    "action": "browseragent_list_tabs",
+    "state": "UNAVAILABLE",
+    "error": "MCP SSE probe returned HTTP429",
+    "qualification": "Actual retry, no browser DOM read/control. Earlier HTTP404 retained as history; no authentication or underlying-cause inference."
   }
 }
