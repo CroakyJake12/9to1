@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Haven.Application;
+using HavenOS.Home.Apps;
 using HavenOS.Home.Core;
 using Xunit;
 
