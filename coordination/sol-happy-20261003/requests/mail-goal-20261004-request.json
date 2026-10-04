@@ -1,0 +1,43 @@
+{
+  "schema": "9to1-mail-goal-coordination-request/v1",
+  "status": "REQUESTED_NOT_ACKNOWLEDGED",
+  "requestedAtUTC": "2026-10-04T16:39:00Z",
+  "userAuthorization": "User explicitly replied Yes, coordinate with Team A/C in this Mail chat.",
+  "recipients": [
+    "Team A / Astra la Vista / A3 worker4_resume",
+    "Team A A6 independent review",
+    "Team C / Sol Excited"
+  ],
+  "scope": "Complete attached Mail Windows assignment; no release promotion, real mail sends, spending or everyday-PC changes.",
+  "sourceInspection": {
+    "initialWorkspace": "/workspace/9to1",
+    "initialHead": "98a08827c9fbc486fe987da73f4aee8398120d31",
+    "reviewedHandoff": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "proposalWorkspace": "/workspace/mail-proposal-20261004",
+    "proposalBranch": "proposal/mail-correctness-20261004",
+    "proposalState": "ISOLATED_UNADOPTED_PROPOSAL_ONLY_NO_OWNER_SCOPE_CLAIM"
+  },
+  "requests": [
+    "Team A/A3: return current exact Mail source/dependency baseline and bounded path-by-path handover for Mail domain/provider/UI source. Existing handover in team-a.json is A4 to A3; this Goal has no owner ACK.",
+    "Team A/A1/A5: supply canonical Mail installed graphical entrypoint/AppID/version and Home publisher/ABI/service/dependency tuple plus bootstrap/signing/repair contract.",
+    "Team A/A6: appoint independent non-author reviewer and reproduction slot for concrete Mail fixes once frozen.",
+    "Team C: coordinate genuine Windows runner/profile, source-approved Mail package recipe, clean no-SDK validation and authorized download/PC delivery route. No dispatch/edit of your workflow from this Goal.",
+    "Team A shared provider owner: review MicrosoftMailProvider continuation URI before OAuth Bearer dispatch. eec accepts arbitrary absolute next-links; credential-boundary reproduction in progress. Also ToggleRead/ToggleFlag currently change display after failed mutation.",
+    "Team A/C: confirm source integration route and unique coordination response allocation; this new disjoint request is a request only."
+  ],
+  "firstResults": {
+    "liveSpecificationRevision": "AHj4eMQsTIT4NLLbffjytUtKvQ-c1NMJ6tAnLf2xD7xcs-AQ188ZHRg49KZ1J4b6z3M3jKMEB_V2tUwEQH26Gd4GBo8MmIUircsD02y-a_0",
+    "cloudEnvironmentId": "ccarenv_b64_Y2NhcmVudl9kZDZhN2NlYTQxYWM4MTkxYjJkNDFlOTYyNmQ5ZWNjMg",
+    "environmentNameModelEffortGoalId": "Not exposed by current readback tools; no settings change or substituted setting claimed.",
+    "sdk": "Linux .NET 10.0.401",
+    "originalMailRelease": "13 passed, 3 failed, 16 total; real TLS fixtures require HAVEN_MAIL_FIXTURE_HOST. Original failures preserved; no remote mail performed.",
+    "package": "Mail project is a library; no accepted installed graphical entrypoint or Mail package supplied.",
+    "proposalWork": "Reproduce/fix remaining domain idempotency/currentness/journal defects and encrypted-store concurrency/error handling in isolated proposal; earlier reviewed eec journal/reconciliation repairs retained."
+  },
+  "blockers": [
+    "No current source handover ACK",
+    "No accepted Mail graphical package/installed Home tuple",
+    "No authorized connected-provider fixture",
+    "No independently reviewed Windows acceptance/delivery"
+  ]
+}
