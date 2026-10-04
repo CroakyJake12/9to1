@@ -89,6 +89,12 @@ public sealed partial class HomeNativeCoreApiSessions
                     throw new UnauthorizedAccessException("The original Files publication authority is unavailable.");
                 // All ordinary owner/current reads complete before either retained guard.
                 await owner.DemandOriginalReplyCurrentAsync(originalConnection, originalReply, linked.Token).ConfigureAwait(false);
+                // This ordinary issuer check completes BEFORE either guard; held owner callbacks may
+                // have retired the actor/installed tuple. It is early refusal, not publication authority.
+                if (!await CurrentAsync(context, linked.Token).ConfigureAwait(false))
+                    throw new UnauthorizedAccessException("The original installed Files caller retired before acquisition.");
+                DemandIssued(context);
+                linked.Token.ThrowIfCancellationRequested();
                 // Existing Files metadata writers enter Files before Home. Do not invert that order.
                 ownerGuard = await owner.AcquireOriginalReplyPublicationAsync(originalConnection,
                     originalReply, linked.Token).ConfigureAwait(false)
