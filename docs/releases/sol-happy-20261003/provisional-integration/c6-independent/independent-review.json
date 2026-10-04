@@ -1,0 +1,216 @@
+{
+  "recordedUTC": "2026-10-04T12:52:28.389547+00:00",
+  "reviewer": "C6 independent functional validation",
+  "state": "ACK_PROVISIONAL_RAW_PAYLOAD_CAS_REPAIR_LOCAL_12CASE_DEBUG_RELEASE_PASS",
+  "sourceCommit": "a4be0cd0fd8af22ccde5fb609e5af70ee0ace271",
+  "basis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "sourceInputs": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/UnifiedExecutionRepositories.cs",
+      "bytes": 23371,
+      "sha256": "18391188f0652003b80aa594733d88deaf576481f8fcb6b4be350eff72b76317"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExternalAgentDurableCancellationTests.cs",
+      "bytes": 8325,
+      "sha256": "552b11de5ce0d30d3f0266c9c8b10e56eaeafdd5497e37ebb9a798c1019f7825"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExternalAgentCancellationConcurrencyTests.cs",
+      "bytes": 14397,
+      "sha256": "1a26bcbbc10aae50b2b307a6d4a25c7c29f4b7405192f2c70dab28e608bad75c"
+    }
+  ],
+  "outsideChangedMethodByteEqual": true,
+  "preservedReferenceMethodExact": true,
+  "originalRegressionUnchanged": true,
+  "applicableCriterion": {
+    "specificationSha256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c",
+    "paragraph": 8291,
+    "criterion": "SH10 durable job identity/progress/cancellation/results; reconnection must not repeat consequential actions; authorised identity/scope/funding retained"
+  },
+  "functionalRuns": [
+    {
+      "configuration": "Debug",
+      "exitCode": 0,
+      "counts": {
+        "total": "12",
+        "executed": "12",
+        "passed": "12",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "tests": [
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: Failed)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: InProgress)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.A_deleted_task_is_not_recreated_by_stale_cancellation",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Renewed_claim_survives_stale_cancellation_and_restart",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Unchanged_valid_JSON_whitespace_does_not_prevent_cancellation",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Caller_cancellation_before_write_leaves_the_durable_task_unchanged",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.External_task_claim_is_exclusive_and_idempotent_completion_is_persisted",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Competing_cancellations_commit_once_and_preserve_the_first_commit_after_restart",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Migration_23_round_trips_graph_feedback_session_notifications_and_sources",
+          "outcome": "Passed"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "/workspace/team-c-c6-durable-validation-20261004/Debug/command.json",
+          "bytes": 1394,
+          "sha256": "5d0f04503e4fcf672da992c4faf036bb1d714ddc38d6586ed10b8182a1d872c3"
+        },
+        {
+          "path": "/workspace/team-c-c6-durable-validation-20261004/Debug/run.log",
+          "bytes": 3294,
+          "sha256": "1c179a36b45af9fbde1811082fbd48ea89776d4fa5ddf2e25a02796010d65036"
+        },
+        {
+          "path": "/workspace/team-c-c6-durable-validation-20261004/Debug/results/tests.trx",
+          "bytes": 20527,
+          "sha256": "b9e84ddea2ac6c9877897396a9404a66b75fedaddc40fb2aaba491998d53bbb4"
+        }
+      ]
+    },
+    {
+      "configuration": "Release",
+      "exitCode": 0,
+      "counts": {
+        "total": "12",
+        "executed": "12",
+        "passed": "12",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "tests": [
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: InProgress)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Unchanged_valid_JSON_whitespace_does_not_prevent_cancellation",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.External_task_claim_is_exclusive_and_idempotent_completion_is_persisted",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Renewed_claim_survives_stale_cancellation_and_restart",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.A_deleted_task_is_not_recreated_by_stale_cancellation",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Competing_cancellations_commit_once_and_preserve_the_first_commit_after_restart",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: Failed)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Migration_23_round_trips_graph_feedback_session_notifications_and_sources",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Caller_cancellation_before_write_leaves_the_durable_task_unchanged",
+          "outcome": "Passed"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel",
+          "outcome": "Passed"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "/workspace/team-c-c6-durable-validation-20261004/Release/command.json",
+          "bytes": 1401,
+          "sha256": "bb5d46ce3499f77e4b770b6613271c17ca1283f67f2589005f8f664411106fbe"
+        },
+        {
+          "path": "/workspace/team-c-c6-durable-validation-20261004/Release/run.log",
+          "bytes": 1791,
+          "sha256": "a7e2630dfc22ec4b0cc686953394eea822ea9e605d8049b5ef4f875e00d5ea13"
+        },
+        {
+          "path": "/workspace/team-c-c6-durable-validation-20261004/Release/results/tests.trx",
+          "bytes": 20579,
+          "sha256": "8e9043422dfe60d897b71345e2247bb32975f9aedf6244517aa7d23d0d90a3e9"
+        }
+      ]
+    }
+  ],
+  "review": "Conditional existing owner+exact original persisted payload+current terminal guards; atomic UPDATE reports one affected row, no retry/upsert/alternate authority. Original three assertions remain intact; seven new real SQLite races/JSON controls and two unchanged owning persistence cases meaningfully exercise write admission, whole canonical payload/restart, renewed lease, deletion and caller cancellation. Failed/Expired fresh-cancel policy unchanged.",
+  "platform": "Linux x64 .NET10.0.401/actual canonical production references and SQLite WAL; separate clean source clone/output tree",
+  "qualification": "Provisional source review and local persistence evidence only. Normal full Infrastructure suite, owner adoption, receiving global composition, hosted jobs/funding/currentness and real Windows package/GUI acceptance remain separate. No provider mutation, identity rerun or active-owner source edit.",
+  "publicSafe": "Private synthetic fixture DB images excluded. Public logs contain no actual token/credential values."
+}
