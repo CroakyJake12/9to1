@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "sourceBasis": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "repository": "CroakyJake12/9to1",
+  "producerRunId": 37208129079,
+  "artifacts": [
+    {
+      "id": 11305252552,
+      "name": "windows-unaccepted-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 78087570,
+      "digest": "sha256:97012e4592d4c0f5da14bedd1ac13b5a6b1988bd292b2e990bccd3cdec30d68f"
+    },
+    {
+      "id": 11305292433,
+      "name": "windows-observation-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 34079,
+      "digest": "sha256:7645fdba070177fd1319112030a11242eacfc5000b8cabb553b0e9f16938b234"
+    }
+  ],
+  "package": {
+    "file": "boards-win-x64-unaccepted.zip",
+    "bytes": 78324943,
+    "sha256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64"
+  },
+  "originalResultSha256": "cba279e171e0f02da0c000f1e9043aadf7247b1b5646d60cb38bddc04682aa3c",
+  "executable": "CakeOS.Apps.Boards.App.exe",
+  "harnessPaths": [
+    ".github/workflows/team-c-boards-packaged-ui-controls.yml",
+    ".github/scripts/boards-packaged-ui-controls.ps1",
+    ".github/validation/boards-packaged-ui-controls.json",
+    "eng/release-validation/boards-packaged-ui/README.md"
+  ],
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Boards.cui",
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BlockRenderer.cs",
+      "sha256": "f33c0979ff4a47469bb0ad11684799c5469311d5ada826f043bb04fe0562731a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+      "sha256": "aeec3484ac7a75156a14a305145851afebdffb66d4a20cf8e75ecc643381d674"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ControlAutomationPeer.cs",
+      "sha256": "abc2ee12e374261fc21f685e921a22468e020d78a45b708fbc70d92364b30b5f"
+    }
+  ]
+}
