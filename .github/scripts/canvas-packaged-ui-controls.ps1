@@ -275,6 +275,36 @@ function Read-UiAutomationAssembly($Assembly) {
     $beneathWindows=$location.StartsWith($windows,[StringComparison]::OrdinalIgnoreCase);$publicLocation='WITHHELD_NON_SYSTEM';if($beneathWindows -and $Assembly.GlobalAssemblyCache){$publicLocation=$location}
     return [ordered]@{name=$name.Name;version=$name.Version.ToString();culture=$name.CultureName;publicKeyToken=([BitConverter]::ToString($name.GetPublicKeyToken())).Replace('-','').ToLowerInvariant();globalAssemblyCache=$Assembly.GlobalAssemblyCache;beneathWindowsDirectory=$beneathWindows;location=$publicLocation;sha256=(Get-FileHash -LiteralPath $location -Algorithm SHA256).Hash.ToLowerInvariant()}
 }
+function Read-BoundedProviderExceptionTypes([Exception]$Failure) {
+    $chain=@();$current=$Failure
+    while($null -ne $current -and $chain.Count -lt 8){
+        $chain+=[ordered]@{type=$current.GetType().FullName;hresult=$current.HResult};$current=$current.InnerException
+    }
+    return [ordered]@{chain=$chain;truncated=$null -ne $current;maximumEntries=8;rawMessage='WITHHELD';rawToString='WITHHELD'}
+}
+function Record-StandardProviderRefusalWitness($Provider,[Exception]$Failure) {
+    $w=[ordered]@{registrationException=Read-BoundedProviderExceptionTypes $Failure;canonicalTypePresent=$false;canonicalTypeIsPublic=$false;publicStaticTablePresent=$false;publicStaticTableExpectedType=$false;tableReadAttempted=$false;tableReadCompleted=$false;tableIsNull=$null;tableCount=$null;publicTableReadFailure=$null}
+    $result.uiaProviderSetup.registrationFailureWitness=$w
+    try{
+        # These are the exact canonical type/field used by the public framework
+        # registration implementation. No private members/table bodies are read.
+        $type=$Provider.GetType($Provider.GetName().Name+'.UIAutomationClientSideProviders')
+        $w.canonicalTypePresent=$null -ne $type
+        if($null -ne $type){
+            $w.canonicalTypeIsPublic=$type.IsPublic
+            $field=$type.GetField('ClientSideProviderDescriptionTable',[Reflection.BindingFlags]::Public -bor [Reflection.BindingFlags]::Static)
+            $w.publicStaticTablePresent=$null -ne $field
+            if($null -ne $field){
+                $w.publicStaticTableExpectedType=$field.FieldType -eq [System.Windows.Automation.ClientSideProviderDescription[]]
+                if($w.publicStaticTableExpectedType){
+                    $w.tableReadAttempted=$true;$table=$field.GetValue($null);$w.tableReadCompleted=$true;$w.tableIsNull=$null -eq $table
+                    if($null -ne $table){$w.tableCount=$table.Length}
+                }
+            }
+        }
+    }catch{$w.publicTableReadFailure=Read-BoundedProviderExceptionTypes $_.Exception}
+    Write-Result
+}
 function Initialize-StandardUiAutomationProviders {
     $result.uiaProviderSetup=[ordered]@{registrationCompleted=$false;client=$null;provider=$null;managedLegacyTypeAvailable=$false}
     $client=[System.Windows.Automation.AutomationElement].Assembly;$clientName=$client.GetName()
@@ -287,7 +317,13 @@ function Initialize-StandardUiAutomationProviders {
     Check (Test-GenuineUiAutomationAssembly $providerSnapshot $requested.Name $clientName.Version.ToString() $clientName.CultureName) 'Actual standard UIAutomation provider is genuine installed Microsoft assembly matching loaded client'
     # Public framework API registers only the genuine installed OS client-side proxies.
     # Existing Edit/Value, Button/Invoke, PID, ownership and geometry criteria remain required.
-    [System.Windows.Automation.ClientSettings]::RegisterClientSideProviderAssembly($requested)
+    try{[System.Windows.Automation.ClientSettings]::RegisterClientSideProviderAssembly($requested)}
+    catch{
+        $originalRegistrationFailure=$_
+        try{Record-StandardProviderRefusalWitness $provider $originalRegistrationFailure.Exception}
+        catch{$result.uiaProviderSetup.registrationWitnessFailure=Read-BoundedProviderExceptionTypes $_.Exception}
+        throw $originalRegistrationFailure
+    }
     $result.uiaProviderSetup.registrationCompleted=$true
     $result.uiaProviderSetup.managedLegacyTypeAvailable=$null -ne ('System.Windows.Automation.LegacyIAccessiblePattern' -as [type])
     Write-Result

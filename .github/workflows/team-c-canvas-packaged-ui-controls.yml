@@ -1,18 +1,17 @@
-name: Team C immutable Canvas native workflow controls (unaccepted)
+name: Team C installed UI Automation setup diagnostic (unaccepted)
 on:
   push:
-    branches: [team-c/sol-happy-c3-canvas-uia-providers-20261004]
+    branches: [team-c/sol-happy-c3-canvas-uia-provider-diagnostic-20261004]
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
 concurrency:
-  group: team-c-canvas-native-workflow-${{ github.ref }}
+  group: team-c-canvas-uia-provider-diagnostic-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  packaged-ui:
+  provider-setup-only:
     runs-on: windows-2022
-    timeout-minutes: 12
+    timeout-minutes: 3
     env:
       GIT_OPTIONAL_LOCKS: '0'
     steps:
@@ -23,51 +22,43 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify immutable original producer and read-only inspector metadata
+      - name: Observe exact installed framework public provider setup refusal only
         shell: powershell
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          PROBE_OUTPUT: ${{ runner.temp }}/canvas-uia-provider-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          $ErrorActionPreference = 'Stop'
-          $c = Get-Content -Raw .github/validation/canvas-packaged-ui-controls.json | ConvertFrom-Json
-          if ($env:GITHUB_REPOSITORY -cne $c.repository) { throw 'Wrong repository.' }
-          $headers = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28' }
-          $base = "https://api.github.com/repos/$($c.repository)/actions"
-          foreach ($expected in $c.artifacts) {
-            $run = Invoke-RestMethod -Headers $headers -Uri "$base/runs/$($expected.runId)"
-            if ($run.head_sha -cne $expected.headSha) { throw 'Pinned original run source mismatch.' }
-            $a = Invoke-RestMethod -Headers $headers -Uri "$base/artifacts/$($expected.id)"
-            if ($a.id -ne $expected.id -or $a.name -cne $expected.name -or $a.size_in_bytes -ne $expected.size_in_bytes -or $a.digest -cne $expected.digest -or $a.expired -or $a.workflow_run.id -ne $expected.runId -or $a.workflow_run.head_sha -cne $expected.headSha) { throw 'Immutable original artifact tuple mismatch or expiry.' }
+          $ErrorActionPreference='Stop'
+          Set-StrictMode -Version Latest
+          $output=[IO.Path]::GetFullPath($env:PROBE_OUTPUT)
+          if(Test-Path -LiteralPath $output){throw 'Evidence directory must be new.'}
+          [void][IO.Directory]::CreateDirectory($output)
+          $source='.github/scripts/canvas-packaged-ui-controls.ps1'
+          $result=[ordered]@{schemaVersion=1;status='NOT_RUN';stage='installed-standard-uia-provider-diagnostic';workflowCommit='${{ github.sha }}';sourceSha256=(Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant();checks=@();launches=@();requests=@();canvasStates=@();forcedCleanup=$false;acceptanceVerified=$false;fullAppAcceptance='NOT_RUN';installedHomeTuple='NOT_RUN';cleanPcDelivery='NOT_RUN';failure=$null;qualification='Setup-only SDK-present hosted Windows client diagnostic. Exact genuine installed Microsoft GAC provider/public API; bounded exception type/HRESULT and canonical public type/table capability only. No package download/extraction, native app/process/input/picker/profile/fixture/provider resource/model/approval state.'}
+          $tokens=$null;$errors=$null
+          $ast=[System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $source).Path,[ref]$tokens,[ref]$errors)
+          if($errors.Count){throw 'Actual source parser errors.'}
+          foreach($name in @('Write-Result','Check','Test-GenuineUiAutomationAssembly','Read-UiAutomationAssembly','Read-BoundedProviderExceptionTypes','Record-StandardProviderRefusalWitness','Initialize-StandardUiAutomationProviders')){
+            $definitions=@($ast.FindAll({param($node)$node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name},$true))
+            if($definitions.Count -ne 1){throw 'Exact source function is absent or ambiguous.'}
+            Invoke-Expression $definitions[0].Extent.Text
           }
-      - name: Download exact original package inside Windows runner
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: 37203799923
-          artifact-ids: 11304710012
-          path: ${{ runner.temp }}/canvas-package-input
-      - name: Download exact original read-only manifest observations
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: 37205514551
-          artifact-ids: 11303769280
-          path: ${{ runner.temp }}/canvas-observation-input
-      - name: Observe actual native Files setup, Canvas creation, stroke commit and reopen
-        shell: powershell
-        env:
-          PROBE_OUTPUT: ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}
-        run: |
-          & .github/scripts/canvas-packaged-ui-controls.ps1 -PackageInput '${{ runner.temp }}/canvas-package-input' -ObservationInput '${{ runner.temp }}/canvas-observation-input' -OutputDirectory $env:PROBE_OUTPUT
-          exit $LASTEXITCODE
-      - name: Retain original bounded observations and failures only
+          $exitCode=1
+          try{
+            $catalog=Get-Content -Raw .github/validation/canvas-packaged-ui-controls.json|ConvertFrom-Json
+            foreach($pin in $catalog.sourcePins){Check ((Get-FileHash -LiteralPath $pin.path -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $pin.sha256) "Exact unchanged native source pin: $($pin.path)"}
+            Add-Type -AssemblyName UIAutomationClient,UIAutomationTypes
+            Initialize-StandardUiAutomationProviders
+            $result.status='SETUP_ONLY_COMPLETED_NATIVE_WORKFLOW_NOT_RUN';$exitCode=0
+          }catch{
+            $result.status='ORIGINAL_PROVIDER_SETUP_REFUSAL_RETAINED'
+            $result.failure=Read-BoundedProviderExceptionTypes $_.Exception
+          }finally{Write-Result}
+          exit $exitCode
+      - name: Retain original bounded setup metadata and refusal only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: canvas-native-workflow-unaccepted-${{ github.sha }}-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/result.json
-            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.log
-            ${{ runner.temp }}/canvas-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}/*.png
+          name: canvas-uia-provider-diagnostic-unaccepted-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/canvas-uia-provider-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}/result.json
           if-no-files-found: warn
           retention-days: 7

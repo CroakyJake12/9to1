@@ -112,3 +112,21 @@ button/geometry/foreground/Invoke guards admit choice. Pane acceptance, coordina
 click fallback, synthetic picker results and request retries remain prohibited.
 Standard tooling setup does not establish runtime success: all actual native
 setup/create/approval/stroke/commit/reopen criteria remain original open gates.
+
+
+Actual f5a3 run37223981483 stops before package extraction or app launch:36
+recorded checks pass and both matching genuine installed Microsoft GACv4 client/
+provider assemblies are observed, but the public registration call throws an
+unobserved-inner MethodInvocationException. No input/profile/request/state or
+forced cleanup occurred. This separate setup-only workflow executes only the
+actual source's seven named public setup/receipt functions. It downloads/extracts
+no package and launches no app. It preserves the same genuine assembly and API
+criteria, recording a maximum-eight exception type/HRESULT chain with all message/
+ToString text withheld. It reads only the exact canonical public static provider
+field used by the framework's public registration implementation; presence/type,
+null/count/completion and any separate bounded exception chain are metadata only.
+No table contents, private members, proxy replacements or OS configuration are
+read/written. Diagnostic capability/output failure preserves the original setup
+exception. A three-minute Windows job bound remains; registration/field static
+initialization are genuine framework calls, not independently cancellable APIs.
+Setup success would still establish no app or native workflow acceptance.
