@@ -14,8 +14,8 @@
     "globalCIBase": "da5466c5a4b37268d841a50120e4838170416dbd",
     "globalCIProposal": "03f64aa6feaff7203de251f9d919fe3220119e38"
   },
-  "payloadCount": 231,
-  "totalBytes": 14767192,
+  "payloadCount": 234,
+  "totalBytes": 14791720,
   "entries": [
     {
       "path": "README.md",
@@ -101,6 +101,16 @@
       "path": "continuation/peer/c4-wave-ten-frozen-source-review.json",
       "bytes": 6127,
       "sha256": "35979caecd15e01685e811e4693ca5dcf1b85b48445c1433949d6eea06a3b4c5"
+    },
+    {
+      "path": "continuation/peer/c6-wave-ten-canonical-source.json",
+      "bytes": 6143,
+      "sha256": "81cdf869a44cf4fb5cfab7c5262ce3286ff4ad5a91a32f2962e9a805c5f1cd52"
+    },
+    {
+      "path": "continuation/peer/c6-wave-ten-native-readback-v2.json",
+      "bytes": 11352,
+      "sha256": "5070151585d2f8325d04a4be93a8b5a7dd128dbdf58c2fb5d4a0ca698dd6e35f"
     },
     {
       "path": "continuation/retired-build-caches.json",
@@ -405,6 +415,11 @@
       "originalSha256": "2072c34bb6e61a5f19cc8240ae9e945f86177e0ef045686b236e4b5e78189fb5",
       "bytes": 5206,
       "sha256": "2072c34bb6e61a5f19cc8240ae9e945f86177e0ef045686b236e4b5e78189fb5"
+    },
+    {
+      "path": "peer/c6-original164-publication-audit.json",
+      "bytes": 7033,
+      "sha256": "5c9e1d4aaa0be2ef6c7ba3689685b5d76a78f3d39e2ff1ae8f62849230f0d42a"
     },
     {
       "path": "peer/c6-picture-canonical-closure.json",
@@ -1504,6 +1519,6 @@
       "sha256": "948853f28cc96fea3d04ed532ded3ccb56f1bebe4ab9eff287dcc04fe4554272"
     }
   ],
-  "previousImmutableEvidenceCommit": "aecbd3563b49a3dad4578d5ac3ab58bb7f7a013a",
-  "previousImmutableIndexSHA256": "6c7c106b1b75f4a1ad50d5519a2d37971d47d1e7fdb7d0161f8b2477f0fa3546"
+  "previousImmutableEvidenceCommit": "3c6662ec364cd3057a03ea33cfc5788fc7fd0c85",
+  "previousImmutableIndexSHA256": "f3376b56544ca1aa6bac734ca5dc8bbf470724074a09bd814a8995519790d20e"
 }
