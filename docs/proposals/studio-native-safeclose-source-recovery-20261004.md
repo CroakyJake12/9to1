@@ -1,0 +1,9 @@
+# Studio native safeclose source recovery
+
+This branch is an INCOMPLETE, UNSELECTED and UNREVIEWED source proposal rebuilt from the complete passing native leaf at 07bb21af116703085bd45f85c8055baffa62a5dc. It does not reconstruct or carry reviews of the lost unpublished draft. The fourteen original Windows case identities and the twelve shared raster/provider products remain at that exact parent.
+
+The first durable checkpoint introduces only private custody for original callback tasks. Window, application, trusted startup/physical-connection composition, deferred native close, preview control, embedded Home approval and meaningful owning fixtures are still being authored. This checkpoint is not suitable for selection or runtime validation.
+
+The Home Windows public startup/connection ports are separately reviewed in the receiving Foundation source union 876d79229984a0b8f164bff108f814f0192f8b8b. Core.Read compatibility cannot grant Den, model, Files or mutation authority. Missing protected installed identity and genuine supplied domain composition must remain unavailable. No default Ready, permission grant, signing, provider transfer or global adoption is implied.
+
+No compilation, test, workflow, package, native or local process invocation is part of these source checkpoints. Full A1 and A6 reviews must close before selection. Larger historical Startup source remains a distinct graph, with its fixture cleanup acquisition hold; it is not a drop-in replacement for this native leaf.
