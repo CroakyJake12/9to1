@@ -1,0 +1,62 @@
+{
+  "status": "EXACT_OWNER_SOURCE_ACK_REQUESTS_NO_GLOBAL_ADOPTION",
+  "accounts": {
+    "owner": "Team A canonical Accounts authority; C3 receiving trusted-service integration",
+    "branch": "team-c/sol-happy-c3-accounts-cancellation",
+    "sourceHead": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+    "parentDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "rootProposalBase": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
+    "closure": "31 exact standalone Accounts core/spec paths; no Remote/Web/issuer activation or package/shared/Avalonia closure",
+    "changes": [
+      "Previously owner-cleared control-character key rejection and 16 operation/character persistence cases.",
+      "Six cancellation checks in existing FundAsync/ReserveAsync; four gated authority/pool-wait controls preserve bytes and restart."
+    ],
+    "pins": [
+      {
+        "head": "9991da24",
+        "path": "9to1 Workspace/Accounts/OrganisationDustPools.cs",
+        "bytes": 28950,
+        "sha256": "2e87be6fa8832c6a86d6634de0c4b9b5639d8b4013f5a710556eef767b72b573",
+        "gitBlob": "409b57f70b87537967240d4168fe0232eea2bf37"
+      },
+      {
+        "head": "9991da24",
+        "path": "9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+        "bytes": 15783,
+        "sha256": "5930c9b1c23d668d820f62006fb64a2bfcae64b1665bb64ecd2053c1a44d0c4b",
+        "gitBlob": "7aefca2c9adaa0b3242e5079e6c3eb034208e0ee"
+      }
+    ],
+    "review": "C2 identity/authority subset and C6 remaining source/whole Debug+Release+negative probes; C6 a96caff8 six-check cancellation ACK only. Test-helper exceptional drain successor still being reviewed; no broad cleanup claim.",
+    "evidence": "evidence/c3-accounts-narrow-integration/artifact-index.json +c6/accounts-c96-review/audit.json +c6/accounts-9991-review/audit.json",
+    "request": "ACK narrow exact source adoption or supply bounded rebase onto current selected owner body, preserving all existing issuer/account/client/session/organisation/quote/funding guards. No stale whole-source replacement. Provide remote actor/current authority/registered-client mapping separately before hosted activation."
+  },
+  "nativeSites": {
+    "owner": "Team A selected native authoring/build source; C1/C4 receiving hosted composition",
+    "normalSource": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "closureEvidence": "cloudflare/native-sites-prerequisite-review.json",
+    "request": "Explicitly ACK/deliver the five normalA63 pipeline/renderer/authoring/guarded-store/test bodies in the nine-file pinned closure; four existing root model/contracts/project/slug bodies are byte-equal. Preserve beforeCommit authority before write and after flush/before File.Move. Select internal Reachable normalA63 body; no unapproved public e0c modifier or duplicate manifest records.",
+    "adapterBranch": "team-c/sol-happy-c4",
+    "adapterHead": "b7b4b4ee5cf7b77e75e1bdca0b4a48a22c7ea95b",
+    "adapterPins": [
+      {
+        "head": "b7b4b4ee",
+        "path": "9to1 Workspace/Sites/Hosting/R2NativeSiteArtifactReader.cs",
+        "bytes": 6714,
+        "sha256": "d82c24a3ee745cecbc5457d685a0b38cf9732d15f0f2b90d55a1f914236ed749",
+        "gitBlob": "5554c382aa06a751c0d7a1f60ead77bca2f266c2"
+      },
+      {
+        "head": "b7b4b4ee",
+        "path": "9to1 Workspace/Sites/Tests/R2NativeSiteArtifactReaderTests.cs",
+        "bytes": 5514,
+        "sha256": "c71db97aa1cc7217dfbfca79680609b556f4669158d5e5432a774d4c951bea3b",
+        "gitBlob": "d7befcd95e01d95bdb553907955bf9e7b6ab5cc4"
+      }
+    ],
+    "evidence": "evidence/c5-native-r2-c218/index.json +evidence/c5-native-r2-b7b4/index.json",
+    "review": "C5 exacte0c-type source ACK;21 cases pass, original14 blank-provenance probes pass, hash omission2fail/19pass. Original failures retained. Receiving root lacks manifest types: no receiving compile/activation ACK.",
+    "remaining": "Canonical original Files/session/project source binding, consistent snapshot export, real secret scanner, immutable namespace/provider composition and full theme/editor/dynamic parity."
+  },
+  "qualification": "Reviewable source requests over the established coordination branch. No new model/ledger, production activation, commercial policy, provider acceptance or whole release completion. Root is sole adopter."
+}
