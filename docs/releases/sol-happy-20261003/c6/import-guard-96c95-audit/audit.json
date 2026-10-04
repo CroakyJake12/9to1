@@ -1,0 +1,67 @@
+{
+  "head": "96c95baf",
+  "root": "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm",
+  "cases": [
+    {
+      "case": "positive",
+      "argv": [
+        "python3",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/packager.py",
+        "--input",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/positive.json",
+        "--output",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/positive-output"
+      ],
+      "exit": 0,
+      "outputExists": true,
+      "logSha256": "4b45c03b1c7b17517bdd7f7bc1ed46948ecf03c608f6367e5c5c0a8a3eb8c648"
+    },
+    {
+      "case": "tampered",
+      "argv": [
+        "python3",
+        "-O",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/packager.py",
+        "--input",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/tampered.json",
+        "--output",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/tampered-output"
+      ],
+      "exit": 1,
+      "outputExists": false,
+      "logSha256": "00c85476e25db49faee9509085a3d2f833cbcda29983f6dba6e5389c6d0338db"
+    },
+    {
+      "case": "duplicate-id",
+      "argv": [
+        "python3",
+        "-O",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/packager.py",
+        "--input",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/duplicate-id.json",
+        "--output",
+        "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/duplicate-id-output"
+      ],
+      "exit": 1,
+      "outputExists": false,
+      "logSha256": "bad6224b26d3750a31d837419c1e90f97ea1e01cfa5803d2f0366af0848f2da9"
+    }
+  ],
+  "baselineNegativeControls": [
+    {
+      "case": "tampered",
+      "exit": 0,
+      "outputExists": true,
+      "htmlFileCount": 7
+    },
+    {
+      "case": "duplicate-id",
+      "exit": 0,
+      "outputExists": true,
+      "htmlFileCount": 6
+    }
+  ],
+  "sourceCommit": "96c95bafb10de706fdaeb6797ec78a8059629243",
+  "sourceSha256": "232e07d75975ceb29ef479d4b7e34fced32da30a801d6ba3ac9fa9d6fbf1ecb3",
+  "qualification": "Utility guard correction only. Original85d0 normal-Python-only evidence retained. Actual7bodybytes preserved; no canonical project/session/source authority, parity or provider activation acceptance."
+}
