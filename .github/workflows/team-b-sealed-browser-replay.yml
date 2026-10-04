@@ -1,0 +1,73 @@
+name: Team B sealed browser replay
+on:
+  push:
+    branches: ["team-b/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    if: startsWith(github.ref, 'refs/heads/team-b/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        suite: [accounts7, wave14]
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Receive exact successful public producer artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: "11304679865"
+          run-id: "37206507459"
+          repository: CroakyJake12/9to1
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/team-b-sealed-22d/transport
+      - name: Verify every public body then run unchanged actual browser oracles
+        run: >-
+          python3 apps/Web/Tests/ci/sealed-browser-replay/run-sealed-browser-replay.py
+          --suite '${{ matrix.suite }}'
+          --transport "$RUNNER_TEMP/team-b-sealed-22d/transport"
+          --output "$RUNNER_TEMP/team-b-sealed-22d/${{ matrix.suite }}"
+      - name: Upload bounded diagnostics without profiles or TLS keys
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-sealed-${{ matrix.suite }}-22d2e2dd-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-sealed-22d/${{ matrix.suite }}/diagnostics
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain exact original public archive part one
+        if: always() && matrix.suite == 'wave14'
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-public-inner-part01-22d2e2dd-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-sealed-22d/wave14/public-parts/part01
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain exact original public archive part two
+        if: always() && matrix.suite == 'wave14'
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-public-inner-part02-22d2e2dd-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-sealed-22d/wave14/public-parts/part02
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
