@@ -1,0 +1,57 @@
+{
+  "sourceCommit": "29e33a1a019f51c83ef16bb8810ad381526fb8c4",
+  "productionUnchangedFrom": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+  "publicationCommit": "b69d8b8815ebb62e425d70fe78d6bf9deb4c9e3f",
+  "publicationPayloadsVerified": 47,
+  "runs": [
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "exit": 0,
+      "log": "OrgPools-Debug.log"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+        "--configuration",
+        "Release"
+      ],
+      "exit": 0,
+      "log": "OrgPools-Release.log"
+    }
+  ],
+  "review": "Full test-only delta read: pending task is collected after independent cancellation/gate/mutex release collectors; original exception references retained. Actual injected gated body failure asserts exact original error, pending completed, OCE and byte/restart preservation. Pool acquisition occurs before pending creation; native mutex release stays on same thread in pool-wait branch.",
+  "scope": "Bounded body-failure drainage verified; no general arbitrary cleanup/release-failure recovery or whole exception aggregation acceptance. No policy/signature/production/owner ACK inferred. SDK10.0.401; no full SDK/native/provider runs.",
+  "metadataCorrection": "Parent message docs pointer had an extra final9; exact Git-resolved b69d8b8 full commit recorded here.",
+  "artifacts": [
+    {
+      "path": "OrgPools-Debug.log",
+      "bytes": 709,
+      "sha256": "7c3b71db8fd7f99033a2c3f86c2c2ad2f91d0e206eecc27db959c78be2af63fb"
+    },
+    {
+      "path": "OrgPools-Release.log",
+      "bytes": 709,
+      "sha256": "7c3b71db8fd7f99033a2c3f86c2c2ad2f91d0e206eecc27db959c78be2af63fb"
+    },
+    {
+      "path": "OrgPoolsProgram.cs",
+      "bytes": 28787,
+      "sha256": "0953c81b77bb5e60ac6a92e654c92ca563d120ca723941462ced01b5f2ddface"
+    },
+    {
+      "path": "runs.json",
+      "bytes": 513,
+      "sha256": "f9a4267bbff456cdab2fd36d99cb30c55149c47f5ba3d674de75cef2a69fce15"
+    }
+  ]
+}
