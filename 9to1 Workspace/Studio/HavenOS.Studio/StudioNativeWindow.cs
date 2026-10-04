@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -218,14 +219,21 @@ public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
     public async Task RetireWorkspaceAsync(CancellationToken ct)
     {
         await RetireEditorAsync(ct);
-        _selectedDen = null; _pendingImport = null; _pendingImportAudit = null; _workspaceActor = null; _agents = [];
-        _model.Set("AgentNames", Array.Empty<string>()); _model.Set("SelectedAgentIndex", -1); _model.Set("AgentName", "");
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _selectedDen = null; _pendingImport = null; _pendingImportAudit = null; _workspaceActor = null; _agents = [];
+            _model.Set("AgentNames", Array.Empty<string>()); _model.Set("SelectedAgentIndex", -1); _model.Set("AgentName", "");
+        });
     }
     public async Task RetireEditorAsync(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var editor = _editor; _editor = null; _session = null;
-        _editorContent.Content = null; _editorHost?.Dispose(); _editorHost = null;
+        var editor = await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var retired = _editor; _editor = null; _session = null;
+            _editorContent.Content = null; _editorHost?.Dispose(); _editorHost = null;
+            return retired;
+        });
         if (editor?.Preview is not null) await editor.Preview.DisposeAsync();
     }
     private sealed class ConfigurationReadiness : ICuiSceneReadiness

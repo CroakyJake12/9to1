@@ -20,7 +20,9 @@ public sealed class StudioNativeHostTests
     public Task Actual_configuration_scene_creates_owned_Den_and_explicit_Agent_then_mounts_editor() => ExerciseHostAsync(false);
     [Fact]
     public Task Actual_picker_import_preserves_bytes_in_owned_Den_and_native_authoring_saves_reference() => ExerciseHostAsync(true);
-    private static async Task ExerciseHostAsync(bool importAvatar)
+    [Fact]
+    public Task Actual_background_Den_disposal_retires_native_editor_and_workspace_before_returning() => ExerciseHostAsync(false, true);
+    private static async Task ExerciseHostAsync(bool importAvatar, bool retireFromBackground = false)
     {
         var root = Path.Combine(Path.GetTempPath(), "studio-native-host-" + Guid.NewGuid().ToString("N"));
         var chosen = Path.Combine(root, "chosen"); Directory.CreateDirectory(chosen);
@@ -68,7 +70,12 @@ public sealed class StudioNativeHostTests
                     {
                         FindButton(window, "Import an avatar image into this Agent…").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                         var assetField = All(window).OfType<TextBox>().Single(item => AutomationProperties.GetName(item) == "Static fallback asset reference");
-                        await Until(() => Task.FromResult(!string.IsNullOrEmpty(assetField.Text)));
+                        try { await Until(() => Task.FromResult(!string.IsNullOrEmpty(assetField.Text))); }
+                        catch (OperationCanceledException error)
+                        {
+                            var observed = string.Join(" | ", All(window).OfType<TextBlock>().Select(item => item.Text));
+                            throw new TimeoutException("The original native avatar import did not complete. Observed UI: " + observed, error);
+                        }
                         var reference = (await session.Den.GetAsync<BlobReferenceRecord>("personal", assetField.Text!))!;
                         Assert.Equal(agent.Id, reference.OwnerId);
                         Assert.Equal(DenAgentPresentationAssets.AgentOwnerKind, reference.OwnerKind);
@@ -84,9 +91,21 @@ public sealed class StudioNativeHostTests
                         Assert.Equal(reference.Id, (await session.Den.GetAsync<AgentDefinitionRecord>("personal", agent.Id))!.Presentation!.StaticFallbackAssetReference);
                     }
                     Assert.False(await session.Den.AccessPolicy.IsAllowedAsync(session.Actor.ActorId, "personal", agent.Id, DenPermission.Execute));
-                    actors.Changed = session.Actor with { AuthenticationRevision = "changed-native-fixture-session" };
-                    var denied = await Record.ExceptionAsync(() => window.ValidateWorkspaceAsync(default));
-                    Assert.True(denied is UnauthorizedAccessException or DenException { Code: DenErrorCode.Forbidden });
+                    if (retireFromBackground)
+                    {
+                        await Task.Run(async () =>
+                        {
+                            Assert.False(Avalonia.Threading.Dispatcher.UIThread.CheckAccess());
+                            await den.DisposeAsync();
+                        }).WaitAsync(TimeSpan.FromSeconds(10));
+                        await Assert.ThrowsAsync<ObjectDisposedException>(() => den.OpenBoundSessionAsync(receipts));
+                    }
+                    else
+                    {
+                        actors.Changed = session.Actor with { AuthenticationRevision = "changed-native-fixture-session" };
+                        var denied = await Record.ExceptionAsync(() => window.ValidateWorkspaceAsync(default));
+                        Assert.True(denied is UnauthorizedAccessException or DenException { Code: DenErrorCode.Forbidden });
+                    }
                     Assert.Empty(All(window).OfType<ComboBox>().Single(item => AutomationProperties.GetName(item) == "Choose Agent").Items);
                     Assert.DoesNotContain(All(window).OfType<Button>(), item => item.Content?.ToString() == "Save to Agent");
                 }
