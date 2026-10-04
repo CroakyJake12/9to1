@@ -1,4 +1,4 @@
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
 var encoder = new TextEncoder();
 var decoder = new TextDecoder();
 var strictDecoder = new TextDecoder("utf-8", { fatal: true });
@@ -40,7 +40,7 @@ function decodeBase64(encoded, url = false) {
   return bytes;
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
 var JOSEError = class extends Error {
   static code = "ERR_JOSE_GENERIC";
   code = "ERR_JOSE_GENERIC";
@@ -119,7 +119,7 @@ var JWSSignatureVerificationFailed = class extends JOSEError {
   }
 };
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
 var invalid = "The input to be decoded is not correctly encoded.";
 function decode(input) {
   try {
@@ -129,7 +129,7 @@ function decode(input) {
   }
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
 function isObject(input) {
   if (typeof input != "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]")
     return false;
@@ -209,7 +209,7 @@ function validateB64(protectedHeader, extensions) {
   return true;
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
 var tag = (key) => key[Symbol.toStringTag];
 var jwkMatchesOp = (entry, key, usage) => {
   const { alg } = entry;
@@ -340,7 +340,7 @@ async function rawKey(key, expected, usage, extractable = false) {
   return key instanceof Uint8Array && (key = await crypto.subtle.importKey("raw", key, expected, extractable, [usage])), checkCryptoKey(key, expected, usage), key;
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
 function table(entries) {
   const out = { __proto__: null };
   for (const alg in entries)
@@ -348,7 +348,7 @@ function table(entries) {
   return out;
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
 var sig = [["verify"], ["sign"]];
 function hmac(bits) {
   const subtle = { name: "HMAC", hash: `SHA-${bits}` };
@@ -418,7 +418,7 @@ function jwsAlgorithm(alg) {
   return entry;
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
 function prepareVerify(options) {
   return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
 }
@@ -470,7 +470,7 @@ async function verifyCompact(jws, shared, key) {
   return verifySignature({ payload, protected: protectedHeader, signature }, shared, key, encodeCompactUnencodedPayload);
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
 var epoch = (date2) => Math.floor(date2.getTime() / 1e3);
 var multipliers = {
   s: 1,
@@ -556,7 +556,7 @@ function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
   return payload;
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
 async function jwtVerify(jwt, key, options) {
   const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key);
   if (!b64)
@@ -565,7 +565,7 @@ async function jwtVerify(jwt, key, options) {
   return { ...verified, payload };
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
 function isUsableJWK(jwk, entry, alg, kid) {
   const { kty, key_ops: keyOps, ext, kid: jwkKid, alg: jwkAlg, use, crv } = jwk;
   return (ext === void 0 || typeof ext == "boolean") && (keyOps === void 0 || Array.isArray(keyOps) && keyOps.every((operation, index) => typeof operation == "string" && keyOps.indexOf(operation) === index) && keyOps.includes("verify")) && entry.kty.includes(kty) && (kid === void 0 || typeof kid == "string" && kid === jwkKid) && (jwkAlg === void 0 ? kty !== "AKP" : alg === jwkAlg) && (use === void 0 || use === "sig") && (!entry.crv || crv === entry.crv);
@@ -619,7 +619,7 @@ function createLocalJWKSet(jwks) {
   });
 }
 
-// ../team-b-c2-receiver-8799/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
+// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
 function isCloudflareWorkers() {
   return typeof WebSocketPair < "u" || typeof navigator < "u" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime < "u" && EdgeRuntime === "vercel";
 }
@@ -806,7 +806,7 @@ var BrowserPublicClient = class {
     this.#beginExpiry = beginTokenExpiryInvalidation;
     this.#config = validatePublicClientConfiguration(configuration, win.location.origin);
     this.#window = win;
-    this.#fetch = transport;
+    this.#fetch = transport === globalThis.fetch ? transport.bind(globalThis) : transport;
     this.#crypto = crypto2;
     this.#before = onBeforeSignIn;
     this.#verifyAccount = verifyCurrentAccount;
@@ -1152,7 +1152,7 @@ var AccountApiClient = class {
     this.#origin = resource.origin;
     this.#token = getAccessToken;
     this.#clear = onPrivateContextInvalidated;
-    this.#fetch = transport;
+    this.#fetch = transport === globalThis.fetch ? transport.bind(globalThis) : transport;
   }
   /** Call before switching account/session/organisation; await cleanup before opening new private surfaces. */
   // Explicit sync begin receipt only; caller MUST separately await its owning

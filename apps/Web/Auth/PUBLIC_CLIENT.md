@@ -13,11 +13,14 @@ Host sequence:
 
 Popup signing uses fresh S256/state/nonce and exact source/origin. Discovery issuer, token issuer/audience, ID nonce/authorized party, stable subject, and access session ID are checked using JOSE. The actual account API remains authoritative for the current session. Access tokens and the verifier live in parent memory only; refresh tokens are discarded. Sign-out, self revocation, expiry, failure, or context invalidation clear that memory. There is no persisted account/token cache. The isolated popup host must preserve its opener across the issuer navigation; `Cross-Origin-Opener-Policy: same-origin` is incompatible with this popup flow. Any host change belongs to the host owner.
 
+The broker and account API bind the captured current `globalThis.fetch` to `globalThis`, because browser-native fetch requires its Window receiver. This also covers the configured module's forwarded native default. Injected transports that differ from the current global fetch retain their existing consumer-instance receiver and request arguments. A later replacement of global fetch does not change the captured transport. The receiver controls preserve cancellation, cleanup, denial and request policy; they do not establish sign-in acceptance. A production correction requires a fresh maintained Web publication and actual browser run against that new source and sealed tuple. Existing publication and failure receipts retain their original identities.
+
 Rebuild using the acknowledged maintained fixture dependencies (its lock pins JOSE 6.2.12 and esbuild 0.28.1):
 
 ```sh
 node apps/Web/Auth/build-public-client.mjs /workspace/team-b-c2-fixture/cloud/cake-id-auth/node_modules
 node --test apps/Web/Auth/browser-public-client.test.js
+node --test apps/Web/Auth/fetch-receiver.test.js
 ```
 
 The build rejects other dependency versions and contains no runtime configuration. Node tests use scripted discovery and negative popup/token inputs; they are supporting unit evidence, not issuer, Worker/D1, browser/CUI, session, hosted-service or full parity acceptance. Real maintained-issuer browser acceptance remains pending and must retain exact source/build identities and strict fixture cleanup receipts. Icon upload, username availability, billing/entitlement and native RSA/auth-revision service contracts remain outstanding.
