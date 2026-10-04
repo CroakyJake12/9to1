@@ -1,0 +1,176 @@
+{
+  "schema": 1,
+  "repository": "CroakyJake12/9to1",
+  "head": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+  "tree": "4fa6c54a5e7df585ad99d5b88eedf8e8ffd28e49",
+  "runId": 37162546239,
+  "runAttempt": 1,
+  "sourceBranch": "validation/astra-desktop-visible-joint05-root30-native01",
+  "artifacts": [
+    {
+      "lane": "joint",
+      "role": "index",
+      "id": 11288432757,
+      "name": "astra-joint-native-sdk-manifest-e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "bytes": 21497,
+      "sha256": "624592dd75d380a3a75b4bd0d5c2b0d53e7aacf15354c78c010ade8688c58250",
+      "member": "manifest.json",
+      "innerBytes": 188811,
+      "innerSha256": "1d5ec7a6c96afcaae064c8414c6e578692eda2cc604094ce4070f72047b380a3"
+    },
+    {
+      "lane": "owning",
+      "role": "index",
+      "id": 11288850532,
+      "name": "astra-files-owning-manifest-e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "bytes": 16838,
+      "sha256": "0e437e08964eac48ecfbbd3f77fe4db89a7a0bb97ccb436f53ee337bbe3c06d0",
+      "member": "manifest.json",
+      "innerBytes": 110943,
+      "innerSha256": "f5f3b23ef4882965f4c378240caeb01c9f3fe7989e554dbd47cd09f3624df5d9"
+    },
+    {
+      "lane": "joint",
+      "role": "part",
+      "part": 0,
+      "id": 11288432760,
+      "name": "astra-joint-native-sdk-bundle-00-e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "bytes": 27272158,
+      "sha256": "c1c606fa4737335d4a2bd0b3919d1446d2befa5dee573a936e116a7aec726b7d",
+      "member": "bundle-00.zip",
+      "innerBytes": 27272018,
+      "innerSha256": "0d17b41fac8ee9f36deac03a505041807bf0649621a78553cd71ba2f66197429"
+    },
+    {
+      "lane": "joint",
+      "role": "part",
+      "part": 1,
+      "id": 11287949009,
+      "name": "astra-joint-native-sdk-bundle-01-e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "bytes": 21767760,
+      "sha256": "b1f7072f20a9ca801c3a959f80727e0139e3c0705647338d61c5790ff6a15cf2",
+      "member": "bundle-01.zip",
+      "innerBytes": 21767620,
+      "innerSha256": "1666d9d42d976760ab51aaddf4d00b155ce93a0a19ebe79e7ca4c45809615b6d"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "part": 0,
+      "id": 11288700746,
+      "name": "astra-files-owning-bundle-00-e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "bytes": 27274358,
+      "sha256": "de965ca1ccfcbca3302bb17549e8e34bb992bb05c759fb5b6dc06e50d0acba21",
+      "member": "bundle-00.zip",
+      "innerBytes": 27274218,
+      "innerSha256": "8431041ca986bba6a4b9d430c5a7b26a3200f6bcb3f2ca6f56cdc7f66627d63a"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "part": 1,
+      "id": 11288625999,
+      "name": "astra-files-owning-bundle-01-e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "bytes": 27125638,
+      "sha256": "2a0d3fa3a141e48671f67b6cbefad04cb82c851ec22cd7f32cbdc24eb76930a2",
+      "member": "bundle-01.zip",
+      "innerBytes": 27125498,
+      "innerSha256": "a783bce9c14b89d78a00375b04d6c1f2eb27de8dc3c5bddcf2f875f3544397b9"
+    }
+  ],
+  "expectedCounts": {
+    "joint": {
+      "files": 372,
+      "pieces": 331,
+      "nonempty": 330,
+      "bytes": 49003184
+    },
+    "owning": {
+      "files": 232,
+      "pieces": 206,
+      "nonempty": 205,
+      "bytes": 54377012
+    }
+  },
+  "required": {
+    "joint": [
+      "joint-sdk/commands.json",
+      "joint-sdk/receipt.json",
+      "joint-sdk/logs/debug-build-entry-00.log",
+      "joint-sdk/logs/debug-build-entry-01.log",
+      "joint-sdk/logs/debug-build-source-tasks.log",
+      "joint-sdk/logs/debug-evaluate-source-tasks.log",
+      "profile-correction/original-sdk-caller.log",
+      "profile-correction/original-sdk-caller-custody.json",
+      "profile-correction/original-native-session-drain/expected-managed-launch.json",
+      "profile-correction/original-native-session-drain/inner-native-delegation.json"
+    ],
+    "owning": [
+      "receipt.json",
+      "console-receipt.json",
+      "infrastructure-build.log",
+      "infrastructure.log",
+      "profile-correction/cleanup-refused-live-original-session.json",
+      "profile-correction/original-native-session-drain/expected-managed-launch.json"
+    ]
+  },
+  "taskPe": {
+    "lane": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "bytes": 826880,
+    "sha256": "fd9ef3fa788be25c320f5cfccdd4740e977d554faf5348de8a17acd92784e8b3"
+  },
+  "limits": {
+    "archiveAttemptBytes": 134217728,
+    "expandedAttemptBytes": 402653184,
+    "ramWorkingSetBytes": 536870912,
+    "ramAvailableFloorBytes": 536870912,
+    "filesystemFreeFloorBytes": 943718400,
+    "outputAttemptBytes": 25165824,
+    "outputAllocationReservationBytes": 41943040,
+    "maxOutputFiles": 768,
+    "apiBodyBytes": 131072,
+    "apiAttempts": 16,
+    "pdbExpandedBytes": 16777216,
+    "reportSlotBytes": 2097152,
+    "diagnosticSlotBytes": 262144
+  },
+  "downloadHosts": {
+    "regex": "^productionresultssa[0-9]{1,3}\\.blob\\.core\\.windows\\.net$",
+    "pathPrefix": "/actions-results/",
+    "redirectsAllowed": 1,
+    "authorizationForwarded": false
+  },
+  "selection": {
+    "wholeSuffixes": [
+      ".log",
+      ".json",
+      ".stdout",
+      ".stderr",
+      ".txt",
+      ".xml",
+      ".trx",
+      ".py",
+      ".cs",
+      ".props",
+      ".targets",
+      ".yml",
+      ".yaml",
+      ".pem"
+    ],
+    "wholePrefixes": [
+      "profile-correction/",
+      "mail-maintained-configuration-source/"
+    ],
+    "binarySuffixesNotPublished": [
+      ".dll",
+      ".pdb",
+      ".so",
+      ".a",
+      ".der",
+      ".exe",
+      ".zip"
+    ],
+    "qualification": "All 604 lane-scoped full files must replay before text publication; every unselected binary remains fully hashed and represented. No body is executed. Missing required original text or invalid UTF-8 refuses complete causal publication rather than retaining a prefix."
+  }
+}
