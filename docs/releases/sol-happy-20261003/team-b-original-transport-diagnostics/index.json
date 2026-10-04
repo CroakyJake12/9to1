@@ -1,0 +1,44 @@
+{
+  "state": "ROOT_FULL_ORIGINAL_DIAGNOSTIC_WRAPPER_VERIFIED_B6_REVIEW_PENDING",
+  "scope": "Existing failed original transport diagnostics only; does not receive full1495261 original or claim browser/native acceptance.",
+  "official": {
+    "artifact": 11314750816,
+    "bytes": 5406,
+    "sha256": "a25ae61c7f8b4c473862748adb20bb319ad30e62f9204f9cee794256e18260b0",
+    "exportRun": 37232499500,
+    "exportHead": "26cc2d87b1a57bcc7f632e2605d09108afc48cd2"
+  },
+  "permanent": {
+    "path": "docs/releases/sol-happy-20261003/team-b-original-transport-diagnostics/failed-browser-e90-diagnostics-original.zip",
+    "blob": "65931f3ba2e6549a599f69ae3f61d6c3a0f6afd3"
+  },
+  "members": [
+    {
+      "path": "original-transport-manifest.json",
+      "bytes": 10201,
+      "sha256": "b479203511fe4a4248037dda0c7812111ad6b02b3d3587e07d7c9af691c200f0",
+      "crc32": 2128684761
+    },
+    {
+      "path": "result.json",
+      "bytes": 11099,
+      "sha256": "7050df86c9de340c4c94901d21f1a2d2782b512857da30da80beb7bec98aa96f",
+      "crc32": 2909601565
+    }
+  ],
+  "sourceOriginal": {
+    "sourceRun": 37230828986,
+    "sourceArtifact": 11313603170,
+    "sourceCommit": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+    "archiveBytes": 1495261,
+    "archiveSha256": "e794fb5e3ab92b8019876f14bb908c340bd0a88be1be53a585ac36122b35fcc7",
+    "custodyWorkflowCommit": "26cc2d87b1a57bcc7f632e2605d09108afc48cd2"
+  },
+  "retirementPhase": {
+    "eligibleOnlyAfter": "Root wholebody/fulltree plus B6 independently remote wholebody/allCRC/readersclosed and root freshremote/local readback. Publish FULL B6 ACK before unlink.",
+    "rootOnlyLocalReader": true,
+    "B6OnlyRemoteReader": true,
+    "onlyNewTemporaryPath": "/workspace/attachments/28032c2b-6398-4d80-9d47-07c6bd0e3369/failed-browser-e90-transport-diagnostics-original.zip",
+    "olderProtectedOriginalsAndPrivatePR11Retained": true
+  }
+}
