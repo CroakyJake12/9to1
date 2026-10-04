@@ -519,7 +519,7 @@ public sealed class HomePackageOriginalDeviceOwnerTests
             try { await same; }
             catch (Exception error)
             {
-                static IEnumerable<Exception> Leaves(Exception original) => original is AggregateException aggregate
+                static IEnumerable<Exception> Leaves(Exception original) => original is AggregateException aggregate && aggregate.InnerExceptions.Count != 0
                     ? aggregate.InnerExceptions.SelectMany(Leaves) : new[] { original };
                 var known = _observed.SelectMany(Leaves).ToHashSet(ReferenceEqualityComparer.Instance);
                 if (Leaves(error).All(known.Contains)) Observe(error);
