@@ -438,8 +438,12 @@
     }
   ],
   "globalReleaseReference": {
-    "pullRequest": 127,
-    "sourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
-    "qualification": "Root global draft release evidence is separate from this exact isolated receiving native source graph; no automatic source adoption."
+    "pullRequest": 5,
+    "pullRequestUrl": "https://github.com/CroakyJake12/9to1/pull/5",
+    "globalCandidateAtOriginalRequest": "127c8e1a61298522bc06b4484db806777d41bac2",
+    "globalCandidateLatestAtMetadataCorrection": "1c7784a08314e9ea9b9eef4b64ed6f1dab229526",
+    "globalReleaseLineageBase": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+    "nativeSourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "qualification": "Root global draft release evidence is separate from this exact isolated receiving native source graph; newer global Mesh/fixture source does not alter this Windows candidate. No automatic source adoption."
   }
 }
