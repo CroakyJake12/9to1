@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "manifestSHA256": "480368dfa02aea0b2dadd168706bb46ade5083311081ae5cdc935d212c5ea7ff",
+  "canonicalInventorySHA256": "3f78d590eed7c7132aa13314e9bc6f33256069cb70aa1d28523377f43fc5ebfe",
+  "review": "ACK29 unique exact inventoried Windows rows,6 actual canonical package/extraction/windows and5 normalclose0 observations;70 original owning native controls69pass1genuineStudioavatarfail,0accepted/0delivered. Every referenced original result/evidence hash/size, package artifact declared ID/hash/expiry, entrypoint Gitbytes/blob,3exact source profiles/reviewed native deltas and package sidecars/executable match raw producer results. Legacy shared host and Launcher excluded appropriately.",
+  "verifiedObservations": [
+    {
+      "target": "home",
+      "sourceCommit": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+      "packageArtifactId": 11304673548,
+      "producerPackageSHA256": "ea40b747a3e523d538c3cf5018608603ba176b7b89191b0df45e55858fda4931",
+      "normalCloseExit0": false
+    },
+    {
+      "target": "boards",
+      "sourceCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+      "packageArtifactId": 11305252552,
+      "producerPackageSHA256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64",
+      "normalCloseExit0": true
+    },
+    {
+      "target": "present",
+      "sourceCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+      "packageArtifactId": 11305857645,
+      "producerPackageSHA256": "086f2a4633753e9d8c7ba942fc00b0fcbd85a871e54f8b4b2644795873b233a5",
+      "normalCloseExit0": true
+    },
+    {
+      "target": "studio",
+      "sourceCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+      "packageArtifactId": 11305289555,
+      "producerPackageSHA256": "b0ee2bf3ddba9400b321cd60a9d24f14bb0f6af8f41a3c9914bed27b316df0ef",
+      "normalCloseExit0": true
+    },
+    {
+      "target": "canvas",
+      "sourceCommit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+      "packageArtifactId": 11304710012,
+      "producerPackageSHA256": "dd24a1082fa6ac571068d3b0bcf941bbb497c4d7f07a67eb78752a15f711ef0a",
+      "normalCloseExit0": true
+    },
+    {
+      "target": "picture",
+      "sourceCommit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+      "packageArtifactId": 11304286833,
+      "producerPackageSHA256": "c611574b054cf69bd860baad98b81a515d9e41252e23340be23c5973c72ce0fb",
+      "normalCloseExit0": true
+    }
+  ],
+  "counts": {
+    "requiredWindowsProductGroups": 29,
+    "provisionalCanonicalProductGroupsWithActualPackageExtractionAndWindow": 6,
+    "canonicalProductGroupsWithObservedNormalCloseExit0": 5,
+    "owningWindowsNativeControlsExecuted": 70,
+    "owningWindowsNativeControlsPassed": 69,
+    "owningWindowsNativeControlsFailed": 1,
+    "fullAccepted": 0,
+    "delivered": 0
+  },
+  "sourceProfilesVerified": [
+    "e2",
+    "7e",
+    "fd5"
+  ],
+  "qualification": "Original package/extraction/executable hashes are producer observations. No C6 local package redownload/noSDK install/PCdelivery/visual donor/full-product acceptance. Studio unsupported Windows native decoder and Home forcedcleanup remain failures. Complete package inventory/installedHome/service/signing/accessibility/crossapp/provider gates remain open; separate Boards installedUI continuation excluded.",
+  "payloadRerun": false
+}
