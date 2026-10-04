@@ -1,0 +1,76 @@
+{
+  "initialSource": "1f8a75a0c2a522625d3473507f02ed81a84064e4",
+  "outputCorrection": "29496af4a7f21f21b2aebcaa7afe35a39134f410",
+  "finalTestsAndManifest": "30cc72a769e298f764064c8310c1d3f7a03c7af6",
+  "pins": [
+    {
+      "path": "cloud/cake-id-auth/deployment/https/prepare-fixture.mjs",
+      "sha256": "4c410a07f34a9d77d5e93f217ac0ed6c172335118f210a3d37d8b5522a21e343",
+      "bytes": 5560
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/authenticated.mjs",
+      "sha256": "660b8e0c77a605035ffb58dc5de14548e7b2271c612be168cf4e1c4bee8a24ac",
+      "bytes": 14939
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/authenticated.test.mjs",
+      "sha256": "e726681fca645b881bd3552f8a043a51cae502bf581c7c0cc637923a7ceafd56",
+      "bytes": 5938
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/AUTHENTICATED.md",
+      "sha256": "cbcac83414eea0f3107249655821a1e6ba8f02c3a300cc4eb69f7c0318c840dd",
+      "bytes": 5967
+    },
+    {
+      "path": "cloud/cake-id-auth/src/index.ts",
+      "sha256": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+      "bytes": 8961
+    },
+    {
+      "path": "cloud/cake-id-auth/src/auth.ts",
+      "sha256": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
+      "bytes": 6164
+    },
+    {
+      "path": "cloud/cake-id-auth/src/resource-api.ts",
+      "sha256": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+      "bytes": 13124
+    },
+    {
+      "path": "cloud/cake-id-auth/src/email.ts",
+      "sha256": "ed288123118c4a65ecb6037cfa4d66b5c875a24268906e575354ce14ab940cec",
+      "bytes": 1509
+    },
+    {
+      "path": "cloud/cake-id-auth/migrations/0000_cake_guardrails.sql",
+      "sha256": "8cd4b84109d4deab88d531b125d59a8a3cf1d87c0cb1abd766bc7ff4cdf5245b",
+      "bytes": 984
+    },
+    {
+      "path": "cloud/cake-id-auth/migrations/0001_better_auth.sql",
+      "sha256": "7145e80b0d4887c785b7e9897ebe36f8b505777ff06df811781faead6f89631c",
+      "bytes": 6244
+    },
+    {
+      "path": "cloud/cake-id-auth/package.json",
+      "sha256": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228",
+      "bytes": 829
+    },
+    {
+      "path": "cloud/cake-id-auth/package-lock.json",
+      "sha256": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098",
+      "bytes": 64877
+    }
+  ],
+  "allOfflineExits": 0,
+  "review": "Whole fixture generator/authenticated HTTP driver/tests/README read. Actual initialized resource precondition, exact two fictional nonadmin verified fixture users/two credential rows/public PKCE client/resource link; roleNULL/reservedowner untouched. Publicclient consent server-signed hook; genuine issuer/audience/nonce/sub/sid JWT checks; wrongPKCE+consumedcode/reducedscope/profileCAS/refresh/accountisolation/revoke/signout. Fixtures and diagnostics exclusive0600/private directory0700; O_NOFOLLOW fixture mode/owner/size bound; root-only explicitSQL, no automatic remotecleanup. Corrected output acquired BEFORE journey, original failure+independent close errors retained.",
+  "tests": "Independent syntax/real pinned hash/actualSQLite migrations/seed duplicate/parameter batch-SQL equivalence/scopedrollback/resource preservation/private mode+symlink+foreignauthority/transport-original-globalrestore/existingoutput-zerojourneys checks pass. No claim realHTTPflow ran.",
+  "qualification": "OFFLINE_PREPARATION_ACK_ONLY; actualHTTPS/source-bound readback/CPU1000/provider seeding/mail/browsercallback/native/admin/registration remain NOT_RUN. Fictional emailVerified not delivery proof; callback URL inspected but never visited. Real private passwords/hashes/tokens/SQL stay outsideGit.",
+  "logs": {
+    "corrected-offline.log": "8b21aac3fa77324c23d96720680ff92997f665be740f0fce3cd3d970ac4f01f8",
+    "final-offline.log": "8b21aac3fa77324c23d96720680ff92997f665be740f0fce3cd3d970ac4f01f8",
+    "initial-offline.log": "8b21aac3fa77324c23d96720680ff92997f665be740f0fce3cd3d970ac4f01f8"
+  }
+}
