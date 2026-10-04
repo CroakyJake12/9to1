@@ -62,7 +62,7 @@
     "textEquivalentPreviousRevision": "ANLCKQlZuLSuopoik2qJHrWoQxliYXJ0xjJfH2ncI9frS-Tm7sLiDFLwVdoLZ3-gbZ4aB1qDkX6j9nGYYpvqrgULBc32eKABkwDZNo2d3v8",
     "finalContinuity": "Atomic final get_document_text revision agreed with get_document; entire1383780B SHAa48cf... byte-identical to21:04 snapshot.8534paragraphs notrequirements. No text scope/default change, reason for revision change not inferred. Historical maps/results retain original sources."
   },
-  "candidateStatus": "UNACCEPTED_PROVISIONAL_COMBINED_SOURCE_RECEIVING_AND_WINDOWS_TESTS_ACTIVE",
+  "candidateStatus": "UNACCEPTED_CURRENT_SOURCE_RECEIVING_WORKFLOWS_ACTIVE",
   "incomingCandidate": {
     "team": "A",
     "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -170,7 +170,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T18:16:10.541739+00:00",
+  "updatedUTC": "2026-10-04T19:13:23.102958+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
@@ -516,14 +516,14 @@
     "qualification": "No CLIcredential/currentpaidusageheadroom/nativeproviderjourney/fullrelease acceptance inferred"
   },
   "currentImplementation20261004": {
-    "status": "ACTIVE_REVIEWED_PROVISIONAL_SOURCE_FIXES_WINDOWS_AND_LOCAL_ACCOUNT_DIAGNOSTICS",
-    "recordedUTC": "2026-10-04T18:16:10.541739+00:00",
+    "status": "ACTIVE_UNACCEPTED_REVIEWED_SOURCE_AND_ORIGINAL_RECEIVING_WORKFLOWS",
+    "recordedUTC": "2026-10-04T19:13:23.102958+00:00",
     "userRequest": "Direct pasted implementation request received in successor chat; supersedes prior stop at hosted-identity blocker.",
     "provisionalCandidate": {
       "branch": "integration/team-c-unaccepted-20261004",
-      "head": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+      "head": "9af8960051abc3bbb01340761fdf12d2f69b1679",
       "base": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
-      "state": "UNACCEPTED_NORMAL434_PEER_GREEN_HOME4_AUTH_DIAGNOSTIC_COMPOSED_WINDOWS_SOURCE_FIXES_ACTIVE",
+      "state": "UNACCEPTED_MAIL_INFRA444_PEER_GREEN_NATIVE_FETCH_FIX_AND_EXPLICIT_CONTRACT_COMPOSED",
       "contents": [
         "31 exact reviewed Accounts core/spec bodies from f7b65b8c",
         "Durable cancellation CAS source/test a4be0cd0 plus retained 67636bb0 evidence",
@@ -554,14 +554,17 @@
         "Unix child TMPDIR4544 composed5ec2965e; original plugin Debug4/Release4 and actual full normal434/434 peer green; original27dd433/434 failure retained",
         "Public cumulative receiving549 payloads84,054,416 bytes/index1413f28f remotely published and Gitblob verified with C6 publication3a58929d",
         "Whole public Team A Home4 b9f30 received93293 and composed323ccff8; all other Git mode/blob entries conserved; normal six/Windows package quit execution being prepared",
-        "Whole final account diagnostic five-body dde012fa composed2a01054b;105 source-contract bodies unchanged,32 preparation controls pass; original7 retained"
+        "Whole final account diagnostic five-body dde012fa composed2a01054b;105 source-contract bodies unchanged,32 preparation controls pass; original7 retained",
+        "Nine exact public Mail correctness bodies from1c78 composeda2c2; independent whole Infrastructure444/444 and Mail69/72 with3 missing trusted-TLS fixtures retained.",
+        "Five exact native-fetch binding proposal455 bodies composedd1ae; explicit two-row source contract0d composed9af; owning55/55 and receiver11/11 with C6 source/unit/pin ACKs.",
+        "Exact safe91-file Mail/Infrastructure packet plus frozen index and C6 runtime/publication receipt published e9e57dd7."
       ],
       "qualification": "No active Team A/B files edited; no main promotion; no acceptance inferred from composition.",
       "pullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
       "remoteVerifiedHead": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd"
     },
     "windows": {
-      "requiredProductGroups": 29,
+      "requiredProductGroups": 30,
       "acceptanceVerified": 0,
       "delivered": 0,
       "actualRunner": "GitHub Actions windows-2022",
@@ -581,7 +584,13 @@
         "legacy shared desktop host"
       ],
       "allAppInventory": ".github/validation/windows-package-owner-request.json on e2effba4",
-      "deliveryRoute": "GitHub versioned Actions artifacts when bytes exist; actual authorized desktop/laptop clean no-SDK acceptance and local PC delivery unavailable.",
+      "deliveryRoute": {
+        "state": "PRIVATE_UNVERIFIED_CANDIDATE_TRANSPORT_VERIFIED",
+        "folder": "185j0YEgD6PcYlfissMYxXGY4XHEdyeGg",
+        "candidates": "1vd3w_E-o-62YlaQxvw8_oKmtNg2vvfVw",
+        "pilot": "14PF7cmr3iOGcK0lm3FKf1tKqNxcqAK7g",
+        "qualification": "Original Boards candidate byte-roundtrip verified through Files.manage_library; shared=false. Transport closure is not clean-PC install, signing, accepted delivery or an app acceptance result."
+      },
       "originalInspector": {
         "source": "f661e909e080d68a9b5505016386c6406c6c87f6",
         "run": 37205514551,
@@ -712,8 +721,28 @@
         "wholeProductFiles": 4,
         "sourcePeerC4": "7ff3964f7c35e6ea25ac5f9964a751e887480828737cef580526045d3c91185e",
         "sourcePeerC6": "70fc94f9c3e6c3ad3e4985817943ff5f67e8c9be8d5648466f3409a35809acc6",
-        "status": "NORMAL_SIX_AND_WINDOWS_PACKAGE_REAL_CTRL_SHIFT_Q_QUIT_PROBE_BEING_PREPARED",
-        "genuineGate": "Default window close intentionally keeps Core alive. No existing external reopen/tray/IPC quit port after HWND gone; do not invent one or count forced cleanup."
+        "status": "FIRST_CI_BUILD_TASK_LOCATION_FAILURE_RETAINED_EXTERNAL_ORIGINAL6_PASS_SOURCE_REVIEW_ACTIVE",
+        "genuineGate": "Default window close intentionally keeps Core alive. No existing external reopen/tray/IPC quit port after HWND gone; do not invent one or count forced cleanup.",
+        "firstRun": {
+          "source": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+          "run": 37224785297,
+          "failure": "MSB4062 source-built Avalonia.Build.Tasks was sought at obsolete fixed bin path; no six-case execution or native process."
+        },
+        "recipeCorrection": {
+          "source": "0d1d64a5ed59e54a915ba3672fd734c0cff0ff40",
+          "branch": "review/team-c-home-avalonia-task-recipe-20261004",
+          "state": "C1_C6_SOURCE_ACK_PUBLISHED_NO_RERUN_YET",
+          "behavior": "Pass maintained AvaloniaBuildTasksLocation using the source-evaluated actual TargetPath under the same Release/artifacts properties."
+        },
+        "externalReceiving": {
+          "source": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+          "pullRequest": "https://github.com/CroakyJake12/9to1/pull/9",
+          "base": "fa7db1bdce872e2d0cbfe1f9af7a36fb2dfc9972",
+          "reportedActual": "Full Release0 warnings/errors; original6 cases6PASS0FAIL0skip. Earlier compile/render/old-control failures retained.",
+          "proposal": "Three canonical controller route projections; synchronous capacity Action overload; source-coherent render fixtures reacquire current visual control with original expected status.",
+          "rootState": "Three current9af Home preimages byte-identical tofa7; C1/C6 independent review pending. Raw evidence export separately held by external automatic approval review; public source is available.",
+          "qualification": "No installed GUI, signing, no-SDK clean-PC or full app acceptance."
+        }
       },
       "canvasCurrent": {
         "immutablePackageSha256": "dd24a1082fa6ac571068d3b0bcf941bbb497c4d7f07a67eb78752a15f711ef0a",
@@ -739,7 +768,22 @@
           }
         ],
         "actualWitness": "True native ownPID/IsChild Edit and Buttons expose UIA Pane without Value/Invoke patterns. Standard Windows client-side provider setup correction is being prepared; preserve original Edit/Button criteria.",
-        "qualification": "No folder selected/request/stroke/reopen/full acceptance; original forced-1 failures/two drains retained."
+        "qualification": "No folder selected/request/stroke/reopen/full acceptance; original forced-1 failures/two drains retained.",
+        "typedProviderSetup": {
+          "source": "257596c3dee1dff1d99410de373eb30b8c5dc4ed",
+          "run": 37226194641,
+          "passed": 28,
+          "failed": 0,
+          "peer": "3575d9cd5d444ada8e336636bbd9e725b484f981902aaedb8616238e316640f8",
+          "qualification": "Actual genuine Microsoft client-side provider registration only; no app, profile or native input."
+        },
+        "nativeSuccessor": {
+          "source": "9bbebc244ab19dcda28148f6bb11275279467f3e",
+          "run": 37227144629,
+          "state": "IMMEDIATE_WORKFLOW_FAILURE_UNDER_READONLY_DIAGNOSIS",
+          "sourcePeer": "c9899e9cb38b35c4d12e348ecafcb959a13f7b3feb8f67c0f69a0a7227dab494",
+          "qualification": "Original immutable package and native Edit/Value, Button/Invoke, approval, stroke, durable commit, normal close/reopen criteria retained. No native success inferred."
+        }
       },
       "presentCurrent": {
         "source": "1e1e4ade8611aac03c2187b674c70e7cb0cd501c",
@@ -748,7 +792,31 @@
         "failure": "Native File-menu control20s timeout",
         "peerSha256": "5c420749553109a7395513e0f55929c7389c662aab76a0aa428c171e71753b5e",
         "sourceWitness": "Ctor mounts Phase2 only; BuildWorkspace lazy SetLibrary/SetWorkspaceDocument normal startup wiring absent. Existing typed repository/editor ports available; minimal provisional startup fix being prepared.",
-        "qualification": "No menu edit/save/reopen. No forced cleanup and two drains; receipt does not certify cleanup exit0. No legacy toolbar substitution."
+        "qualification": "No menu edit/save/reopen. No forced cleanup and two drains; receipt does not certify cleanup exit0. No legacy toolbar substitution.",
+        "reviewedProduct": "93d8e5dfd786e9cd2c1cdc9013dbce60b8a22ec8",
+        "rootComposed": "fa7db1bdce872e2d0cbfe1f9af7a36fb2dfc9972",
+        "receivingProducer": {
+          "source": "946fe6c038eaf926fbcfec1888f2f864ef8ba160",
+          "run": 37227144107,
+          "state": "ACTUAL_IN_PROGRESS",
+          "sourcePeers": "C4 final8d1bf8af; C6 final524f828d",
+          "criteria": "Original owning15/shared7, fresh sealed self-contained package, original native UI/save/reopen semantics; three actual authored control-name corrections explicitly reviewed."
+        }
+      },
+      "expandedScope": {
+        "groups": 30,
+        "firstPartyCardsAdded": true,
+        "studyWithinSpaces": true,
+        "burrowsWithinPlanner": true,
+        "implementation": "UNMEASURED_EXPANDED_SCOPE",
+        "original29Manifest": "Frozen unchanged as historical inventory"
+      },
+      "studioGifCatalog": {
+        "source": "137fd22e4cf0379d04adcd6da4c82a1443f5c911",
+        "run": 37226116568,
+        "state": "ACTUAL_ORIGINAL_THREE_JOB_MATRIX_DISPATCHED",
+        "sourcePeer": "c252aa46833366ae196784adfc2a3066058024353340038587326f894e7a04c5",
+        "qualification": "Only exact declared-file catalog on publicc22 source; old undeclared-source preflight failure retained; no broad native decoder adoption."
       }
     },
     "functionalResults": {
@@ -876,29 +944,66 @@
           "issuerFinalExit": 0,
           "issuerCloseReceiptSha256": "1bfa38520ce5b8e6a20bd785ac56f52a912607fa76714d6435c0842f18ebc702",
           "qualification": "No issuer/broker/fetch cause inferred; second original maintained issuer shutdown signals preserved separately."
+        },
+        "thirdActual": {
+          "producer": "df547b5c",
+          "test": "1775cfde",
+          "passed": 2,
+          "failed": 1,
+          "notRun": 4,
+          "stage": "Issuer popup/form target closed",
+          "actualDiscoveryAttempts": 0,
+          "observedCause": "Native fetch invoked with forbidden class-instance receiver; malformed Window URL and plain-object receiver controls retain INVALID_URL/ILLEGAL_INVOCATION.",
+          "closure": "Root original issuer24402 strictstop/final0; browser all11 identities gone/ECHILD, no browser signals, unchanged pins.",
+          "peer": "189ae0a70a91eb4dca8d13282a7021dfbc386b2b629a1cfcdc3b125f153b44a0"
+        },
+        "successor": {
+          "product": "45522d633a363586618888273e4a3cd605395521",
+          "contract": "0d1512f02ff3f333a7171f3c79894a5c443c7150",
+          "composed": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+          "state": "SOURCE_UNIT_AND_EXPLICIT_CONTRACT_C6_ACK_NEW_ORDINARY_WEB_PUBLICATION_IN_PROGRESS",
+          "owningCases": 55,
+          "receiverControls": 11,
+          "webRun": 37227141927,
+          "qualification": "Bind native fetch only when exactly current global fetch; injected transport consumer behavior retained. Fresh producer/ZIP/manifest/seal required before root-owned browser execution. No authentication success claimed."
         }
       },
       "finalNormalPersistenceGate": {
-        "source": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2",
-        "status": "ACTUAL_UNFILTERED_NORMAL434_PASS_C6_INDEPENDENT_ACK",
-        "passed": 434,
+        "source": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+        "status": "ACTUAL_WHOLE_INFRASTRUCTURE444_PASS_C6_RUNTIME_PUBLICATION_ACK",
+        "passed": 444,
         "failed": 0,
         "skipped": 0,
         "owningProjects": 7,
-        "sourceInputs": 762,
-        "runtimeFiles": 213,
-        "peerSha256": "dbbfff4152893bd3ff77c50b84a9a235e8d1a4badf385419959fa9315d13169e",
-        "originalFailure": "27dd original433PASS1FAIL ExtensionPluginE2E successMarker preserved; child Unix TMPDIR propagation fixes concrete parent/private temp boundary",
-        "qualification": "Home4 and diagnostic five files are outside this ordinary graph. Incoming Mail Graph composition will change relevant source and require new whole444 run."
+        "sourceInputs": 793,
+        "evaluatedInputs": 747,
+        "runtimeFiles": 182,
+        "peerSha256": "c67a6f5be247a2bc08d32a67832656d617eb97259d0633feaf047d87ea211c74",
+        "qualification": "All old434 plus10 Graph original cases. Historical5ec434 and prior433/1 remain; later Present, native Home and Web changes are outside this graph."
       },
       "publicMailNine": {
         "source": "a431e3ca9d3002c74fc90f98377253120d0dfd48",
         "proposal": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
-        "status": "NINE_WHOLE_BODIES_SOURCE_RECIPE_PEER_ACK_PREPARING_CAPACITY_SAFE_NORMAL72_AND_GRAPH10",
+        "status": "ACTUAL_UNFILTERED_MAIL72_69_PASS_3_MISSING_TRUSTED_FIXTURE_FAILURES_RETAINED",
         "peerSha256": "49da3b8cf45d3bffbad916bdb318d49fb2391910edfdc152245825da159d876a",
         "fullNativeCases": 72,
         "knownMissingTlsFixtures": 3,
-        "qualification": "Native UI/body/project closure remains open; no private findings or broad Desktop import; no actual Mail72/Graph10 test result yet."
+        "qualification": "All72 unchanged tests executed; two InboxTLS and one RealTransport require original HAVEN_MAIL_FIXTURE_* secure child environment. No source defect inferred from missing fixture.",
+        "composed": "a2c2cff79885f08cfbdea31d5a5c0d91c435993b",
+        "actual": {
+          "passed": 69,
+          "failed": 3,
+          "skipped": 0
+        },
+        "fixtureRemediation": {
+          "owner": "Existing C4, root sole invocation",
+          "state": "EXACT_APPROVED_GREENMAIL_RECIPE_RECOVERED_CURRENT_UBUNTU_ADAPTATION_ACTIVE",
+          "originalRecipeGitBlob": "2248ff4cb92a1c8856b61cadd5f75b77fb63fa63",
+          "originalRecipeSha256": "aa69116192607dd907383c0f6d4c5bd4251f46ba41eae1057dbf65b28a8526fd",
+          "greenmail": "2.1.14 SHA0381392f3a44e4d8ae78051778440f58820d01acaf5757c3f43649deda8c1d23",
+          "preserved": "Normal OS CA trust, signed full-chain CRL, real loopback TLS IMAP/SMTP, random fictional credentials only in secure child environment, private runtime logs and strict process closure.",
+          "qualification": "Original recipe is Linux-specific; no external Windows trust-store mutation or competing fixture authorized/requested. Current normal5-project graph/72-case source declaration requires reviewed adaptation."
+        }
       }
     },
     "workerLogs": {
@@ -906,25 +1011,32 @@
       "url": "https://docs.google.com/document/d/1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
       "writer": "Team C sole successor integrator",
       "directUserWriteAuthorization": true,
-      "checkpoints": "13:56,14:33,15:00,15:30,16:00,16:44,17:14,17:46,18:19,19:13 Europe/London; latest all three exact paragraphs, H1 heading, bold Montserrat400 body,18pt progress, semicolons and BLOCKED verified.",
+      "checkpoints": "13:56,14:33,15:00,15:30,16:00,16:44,17:14,17:46,18:19,19:13 Europe/London; latest all three exact paragraphs, H1 heading, bold Montserrat400 body,18pt progress, semicolons and BLOCKED verified.;19:56 Europe/London all three read back and exact formatting verified.",
       "formatQualification": "13:56formatcorrectionretainedin14:33; nohistoryrewritten.",
-      "lastCheckpointReceipt": "docs/releases/sol-happy-20261003/provisional-integration/checkpoint-1913.json"
+      "lastCheckpointReceipt": "/workspace/team-c-resume-evidence/checkpoint-1956.json"
     },
-    "next": "Continue grounded source fixes and actual Windows Home/Canvas/Present execution, exact local-account startup diagnosis, and public Mail72/Graph10. Do not stop solely for missing adoption; full acceptance, provider/installed/PC delivery gates remain.",
+    "next": "Finish fresh actual Web/Present/Canvas/Studio receiving runs, review/adopt narrow Home3 and run coherent updated native producer, then provision exact reviewed approved trusted Mail fixture and execute unchanged72. Continue remaining30-group and provider acceptance until complete or a genuine blocker.",
     "acceptedHead": null,
     "mainMerged": false,
     "preservedReleaseHead": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
     "priorImplementationRecord": {
-      "commit": "51c3ffc3ffe082faad7e3c7883fcfb273af93ef0",
+      "commit": "b2dff0b091af0a54a5662d6fbf65d218b428cc86",
       "path": "coordination/sol-happy-20261003/team-c.json",
       "field": "currentImplementation20261004",
-      "qualification": "Earlier source, failures and approvals remain in immutable Git history."
+      "qualification": "All previous source, approvals and original failures remain in immutable Git history."
     },
     "forecast": {
-      "recordedLondon": "2026-10-04T17:46:00+01:00",
-      "fullPasses1to3By2000": "NOT_CREDIBLE_1730_ALL29_CANDIDATE_TUPLES_NOT_STABILISED_MANDATORY_GATES_OPEN",
-      "protectedMinimum": "All29remainvisible0verified0delivered; actualpackageworkflows/sourcefixes prioritised; noacceptance/price/permissionwaiver.",
-      "missing": "Ownerremainingactualinstalledentrypoints/HomeAppIDpackageABI/publisher/currentauthority+Windowsdecoder; noSDKcleanPCandlocaldeliveryroute; billingpolicy; fullprovider/browser/installed/donor/platformacceptance."
+      "recordedUTC": "2026-10-04T19:13:23.102958+00:00",
+      "scope": "Canonical expanded30 groups/LE01-15 within Pass1; existing29 manifest retained historically.",
+      "targets": {
+        "windowsAndMatchedHome": "2026-10-05T07:00:00+01:00",
+        "fullPasses1to3": "2026-10-05T19:00:00+01:00"
+      },
+      "deadlineAuthority": "Current canonical native specification revision and direct delegated user steering resolve the revised targets; Sunday20:00 is superseded.",
+      "verified": 0,
+      "delivered": 0,
+      "implementation": "UNMEASURED_EXPANDED_SCOPE",
+      "remaining": "Installed Home ABI/publisher/current Windows authority, no-SDK clean-machine install, complete native/provider journeys and commercial policy. Private download transport is verified; acceptance is separate."
     }
   },
   "progressReportingAcknowledgement": {
@@ -937,7 +1049,7 @@
     "firstActualCombinedCheckpoint": "13:56 Europe/London",
     "documentReadback": "Three H1 checkpoints; NORMAL_TEXT bold bodies and separate18pt-indented progress paragraphs verified; original templates preserved."
   },
-  "provisionalCandidateHead": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+  "provisionalCandidateHead": "9af8960051abc3bbb01340761fdf12d2f69b1679",
   "provisionalCandidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
   "currentBrowserSuccessorReview": {
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/6",
@@ -953,9 +1065,9 @@
     "buildContinuation": "LocalNETSDK1147 genuinewasm-tools prerequisite. Reviewedexact82lineCIclone/root9pin applicability matchedce50; existingdisposablerunner sourcebuiltpublishthenactualbrowser9 invoked viaexplicitTeamCbranch, no expectedresult yet."
   },
   "teamARecoveryResponse20261004": {
-    "recordedUTC": "2026-10-04T18:16:10.541739+00:00",
+    "recordedUTC": "2026-10-04T19:13:23.102958+00:00",
     "request": "requests/team-a-recovery-expanded-pass1-20261004.json",
-    "actualCurrentGlobal": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+    "actualCurrentGlobal": "9af8960051abc3bbb01340761fdf12d2f69b1679",
     "baseline": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
     "homeReceived": "All four public b9f30 bodies reviewed and composed323ccff8; original native render plus five new cases retained, current six-case Windows recipe imminent.",
     "nativeBuildRecipe": "Actual two gitlinks XamlX009d186 and DBus864a416; SDK10.0.401/source-built CUI.Tasks; normal original project graph. No stale three-link Terminal/libvterm helper or project/package policy replacement. Existing authorized Windows2022 Actions runner available.",
@@ -971,8 +1083,40 @@
     "reportedRevisedTargets": {
       "morningWindows": "2026-10-05T07:00:00+01:00",
       "fullPasses": "2026-10-05T19:00:00+01:00",
-      "assignmentState": "Reported by repository handoff; direct current-chat clarification asked and pending. Continue current implementation/Windows work; no approval/scope/acceptance waiver."
+      "assignmentState": "CONFIRMED_CURRENT_CANONICAL_SPEC_AND_DIRECT_DELEGATED_USER_STEERING; Sunday20:00 superseded; no technical acceptance or pricing waiver."
     },
-    "remainingExactARequests": "HomeAppID/package ABI/publisher/bootstrap tuple and signed descriptor dependency activation; canonical current actor/session/account revision bridge; Files ownership/session/read/import/scanner ports; Windows decoder; Write measured layout/caret/input. Productive original owners retain ownership."
+    "remainingExactARequests": "HomeAppID/package ABI/publisher/bootstrap tuple and signed descriptor dependency activation; canonical current actor/session/account revision bridge; Files ownership/session/read/import/scanner ports; Windows decoder; Write measured layout/caret/input. Productive original owners retain ownership.",
+    "canonicalRevision": "AHj4eMRsWvn0v-Ik4EK9huYveHuI50ONaCcsS80HxXI3CyGlS-RfYFZKFP-oZQQubkdpCB7_kxGiS7Hv8A5ldL6HpxV9hw3PJQAfImTVTt8",
+    "homeReceiving": {
+      "ownerSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+      "receiver": "93293d26cf24e1d4b4639f475ca91fec1c5d7888",
+      "composed": "323ccff8c9cc9b020d511379388bd57a569a138b",
+      "wholeProductFiles": 4,
+      "sourcePeerC4": "7ff3964f7c35e6ea25ac5f9964a751e887480828737cef580526045d3c91185e",
+      "sourcePeerC6": "70fc94f9c3e6c3ad3e4985817943ff5f67e8c9be8d5648466f3409a35809acc6",
+      "status": "FIRST_CI_BUILD_TASK_LOCATION_FAILURE_RETAINED_EXTERNAL_ORIGINAL6_PASS_SOURCE_REVIEW_ACTIVE",
+      "genuineGate": "Default window close intentionally keeps Core alive. No existing external reopen/tray/IPC quit port after HWND gone; do not invent one or count forced cleanup.",
+      "firstRun": {
+        "source": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+        "run": 37224785297,
+        "failure": "MSB4062 source-built Avalonia.Build.Tasks was sought at obsolete fixed bin path; no six-case execution or native process."
+      },
+      "recipeCorrection": {
+        "source": "0d1d64a5ed59e54a915ba3672fd734c0cff0ff40",
+        "branch": "review/team-c-home-avalonia-task-recipe-20261004",
+        "state": "C1_C6_SOURCE_ACK_PUBLISHED_NO_RERUN_YET",
+        "behavior": "Pass maintained AvaloniaBuildTasksLocation using the source-evaluated actual TargetPath under the same Release/artifacts properties."
+      },
+      "externalReceiving": {
+        "source": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+        "pullRequest": "https://github.com/CroakyJake12/9to1/pull/9",
+        "base": "fa7db1bdce872e2d0cbfe1f9af7a36fb2dfc9972",
+        "reportedActual": "Full Release0 warnings/errors; original6 cases6PASS0FAIL0skip. Earlier compile/render/old-control failures retained.",
+        "proposal": "Three canonical controller route projections; synchronous capacity Action overload; source-coherent render fixtures reacquire current visual control with original expected status.",
+        "rootState": "Three current9af Home preimages byte-identical tofa7; C1/C6 independent review pending. Raw evidence export separately held by external automatic approval review; public source is available.",
+        "qualification": "No installed GUI, signing, no-SDK clean-PC or full app acceptance."
+      }
+    },
+    "boundedUnclaimedLane": "Existing authorized Windows recovery chat owns only isolated native Home route binding and original test-fixture correction PR9; source review underway here. C4 retains sole trusted-Mail fixture adaptation. No competing lifecycle/build-task/native producer or global edits."
   }
 }
