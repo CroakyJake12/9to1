@@ -4,6 +4,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { jwt, username } from "better-auth/plugins";
 import { AUTH_BASE_PATH, ACCESS_TOKEN_SECONDS, AUTHORIZATION_SCOPES } from "./contract";
 import type { Env } from "./env";
+import { deliverEmail } from "./email";
 
 function required(value: string | undefined, key: string): string {
   if (!value || value.trim().length < 32 && key.endsWith("SECRET")) {
@@ -22,17 +23,6 @@ function assertSafeServiceUrl(value: string, key: string, localOnly: boolean): v
   }
   if (url.protocol !== "https:") throw new Error(`${key} must use HTTPS outside local-test-only mode`);
   if (key === "AUTH_BASE_URL" && url.pathname !== "/") throw new Error("AUTH_BASE_URL must be an origin without a path");
-}
-
-async function deliverEmail(env: Env, message: { to: string; subject: string; text: string }): Promise<void> {
-  if (env.APP_MODE === "local-test-only" && env.EMAIL_CAPTURE === "true") {
-    await env.DB.prepare(
-      "INSERT INTO cake_email_outbox (recipient, subject, body, createdAt) VALUES (?, ?, ?, ?)",
-    ).bind(message.to.toLowerCase(), message.subject, message.text, Date.now()).run();
-    return;
-  }
-
-  throw new Error("CAKE ID email delivery is not configured");
 }
 
 export function createAuthOptions(env: Env): BetterAuthOptions {
