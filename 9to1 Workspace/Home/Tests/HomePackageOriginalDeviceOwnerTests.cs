@@ -580,7 +580,7 @@ public sealed class HomePackageOriginalDeviceOwnerTests
                 var name = "home-package-original-" + Guid.NewGuid().ToString("N");
                 _pipeServer = new(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
                     PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
-                _pipeClient = new(".", name, PipeDirection.InOut, PipeOptions.Asynchronous);
+                _pipeClient = new(".", name, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
                 _pipeAccept = _pipeServer.WaitForConnectionAsync(_connection.Token);
                 _pipeConnect = _pipeClient.ConnectAsync(_connection.Token);
                 await Task.WhenAll(_pipeAccept, _pipeConnect);
@@ -626,8 +626,8 @@ public sealed class HomePackageOriginalDeviceOwnerTests
             Task? adapterClose = null, ownerClose = null;
             try { if (Adapter is not null) adapterClose = Adapter.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
             try { if (Owner is not null) ownerClose = Owner.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
-            if (adapterClose is not null) await failures.DrainAsync(adapterClose);
-            if (ownerClose is not null) await failures.DrainAsync(ownerClose);
+            if (adapterClose is not null) await failures.DrainPreviouslyObservedOriginalsAsync(adapterClose);
+            if (ownerClose is not null) await failures.DrainPreviouslyObservedOriginalsAsync(ownerClose);
             if (_connection is not null) failures.Attempt(_connection.Cancel);
             if (_pipeAccept is not null) await failures.DrainAsync(_pipeAccept);
             if (_pipeConnect is not null) await failures.DrainAsync(_pipeConnect);
