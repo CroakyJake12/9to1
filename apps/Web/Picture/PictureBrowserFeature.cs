@@ -108,6 +108,7 @@ public sealed class PictureBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
     }
     private async Task RetireAfterTransfer(PresentationOffer offer)
     {
+        if (ReferenceEquals(offer.Previous, offer.Candidate)) return;
         await Task.Yield(); // Let the shell finish its reversible native handoff first.
         if (!offer.Accepted || ReferenceEquals(offer.Previous, offer.Candidate)) return;
         try { offer.Previous.Dispose(); }
