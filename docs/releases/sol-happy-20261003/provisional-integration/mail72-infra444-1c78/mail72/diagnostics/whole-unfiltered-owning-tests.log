@@ -1,0 +1,29 @@
+Test run for /workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts/bin/HavenOS.Mail.Tests/release_linux-x64/HavenOS.Mail.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.47]     HavenOS.Mail.Tests.MailKitRealTransportTests.Actual_TLS_SMTP_submission_is_retrieved_by_actual_IMAP_with_identity_body_and_incremental_cursor [FAIL]
+  Failed HavenOS.Mail.Tests.MailKitRealTransportTests.Actual_TLS_SMTP_submission_is_retrieved_by_actual_IMAP_with_identity_body_and_incremental_cursor [1 ms]
+  Error Message:
+   System.InvalidOperationException : The required real transport fixture is not configured: HAVEN_MAIL_FIXTURE_HOST
+  Stack Trace:
+     at HavenOS.Mail.Tests.MailKitRealTransportTests.Required(String name) in /_/9to1 Workspace/Mail/Tests/MailKitTransportTests.cs:line 87
+   at HavenOS.Mail.Tests.MailKitRealTransportTests.Actual_TLS_SMTP_submission_is_retrieved_by_actual_IMAP_with_identity_body_and_incremental_cursor() in /_/9to1 Workspace/Mail/Tests/MailKitTransportTests.cs:line 45
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:00.52]     HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit [FAIL]
+[xUnit.net 00:00:00.52]     HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit [FAIL]
+  Failed HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit [6 ms]
+  Error Message:
+   System.InvalidOperationException : The required real transport fixture is not configured: HAVEN_MAIL_FIXTURE_HOST
+  Stack Trace:
+     at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Required(String name) in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 359
+   at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit() in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 20
+--- End of stack trace from previous location ---
+  Failed HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit [4 ms]
+  Error Message:
+   System.InvalidOperationException : The required real transport fixture is not configured: HAVEN_MAIL_FIXTURE_HOST
+  Stack Trace:
+     at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Required(String name) in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 359
+   at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit() in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 234
+--- End of stack trace from previous location ---
+Results File: /workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/test-results/mail72.trx
+
+Failed!  - Failed:     3, Passed:    69, Skipped:     0, Total:    72, Duration: 31 s - HavenOS.Mail.Tests.dll (net10.0)

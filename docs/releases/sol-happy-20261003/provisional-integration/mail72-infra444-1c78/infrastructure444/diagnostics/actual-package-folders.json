@@ -1,0 +1,30 @@
+{
+  "artifacts/obj/Haven.Browser/project.assets.json": [
+    "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/nuget",
+    "/workspace/.tools/nuget/packages"
+  ],
+  "artifacts/obj/NineToOne.Cui.AI/project.assets.json": [
+    "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/nuget",
+    "/workspace/.tools/nuget/packages"
+  ],
+  "artifacts/obj/Haven.Application/project.assets.json": [
+    "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/nuget",
+    "/workspace/.tools/nuget/packages"
+  ],
+  "artifacts/obj/Haven.Infrastructure.Tests/project.assets.json": [
+    "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/nuget",
+    "/workspace/.tools/nuget/packages"
+  ],
+  "artifacts/obj/Haven.PluginFixture/project.assets.json": [
+    "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/nuget",
+    "/workspace/.tools/nuget/packages"
+  ],
+  "artifacts/obj/Haven.Core/project.assets.json": [
+    "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/nuget",
+    "/workspace/.tools/nuget/packages"
+  ],
+  "artifacts/obj/Haven.Infrastructure/project.assets.json": [
+    "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/nuget",
+    "/workspace/.tools/nuget/packages"
+  ]
+}

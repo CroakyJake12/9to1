@@ -1,0 +1,83 @@
+{
+  "state": "FAIL_OR_INCOMPLETE",
+  "sourceCommit": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+  "actualReceivingRootBodyObservation": "3cad94393f3039c9b39b91df631cd986aff13ca6",
+  "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+  "expected": 72,
+  "ordinaryProjects": 5,
+  "configuration": "Release",
+  "runtimeIdentifier": "linux-x64",
+  "testFilter": null,
+  "originalSourceAssertionsPoliciesProjectsUnchanged": true,
+  "scope": "Actual unchanged normal source-built owning project; provisional Linux component scope, no graphical package/Windows/Home/provider/fullrelease acceptance.",
+  "error": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+  "finalCustodyError": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+  "commandFamilies": 2,
+  "allCommandFamiliesNormalClosedNoSignals": true,
+  "actualNonzeroExitCommands": []
+}
+{
+  "state": "FAIL_OR_INCOMPLETE",
+  "sourceCommit": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+  "actualReceivingRootBodyObservation": "3cad94393f3039c9b39b91df631cd986aff13ca6",
+  "project": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+  "expected": 444,
+  "ordinaryProjects": 7,
+  "configuration": "Release",
+  "runtimeIdentifier": "linux-x64",
+  "testFilter": null,
+  "originalSourceAssertionsPoliciesProjectsUnchanged": true,
+  "scope": "Actual unchanged normal source-built owning project; provisional Linux component scope, no graphical package/Windows/Home/provider/fullrelease acceptance.",
+  "error": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+  "finalCustodyError": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+  "commandFamilies": 2,
+  "allCommandFamiliesNormalClosedNoSignals": true,
+  "actualNonzeroExitCommands": []
+}
+{
+  "sourceCommit": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+  "actualRootBodyObservation": "3cad94393f3039c9b39b91df631cd986aff13ca6",
+  "actualSource793BeforeAfterIdentical": true,
+  "suites": [
+    {
+      "state": "FAIL_OR_INCOMPLETE",
+      "sourceCommit": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+      "actualReceivingRootBodyObservation": "3cad94393f3039c9b39b91df631cd986aff13ca6",
+      "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+      "expected": 72,
+      "ordinaryProjects": 5,
+      "configuration": "Release",
+      "runtimeIdentifier": "linux-x64",
+      "testFilter": null,
+      "originalSourceAssertionsPoliciesProjectsUnchanged": true,
+      "scope": "Actual unchanged normal source-built owning project; provisional Linux component scope, no graphical package/Windows/Home/provider/fullrelease acceptance.",
+      "error": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+      "finalCustodyError": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+      "commandFamilies": 2,
+      "allCommandFamiliesNormalClosedNoSignals": true,
+      "actualNonzeroExitCommands": []
+    },
+    {
+      "state": "FAIL_OR_INCOMPLETE",
+      "sourceCommit": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+      "actualReceivingRootBodyObservation": "3cad94393f3039c9b39b91df631cd986aff13ca6",
+      "project": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "expected": 444,
+      "ordinaryProjects": 7,
+      "configuration": "Release",
+      "runtimeIdentifier": "linux-x64",
+      "testFilter": null,
+      "originalSourceAssertionsPoliciesProjectsUnchanged": true,
+      "scope": "Actual unchanged normal source-built owning project; provisional Linux component scope, no graphical package/Windows/Home/provider/fullrelease acceptance.",
+      "error": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+      "finalCustodyError": "TypeError(\"unsupported operand type(s) for +: 'PosixPath' and 'str'\")",
+      "commandFamilies": 2,
+      "allCommandFamiliesNormalClosedNoSignals": true,
+      "actualNonzeroExitCommands": []
+    }
+  ],
+  "noSourceProjectOracleAssertionsOrProviderChanges": true,
+  "fullMailSuitePassed": false,
+  "scope": "Actual own frozen1c78 normal Linux component graphs. Historical5ec434 remains separate; rootHome/auth/newWindows changes outside these physical793 source inputs are not tested.",
+  "completedRequiredScopedExecutions": false
+}
