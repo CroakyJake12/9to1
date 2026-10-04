@@ -1,0 +1,22 @@
+✔ explicit verified identities produce numeric Worker bindings without secret values (1.326988ms)
+✔ missing, extra, placeholder, invalid mode and unbounded inputs refuse preparation (0.497894ms)
+✔ C3-WH-01: verified receipt survives restart; replay does not duplicate receipt (no allocation consumer exists) (36.124211ms)
+✔ C3-WH-02: byte tampering, stale/future signatures and duplicate timestamps cannot persist (2.876953ms)
+✔ C3-WH-03: rotation accepts a matching v1 without JSON normalisation (1.345556ms)
+✔ C3-WH-04: test/live separation fails closed, configuration required (1.813584ms)
+✔ C3-WH-05: conflicting event identity cannot replace durable accepted facts (1.761405ms)
+✔ C3-WH-06: database failure does not acknowledge delivery; retry recovers (1.971914ms)
+✔ C3-WH-07: old events are receipts only and cannot overwrite newer subscription facts (2.865376ms)
+✔ C3-WH-08: bounded body and malformed verified events leave no receipt (2.918917ms)
+✔ C3-WH-09: concurrent claims have one owner; stale claim cannot complete after restart/recovery (3.563201ms)
+✔ C3-WH-10: failed consumer becomes reconciliation-required, mode/token cannot steal ownership (1.784451ms)
+✔ C3-WH-11: actual Worker fetch ignores execution context and durably accepts valid receipt (2.340221ms)
+✔ C3-WH-12: lost acknowledgement after commit is safely retried against existing receipt (2.238828ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 121.642105
