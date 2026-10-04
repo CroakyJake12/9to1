@@ -1,0 +1,74 @@
+{
+  "createdUTC": "2026-10-04T02:09:02.608523+00:00",
+  "state": "ARCHIVE_CONTENT_LINKS_VERIFIED",
+  "zip_sha256": "07328dfc685a725315d2433beb373925c8bcdae96e8c451ae85a81b15f76cd0a",
+  "checks": [
+    {
+      "kind": "TRX",
+      "member": "original-evidence/results/math-owner-original.trx",
+      "actual": {
+        "total": "22",
+        "executed": "22",
+        "passed": "19",
+        "failed": "3",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "kind": "TRX",
+      "member": "serial-evidence/results/math-owner-original-serial.trx",
+      "actual": {
+        "total": "22",
+        "executed": "22",
+        "passed": "22",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      }
+    },
+    {
+      "kind": "Exact preserved runtime custody",
+      "member": "original-evidence/first-native-linux-runtime-custody.json",
+      "matching_members": 138,
+      "matching_bytes": 54970868
+    },
+    {
+      "kind": "Exact preserved runtime custody",
+      "member": "serial-evidence/serial-native-linux-runtime-custody.json",
+      "matching_members": 138,
+      "matching_bytes": 54970940
+    },
+    {
+      "kind": "Exact frozen source cuts",
+      "member": "original-evidence/manifest.json",
+      "matching_members": 41
+    },
+    {
+      "kind": "Exact frozen source cuts",
+      "member": "serial-evidence/serial-owner-policy-proposal.json",
+      "matching_members": 42
+    }
+  ],
+  "scope": "Source/evidence verification only, no native rerun/SDK/GUI."
+}

@@ -1,0 +1,3377 @@
+{
+  "createdUTC": "2026-10-04T02:08:29.286737+00:00",
+  "state": "ARCHIVE_CREATED_ALL_MEMBERS_READ_HASHED_CRC_CHECKED",
+  "zip": {
+    "path": "/tmp/team-b-math22-portable-evidence-20261004/math22-original-and-serial-evidence.zip",
+    "bytes": 42400008,
+    "sha256": "07328dfc685a725315d2433beb373925c8bcdae96e8c451ae85a81b15f76cd0a",
+    "members": 480,
+    "uncompressed_bytes": 114121827,
+    "under150MiB": true,
+    "CRC_test": null
+  },
+  "all_member_hashes": [
+    {
+      "member": "original-evidence/actual-csharpmath-embedded-resource-bytes.json",
+      "uncompressed_bytes": 2344,
+      "compressed_bytes": 760,
+      "sha256": "e87e237426ee959174e6855bec5fc500d31d5584c48c3565e301ca10acd66d36",
+      "CRC32": "aa068eec"
+    },
+    {
+      "member": "original-evidence/actual-native-source-superset-after-first-run.json",
+      "uncompressed_bytes": 654290,
+      "compressed_bytes": 169109,
+      "sha256": "6cc094d5c72dd210600ea43d926fe8d2b1b332fee03472e0431e8e8add538cf7",
+      "CRC32": "1e088806"
+    },
+    {
+      "member": "original-evidence/actual-native-source-superset-before.json",
+      "uncompressed_bytes": 654451,
+      "compressed_bytes": 169236,
+      "sha256": "651a041172b7c676854e4b336f7f8e190a1c6cf789cd0ecda78ee331269e8f6b",
+      "CRC32": "41b2a4a2"
+    },
+    {
+      "member": "original-evidence/actual-restored-owner-package-pins.json",
+      "uncompressed_bytes": 3797,
+      "compressed_bytes": 1283,
+      "sha256": "086d6338a504bc4861a81e605fb82765801684b42275c7021c2bc75e26affb7c",
+      "CRC32": "c8ef91f9"
+    },
+    {
+      "member": "original-evidence/first-native-build.log",
+      "uncompressed_bytes": 5405,
+      "compressed_bytes": 819,
+      "sha256": "e015a1c18d854a9e4aa6293ed8b2370ba74053c36679d9a00154db0459378bce",
+      "CRC32": "d8e7125a"
+    },
+    {
+      "member": "original-evidence/first-native-discovery.log",
+      "uncompressed_bytes": 3286,
+      "compressed_bytes": 955,
+      "sha256": "248a8697c6c3ca8f4adfa0d58972b4ed209ff10c920bbb4120a5dbde1489b83a",
+      "CRC32": "a0409d35"
+    },
+    {
+      "member": "original-evidence/first-native-linux-runtime-custody.json",
+      "uncompressed_bytes": 46992,
+      "compressed_bytes": 8574,
+      "sha256": "d8fabe32566fa7509fe47b1744c29de79947dd2144444eeeb204a26b0d29d8f7",
+      "CRC32": "55e14cb9"
+    },
+    {
+      "member": "original-evidence/first-native-restore.log",
+      "uncompressed_bytes": 8745,
+      "compressed_bytes": 1310,
+      "sha256": "fdb6704384f57d17bc1ac04900f573eb1fc341a0750263d7fefcf07fff5c657d",
+      "CRC32": "3c078de1"
+    },
+    {
+      "member": "original-evidence/first-native-results.json",
+      "uncompressed_bytes": 79707,
+      "compressed_bytes": 18272,
+      "sha256": "d2ef9bcb2ecabc1123b0cc1fe5ec9234d82258385b3896bbd5dfad3c2bf7dbd8",
+      "CRC32": "73273a99"
+    },
+    {
+      "member": "original-evidence/first-native-run.log",
+      "uncompressed_bytes": 10001,
+      "compressed_bytes": 1789,
+      "sha256": "bce935ed7a4e9b60aaff11fd72768b9d67782577e8f5900003993793d7ba2fc6",
+      "CRC32": "23695a90"
+    },
+    {
+      "member": "original-evidence/first-native-runner-preflight-error.txt",
+      "uncompressed_bytes": 278,
+      "compressed_bytes": 203,
+      "sha256": "8e06a20926a9b7481e110719db627ce6ae61811a4536888d4402e45c9e0bf250",
+      "CRC32": "6195ec28"
+    },
+    {
+      "member": "original-evidence/literal-project-closure.json",
+      "uncompressed_bytes": 51254,
+      "compressed_bytes": 4504,
+      "sha256": "6faa72f1bf859a91f77874c61a6904748ef4e6924c82e44a336c3ee81047963d",
+      "CRC32": "4d74ad82"
+    },
+    {
+      "member": "original-evidence/manifest.json",
+      "uncompressed_bytes": 40426,
+      "compressed_bytes": 8861,
+      "sha256": "f99bce635191567e378820022bbc7e65ea9dab132ca60f57e01f5071bbcf8c44",
+      "CRC32": "2507dd99"
+    },
+    {
+      "member": "original-evidence/next-sdk-preparation.json",
+      "uncompressed_bytes": 6096,
+      "compressed_bytes": 2100,
+      "sha256": "4c14f205f6777a62c374a26d3ecbfd40c4ea81b3baf2a478d7e88a2a0df3f9fb",
+      "CRC32": "6b3e0e79"
+    },
+    {
+      "member": "original-evidence/package-head-preflight.json",
+      "uncompressed_bytes": 5788,
+      "compressed_bytes": 1551,
+      "sha256": "732fdad570e9b1641f0d117d5b95e6b507b281e6852ca919d072f30d67b6ffd5",
+      "CRC32": "1a6b88c8"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/OwnerMath.Tests.csproj",
+      "uncompressed_bytes": 2538,
+      "compressed_bytes": 809,
+      "sha256": "93b5210be96a1adb1683de63f2f491a419fef2d0d37f33b24d69df60452ad69b",
+      "CRC32": "72a4b3d7"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/custody.json",
+      "uncompressed_bytes": 15956,
+      "compressed_bytes": 2921,
+      "sha256": "5df4aaad8ee6e6673d3a33e6e270b9801175e922231156b517482f18f8048594",
+      "CRC32": "b59e8878"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/literal-project-closure.json",
+      "uncompressed_bytes": 51376,
+      "compressed_bytes": 4594,
+      "sha256": "f4e7a6581df9f20c5d136bb2aa66da5cdcc9ce51c6152881bd8d683d2d9e18f8",
+      "CRC32": "9370460d"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/manifest.json",
+      "uncompressed_bytes": 40071,
+      "compressed_bytes": 8754,
+      "sha256": "9116011e9175a031165a6816886e3e69fead839093158709a905412825051d91",
+      "CRC32": "b3ad8099"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/resource-readiness.json",
+      "uncompressed_bytes": 20518,
+      "compressed_bytes": 4176,
+      "sha256": "7874dd0c9fbed3fc9628f530dd7ae156005a770b41ea5de28746d88c5a39168c",
+      "CRC32": "69407a63"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Directory.Build.props",
+      "uncompressed_bytes": 781,
+      "compressed_bytes": 423,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "CRC32": "b9da30c8"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Directory.Packages.props",
+      "uncompressed_bytes": 2581,
+      "compressed_bytes": 799,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
+      "CRC32": "56d054bd"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Home/HavenOS.Home.csproj",
+      "uncompressed_bytes": 1745,
+      "compressed_bytes": 504,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8",
+      "CRC32": "da1601f5"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Home/NativeUI/Controls/HomeProductivityCuiSurface.cs",
+      "uncompressed_bytes": 6990,
+      "compressed_bytes": 1858,
+      "sha256": "0b36b3b740bbce6dd4f42968301204088ec802dd451f6646dde8419f836f9711",
+      "CRC32": "a8b96815"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "uncompressed_bytes": 1107,
+      "compressed_bytes": 400,
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff",
+      "CRC32": "373d5b78"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Home/NativeUI/HomeEquationObjectRenderer.cs",
+      "uncompressed_bytes": 6518,
+      "compressed_bytes": 2132,
+      "sha256": "43e680ffe1fa60c5292c8da0411110ee701935a152ff6de20e7dce1d8c01e84b",
+      "CRC32": "af99b25e"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/provenance.json",
+      "uncompressed_bytes": 3794,
+      "compressed_bytes": 1603,
+      "sha256": "7231dcead098b1bdc4e57c3e39ac4d8b11ec34d0251e9ac62dccc4f9e86d00eb",
+      "CRC32": "cb026a2c"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/Home/Source/Home/Core/HomeEquationObjects.cs",
+      "uncompressed_bytes": 8684,
+      "compressed_bytes": 2542,
+      "sha256": "33605774b9e004fc6202d1bf92fcd1e6262503f5243d148e9a1c0c484917d3d6",
+      "CRC32": "5717411e"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Directory.Packages.props",
+      "uncompressed_bytes": 1993,
+      "compressed_bytes": 504,
+      "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8",
+      "CRC32": "147c6d7d"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "uncompressed_bytes": 700,
+      "compressed_bytes": 402,
+      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d",
+      "CRC32": "fa5e8a01"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+      "uncompressed_bytes": 2955,
+      "compressed_bytes": 938,
+      "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d",
+      "CRC32": "581e9698"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+      "uncompressed_bytes": 6875,
+      "compressed_bytes": 1914,
+      "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67",
+      "CRC32": "4f664597"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+      "uncompressed_bytes": 985,
+      "compressed_bytes": 507,
+      "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b",
+      "CRC32": "8e2c1598"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Forms/FormMarking.cs",
+      "uncompressed_bytes": 8737,
+      "compressed_bytes": 2598,
+      "sha256": "e757abd4ff984398b5c48fe0346bd89e3c7fdce365a7f756e5d3c9cf4cbccf6a",
+      "CRC32": "58ccc9ad"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "uncompressed_bytes": 375,
+      "compressed_bytes": 258,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121",
+      "CRC32": "7bf64048"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+      "uncompressed_bytes": 2442,
+      "compressed_bytes": 729,
+      "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec",
+      "CRC32": "f8e9b5b8"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphMarking.cs",
+      "uncompressed_bytes": 4048,
+      "compressed_bytes": 1324,
+      "sha256": "a2b93dd4e16b062e3a796ac3b4363a7aba333bc14b82b84839b4dbd2b0af7097",
+      "CRC32": "c5c9eb03"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+      "uncompressed_bytes": 713,
+      "compressed_bytes": 389,
+      "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad",
+      "CRC32": "02a8a607"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+      "uncompressed_bytes": 2387,
+      "compressed_bytes": 727,
+      "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54",
+      "CRC32": "76ab38c5"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+      "uncompressed_bytes": 1569,
+      "compressed_bytes": 727,
+      "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c",
+      "CRC32": "ca216948"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathMarking.cs",
+      "uncompressed_bytes": 7479,
+      "compressed_bytes": 2266,
+      "sha256": "1f6eeeffd5a1b4e2b112ec960e8014b720076b641c6011266b69cd28ebcdde89",
+      "CRC32": "acc68208"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "uncompressed_bytes": 14310,
+      "compressed_bytes": 3218,
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162",
+      "CRC32": "e370140b"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "uncompressed_bytes": 6312,
+      "compressed_bytes": 1837,
+      "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9",
+      "CRC32": "a7728e4d"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+      "uncompressed_bytes": 1943,
+      "compressed_bytes": 783,
+      "sha256": "1924346384b8943949b06c416be834f5f580a6bb1aebe25f12482e7d3178fb28",
+      "CRC32": "6e08e38f"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+      "uncompressed_bytes": 4260,
+      "compressed_bytes": 1544,
+      "sha256": "a4ecc966757fe6d99fe0e2decd3cc96c5c75290d853efeb3eeddbaa23c78d7b1",
+      "CRC32": "81d7f28f"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+      "uncompressed_bytes": 8178,
+      "compressed_bytes": 2750,
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362",
+      "CRC32": "fe8a456e"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+      "uncompressed_bytes": 9274,
+      "compressed_bytes": 2726,
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f",
+      "CRC32": "cbcc5618"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+      "uncompressed_bytes": 8238,
+      "compressed_bytes": 2391,
+      "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d",
+      "CRC32": "6d98e327"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "uncompressed_bytes": 1355,
+      "compressed_bytes": 566,
+      "sha256": "c5a4b50032e30cf90fe59872b148b14bd26a8c2bf8a31ec71c4a8b9afbc3caf5",
+      "CRC32": "8ce53d1c"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs",
+      "uncompressed_bytes": 4503,
+      "compressed_bytes": 1139,
+      "sha256": "b1909c91396c66139f89ebb68be5c41abee969b47f80f29d6fe79e5b464c6476",
+      "CRC32": "ce68f4fd"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs",
+      "uncompressed_bytes": 10429,
+      "compressed_bytes": 2622,
+      "sha256": "0de78df0d34b6f772f93eb2502ee1cae3e2069b0e07008cb2c28ce4bdfc6d3b7",
+      "CRC32": "f9edf10a"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "uncompressed_bytes": 1803,
+      "compressed_bytes": 648,
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064",
+      "CRC32": "97ec4fc9"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeProductivityCuiSurfaceTests.cs",
+      "uncompressed_bytes": 4785,
+      "compressed_bytes": 1563,
+      "sha256": "538f11ad2dbb36ec219ee7a65dab129fb6275d0276f40c98beff686182a27b22",
+      "CRC32": "d175c8d3"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
+      "uncompressed_bytes": 7357,
+      "compressed_bytes": 2124,
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9",
+      "CRC32": "bfec8af4"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
+      "uncompressed_bytes": 8938,
+      "compressed_bytes": 2364,
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e",
+      "CRC32": "5173cd47"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/apps/Web/NineToOne.Web.csproj",
+      "uncompressed_bytes": 4602,
+      "compressed_bytes": 1399,
+      "sha256": "7fa36055b3df61c8062f68667e155cad83501b27064374b6c6187fe766839ab9",
+      "CRC32": "a270efd7"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/apps/Web/Productivity/Mathematics/OWNER-CONTRACT-REQUEST.json",
+      "uncompressed_bytes": 9920,
+      "compressed_bytes": 3625,
+      "sha256": "a95815367fd6f9a8e41dc5049770bfef57f17a3744bd128451bfcb9cb828cb0b",
+      "CRC32": "6f3c8765"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/apps/Web/Productivity/Mathematics/README.md",
+      "uncompressed_bytes": 1233,
+      "compressed_bytes": 713,
+      "sha256": "9725289e12b07c871b6dbb6f7cd3a01ae541f1c72b945e3e2bcbd67884bb3f70",
+      "CRC32": "0fa3c5a1"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/apps/Web/Productivity/Mathematics/Tests/NativePixelHost.cs",
+      "uncompressed_bytes": 832,
+      "compressed_bytes": 434,
+      "sha256": "9073adea34ac3661f6d146d35e9771bbafa46dd041b89315ee3d23919df1d8c7",
+      "CRC32": "c03d142e"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/apps/Web/Productivity/Mathematics/Tests/OwnerMath.Tests.csproj",
+      "uncompressed_bytes": 2538,
+      "compressed_bytes": 809,
+      "sha256": "93b5210be96a1adb1683de63f2f491a419fef2d0d37f33b24d69df60452ad69b",
+      "CRC32": "72a4b3d7"
+    },
+    {
+      "member": "original-evidence/pre-notice-closure/source-cut/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "uncompressed_bytes": 1315,
+      "compressed_bytes": 364,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4",
+      "CRC32": "79eceeee"
+    },
+    {
+      "member": "original-evidence/read-package-resources.py",
+      "uncompressed_bytes": 2083,
+      "compressed_bytes": 951,
+      "sha256": "caf496d2a8f304e6f890f9c9d33126f76ed52a291892a2fc3e03a6ffb11b0474",
+      "CRC32": "d9b838c6"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-MIT.txt",
+      "uncompressed_bytes": 1087,
+      "compressed_bytes": 644,
+      "sha256": "7c8f476bf7e35d9eaeb986eef4e77e9a71c31ca4f8b98a3b7378e26321ce23e3",
+      "CRC32": "233a270f"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-upstream-license-declarations.md",
+      "uncompressed_bytes": 4593,
+      "compressed_bytes": 857,
+      "sha256": "7965122970372c7b294c2341a940c9ecba18515ffdafabdf5abb8f149d2d34f4",
+      "CRC32": "75d9e1dd"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Font-copyright-notices.txt",
+      "uncompressed_bytes": 996,
+      "compressed_bytes": 575,
+      "sha256": "f378cfbd5178c319c12f30ac5c2aa070ab6b51655b00e212f4dd2c46c3075f7d",
+      "CRC32": "e8953c9b"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/FreeType-FTL.txt",
+      "uncompressed_bytes": 6620,
+      "compressed_bytes": 2837,
+      "sha256": "e4b7fdb18fc04b1e0197c41e1ce072cf49b2f5f4a8f5ed26768440d1c957156f",
+      "CRC32": "45ad5c9b"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/GUST-FONT-LICENSE.txt",
+      "uncompressed_bytes": 1456,
+      "compressed_bytes": 710,
+      "sha256": "2bd69affc3da00715116f713f57eab9707e96daf3562ad0215987b15b9c16f73",
+      "CRC32": "3b8114dd"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/ICU60-LICENSE.txt",
+      "uncompressed_bytes": 19442,
+      "compressed_bytes": 5236,
+      "sha256": "24c771ce37201a3ab604852e47d10d21595d0493269dd6c8a5e567e998e18c00",
+      "CRC32": "32353727"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LPPL-1.3c.tex",
+      "uncompressed_bytes": 23386,
+      "compressed_bytes": 7570,
+      "sha256": "c3c7c49085d4c8d722ca98937b2378619b45dd0b5bd1456bcd61be95d8b954f1",
+      "CRC32": "65058b41"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-MANIFEST.txt",
+      "uncompressed_bytes": 2186,
+      "compressed_bytes": 783,
+      "sha256": "1daa729f7922c42ba5ce8da7dfe4ecdc9e5c878ad86217fd6f32c4671505b007",
+      "CRC32": "b7f58dad"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-README.txt",
+      "uncompressed_bytes": 4588,
+      "compressed_bytes": 2055,
+      "sha256": "e6fdd5fb44b656146fa988d191f58901c09a347d3f4fbaa3b45b24a6ad7ec30b",
+      "CRC32": "7e11d55c"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/NOTICE.txt",
+      "uncompressed_bytes": 1657,
+      "compressed_bytes": 869,
+      "sha256": "e71767fe62fdad5c3fcb0b9df2bfcf577279f2f2198c7bee80c6cdbb979531fd",
+      "CRC32": "32f49dbb"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/SIL-Open-Font-License-1.1.md",
+      "uncompressed_bytes": 4566,
+      "compressed_bytes": 1912,
+      "sha256": "d4274903cbedb0566531e9856e5353991818e84ff17b747d7d41cbdd4e736ff5",
+      "CRC32": "8b3eda07"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-Apache-2.0.txt",
+      "uncompressed_bytes": 11361,
+      "compressed_bytes": 3958,
+      "sha256": "a22a0c495566ce9b09b25aa3feab8d54a5b12c6a26eb3dcb5324ead9a586da66",
+      "CRC32": "f6987e1e"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-MIT.txt",
+      "uncompressed_bytes": 1185,
+      "compressed_bytes": 701,
+      "sha256": "c72384e3fe4818ff9ee516f9e5d2ba579c6299856fde53d9fa37384df4343d4a",
+      "CRC32": "2188cc18"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-attributions.md",
+      "uncompressed_bytes": 2323,
+      "compressed_bytes": 1121,
+      "sha256": "e2449e386e85f43cd5ad20869d23653315d656ac0ffb8630143308a83bd79522",
+      "CRC32": "2d9d93d0"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-source-headers.txt",
+      "uncompressed_bytes": 23603,
+      "compressed_bytes": 5761,
+      "sha256": "f90dee3e11f6b139874f09f792eba0c389107a6d40db9ef6876cdeadeda55faf",
+      "CRC32": "34e37fc4"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/provenance.json",
+      "uncompressed_bytes": 3794,
+      "compressed_bytes": 1603,
+      "sha256": "7231dcead098b1bdc4e57c3e39ac4d8b11ec34d0251e9ac62dccc4f9e86d00eb",
+      "CRC32": "cb026a2c"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/LICENSE.txt",
+      "uncompressed_bytes": 1096,
+      "compressed_bytes": 644,
+      "sha256": "d32218dd6fcc1e749bcbe2c193cb5703863724e58d1693aa9f278edefee69f7b",
+      "CRC32": "1b09c2de"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/NOTICES.txt",
+      "uncompressed_bytes": 20768,
+      "compressed_bytes": 5563,
+      "sha256": "35d4c7707199a9c30ae29879cda7d961ecbd9b5b9f22039701717f9040ee064b",
+      "CRC32": "ab5c412c"
+    },
+    {
+      "member": "original-evidence/resource-cut/9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+      "uncompressed_bytes": 8238,
+      "compressed_bytes": 2391,
+      "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d",
+      "CRC32": "6d98e327"
+    },
+    {
+      "member": "original-evidence/resource-read-helper-first-syntax-error.txt",
+      "uncompressed_bytes": 294,
+      "compressed_bytes": 198,
+      "sha256": "5db63f738cbb2b27ec4c8183aa623f323066b84b4e06489ff445e5ba4950a1a4",
+      "CRC32": "d8171a10"
+    },
+    {
+      "member": "original-evidence/resource-readiness.json",
+      "uncompressed_bytes": 20531,
+      "compressed_bytes": 4178,
+      "sha256": "a06c1072b5dc5799407819fcaa0b4825f1933cead85930f9bb2168d109354355",
+      "CRC32": "10832b3d"
+    },
+    {
+      "member": "original-evidence/results/math-owner-original.trx",
+      "uncompressed_bytes": 54175,
+      "compressed_bytes": 6924,
+      "sha256": "ee6b3cb4f13c213eef35a7eee1b6d9836618f932ed0bfb2d7e4d46fb53003e2a",
+      "CRC32": "8961a267"
+    },
+    {
+      "member": "original-evidence/sdk-command-0.json",
+      "uncompressed_bytes": 1385,
+      "compressed_bytes": 653,
+      "sha256": "6e85970bf25bc593440118595f07055ac49d7496639892c1aa0734752aba39cf",
+      "CRC32": "c1ba263e"
+    },
+    {
+      "member": "original-evidence/sdk-command-1.json",
+      "uncompressed_bytes": 1259,
+      "compressed_bytes": 619,
+      "sha256": "f00c604902cbc60e701443c04613fd20f0f04d6a6ebf505e24ad86ef7fd6753c",
+      "CRC32": "e6a5b6a4"
+    },
+    {
+      "member": "original-evidence/sdk-command-2.json",
+      "uncompressed_bytes": 1255,
+      "compressed_bytes": 609,
+      "sha256": "0eef2fcbdf8f6d2f9932cfbd40e5b295fbe685a9a9c284fdc02b3b761adc0098",
+      "CRC32": "ef0b2a50"
+    },
+    {
+      "member": "original-evidence/sdk-command-3.json",
+      "uncompressed_bytes": 1418,
+      "compressed_bytes": 658,
+      "sha256": "bb0f6827ae84fa911097eea9f526535c8ae79bfa727dd0f01b2564069697803f",
+      "CRC32": "f9c4d9bb"
+    },
+    {
+      "member": "original-evidence/sdk-runner-original-path-error.py",
+      "uncompressed_bytes": 1621,
+      "compressed_bytes": 803,
+      "sha256": "db066c2d72afc8811de2968e369688d49f5d06e46685cc0d37321a516feb85ae",
+      "CRC32": "8a301e80"
+    },
+    {
+      "member": "original-evidence/sdk-runner.py",
+      "uncompressed_bytes": 1625,
+      "compressed_bytes": 805,
+      "sha256": "5fa1aa0d60e6f742c7a0e0acbb9ff72f1871813e94312f2e9d0f083227f2dc86",
+      "CRC32": "7538e279"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Directory.Build.props",
+      "uncompressed_bytes": 781,
+      "compressed_bytes": 423,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "CRC32": "b9da30c8"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Directory.Packages.props",
+      "uncompressed_bytes": 2581,
+      "compressed_bytes": 799,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
+      "CRC32": "56d054bd"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Home/HavenOS.Home.csproj",
+      "uncompressed_bytes": 1745,
+      "compressed_bytes": 504,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8",
+      "CRC32": "da1601f5"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Home/NativeUI/Controls/HomeProductivityCuiSurface.cs",
+      "uncompressed_bytes": 6990,
+      "compressed_bytes": 1858,
+      "sha256": "0b36b3b740bbce6dd4f42968301204088ec802dd451f6646dde8419f836f9711",
+      "CRC32": "a8b96815"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "uncompressed_bytes": 1107,
+      "compressed_bytes": 400,
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff",
+      "CRC32": "373d5b78"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Home/NativeUI/HomeEquationObjectRenderer.cs",
+      "uncompressed_bytes": 6518,
+      "compressed_bytes": 2132,
+      "sha256": "43e680ffe1fa60c5292c8da0411110ee701935a152ff6de20e7dce1d8c01e84b",
+      "CRC32": "af99b25e"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/provenance.json",
+      "uncompressed_bytes": 3794,
+      "compressed_bytes": 1603,
+      "sha256": "7231dcead098b1bdc4e57c3e39ac4d8b11ec34d0251e9ac62dccc4f9e86d00eb",
+      "CRC32": "cb026a2c"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/Home/Source/Home/Core/HomeEquationObjects.cs",
+      "uncompressed_bytes": 8684,
+      "compressed_bytes": 2542,
+      "sha256": "33605774b9e004fc6202d1bf92fcd1e6262503f5243d148e9a1c0c484917d3d6",
+      "CRC32": "5717411e"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Directory.Packages.props",
+      "uncompressed_bytes": 1993,
+      "compressed_bytes": 504,
+      "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8",
+      "CRC32": "147c6d7d"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "uncompressed_bytes": 700,
+      "compressed_bytes": 402,
+      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d",
+      "CRC32": "fa5e8a01"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+      "uncompressed_bytes": 2955,
+      "compressed_bytes": 938,
+      "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d",
+      "CRC32": "581e9698"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+      "uncompressed_bytes": 6875,
+      "compressed_bytes": 1914,
+      "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67",
+      "CRC32": "4f664597"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+      "uncompressed_bytes": 985,
+      "compressed_bytes": 507,
+      "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b",
+      "CRC32": "8e2c1598"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Forms/FormMarking.cs",
+      "uncompressed_bytes": 8737,
+      "compressed_bytes": 2598,
+      "sha256": "e757abd4ff984398b5c48fe0346bd89e3c7fdce365a7f756e5d3c9cf4cbccf6a",
+      "CRC32": "58ccc9ad"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "uncompressed_bytes": 375,
+      "compressed_bytes": 258,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121",
+      "CRC32": "7bf64048"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+      "uncompressed_bytes": 2442,
+      "compressed_bytes": 729,
+      "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec",
+      "CRC32": "f8e9b5b8"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphMarking.cs",
+      "uncompressed_bytes": 4048,
+      "compressed_bytes": 1324,
+      "sha256": "a2b93dd4e16b062e3a796ac3b4363a7aba333bc14b82b84839b4dbd2b0af7097",
+      "CRC32": "c5c9eb03"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+      "uncompressed_bytes": 713,
+      "compressed_bytes": 389,
+      "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad",
+      "CRC32": "02a8a607"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+      "uncompressed_bytes": 2387,
+      "compressed_bytes": 727,
+      "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54",
+      "CRC32": "76ab38c5"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+      "uncompressed_bytes": 1569,
+      "compressed_bytes": 727,
+      "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c",
+      "CRC32": "ca216948"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathMarking.cs",
+      "uncompressed_bytes": 7479,
+      "compressed_bytes": 2266,
+      "sha256": "1f6eeeffd5a1b4e2b112ec960e8014b720076b641c6011266b69cd28ebcdde89",
+      "CRC32": "acc68208"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "uncompressed_bytes": 14310,
+      "compressed_bytes": 3218,
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162",
+      "CRC32": "e370140b"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "uncompressed_bytes": 6312,
+      "compressed_bytes": 1837,
+      "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9",
+      "CRC32": "a7728e4d"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+      "uncompressed_bytes": 1943,
+      "compressed_bytes": 783,
+      "sha256": "1924346384b8943949b06c416be834f5f580a6bb1aebe25f12482e7d3178fb28",
+      "CRC32": "6e08e38f"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+      "uncompressed_bytes": 4260,
+      "compressed_bytes": 1544,
+      "sha256": "a4ecc966757fe6d99fe0e2decd3cc96c5c75290d853efeb3eeddbaa23c78d7b1",
+      "CRC32": "81d7f28f"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+      "uncompressed_bytes": 8178,
+      "compressed_bytes": 2750,
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362",
+      "CRC32": "fe8a456e"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+      "uncompressed_bytes": 9274,
+      "compressed_bytes": 2726,
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f",
+      "CRC32": "cbcc5618"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+      "uncompressed_bytes": 8238,
+      "compressed_bytes": 2391,
+      "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d",
+      "CRC32": "6d98e327"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "uncompressed_bytes": 1355,
+      "compressed_bytes": 566,
+      "sha256": "c5a4b50032e30cf90fe59872b148b14bd26a8c2bf8a31ec71c4a8b9afbc3caf5",
+      "CRC32": "8ce53d1c"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs",
+      "uncompressed_bytes": 4503,
+      "compressed_bytes": 1139,
+      "sha256": "b1909c91396c66139f89ebb68be5c41abee969b47f80f29d6fe79e5b464c6476",
+      "CRC32": "ce68f4fd"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs",
+      "uncompressed_bytes": 10429,
+      "compressed_bytes": 2622,
+      "sha256": "0de78df0d34b6f772f93eb2502ee1cae3e2069b0e07008cb2c28ce4bdfc6d3b7",
+      "CRC32": "f9edf10a"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "uncompressed_bytes": 1803,
+      "compressed_bytes": 648,
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064",
+      "CRC32": "97ec4fc9"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeProductivityCuiSurfaceTests.cs",
+      "uncompressed_bytes": 4785,
+      "compressed_bytes": 1563,
+      "sha256": "538f11ad2dbb36ec219ee7a65dab129fb6275d0276f40c98beff686182a27b22",
+      "CRC32": "d175c8d3"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
+      "uncompressed_bytes": 7357,
+      "compressed_bytes": 2124,
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9",
+      "CRC32": "bfec8af4"
+    },
+    {
+      "member": "original-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
+      "uncompressed_bytes": 8938,
+      "compressed_bytes": 2364,
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e",
+      "CRC32": "5173cd47"
+    },
+    {
+      "member": "original-evidence/source-cut/apps/Web/NineToOne.Web.csproj",
+      "uncompressed_bytes": 4602,
+      "compressed_bytes": 1399,
+      "sha256": "7fa36055b3df61c8062f68667e155cad83501b27064374b6c6187fe766839ab9",
+      "CRC32": "a270efd7"
+    },
+    {
+      "member": "original-evidence/source-cut/apps/Web/Productivity/Mathematics/OWNER-CONTRACT-REQUEST.json",
+      "uncompressed_bytes": 9920,
+      "compressed_bytes": 3625,
+      "sha256": "a95815367fd6f9a8e41dc5049770bfef57f17a3744bd128451bfcb9cb828cb0b",
+      "CRC32": "6f3c8765"
+    },
+    {
+      "member": "original-evidence/source-cut/apps/Web/Productivity/Mathematics/README.md",
+      "uncompressed_bytes": 1233,
+      "compressed_bytes": 713,
+      "sha256": "9725289e12b07c871b6dbb6f7cd3a01ae541f1c72b945e3e2bcbd67884bb3f70",
+      "CRC32": "0fa3c5a1"
+    },
+    {
+      "member": "original-evidence/source-cut/apps/Web/Productivity/Mathematics/Tests/NativePixelHost.cs",
+      "uncompressed_bytes": 832,
+      "compressed_bytes": 434,
+      "sha256": "9073adea34ac3661f6d146d35e9771bbafa46dd041b89315ee3d23919df1d8c7",
+      "CRC32": "c03d142e"
+    },
+    {
+      "member": "original-evidence/source-cut/apps/Web/Productivity/Mathematics/Tests/OwnerMath.Tests.csproj",
+      "uncompressed_bytes": 3136,
+      "compressed_bytes": 979,
+      "sha256": "de95b898c65628db7aa89e4171227fc6c54178aae257d4b9ebf25d53fac8082c",
+      "CRC32": "8331d023"
+    },
+    {
+      "member": "original-evidence/source-cut/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "uncompressed_bytes": 1315,
+      "compressed_bytes": 364,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4",
+      "CRC32": "79eceeee"
+    },
+    {
+      "member": "serial-evidence/artifacts-size-before.json",
+      "uncompressed_bytes": 21,
+      "compressed_bytes": 23,
+      "sha256": "d653ebe0855e5f62da47846872e1873c86e2e503d4ff948ce09fd9954e08c178",
+      "CRC32": "306c95b8"
+    },
+    {
+      "member": "serial-evidence/final-owned-handoff/first-receipt-helper-key-error.txt",
+      "uncompressed_bytes": 506,
+      "compressed_bytes": 297,
+      "sha256": "6d7de30e48c5034b6ba8252076fec6c4c6ff3a2dfbaf7c93be30472179790e0d",
+      "CRC32": "89080bbb"
+    },
+    {
+      "member": "serial-evidence/final-owned-handoff/manifest.json",
+      "uncompressed_bytes": 3603,
+      "compressed_bytes": 1247,
+      "sha256": "a4ab7de684f4e0e329827c0d8075f0cb54ecd1fc49a0f805f004204cc9a06b3b",
+      "CRC32": "e93d0ae1"
+    },
+    {
+      "member": "serial-evidence/final-owned-handoff/owner-package-after.json",
+      "uncompressed_bytes": 2660,
+      "compressed_bytes": 1030,
+      "sha256": "166fc485c62b4075dabea298ca285853c78b06e4231f1428103e91ad8e5a4bbf",
+      "CRC32": "47a2d794"
+    },
+    {
+      "member": "serial-evidence/final-owned-handoff/source-cut/apps/Web/Productivity/Mathematics/OWNER-CONTRACT-REQUEST.json",
+      "uncompressed_bytes": 9920,
+      "compressed_bytes": 3625,
+      "sha256": "a95815367fd6f9a8e41dc5049770bfef57f17a3744bd128451bfcb9cb828cb0b",
+      "CRC32": "6f3c8765"
+    },
+    {
+      "member": "serial-evidence/final-owned-handoff/source-cut/apps/Web/Productivity/Mathematics/README.md",
+      "uncompressed_bytes": 1427,
+      "compressed_bytes": 790,
+      "sha256": "7cca1108c6d0a5b0f3300eefd67a44bf49531695ef45fbec6e38c9dc29614748",
+      "CRC32": "a10efdd8"
+    },
+    {
+      "member": "serial-evidence/final-owned-handoff/source-cut/apps/Web/Productivity/Mathematics/Tests/NativePixelHost.cs",
+      "uncompressed_bytes": 832,
+      "compressed_bytes": 434,
+      "sha256": "9073adea34ac3661f6d146d35e9771bbafa46dd041b89315ee3d23919df1d8c7",
+      "CRC32": "c03d142e"
+    },
+    {
+      "member": "serial-evidence/final-owned-handoff/source-cut/apps/Web/Productivity/Mathematics/Tests/OwnerMath.Tests.csproj",
+      "uncompressed_bytes": 3369,
+      "compressed_bytes": 1022,
+      "sha256": "1b7ab2ae88d9b1cc1429f729e385ae64c174315f2b8c34856c60e63c78d68eaf",
+      "CRC32": "eb1f0914"
+    },
+    {
+      "member": "serial-evidence/freeze-and-first-failure-receipt.json",
+      "uncompressed_bytes": 17446,
+      "compressed_bytes": 3675,
+      "sha256": "16be6a6e54d707f3b39e828f48abaaa1c44a59b08ae0b089f793f2c14002724b",
+      "CRC32": "3e945d1b"
+    },
+    {
+      "member": "serial-evidence/freeze-policy.py",
+      "uncompressed_bytes": 3577,
+      "compressed_bytes": 1714,
+      "sha256": "8c1035ca5fd02b03af1bc2429cef3ef6acbbba5b16b0395cb0028ad93addf68e",
+      "CRC32": "8985cf61"
+    },
+    {
+      "member": "serial-evidence/next-sdk-commands.json",
+      "uncompressed_bytes": 3686,
+      "compressed_bytes": 1371,
+      "sha256": "733549501a4560aa50803cf6940324e9c829139c8edda608816423ad98b7e429",
+      "CRC32": "d6c62d1b"
+    },
+    {
+      "member": "serial-evidence/results/math-owner-original-serial.trx",
+      "uncompressed_bytes": 34408,
+      "compressed_bytes": 4477,
+      "sha256": "81c1892b16ee2ec2174263b72c872d51dfb0378e7b4bdb61fc3718f4a125b176",
+      "CRC32": "e65c4d30"
+    },
+    {
+      "member": "serial-evidence/run-serial.py",
+      "uncompressed_bytes": 2813,
+      "compressed_bytes": 1206,
+      "sha256": "10b9373e2185349c2d479500687a8e613da0282d4f3b7e85157e7c847a4ae5c6",
+      "CRC32": "5f050bb4"
+    },
+    {
+      "member": "serial-evidence/serial-command-0.json",
+      "uncompressed_bytes": 1262,
+      "compressed_bytes": 611,
+      "sha256": "4b5a1143cc2a5666f5faba853f2b662847dcda7d303bc84cc0d1b0e9384fc7ae",
+      "CRC32": "c6b74c20"
+    },
+    {
+      "member": "serial-evidence/serial-command-1.json",
+      "uncompressed_bytes": 1263,
+      "compressed_bytes": 597,
+      "sha256": "d21a54280dd19c5847749fca6a350407293b7122db484d91fac96010aa728895",
+      "CRC32": "0458ee5f"
+    },
+    {
+      "member": "serial-evidence/serial-command-2.json",
+      "uncompressed_bytes": 1399,
+      "compressed_bytes": 637,
+      "sha256": "6a438c03bf2f4485d4de6f65527938ad58bd5556f09c18c0735fdd53ffed35f2",
+      "CRC32": "1e6c264a"
+    },
+    {
+      "member": "serial-evidence/serial-native-build.log",
+      "uncompressed_bytes": 5405,
+      "compressed_bytes": 818,
+      "sha256": "dad3db7a1823dc4e284ccdda40b54cec454394cbfd85ddba92622aa816c3b852",
+      "CRC32": "02b208c5"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/.msCoverageSourceRootsMapping_NineToOne.Math.Owner.Tests",
+      "uncompressed_bytes": 85072,
+      "compressed_bytes": 1777,
+      "sha256": "d897f33c5f5775722d727a8682f2bb41804029694e9624572b36dae2791fb5b2",
+      "CRC32": "6e563bdf"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Base.dll",
+      "uncompressed_bytes": 2435072,
+      "compressed_bytes": 833416,
+      "sha256": "ac43a7f7b652a619f049d5f2463fa1989cf74b618ddcd86b040a84077ac46dd6",
+      "CRC32": "0da59025"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Base.pdb",
+      "uncompressed_bytes": 1053792,
+      "compressed_bytes": 466202,
+      "sha256": "b66f4b21a5a5be9fae928c1439076c63ae2fc642755fe2c154edfae22a0e3be8",
+      "CRC32": "b54673d0"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Base.xml",
+      "uncompressed_bytes": 2021500,
+      "compressed_bytes": 233101,
+      "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4",
+      "CRC32": "6c2c2aa2"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Controls.dll",
+      "uncompressed_bytes": 1405440,
+      "compressed_bytes": 519927,
+      "sha256": "70dc421bb80df10fb37ab69c9d87bbc36596ebc94c8cb7a191de9d000b714bde",
+      "CRC32": "d6fd9a61"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Controls.pdb",
+      "uncompressed_bytes": 638464,
+      "compressed_bytes": 270813,
+      "sha256": "32d09f1fcf02c070ec2cb364375417c7e9a5da5cae8e8ed4f997171804e78906",
+      "CRC32": "9f180217"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Controls.xml",
+      "uncompressed_bytes": 1335488,
+      "compressed_bytes": 144383,
+      "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a",
+      "CRC32": "ba7680f9"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.DesignerSupport.dll",
+      "uncompressed_bytes": 76288,
+      "compressed_bytes": 31633,
+      "sha256": "4fb239353038a6c1327390e2a9334707d128512efe20b128b1da58b1ecb68d50",
+      "CRC32": "97c2979e"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.DesignerSupport.pdb",
+      "uncompressed_bytes": 32288,
+      "compressed_bytes": 17799,
+      "sha256": "56e141d308afc5f96d6d2980e9d35d131ec73ce58ad1773bab31718d67976680",
+      "CRC32": "fc8ed524"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.DesignerSupport.xml",
+      "uncompressed_bytes": 141,
+      "compressed_bytes": 96,
+      "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0",
+      "CRC32": "7e8a620a"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Desktop.dll",
+      "uncompressed_bytes": 15360,
+      "compressed_bytes": 4122,
+      "sha256": "54c770236ca146436e3c6a73c84db3bc1f62ad82e868775c7b28724eecf0ba4d",
+      "CRC32": "fd07bb51"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Desktop.pdb",
+      "uncompressed_bytes": 14484,
+      "compressed_bytes": 9097,
+      "sha256": "736c07ca437a0c089af234ae249ae95e8aea04106f940e3cd57ef6fb9ddb2e68",
+      "CRC32": "00922b3f"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Desktop.xml",
+      "uncompressed_bytes": 133,
+      "compressed_bytes": 88,
+      "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793",
+      "CRC32": "4edc73a2"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Dialogs.dll",
+      "uncompressed_bytes": 246784,
+      "compressed_bytes": 121356,
+      "sha256": "d94c566f7e2b594543c4e1a5851a03b8f8dbb9e95c07fd0b0d1022a55c40146b",
+      "CRC32": "67c8ac15"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Dialogs.pdb",
+      "uncompressed_bytes": 26700,
+      "compressed_bytes": 13959,
+      "sha256": "68323081c4ac0d1007575c08f54dcec32969a6f762ab5352f5c9d4fa0d7dc0ec",
+      "CRC32": "f2058be1"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Dialogs.xml",
+      "uncompressed_bytes": 638,
+      "compressed_bytes": 272,
+      "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f",
+      "CRC32": "96617f33"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Fonts.Inter.dll",
+      "uncompressed_bytes": 1897472,
+      "compressed_bytes": 933277,
+      "sha256": "28aee11c370c0b451b3e9c06aed285463aa1bd6090917ce6404c5c5577b826d5",
+      "CRC32": "819da83c"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Fonts.Inter.pdb",
+      "uncompressed_bytes": 13464,
+      "compressed_bytes": 8471,
+      "sha256": "422956b2a725fddbd5714672ceb6573c2fb3861634b1358fa372870985ac66b1",
+      "CRC32": "f228df71"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Fonts.Inter.xml",
+      "uncompressed_bytes": 137,
+      "compressed_bytes": 92,
+      "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa",
+      "CRC32": "2fa379b8"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.FreeDesktop.AtSpi.dll",
+      "uncompressed_bytes": 660480,
+      "compressed_bytes": 209339,
+      "sha256": "63417fe5a3563e1b001b64f0f081dad64173b1fe5efc73fdd2745759739c43c6",
+      "CRC32": "caece4af"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.FreeDesktop.AtSpi.pdb",
+      "uncompressed_bytes": 225728,
+      "compressed_bytes": 119214,
+      "sha256": "80544bb5d5ee6e3d92a3b104bd88e388207ab5189e00e3a4522310eabc8fefca",
+      "CRC32": "4a00f3fa"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.FreeDesktop.AtSpi.xml",
+      "uncompressed_bytes": 52965,
+      "compressed_bytes": 7126,
+      "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3",
+      "CRC32": "70efc4ec"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.FreeDesktop.dll",
+      "uncompressed_bytes": 220160,
+      "compressed_bytes": 81029,
+      "sha256": "0dc336b0d83c0569f27ae82d41a93b02d5730e160f8b7e134153f4cbe89eb020",
+      "CRC32": "27de19ad"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.FreeDesktop.pdb",
+      "uncompressed_bytes": 101592,
+      "compressed_bytes": 59282,
+      "sha256": "3b2933d30123dd617284da93b2ad82406a59bef1ee2f082359f355a994b6e193",
+      "CRC32": "5c0355af"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.FreeDesktop.xml",
+      "uncompressed_bytes": 1857,
+      "compressed_bytes": 525,
+      "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3",
+      "CRC32": "46239a9f"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.HarfBuzz.dll",
+      "uncompressed_bytes": 22528,
+      "compressed_bytes": 8187,
+      "sha256": "145358609bad96e7ce91e9a8dbc5e733f7bb765c527fedd9880b03262bb0186e",
+      "CRC32": "485122e4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.HarfBuzz.pdb",
+      "uncompressed_bytes": 16412,
+      "compressed_bytes": 10238,
+      "sha256": "7f71fec5c01a5142357aeedc75917a45e283e27ec9ad166200057e070a5f06f1",
+      "CRC32": "4940b848"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.HarfBuzz.xml",
+      "uncompressed_bytes": 1114,
+      "compressed_bytes": 378,
+      "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c",
+      "CRC32": "6e7d58c9"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Headless.XUnit.dll",
+      "uncompressed_bytes": 35840,
+      "compressed_bytes": 12747,
+      "sha256": "a46213a5a400df2480a3c5f39d09ce8d60bd7d3e69d5c67f0a54962ecb63c8e4",
+      "CRC32": "a1c20add"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Headless.dll",
+      "uncompressed_bytes": 73728,
+      "compressed_bytes": 29919,
+      "sha256": "5bd0c8fe987544857bc43a9aecf1382091717a1a02582d194c673ea8ba4fb1fc",
+      "CRC32": "86691b20"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Headless.pdb",
+      "uncompressed_bytes": 32340,
+      "compressed_bytes": 17377,
+      "sha256": "f76d0378372529f47bbf8f79fa77c94ec3339089c43031a82451f085fb9cd0a4",
+      "CRC32": "1981c1fe"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Headless.xml",
+      "uncompressed_bytes": 13264,
+      "compressed_bytes": 2360,
+      "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10",
+      "CRC32": "edd86806"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Markup.Xaml.dll",
+      "uncompressed_bytes": 78848,
+      "compressed_bytes": 32246,
+      "sha256": "8a95d411dca4ef9e90cd1944ed1fcba9e2049b3d3ac0e8fd150ae36e277864a6",
+      "CRC32": "8bbb37e8"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Markup.Xaml.pdb",
+      "uncompressed_bytes": 39648,
+      "compressed_bytes": 21708,
+      "sha256": "4e51bd4fd0b518d88430b00cb37cc33ab3f150bea35d277a845cb9c99ba9d211",
+      "CRC32": "04b78b3f"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Markup.Xaml.xml",
+      "uncompressed_bytes": 25476,
+      "compressed_bytes": 3438,
+      "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87",
+      "CRC32": "a639d5ca"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Markup.dll",
+      "uncompressed_bytes": 47616,
+      "compressed_bytes": 17334,
+      "sha256": "dc6f4b94e9168ef0f424d635b4da2bcfd4ff7688e5506f795fe803b57e0a3428",
+      "CRC32": "3f994d58"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Markup.pdb",
+      "uncompressed_bytes": 26260,
+      "compressed_bytes": 14856,
+      "sha256": "4c733f2bc5835e548db0d1e9d1589e4544d1cac20b79d7440bc64a424de7e78d",
+      "CRC32": "57d7cbc1"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Markup.xml",
+      "uncompressed_bytes": 4336,
+      "compressed_bytes": 1018,
+      "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562",
+      "CRC32": "35385d3b"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Metal.dll",
+      "uncompressed_bytes": 15360,
+      "compressed_bytes": 4454,
+      "sha256": "27c7e5b56f3139394d166d464c9f30a6fb7891b66e6db3ef5ca4c53100bae1c2",
+      "CRC32": "980fab70"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Metal.pdb",
+      "uncompressed_bytes": 13356,
+      "compressed_bytes": 8376,
+      "sha256": "bbab779288a2b83c8e48db7e51a5054f354469b5f58e6abd224c0f7d63379049",
+      "CRC32": "047a7e73"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Metal.xml",
+      "uncompressed_bytes": 131,
+      "compressed_bytes": 86,
+      "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd",
+      "CRC32": "70774217"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.MicroCom.dll",
+      "uncompressed_bytes": 15360,
+      "compressed_bytes": 4238,
+      "sha256": "17144541219d029a4e74412f102dc9c5fd7ccdf8a3135b58d5a5d8eedced6af1",
+      "CRC32": "25732bb5"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.MicroCom.pdb",
+      "uncompressed_bytes": 13536,
+      "compressed_bytes": 8452,
+      "sha256": "8f1a1116bec90ab813b4184da2d6cb1ffe56959c825ac799de8a5a0f9edd2804",
+      "CRC32": "7f2f090d"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.MicroCom.xml",
+      "uncompressed_bytes": 134,
+      "compressed_bytes": 89,
+      "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105",
+      "CRC32": "09f98386"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Native.dll",
+      "uncompressed_bytes": 359936,
+      "compressed_bytes": 120214,
+      "sha256": "745e5727224f04ca3804f43caac0a9eaf2aa496b82a0b8d3f630afc09096b4bb",
+      "CRC32": "0304c7dc"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Native.pdb",
+      "uncompressed_bytes": 217008,
+      "compressed_bytes": 102100,
+      "sha256": "4a6cab2c1b3b1a2b2d6d230c2ff4826b3e2b1b246a9d4aa98885e95cd622cb06",
+      "CRC32": "5291b054"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Native.xml",
+      "uncompressed_bytes": 9476,
+      "compressed_bytes": 1743,
+      "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c",
+      "CRC32": "39a4cfa7"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.OpenGL.dll",
+      "uncompressed_bytes": 120832,
+      "compressed_bytes": 44479,
+      "sha256": "a0aebc30c31ae380c2469a88f11d7bf2c3d70fba9ef9c2782f6d7b07ed5df2f3",
+      "CRC32": "165763e2"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.OpenGL.pdb",
+      "uncompressed_bytes": 53388,
+      "compressed_bytes": 31482,
+      "sha256": "3cadd0c018680b4442abfff131f492a72fe92b40f7bfed33b6d4f987b20d952c",
+      "CRC32": "ba36e311"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.OpenGL.xml",
+      "uncompressed_bytes": 5602,
+      "compressed_bytes": 1217,
+      "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be",
+      "CRC32": "07e68cf0"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Remote.Protocol.dll",
+      "uncompressed_bytes": 80384,
+      "compressed_bytes": 34368,
+      "sha256": "8ce344c7706f6c15f3fec1e4aeca6af9135965c8b91c19fb7468a2ad36e9fb0d",
+      "CRC32": "0788d590"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Remote.Protocol.pdb",
+      "uncompressed_bytes": 34628,
+      "compressed_bytes": 18960,
+      "sha256": "d9b8af80aaf2883a1f6b3fe8243b3894651be83ae1ed10a2556fb730b7ba2c00",
+      "CRC32": "9a2de00b"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Remote.Protocol.xml",
+      "uncompressed_bytes": 70801,
+      "compressed_bytes": 5772,
+      "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2",
+      "CRC32": "359cbe67"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Skia.dll",
+      "uncompressed_bytes": 130560,
+      "compressed_bytes": 59746,
+      "sha256": "6c9bfaaa036b5439d7917eb200dd347814a838319d3c7147c4699dbba0b63c6f",
+      "CRC32": "3e44290d"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Skia.pdb",
+      "uncompressed_bytes": 64372,
+      "compressed_bytes": 33837,
+      "sha256": "0b5f5386cb7152de8c73403ac7346cfe81ada8fb3337ee4388c34c1633b76cb6",
+      "CRC32": "b47189e4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Skia.xml",
+      "uncompressed_bytes": 47094,
+      "compressed_bytes": 6271,
+      "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584",
+      "CRC32": "c0743d29"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Themes.Fluent.dll",
+      "uncompressed_bytes": 963072,
+      "compressed_bytes": 163059,
+      "sha256": "ac08aeb4d627a44820d1ef3a6a901b9d8afff3e85131fc39f1614db3fd7191b7",
+      "CRC32": "47795d54"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Themes.Fluent.pdb",
+      "uncompressed_bytes": 182368,
+      "compressed_bytes": 48784,
+      "sha256": "8dbb92cf3b1838a02a000ff6f7800ea9057410bb44555b40b11fb224eff64930",
+      "CRC32": "282f914f"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Themes.Fluent.xml",
+      "uncompressed_bytes": 6894,
+      "compressed_bytes": 705,
+      "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111",
+      "CRC32": "2f111781"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Vulkan.dll",
+      "uncompressed_bytes": 194048,
+      "compressed_bytes": 60926,
+      "sha256": "b549d38ee3feffa290751cbcf4f97be67ed102d6bec6585f3836d4dcf95a9138",
+      "CRC32": "568aa087"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Vulkan.pdb",
+      "uncompressed_bytes": 48472,
+      "compressed_bytes": 29257,
+      "sha256": "04a11ef45c6a31d00c8d170dbc4a0c1e44225f4b127f4da177dd3bc90b4e4ebd",
+      "CRC32": "cd4dfb26"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Vulkan.xml",
+      "uncompressed_bytes": 1620,
+      "compressed_bytes": 349,
+      "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd",
+      "CRC32": "52cb495e"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Win32.Automation.dll",
+      "uncompressed_bytes": 130048,
+      "compressed_bytes": 46370,
+      "sha256": "46e54c0cb4a9869e59a59866259069879d0bb9bacb95923ee8a3042a16262296",
+      "CRC32": "baaf1ec9"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Win32.Automation.pdb",
+      "uncompressed_bytes": 101876,
+      "compressed_bytes": 65623,
+      "sha256": "0f507c3018e6885aeb334c44bab7e4fd90827ccf6bad6bf09f268e620b8354fd",
+      "CRC32": "3cbf9e61"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Win32.Automation.xml",
+      "uncompressed_bytes": 3812,
+      "compressed_bytes": 838,
+      "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9",
+      "CRC32": "f80269fa"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Win32.dll",
+      "uncompressed_bytes": 967168,
+      "compressed_bytes": 301810,
+      "sha256": "285c454cdbe27faae30ba06725391846aaae85b5b893e2e7d09d851350de3836",
+      "CRC32": "b97685d7"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Win32.pdb",
+      "uncompressed_bytes": 500696,
+      "compressed_bytes": 275904,
+      "sha256": "379d89324a7cac32d6214e08cf3f86ec6ab4da4e05cee2939b89db03f1e34b83",
+      "CRC32": "abb8f0d4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.Win32.xml",
+      "uncompressed_bytes": 143346,
+      "compressed_bytes": 21138,
+      "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba",
+      "CRC32": "01e22f69"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.X11.dll",
+      "uncompressed_bytes": 390144,
+      "compressed_bytes": 159440,
+      "sha256": "7f8e04d5114eb3ee93a2c08adb231293b4bdd3a96b5819ef6e8c6acdd90864ce",
+      "CRC32": "f3235dfa"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.X11.pdb",
+      "uncompressed_bytes": 112968,
+      "compressed_bytes": 57900,
+      "sha256": "9fc458477e05d761ac3dd6f96a35a44532461317e9585cea1fe64c6bea2ddd8f",
+      "CRC32": "da91c1b8"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.X11.xml",
+      "uncompressed_bytes": 11685,
+      "compressed_bytes": 2850,
+      "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b",
+      "CRC32": "dda4a646"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.dll",
+      "uncompressed_bytes": 4096,
+      "compressed_bytes": 1873,
+      "sha256": "934479ae2826b86233274fced9247c76a911b54c6d76d92805eedcc1041508e7",
+      "CRC32": "a8bed7a0"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.pdb",
+      "uncompressed_bytes": 12224,
+      "compressed_bytes": 7313,
+      "sha256": "c97247a9d1bd464d7ca9059c81ca6d8100ecae50b54bcf0010f4851f9bf78103",
+      "CRC32": "e1bf41da"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Avalonia.xml",
+      "uncompressed_bytes": 125,
+      "compressed_bytes": 80,
+      "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8",
+      "CRC32": "dce525ef"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CSharpMath.Rendering.dll",
+      "uncompressed_bytes": 1797632,
+      "compressed_bytes": 812440,
+      "sha256": "57d7386b02f3ae577b0f73adb511f10a19328282cf42c7fd3bf430c641bcdc0c",
+      "CRC32": "a2da4447"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CSharpMath.SkiaSharp.dll",
+      "uncompressed_bytes": 11264,
+      "compressed_bytes": 5097,
+      "sha256": "14e36a4b3274f7595e3116e07b9edc7f7882885f237d84f9daddc0ac310a3e60",
+      "CRC32": "1fb94aca"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CSharpMath.dll",
+      "uncompressed_bytes": 227328,
+      "compressed_bytes": 92361,
+      "sha256": "955db545f7cdd2164b146f746b4eb79b0f2623fc125a8984be3a1dfa35441d4d",
+      "CRC32": "7e11b13d"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Core.dll",
+      "uncompressed_bytes": 80896,
+      "compressed_bytes": 33113,
+      "sha256": "5a9226b6f05404481509d511a27ffeb4c4575e1b3643719fc2112402094572a3",
+      "CRC32": "a721eaa4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Core.pdb",
+      "uncompressed_bytes": 32728,
+      "compressed_bytes": 17277,
+      "sha256": "1635e5b2e5e347e8e1a50110782922e683604c60d6a1926f42f067e9932b6656",
+      "CRC32": "e39aaf35"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Language.dll",
+      "uncompressed_bytes": 12288,
+      "compressed_bytes": 5420,
+      "sha256": "347758dc876c3200d44b29377cd794c4434a3f049002e73c7e9617e4a0cf0b71",
+      "CRC32": "e75913cf"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Language.pdb",
+      "uncompressed_bytes": 13536,
+      "compressed_bytes": 7877,
+      "sha256": "f89b6cb0585ae5cd682956ba3dc035ea4d65e531b10e68b42e6800e5215f6d77",
+      "CRC32": "e3e27d5c"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Runtime.dll",
+      "uncompressed_bytes": 160256,
+      "compressed_bytes": 68195,
+      "sha256": "b72c3a0401a63c6dc681c8a28813073d13a2efac02a96a66c5ce5487254a76d0",
+      "CRC32": "80e5cfc4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Runtime.pdb",
+      "uncompressed_bytes": 53324,
+      "compressed_bytes": 28778,
+      "sha256": "2f9af153bd1715d8d62ded1cc61aad399bf94e813c43d27d90846273413b08a2",
+      "CRC32": "6d777337"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Themes.dll",
+      "uncompressed_bytes": 92672,
+      "compressed_bytes": 35800,
+      "sha256": "22aec816cd2817197fa4c10fd60ad63c1919b8729f4ca5daaed1a14603b9a27a",
+      "CRC32": "a0e18527"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/CakeOS.Cui.Themes.pdb",
+      "uncompressed_bytes": 29236,
+      "compressed_bytes": 15284,
+      "sha256": "d0e9192932cf3ade61e2e2bdd0dbd8de9cb4f4b9f79bb7f330664931fae0affb",
+      "CRC32": "1b0d552f"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Den.dll",
+      "uncompressed_bytes": 337408,
+      "compressed_bytes": 124202,
+      "sha256": "a3045ccc31a88fb0b5ef441acd9ee3d29b836afc1080f4b98a9c1f79064362b3",
+      "CRC32": "b820f3a4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Den.pdb",
+      "uncompressed_bytes": 72624,
+      "compressed_bytes": 34819,
+      "sha256": "e0105552e60b1638a6583680b9b6cbc0f40cb6ad3b281f04280cee921185f891",
+      "CRC32": "c41e4f08"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Dulche.Runtime.dll",
+      "uncompressed_bytes": 748032,
+      "compressed_bytes": 253242,
+      "sha256": "44455caa55bf1e9b8ad3b2b4b3d377ecde7b60966442799e2e67eeb4758c6a6d",
+      "CRC32": "2165a686"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Dulche.Runtime.pdb",
+      "uncompressed_bytes": 131992,
+      "compressed_bytes": 52846,
+      "sha256": "8068be5d6faecdeceb0a439fea7258c20520943224b3247c658baa6a7851d72f",
+      "CRC32": "7c1fd423"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/HarfBuzzSharp.dll",
+      "uncompressed_bytes": 122400,
+      "compressed_bytes": 50709,
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29",
+      "CRC32": "ee9c6d27"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Haven.Application.dll",
+      "uncompressed_bytes": 4350976,
+      "compressed_bytes": 1415098,
+      "sha256": "9de8fe9a05bc27dc4ad98faab750ddf4e1fce80079386d05f5c22a0bd85ddbe6",
+      "CRC32": "a2b219ea"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Haven.Application.pdb",
+      "uncompressed_bytes": 865292,
+      "compressed_bytes": 358158,
+      "sha256": "ad86814f3e215abd3c9406d5a9a0a8f40a4c0f894a2585b6413134ff95367c0c",
+      "CRC32": "51f2ef00"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Haven.Core.dll",
+      "uncompressed_bytes": 1885696,
+      "compressed_bytes": 567197,
+      "sha256": "ba3d7d2389eeb4294a965d30a0457b989da64b15eb8e5f790237ac0ff5b0cb3f",
+      "CRC32": "f53d0ace"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Haven.Core.pdb",
+      "uncompressed_bytes": 346348,
+      "compressed_bytes": 109582,
+      "sha256": "333032877c1a0c06666cd0077373cd35483654666a10116022a399d6c210b260",
+      "CRC32": "03929df7"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/HavenOS.Home.NativeUI.dll",
+      "uncompressed_bytes": 230912,
+      "compressed_bytes": 79064,
+      "sha256": "c2899085e7444efe2ed14e33bf96cc6ad9a82f742a29a0abb7718a6399477dc9",
+      "CRC32": "bccdf588"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/HavenOS.Home.NativeUI.pdb",
+      "uncompressed_bytes": 33748,
+      "compressed_bytes": 20070,
+      "sha256": "a6ec1022bc03c3e0f90d110ec697a9a3b3cc0ed825b01dead606abdc491a68e5",
+      "CRC32": "a6283822"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/HavenOS.Home.dll",
+      "uncompressed_bytes": 1399808,
+      "compressed_bytes": 463388,
+      "sha256": "c7928c53d45d240edb6b565af6790d7e6de0528e6882e42e9bddfb7d49d6c3bd",
+      "CRC32": "eb5d189e"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/HavenOS.Home.pdb",
+      "uncompressed_bytes": 263576,
+      "compressed_bytes": 108658,
+      "sha256": "3f4b6b775c6a6e21bad7bf63f853711d792c81f0a99b45189b46eddc72e6ebda",
+      "CRC32": "6b7ee1a3"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/MicroCom.Runtime.dll",
+      "uncompressed_bytes": 16384,
+      "compressed_bytes": 8106,
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318",
+      "CRC32": "68dd8f15"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.ApplicationInsights.dll",
+      "uncompressed_bytes": 386080,
+      "compressed_bytes": 152047,
+      "sha256": "bf9a4b88c7f94267e1cc7ed0700c575d3eb3266ff25bcb76e4f40f1b0fba022d",
+      "CRC32": "fe3e1610"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.Bcl.AsyncInterfaces.dll",
+      "uncompressed_bytes": 16000,
+      "compressed_bytes": 8836,
+      "sha256": "5705d245072d3eb78400547b32147dbb6e2c8b02ba8bda76729798f5efdeaecb",
+      "CRC32": "cc0d12a3"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.TestPlatform.CommunicationUtilities.dll",
+      "uncompressed_bytes": 137776,
+      "compressed_bytes": 66335,
+      "sha256": "e38a359aa502bb1867d6092dca9aba5c130dd6f9111decea8156aa746b2c69e6",
+      "CRC32": "a895ec18"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.TestPlatform.CoreUtilities.dll",
+      "uncompressed_bytes": 98336,
+      "compressed_bytes": 46575,
+      "sha256": "f6e2495c44640d8915b2aefc938f391c970300266da014350ff35512a448ee84",
+      "CRC32": "c994cc01"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.TestPlatform.CrossPlatEngine.dll",
+      "uncompressed_bytes": 316960,
+      "compressed_bytes": 146800,
+      "sha256": "d55399bc66dc5b451d60ad82662452ca4a5f735918135dfc91ca9b5e3e38a6ab",
+      "CRC32": "bd422c19"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.TestPlatform.PlatformAbstractions.dll",
+      "uncompressed_bytes": 51232,
+      "compressed_bytes": 33250,
+      "sha256": "7b919ce4429c3b7b8fa2c36fd641b70b2f459a30ecb7c65fd80f437673cec930",
+      "CRC32": "f6cbed57"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.TestPlatform.Utilities.dll",
+      "uncompressed_bytes": 67104,
+      "compressed_bytes": 37017,
+      "sha256": "01ffd64d25a4bd905aef9594d2aa700e020273a90a77a8720af6bec8b4fd5444",
+      "CRC32": "6cf07bcc"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.Testing.Extensions.MSBuild.dll",
+      "uncompressed_bytes": 60448,
+      "compressed_bytes": 35081,
+      "sha256": "f6ef5ef03b5c22f7900fb67fe741847e75cf3ce26f652106a27d8cfcc834bb7f",
+      "CRC32": "06cfd87a"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.Testing.Extensions.Telemetry.dll",
+      "uncompressed_bytes": 44576,
+      "compressed_bytes": 29760,
+      "sha256": "548751ae749bca1e823f1bc3698ac751a0dc0ca47c396a9d32b432bd828848df",
+      "CRC32": "8752a945"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
+      "uncompressed_bytes": 32800,
+      "compressed_bytes": 21454,
+      "sha256": "acae6c525ead26f77ceab1b1d640fe7e8c07fec2acdfc78bf753b220a49ef3e6",
+      "CRC32": "f3ceb90b"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.Testing.Platform.dll",
+      "uncompressed_bytes": 1153568,
+      "compressed_bytes": 578865,
+      "sha256": "519744d3b6321320e366495fbed0d8c37f9b0e11207667eb89eb5c0c425a7462",
+      "CRC32": "faaacd0b"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.VisualStudio.CodeCoverage.Shim.dll",
+      "uncompressed_bytes": 17464,
+      "compressed_bytes": 10494,
+      "sha256": "a753bc15f23a957f4f91a059376e4472c6bacd1503622de4b9b2b079ad8ea289",
+      "CRC32": "ddb42d2b"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.VisualStudio.TestPlatform.Common.dll",
+      "uncompressed_bytes": 248352,
+      "compressed_bytes": 120250,
+      "sha256": "059aa2f335c3f7b14ac3fb7caa1625bc2767581b9548e9ff53a246c7f2f94d6a",
+      "CRC32": "1468c58a"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+      "uncompressed_bytes": 334392,
+      "compressed_bytes": 167540,
+      "sha256": "f83e38ee9020baa42e284e2299e233070ffa86ce4b10213583f9b7c8a521bcd0",
+      "CRC32": "57658e75"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Newtonsoft.Json.dll",
+      "uncompressed_bytes": 712464,
+      "compressed_bytes": 270107,
+      "sha256": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07",
+      "CRC32": "e0a4803d"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/NineToOne.Cui.AI.dll",
+      "uncompressed_bytes": 130560,
+      "compressed_bytes": 51658,
+      "sha256": "efe5449d0ac3d4cd94ad3a10b6acdf7d6042572a0670f4508b50ebffa893036b",
+      "CRC32": "3259462b"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/NineToOne.Cui.AI.pdb",
+      "uncompressed_bytes": 37516,
+      "compressed_bytes": 20541,
+      "sha256": "5a203a9763516e2954116fc8ff34f0c8632b170b0c4dfc40b1c6f1fab0390cc7",
+      "CRC32": "ab9b2c17"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/NineToOne.Math.Owner.Tests",
+      "uncompressed_bytes": 78256,
+      "compressed_bytes": 33254,
+      "sha256": "6164b37f51a6a877d97796d5e8cd97a83190defba8159ac1d69865b5872179bb",
+      "CRC32": "359d65b4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/NineToOne.Math.Owner.Tests.deps.json",
+      "uncompressed_bytes": 60817,
+      "compressed_bytes": 7265,
+      "sha256": "97fbfa84546dfa31e011c120cd29b02c040f86f77b763b429b82ddf02fbcc6c5",
+      "CRC32": "f2b88718"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/NineToOne.Math.Owner.Tests.dll",
+      "uncompressed_bytes": 112640,
+      "compressed_bytes": 38324,
+      "sha256": "8e74ab483effcac0b0fa26b74bda510c580097698300420d66cd89780be3ac3d",
+      "CRC32": "803891b4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/NineToOne.Math.Owner.Tests.pdb",
+      "uncompressed_bytes": 30880,
+      "compressed_bytes": 18589,
+      "sha256": "39351bec77c6da428203e9e69d47c8601e9792251e27121130cfadb7ae113db5",
+      "CRC32": "3da8b023"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/NineToOne.Math.Owner.Tests.runtimeconfig.json",
+      "uncompressed_bytes": 306,
+      "compressed_bytes": 196,
+      "sha256": "47006289392cc2d570cfeaf8f92b5c06d9d3ad0c33faf63316ef9b6edac73963",
+      "CRC32": "026cc093"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/ScottPlot.Avalonia.dll",
+      "uncompressed_bytes": 19968,
+      "compressed_bytes": 9600,
+      "sha256": "cab4fd2da80d40b6c12f727e3fdaf9e282cafc9bd29df237a89d8403515d78ee",
+      "CRC32": "7bc9a3ce"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/ScottPlot.dll",
+      "uncompressed_bytes": 1206272,
+      "compressed_bytes": 412196,
+      "sha256": "f9c29dcb60d49086009ce63a826310e9f9ea8621c11c24eb6129a35d144a88ad",
+      "CRC32": "10e91f67"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/SkiaSharp.HarfBuzz.dll",
+      "uncompressed_bytes": 24136,
+      "compressed_bytes": 13409,
+      "sha256": "7b5fa276567ed50861af0f05b74900f64c17b6dfafe1e5389144206562009529",
+      "CRC32": "6b886491"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/SkiaSharp.dll",
+      "uncompressed_bytes": 490528,
+      "compressed_bytes": 176404,
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3",
+      "CRC32": "1d75dfcd"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/Tmds.DBus.Protocol.dll",
+      "uncompressed_bytes": 219136,
+      "compressed_bytes": 95878,
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b",
+      "CRC32": "c049f89a"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/runtimes/linux-x64/native/libHarfBuzzSharp.so",
+      "uncompressed_bytes": 2808040,
+      "compressed_bytes": 1130582,
+      "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018",
+      "CRC32": "cdfe668a"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/runtimes/linux-x64/native/libSkiaSharp.so",
+      "uncompressed_bytes": 11170240,
+      "compressed_bytes": 4590973,
+      "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e",
+      "CRC32": "fa1b5533"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/testhost.dll",
+      "uncompressed_bytes": 49696,
+      "compressed_bytes": 30917,
+      "sha256": "92cbdf52db5249112f9f53f1fcdaf9f9aa3fce467141c688a31a7fe095e4d304",
+      "CRC32": "04e6ca62"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.abstractions.dll",
+      "uncompressed_bytes": 21928,
+      "compressed_bytes": 10903,
+      "sha256": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c",
+      "CRC32": "838eb1ff"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.runner.visualstudio.testadapter.dll",
+      "uncompressed_bytes": 1253376,
+      "compressed_bytes": 462888,
+      "sha256": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a",
+      "CRC32": "067cee67"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.v3.assert.dll",
+      "uncompressed_bytes": 214792,
+      "compressed_bytes": 106552,
+      "sha256": "483aec8a5b7faea0a92d0ae4f11a3479045f8f5e3f551dfc4dac6bedeaafa9ce",
+      "CRC32": "72716ce3"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.v3.common.dll",
+      "uncompressed_bytes": 191752,
+      "compressed_bytes": 103823,
+      "sha256": "e4175bc165d01b9828acdc996776370adf4f8d0a5865e75ec9ded17fb70258a9",
+      "CRC32": "d14e64a4"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.v3.core.dll",
+      "uncompressed_bytes": 498440,
+      "compressed_bytes": 226981,
+      "sha256": "b3641e9e80cd8175e2d9995d6fa9750b8fb31740c87ba121e56cfe515f7f06cc",
+      "CRC32": "2f357eba"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.v3.mtp-v1.dll",
+      "uncompressed_bytes": 123144,
+      "compressed_bytes": 61814,
+      "sha256": "69903f4e48e5794350154d97bc911909974469780cd1931e23da3af419a1f2e7",
+      "CRC32": "38258255"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.v3.runner.common.dll",
+      "uncompressed_bytes": 978696,
+      "compressed_bytes": 397446,
+      "sha256": "8d9b157ebd8d9240d292ed922f5f26ba4011de5fd07812ceaac7baccfc5e6bc4",
+      "CRC32": "5df8c443"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.v3.runner.inproc.console.dll",
+      "uncompressed_bytes": 75528,
+      "compressed_bytes": 44567,
+      "sha256": "360ef1613c7d4148a715b8495d9f7ad95e4126f75ed86dda6cf81139c28b1431",
+      "CRC32": "9e82d81c"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime/xunit.v3.runner.utility.netcore.dll",
+      "uncompressed_bytes": 174856,
+      "compressed_bytes": 92984,
+      "sha256": "abce062185b0d72b665aae07d76c681aff1cd794525a34cfa1b3b0137af76aff",
+      "CRC32": "bfd73651"
+    },
+    {
+      "member": "serial-evidence/serial-native-linux-runtime-custody.json",
+      "uncompressed_bytes": 50177,
+      "compressed_bytes": 8485,
+      "sha256": "fa02a569f8b5dbbad98e6ed6301efc956f8971c477981ddc5202a776398f034d",
+      "CRC32": "251a221a"
+    },
+    {
+      "member": "serial-evidence/serial-native-results.json",
+      "uncompressed_bytes": 12711,
+      "compressed_bytes": 3216,
+      "sha256": "af2b3ba81851aae8eb1a33606d1a3ea6384c540066fe0128d5e648af2a0f92e9",
+      "CRC32": "db643e80"
+    },
+    {
+      "member": "serial-evidence/serial-original-discovery.log",
+      "uncompressed_bytes": 3286,
+      "compressed_bytes": 955,
+      "sha256": "248a8697c6c3ca8f4adfa0d58972b4ed209ff10c920bbb4120a5dbde1489b83a",
+      "CRC32": "a0409d35"
+    },
+    {
+      "member": "serial-evidence/serial-original-test.log",
+      "uncompressed_bytes": 432,
+      "compressed_bytes": 258,
+      "sha256": "9674fbd0b0e6436b1830b4845411109d0b2b64ae2d06d0010ad04589b28f6e1c",
+      "CRC32": "b66082df"
+    },
+    {
+      "member": "serial-evidence/serial-owner-policy-proposal.json",
+      "uncompressed_bytes": 16536,
+      "compressed_bytes": 3877,
+      "sha256": "352afa0b2bb12f213ed272cd8fdf03782a009086ddf5f795ebd25b8f18f1727d",
+      "CRC32": "a14ab6c7"
+    },
+    {
+      "member": "serial-evidence/serial-source-after.json",
+      "uncompressed_bytes": 654614,
+      "compressed_bytes": 168741,
+      "sha256": "07834a08314fb8e9319bbb8e33d37877f2062372c5cea15a85cd5e73644db09d",
+      "CRC32": "a4408104"
+    },
+    {
+      "member": "serial-evidence/serial-source-before.json",
+      "uncompressed_bytes": 654597,
+      "compressed_bytes": 168729,
+      "sha256": "3550864c6cbe4b7066e3e78584f279d2dac083eef7b737c80872b350048ef88c",
+      "CRC32": "8273d80d"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Directory.Build.props",
+      "uncompressed_bytes": 781,
+      "compressed_bytes": 423,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "CRC32": "b9da30c8"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Directory.Packages.props",
+      "uncompressed_bytes": 2581,
+      "compressed_bytes": 799,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
+      "CRC32": "56d054bd"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Home/HavenOS.Home.csproj",
+      "uncompressed_bytes": 1745,
+      "compressed_bytes": 504,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8",
+      "CRC32": "da1601f5"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Home/NativeUI/Controls/HomeProductivityCuiSurface.cs",
+      "uncompressed_bytes": 6990,
+      "compressed_bytes": 1858,
+      "sha256": "0b36b3b740bbce6dd4f42968301204088ec802dd451f6646dde8419f836f9711",
+      "CRC32": "a8b96815"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "uncompressed_bytes": 1107,
+      "compressed_bytes": 400,
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff",
+      "CRC32": "373d5b78"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Home/NativeUI/HomeEquationObjectRenderer.cs",
+      "uncompressed_bytes": 6518,
+      "compressed_bytes": 2132,
+      "sha256": "43e680ffe1fa60c5292c8da0411110ee701935a152ff6de20e7dce1d8c01e84b",
+      "CRC32": "af99b25e"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/provenance.json",
+      "uncompressed_bytes": 3794,
+      "compressed_bytes": 1603,
+      "sha256": "7231dcead098b1bdc4e57c3e39ac4d8b11ec34d0251e9ac62dccc4f9e86d00eb",
+      "CRC32": "cb026a2c"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/Home/Source/Home/Core/HomeEquationObjects.cs",
+      "uncompressed_bytes": 8684,
+      "compressed_bytes": 2542,
+      "sha256": "33605774b9e004fc6202d1bf92fcd1e6262503f5243d148e9a1c0c484917d3d6",
+      "CRC32": "5717411e"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Directory.Packages.props",
+      "uncompressed_bytes": 1993,
+      "compressed_bytes": 504,
+      "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8",
+      "CRC32": "147c6d7d"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "uncompressed_bytes": 700,
+      "compressed_bytes": 402,
+      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d",
+      "CRC32": "fa5e8a01"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+      "uncompressed_bytes": 2955,
+      "compressed_bytes": 938,
+      "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d",
+      "CRC32": "581e9698"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+      "uncompressed_bytes": 6875,
+      "compressed_bytes": 1914,
+      "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67",
+      "CRC32": "4f664597"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+      "uncompressed_bytes": 985,
+      "compressed_bytes": 507,
+      "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b",
+      "CRC32": "8e2c1598"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Forms/FormMarking.cs",
+      "uncompressed_bytes": 8737,
+      "compressed_bytes": 2598,
+      "sha256": "e757abd4ff984398b5c48fe0346bd89e3c7fdce365a7f756e5d3c9cf4cbccf6a",
+      "CRC32": "58ccc9ad"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "uncompressed_bytes": 375,
+      "compressed_bytes": 258,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121",
+      "CRC32": "7bf64048"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+      "uncompressed_bytes": 2442,
+      "compressed_bytes": 729,
+      "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec",
+      "CRC32": "f8e9b5b8"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphMarking.cs",
+      "uncompressed_bytes": 4048,
+      "compressed_bytes": 1324,
+      "sha256": "a2b93dd4e16b062e3a796ac3b4363a7aba333bc14b82b84839b4dbd2b0af7097",
+      "CRC32": "c5c9eb03"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+      "uncompressed_bytes": 713,
+      "compressed_bytes": 389,
+      "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad",
+      "CRC32": "02a8a607"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+      "uncompressed_bytes": 2387,
+      "compressed_bytes": 727,
+      "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54",
+      "CRC32": "76ab38c5"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+      "uncompressed_bytes": 1569,
+      "compressed_bytes": 727,
+      "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c",
+      "CRC32": "ca216948"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathMarking.cs",
+      "uncompressed_bytes": 7479,
+      "compressed_bytes": 2266,
+      "sha256": "1f6eeeffd5a1b4e2b112ec960e8014b720076b641c6011266b69cd28ebcdde89",
+      "CRC32": "acc68208"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "uncompressed_bytes": 14310,
+      "compressed_bytes": 3218,
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162",
+      "CRC32": "e370140b"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "uncompressed_bytes": 6312,
+      "compressed_bytes": 1837,
+      "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9",
+      "CRC32": "a7728e4d"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+      "uncompressed_bytes": 1943,
+      "compressed_bytes": 783,
+      "sha256": "1924346384b8943949b06c416be834f5f580a6bb1aebe25f12482e7d3178fb28",
+      "CRC32": "6e08e38f"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+      "uncompressed_bytes": 4260,
+      "compressed_bytes": 1544,
+      "sha256": "a4ecc966757fe6d99fe0e2decd3cc96c5c75290d853efeb3eeddbaa23c78d7b1",
+      "CRC32": "81d7f28f"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+      "uncompressed_bytes": 8178,
+      "compressed_bytes": 2750,
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362",
+      "CRC32": "fe8a456e"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+      "uncompressed_bytes": 9274,
+      "compressed_bytes": 2726,
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f",
+      "CRC32": "cbcc5618"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+      "uncompressed_bytes": 8238,
+      "compressed_bytes": 2391,
+      "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d",
+      "CRC32": "6d98e327"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "uncompressed_bytes": 1355,
+      "compressed_bytes": 566,
+      "sha256": "c5a4b50032e30cf90fe59872b148b14bd26a8c2bf8a31ec71c4a8b9afbc3caf5",
+      "CRC32": "8ce53d1c"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs",
+      "uncompressed_bytes": 4503,
+      "compressed_bytes": 1139,
+      "sha256": "b1909c91396c66139f89ebb68be5c41abee969b47f80f29d6fe79e5b464c6476",
+      "CRC32": "ce68f4fd"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs",
+      "uncompressed_bytes": 10429,
+      "compressed_bytes": 2622,
+      "sha256": "0de78df0d34b6f772f93eb2502ee1cae3e2069b0e07008cb2c28ce4bdfc6d3b7",
+      "CRC32": "f9edf10a"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs",
+      "uncompressed_bytes": 309,
+      "compressed_bytes": 216,
+      "sha256": "476ebbfbe45b12c6e9becf8bc5a79ad2fe6d419638dc8d660a97b6df58429a87",
+      "CRC32": "e508fab1"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "uncompressed_bytes": 1803,
+      "compressed_bytes": 648,
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064",
+      "CRC32": "97ec4fc9"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeProductivityCuiSurfaceTests.cs",
+      "uncompressed_bytes": 4785,
+      "compressed_bytes": 1563,
+      "sha256": "538f11ad2dbb36ec219ee7a65dab129fb6275d0276f40c98beff686182a27b22",
+      "CRC32": "d175c8d3"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
+      "uncompressed_bytes": 7357,
+      "compressed_bytes": 2124,
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9",
+      "CRC32": "bfec8af4"
+    },
+    {
+      "member": "serial-evidence/source-cut/9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
+      "uncompressed_bytes": 8938,
+      "compressed_bytes": 2364,
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e",
+      "CRC32": "5173cd47"
+    },
+    {
+      "member": "serial-evidence/source-cut/apps/Web/NineToOne.Web.csproj",
+      "uncompressed_bytes": 4602,
+      "compressed_bytes": 1399,
+      "sha256": "7fa36055b3df61c8062f68667e155cad83501b27064374b6c6187fe766839ab9",
+      "CRC32": "a270efd7"
+    },
+    {
+      "member": "serial-evidence/source-cut/apps/Web/Productivity/Mathematics/OWNER-CONTRACT-REQUEST.json",
+      "uncompressed_bytes": 9920,
+      "compressed_bytes": 3625,
+      "sha256": "a95815367fd6f9a8e41dc5049770bfef57f17a3744bd128451bfcb9cb828cb0b",
+      "CRC32": "6f3c8765"
+    },
+    {
+      "member": "serial-evidence/source-cut/apps/Web/Productivity/Mathematics/README.md",
+      "uncompressed_bytes": 1233,
+      "compressed_bytes": 713,
+      "sha256": "9725289e12b07c871b6dbb6f7cd3a01ae541f1c72b945e3e2bcbd67884bb3f70",
+      "CRC32": "0fa3c5a1"
+    },
+    {
+      "member": "serial-evidence/source-cut/apps/Web/Productivity/Mathematics/Tests/NativePixelHost.cs",
+      "uncompressed_bytes": 832,
+      "compressed_bytes": 434,
+      "sha256": "9073adea34ac3661f6d146d35e9771bbafa46dd041b89315ee3d23919df1d8c7",
+      "CRC32": "c03d142e"
+    },
+    {
+      "member": "serial-evidence/source-cut/apps/Web/Productivity/Mathematics/Tests/OwnerMath.Tests.csproj",
+      "uncompressed_bytes": 3369,
+      "compressed_bytes": 1022,
+      "sha256": "1b7ab2ae88d9b1cc1429f729e385ae64c174315f2b8c34856c60e63c78d68eaf",
+      "CRC32": "eb1f0914"
+    },
+    {
+      "member": "serial-evidence/source-cut/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "uncompressed_bytes": 1315,
+      "compressed_bytes": 364,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4",
+      "CRC32": "79eceeee"
+    },
+    {
+      "member": "serial-evidence/source-cut/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Platform/AssetLoader.cs",
+      "uncompressed_bytes": 2208,
+      "compressed_bytes": 578,
+      "sha256": "b7f8304712a5a63e5a4b637a82776fd00930b2eac6e58745cbd8641016ecdabd",
+      "CRC32": "234bd2a5"
+    },
+    {
+      "member": "serial-evidence/source-cut/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/HeadlessUnitTestSession.cs",
+      "uncompressed_bytes": 12126,
+      "compressed_bytes": 3016,
+      "sha256": "74725f3cc4bea5b5f9003c890e767abcfdeebe3e03af7f99beb512b1365d4ca9",
+      "CRC32": "40ebfc49"
+    },
+    {
+      "member": "serial-evidence/workspace-freeze-first-enospc.txt",
+      "uncompressed_bytes": 340,
+      "compressed_bytes": 246,
+      "sha256": "3a180a7b6dcedac5592395c576249a752645e277144dcdf95da6a847efa85f9d",
+      "CRC32": "e00a980c"
+    },
+    {
+      "member": "original-native-linux-runtime/.msCoverageSourceRootsMapping_NineToOne.Math.Owner.Tests",
+      "uncompressed_bytes": 85072,
+      "compressed_bytes": 1777,
+      "sha256": "d897f33c5f5775722d727a8682f2bb41804029694e9624572b36dae2791fb5b2",
+      "CRC32": "6e563bdf"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Base.dll",
+      "uncompressed_bytes": 2435072,
+      "compressed_bytes": 833416,
+      "sha256": "ac43a7f7b652a619f049d5f2463fa1989cf74b618ddcd86b040a84077ac46dd6",
+      "CRC32": "0da59025"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Base.pdb",
+      "uncompressed_bytes": 1053792,
+      "compressed_bytes": 466202,
+      "sha256": "b66f4b21a5a5be9fae928c1439076c63ae2fc642755fe2c154edfae22a0e3be8",
+      "CRC32": "b54673d0"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Base.xml",
+      "uncompressed_bytes": 2021500,
+      "compressed_bytes": 233101,
+      "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4",
+      "CRC32": "6c2c2aa2"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Controls.dll",
+      "uncompressed_bytes": 1405440,
+      "compressed_bytes": 519927,
+      "sha256": "70dc421bb80df10fb37ab69c9d87bbc36596ebc94c8cb7a191de9d000b714bde",
+      "CRC32": "d6fd9a61"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Controls.pdb",
+      "uncompressed_bytes": 638464,
+      "compressed_bytes": 270813,
+      "sha256": "32d09f1fcf02c070ec2cb364375417c7e9a5da5cae8e8ed4f997171804e78906",
+      "CRC32": "9f180217"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Controls.xml",
+      "uncompressed_bytes": 1335488,
+      "compressed_bytes": 144383,
+      "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a",
+      "CRC32": "ba7680f9"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.DesignerSupport.dll",
+      "uncompressed_bytes": 76288,
+      "compressed_bytes": 31633,
+      "sha256": "4fb239353038a6c1327390e2a9334707d128512efe20b128b1da58b1ecb68d50",
+      "CRC32": "97c2979e"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.DesignerSupport.pdb",
+      "uncompressed_bytes": 32288,
+      "compressed_bytes": 17799,
+      "sha256": "56e141d308afc5f96d6d2980e9d35d131ec73ce58ad1773bab31718d67976680",
+      "CRC32": "fc8ed524"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.DesignerSupport.xml",
+      "uncompressed_bytes": 141,
+      "compressed_bytes": 96,
+      "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0",
+      "CRC32": "7e8a620a"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Desktop.dll",
+      "uncompressed_bytes": 15360,
+      "compressed_bytes": 4122,
+      "sha256": "54c770236ca146436e3c6a73c84db3bc1f62ad82e868775c7b28724eecf0ba4d",
+      "CRC32": "fd07bb51"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Desktop.pdb",
+      "uncompressed_bytes": 14484,
+      "compressed_bytes": 9097,
+      "sha256": "736c07ca437a0c089af234ae249ae95e8aea04106f940e3cd57ef6fb9ddb2e68",
+      "CRC32": "00922b3f"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Desktop.xml",
+      "uncompressed_bytes": 133,
+      "compressed_bytes": 88,
+      "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793",
+      "CRC32": "4edc73a2"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Dialogs.dll",
+      "uncompressed_bytes": 246784,
+      "compressed_bytes": 121356,
+      "sha256": "d94c566f7e2b594543c4e1a5851a03b8f8dbb9e95c07fd0b0d1022a55c40146b",
+      "CRC32": "67c8ac15"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Dialogs.pdb",
+      "uncompressed_bytes": 26700,
+      "compressed_bytes": 13959,
+      "sha256": "68323081c4ac0d1007575c08f54dcec32969a6f762ab5352f5c9d4fa0d7dc0ec",
+      "CRC32": "f2058be1"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Dialogs.xml",
+      "uncompressed_bytes": 638,
+      "compressed_bytes": 272,
+      "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f",
+      "CRC32": "96617f33"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Fonts.Inter.dll",
+      "uncompressed_bytes": 1897472,
+      "compressed_bytes": 933277,
+      "sha256": "28aee11c370c0b451b3e9c06aed285463aa1bd6090917ce6404c5c5577b826d5",
+      "CRC32": "819da83c"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Fonts.Inter.pdb",
+      "uncompressed_bytes": 13464,
+      "compressed_bytes": 8471,
+      "sha256": "422956b2a725fddbd5714672ceb6573c2fb3861634b1358fa372870985ac66b1",
+      "CRC32": "f228df71"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Fonts.Inter.xml",
+      "uncompressed_bytes": 137,
+      "compressed_bytes": 92,
+      "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa",
+      "CRC32": "2fa379b8"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.FreeDesktop.AtSpi.dll",
+      "uncompressed_bytes": 660480,
+      "compressed_bytes": 209339,
+      "sha256": "63417fe5a3563e1b001b64f0f081dad64173b1fe5efc73fdd2745759739c43c6",
+      "CRC32": "caece4af"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.FreeDesktop.AtSpi.pdb",
+      "uncompressed_bytes": 225728,
+      "compressed_bytes": 119214,
+      "sha256": "80544bb5d5ee6e3d92a3b104bd88e388207ab5189e00e3a4522310eabc8fefca",
+      "CRC32": "4a00f3fa"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.FreeDesktop.AtSpi.xml",
+      "uncompressed_bytes": 52965,
+      "compressed_bytes": 7126,
+      "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3",
+      "CRC32": "70efc4ec"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.FreeDesktop.dll",
+      "uncompressed_bytes": 220160,
+      "compressed_bytes": 81029,
+      "sha256": "0dc336b0d83c0569f27ae82d41a93b02d5730e160f8b7e134153f4cbe89eb020",
+      "CRC32": "27de19ad"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.FreeDesktop.pdb",
+      "uncompressed_bytes": 101592,
+      "compressed_bytes": 59282,
+      "sha256": "3b2933d30123dd617284da93b2ad82406a59bef1ee2f082359f355a994b6e193",
+      "CRC32": "5c0355af"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.FreeDesktop.xml",
+      "uncompressed_bytes": 1857,
+      "compressed_bytes": 525,
+      "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3",
+      "CRC32": "46239a9f"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.HarfBuzz.dll",
+      "uncompressed_bytes": 22528,
+      "compressed_bytes": 8187,
+      "sha256": "145358609bad96e7ce91e9a8dbc5e733f7bb765c527fedd9880b03262bb0186e",
+      "CRC32": "485122e4"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.HarfBuzz.pdb",
+      "uncompressed_bytes": 16412,
+      "compressed_bytes": 10238,
+      "sha256": "7f71fec5c01a5142357aeedc75917a45e283e27ec9ad166200057e070a5f06f1",
+      "CRC32": "4940b848"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.HarfBuzz.xml",
+      "uncompressed_bytes": 1114,
+      "compressed_bytes": 378,
+      "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c",
+      "CRC32": "6e7d58c9"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Headless.XUnit.dll",
+      "uncompressed_bytes": 35840,
+      "compressed_bytes": 12747,
+      "sha256": "a46213a5a400df2480a3c5f39d09ce8d60bd7d3e69d5c67f0a54962ecb63c8e4",
+      "CRC32": "a1c20add"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Headless.dll",
+      "uncompressed_bytes": 73728,
+      "compressed_bytes": 29919,
+      "sha256": "5bd0c8fe987544857bc43a9aecf1382091717a1a02582d194c673ea8ba4fb1fc",
+      "CRC32": "86691b20"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Headless.pdb",
+      "uncompressed_bytes": 32340,
+      "compressed_bytes": 17377,
+      "sha256": "f76d0378372529f47bbf8f79fa77c94ec3339089c43031a82451f085fb9cd0a4",
+      "CRC32": "1981c1fe"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Headless.xml",
+      "uncompressed_bytes": 13264,
+      "compressed_bytes": 2360,
+      "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10",
+      "CRC32": "edd86806"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Markup.Xaml.dll",
+      "uncompressed_bytes": 78848,
+      "compressed_bytes": 32246,
+      "sha256": "8a95d411dca4ef9e90cd1944ed1fcba9e2049b3d3ac0e8fd150ae36e277864a6",
+      "CRC32": "8bbb37e8"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Markup.Xaml.pdb",
+      "uncompressed_bytes": 39648,
+      "compressed_bytes": 21708,
+      "sha256": "4e51bd4fd0b518d88430b00cb37cc33ab3f150bea35d277a845cb9c99ba9d211",
+      "CRC32": "04b78b3f"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Markup.Xaml.xml",
+      "uncompressed_bytes": 25476,
+      "compressed_bytes": 3438,
+      "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87",
+      "CRC32": "a639d5ca"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Markup.dll",
+      "uncompressed_bytes": 47616,
+      "compressed_bytes": 17334,
+      "sha256": "dc6f4b94e9168ef0f424d635b4da2bcfd4ff7688e5506f795fe803b57e0a3428",
+      "CRC32": "3f994d58"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Markup.pdb",
+      "uncompressed_bytes": 26260,
+      "compressed_bytes": 14856,
+      "sha256": "4c733f2bc5835e548db0d1e9d1589e4544d1cac20b79d7440bc64a424de7e78d",
+      "CRC32": "57d7cbc1"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Markup.xml",
+      "uncompressed_bytes": 4336,
+      "compressed_bytes": 1018,
+      "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562",
+      "CRC32": "35385d3b"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Metal.dll",
+      "uncompressed_bytes": 15360,
+      "compressed_bytes": 4454,
+      "sha256": "27c7e5b56f3139394d166d464c9f30a6fb7891b66e6db3ef5ca4c53100bae1c2",
+      "CRC32": "980fab70"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Metal.pdb",
+      "uncompressed_bytes": 13356,
+      "compressed_bytes": 8376,
+      "sha256": "bbab779288a2b83c8e48db7e51a5054f354469b5f58e6abd224c0f7d63379049",
+      "CRC32": "047a7e73"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Metal.xml",
+      "uncompressed_bytes": 131,
+      "compressed_bytes": 86,
+      "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd",
+      "CRC32": "70774217"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.MicroCom.dll",
+      "uncompressed_bytes": 15360,
+      "compressed_bytes": 4238,
+      "sha256": "17144541219d029a4e74412f102dc9c5fd7ccdf8a3135b58d5a5d8eedced6af1",
+      "CRC32": "25732bb5"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.MicroCom.pdb",
+      "uncompressed_bytes": 13536,
+      "compressed_bytes": 8452,
+      "sha256": "8f1a1116bec90ab813b4184da2d6cb1ffe56959c825ac799de8a5a0f9edd2804",
+      "CRC32": "7f2f090d"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.MicroCom.xml",
+      "uncompressed_bytes": 134,
+      "compressed_bytes": 89,
+      "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105",
+      "CRC32": "09f98386"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Native.dll",
+      "uncompressed_bytes": 359936,
+      "compressed_bytes": 120214,
+      "sha256": "745e5727224f04ca3804f43caac0a9eaf2aa496b82a0b8d3f630afc09096b4bb",
+      "CRC32": "0304c7dc"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Native.pdb",
+      "uncompressed_bytes": 217008,
+      "compressed_bytes": 102100,
+      "sha256": "4a6cab2c1b3b1a2b2d6d230c2ff4826b3e2b1b246a9d4aa98885e95cd622cb06",
+      "CRC32": "5291b054"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Native.xml",
+      "uncompressed_bytes": 9476,
+      "compressed_bytes": 1743,
+      "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c",
+      "CRC32": "39a4cfa7"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.OpenGL.dll",
+      "uncompressed_bytes": 120832,
+      "compressed_bytes": 44479,
+      "sha256": "a0aebc30c31ae380c2469a88f11d7bf2c3d70fba9ef9c2782f6d7b07ed5df2f3",
+      "CRC32": "165763e2"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.OpenGL.pdb",
+      "uncompressed_bytes": 53388,
+      "compressed_bytes": 31482,
+      "sha256": "3cadd0c018680b4442abfff131f492a72fe92b40f7bfed33b6d4f987b20d952c",
+      "CRC32": "ba36e311"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.OpenGL.xml",
+      "uncompressed_bytes": 5602,
+      "compressed_bytes": 1217,
+      "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be",
+      "CRC32": "07e68cf0"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Remote.Protocol.dll",
+      "uncompressed_bytes": 80384,
+      "compressed_bytes": 34368,
+      "sha256": "8ce344c7706f6c15f3fec1e4aeca6af9135965c8b91c19fb7468a2ad36e9fb0d",
+      "CRC32": "0788d590"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Remote.Protocol.pdb",
+      "uncompressed_bytes": 34628,
+      "compressed_bytes": 18960,
+      "sha256": "d9b8af80aaf2883a1f6b3fe8243b3894651be83ae1ed10a2556fb730b7ba2c00",
+      "CRC32": "9a2de00b"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Remote.Protocol.xml",
+      "uncompressed_bytes": 70801,
+      "compressed_bytes": 5772,
+      "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2",
+      "CRC32": "359cbe67"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Skia.dll",
+      "uncompressed_bytes": 130560,
+      "compressed_bytes": 59746,
+      "sha256": "6c9bfaaa036b5439d7917eb200dd347814a838319d3c7147c4699dbba0b63c6f",
+      "CRC32": "3e44290d"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Skia.pdb",
+      "uncompressed_bytes": 64372,
+      "compressed_bytes": 33837,
+      "sha256": "0b5f5386cb7152de8c73403ac7346cfe81ada8fb3337ee4388c34c1633b76cb6",
+      "CRC32": "b47189e4"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Skia.xml",
+      "uncompressed_bytes": 47094,
+      "compressed_bytes": 6271,
+      "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584",
+      "CRC32": "c0743d29"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Themes.Fluent.dll",
+      "uncompressed_bytes": 963072,
+      "compressed_bytes": 163059,
+      "sha256": "ac08aeb4d627a44820d1ef3a6a901b9d8afff3e85131fc39f1614db3fd7191b7",
+      "CRC32": "47795d54"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Themes.Fluent.pdb",
+      "uncompressed_bytes": 182368,
+      "compressed_bytes": 48784,
+      "sha256": "8dbb92cf3b1838a02a000ff6f7800ea9057410bb44555b40b11fb224eff64930",
+      "CRC32": "282f914f"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Themes.Fluent.xml",
+      "uncompressed_bytes": 6894,
+      "compressed_bytes": 705,
+      "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111",
+      "CRC32": "2f111781"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Vulkan.dll",
+      "uncompressed_bytes": 194048,
+      "compressed_bytes": 60926,
+      "sha256": "b549d38ee3feffa290751cbcf4f97be67ed102d6bec6585f3836d4dcf95a9138",
+      "CRC32": "568aa087"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Vulkan.pdb",
+      "uncompressed_bytes": 48472,
+      "compressed_bytes": 29257,
+      "sha256": "04a11ef45c6a31d00c8d170dbc4a0c1e44225f4b127f4da177dd3bc90b4e4ebd",
+      "CRC32": "cd4dfb26"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Vulkan.xml",
+      "uncompressed_bytes": 1620,
+      "compressed_bytes": 349,
+      "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd",
+      "CRC32": "52cb495e"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Win32.Automation.dll",
+      "uncompressed_bytes": 130048,
+      "compressed_bytes": 46370,
+      "sha256": "46e54c0cb4a9869e59a59866259069879d0bb9bacb95923ee8a3042a16262296",
+      "CRC32": "baaf1ec9"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Win32.Automation.pdb",
+      "uncompressed_bytes": 101876,
+      "compressed_bytes": 65623,
+      "sha256": "0f507c3018e6885aeb334c44bab7e4fd90827ccf6bad6bf09f268e620b8354fd",
+      "CRC32": "3cbf9e61"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Win32.Automation.xml",
+      "uncompressed_bytes": 3812,
+      "compressed_bytes": 838,
+      "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9",
+      "CRC32": "f80269fa"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Win32.dll",
+      "uncompressed_bytes": 967168,
+      "compressed_bytes": 301810,
+      "sha256": "285c454cdbe27faae30ba06725391846aaae85b5b893e2e7d09d851350de3836",
+      "CRC32": "b97685d7"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Win32.pdb",
+      "uncompressed_bytes": 500696,
+      "compressed_bytes": 275904,
+      "sha256": "379d89324a7cac32d6214e08cf3f86ec6ab4da4e05cee2939b89db03f1e34b83",
+      "CRC32": "abb8f0d4"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.Win32.xml",
+      "uncompressed_bytes": 143346,
+      "compressed_bytes": 21138,
+      "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba",
+      "CRC32": "01e22f69"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.X11.dll",
+      "uncompressed_bytes": 390144,
+      "compressed_bytes": 159440,
+      "sha256": "7f8e04d5114eb3ee93a2c08adb231293b4bdd3a96b5819ef6e8c6acdd90864ce",
+      "CRC32": "f3235dfa"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.X11.pdb",
+      "uncompressed_bytes": 112968,
+      "compressed_bytes": 57900,
+      "sha256": "9fc458477e05d761ac3dd6f96a35a44532461317e9585cea1fe64c6bea2ddd8f",
+      "CRC32": "da91c1b8"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.X11.xml",
+      "uncompressed_bytes": 11685,
+      "compressed_bytes": 2850,
+      "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b",
+      "CRC32": "dda4a646"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.dll",
+      "uncompressed_bytes": 4096,
+      "compressed_bytes": 1873,
+      "sha256": "934479ae2826b86233274fced9247c76a911b54c6d76d92805eedcc1041508e7",
+      "CRC32": "a8bed7a0"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.pdb",
+      "uncompressed_bytes": 12224,
+      "compressed_bytes": 7313,
+      "sha256": "c97247a9d1bd464d7ca9059c81ca6d8100ecae50b54bcf0010f4851f9bf78103",
+      "CRC32": "e1bf41da"
+    },
+    {
+      "member": "original-native-linux-runtime/Avalonia.xml",
+      "uncompressed_bytes": 125,
+      "compressed_bytes": 80,
+      "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8",
+      "CRC32": "dce525ef"
+    },
+    {
+      "member": "original-native-linux-runtime/CSharpMath.Rendering.dll",
+      "uncompressed_bytes": 1797632,
+      "compressed_bytes": 812440,
+      "sha256": "57d7386b02f3ae577b0f73adb511f10a19328282cf42c7fd3bf430c641bcdc0c",
+      "CRC32": "a2da4447"
+    },
+    {
+      "member": "original-native-linux-runtime/CSharpMath.SkiaSharp.dll",
+      "uncompressed_bytes": 11264,
+      "compressed_bytes": 5097,
+      "sha256": "14e36a4b3274f7595e3116e07b9edc7f7882885f237d84f9daddc0ac310a3e60",
+      "CRC32": "1fb94aca"
+    },
+    {
+      "member": "original-native-linux-runtime/CSharpMath.dll",
+      "uncompressed_bytes": 227328,
+      "compressed_bytes": 92361,
+      "sha256": "955db545f7cdd2164b146f746b4eb79b0f2623fc125a8984be3a1dfa35441d4d",
+      "CRC32": "7e11b13d"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Core.dll",
+      "uncompressed_bytes": 80896,
+      "compressed_bytes": 33113,
+      "sha256": "5a9226b6f05404481509d511a27ffeb4c4575e1b3643719fc2112402094572a3",
+      "CRC32": "a721eaa4"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Core.pdb",
+      "uncompressed_bytes": 32728,
+      "compressed_bytes": 17277,
+      "sha256": "1635e5b2e5e347e8e1a50110782922e683604c60d6a1926f42f067e9932b6656",
+      "CRC32": "e39aaf35"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Language.dll",
+      "uncompressed_bytes": 12288,
+      "compressed_bytes": 5420,
+      "sha256": "347758dc876c3200d44b29377cd794c4434a3f049002e73c7e9617e4a0cf0b71",
+      "CRC32": "e75913cf"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Language.pdb",
+      "uncompressed_bytes": 13536,
+      "compressed_bytes": 7877,
+      "sha256": "f89b6cb0585ae5cd682956ba3dc035ea4d65e531b10e68b42e6800e5215f6d77",
+      "CRC32": "e3e27d5c"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Runtime.dll",
+      "uncompressed_bytes": 160256,
+      "compressed_bytes": 68195,
+      "sha256": "b72c3a0401a63c6dc681c8a28813073d13a2efac02a96a66c5ce5487254a76d0",
+      "CRC32": "80e5cfc4"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Runtime.pdb",
+      "uncompressed_bytes": 53324,
+      "compressed_bytes": 28778,
+      "sha256": "2f9af153bd1715d8d62ded1cc61aad399bf94e813c43d27d90846273413b08a2",
+      "CRC32": "6d777337"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Themes.dll",
+      "uncompressed_bytes": 92672,
+      "compressed_bytes": 35800,
+      "sha256": "22aec816cd2817197fa4c10fd60ad63c1919b8729f4ca5daaed1a14603b9a27a",
+      "CRC32": "a0e18527"
+    },
+    {
+      "member": "original-native-linux-runtime/CakeOS.Cui.Themes.pdb",
+      "uncompressed_bytes": 29236,
+      "compressed_bytes": 15284,
+      "sha256": "d0e9192932cf3ade61e2e2bdd0dbd8de9cb4f4b9f79bb7f330664931fae0affb",
+      "CRC32": "1b0d552f"
+    },
+    {
+      "member": "original-native-linux-runtime/Den.dll",
+      "uncompressed_bytes": 337408,
+      "compressed_bytes": 124202,
+      "sha256": "a3045ccc31a88fb0b5ef441acd9ee3d29b836afc1080f4b98a9c1f79064362b3",
+      "CRC32": "b820f3a4"
+    },
+    {
+      "member": "original-native-linux-runtime/Den.pdb",
+      "uncompressed_bytes": 72624,
+      "compressed_bytes": 34819,
+      "sha256": "e0105552e60b1638a6583680b9b6cbc0f40cb6ad3b281f04280cee921185f891",
+      "CRC32": "c41e4f08"
+    },
+    {
+      "member": "original-native-linux-runtime/Dulche.Runtime.dll",
+      "uncompressed_bytes": 748032,
+      "compressed_bytes": 253242,
+      "sha256": "44455caa55bf1e9b8ad3b2b4b3d377ecde7b60966442799e2e67eeb4758c6a6d",
+      "CRC32": "2165a686"
+    },
+    {
+      "member": "original-native-linux-runtime/Dulche.Runtime.pdb",
+      "uncompressed_bytes": 131992,
+      "compressed_bytes": 52846,
+      "sha256": "8068be5d6faecdeceb0a439fea7258c20520943224b3247c658baa6a7851d72f",
+      "CRC32": "7c1fd423"
+    },
+    {
+      "member": "original-native-linux-runtime/HarfBuzzSharp.dll",
+      "uncompressed_bytes": 122400,
+      "compressed_bytes": 50709,
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29",
+      "CRC32": "ee9c6d27"
+    },
+    {
+      "member": "original-native-linux-runtime/Haven.Application.dll",
+      "uncompressed_bytes": 4350976,
+      "compressed_bytes": 1415098,
+      "sha256": "9de8fe9a05bc27dc4ad98faab750ddf4e1fce80079386d05f5c22a0bd85ddbe6",
+      "CRC32": "a2b219ea"
+    },
+    {
+      "member": "original-native-linux-runtime/Haven.Application.pdb",
+      "uncompressed_bytes": 865292,
+      "compressed_bytes": 358158,
+      "sha256": "ad86814f3e215abd3c9406d5a9a0a8f40a4c0f894a2585b6413134ff95367c0c",
+      "CRC32": "51f2ef00"
+    },
+    {
+      "member": "original-native-linux-runtime/Haven.Core.dll",
+      "uncompressed_bytes": 1885696,
+      "compressed_bytes": 567197,
+      "sha256": "ba3d7d2389eeb4294a965d30a0457b989da64b15eb8e5f790237ac0ff5b0cb3f",
+      "CRC32": "f53d0ace"
+    },
+    {
+      "member": "original-native-linux-runtime/Haven.Core.pdb",
+      "uncompressed_bytes": 346348,
+      "compressed_bytes": 109582,
+      "sha256": "333032877c1a0c06666cd0077373cd35483654666a10116022a399d6c210b260",
+      "CRC32": "03929df7"
+    },
+    {
+      "member": "original-native-linux-runtime/HavenOS.Home.NativeUI.dll",
+      "uncompressed_bytes": 230912,
+      "compressed_bytes": 79064,
+      "sha256": "c2899085e7444efe2ed14e33bf96cc6ad9a82f742a29a0abb7718a6399477dc9",
+      "CRC32": "bccdf588"
+    },
+    {
+      "member": "original-native-linux-runtime/HavenOS.Home.NativeUI.pdb",
+      "uncompressed_bytes": 33748,
+      "compressed_bytes": 20070,
+      "sha256": "a6ec1022bc03c3e0f90d110ec697a9a3b3cc0ed825b01dead606abdc491a68e5",
+      "CRC32": "a6283822"
+    },
+    {
+      "member": "original-native-linux-runtime/HavenOS.Home.dll",
+      "uncompressed_bytes": 1399808,
+      "compressed_bytes": 463388,
+      "sha256": "c7928c53d45d240edb6b565af6790d7e6de0528e6882e42e9bddfb7d49d6c3bd",
+      "CRC32": "eb5d189e"
+    },
+    {
+      "member": "original-native-linux-runtime/HavenOS.Home.pdb",
+      "uncompressed_bytes": 263576,
+      "compressed_bytes": 108658,
+      "sha256": "3f4b6b775c6a6e21bad7bf63f853711d792c81f0a99b45189b46eddc72e6ebda",
+      "CRC32": "6b7ee1a3"
+    },
+    {
+      "member": "original-native-linux-runtime/MicroCom.Runtime.dll",
+      "uncompressed_bytes": 16384,
+      "compressed_bytes": 8106,
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318",
+      "CRC32": "68dd8f15"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.ApplicationInsights.dll",
+      "uncompressed_bytes": 386080,
+      "compressed_bytes": 152047,
+      "sha256": "bf9a4b88c7f94267e1cc7ed0700c575d3eb3266ff25bcb76e4f40f1b0fba022d",
+      "CRC32": "fe3e1610"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.Bcl.AsyncInterfaces.dll",
+      "uncompressed_bytes": 16000,
+      "compressed_bytes": 8836,
+      "sha256": "5705d245072d3eb78400547b32147dbb6e2c8b02ba8bda76729798f5efdeaecb",
+      "CRC32": "cc0d12a3"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.TestPlatform.CommunicationUtilities.dll",
+      "uncompressed_bytes": 137776,
+      "compressed_bytes": 66335,
+      "sha256": "e38a359aa502bb1867d6092dca9aba5c130dd6f9111decea8156aa746b2c69e6",
+      "CRC32": "a895ec18"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.TestPlatform.CoreUtilities.dll",
+      "uncompressed_bytes": 98336,
+      "compressed_bytes": 46575,
+      "sha256": "f6e2495c44640d8915b2aefc938f391c970300266da014350ff35512a448ee84",
+      "CRC32": "c994cc01"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.TestPlatform.CrossPlatEngine.dll",
+      "uncompressed_bytes": 316960,
+      "compressed_bytes": 146800,
+      "sha256": "d55399bc66dc5b451d60ad82662452ca4a5f735918135dfc91ca9b5e3e38a6ab",
+      "CRC32": "bd422c19"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.TestPlatform.PlatformAbstractions.dll",
+      "uncompressed_bytes": 51232,
+      "compressed_bytes": 33250,
+      "sha256": "7b919ce4429c3b7b8fa2c36fd641b70b2f459a30ecb7c65fd80f437673cec930",
+      "CRC32": "f6cbed57"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.TestPlatform.Utilities.dll",
+      "uncompressed_bytes": 67104,
+      "compressed_bytes": 37017,
+      "sha256": "01ffd64d25a4bd905aef9594d2aa700e020273a90a77a8720af6bec8b4fd5444",
+      "CRC32": "6cf07bcc"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.Testing.Extensions.MSBuild.dll",
+      "uncompressed_bytes": 60448,
+      "compressed_bytes": 35081,
+      "sha256": "f6ef5ef03b5c22f7900fb67fe741847e75cf3ce26f652106a27d8cfcc834bb7f",
+      "CRC32": "06cfd87a"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.Testing.Extensions.Telemetry.dll",
+      "uncompressed_bytes": 44576,
+      "compressed_bytes": 29760,
+      "sha256": "548751ae749bca1e823f1bc3698ac751a0dc0ca47c396a9d32b432bd828848df",
+      "CRC32": "8752a945"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
+      "uncompressed_bytes": 32800,
+      "compressed_bytes": 21454,
+      "sha256": "acae6c525ead26f77ceab1b1d640fe7e8c07fec2acdfc78bf753b220a49ef3e6",
+      "CRC32": "f3ceb90b"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.Testing.Platform.dll",
+      "uncompressed_bytes": 1153568,
+      "compressed_bytes": 578865,
+      "sha256": "519744d3b6321320e366495fbed0d8c37f9b0e11207667eb89eb5c0c425a7462",
+      "CRC32": "faaacd0b"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.VisualStudio.CodeCoverage.Shim.dll",
+      "uncompressed_bytes": 17464,
+      "compressed_bytes": 10494,
+      "sha256": "a753bc15f23a957f4f91a059376e4472c6bacd1503622de4b9b2b079ad8ea289",
+      "CRC32": "ddb42d2b"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.VisualStudio.TestPlatform.Common.dll",
+      "uncompressed_bytes": 248352,
+      "compressed_bytes": 120250,
+      "sha256": "059aa2f335c3f7b14ac3fb7caa1625bc2767581b9548e9ff53a246c7f2f94d6a",
+      "CRC32": "1468c58a"
+    },
+    {
+      "member": "original-native-linux-runtime/Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+      "uncompressed_bytes": 334392,
+      "compressed_bytes": 167540,
+      "sha256": "f83e38ee9020baa42e284e2299e233070ffa86ce4b10213583f9b7c8a521bcd0",
+      "CRC32": "57658e75"
+    },
+    {
+      "member": "original-native-linux-runtime/Newtonsoft.Json.dll",
+      "uncompressed_bytes": 712464,
+      "compressed_bytes": 270107,
+      "sha256": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07",
+      "CRC32": "e0a4803d"
+    },
+    {
+      "member": "original-native-linux-runtime/NineToOne.Cui.AI.dll",
+      "uncompressed_bytes": 130560,
+      "compressed_bytes": 51658,
+      "sha256": "efe5449d0ac3d4cd94ad3a10b6acdf7d6042572a0670f4508b50ebffa893036b",
+      "CRC32": "3259462b"
+    },
+    {
+      "member": "original-native-linux-runtime/NineToOne.Cui.AI.pdb",
+      "uncompressed_bytes": 37516,
+      "compressed_bytes": 20541,
+      "sha256": "5a203a9763516e2954116fc8ff34f0c8632b170b0c4dfc40b1c6f1fab0390cc7",
+      "CRC32": "ab9b2c17"
+    },
+    {
+      "member": "original-native-linux-runtime/NineToOne.Math.Owner.Tests",
+      "uncompressed_bytes": 78256,
+      "compressed_bytes": 33254,
+      "sha256": "6164b37f51a6a877d97796d5e8cd97a83190defba8159ac1d69865b5872179bb",
+      "CRC32": "359d65b4"
+    },
+    {
+      "member": "original-native-linux-runtime/NineToOne.Math.Owner.Tests.deps.json",
+      "uncompressed_bytes": 60817,
+      "compressed_bytes": 7265,
+      "sha256": "97fbfa84546dfa31e011c120cd29b02c040f86f77b763b429b82ddf02fbcc6c5",
+      "CRC32": "f2b88718"
+    },
+    {
+      "member": "original-native-linux-runtime/NineToOne.Math.Owner.Tests.dll",
+      "uncompressed_bytes": 112640,
+      "compressed_bytes": 38248,
+      "sha256": "6788d2a447e7a3d39b7c3c4e6df238df2144ce3eb786dd44a6ba513000a24c2b",
+      "CRC32": "7fb94107"
+    },
+    {
+      "member": "original-native-linux-runtime/NineToOne.Math.Owner.Tests.pdb",
+      "uncompressed_bytes": 30808,
+      "compressed_bytes": 18540,
+      "sha256": "f9ff124a161c8bdda11e27e517de0f9c9923aeb1e2b1dc679635fec472f4a4ab",
+      "CRC32": "410d638a"
+    },
+    {
+      "member": "original-native-linux-runtime/NineToOne.Math.Owner.Tests.runtimeconfig.json",
+      "uncompressed_bytes": 306,
+      "compressed_bytes": 196,
+      "sha256": "47006289392cc2d570cfeaf8f92b5c06d9d3ad0c33faf63316ef9b6edac73963",
+      "CRC32": "026cc093"
+    },
+    {
+      "member": "original-native-linux-runtime/ScottPlot.Avalonia.dll",
+      "uncompressed_bytes": 19968,
+      "compressed_bytes": 9600,
+      "sha256": "cab4fd2da80d40b6c12f727e3fdaf9e282cafc9bd29df237a89d8403515d78ee",
+      "CRC32": "7bc9a3ce"
+    },
+    {
+      "member": "original-native-linux-runtime/ScottPlot.dll",
+      "uncompressed_bytes": 1206272,
+      "compressed_bytes": 412196,
+      "sha256": "f9c29dcb60d49086009ce63a826310e9f9ea8621c11c24eb6129a35d144a88ad",
+      "CRC32": "10e91f67"
+    },
+    {
+      "member": "original-native-linux-runtime/SkiaSharp.HarfBuzz.dll",
+      "uncompressed_bytes": 24136,
+      "compressed_bytes": 13409,
+      "sha256": "7b5fa276567ed50861af0f05b74900f64c17b6dfafe1e5389144206562009529",
+      "CRC32": "6b886491"
+    },
+    {
+      "member": "original-native-linux-runtime/SkiaSharp.dll",
+      "uncompressed_bytes": 490528,
+      "compressed_bytes": 176404,
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3",
+      "CRC32": "1d75dfcd"
+    },
+    {
+      "member": "original-native-linux-runtime/Tmds.DBus.Protocol.dll",
+      "uncompressed_bytes": 219136,
+      "compressed_bytes": 95878,
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b",
+      "CRC32": "c049f89a"
+    },
+    {
+      "member": "original-native-linux-runtime/runtimes/linux-x64/native/libHarfBuzzSharp.so",
+      "uncompressed_bytes": 2808040,
+      "compressed_bytes": 1130582,
+      "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018",
+      "CRC32": "cdfe668a"
+    },
+    {
+      "member": "original-native-linux-runtime/runtimes/linux-x64/native/libSkiaSharp.so",
+      "uncompressed_bytes": 11170240,
+      "compressed_bytes": 4590973,
+      "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e",
+      "CRC32": "fa1b5533"
+    },
+    {
+      "member": "original-native-linux-runtime/testhost.dll",
+      "uncompressed_bytes": 49696,
+      "compressed_bytes": 30917,
+      "sha256": "92cbdf52db5249112f9f53f1fcdaf9f9aa3fce467141c688a31a7fe095e4d304",
+      "CRC32": "04e6ca62"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.abstractions.dll",
+      "uncompressed_bytes": 21928,
+      "compressed_bytes": 10903,
+      "sha256": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c",
+      "CRC32": "838eb1ff"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.runner.visualstudio.testadapter.dll",
+      "uncompressed_bytes": 1253376,
+      "compressed_bytes": 462888,
+      "sha256": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a",
+      "CRC32": "067cee67"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.v3.assert.dll",
+      "uncompressed_bytes": 214792,
+      "compressed_bytes": 106552,
+      "sha256": "483aec8a5b7faea0a92d0ae4f11a3479045f8f5e3f551dfc4dac6bedeaafa9ce",
+      "CRC32": "72716ce3"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.v3.common.dll",
+      "uncompressed_bytes": 191752,
+      "compressed_bytes": 103823,
+      "sha256": "e4175bc165d01b9828acdc996776370adf4f8d0a5865e75ec9ded17fb70258a9",
+      "CRC32": "d14e64a4"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.v3.core.dll",
+      "uncompressed_bytes": 498440,
+      "compressed_bytes": 226981,
+      "sha256": "b3641e9e80cd8175e2d9995d6fa9750b8fb31740c87ba121e56cfe515f7f06cc",
+      "CRC32": "2f357eba"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.v3.mtp-v1.dll",
+      "uncompressed_bytes": 123144,
+      "compressed_bytes": 61814,
+      "sha256": "69903f4e48e5794350154d97bc911909974469780cd1931e23da3af419a1f2e7",
+      "CRC32": "38258255"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.v3.runner.common.dll",
+      "uncompressed_bytes": 978696,
+      "compressed_bytes": 397446,
+      "sha256": "8d9b157ebd8d9240d292ed922f5f26ba4011de5fd07812ceaac7baccfc5e6bc4",
+      "CRC32": "5df8c443"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.v3.runner.inproc.console.dll",
+      "uncompressed_bytes": 75528,
+      "compressed_bytes": 44567,
+      "sha256": "360ef1613c7d4148a715b8495d9f7ad95e4126f75ed86dda6cf81139c28b1431",
+      "CRC32": "9e82d81c"
+    },
+    {
+      "member": "original-native-linux-runtime/xunit.v3.runner.utility.netcore.dll",
+      "uncompressed_bytes": 174856,
+      "compressed_bytes": 92984,
+      "sha256": "abce062185b0d72b665aae07d76c681aff1cd794525a34cfa1b3b0137af76aff",
+      "CRC32": "bfd73651"
+    },
+    {
+      "member": "independent-b6/math-serial-owner-policy-source-review.json",
+      "uncompressed_bytes": 18438,
+      "compressed_bytes": 3900,
+      "sha256": "cfb342c377d09e623c0981756edf3a9c4f575bb7b500716054acfd4064694df1",
+      "CRC32": "9703dc60"
+    },
+    {
+      "member": "independent-b6/math-serial22-recorded-evidence-review.json",
+      "uncompressed_bytes": 3075,
+      "compressed_bytes": 1447,
+      "sha256": "01dcdabd12837cb63ca2ee4e560a55b8eb3828754092a72a7cf70103287bf958",
+      "CRC32": "e788e314"
+    },
+    {
+      "member": "OWNER-NOTES.md",
+      "uncompressed_bytes": 1962,
+      "compressed_bytes": 1023,
+      "sha256": "c30bbf6f14c2d1eb2ba4805e096bd84b3172306b018ae754dcffbacda9dbfabd",
+      "CRC32": "7851be79"
+    },
+    {
+      "member": "contents-manifest.json",
+      "uncompressed_bytes": 165523,
+      "compressed_bytes": 27912,
+      "sha256": "c5785588ad0707da1e254cd7e518ebf6a9af394d5dc3d2e37e57afda208c8215",
+      "CRC32": "f7c6907b"
+    }
+  ],
+  "scope": "Original19/3 and corrected22 actual native/core evidence remain separately labelled. No SDK/package cache or private fixture data included. Full original/final preserved Linux runtime custody, not relabelled. No SDK/GUI used for archive.",
+  "root_sole_committer": true
+}

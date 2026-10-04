@@ -1,0 +1,12 @@
+{
+  "createdUTC": "2026-10-04T02:23:20.182148+00:00",
+  "state": "ROOT_ALL_480_MEMBERS_INDEPENDENTLY_VERIFIED",
+  "zip_sha256": "07328dfc685a725315d2433beb373925c8bcdae96e8c451ae85a81b15f76cd0a",
+  "zip_bytes": 42400008,
+  "member_count": 480,
+  "all_member_uncompressed_bytes": 114121827,
+  "unique_safe_paths": true,
+  "all_member_hashes_lengths_crc_and_compression_sizes_match": true,
+  "zip_crc_test": null,
+  "scope": "Portable custody for separately preserved original19PASS3FAIL and final22PASS native owner evidence. No browser or cross-client acceptance."
+}
