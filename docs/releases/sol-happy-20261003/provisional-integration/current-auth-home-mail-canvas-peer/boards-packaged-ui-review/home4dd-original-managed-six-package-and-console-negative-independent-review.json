@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent validation",
+  "scope": "Original current4dd Home managed six/source-built package and failed first native control only; no native replay",
+  "sourceCommit": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+  "runId": 37228835003,
+  "jobId": 111514012449,
+  "officialDiagnosticArtifact": {
+    "id": 11313138361,
+    "bytes": 2564391,
+    "sha256": "288bc00c523d73a52eab0ba52ca54deafb49f4056eaf58d0d3dd58b9a42d3966",
+    "independentProviderReadback": true,
+    "originalMembersCRCAndCopiedBytesVerified": true
+  },
+  "originalOwningTests": {
+    "total": 6,
+    "executed": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "allOriginalCaseIdentitySetEquality": true,
+    "trxSha256": "a6becc2ba31ea1251a09bf0cd397077902e81d0a89ca5e7910124d3e6148c035"
+  },
+  "sourceRuntime": {
+    "17293SourceRowsBeforeAfterByteEqual": true,
+    "232OwningRuntimeRowsBeforeAfterByteEqual": true,
+    "noSkippedSourceOrOracle": true,
+    "qualification": "Actual original source-build logs and retained physical hash metadata; not an installed owner adoption claim."
+  },
+  "actualOriginalPackage": {
+    "bytes": 81553586,
+    "sha256": "0033a7c7161ac28a14b7c8c34d7d3c64c0b985b95cc480cfc0f45273134aae42",
+    "sealManifestHashBound": true,
+    "all299MemberCRCSizeHashVerified": true,
+    "wholeOfficialContainerMetadataOnly": true,
+    "payloadBytesReadThroughOriginalBoundedPartsAndReassembledZIP": true,
+    "closedArchiveRelocation": "Explicit C5 SHA-preserving /tmp->task-owned workspace mapping485448..., original old paths now symlink pointers; actual destination regular file independently read."
+  },
+  "nativeFirstOriginal": {
+    "cohort": "native-first",
+    "pid": 6200,
+    "sessionId": 2,
+    "windowVisible": true,
+    "ownHWND": true,
+    "foregroundVerified": true,
+    "inputEventsSent": 6,
+    "exited": false,
+    "exitCode": null,
+    "forcedCleanup": false,
+    "processSignals": [],
+    "outputDrained": false,
+    "originalCuiRootReported": false,
+    "phase": "original-process-exit",
+    "errorType": "RuntimeException",
+    "startedUTC": "2026-10-04T19:42:53.4367400Z",
+    "windowTitle": "D:\\a\\_temp\\home-original-37228835003-1\\extracted\\AvaloniaHome.exe",
+    "releaseEventsSent": 3
+  },
+  "nativeFirstAssessment": "FAIL retained. Original selected HWND title equals executable path, whereas source-defined GUI title is9-1 Home. Six admitted key events/three releases to that foreground owned window do not establish actual GUI KeyDown invocation. Product shutdown failure is not proved.",
+  "originalStdout": {
+    "bytes": 312,
+    "sha256": "d22f591672b95af2cbe304121a120fed002f3022f0c85520b83cd7af00c8e03c",
+    "canonicalStackPanelRootLineWithActualAsciiHyphen": true,
+    "stderrBytes": 0
+  },
+  "closureQualification": "Original first process still alive at45s; outputDrained/exited false. No natural settlement proved by subsequent Actions orphan cleanup. No harness kill does not mean clean kernel family closure. Second fresh native process/default-profile readback NOT_RUN.",
+  "historicalNegativesPreserved": true,
+  "successorSourceReview": "home-owned-canonical-gui-e530-preinvoke-independent-review.json separately verifies grounded unique owned actualGUI selector without product/oracle change.",
+  "status": "MANAGED6_PACKAGE_PASS_NATIVE_FIRST_NEGATIVE_VERIFIED",
+  "fullHomeInstalledBootstrapDefaultCloseDeliveryAcceptance": false
+}

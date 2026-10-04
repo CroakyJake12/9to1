@@ -1,0 +1,45 @@
+✔ public preflight accepts exact inventories only; no browser or issuer execution (298.889233ms)
+✔ credential-bearing PW debug/preload inheritance is disabled before browser launch (0.242118ms)
+✔ invalid explicit candidate refuses before even reading public binding (0.467801ms)
+✔ actual CLI invalid candidate redacts errors and precedes private read/PW import/listener (46.386183ms)
+✔ mismatched candidate and publication receipt hash refuse (279.410709ms)
+✔ unreviewed runner or source contract refuses (0.703951ms)
+✔ separate actual test and fixture HEADs refuse a caller-invented label (59.601561ms)
+✔ all exact105 source bodies remain required despite separate source identities (1.172444ms)
+✔ actual Git body check refuses rehashed working-tree edits (5.914755ms)
+✔ redirected selected source refuses before any target contents are read (2.582688ms)
+✔ form errors produce fixed categories only, even with credential-bearing text or getters (0.288737ms)
+✔ actual canonical Chromium TMPDIR accepts62 UTF8 bytes and refuses63 before spawn (0.306513ms)
+✔ actual Unicode TMPDIR is measured by UTF8 bytes rather than character count (0.198874ms)
+✔ only exact singleton launch marker survives otherwise private error output (0.131845ms)
+✔ fetch receiver probe uses only an invalid absolute URL and redacts both error boundaries (1.763707ms)
+✔ fetch receiver probe refuses a supposedly parseable URL before calling any fetch (0.663711ms)
+✔ read-only public status observer excludes unknown text and bounds its history (1.153575ms)
+✔ changed receiving critical source refuses even if caller rehashes both catalogs (0.664392ms)
+✔ before/after source mismatch and recorded source mutation refuse (0.753544ms)
+✔ actual full asset body mutation and unlisted asset refuse (511.454746ms)
+✔ public asset symlink refuses even if its target bytes match (268.613926ms)
+✔ fixture source missing body or caller-rehashed alternate implementation refuses (124.84623ms)
+✔ owned private-file contract reads only exact restrictive run, without authenticating (1.071544ms)
+✔ foreign path and permissive private mode refuse (0.251001ms)
+✔ wrong port, external discovery and non-fictional account refuse (3.720645ms)
+✔ private mutation remains an observable failure after read (0.390908ms)
+✔ public boundary diagnostics classify callback and each current public endpoint without query retention (0.491897ms)
+✔ callback diagnostics distinguish document/fetch methods, HTTP statuses and exact fixed cancellation phase (0.555441ms)
+✔ unknown network fields and throwing getters cannot print private errors, URL or failure text (0.244892ms)
+✔ console diagnostics retain only fixed startup/resource codes and known origin categories (0.265673ms)
+✔ network diagnostics refuse unknown events and bound repeated counts (18.90427ms)
+✔ both revised issuer bodies refuse an alternate caller-rehashed fixture implementation (118.943188ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1920.188378
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.021s
+
+OK

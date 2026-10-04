@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent validation",
+  "scope": "Actual original9 local Picture browser groups and unchanged9af sealed publication, no browser replay",
+  "sourceCommit": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+  "runId": 37227141927,
+  "jobId": 111509039692,
+  "sealedTupleAnd4553GitSourceIdentityPriorIndependentReceipt": "web9af-sealed-tuple-critical-auth-source-independent-review.json",
+  "counts": {
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "exactOriginalOutcomeNamesAndAllPassed": [
+    "create-real-png-local-document",
+    "canonical-crop",
+    "canonical-undo-redo",
+    "clean-save-close",
+    "reopen-real-local-row",
+    "real-png-download-exact-pixels",
+    "clean-browser-process-restart",
+    "real-presentation-and-pending-input-refusal",
+    "two-tab-cas-dirty-close-and-explicit-reload"
+  ],
+  "wholeOriginalRunnerOracleGitHashesUnchanged": true,
+  "entire285ManifestPathBodyMapBeforeAfterEqual": true,
+  "actualTwoDistinctChromiumPidsAndClosedContexts": true,
+  "serverClosedAndPortRebind": true,
+  "twentySixOriginalCommandFamiliesNaturalZeroEOF_ECHILDClosedZeroSignalsAllBirthsGone": true,
+  "bothOriginalTraceZIP_CRC": true,
+  "actualPixelGroundTruth": {
+    "actualSourceGit8x6PNG": true,
+    "real5x3DownloadedPNG": true,
+    "every15Pixel60RGBAByteEqualsExactCrop1_2_6_5": true,
+    "rgbaSha256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d"
+  },
+  "retainedWarnings": {
+    "build.log": [
+      "IL2026",
+      "WASM0001"
+    ],
+    "publish.log": [
+      "IL2026",
+      "IL2104"
+    ]
+  },
+  "runtimeQualification": "Actual original declared10.0.12/Skia/HarfBuzz inputs and sealed payload independently checked through reviewed ordered transport parts; whole official publication container >32MiB metadata only. No transient peak/RSS claim.",
+  "acceptanceBoundary": "Nine local Picture workflows only. Auth/real issuer/.NET/GPS Preserve/donor/AT/hardware/provider/installed/deployment/full parity not accepted by browser9.",
+  "status": "ACTUAL_BROWSER9_SCOPED_PASS",
+  "fullReleaseAcceptance": false
+}

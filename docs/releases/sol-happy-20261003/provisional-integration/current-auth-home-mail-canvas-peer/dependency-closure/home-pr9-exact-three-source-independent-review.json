@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_PROVISIONAL_EXACT_EXTERNAL_HOME_THREE_FILE_RECEIVING_SOURCE",
+  "pullRequest": "https://github.com/CroakyJake12/9to1/pull/9",
+  "sourceCommit": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+  "sourceParent": "fa7db1bdce872e2d0cbfe1f9af7a36fb2dfc9972",
+  "receivingBaseline": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+  "allThreeCurrentPreimagesEqualActualParent": true,
+  "outsideThreeParentEntriesModeBlobConserved": 16591,
+  "wholeChangedBodies": [
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "bytes": 13971,
+      "sha256": "b1fd87d2d04fc49b5e1efae86c776d18044e0ddee1be49fd961edc62985d5a9d",
+      "oldModeBlob": "100644 blob 09f4d6e17f68a4f532a4974c7632ebb53d1612e8",
+      "newModeBlob": "100644 blob 891571b76ddc49547133051bac2f6986450f552f"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "bytes": 12801,
+      "sha256": "f0c4c86cf65aeed50112e5cae6f7c5ef0ffd5e9dd7558a3b9cbc70f0f96230d6",
+      "oldModeBlob": "100644 blob 103ea358357b14cd8ffca3a5f1a1ad4c95cef7c0",
+      "newModeBlob": "100644 blob dd03a23c30d2d762b9fde5ab6afe4ff0b8a7a05f"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "bytes": 11653,
+      "sha256": "1554ba89446e238ad4aba99ed7043e0bc1d9f85daf0a0cad2567aad0c4458d1c",
+      "oldModeBlob": "100644 blob a06a94050d7be19f45019ce2a62fa8770361f1e0",
+      "newModeBlob": "100644 blob 9564273ae3b9f11c7f5e43873d379081da9d3c92"
+    }
+  ],
+  "originalTestMethods": [
+    "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit",
+    "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services",
+    "Original_close_is_published_before_Core_callback_reentry",
+    "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close",
+    "Native_home_host_loads_canonical_cui_into_a_measured_window"
+  ],
+  "originalSixCaseIdentitiesConserved": "Three lifetime Facts plus one original two-InlineData Theory and one render Fact. Original attributes/methods unchanged; no skip/filter/new substitute case.",
+  "productionInverseExact": true,
+  "review": [
+    "Only three canonical boolean route values from the existing Home controller Surface are projected before existing summary refresh. They satisfy required current Home.cui conditional bindings without creating route actions,authority,providers,actor or bootstrap. Removing those three lines recovers the entire parent Program body.",
+    "Synchronous exhausted-capacity TryRunOriginal invocation is retained inside an Action statement body; the Task return is discarded to select the intended xUnit Throws(Action) overload. Existing512successful/128fault/admission-denial/acquiredfalse/close-error assertions remain.",
+    "Fallback/faulted render fixtures now provide only required canonical default route conditions,leaving CatalogSummary missing/faulted and exact MissingSource/Faulted/fallback assertions unchanged.",
+    "Authored nav-settings line19 equals exact current Home.cui line. Original source file/type/id/action/accessibility/layout assertions preserved.",
+    "Bounded ten-second UI dispatcher pumping reacquires the actual current operation-status TextBlock after async refresh. Existing not-connected text and updated diagnostics binding/native-value equality remain; no stale detached control assertion or hidden model result."
+  ],
+  "receivingGraphCompatibility": "All104 differences from actual parentfa7 to current9af are confined to docs/releases and Web Auth/LocalAuth. Home/nativeHome/CUI/framework/managed references and global project/package/policy inputs remain exact parent,apart from proposed three paths.",
+  "runtime": "External original whole owning six reportedly PASS on actual Windows sourcefa7+delta; C6 rawTRX/build/source-custody readback pending. No payload rerun or installed/native package/quit success inferred from this source ACK.",
+  "acceptance": "Root-only provisional exact whole-three composition is authorized. Lifecycle,authorization,DenyAll/bootstrap,current actor,HomeCore/native APIs,projects/policy and all other production bodies remain untouched. Full Home/installed identity/signing/noSDK/30app release acceptance pending."
+}
