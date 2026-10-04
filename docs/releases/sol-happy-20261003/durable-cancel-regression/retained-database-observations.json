@@ -1,0 +1,107 @@
+[
+  {
+    "path": "/workspace/team-c/evidence/c5/durable-cancel/actual-task-70ab102c70434d15ba54563af16590d9/tasks.db",
+    "bytes": 942080,
+    "sha256": "0eed74126ce8891f3e3fd62d3d8440c0142cfc082854598e85f79deefb39d384",
+    "schemaVersion": 28,
+    "actualReopenedRows": [
+      {
+        "id": "526fe377-8b54-4511-b41e-5ce78dbbe7a0",
+        "locator": {
+          "value": "HAV-WMBC-GVK6-SZ32"
+        },
+        "ownerUserId": "80399c12-6af0-454b-922c-1c36b58f1d24",
+        "workspaceId": "0d40efb8-df9f-4e1a-8975-e3d6a9916698",
+        "projectId": "5a067477-9df6-46f4-ac86-3292036d73bb",
+        "sourceTabId": null,
+        "executionId": null,
+        "agentPluginId": "local-test-agent",
+        "title": "Durable test",
+        "instruction": "No provider execution",
+        "contextReferenceJson": "{}",
+        "expectedOutput": "result",
+        "status": 8,
+        "claimedBy": "original-agent",
+        "leaseTokenHash": "6127fb3799cef0ad43f390cc3125db462288060f3dadf3b586dc8d295a9b2636",
+        "leaseExpiresAt": "2026-10-04T11:10:27.2254143+00:00",
+        "idempotencyKey": null,
+        "safeProgress": null,
+        "safeResult": null,
+        "safeError": null,
+        "createdAt": "2026-10-04T11:05:27.1280114+00:00",
+        "updatedAt": "2026-10-04T11:05:27.2296329+00:00",
+        "expiresAt": "2026-10-11T11:05:27.1280114+00:00"
+      }
+    ]
+  },
+  {
+    "path": "/workspace/team-c/evidence/c5/durable-cancel/actual-task-d26e749ae96c49e2a97cf11f02104320/tasks.db",
+    "bytes": 942080,
+    "sha256": "2e2c421192a8ee63a8f6eee4f1600d6c022e041c9280882e3e42aa719463a7ef",
+    "schemaVersion": 28,
+    "actualReopenedRows": [
+      {
+        "id": "40b503e6-5407-4fff-a22c-04b6721a0272",
+        "locator": {
+          "value": "HAV-WPMX-F38A-H2FU"
+        },
+        "ownerUserId": "5cd9fa83-49b0-4d19-a80e-36e92f297153",
+        "workspaceId": "a33de0f9-2415-4685-a65c-20b601dd4fa8",
+        "projectId": "8e868769-50b6-4fa1-8d5f-7145bf69607d",
+        "sourceTabId": null,
+        "executionId": null,
+        "agentPluginId": "local-test-agent",
+        "title": "Durable test",
+        "instruction": "No provider execution",
+        "contextReferenceJson": "{}",
+        "expectedOutput": "result",
+        "status": 6,
+        "claimedBy": "original-agent",
+        "leaseTokenHash": "6438dbf1dd9985d54c6f2341770c61db60e1b2fd5ca871bd30ed70fd5f6bac11",
+        "leaseExpiresAt": "2026-10-04T11:10:27.3843741+00:00",
+        "idempotencyKey": "complete-1",
+        "safeProgress": "done",
+        "safeResult": "original-result",
+        "safeError": "",
+        "createdAt": "2026-10-04T11:05:27.3826146+00:00",
+        "updatedAt": "2026-10-04T11:05:27.3868186+00:00",
+        "expiresAt": "2026-10-11T11:05:27.3826146+00:00"
+      }
+    ]
+  },
+  {
+    "path": "/workspace/team-c/evidence/c5/durable-cancel/actual-task-fe373323dd42431c9f4da002ef4a393a/tasks.db",
+    "bytes": 942080,
+    "sha256": "e590ee21ae31aeee350d34f1ee204b8abb7b5a3e85a0ed30b0c851aa34685ea2",
+    "schemaVersion": 28,
+    "actualReopenedRows": [
+      {
+        "id": "c84629fb-84b3-4206-a416-806d637a5124",
+        "locator": {
+          "value": "HAV-2H8E-ABD6-CCTM"
+        },
+        "ownerUserId": "bddae79c-09bf-443a-8a1f-75f2cdf2c038",
+        "workspaceId": "4ec6d986-9ac4-48cb-a425-ce141a7d98a2",
+        "projectId": "7cf1be44-7637-47c1-bbe6-30723a09f6e3",
+        "sourceTabId": null,
+        "executionId": null,
+        "agentPluginId": "local-test-agent",
+        "title": "Durable test",
+        "instruction": "No provider execution",
+        "contextReferenceJson": "{}",
+        "expectedOutput": "result",
+        "status": 8,
+        "claimedBy": "original-agent",
+        "leaseTokenHash": "31689f55c57777e6cd8b428e906452663756333c5c25af8639cf7ce47d303573",
+        "leaseExpiresAt": "2026-10-04T11:10:27.2864452+00:00",
+        "idempotencyKey": null,
+        "safeProgress": null,
+        "safeResult": null,
+        "safeError": null,
+        "createdAt": "2026-10-04T11:05:27.285144+00:00",
+        "updatedAt": "2026-10-04T11:05:27.2874371+00:00",
+        "expiresAt": "2026-10-11T11:05:27.285144+00:00"
+      }
+    ]
+  }
+]

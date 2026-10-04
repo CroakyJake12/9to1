@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="96c1b30d-068f-4850-9737-d75db2e6bbfb" name="@5f26f397bc73 2026-10-04 11:05:27" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T11:05:27.5299266+00:00" queuing="2026-10-04T11:05:27.5299267+00:00" start="2026-10-04T11:05:26.3036011+00:00" finish="2026-10-04T11:05:27.5405906+00:00" />
+  <TestSettings name="default" id="fed3f474-ccb9-4d63-a9dd-99d20c5f7ace">
+    <Deployment runDeploymentRoot="_5f26f397bc73_2026-10-04_11_05_27" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="10a4ba16-9ccf-4c69-b5fd-b5ecbb751e23" testId="220e60e6-73ae-2f11-3c7d-34e225308f05" testName="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it" computerName="5f26f397bc73" duration="00:00:00.2266228" startTime="2026-10-04T11:05:27.0105896+00:00" endTime="2026-10-04T11:05:27.2463465+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="10a4ba16-9ccf-4c69-b5fd-b5ecbb751e23">
+      <Output>
+        <StdOut>Actual cancellation/reconnect database=/workspace/team-c/evidence/c5/durable-cancel/actual-task-70ab102c70434d15ba54563af16590d9/tasks.db</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="66c75aa5-9cb7-4dec-bb4a-799640919163" testId="35a830f4-5e0b-3dd7-7497-10b34dc610d9" testName="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel" computerName="5f26f397bc73" duration="00:00:00.0702406" startTime="2026-10-04T11:05:27.3240643+00:00" endTime="2026-10-04T11:05:27.3925025+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="66c75aa5-9cb7-4dec-bb4a-799640919163" />
+    <UnitTestResult executionId="be97a787-1e67-42eb-9fce-576fe54db118" testId="98778795-8693-2090-c679-9f1acfccc2ea" testName="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel" computerName="5f26f397bc73" duration="00:00:00.0617932" startTime="2026-10-04T11:05:27.2678212+00:00" endTime="2026-10-04T11:05:27.3155249+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="be97a787-1e67-42eb-9fce-576fe54db118">
+      <Output>
+        <StdOut>Actual retained database=/workspace/team-c/evidence/c5/durable-cancel/actual-task-fe373323dd42431c9f4da002ef4a393a/tasks.db; cancelReturned=True; restoredStatus=Cancelled; result=&lt;null&gt;; idempotency=&lt;null&gt;</StdOut>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: Completed
+Actual:   Cancelled</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel() in /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExternalAgentDurableCancellationTests.cs:line 47
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel" storage="/workspace/team-c/evidence/c5/durable-cancel/bin/x64/debug/net10.0/haven.infrastructure.tests.dll" id="98778795-8693-2090-c679-9f1acfccc2ea">
+      <Execution id="be97a787-1e67-42eb-9fce-576fe54db118" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/durable-cancel/bin/x64/Debug/net10.0/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests" name="Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel" storage="/workspace/team-c/evidence/c5/durable-cancel/bin/x64/debug/net10.0/haven.infrastructure.tests.dll" id="35a830f4-5e0b-3dd7-7497-10b34dc610d9">
+      <Execution id="66c75aa5-9cb7-4dec-bb4a-799640919163" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/durable-cancel/bin/x64/Debug/net10.0/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests" name="Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it" storage="/workspace/team-c/evidence/c5/durable-cancel/bin/x64/debug/net10.0/haven.infrastructure.tests.dll" id="220e60e6-73ae-2f11-3c7d-34e225308f05">
+      <Execution id="10a4ba16-9ccf-4c69-b5fd-b5ecbb751e23" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/durable-cancel/bin/x64/Debug/net10.0/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests" name="Cancelled_task_survives_restart_and_original_lease_cannot_complete_it" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="220e60e6-73ae-2f11-3c7d-34e225308f05" executionId="10a4ba16-9ccf-4c69-b5fd-b5ecbb751e23" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="35a830f4-5e0b-3dd7-7497-10b34dc610d9" executionId="66c75aa5-9cb7-4dec-bb4a-799640919163" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98778795-8693-2090-c679-9f1acfccc2ea" executionId="be97a787-1e67-42eb-9fce-576fe54db118" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="3" executed="3" passed="2" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.10]   Discovering: Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.14]   Discovered:  Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.17]   Starting:    Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.51]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:00.51]       Expected: Completed
+[xUnit.net 00:00:00.51]       Actual:   Cancelled
+[xUnit.net 00:00:00.52]       Stack Trace:
+[xUnit.net 00:00:00.52]         /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExternalAgentDurableCancellationTests.cs(47,0): at Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel()
+[xUnit.net 00:00:00.52]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.52]       Output:
+[xUnit.net 00:00:00.52]         Actual retained database=/workspace/team-c/evidence/c5/durable-cancel/actual-task-fe373323dd42431c9f4da002ef4a393a/tasks.db; cancelReturned=True; restoredStatus=Cancelled; result=&lt;null&gt;; idempotency=&lt;null&gt;
+[xUnit.net 00:00:00.59]   Finished:    Haven.Infrastructure.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T11:05:27.3211156+00:00">
+        <Text>[xUnit.net 00:00:00.51]     Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
