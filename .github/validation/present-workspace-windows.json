@@ -320,6 +320,13 @@
       "gitBlob": "e4c0c1ee253546cd850635b90d6c29c19de86b92"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.UI/Components/Button/Button.cs",
+      "bytes": 7333,
+      "sha256": "7e547b6ff9e6471e40f267a5c810fe7dfd8bbb7f082f5798b269b9eecc500539",
+      "gitMode": "100644",
+      "gitBlob": "e840723f75be766ed30826c78561117b4423df97"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.UI/Components/Popup/PopupMenu.cs",
       "bytes": 5442,
       "sha256": "4259917066db61c3ebd639157dc61447a3d69935d12bfc3f74891068f32eb30f",
@@ -859,5 +866,27 @@
     "originalSource": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
     "failure": "MSB4062 artifact-relocated Avalonia.Build.Tasks consumer default sourcebin path",
     "repair": "Evaluate actual original Avalonia task TargetPath with same Release artifacts settings; build/hash real task DLL and pass existing public AvaloniaBuildTasksLocation override alongside distinct CuiBuildTasksLocation"
+  },
+  "reviewedGroundedNativeNameCorrections": {
+    "originalUiSource": "1e1e4ade8611aac03c2187b674c70e7cb0cd501c",
+    "preservedInitialReceivingSource": "ebdcf7644849acf01be7f64c7ac818bdb195d3e3",
+    "literalOccurrences": 3,
+    "add": "SetWorkspaceDocument Content + Add slide -> canonical Button.Content setter updates AccessibleName -> actual HavenSceneAutomationPeer.GetNameCore reads AccessibleName",
+    "rail": "Actual PresentEditor.AddSlide sets Title Slide 2; SetWorkspaceDocument assigns AccessibleName Slide 2: Slide 2, UIA reads that exact name",
+    "semanticCriteriaUnchanged": [
+      "exact own Button process/AutomationId/role/visibility/enabled/InvokePattern",
+      "actual added count/unique durable slide ID",
+      "title/notes/save/picker cancellation/close/reopen/library search/open/preserved bytes"
+    ],
+    "otherExpectedNamesAudited": {
+      "Presentation title": "constructor explicit DeckTitleInput.AccessibleName",
+      "Speaker notes": "constructor explicit NotesInput.AccessibleName",
+      "File": "actual AddMenuButton File -> ActionButton AccessibleName",
+      "File menu": "actual ShowFileMenu -> PopupMenu Card.AccessibleName",
+      "New presentation/Save/Open import/Back to presentations": "actual exact owning PopupMenuItem labels",
+      "Open or import presentation": "existing actual native import FilePicker title",
+      "Search local presentation titles": "whole EEC actual LibrarySearch AccessibleName",
+      "library Open edited title": "actual summary title -> ActionButton AccessibleName; saved expected synthetic exact title"
+    }
   }
 }
