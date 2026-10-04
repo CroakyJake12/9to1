@@ -10,7 +10,7 @@ public sealed record HomeNativeFilesItem(Guid ItemId, Guid? ParentId, string Nam
     Guid? MetadataRevision, long? SizeBytes, string? ContentType, DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt, string Availability, bool IsShared, string? ContentHash);
 public sealed record HomeNativeFilesPage(Guid OriginalPage, Guid StoreId, string StoreRevision,
-    Guid? ParentId, string Title, IReadOnlyList<HomeNativeFilesItem> Items, bool HasMore);
+    Guid? ParentId, string Title, IReadOnlyList<HomeNativeFilesItem> Items, bool HasMore, int? NextOffset = null);
 public sealed record HomeNativeFilesReply(string State, string Code, string Message,
     HomeNativeFilesPage? Page = null, string? PermissionRequestId = null);
 

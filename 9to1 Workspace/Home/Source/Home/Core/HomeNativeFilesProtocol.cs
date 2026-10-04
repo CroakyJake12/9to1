@@ -81,6 +81,7 @@ internal static class HomeNativeFilesProtocol
         if (reply.Page is not { } page) return;
         if (page.OriginalPage == Guid.Empty || page.StoreId == Guid.Empty || !Text(page.StoreRevision, 4096) ||
             page.ParentId == Guid.Empty || page.Title is null || page.Title.Length > 4096 ||
+            page.NextOffset is < 0 or > 100 || page.HasMore != (page.NextOffset is not null) ||
             page.Items is null || page.Items.Count > 20 || page.Items.Any(item => item is null ||
                 item.ItemId == Guid.Empty || item.ParentId == Guid.Empty || item.MetadataRevision == Guid.Empty ||
                 item.Name is null || item.Name.Length > 4096 || item.ContentType is { Length: > 1024 } ||
