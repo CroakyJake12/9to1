@@ -1,0 +1,115 @@
+{
+  "scope": "Actual unchanged portable Picture owner engine \u002B real native Skia Bitmap; NOT browser or full Picture acceptance",
+  "outcomes": {
+    "canonical-open-source": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "canonical-edit-and-reopen": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "native-crop-transform-export": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "metadata-privacy-export": {
+      "Status": "FAIL",
+      "Error": "System.AggregateException: Retained strict metadata mode failures. (The given key \u0027GPSLatitude\u0027 was not present in the dictionary.)\n ---\u003E System.Collections.Generic.KeyNotFoundException: The given key \u0027GPSLatitude\u0027 was not present in the dictionary.\n   at System.Collections.Generic.Dictionary\u00602.get_Item(TKey key)\n   at RawPngMetadata.Coordinates() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/RawPngMetadata.cs:line 67\n   at Program.\u003C\u003Ec__DisplayClass0_1.\u003C\u003CMain\u003E$\u003Eb__10() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 87\n   --- End of inner exception stack trace ---\n   at Program.\u003C\u003Ec__DisplayClass0_1.\u003C\u003CMain\u003E$\u003Eb__10() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 94\n   at Program.\u003C\u003Ec__DisplayClass0_0.\u003C\u003CMain\u003E$\u003Eg__Test|5(String id, Action execute) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 16"
+    },
+    "source-change-refusal": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "overwrite-refusal": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "invalid-crop-preserves-state": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "future-schema-refusal": {
+      "Status": "PASS",
+      "Error": null
+    }
+  },
+  "assertions": 25,
+  "metadataReadbacks": [
+    {
+      "name": "source",
+      "Gps": {
+        "GPSLatitude": "51,30N",
+        "GPSLongitude": "0,7.2W",
+        "GPSAltitude": "24/1",
+        "GPSAltitudeRef": "0"
+      },
+      "Chunks": [
+        "IHDR",
+        "iTXt",
+        "tEXt",
+        "tEXt",
+        "tEXt",
+        "sRGB",
+        "IDAT",
+        "IEND"
+      ],
+      "XmpPackets": 1,
+      "Latitude": 51.5,
+      "Longitude": -0.12,
+      "Altitude": 24
+    },
+    {
+      "name": "Preserve",
+      "Gps": {},
+      "Chunks": [
+        "IHDR",
+        "iTXt",
+        "tEXt",
+        "tEXt",
+        "tEXt",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ],
+      "XmpPackets": 1
+    },
+    {
+      "name": "RemoveLocation",
+      "Gps": {},
+      "Chunks": [
+        "IHDR",
+        "iTXt",
+        "tEXt",
+        "tEXt",
+        "tEXt",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ],
+      "XmpPackets": 1
+    }
+  ],
+  "metadataModeOutcomes": {
+    "Preserve": {
+      "Status": "FAIL",
+      "Error": "System.Collections.Generic.KeyNotFoundException: The given key \u0027GPSLatitude\u0027 was not present in the dictionary.\n   at System.Collections.Generic.Dictionary\u00602.get_Item(TKey key)\n   at RawPngMetadata.Coordinates() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/RawPngMetadata.cs:line 67\n   at Program.\u003C\u003Ec__DisplayClass0_1.\u003C\u003CMain\u003E$\u003Eb__10() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 87"
+    },
+    "RemoveLocation": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "RemoveAll": {
+      "Status": "PASS",
+      "Error": null
+    }
+  },
+  "failure": "System.AggregateException: Retained strict metadata mode failures. (The given key \u0027GPSLatitude\u0027 was not present in the dictionary.)\n ---\u003E System.Collections.Generic.KeyNotFoundException: The given key \u0027GPSLatitude\u0027 was not present in the dictionary.\n   at System.Collections.Generic.Dictionary\u00602.get_Item(TKey key)\n   at RawPngMetadata.Coordinates() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/RawPngMetadata.cs:line 67\n   at Program.\u003C\u003Ec__DisplayClass0_1.\u003C\u003CMain\u003E$\u003Eb__10() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 87\n   --- End of inner exception stack trace ---\n   at Program.\u003C\u003Ec__DisplayClass0_1.\u003C\u003CMain\u003E$\u003Eb__10() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 94\n   at Program.\u003C\u003Ec__DisplayClass0_0.\u003C\u003CMain\u003E$\u003Eg__Test|5(String id, Action execute) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 16\n   at Program.\u003CMain\u003E$(String[] args) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 66",
+  "counts": {
+    "discovered": 8,
+    "passed": 7,
+    "failed": 1,
+    "notRun": 0
+  },
+  "exit": 1
+}

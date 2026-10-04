@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="RawPngMetadata.cs" />
+    <ProjectReference Include="/workspace/team-b-astra-browser-validation/apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj" />
+    <ProjectReference Include="/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,16 @@
+{
+  "processExit": 1,
+  "counts": {
+    "discovered": 8,
+    "passed": 7,
+    "failed": 1,
+    "notRun": 0
+  },
+  "assertions": 25,
+  "classification": "ACTUAL_SOURCE_QUALIFIED_OWNER_PRESERVE_GPS_LOSS",
+  "originalSourceBeforeAfterEqual": true,
+  "pixelProcessExit": 0,
+  "pixelAssertions": 67,
+  "sourceFingerprintCapturedBeforeRender": "A17E304D0A333065202CF77C656D7BC86ABDD37237B407A0A5CB870D33870297",
+  "originalSourceSha256AfterRender": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297"
+}

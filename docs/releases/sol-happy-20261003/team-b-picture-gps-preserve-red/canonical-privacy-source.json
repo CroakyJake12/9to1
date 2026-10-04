@@ -1,0 +1,41 @@
+{
+  "snapshotPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/source/live-2137.json",
+  "snapshotSha256": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+  "retrievedUTC": "2026-10-03 21:35:45 UTC",
+  "revisionId": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+  "paragraphCount": 8534,
+  "paragraphs": [
+    {
+      "text": "Picture's Info/Metadata view exposes available dimensions, format, file size, colour profile, capture date, camera/lens/exposure details, orientation, location and other supported EXIF/IPTC/XMP metadata. Unknown metadata should be preserved through non-destructive round trips where possible.",
+      "startIndex": 621015,
+      "endIndex": 621307,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "Export/privacy controls MUST support preserving metadata, removing location metadata and removing all removable metadata where the target format supports it.",
+      "startIndex": 621308,
+      "endIndex": 621465,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "Export options include size/resolution, format/compression/quality, transparency/background, colour profile, metadata/privacy and applicable animation/vector options.",
+      "startIndex": 622035,
+      "endIndex": 622201,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "A failed edit/generation/export leaves the prior valid document revision intact. Unsupported export features are reported before destructive flattening/conversion.",
+      "startIndex": 628981,
+      "endIndex": 629144,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    }
+  ]
+}

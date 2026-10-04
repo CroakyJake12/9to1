@@ -1,0 +1,52 @@
+{
+  "fixtureDefect": "Source GPS values were assigned without creating a persistent XMP tag; raw original PNG has no GPS metadata. Strict preserve assertion unchanged for corrected fixture.",
+  "chunks": [
+    {
+      "file": "original.png",
+      "sha256": "1d5d3f4a895f3a2ef664fe880299ff3439462d28f61618c0220fba28a9c83141",
+      "metadata": [
+        {
+          "type": "tEXt",
+          "bytes": 23,
+          "dataUtf8": "Title\u0000Real source title"
+        },
+        {
+          "type": "tEXt",
+          "bytes": 41,
+          "dataUtf8": "Description\u0000Retained non-location comment"
+        },
+        {
+          "type": "tEXt",
+          "bytes": 37,
+          "dataUtf8": "Comment\u0000Retained non-location comment"
+        }
+      ]
+    },
+    {
+      "file": "Preserve.png",
+      "sha256": "d5a690fb74e3d8866ad6138f71e7e080fd5f40814d798115856feb0080959c64",
+      "metadata": [
+        {
+          "type": "iTXt",
+          "bytes": 1010,
+          "dataUtf8": "XML:com.adobe.xmp\u0000\u0000\u0000\u0000\u0000<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description exif:ExposureTime=\"0/1\" exif:FNumber=\"0/1\" exif:FocalLength=\"0/1\" exif:FocalLengthIn35mmFilm=\"\" xmlns:exif=\"http://ns.adobe.com/exif/1.0/\"><dc:subject xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Bag /></dc:subject><exif:ISOSpeedRatings><rdf:Seq><rdf:li></rdf:li></rdf:Seq></exif:ISOSpeedRatings><dc:creator xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Seq><rdf:li></rdf:li></rdf:Seq></dc:creator><dc:title xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Alt><rdf:li xml:lang=\"x-default\">Real source title</rdf:li></rdf:Alt></dc:title><dc:description xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Alt><rdf:li xml:lang=\"x-default\">Retained non-location comment</rdf:li></rdf:Alt></dc:description><exif:UserComment><rdf:Alt><rdf:li xml:lang=\"x-default\">Retained non-location comment</rdf:li></rdf:Alt></exif:UserComment></rdf:Description></rdf:RDF></x:xmpmeta>"
+        },
+        {
+          "type": "tEXt",
+          "bytes": 23,
+          "dataUtf8": "Title\u0000Real source title"
+        },
+        {
+          "type": "tEXt",
+          "bytes": 41,
+          "dataUtf8": "Description\u0000Retained non-location comment"
+        },
+        {
+          "type": "tEXt",
+          "bytes": 37,
+          "dataUtf8": "Comment\u0000Retained non-location comment"
+        }
+      ]
+    }
+  ]
+}

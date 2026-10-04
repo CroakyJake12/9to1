@@ -1,0 +1,72 @@
+[
+  {
+    "name": "original.png",
+    "bytes": 667,
+    "sha256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297",
+    "allChunkCrcValid": true,
+    "chunks": [
+      "IHDR",
+      "iTXt",
+      "tEXt",
+      "tEXt",
+      "tEXt",
+      "sRGB",
+      "IDAT",
+      "IEND"
+    ],
+    "rawXmp": [
+      "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description exif:GPSLatitude=\"51,30N\" exif:GPSLongitude=\"0,7.2W\" exif:GPSAltitude=\"24/1\" exif:GPSAltitudeRef=\"0\" xmlns:exif=\"http://ns.adobe.com/exif/1.0/\" /></rdf:RDF></x:xmpmeta>"
+    ]
+  },
+  {
+    "name": "Preserve.png",
+    "bytes": 1283,
+    "sha256": "d5a690fb74e3d8866ad6138f71e7e080fd5f40814d798115856feb0080959c64",
+    "allChunkCrcValid": true,
+    "chunks": [
+      "IHDR",
+      "iTXt",
+      "tEXt",
+      "tEXt",
+      "tEXt",
+      "sBIT",
+      "IDAT",
+      "IEND"
+    ],
+    "rawXmp": [
+      "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description exif:ExposureTime=\"0/1\" exif:FNumber=\"0/1\" exif:FocalLength=\"0/1\" exif:FocalLengthIn35mmFilm=\"\" xmlns:exif=\"http://ns.adobe.com/exif/1.0/\"><dc:subject xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Bag /></dc:subject><exif:ISOSpeedRatings><rdf:Seq><rdf:li></rdf:li></rdf:Seq></exif:ISOSpeedRatings><dc:creator xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Seq><rdf:li></rdf:li></rdf:Seq></dc:creator><dc:title xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Alt><rdf:li xml:lang=\"x-default\">Real source title</rdf:li></rdf:Alt></dc:title><dc:description xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Alt><rdf:li xml:lang=\"x-default\">Retained non-location comment</rdf:li></rdf:Alt></dc:description><exif:UserComment><rdf:Alt><rdf:li xml:lang=\"x-default\">Retained non-location comment</rdf:li></rdf:Alt></exif:UserComment></rdf:Description></rdf:RDF></x:xmpmeta>"
+    ]
+  },
+  {
+    "name": "RemoveLocation.png",
+    "bytes": 1283,
+    "sha256": "d5a690fb74e3d8866ad6138f71e7e080fd5f40814d798115856feb0080959c64",
+    "allChunkCrcValid": true,
+    "chunks": [
+      "IHDR",
+      "iTXt",
+      "tEXt",
+      "tEXt",
+      "tEXt",
+      "sBIT",
+      "IDAT",
+      "IEND"
+    ],
+    "rawXmp": [
+      "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description exif:ExposureTime=\"0/1\" exif:FNumber=\"0/1\" exif:FocalLength=\"0/1\" exif:FocalLengthIn35mmFilm=\"\" xmlns:exif=\"http://ns.adobe.com/exif/1.0/\"><dc:subject xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Bag /></dc:subject><exif:ISOSpeedRatings><rdf:Seq><rdf:li></rdf:li></rdf:Seq></exif:ISOSpeedRatings><dc:creator xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Seq><rdf:li></rdf:li></rdf:Seq></dc:creator><dc:title xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Alt><rdf:li xml:lang=\"x-default\">Real source title</rdf:li></rdf:Alt></dc:title><dc:description xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><rdf:Alt><rdf:li xml:lang=\"x-default\">Retained non-location comment</rdf:li></rdf:Alt></dc:description><exif:UserComment><rdf:Alt><rdf:li xml:lang=\"x-default\">Retained non-location comment</rdf:li></rdf:Alt></exif:UserComment></rdf:Description></rdf:RDF></x:xmpmeta>"
+    ]
+  },
+  {
+    "name": "RemoveAll.png",
+    "bytes": 124,
+    "sha256": "5825755aed124c8cf0bf1eb41c6316ab849044ac67c1e0965ab7898e4094487b",
+    "allChunkCrcValid": true,
+    "chunks": [
+      "IHDR",
+      "sBIT",
+      "IDAT",
+      "IEND"
+    ],
+    "rawXmp": []
+  }
+]

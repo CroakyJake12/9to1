@@ -1,0 +1,19 @@
+{
+  "scope": "Controlled console lifecycle tests, actual source-linked Picture session+canonical owner engine+nativeBitmap; no UI/browser/IDB/provider acceptance",
+  "processExit": 0,
+  "discovered": 8,
+  "executed": 8,
+  "passed": 8,
+  "failed": 0,
+  "assertions": 43,
+  "productionSourceUnchangedBeforeRun01ThroughRun02": true,
+  "harnessRepair": "Clear console fixture captured UI SynchronizationContext after native setup; no running UI dispatcher. Per-case progress added. Prior run01 hung, terminated143, no final counts invented.",
+  "programSha256": "413b71f7d627f8a72b7503fee4ce1ce7625b9af78c6f3e076e15f1412f6ea915",
+  "resultsSha256": "22003c91b24b88998900d0874bbb757615e96afa3d207e865bf7c0053f45890d",
+  "environment": {
+    "DOTNET_CLI_HOME": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/team-b-evidence/sol-happy-20261003/b3/nuget",
+    "RestoreFallbackFolders": "/workspace/.nuget/packages",
+    "XDG_CACHE_HOME": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/xdg-cache"
+  }
+}

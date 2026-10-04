@@ -1,0 +1,6 @@
+{
+  "scope": "Independent actual exported PNG pixel check, NOT browser acceptance",
+  "status": "PASS",
+  "assertions": 67,
+  "exit": 0
+}

@@ -1,0 +1,23 @@
+START import-refusal-prepare-retains-canonical-draft-and-original
+PASS import-refusal-prepare-retains-canonical-draft-and-original
+START missing-postcommit-receipt-preserves-dirty-without-new-revision
+PASS missing-postcommit-receipt-preserves-dirty-without-new-revision
+START busy-prepare-retains-real-native-owner-edit
+PASS busy-prepare-retains-real-native-owner-edit
+START late-commit-after-dispose-keeps-subsequent-dirty-marker
+PASS late-commit-after-dispose-keeps-subsequent-dirty-marker
+START release-fault-clears-document-source-history-and-bindings
+PicturePresentationFailed: InvalidOperationException
+PASS release-fault-clears-document-source-history-and-bindings
+START acknowledged-edit-survives-list-and-observer-faults
+PicturePresentationFailed: InvalidOperationException
+PicturePostCommitListFailed: InvalidOperationException
+PicturePresentationFailed: InvalidOperationException
+PicturePresentationFailed: InvalidOperationException
+PicturePresentationFailed: InvalidOperationException
+PASS acknowledged-edit-survives-list-and-observer-faults
+START changed-original-failed-prepare-retains-draft-and-last-package
+PASS changed-original-failed-prepare-retains-draft-and-last-package
+START clean-close-keeps-real-canonical-package-and-original-bytes
+PASS clean-close-keeps-real-canonical-package-and-original-bytes
+{"discovered":8,"executed":8,"assertions":43,"exitCode":0}

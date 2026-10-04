@@ -1,0 +1,55 @@
+{
+  "scope": "Read-only source/DLL/PDB/XML custody; no SDK or product runtime rerun",
+  "package": "TagLibSharp2.3.0/netstandard2.0",
+  "releaseCommit": "b5ae84f2e84087bf160bb0471420200dd2b5d809",
+  "all15DocumentPdbChecksumsMatchedAfterLFtoCRLF": true,
+  "causalSources": [
+    {
+      "path": "upstream/TaglibSharp/Xmp/XmpTag.cs",
+      "lines": [
+        1196,
+        1209,
+        1222
+      ],
+      "finding": "Latitude Longitude Altitude typed getters always return null; all setters empty."
+    },
+    {
+      "path": "upstream/TaglibSharp/Png/File.cs",
+      "lines": [
+        280,
+        582,
+        583
+      ],
+      "finding": "PNG supports XMP|Png combined tags, and parses actual iTXt XMP into XmpTag."
+    },
+    {
+      "path": "upstream/TaglibSharp/Image/CombinedImageTag.cs",
+      "lines": [
+        323,
+        348,
+        373
+      ],
+      "finding": "Typed GPS getters return first nonnull child typed value; PNG XmpTag is null."
+    }
+  ],
+  "retainedRedRun04": "../picture-engine-tests/run04/results.json",
+  "validRawSourceGPS": "../picture-engine-tests/run04/source-metadata-chunks.json",
+  "conclusion": "Typed GPS prerequisite assertion cannot pass this installed PNG/XMP reader. Valid persisted nodes are present. This does not demonstrate exporter metadata regression. Strict raw namespace-aware XMP numeric coordinate equality/absence is proposed, not executed.",
+  "installedPackageFiles": [
+    {
+      "path": "/workspace/.nuget/packages/taglibsharp/2.3.0/lib/netstandard2.0/TagLibSharp.dll",
+      "bytes": 500224,
+      "sha256": "dad93b152d55cf6a58b2037bcf9dd34b45d87761fe5ed61a232b3d4641d2a5d3"
+    },
+    {
+      "path": "/workspace/.nuget/packages/taglibsharp/2.3.0/lib/netstandard2.0/TagLibSharp.pdb",
+      "bytes": 245720,
+      "sha256": "6f06ea1b3a8b5e50f42f9da4e66980328c4bcbf5f9c18a1e5cb63e5f95f6029a"
+    },
+    {
+      "path": "/workspace/.nuget/packages/taglibsharp/2.3.0/lib/netstandard2.0/TaglibSharp.xml",
+      "bytes": 2195366,
+      "sha256": "77b7a7c230907b6042f1e31a236e0c2741bf7123b0cc87d0152186c67055939b"
+    }
+  ]
+}

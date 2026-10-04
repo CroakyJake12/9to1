@@ -1,0 +1,15 @@
+{
+  "url": "https://api.github.com/repos/mono/taglib-sharp/git/refs/tags",
+  "matches": [
+    {
+      "ref": "refs/tags/TaglibSharp-2.3.0.0",
+      "node_id": "MDM6UmVmNzkxNDM4OnJlZnMvdGFncy9UYWdsaWJTaGFycC0yLjMuMC4w",
+      "url": "https://api.github.com/repos/mono/taglib-sharp/git/refs/tags/TaglibSharp-2.3.0.0",
+      "object": {
+        "sha": "b5ae84f2e84087bf160bb0471420200dd2b5d809",
+        "type": "commit",
+        "url": "https://api.github.com/repos/mono/taglib-sharp/git/commits/b5ae84f2e84087bf160bb0471420200dd2b5d809"
+      }
+    }
+  ]
+}

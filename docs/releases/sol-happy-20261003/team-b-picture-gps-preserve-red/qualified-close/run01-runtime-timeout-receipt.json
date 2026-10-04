@@ -1,0 +1,17 @@
+{
+  "scope": "Controlled native lifecycle harness first execution; no GUI/provider acceptance",
+  "state": "RUNTIME_TIMEOUT_TERMINATED",
+  "discovered": 8,
+  "executedCount": "UNKNOWN: prior fixture only writes final report; no durable per-case record before hang",
+  "passed": "NOT_CLAIMED",
+  "failed": "Harness runtime hang",
+  "notRun": "UNDETERMINED remainder",
+  "runtimeStarted": true,
+  "terminatedPids": [
+    85534,
+    85367
+  ],
+  "terminationSignal": "SIGTERM",
+  "sourceSha256": "d4b653c05afd882e26d9f7e217ae8696d318f063d50511b846b3e1eb239246c3",
+  "causeStatus": "Source-reachable captured Avalonia UI SynchronizationContext without running dispatcher: held asynchronous tests cannot resume/timeout. Pending test-only context repair; no production bug inference."
+}

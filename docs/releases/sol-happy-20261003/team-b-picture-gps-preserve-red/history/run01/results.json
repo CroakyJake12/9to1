@@ -1,0 +1,46 @@
+{
+  "scope": "Actual unchanged portable Picture owner engine \u002B real native Skia Bitmap; NOT browser or full Picture acceptance",
+  "outcomes": {
+    "canonical-open-source": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "canonical-edit-and-reopen": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "native-crop-transform-export": {
+      "Status": "PASS",
+      "Error": null
+    },
+    "metadata-privacy-export": {
+      "Status": "FAIL",
+      "Error": "System.Exception: Location preserved\n   at Program.\u003C\u003Ec__DisplayClass0_0.\u003C\u003CMain\u003E$\u003Eg__Require|2(Boolean condition, String message) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 13\n   at Program.\u003C\u003Ec__DisplayClass0_1.\u003C\u003CMain\u003E$\u003Eb__8() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 55\n   at Program.\u003C\u003Ec__DisplayClass0_0.\u003C\u003CMain\u003E$\u003Eg__Test|3(String id, Action execute) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 14"
+    },
+    "source-change-refusal": {
+      "Status": "NOT-RUN",
+      "Error": null
+    },
+    "overwrite-refusal": {
+      "Status": "NOT-RUN",
+      "Error": null
+    },
+    "invalid-crop-preserves-state": {
+      "Status": "NOT-RUN",
+      "Error": null
+    },
+    "future-schema-refusal": {
+      "Status": "NOT-RUN",
+      "Error": null
+    }
+  },
+  "assertions": 11,
+  "failure": "System.Exception: Location preserved\n   at Program.\u003C\u003Ec__DisplayClass0_0.\u003C\u003CMain\u003E$\u003Eg__Require|2(Boolean condition, String message) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 13\n   at Program.\u003C\u003Ec__DisplayClass0_1.\u003C\u003CMain\u003E$\u003Eb__8() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 55\n   at Program.\u003C\u003Ec__DisplayClass0_0.\u003C\u003CMain\u003E$\u003Eg__Test|3(String id, Action execute) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 14\n   at Program.\u003CMain\u003E$(String[] args) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs:line 53",
+  "counts": {
+    "discovered": 8,
+    "passed": 3,
+    "failed": 1,
+    "notRun": 4
+  },
+  "exit": 1
+}

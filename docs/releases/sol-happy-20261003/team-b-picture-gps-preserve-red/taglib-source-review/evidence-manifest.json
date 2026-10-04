@@ -1,0 +1,112 @@
+{
+  "scope": "Read-only package DLL/PDB/XML matching and exact upstream document closure; actual persisted source rawGPS readback only",
+  "sdkUsed": false,
+  "productionChanged": false,
+  "files": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/findings.json",
+      "bytes": 2086,
+      "sha256": "009c5543ce8bf3c4c13bb84613ed1ad7d4e4731cde34ca99cb601e25d043dca6"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/pdb-source-checksums.json",
+      "bytes": 3654,
+      "sha256": "916e10e52828c10a7568d53f8378d29b34e47010d6a1e7436d6a96e8b1b8c8e7"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/read-pdb.py",
+      "bytes": 1685,
+      "sha256": "9f7da58763f55d737409bcc79a6a364e88e6a57af6aabc2ad94745c918eeae51"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/run04-independent-numeric-source-readback.json",
+      "bytes": 951,
+      "sha256": "4a900feff58e3aed079b36b6ec07ea66cfd16936a3701234876f9fa79a63a6ba"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Image/Codec.cs",
+      "bytes": 4152,
+      "sha256": "b1b7c7a9b4814d826b5c6fff56747c1ccbb04cb342a4ca5b57a8eecd9e86382b"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Image/CombinedImageTag.cs",
+      "bytes": 15507,
+      "sha256": "4d747da31e6c61b9c2f0a7de400d82e6bc558f9960f92f1a51414c355662ab7c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Image/File.cs",
+      "bytes": 6282,
+      "sha256": "5590f7ac2bd9df710cc28486152da852c56988cd54f1a2ce7bcaaaf7dcc64fcb"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Image/ImageBlockFile.cs",
+      "bytes": 9437,
+      "sha256": "950f7e4fa1f6bd00dc3381ca03501e2e18f2636091daabc82e2679b65abd4d6d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Image/ImageOrientation.cs",
+      "bytes": 2313,
+      "sha256": "3e5cf953537352d210df69d93c1c4a8ccece75886baf18ab37318270e3bf6968"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Image/ImageTag.cs",
+      "bytes": 6489,
+      "sha256": "c7678ec4948254e9f0edc3b1dc4ea5687a84dcd3134523ef0090a7b33c7500d1"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Image/NoMetadata/File.cs",
+      "bytes": 6293,
+      "sha256": "891cb9bb4eabdb05b147aa066286d3b1fe6ced689a0aee080fb2db1ebec879f3"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Png/Codec.cs",
+      "bytes": 1713,
+      "sha256": "b99a301fae40680e10c70b2a0f0a0d8d1b84d308ab8ceddd26af4b4f01495d25"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Png/File.cs",
+      "bytes": 26599,
+      "sha256": "9c90fdb1228d704e8fc29d4ed36a11966b55a013d2b04e915634d18b2ecf9dcc"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Png/PngTag.cs",
+      "bytes": 7444,
+      "sha256": "e52f18074ac2d5a5a624689921efd37f5fa2ed0ce0ab383ec536490323cd9e04"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Xmp/XmlNodeExtensions.cs",
+      "bytes": 2845,
+      "sha256": "91cad62dcc0ecbb0f2b54742a01bf0ed420179110289025ecaad2a7ebd47d7bb"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Xmp/XmpNode.cs",
+      "bytes": 11859,
+      "sha256": "116bbc600ff7a09693096f6d28f6f75ab8df9e452f44a25362d0e8a7d244a4d5"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Xmp/XmpNodeType.cs",
+      "bytes": 1299,
+      "sha256": "f8d8fb9cad5df1cce5eba8d175c9f449236cec8780d269c35236b36d0547f3f5"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Xmp/XmpNodeVisitor.cs",
+      "bytes": 1289,
+      "sha256": "362b6fe70eedc43c25592dece33430ba46dac1f039402b893c268cb8aa208b70"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream/TaglibSharp/Xmp/XmpTag.cs",
+      "bytes": 41432,
+      "sha256": "add3d67973b78ea6de9902aeddb8e6f0526e4f9627e8624c49fa02c7fc557252"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream-source-manifest.json",
+      "bytes": 8354,
+      "sha256": "bf97311b943b4d61b51f317d2210d2e6dd697e8c178e1e10d539bf2f5cc191dc"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/taglib-source-review/upstream-tag-refs.json",
+      "bytes": 556,
+      "sha256": "26fa5656ab835d6e1d991370947ae1173e25d1d95e1c31ff71d23d4a37892264"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using Avalonia;
+using Avalonia.Headless;
+using Avalonia.Media.Imaging;
+using Avalonia.Skia;
+using HavenOS.Images;
+
+var output = Path.GetFullPath(args[0]); Directory.CreateDirectory(output);
+var cases = new[] { "canonical-open-source", "canonical-edit-and-reopen", "native-crop-transform-export", "metadata-privacy-export", "source-change-refusal", "overwrite-refusal", "invalid-crop-preserves-state", "future-schema-refusal" };
+var outcomes = cases.ToDictionary(x => x, x => new Outcome("NOT-RUN", null));
+var assertions = 0;
+var metadataReadbacks = new List<object>();
+var metadataModeOutcomes = Enum.GetValues<PictureMetadataExportMode>().ToDictionary(x => x.ToString(), x => new Outcome("NOT-RUN", null));
+void Require(bool condition, string message) { assertions++; if (!condition) throw new Exception(message); }
+void Test(string id, Action execute) { try { execute(); outcomes[id] = new("PASS", null); } catch (Exception error) { outcomes[id] = new("FAIL", error.ToString()); throw; } }
+void Refuses<T>(Action execute) where T : Exception { try { execute(); } catch (T) { assertions++; return; } throw new Exception("Expected " + typeof(T).Name); }
+string? failure = null;
+try
+{
+    AppBuilder.Configure<Application>().UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }).SetupWithoutStarting();
+    var sourcePath = Path.Combine(output, "original.png"); File.Copy(args[1], sourcePath, overwrite: false);
+    using (var file = TagLib.File.Create(sourcePath))
+    {
+        var tag = (TagLib.Png.PngTag)file.GetTag(TagLib.TagTypes.Png, true);
+        tag.Title = "Real source title"; tag.Comment = "Retained non-location comment";
+        var xmp = (TagLib.Xmp.XmpTag)file.GetTag(TagLib.TagTypes.XMP, true);
+        // Actual TagLib producer: GPS property setters produced empty XMP in preserved run03.
+        xmp.SetTextNode("http://ns.adobe.com/exif/1.0/", "GPSLatitude", "51,30N");
+        xmp.SetTextNode("http://ns.adobe.com/exif/1.0/", "GPSLongitude", "0,7.2W");
+        xmp.SetTextNode("http://ns.adobe.com/exif/1.0/", "GPSAltitude", "24/1");
+        xmp.SetTextNode("http://ns.adobe.com/exif/1.0/", "GPSAltitudeRef", "0");
+        file.Save();
+    }
+    var sourceBytes = File.ReadAllBytes(sourcePath); var engine = new PictureCropService(); var original = engine.OpenSource(sourcePath);
+    Test(cases[0], () =>
+    {
+        var rawSource = RawPngMetadata.Read(sourcePath); var coordinates = rawSource.Coordinates();
+        metadataReadbacks.Add(new { name = "source", rawSource.Gps, rawSource.Chunks, rawSource.XmpPackets, coordinates.Latitude, coordinates.Longitude, coordinates.Altitude });
+        Require(coordinates == (51.5m, -.12m, 24m), "Actual persisted source GPS exactly matches fixture before owner export, with every PNG chunk CRC checked");
+        var corruptCrc = sourceBytes.ToArray(); corruptCrc[^1] ^= 1;
+        Refuses<InvalidDataException>(() => RawPngMetadata.Read(corruptCrc));
+        Require(original.DocumentId != Guid.Empty && original.FileId is null, "Real local identity, no hosted FileId");
+        Require(original.Revision == 0 && original.CanvasWidth == 8 && original.CanvasHeight == 6 && original.Operations.Count == 0, "Canonical original geometry");
+        Require(original.SourceRevision == Convert.ToHexString(SHA256.HashData(sourceBytes)), "Actual original bytes SHA256");
+    });
+    var edited = original.Crop(1, 2, 5, 3).Rotate().Flip(true);
+    Test(cases[1], () =>
+    {
+        var reopened = PictureDocument.Deserialize(edited.Serialize());
+        Require(reopened.DocumentId == original.DocumentId && reopened.SourceRevision == original.SourceRevision && reopened.SourcePath == original.SourcePath, "Identity and original revision preserved");
+        Require(reopened.Revision == 3 && reopened.CanvasWidth == 3 && reopened.CanvasHeight == 5 && reopened.Operations.Count == 3, "Canonical crop rotate flip graph survives serialization");
+        Require(reopened.Operations[0] == new CropOperation(1, 2, 5, 3) && reopened.Operations[1] == new RotateOperation(1) && reopened.Operations[2] == new FlipOperation(true), "Exact typed operations");
+        File.WriteAllBytes(Path.Combine(output, "edited.picture.json"), reopened.Serialize());
+    });
+    Test(cases[2], () =>
+    {
+        var path = Path.Combine(output, "transformed.png"); engine.ExportPng(edited, path, PictureMetadataExportMode.RemoveAll);
+        using var bitmap = new Bitmap(path); Require(bitmap.PixelSize == new PixelSize(3, 5), "Actual decoded transformed PNG geometry");
+        var resized = edited.Resize(6, 10); engine.ExportPng(resized, Path.Combine(output, "resized.png"), PictureMetadataExportMode.RemoveAll);
+        using var result = new Bitmap(Path.Combine(output, "resized.png")); Require(result.PixelSize == new PixelSize(6, 10), "Actual decoded resized PNG geometry");
+        engine.ExportPng(original, Path.Combine(output, "alpha-roundtrip.png"), PictureMetadataExportMode.RemoveAll);
+        Require(File.ReadAllBytes(sourcePath).SequenceEqual(sourceBytes), "Native render/export never alters original bytes");
+    });
+    // Independent metadata modes and later immutable/refusal cases can execute after a retained Preserve failure.
+    try { Test(cases[3], () =>
+    {
+        var modeErrors = new List<Exception>();
+        foreach (var mode in Enum.GetValues<PictureMetadataExportMode>())
+        {
+            try
+            {
+            var path = Path.Combine(output, mode + ".png"); engine.ExportPng(original, path, mode);
+            var raw = RawPngMetadata.Read(path);
+            using var file = TagLib.File.Create(path);
+            if (mode == PictureMetadataExportMode.RemoveAll)
+            {
+                Require(file.GetTag(TagLib.TagTypes.Png, false) is null, "RemoveAll removes PNG tags");
+                Require(raw.XmpPackets == 0 && raw.Gps.Count == 0 && !raw.Chunks.Any(x => x is "tEXt" or "zTXt" or "iTXt" or "eXIf"), "RemoveAll removes raw metadata chunks");
+            }
+            else
+            {
+                var tag = (TagLib.Png.PngTag)file.GetTag(TagLib.TagTypes.Png, false);
+                Require(tag.Title == "Real source title" && tag.Comment == "Retained non-location comment", "Non-location metadata retained");
+                metadataReadbacks.Add(new { name = mode.ToString(), raw.Gps, raw.Chunks, raw.XmpPackets });
+                if (mode == PictureMetadataExportMode.RemoveLocation) Require(raw.Gps.Count == 0 && !raw.Chunks.Contains("eXIf"), "All raw EXIF-namespace GPS fields removed, no uninspected binary EXIF retained");
+                else Require(raw.Coordinates() == (51.5m, -.12m, 24m), "Location preserved exactly in actual persisted XMP");
+            }
+            metadataModeOutcomes[mode.ToString()] = new("PASS", null);
+            }
+            catch (Exception error) { modeErrors.Add(error); metadataModeOutcomes[mode.ToString()] = new("FAIL", error.ToString()); }
+        }
+        Require(File.ReadAllBytes(sourcePath).SequenceEqual(sourceBytes), "Metadata export never changes source");
+        if (modeErrors.Count != 0) throw new AggregateException("Retained strict metadata mode failures.", modeErrors);
+    }); } catch (Exception error) { failure = error.ToString(); Environment.ExitCode = 1; }
+    Test(cases[4], () =>
+    {
+        var changed = sourceBytes.ToArray(); changed[^1] ^= 1; File.WriteAllBytes(sourcePath, changed);
+        var destination = Path.Combine(output, "must-not-exist.png");
+        try { Refuses<InvalidDataException>(() => engine.ExportPng(original, destination)); Require(!File.Exists(destination), "Changed source creates no partial export"); }
+        finally { File.WriteAllBytes(sourcePath, sourceBytes); }
+    });
+    Test(cases[5], () =>
+    {
+        var destination = Path.Combine(output, "transformed.png"); var prior = File.ReadAllBytes(destination);
+        Refuses<IOException>(() => engine.ExportPng(edited, destination)); Refuses<IOException>(() => engine.ExportPng(edited, sourcePath));
+        Require(File.ReadAllBytes(destination).SequenceEqual(prior) && File.ReadAllBytes(sourcePath).SequenceEqual(sourceBytes), "Existing output and source preserved");
+    });
+    Test(cases[6], () => { var before = edited.Serialize(); Refuses<ArgumentOutOfRangeException>(() => edited.Crop(2, 0, 2, 1)); Require(edited.Serialize().SequenceEqual(before), "Invalid crop immutable prior revision"); });
+    Test(cases[7], () => { var text = System.Text.Encoding.UTF8.GetString(edited.Serialize()).Replace("\"schemaVersion\":1", "\"schemaVersion\":99", StringComparison.Ordinal); Refuses<InvalidDataException>(() => PictureDocument.Deserialize(System.Text.Encoding.UTF8.GetBytes(text))); });
+}
+catch (Exception error) { failure = error.ToString(); Environment.ExitCode = 1; }
+finally
+{
+    var report = new { scope = "Actual unchanged portable Picture owner engine + real native Skia Bitmap; NOT browser or full Picture acceptance", outcomes, assertions, metadataReadbacks, metadataModeOutcomes, failure,
+        counts = new { discovered = cases.Length, passed = outcomes.Count(x => x.Value.Status == "PASS"), failed = outcomes.Count(x => x.Value.Status == "FAIL"), notRun = outcomes.Count(x => x.Value.Status == "NOT-RUN") }, exit = Environment.ExitCode };
+    File.WriteAllText(Path.Combine(output, "results.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine(JsonSerializer.Serialize(report));
+}
+record Outcome(string Status, string? Error);

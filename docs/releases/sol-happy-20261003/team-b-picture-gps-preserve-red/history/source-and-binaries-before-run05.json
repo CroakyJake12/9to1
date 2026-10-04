@@ -1,0 +1,117 @@
+[
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs",
+    "bytes": 8798,
+    "sha256": "be6b940b8311368d2960381011fd2bc2fe8ffe1436bdb444032af2ee94f44f7e"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/RawPngMetadata.cs",
+    "bytes": 5915,
+    "sha256": "9730a636de4a902d4ca554b02f953a96502efe6cf65224b703501cf93107c337"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/PictureEngine.Tests.csproj",
+    "bytes": 690,
+    "sha256": "b2b4ffe9a2535e6a1862189143369059c0ae7f7dcbe0b8db7395fb40e1db484d"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/rgba-source.png",
+    "bytes": 210,
+    "sha256": "b8271f55d9f2eacecacd482c1497892615f8631df0a5aaf2586ea2106c76a50c"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj",
+    "bytes": 2034,
+    "sha256": "9d4bf6fc0d7c2698f171d3b8e45b7f1aed15d943eab6b637befc86b54cd8e4d3"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/PictureDocument.cs",
+    "bytes": 8282,
+    "sha256": "4ebc98a8b0da06c1b798e82b2a9f6cb06c028b854c4a4a5b9e0151d2a7aeaf1e"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/PictureCropService.cs",
+    "bytes": 9397,
+    "sha256": "efb2f1e0bf47c10fed6a27088e82ccd9949f4ae49aa706ddf7ef872d7bfe8a6b"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/ImageViewportState.cs",
+    "bytes": 2284,
+    "sha256": "cc57ffa8f1d6280cb7ce5eb0679f4dd9e7e79f7e800cb73c00b95d085d13f6a9"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Fonts.Inter.dll",
+    "bytes": 1897472,
+    "sha256": "911c8db35f1c69208c57175cb1f4d7067e06c5623318f9e14798fe77e4ac48b5"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Headless.dll",
+    "bytes": 71168,
+    "sha256": "e742f1579211f71d29a00a7498d059f5540803ce41d1e8883df05f831360afb9"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/SkiaSharp.dll",
+    "bytes": 490528,
+    "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/NineToOne.Picture.BrowserEngine.dll",
+    "bytes": 34304,
+    "sha256": "8d8056bf21a82d881054e6fb835f66c4b63c95fe03e40bb5f92b26cc5173bc92"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/PictureEngine.Tests.dll",
+    "bytes": 23552,
+    "sha256": "32e1f97936b64a10fb0434690fe8fd372eb45e214724b0ba42a99823a7534a8f"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/TagLibSharp.dll",
+    "bytes": 500224,
+    "sha256": "dad93b152d55cf6a58b2037bcf9dd34b45d87761fe5ed61a232b3d4641d2a5d3"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/HarfBuzzSharp.dll",
+    "bytes": 122400,
+    "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Base.dll",
+    "bytes": 2259456,
+    "sha256": "3be74f5680118c75f0b4fd0ef4049d2f062bfff5c767be01cc38a1dbdfdd4c70"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.HarfBuzz.dll",
+    "bytes": 22016,
+    "sha256": "aec51dfff5f305d22fa2b16d01be0207c00297060d5c71d09a93ba2be6c75983"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Skia.dll",
+    "bytes": 123392,
+    "sha256": "71a014d35d4929a5f4cc96bdd6bcb5ca4c421225222a2c700a49a04b1df9410a"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Controls.dll",
+    "bytes": 1299456,
+    "sha256": "d76cb3a07f1df6db342a3a5e9ecc979c59582e02783d6a4d7197210da7dd8d8e"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.OpenGL.dll",
+    "bytes": 116736,
+    "sha256": "b18f97d6c36a96f23b72c77b1e5f3e114359aba21face4d038b81d76e04538e9"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Vulkan.dll",
+    "bytes": 190976,
+    "sha256": "569118aea996c57cda4662e5d62e35025840d974f27264556eed12f598b13956"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Remote.Protocol.dll",
+    "bytes": 75776,
+    "sha256": "4ec077f3234f40317721ed4d9030e9267cca27542805e55ce89a66c4bdaa20c4"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/bin/Release/net10.0/Avalonia.Metal.dll",
+    "bytes": 15360,
+    "sha256": "2b7640c33ac85fb32ac4d4c3db7ec588471af4471019cd3d13f0b8b4abe40d40"
+  }
+]

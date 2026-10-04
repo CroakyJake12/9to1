@@ -1,0 +1,25 @@
+{
+  "scope": "Retains strict metadata failures per mode while executing independent actual metadata/refusal/schema cases; no expected values changed. Source captured while run06 build executes, not relabeled as prelaunch capture. Owner hashes remain run05 before/after + build hard gates.",
+  "files": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs",
+      "bytes": 9581,
+      "sha256": "ab3253be6d513997908874ab6da79de570d565c5567f4180c8180780da6459b2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/RawPngMetadata.cs",
+      "bytes": 5915,
+      "sha256": "9730a636de4a902d4ca554b02f953a96502efe6cf65224b703501cf93107c337"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/PictureEngine.Tests.csproj",
+      "bytes": 690,
+      "sha256": "b2b4ffe9a2535e6a1862189143369059c0ae7f7dcbe0b8db7395fb40e1db484d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/rgba-source.png",
+      "bytes": 210,
+      "sha256": "b8271f55d9f2eacecacd482c1497892615f8631df0a5aaf2586ea2106c76a50c"
+    }
+  ]
+}

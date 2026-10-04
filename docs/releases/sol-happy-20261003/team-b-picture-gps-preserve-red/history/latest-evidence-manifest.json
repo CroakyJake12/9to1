@@ -1,0 +1,60 @@
+{
+  "scope": "Actual unchanged Picture owner source/native fixture prerequisite evidence; no browser, completed metadata export, or close acceptance",
+  "files": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run02.log",
+      "bytes": 1153,
+      "sha256": "1aebebee7cec8ca3e471f163f7e72f0135e06197930f8020ca64a4441f16a1b0"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run02-compile-results.json",
+      "bytes": 336,
+      "sha256": "8e9854ed3d2979fa325c558025779380f4db66bdc84ecc40dbffd5c5a6db4f7c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run03.log",
+      "bytes": 2398,
+      "sha256": "e9e8d9306c2fb486cae8866846c4e6d36c8181efd6ffd95a71dab36cbb8079e0"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run03/results.json",
+      "bytes": 2717,
+      "sha256": "3d71d91997496fe7b65a33174cb5a13c81652f61c048beaa90452da2c9c27a30"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run03/source-metadata-chunks.json",
+      "bytes": 810,
+      "sha256": "27c38581e18397e0eb009b07585517c79e09c04eb3aed6c4d9d42e3c1dba8961"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run04.log",
+      "bytes": 2398,
+      "sha256": "224d3ecbca6f01bf41b433ad9b555850d4d90014d21e906b1f0990c75913eb80"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run04/results.json",
+      "bytes": 2717,
+      "sha256": "f6d9e68c0872fb7bdb569af22bd35485a578dda2cdf91bb5a435986962b0dcb6"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run04/source-metadata-chunks.json",
+      "bytes": 964,
+      "sha256": "f2d74b738419ad7ad17fdf5e67bbbce4b60c1dafd9586bcff1c9c276f1b5f969"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run04/process-receipt.json",
+      "bytes": 593,
+      "sha256": "94f3af85d04a8781eb6c2466825c817ee3c62fa836e96c24e291d093e58678aa"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/source-manifest-before-run04.json",
+      "bytes": 2239,
+      "sha256": "806e78e7b15434a1da7928f0fa0124666fe42fe8026166109ea8ff2c969852f9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/source-manifest-after-run04.json",
+      "bytes": 2272,
+      "sha256": "a3192aace8cede8f6aad78a1f09b7625db06f769868236ca7f77d540a1b6846d"
+    }
+  ]
+}

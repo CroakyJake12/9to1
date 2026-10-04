@@ -1,0 +1,16 @@
+{
+  "processExit": 1,
+  "classification": "ACTUAL_NATIVE_FIXTURE_SOURCE_PREFLIGHT_RED",
+  "engineDiscovered": 8,
+  "enginePassed": 0,
+  "engineFailed": 1,
+  "engineNotRun": 7,
+  "pixelStatus": "NOT-RUN",
+  "closeStatus": "NOT-RUN",
+  "environment": {
+    "DOTNET_CLI_HOME": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/team-b-evidence/sol-happy-20261003/b3/nuget",
+    "RestoreFallbackFolders": "/workspace/.nuget/packages",
+    "XDG_CACHE_HOME": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/xdg-cache"
+  }
+}

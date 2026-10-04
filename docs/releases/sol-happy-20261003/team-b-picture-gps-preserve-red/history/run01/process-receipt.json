@@ -1,0 +1,10 @@
+{
+  "processExit": 1,
+  "engineDiscovered": 8,
+  "enginePassed": 3,
+  "engineFailed": 1,
+  "engineNotRun": 4,
+  "pixelVerificationExit": 0,
+  "pixelAssertions": 67,
+  "classification": "ACTUAL_OWNER_NATIVE_SUBSET_NOT_BROWSER"
+}

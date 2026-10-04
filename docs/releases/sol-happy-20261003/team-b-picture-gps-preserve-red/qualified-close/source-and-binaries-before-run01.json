@@ -1,0 +1,47 @@
+[
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-close-tests/Program.cs",
+    "bytes": 10640,
+    "sha256": "d4b653c05afd882e26d9f7e217ae8696d318f063d50511b846b3e1eb239246c3"
+  },
+  {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-close-tests/PictureClose.Tests.csproj",
+    "bytes": 1333,
+    "sha256": "6ef6ddd62a5e66a74357f6a9efcd45924bc3053c9ab64e71983acbae5fc83279"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/apps/Web/Picture/PictureBrowserSession.cs",
+    "bytes": 25801,
+    "sha256": "24933899f9ea2f05ff0266588a4f87be183cb4441bce1587c7925cab1de63edb"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/apps/Web/Picture/PictureBrowserFeature.cs",
+    "bytes": 5561,
+    "sha256": "4709aafa462df1127ecdeb3aac9c61efafeabde2f107501d4873898f4b973451"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/apps/Web/Media/IPictureBrowserMedia.cs",
+    "bytes": 353,
+    "sha256": "68c8b4a1131ce91bfc3babe74b6d826a6176d13787beacaba945ad45e6bf7690"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Runtime/ICuiWritableBindingContext.cs",
+    "bytes": 348,
+    "sha256": "792aaed32f7d12a896bd6d1e7b505489d34d63e9be5ef3b7526489c37850cc3d"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/PictureDocument.cs",
+    "bytes": 8282,
+    "sha256": "4ebc98a8b0da06c1b798e82b2a9f6cb06c028b854c4a4a5b9e0151d2a7aeaf1e"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/PictureCropService.cs",
+    "bytes": 9397,
+    "sha256": "efb2f1e0bf47c10fed6a27088e82ccd9949f4ae49aa706ddf7ef872d7bfe8a6b"
+  },
+  {
+    "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/ImageViewportState.cs",
+    "bytes": 2284,
+    "sha256": "cc57ffa8f1d6280cb7ce5eb0679f4dd9e7e79f7e800cb73c00b95d085d13f6a9"
+  }
+]

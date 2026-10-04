@@ -1,0 +1,53 @@
+{
+  "scope": "Authorized test-only raw PNG CRC + namespace-aware exact decimal GPS oracle correction; actual unchanged canonical owner engine. SDK/browser execution NOT-RUN. Prior run01-04 preserved.",
+  "state": "AUTHORED-NOT-RUN",
+  "expectedGPS": {
+    "latitude": "51.5",
+    "longitude": "-0.12",
+    "altitude": "24",
+    "tolerance": null
+  },
+  "sourceBasis": "../taglib-source-review/findings.json",
+  "files": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/Program.cs",
+      "bytes": 8798,
+      "sha256": "be6b940b8311368d2960381011fd2bc2fe8ffe1436bdb444032af2ee94f44f7e"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/RawPngMetadata.cs",
+      "bytes": 5915,
+      "sha256": "9730a636de4a902d4ca554b02f953a96502efe6cf65224b703501cf93107c337"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/PictureEngine.Tests.csproj",
+      "bytes": 690,
+      "sha256": "b2b4ffe9a2535e6a1862189143369059c0ae7f7dcbe0b8db7395fb40e1db484d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/rgba-source.png",
+      "bytes": 210,
+      "sha256": "b8271f55d9f2eacecacd482c1497892615f8631df0a5aaf2586ea2106c76a50c"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj",
+      "bytes": 2034,
+      "sha256": "9d4bf6fc0d7c2698f171d3b8e45b7f1aed15d943eab6b637befc86b54cd8e4d3"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/PictureDocument.cs",
+      "bytes": 8282,
+      "sha256": "4ebc98a8b0da06c1b798e82b2a9f6cb06c028b854c4a4a5b9e0151d2a7aeaf1e"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/PictureCropService.cs",
+      "bytes": 9397,
+      "sha256": "efb2f1e0bf47c10fed6a27088e82ccd9949f4ae49aa706ddf7ef872d7bfe8a6b"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/ImageViewportState.cs",
+      "bytes": 2284,
+      "sha256": "cc57ffa8f1d6280cb7ce5eb0679f4dd9e7e79f7e800cb73c00b95d085d13f6a9"
+    }
+  ]
+}

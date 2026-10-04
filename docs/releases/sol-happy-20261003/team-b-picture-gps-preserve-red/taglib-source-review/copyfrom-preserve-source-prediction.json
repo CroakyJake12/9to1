@@ -1,0 +1,33 @@
+{
+  "scope": "Read-only source reachability prediction only; corrected owner export has not executed",
+  "actualSourceGPSValidatedExact": {
+    "latitude": "51.5",
+    "longitude": "-.12",
+    "altitude": "24",
+    "receipt": "run04-independent-numeric-source-readback.json"
+  },
+  "sourceClosure": [
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/Picture/PictureCropService.cs",
+      "sha256": "efb2f1e0bf47c10fed6a27088e82ccd9949f4ae49aa706ddf7ef872d7bfe8a6b",
+      "line": 83,
+      "operation": "renderedImage.CopyFrom(sourceImage)"
+    },
+    {
+      "path": "upstream/TaglibSharp/Image/File.cs",
+      "line": 208,
+      "operation": "CopyFrom uses reflection over writable ImageTag properties and from_tag typed property values; no rawXmpTag NodeTree clone."
+    },
+    {
+      "path": "upstream/TaglibSharp/Xmp/XmpTag.cs",
+      "lines": [
+        1196,
+        1209,
+        1222
+      ],
+      "operation": "Typed GPS getters always null; setters no-op."
+    }
+  ],
+  "prediction": "Strict source-qualified rawXMP Preserve test may fail because original GPS nodes are not transferred. Confirm actual persisted export before product defect declaration; no source patch authorized or performed.",
+  "nextProcedure": "picture-engine-tests authored-source-manifest-05-raw-xmp.json, runtime NOT-RUN"
+}

@@ -1,0 +1,440 @@
+{
+  "scope": "Controlled lifecycle only; actual Picture session, unchanged canonical owner codec and real native renderer. No browser/IndexedDB/provider/backend acceptance.",
+  "discovered": 8,
+  "executed": 8,
+  "passed": 8,
+  "failed": 0,
+  "notRun": [],
+  "startupFailure": null,
+  "assertions": 43,
+  "cases": [
+    {
+      "Name": "import-refusal-prepare-retains-canonical-draft-and-original",
+      "Status": "PASS",
+      "Assertions": 7,
+      "Error": null
+    },
+    {
+      "Name": "missing-postcommit-receipt-preserves-dirty-without-new-revision",
+      "Status": "PASS",
+      "Assertions": 8,
+      "Error": null
+    },
+    {
+      "Name": "busy-prepare-retains-real-native-owner-edit",
+      "Status": "PASS",
+      "Assertions": 6,
+      "Error": null
+    },
+    {
+      "Name": "late-commit-after-dispose-keeps-subsequent-dirty-marker",
+      "Status": "PASS",
+      "Assertions": 4,
+      "Error": null
+    },
+    {
+      "Name": "release-fault-clears-document-source-history-and-bindings",
+      "Status": "PASS",
+      "Assertions": 2,
+      "Error": null
+    },
+    {
+      "Name": "acknowledged-edit-survives-list-and-observer-faults",
+      "Status": "PASS",
+      "Assertions": 5,
+      "Error": null
+    },
+    {
+      "Name": "changed-original-failed-prepare-retains-draft-and-last-package",
+      "Status": "PASS",
+      "Assertions": 7,
+      "Error": null
+    },
+    {
+      "Name": "clean-close-keeps-real-canonical-package-and-original-bytes",
+      "Status": "PASS",
+      "Assertions": 4,
+      "Error": null
+    }
+  ],
+  "receipts": [
+    {
+      "name": "import-refusal",
+      "documentId": "c0c2003f-6fbc-42aa-89ab-c9db7c56781d",
+      "revision": 0,
+      "IsDirty": false,
+      "IsBusy": false,
+      "ErrorCode": null,
+      "Status": "Saved in this browser \u00B7 revision 0",
+      "canonicalJson": "{\u0022documentId\u0022:\u0022c0c2003f-6fbc-42aa-89ab-c9db7c56781d\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002261311f21611b4b6e8aabc73a750885fb\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/61311f21611b4b6e8aabc73a750885fb.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+      "CommitCalls": 3,
+      "DirtyWrites": 2,
+      "attempts": [
+        {
+          "documentId": "c0c2003f-6fbc-42aa-89ab-c9db7c56781d",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022c0c2003f-6fbc-42aa-89ab-c9db7c56781d\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002261311f21611b4b6e8aabc73a750885fb\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/61311f21611b4b6e8aabc73a750885fb.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "c0c2003f-6fbc-42aa-89ab-c9db7c56781d",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022c0c2003f-6fbc-42aa-89ab-c9db7c56781d\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002261311f21611b4b6e8aabc73a750885fb\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/61311f21611b4b6e8aabc73a750885fb.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "c0c2003f-6fbc-42aa-89ab-c9db7c56781d",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022c0c2003f-6fbc-42aa-89ab-c9db7c56781d\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002261311f21611b4b6e8aabc73a750885fb\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/61311f21611b4b6e8aabc73a750885fb.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "c0c2003f-6fbc-42aa-89ab-c9db7c56781d",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022c0c2003f-6fbc-42aa-89ab-c9db7c56781d\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002261311f21611b4b6e8aabc73a750885fb\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/61311f21611b4b6e8aabc73a750885fb.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        }
+      ]
+    },
+    {
+      "name": "lost-ack",
+      "documentId": "6edd73f3-3e2d-4a2f-b23a-378d4a7339e4",
+      "revision": 1,
+      "IsDirty": true,
+      "IsBusy": false,
+      "ErrorCode": "RevisionConflict",
+      "Status": "Controlled lifecycle boundary RevisionConflict",
+      "canonicalJson": "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+      "CommitCalls": 3,
+      "DirtyWrites": 3,
+      "attempts": [
+        {
+          "documentId": "6edd73f3-3e2d-4a2f-b23a-378d4a7339e4",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "6edd73f3-3e2d-4a2f-b23a-378d4a7339e4",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        },
+        {
+          "documentId": "6edd73f3-3e2d-4a2f-b23a-378d4a7339e4",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "6edd73f3-3e2d-4a2f-b23a-378d4a7339e4",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u00226edd73f3-3e2d-4a2f-b23a-378d4a7339e4\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002253b6be83e9e44e2ea2617f103e49b422\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/53b6be83e9e44e2ea2617f103e49b422.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ]
+    },
+    {
+      "name": "busy",
+      "documentId": "4a220b6e-7e06-4776-949d-ba1658b5dd16",
+      "revision": 1,
+      "IsDirty": false,
+      "IsBusy": false,
+      "ErrorCode": null,
+      "Status": "Saved in this browser \u00B7 revision 1",
+      "canonicalJson": "{\u0022documentId\u0022:\u00224a220b6e-7e06-4776-949d-ba1658b5dd16\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002203771069e67c4a3fa5bf115b15e51f81\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/03771069e67c4a3fa5bf115b15e51f81.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+      "CommitCalls": 2,
+      "DirtyWrites": 4,
+      "attempts": [
+        {
+          "documentId": "4a220b6e-7e06-4776-949d-ba1658b5dd16",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u00224a220b6e-7e06-4776-949d-ba1658b5dd16\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002203771069e67c4a3fa5bf115b15e51f81\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/03771069e67c4a3fa5bf115b15e51f81.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "4a220b6e-7e06-4776-949d-ba1658b5dd16",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u00224a220b6e-7e06-4776-949d-ba1658b5dd16\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002203771069e67c4a3fa5bf115b15e51f81\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/03771069e67c4a3fa5bf115b15e51f81.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u00224a220b6e-7e06-4776-949d-ba1658b5dd16\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002203771069e67c4a3fa5bf115b15e51f81\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/03771069e67c4a3fa5bf115b15e51f81.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "4a220b6e-7e06-4776-949d-ba1658b5dd16",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u00224a220b6e-7e06-4776-949d-ba1658b5dd16\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002203771069e67c4a3fa5bf115b15e51f81\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/03771069e67c4a3fa5bf115b15e51f81.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u00224a220b6e-7e06-4776-949d-ba1658b5dd16\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002203771069e67c4a3fa5bf115b15e51f81\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/03771069e67c4a3fa5bf115b15e51f81.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ]
+    },
+    {
+      "name": "late-commit",
+      "documentId": null,
+      "revision": null,
+      "IsDirty": false,
+      "IsBusy": false,
+      "ErrorCode": null,
+      "Status": "Saved in this browser \u00B7 revision 0",
+      "canonicalJson": null,
+      "CommitCalls": 2,
+      "DirtyWrites": 4,
+      "attempts": [
+        {
+          "documentId": "36abdbf2-9d21-472a-97e9-8fb3bd625cc6",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u002236abdbf2-9d21-472a-97e9-8fb3bd625cc6\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022980df97fb8ac47f993ab42cf703f10a3\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/980df97fb8ac47f993ab42cf703f10a3.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "36abdbf2-9d21-472a-97e9-8fb3bd625cc6",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u002236abdbf2-9d21-472a-97e9-8fb3bd625cc6\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022980df97fb8ac47f993ab42cf703f10a3\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/980df97fb8ac47f993ab42cf703f10a3.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u002236abdbf2-9d21-472a-97e9-8fb3bd625cc6\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022980df97fb8ac47f993ab42cf703f10a3\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/980df97fb8ac47f993ab42cf703f10a3.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "36abdbf2-9d21-472a-97e9-8fb3bd625cc6",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u002236abdbf2-9d21-472a-97e9-8fb3bd625cc6\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022980df97fb8ac47f993ab42cf703f10a3\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/980df97fb8ac47f993ab42cf703f10a3.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u002236abdbf2-9d21-472a-97e9-8fb3bd625cc6\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022980df97fb8ac47f993ab42cf703f10a3\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/980df97fb8ac47f993ab42cf703f10a3.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ]
+    },
+    {
+      "name": "release-fault",
+      "documentId": null,
+      "revision": null,
+      "IsDirty": false,
+      "IsBusy": false,
+      "ErrorCode": null,
+      "Status": "Saved in this browser \u00B7 revision 0",
+      "canonicalJson": null,
+      "CommitCalls": 1,
+      "DirtyWrites": 2,
+      "attempts": [
+        {
+          "documentId": "ba7a5e21-4a1b-4158-a5e9-98069e04a31d",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022ba7a5e21-4a1b-4158-a5e9-98069e04a31d\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022498359b1a62d4b74b4f27d89fc7af9e3\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/498359b1a62d4b74b4f27d89fc7af9e3.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "ba7a5e21-4a1b-4158-a5e9-98069e04a31d",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022ba7a5e21-4a1b-4158-a5e9-98069e04a31d\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022498359b1a62d4b74b4f27d89fc7af9e3\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/498359b1a62d4b74b4f27d89fc7af9e3.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        }
+      ]
+    },
+    {
+      "name": "observer-list",
+      "documentId": "ee13df09-858b-468b-8b68-a40bac3d4e78",
+      "revision": 1,
+      "IsDirty": false,
+      "IsBusy": false,
+      "ErrorCode": null,
+      "Status": "Saved in this browser \u00B7 revision 1; the document list did not refresh. The edit was saved.",
+      "canonicalJson": "{\u0022documentId\u0022:\u0022ee13df09-858b-468b-8b68-a40bac3d4e78\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022fc973620e80a4bcc8de152b0eff4172f\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/fc973620e80a4bcc8de152b0eff4172f.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+      "CommitCalls": 2,
+      "DirtyWrites": 4,
+      "attempts": [
+        {
+          "documentId": "ee13df09-858b-468b-8b68-a40bac3d4e78",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022ee13df09-858b-468b-8b68-a40bac3d4e78\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022fc973620e80a4bcc8de152b0eff4172f\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/fc973620e80a4bcc8de152b0eff4172f.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "ee13df09-858b-468b-8b68-a40bac3d4e78",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u0022ee13df09-858b-468b-8b68-a40bac3d4e78\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022fc973620e80a4bcc8de152b0eff4172f\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/fc973620e80a4bcc8de152b0eff4172f.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u0022ee13df09-858b-468b-8b68-a40bac3d4e78\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022fc973620e80a4bcc8de152b0eff4172f\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/fc973620e80a4bcc8de152b0eff4172f.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "ee13df09-858b-468b-8b68-a40bac3d4e78",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u0022ee13df09-858b-468b-8b68-a40bac3d4e78\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022fc973620e80a4bcc8de152b0eff4172f\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/fc973620e80a4bcc8de152b0eff4172f.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u0022ee13df09-858b-468b-8b68-a40bac3d4e78\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022fc973620e80a4bcc8de152b0eff4172f\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/fc973620e80a4bcc8de152b0eff4172f.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ]
+    },
+    {
+      "name": "source-changed",
+      "documentId": "9b54c1e5-dda7-460d-ab94-40e5ce17f55e",
+      "revision": 1,
+      "IsDirty": true,
+      "IsBusy": false,
+      "ErrorCode": "SourceChanged",
+      "Status": "The original PNG source changed. Reopen the intact saved copy before editing.",
+      "canonicalJson": "{\u0022documentId\u0022:\u00229b54c1e5-dda7-460d-ab94-40e5ce17f55e\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002204113d7977714e4c84725933b8fd1c7b\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/04113d7977714e4c84725933b8fd1c7b.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+      "CommitCalls": 2,
+      "DirtyWrites": 3,
+      "attempts": [
+        {
+          "documentId": "9b54c1e5-dda7-460d-ab94-40e5ce17f55e",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u00229b54c1e5-dda7-460d-ab94-40e5ce17f55e\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002204113d7977714e4c84725933b8fd1c7b\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/04113d7977714e4c84725933b8fd1c7b.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "9b54c1e5-dda7-460d-ab94-40e5ce17f55e",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u00229b54c1e5-dda7-460d-ab94-40e5ce17f55e\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002204113d7977714e4c84725933b8fd1c7b\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/04113d7977714e4c84725933b8fd1c7b.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u00229b54c1e5-dda7-460d-ab94-40e5ce17f55e\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002204113d7977714e4c84725933b8fd1c7b\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/04113d7977714e4c84725933b8fd1c7b.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "9b54c1e5-dda7-460d-ab94-40e5ce17f55e",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u00229b54c1e5-dda7-460d-ab94-40e5ce17f55e\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u002204113d7977714e4c84725933b8fd1c7b\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/04113d7977714e4c84725933b8fd1c7b.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        }
+      ]
+    },
+    {
+      "name": "close",
+      "documentId": null,
+      "revision": null,
+      "IsDirty": false,
+      "IsBusy": false,
+      "ErrorCode": null,
+      "Status": "Closed. The saved editable document remains in this browser.",
+      "canonicalJson": null,
+      "CommitCalls": 2,
+      "DirtyWrites": 5,
+      "attempts": [
+        {
+          "documentId": "e359c02f-b663-4285-9f5c-c57d54c74079",
+          "name": "Actual native PNG fixture",
+          "revision": 0,
+          "documentJson": "{\u0022documentId\u0022:\u0022e359c02f-b663-4285-9f5c-c57d54c74079\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022e2d3f2f31f9649fe986e8a7c233c2e83\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/e2d3f2f31f9649fe986e8a7c233c2e83.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [],
+          "redo": []
+        },
+        {
+          "documentId": "e359c02f-b663-4285-9f5c-c57d54c74079",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u0022e359c02f-b663-4285-9f5c-c57d54c74079\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022e2d3f2f31f9649fe986e8a7c233c2e83\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/e2d3f2f31f9649fe986e8a7c233c2e83.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u0022e359c02f-b663-4285-9f5c-c57d54c74079\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022e2d3f2f31f9649fe986e8a7c233c2e83\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/e2d3f2f31f9649fe986e8a7c233c2e83.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ],
+      "acknowledged": [
+        {
+          "documentId": "e359c02f-b663-4285-9f5c-c57d54c74079",
+          "name": "Actual native PNG fixture",
+          "revision": 1,
+          "documentJson": "{\u0022documentId\u0022:\u0022e359c02f-b663-4285-9f5c-c57d54c74079\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022e2d3f2f31f9649fe986e8a7c233c2e83\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/e2d3f2f31f9649fe986e8a7c233c2e83.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:6,\u0022canvasHeight\u0022:8,\u0022operations\u0022:[{\u0022type\u0022:\u0022rotate\u0022,\u0022clockwiseQuarterTurns\u0022:1}],\u0022revision\u0022:1}",
+          "sourceBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD\u002BBd/7AAAAAXNSR0IArs4c6QAAAIxJREFUeJwNyiEBRCEQRdFpsA1GY36DaYBBTwMaPLnuN0BjtgEh0BS6y9HH7HL7EOakPciCYZVlybGOWfngxb9RHrIEKpVRklU6p\u002BiG5nh7iBZkq6glo3VWE6e9N\u002BjBFYQqqUTqDImll6Nxwwx8VmImOTuaYsyXNQdn/m7YFd9J7E5uof0y9mDtH2cv/hn/ZaNNKb65AAAAAElFTkSuQmCC",
+          "undo": [
+            "{\u0022documentId\u0022:\u0022e359c02f-b663-4285-9f5c-c57d54c74079\u0022,\u0022schemaVersion\u0022:1,\u0022displayName\u0022:\u0022e2d3f2f31f9649fe986e8a7c233c2e83\u0022,\u0022fileId\u0022:null,\u0022sourcePath\u0022:\u0022/tmp/9to1-picture-local/sources/e2d3f2f31f9649fe986e8a7c233c2e83.png\u0022,\u0022sourceRevision\u0022:\u0022B8271F55D9F2EACECACD482C1497892615F8631DF0A5AAF2586EA2106C76A50C\u0022,\u0022canvasWidth\u0022:8,\u0022canvasHeight\u0022:6,\u0022operations\u0022:[],\u0022revision\u0022:0}"
+          ],
+          "redo": []
+        }
+      ]
+    }
+  ],
+  "exitCode": 0
+}

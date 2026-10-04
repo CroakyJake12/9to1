@@ -1,0 +1,5 @@
+/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/source-custody/6f9245bb960bf3b6b826c6c1dc3f9e9554505f6104f0253e9ec05abf58c2d39f.cs(95,8): error CS0101: The namespace '<global namespace>' already contains a definition for 'Outcome' [/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/PictureEngine.Tests.csproj]
+/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/source-custody/6f9245bb960bf3b6b826c6c1dc3f9e9554505f6104f0253e9ec05abf58c2d39f.cs(9,1): error CS8802: Only one compilation unit can have top-level statements. [/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/PictureEngine.Tests.csproj]
+/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/source-custody/6f9245bb960bf3b6b826c6c1dc3f9e9554505f6104f0253e9ec05abf58c2d39f.cs(95,15): error CS8863: Only a single partial type declaration may have a parameter list [/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/PictureEngine.Tests.csproj]
+
+The build failed. Fix the build errors and run again.

@@ -1,0 +1,155 @@
+{
+  "commit": "b5ae84f2e84087bf160bb0471420200dd2b5d809",
+  "files": [
+    {
+      "path": "TaglibSharp/Image/Codec.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Image/Codec.cs",
+      "bytes": 4152,
+      "sha256": "b1b7c7a9b4814d826b5c6fff56747c1ccbb04cb342a4ca5b57a8eecd9e86382b",
+      "pdbSha256": "e0d36df14bcef73fd6c37c1f1d3973fce8b3cb12212c70f5ef629f79962381e4",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "e0d36df14bcef73fd6c37c1f1d3973fce8b3cb12212c70f5ef629f79962381e4",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Image/CombinedImageTag.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Image/CombinedImageTag.cs",
+      "bytes": 15507,
+      "sha256": "4d747da31e6c61b9c2f0a7de400d82e6bc558f9960f92f1a51414c355662ab7c",
+      "pdbSha256": "a7d13176ddc50705cdba2403c65bb6ac7a28d4884fb43a28fa59b8c2314e700c",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "a7d13176ddc50705cdba2403c65bb6ac7a28d4884fb43a28fa59b8c2314e700c",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Image/File.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Image/File.cs",
+      "bytes": 6282,
+      "sha256": "5590f7ac2bd9df710cc28486152da852c56988cd54f1a2ce7bcaaaf7dcc64fcb",
+      "pdbSha256": "015f8c7e3ac75c8a8e71470d5021f8edf1e7e42b218b0c5f0765f89532e1421c",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "015f8c7e3ac75c8a8e71470d5021f8edf1e7e42b218b0c5f0765f89532e1421c",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Image/ImageBlockFile.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Image/ImageBlockFile.cs",
+      "bytes": 9437,
+      "sha256": "950f7e4fa1f6bd00dc3381ca03501e2e18f2636091daabc82e2679b65abd4d6d",
+      "pdbSha256": "dde758fd18d95f3cf3ab6626b67415cb0b73a0325b140542876ed0138e295264",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "dde758fd18d95f3cf3ab6626b67415cb0b73a0325b140542876ed0138e295264",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Image/ImageOrientation.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Image/ImageOrientation.cs",
+      "bytes": 2313,
+      "sha256": "3e5cf953537352d210df69d93c1c4a8ccece75886baf18ab37318270e3bf6968",
+      "pdbSha256": "6e57093a3f1d311e36080f6479e5846bf91b0b44b68dfe1f3f19442174027163",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "6e57093a3f1d311e36080f6479e5846bf91b0b44b68dfe1f3f19442174027163",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Image/ImageTag.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Image/ImageTag.cs",
+      "bytes": 6489,
+      "sha256": "c7678ec4948254e9f0edc3b1dc4ea5687a84dcd3134523ef0090a7b33c7500d1",
+      "pdbSha256": "32553e72cfeff41d6f834e3a95dda53689bc9b6208ef2a9840984ca7b2a805f8",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "32553e72cfeff41d6f834e3a95dda53689bc9b6208ef2a9840984ca7b2a805f8",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Image/NoMetadata/File.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Image/NoMetadata/File.cs",
+      "bytes": 6293,
+      "sha256": "891cb9bb4eabdb05b147aa066286d3b1fe6ced689a0aee080fb2db1ebec879f3",
+      "pdbSha256": "bce1751cedee0e9a43580b1976f5245c1300dae626737d37066ab56d8733b218",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "bce1751cedee0e9a43580b1976f5245c1300dae626737d37066ab56d8733b218",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Png/Codec.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Png/Codec.cs",
+      "bytes": 1713,
+      "sha256": "b99a301fae40680e10c70b2a0f0a0d8d1b84d308ab8ceddd26af4b4f01495d25",
+      "pdbSha256": "37ac7fbf8feb7ce77253bba07467ae876f11dd2ffc39d9cfde2fa204bf96a232",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "37ac7fbf8feb7ce77253bba07467ae876f11dd2ffc39d9cfde2fa204bf96a232",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Png/File.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Png/File.cs",
+      "bytes": 26599,
+      "sha256": "9c90fdb1228d704e8fc29d4ed36a11966b55a013d2b04e915634d18b2ecf9dcc",
+      "pdbSha256": "680a7c9f84b580668f838a9957dbe5857cf9ec07e7766025939ba2fe974dbc11",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "680a7c9f84b580668f838a9957dbe5857cf9ec07e7766025939ba2fe974dbc11",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Png/PngTag.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Png/PngTag.cs",
+      "bytes": 7444,
+      "sha256": "e52f18074ac2d5a5a624689921efd37f5fa2ed0ce0ab383ec536490323cd9e04",
+      "pdbSha256": "9311ef2ce1898bf667f8848bc4bf85c2a2f437f87262e4be9f8787858e3c8a4e",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "9311ef2ce1898bf667f8848bc4bf85c2a2f437f87262e4be9f8787858e3c8a4e",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Xmp/XmlNodeExtensions.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Xmp/XmlNodeExtensions.cs",
+      "bytes": 2845,
+      "sha256": "91cad62dcc0ecbb0f2b54742a01bf0ed420179110289025ecaad2a7ebd47d7bb",
+      "pdbSha256": "d59d74a8023df8692cdeb632d36fd888089f0b0f2b04c5e898f4a621e8532048",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "d59d74a8023df8692cdeb632d36fd888089f0b0f2b04c5e898f4a621e8532048",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Xmp/XmpNode.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Xmp/XmpNode.cs",
+      "bytes": 11859,
+      "sha256": "116bbc600ff7a09693096f6d28f6f75ab8df9e452f44a25362d0e8a7d244a4d5",
+      "pdbSha256": "472996cd02574338297793ed3a9349b2b1f6dd62b5595dcd508fc7cbd74fa884",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "472996cd02574338297793ed3a9349b2b1f6dd62b5595dcd508fc7cbd74fa884",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Xmp/XmpNodeType.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Xmp/XmpNodeType.cs",
+      "bytes": 1299,
+      "sha256": "f8d8fb9cad5df1cce5eba8d175c9f449236cec8780d269c35236b36d0547f3f5",
+      "pdbSha256": "5ee9abf0e4ba52193521c02cc3c9372b1e6e4d30a91d55c146a3eff2109b75d4",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "5ee9abf0e4ba52193521c02cc3c9372b1e6e4d30a91d55c146a3eff2109b75d4",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Xmp/XmpNodeVisitor.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Xmp/XmpNodeVisitor.cs",
+      "bytes": 1289,
+      "sha256": "362b6fe70eedc43c25592dece33430ba46dac1f039402b893c268cb8aa208b70",
+      "pdbSha256": "e1e18f7a75ad8d87dab3ffd86ccadbc5eadbee082b3a01ea987c68dc04890d03",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "e1e18f7a75ad8d87dab3ffd86ccadbc5eadbee082b3a01ea987c68dc04890d03",
+      "lfToCrlfMatchesPdb": true
+    },
+    {
+      "path": "TaglibSharp/Xmp/XmpTag.cs",
+      "url": "https://raw.githubusercontent.com/mono/taglib-sharp/b5ae84f2e84087bf160bb0471420200dd2b5d809/src/TaglibSharp/Xmp/XmpTag.cs",
+      "bytes": 41432,
+      "sha256": "add3d67973b78ea6de9902aeddb8e6f0526e4f9627e8624c49fa02c7fc557252",
+      "pdbSha256": "84c4fedbe6085d05fc778d5ece2d5c192e4f0eaaff648b36e0324ab50f9e852d",
+      "rawMatchesPdb": false,
+      "lfToCrlfSha256": "84c4fedbe6085d05fc778d5ece2d5c192e4f0eaaff648b36e0324ab50f9e852d",
+      "lfToCrlfMatchesPdb": true
+    }
+  ]
+}

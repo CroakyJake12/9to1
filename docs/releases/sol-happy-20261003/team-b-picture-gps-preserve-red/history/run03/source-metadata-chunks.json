@@ -1,0 +1,26 @@
+{
+  "file": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run03/original.png",
+  "sha256": "8be33dd20d273a874f40081a7811c882fd3250efdcfea8db41848d231e56174f",
+  "chunks": [
+    {
+      "type": "iTXt",
+      "bytes": 164,
+      "utf8": "XML:com.adobe.xmp\u0000\u0000\u0000\u0000\u0000<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description /></rdf:RDF></x:xmpmeta>"
+    },
+    {
+      "type": "tEXt",
+      "bytes": 23,
+      "utf8": "Title\u0000Real source title"
+    },
+    {
+      "type": "tEXt",
+      "bytes": 41,
+      "utf8": "Description\u0000Retained non-location comment"
+    },
+    {
+      "type": "tEXt",
+      "bytes": 37,
+      "utf8": "Comment\u0000Retained non-location comment"
+    }
+  ]
+}

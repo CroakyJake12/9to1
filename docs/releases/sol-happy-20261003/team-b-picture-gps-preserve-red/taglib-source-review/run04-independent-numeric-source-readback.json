@@ -1,0 +1,36 @@
+{
+  "scope": "Independent actual persisted source PNG CRC + namespace-aware raw XMP coordinate readback; not owner exporter or TagLib typed API acceptance",
+  "file": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-engine-tests/run04/original.png",
+  "sha256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297",
+  "everyChunkCRCValid": true,
+  "chunks": [
+    "IHDR",
+    "iTXt",
+    "tEXt",
+    "tEXt",
+    "tEXt",
+    "sRGB",
+    "IDAT",
+    "IEND"
+  ],
+  "namespace": "http://ns.adobe.com/exif/1.0/",
+  "rawGPS": {
+    "GPSLatitude": "51,30N",
+    "GPSLongitude": "0,7.2W",
+    "GPSAltitude": "24/1",
+    "GPSAltitudeRef": "0"
+  },
+  "exactRationalReadback": {
+    "latitude": "103/2",
+    "longitude": "-3/25",
+    "altitude": "24"
+  },
+  "exactExpected": {
+    "latitude": "103/2",
+    "longitude": "-3/25",
+    "altitude": "24"
+  },
+  "outcome": "PASS",
+  "precisionTolerance": null,
+  "processExit": 0
+}
