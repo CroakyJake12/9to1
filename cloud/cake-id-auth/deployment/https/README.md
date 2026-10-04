@@ -1,14 +1,14 @@
-This additive anonymous HTTPS driver targets ONLY the actual isolated `cake-id-release-validation.jcbailey008.workers.dev` issuer, deployment713c1695-7e21-489b-bc97-906450972cfa, maintained producer source d643d723. It changes no producer, binding, secret, migration or deployment. Root remains the provider writer. Run only after the exact hostname is permitted and the root operator deliberately enables the isolated endpoint.
+This additive anonymous HTTPS driver targets ONLY the actual isolated `cake-id-release-validation.jcbailey008.workers.dev` issuer, expected Worker version713c1695-7e21-489b-bc97-906450972cfa, maintained producer source d643d723. It changes no producer, binding, secret, migration or deployment. Root remains the provider writer. Run only after the exact hostname is permitted and the root operator deliberately enables the isolated endpoint.
 
 From `cloud/cake-id-auth`:
 
 ```
 node --check deployment/https/validate.mjs
 node deployment/https/validate.test.mjs
-node deployment/https/validate.mjs /workspace/team-c/evidence/c2/https-anonymous-NEW.json
+node --use-env-proxy --use-system-ca deployment/https/validate.mjs /workspace/team-c/evidence/c2/https-anonymous-NEW.json
 ```
 
-The output path must be new. Transport/assertion failures and independent evidence-write failures remain separately observable; existing evidence is never overwritten. Requests omit credentials, never follow redirects and have15-second abort signals. Output retains status/CORS/path metadata, not response bodies, cookies or tokens. No secrets are required.
+Use the inherited managed proxy and CA trust for remote execution; the Node24 flags above preserve that supported route. The output path must be new. Transport/assertion failures and independent evidence-write failures remain separately observable; existing evidence is never overwritten. Requests omit credentials, never follow redirects and have15-second abort signals. Output retains status/CORS/path metadata, not response bodies, cookies or tokens. No secrets are required.
 
 Assertions follow maintained integration/public-cors semantics: exact issuer/discovery endpoints/S256/code, public-only JWKS, exact-path public CORS without credential grant, foreign/opaque origin denial, public page security headers, unauthenticated account denial, malformed reset rejection and unknown-client/invalid-code token rejection. The malformed reset has no password/token and is rejected by pinned library body validation before consuming recovery tokens. No verification/recovery request, registration, login or administrative request is sent. Discovery/JWKS may initialise the library's own issuer signing key if none exists; this is maintained server GET behaviour, not a credential or account fixture.
 
