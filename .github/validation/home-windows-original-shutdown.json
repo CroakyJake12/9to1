@@ -1,0 +1,1312 @@
+{
+  "schemaVersion": 1,
+  "sourceBasis": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+  "homeProductionPin": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+  "proposalPaths": [
+    ".github/workflows/team-c-home-windows-original-shutdown.yml",
+    ".github/scripts/home-windows-original-shutdown.ps1",
+    ".github/validation/home-windows-original-shutdown.json"
+  ],
+  "sourcePins": [
+    {
+      "path": ".gitmodules",
+      "bytes": 3970,
+      "sha256": "4f8c5945b3ad2cdad05fa79bf6e9e2f5c1b02074f7f8b8391ae3a58494d3d5b9"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Den.csproj",
+      "bytes": 525,
+      "sha256": "65b775f22ea951c66b762fc14c5cb752b2aaf0760da059c121dad2208ec12afa"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Dulche.Runtime.csproj",
+      "bytes": 1160,
+      "sha256": "6815183be9c760e769070254b86cd2689c7d3e0006a7b2b5366c6d0f6c9ea80d"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "bytes": 2581,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+    },
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "bytes": 1745,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "bytes": 1107,
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HomeNativeStartupCuiReadiness.cs",
+      "bytes": 1245,
+      "sha256": "fe66f193fcea1f65e7ce3e0535f7834981d86420d441419078cf81a643f7a320"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/HomeApprovals.cui",
+      "bytes": 4767,
+      "sha256": "98000a602764c3eda03386f49327c067f9b7c20f987260b68eeb21d1902ab266"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/Models.cui",
+      "bytes": 4081,
+      "sha256": "ea306ce8760943eb31ae4e1e5d71f41f828c5764006d7ccb37951f85bdf75697"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomeAppsFeature.cs",
+      "bytes": 13475,
+      "sha256": "774cba7ed004e1b5d0da7a08469fe9829f93a8e0c2d71af73192cc2a5d2c13ad"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageArtifactSelection.cs",
+      "bytes": 10722,
+      "sha256": "385e80b8c7b95f9b3889544abd682e6e4eb3f4acf4a83148eed24bf12c0fbd18"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageDatabase.cs",
+      "bytes": 20178,
+      "sha256": "cf545b250443cea42cef5eafc3e8bbd3f40d2a42b6adef6924744d81d2815a1f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageOriginalDependencyLifecycle.cs",
+      "bytes": 19487,
+      "sha256": "33f973479d1baf006a06979f47a52772e79499f65f4ad9fa83f152a1f86053f4"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageOriginalDeviceOwner.cs",
+      "bytes": 45177,
+      "sha256": "82048623bf946102a52bb6072b92e5f2871895b00dd7dc24f861199020d6a3a9"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageOriginalLifecyclePolicy.cs",
+      "bytes": 9903,
+      "sha256": "4ca201269b6213e82eddfd2f8246d1422452e43aaa492ba68c81b5499d983577"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageOriginalLifecycleRun.cs",
+      "bytes": 20012,
+      "sha256": "964d7e217c69dd5556001b243555cac382138b3a0038f01758c981d7ec2c2e64"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageOriginalOperationAdmission.cs",
+      "bytes": 45843,
+      "sha256": "1de5af93d9686eb29ea42a972d5f6867dd7ca72326d8fa3814daedb99bba76a2"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/FileHomeCoreStateStore.GraphPublication.cs",
+      "bytes": 752,
+      "sha256": "291a11492c1d67234ed31c439296c647c57df347c62840a92afd1bbfb3cfbd95"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/FileHomeCoreStateStore.cs",
+      "bytes": 17413,
+      "sha256": "7477d619f22c350cdd15ddfa732ba56b259f9a27f42266d82b4b3c1d483ced35"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeActionPolicySource.cs",
+      "bytes": 328,
+      "sha256": "53902496be938b904511e8725b0f7197981f4f85348ab6d62de7195474762264"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAppAiServices.cs",
+      "bytes": 26192,
+      "sha256": "590504a311b109c0d41d6451da54edd4bbe74c42aa264ed844ef141fe47a9bb6"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeArtifactReferenceObjects.cs",
+      "bytes": 7608,
+      "sha256": "0360ddc19c7e8e4e6ef9456697e94af58e1989ea1635471410845a20576253a1"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceAttestation.cs",
+      "bytes": 8359,
+      "sha256": "faab52617bb737de1c3aac016ae879d2511fad2c1c3718eb04d33ce48bf475b7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceCommitFence.ShelfItemEdit.cs",
+      "bytes": 5021,
+      "sha256": "42294985082fd32854ec97441446ff5f09515775728728d7f3e76bb9ebbe11db"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceCommitFence.cs",
+      "bytes": 18295,
+      "sha256": "7ebed9fe0d51c08c516a6304a12ab4f00082b21c5f4dedbd26e0af42acc82bc7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreApi.cs",
+      "bytes": 5122,
+      "sha256": "2181a8a1d5d36470c820d26769bcf357ec7b4b819b698b79946ceb2a3e52dfd5"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+      "bytes": 7402,
+      "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "bytes": 26062,
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreServiceReadActionPolicies.cs",
+      "bytes": 885,
+      "sha256": "d1c834f038ef6772ac60842407303a8f2e2080564e7890fb1787af5fbff684c5"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreStateService.cs",
+      "bytes": 1340,
+      "sha256": "8b12dc8cb184428442e2990b1c3a0c57f39d5c9437a2d5ce76094aec526faebb"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeEquationObjects.cs",
+      "bytes": 8684,
+      "sha256": "33605774b9e004fc6202d1bf92fcd1e6262503f5243d148e9a1c0c484917d3d6"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs",
+      "bytes": 17696,
+      "sha256": "02def3189de0070dd6b33d8eea1d62a5c74ba9fd0699786ca1bcc934b28631ff"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeGraphPublicationObservation.cs",
+      "bytes": 1225,
+      "sha256": "f9be86fe31e3a8ce972631d96ac0f5e4781ea6462b55f6e1c6335ff6a0d4d8b3"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeGraphPublicationOwner.cs",
+      "bytes": 22366,
+      "sha256": "bae3fc2624a5cce154c761cd430d5fed6d417d49c631531be4bbfca46b4a6b89"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeGraphPublicationResourceRegistry.cs",
+      "bytes": 1758,
+      "sha256": "90175302aaaadd782dd66fb175952a1722fbb3e1fa68f086b4fc51a0bd2dbcb5"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeGraphSqlAssociationLeaseSource.cs",
+      "bytes": 8393,
+      "sha256": "0982462701447ce2bad44553b6e0543d466866be27651807636d23829bf80ead"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeInstalledAppInvocationSource.cs",
+      "bytes": 1623,
+      "sha256": "daa9d089cb5972a62fe8229fb50861eee2fc333b40cd1645983e5a45da4bbe2d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeInstalledApplicationRegistry.cs",
+      "bytes": 14689,
+      "sha256": "7697396ccdbb0cb6ed5729cf6f652d963ce2f15258c590abbfdd1a9939fb4c90"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeInvocationCatalogue.cs",
+      "bytes": 5268,
+      "sha256": "97b0ff9139b502dc55c9177c1eb29721c720fd104f33c1700cf16c9789437210"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalOperationLease.cs",
+      "bytes": 6103,
+      "sha256": "04248e3742a05aa57a7b03ab234834814b4cc08985b577ce2e338471427e0321"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalProfileIdentity.cs",
+      "bytes": 7615,
+      "sha256": "658dc85e0be5e5e6d878a41c03211a8b95b4dfc56d329c23c1ad745fdb42883b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalReadComposition.cs",
+      "bytes": 491,
+      "sha256": "218879281bf0ac12a49bbe4ad0b386be9cc76ef421a289665ad8109f35c8ab4a"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalStoreOwnership.cs",
+      "bytes": 17316,
+      "sha256": "4086ecd8d765a01d1c2a2e21fdd83b83e7513f529af3119e15426aa2f7e53104"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeLocalStoreSetupSession.cs",
+      "bytes": 6534,
+      "sha256": "5a8f89d3e431d104e6ccd078e230fab035078a61b01a57bb58d0d0653afa9940"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeModelOriginalActorFeatureContracts.cs",
+      "bytes": 566,
+      "sha256": "a4d930529a03644f6461bbf230ecf12e900d468736216612aaa3e213842d26ce"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeModelPickerFeatureProvider.cs",
+      "bytes": 22466,
+      "sha256": "0f12257287317a7958a4d95f9e69bd57e645ac1a7171bd7d026f55c47d5db3ae"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeModelPickerOriginalSessionProvider.cs",
+      "bytes": 4289,
+      "sha256": "9745568c8ee0fe7249a043e8d3a6522ce93d383bf7bcb9b15772f19f13c63a97"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.ReplyCurrentness.cs",
+      "bytes": 2490,
+      "sha256": "6f45711457d42cd5bfc494a583b87ac454fc9d5357d77ea819a2f54fccb361cc"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.cs",
+      "bytes": 31800,
+      "sha256": "958813d46386c2bdebd7f2c9b332d85e437eba24c7efdebfc390bd62f08151c2"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeDiscoverySession.cs",
+      "bytes": 3216,
+      "sha256": "da266f9fa61965036c658982534ee7206863165595f580c717cd4c069498f397"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeEndpointLocation.cs",
+      "bytes": 3156,
+      "sha256": "f1e8d9546757a728b2491eb8c9e0a74002874cf26b64f8f711cefe5a575e1652"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativePeerObservation.cs",
+      "bytes": 2649,
+      "sha256": "6fdf3096e304cdb5de61167c0754dd42b2341577d73865fc5149107cf3c7664d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeServiceHost.cs",
+      "bytes": 6504,
+      "sha256": "bedfe3a73a5cd8f9feb8df0a5402c1316903421a9ff24a78698de501c1413343"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeSessionLease.cs",
+      "bytes": 2724,
+      "sha256": "ba712d675086fd951cfa19aabe6184e8d0bf9272bfbf1bac4944ef731a3761df"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeStartupSession.cs",
+      "bytes": 11532,
+      "sha256": "8e7b7dac1a46d5113a13becbb2586946a76b27c33b3c1eeaabebc5b236c67bc7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWidgetRegistry.cs",
+      "bytes": 16903,
+      "sha256": "6e2c4b599678550ecfac5954bceb2f02ad85cedb9e5cb8bbbc8f83dc63b8a59b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWidgetRuntimeContracts.cs",
+      "bytes": 3359,
+      "sha256": "8f5c47a834dc4c3b3dd9243eb116fe2f4bededa299f465f887508cf70efc1e12"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsAppConnection.cs",
+      "bytes": 9509,
+      "sha256": "52540186684f72e0aebfa075aa8f3116ed1c6af69c9d293c980518853fb50662"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsBootstrap.cs",
+      "bytes": 5570,
+      "sha256": "3c74737b89592a312dbd50227339c28f886e2046fad772b8e9957030190301c7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsComposition.cs",
+      "bytes": 17595,
+      "sha256": "4455e0f87278e7f3b3428f0041e49a304bcf839df876598170eb203b7b974c8d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsCoreHost.cs",
+      "bytes": 9807,
+      "sha256": "6fe724175322dfad7a33d242f724b13ce05de9b614e8b52d3f22d0deb5489b6d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsHostObservation.cs",
+      "bytes": 2294,
+      "sha256": "ee4607307c7736c3b27e6e7fd8aa698c285a012b52e237b5199b6deb5a00bb96"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsHostOwner.cs",
+      "bytes": 7514,
+      "sha256": "f8c7ff4574f68df8e30030f1122d3318f5e53d913ce1a64fd8fa213df9a12074"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsStartupSession.cs",
+      "bytes": 10886,
+      "sha256": "9c9eb4e8ce471e57463858f463a99ce2a065fdd00a7ae4ae70550fe33b2153a7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNotesSharedObjects.cs",
+      "bytes": 12441,
+      "sha256": "b25bd60e1f1ed1bdf90fc37c732f793e278e8d9ab2f855667e8f0481d1e8bf62"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNotesStyleProjection.cs",
+      "bytes": 1874,
+      "sha256": "1ca4e787eacf9712b3e6aae74ce794a3587bfa6cb64248478a1fcb28e891a482"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomePermissionsCoreService.cs",
+      "bytes": 1450,
+      "sha256": "a112d849e32d2d1bc10492ae47a2c85ed4442ce1407e29ae30badca1071a7785"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomePersonalDenFactory.cs",
+      "bytes": 5730,
+      "sha256": "c46b433847aedeb2c2ea904353e0526a547c4ab8a8a9bb2d6413827096a0da0c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomePersonalModelRoutes.cs",
+      "bytes": 2425,
+      "sha256": "9e494cff9983b810a383e204438e0f1f6cc8e9d74a19f794b977eff974f495ba"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeProductivityEngine.cs",
+      "bytes": 36577,
+      "sha256": "b137ac2a2e6594aa3c7a5dcd3562ebf8f685a9b7487231ae60fbda4e37f3311a"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeProductivityGeometry.cs",
+      "bytes": 7653,
+      "sha256": "ef9e52e06adb6b14397d46feb0811bcc4e2cc94b9aa5219fa826d9e088d4df8e"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeProductivityHandlers.cs",
+      "bytes": 7222,
+      "sha256": "0dc3ad03de0ea9ea78b764106ce321eb6e3568d2747fa2d6f1ab432b72954203"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeProductivityRasterFrame.cs",
+      "bytes": 1039,
+      "sha256": "872f21f7a10fe1fb15a8da05d9e64e5a565aeb119a89b583611aa7eaee7683cb"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeResourceOperationBroker.cs",
+      "bytes": 26059,
+      "sha256": "cf3a876df379333724b0dbd11ae406fcd051460914cf65e22bd2465b9398598c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeResourcePreparedReview.cs",
+      "bytes": 11406,
+      "sha256": "a5ddd91a2f7fd086506ac9f5d059118615a7bc28097ac09dc750d2eb83b87378"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeResourceStoreOwnershipAuthority.cs",
+      "bytes": 2243,
+      "sha256": "1f374649577800d7cb762708ce063ac9b472d734e3c14881a11550b371a8021b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs",
+      "bytes": 466,
+      "sha256": "05d89400297f02174d01f89f1979eaa5bdea447d8ce2b9e435c1093de6523320"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeTerminalAdviceService.cs",
+      "bytes": 4166,
+      "sha256": "a5051775d1a5a0df70b3f21bde26a29c5bb4aa6be4c81c733a4065a7b3745fd7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeTestAssemblyInfo.cs",
+      "bytes": 154,
+      "sha256": "993afb5dd6289e670eb417caca2cce38ac61e3454557f2c4c914f6120c193909"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreClient.cs",
+      "bytes": 9568,
+      "sha256": "5b4d0372103b78a3b80cbcce3929fbeadda5615c22003e7fd518c3aa5c4256aa"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreProtocol.cs",
+      "bytes": 5400,
+      "sha256": "ba41142c984d991354c365e63c5947c1ffd26f41645fcc5dfc88c0d7216989db"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreTransport.cs",
+      "bytes": 11041,
+      "sha256": "67bf91e74749292cca24851e9372dfd2890b3f7054a3517130189a15e0e1229b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixDiscoveryClient.cs",
+      "bytes": 4108,
+      "sha256": "09bbd7b9f85df59f9b2e6d984ddaeb2165c7c996195654f1bca02dcfc21404b5"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixDiscoveryTransport.cs",
+      "bytes": 4110,
+      "sha256": "1a4a73c5eec8a7d32f14acd15589308aa7bcf322c051262afe899c9d23513892"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeVectorShapeObjects.cs",
+      "bytes": 10709,
+      "sha256": "2ba2a79df88c83a12fade3679a268f5c48d7cd712b5ccc6a9208d6d33be2fa53"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeVersionedModelRouteRepository.cs",
+      "bytes": 3661,
+      "sha256": "08c8dd1ce7675f94335d8f841538110025b06e9b12903d68732cd589a42fea02"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeVersionedNodeGraphRepository.Guarded.cs",
+      "bytes": 6920,
+      "sha256": "d54a06b3aab2396604948b452d47328b663a6da0c94f1df81d4e5fae26c1bf35"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeVersionedNodeGraphRepository.cs",
+      "bytes": 8017,
+      "sha256": "5f5f1286d9d14f781322c6517c14119aa0951bd0e893f326839f2f116d09e6d9"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeWebMcpActionPolicySource.cs",
+      "bytes": 545,
+      "sha256": "c98da7f9a262f81fc3cc2c95f2e9889b097f71fa015a2e353f7143a29f14f99d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeWebMcpOriginalActorApproval.cs",
+      "bytes": 13956,
+      "sha256": "b2fff9dc67743470585cec3113abc9c26b4f3650a1fa01ae30405d6bfd4923ed"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeWindowsCoreClient.cs",
+      "bytes": 13321,
+      "sha256": "f188596d759e7808e8b42df09e6f69feb6d49b12e9e9bd5b89c60ee9cdcb43f0"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeWindowsCoreConnection.cs",
+      "bytes": 10830,
+      "sha256": "859470cf668dfea1cc7d95f10fcc83cba7287973ea82a14cf6e04d1b878882ca"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/IHomePersistedWriteObserver.cs",
+      "bytes": 691,
+      "sha256": "f56b0d6a721d146de9ee48a6cf96c72713243a724a6609a756b0be1c6cfef58e"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Discover/HomeDiscoverCatalog.cs",
+      "bytes": 22038,
+      "sha256": "5b330947d52be2cd4240d0f46a8c48702be1e254f856f25067c2b02bc84eb1dc"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeCuiScene.cs",
+      "bytes": 35989,
+      "sha256": "8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeDashboard.cs",
+      "bytes": 14373,
+      "sha256": "6631e03a072f32c7922d87ebebdf3d64af604df359d3211b7635af054b10d9b9"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeEcosystem.cs",
+      "bytes": 53555,
+      "sha256": "4fa763f8d68e2382a00e24e27dfa386d5ff548cf610ab12d23fcb4b25639cac4"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomePermissionModels.cs",
+      "bytes": 8199,
+      "sha256": "25e6bed3bacfea58d6dd7b5843895412f633622197bbff9d8c5eb5014479b302"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
+      "bytes": 48284,
+      "sha256": "f8770b858d87ac9f02b46308ed387f9411d0cb928fe514a5879a5ae83d2636f7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelCatalogueEntry.cs",
+      "bytes": 5541,
+      "sha256": "8aad2ac73ec22e8276be736c2603e743871ac447b69aa547a370f696f243605d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiScene.cs",
+      "bytes": 7632,
+      "sha256": "63a29ebf46790ad15b018fe696fa9049672ec28476be135c3bd887d70f04a470"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerRouteEditor.cs",
+      "bytes": 24066,
+      "sha256": "923cda7fc1443b2fc58b333c5e972946806e2b97cc35b2bcc8fdc43c129f6e1f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/PermissionsTrustNotifications/HomeFeatureStoreException.cs",
+      "bytes": 374,
+      "sha256": "e2fc0395e752b5d04c708755d727c0fa969b06996c5c6339f74d75c72b93c3d2"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/PermissionsTrustNotifications/HomeNotificationFeatureProvider.cs",
+      "bytes": 19678,
+      "sha256": "026c69213a4bfa822e86fa2d612e6a5b478d488c05aade71ddd3c86d41ee9996"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "bytes": 667,
+      "sha256": "9908203c277a0edc0cc7733f073adfe91c75e344a07d594d0f43cb4bdf0c66cf"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+      "bytes": 1858,
+      "sha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+      "bytes": 3742,
+      "sha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+      "bytes": 3239,
+      "sha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+      "bytes": 5739,
+      "sha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+      "bytes": 7724,
+      "sha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+      "bytes": 10300,
+      "sha256": "a4ec810cc4b78ecadaaae43a59346fbc2d9175e262830c90693d01be740777c0"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+      "bytes": 12232,
+      "sha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+      "bytes": 14591,
+      "sha256": "3a391a318e724a082ee4b0358a72f1ff7b77e644758d4d1bbfa5849ef0050d64"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeWindowsCompositionTests.cs",
+      "bytes": 10177,
+      "sha256": "c8e7c9ce52953b10ed9cf1b60138606a4f58d6619637169d10327fdaef7b8fa4"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+      "bytes": 5652,
+      "sha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+      "bytes": 5592,
+      "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePackageOriginalDependencyLifecycleTests.cs",
+      "bytes": 26317,
+      "sha256": "3400cbcac6350c8fd547d81c7bb029cd748ad7248f0fd45ce97711969e530eb7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePackageOriginalDeviceOwnerTests.cs",
+      "bytes": 55232,
+      "sha256": "77bbdd80fea02ce6cbd2d41194c9ffdc378e255bd5c8626bba4a5db9faf301b2"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+      "bytes": 10363,
+      "sha256": "c5b1dcacb685a4d6ae6460a8d101628916b2ff37c8fa4bead7fd432415a4fe25"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+      "bytes": 2680,
+      "sha256": "a2e75feb059173d564c9993080b5de4b0a233184042cee88aed850feb85cd30c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeWindowsCoreTransportTests.cs",
+      "bytes": 30619,
+      "sha256": "174e1d89f85038377ec8b4f6b048ba4c89029c2e5c9755af4a84ef698b449f8a"
+    },
+    {
+      "path": "9to1 Workspace/Home/UI/Home.cui",
+      "bytes": 11861,
+      "sha256": "13c80c592b71831a21cfe9bec065f901c6d7d3df35575ff77def6c079e0a59fc"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+      "bytes": 1922,
+      "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/IHomeNativeInstalledPeerOriginalActorVerifier.cs",
+      "bytes": 682,
+      "sha256": "42ab66ef4846f3ca49a4a09d488ee1d49fb3e0d2fe6d299541c53fb5d487a2ca"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "bytes": 700,
+      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "bytes": 375,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/HomeOriginalCoreServiceCollectionExtensions.cs",
+      "bytes": 1412,
+      "sha256": "af9f3865562f7c0f58d9745c6f60306ce7d8570e7bf28a882f637487f0563c79"
+    },
+    {
+      "path": "NuGet.Config",
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+      "bytes": 2315,
+      "sha256": "ab1a0ab1fa185d4b66ef6f75d66546be457481947cc655cb164a9842a6b5344c"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "bytes": 4607,
+      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "bytes": 16141,
+      "sha256": "b93785310ca3b2184ce57ad8074b1bfa88d94c2cf6125f1752ce41e1b6ae5156"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+      "bytes": 580,
+      "sha256": "c982787059aa506a2ff687ce1a178d6e6212d158e410408a2839a09392a7fdba"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "bytes": 12801,
+      "sha256": "f0c4c86cf65aeed50112e5cae6f7c5ef0ffd5e9dd7558a3b9cbc70f0f96230d6"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "bytes": 11653,
+      "sha256": "1554ba89446e238ad4aba99ed7043e0bc1d9f85daf0a0cad2567aad0c4458d1c"
+    },
+    {
+      "path": "docs/home/windows-native-producer.md",
+      "bytes": 3189,
+      "sha256": "f81ed0fb6b2961bf162e3e1e57428b32218032fbf0c17a9c2aa59cb464ceff4c"
+    },
+    {
+      "path": "docs/proposals/home-windows-core-foundation-20261004.md",
+      "bytes": 3183,
+      "sha256": "b26818b0075bf2b2b82f1eaa78b1c437fa7b223036c655302ef7834f44643ec2"
+    },
+    {
+      "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+      "bytes": 453,
+      "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504"
+    },
+    {
+      "path": "framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CakeOS.Cui.Build.Tasks.csproj",
+      "bytes": 768,
+      "sha256": "461a2da8c03cd55545638080e3594829f80ea515c376866c345e39b361f82b57"
+    },
+    {
+      "path": "framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj",
+      "bytes": 1070,
+      "sha256": "f4ec1368c3f9563d3e6fcad54704dad08249e2f9e38786a4c33950d994549434"
+    },
+    {
+      "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+      "bytes": 495,
+      "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0"
+    },
+    {
+      "path": "framework/CUI/DevTools/src/Haven.CUI.DevTools.csproj",
+      "bytes": 624,
+      "sha256": "4995da61f6dd48bf8f60ab2e62df8b5b56be2d68e09d83411ae8d266c6407501"
+    },
+    {
+      "path": "framework/CUI/Directory.Packages.props",
+      "bytes": 429,
+      "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+    },
+    {
+      "path": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+      "bytes": 405,
+      "sha256": "38bb6257791a2ca650635f1b75b0ab186c70c99504220d7ef49223dd14dfdd36"
+    },
+    {
+      "path": "framework/CUI/NuGet.Config",
+      "bytes": 418,
+      "sha256": "0197c948f13e2b8d0e1f52d33687185ed29bc7c01892526985dac04a79e48f81"
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90822,
+      "sha256": "aabc12960e3bbc7579da6c840cefa45dff5bee0b397dde7279e34df96a6ed157"
+    },
+    {
+      "path": "framework/CUI/Themes/CakeOS.Cui.Themes.csproj",
+      "bytes": 690,
+      "sha256": "448c242f70873c71b4ec3d6e05cebe032c678f3f7356a667acba5de4bc821de6"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/Directory.Build.props",
+      "bytes": 1496,
+      "sha256": "e3417886b5acf82051e39a84e890bd94c700b242c4bff6e91779843a30e48ef0"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/Directory.Build.targets",
+      "bytes": 208,
+      "sha256": "52a2848bddd7efaeffced859a851d20bdff591579dd1dffda6a92a6c9d60fb43"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/Directory.Packages.props",
+      "bytes": 5112,
+      "sha256": "e49b9733247305ea12e3acae176b34ceedb8cc549423169b68cd264972d26eb5"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/NuGet.Config",
+      "bytes": 881,
+      "sha256": "d3fd147f2b7d433f0059fdb1ce74946d1087d65a42019958ce0626a33e49727e"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj",
+      "bytes": 4348,
+      "sha256": "01bcaf5a6d9829ded172e0f9eb1ac61a28f15b8f1ff8485d345f116f8f3fac16"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "bytes": 4911,
+      "sha256": "3dc8f5c1912653db614982f501d85bdafac2cb200a4d6957920570b825797f1a"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Input/IKeyboardDevice.cs",
+      "bytes": 888,
+      "sha256": "e44fde43fde5eb018eb16ea20ca5602627017bff0760ec0bc235dec464905c99"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.Invoke.cs",
+      "bytes": 31379,
+      "sha256": "7a0d50b80f261a3779363b5b57164792ca620f3ffdbe45b50175d9c0ccd22d29"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.MainLoop.cs",
+      "bytes": 6839,
+      "sha256": "d8efc8770c0afa72c207debf6aee54b0cad86d36cc135fbb17475c9d87e25c30"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.cs",
+      "bytes": 5568,
+      "sha256": "4ebf10c67ec14c51c1efe2401965288cb935651924f5772b5172665f5d7e8602"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/DispatcherOperation.cs",
+      "bytes": 14393,
+      "sha256": "cfcff802dec0a4dbf673503f1bd02c30b30f2a3129e609e9453425588823c6cf"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "bytes": 7712,
+      "sha256": "60e3a5c83a59dfe656f93d266890a95019f5dc50002287d296a860b549ed49ab"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ClassicDesktopStyleApplicationLifetime.cs",
+      "bytes": 10518,
+      "sha256": "09c0afba6fe4004c671217ac430e86c0ea0d8dace1e722cb6a83a83c56b8225a"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IClassicDesktopStyleApplicationLifetime.cs",
+      "bytes": 2930,
+      "sha256": "b9ff25759fe821bf96bb1ae2d149fea132295173967fbd12a07094124cb68408"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IControlledApplicationLifetime.cs",
+      "bytes": 902,
+      "sha256": "de3778330edc8556c40429a559b93f95d2d7a4e380852a8b747ae2d447acff10"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ShutdownRequestedEventArgs.cs",
+      "bytes": 305,
+      "sha256": "ae9ec93a6a6544121eb17eea013c2146cf011510c282eec538afeb7d2a533768"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj",
+      "bytes": 2661,
+      "sha256": "585fc69d868dc41657a901c9b63b804453dbdf84aaa37c291ccad08b5552925c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj",
+      "bytes": 825,
+      "sha256": "0ee7b483e6b0109f6c630d09e71dbe99c0bc29fc58519ca3dba8184d6fc95355"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj",
+      "bytes": 892,
+      "sha256": "e08808c6fe4379354af6d1f260ea4d5ca7d4a82a5c1c55d1f4df83ec5bdce3fb"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj",
+      "bytes": 496,
+      "sha256": "48219608db2b7a276ad8c21457b457eb301e7634f22fe9a67339f06a6e641501"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
+      "bytes": 3088,
+      "sha256": "83673ae1ee3859b875aa1b91e6469b978ddf36848e2ee186742f966cdc332435"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj",
+      "bytes": 2288,
+      "sha256": "6cedd5f053b4bca3bfe1389b58c9232e95a06cf3e5524734a65b6db805a11804"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj",
+      "bytes": 580,
+      "sha256": "e8674f3b68341ab7700443e30038de65768242144b28b6fe0c6cdbc7e1e47117"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+      "bytes": 574,
+      "sha256": "8fa5bd2315a68f5baf930fefd73be437110bedb663a25425756cab7a781a17cc"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj",
+      "bytes": 1511,
+      "sha256": "1382b15489d80637e1880307e334a7515a4fe00f2cdbca4fc5df1ec59643d0f0"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj",
+      "bytes": 814,
+      "sha256": "9d290786824bf201dd0f4c496c34b58cc60dc7810d778fb131d1ceb2bdf57453"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj",
+      "bytes": 762,
+      "sha256": "a72e9a35c6a735e48973e5129e01e5f80e1a3f9d016231921bbef0edd9d663f0"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj",
+      "bytes": 807,
+      "sha256": "cf11ea0e4211ecf947cfde57afbf2d83d68564a74c853ceb5576731ef204a935"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj",
+      "bytes": 765,
+      "sha256": "0e93a888d1657cfa52a144ab6f42850b5f91155237b5a6993292c0f3b10d8088"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj",
+      "bytes": 1274,
+      "sha256": "5946ac56ea972919e672d8aa793dfedf166268939369c2f4f6a24cf8dd0bd936"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "bytes": 316,
+      "sha256": "1bf7806839ad3ee73d0f6fe52fa20fb2dc769d07056b891259f7691acea503ee"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
+      "bytes": 1084,
+      "sha256": "a35af8f3ecb1dbf40a9e71428e0427d91f3cb7a8c8ba8db6c5075bacb43df242"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj",
+      "bytes": 1862,
+      "sha256": "071fa8b77582e8de24d63c4d5e8ace5c49170891214f5ad2dd29d0a4fff6ce98"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj",
+      "bytes": 4584,
+      "sha256": "54ecc1584f5f7504e17b1388ff683c6ada93cc6204eb784fcc49dd57f2da4cf1"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj",
+      "bytes": 1411,
+      "sha256": "cf467012d8dde584f87b58060cc22315f23b7b11dc839e0369d8069cdb9a84b3"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+      "bytes": 1643,
+      "sha256": "9f928d1f0f55adfe47910e0e30893a3b26cdd77a4450f46623d8b2ca7057dc75"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj",
+      "bytes": 896,
+      "sha256": "d396b2c58b745d7b2eda7ec82d26c67eb99a8cfd7505e850e1901549ba84691f"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+      "bytes": 3027,
+      "sha256": "967071bb22cca3a0d531a87b7301cbd8d4b7029f692c15a6bf92be438a66ff22"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
+      "bytes": 808,
+      "sha256": "293663ec6575c1c32b18d4c4ad5fa232f984dbbd42e309b78dbebacb01c3c9f1"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj",
+      "bytes": 954,
+      "sha256": "3740d7b8c569040dd1ab4ef25395bcf242906c0842b5acba6441dd397df6950a"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj",
+      "bytes": 1105,
+      "sha256": "a70d943298590acecca70dd89693d1d86fe42d4d0522844937d1abb1cb1992cb"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj",
+      "bytes": 1014,
+      "sha256": "33166e06a9189dc564bf298fd25594dc9b3ed5ddb1739beafbbd82fa70ad0a3c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj",
+      "bytes": 1586,
+      "sha256": "d583e2ebb01116f2d777cd79c80f40214da58aac5860c5811e88428a4dc7d76d"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Directory.Build.props",
+      "bytes": 143,
+      "sha256": "e45c5ee4cb7630d40067d4213ae38c7d28c5d411883e21e33d8bc6f8a3c8da08"
+    },
+    {
+      "path": "global.json",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    }
+  ],
+  "requiredGitlinks": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+      "commit": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "commit": "864a05282841bf04006890f04d11d60d1a046aa9"
+    }
+  ],
+  "ordinaryTests": {
+    "project": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+    "total": 6,
+    "originalRender": 1,
+    "originalLifetimeNewCases": 5,
+    "measuredAssertions": null,
+    "sourceAssertionCallsNewClass": 54,
+    "originalMethods": [
+      "Native_home_host_loads_canonical_cui_into_a_measured_window",
+      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit",
+      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services",
+      "Original_close_is_published_before_Core_callback_reentry",
+      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close"
+    ],
+    "casesByMethod": {
+      "Native_home_host_loads_canonical_cui_into_a_measured_window": 1,
+      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit": 1,
+      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services": 2,
+      "Original_close_is_published_before_Core_callback_reentry": 1,
+      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close": 1
+    }
+  },
+  "originalForcedFailure": {
+    "source": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+    "run": 37205981853,
+    "job": 111447135076,
+    "forcedCleanup": true,
+    "exitCode": -1,
+    "status": "RETAINED_ORIGINAL_FAILURE_NO_ACCEPTANCE",
+    "retainedSeparateFirstCompilerRun": 37224785297
+  },
+  "qualification": "Root-owned disposable Windows source compile, two original composition Facts plus six unchanged native host cases, and current native explicit quit only. Installed authority/signing/clean-PC/provider/all themes and default-close external reopen remain NOT_RUN.",
+  "resourceBounds": {
+    "jobMinutes": 60,
+    "requiredOutputDriveFreeBytes": 8589934592,
+    "perLogPostCompletionMaximumBytes": 8388608,
+    "maximumRawZipParts": 8,
+    "rawPartMaximumBytes": 19922944,
+    "nativeVisibleWindowSeconds": 45,
+    "nativeFocusSeconds": 5,
+    "nativeShutdownSeconds": 45,
+    "automaticAggregateDiskGrowthOrRSSMonitor": false,
+    "forcedShutdownPermitted": false,
+    "nativeOutputDrainSeconds": 5
+  },
+  "initialHomeWholeSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+  "currentHomeSourceDelivery": "88c704a781c150b662d57d023c510845047c1ee2",
+  "currentHomeSourcePeerSHA256": "a428c3544e7d9504f9721917bdbbfd88478899a1c557a22bcaf4fbe1fb0a4d85",
+  "currentWholeHomeBodies": [
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "currentRootCommit": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+      "wholeCanonicalSource": "88c704a781c150b662d57d023c510845047c1ee2",
+      "bytes": 16141,
+      "sha256": "b93785310ca3b2184ce57ad8074b1bfa88d94c2cf6125f1752ce41e1b6ae5156"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "currentRootCommit": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+      "wholeCanonicalSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+      "bytes": 4607,
+      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "currentRootCommit": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+      "wholeCanonicalSource": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+      "bytes": 12801,
+      "sha256": "f0c4c86cf65aeed50112e5cae6f7c5ef0ffd5e9dd7558a3b9cbc70f0f96230d6"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "currentRootCommit": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+      "wholeCanonicalSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+      "bytes": 26062,
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "currentRootCommit": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+      "wholeCanonicalSource": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+      "bytes": 11653,
+      "sha256": "1554ba89446e238ad4aba99ed7043e0bc1d9f85daf0a0cad2567aad0c4458d1c"
+    }
+  ],
+  "historicalHomeRecipe": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40 plus separate source-only AvaloniaTask correction0d1d64a5; original372247 MSB4062 retained. New current producer never relabels olde1/df or externalfa7PR9 runtime.",
+  "retainedCurrentHomeFirstNativeControlFailure": {
+    "source": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+    "run": 37228835003,
+    "job": 111514012449,
+    "managedSix": "PASS_SCOPED",
+    "nativePackage": "BUILT_SEALED_UNACCEPTED",
+    "firstNativeQuit": "FAIL_RETAINED",
+    "observedWindowTitle": "Actual launched executable path, not source-defined 9-1 Home GUI title",
+    "originalCuiOutputTransport": "Actual original stdout recorded ASCII hyphen for source em-dash; successor still requires canonical StackPanel root marker and current unique native GUI title",
+    "secondProcessAndProfileReopen": "NOT_RUN"
+  },
+  "compositionTests": {
+    "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+    "framework": "net10.0",
+    "total": 2,
+    "filter": "FullyQualifiedName~HomeNativeWindowsCompositionTests",
+    "originalNames": [
+      "HavenOS.Home.Tests.HomeNativeWindowsCompositionTests.Original_producer_starts_real_core_with_one_profile_permission_graph_and_denies_copied_callers",
+      "HavenOS.Home.Tests.HomeNativeWindowsCompositionTests.Close_publishes_same_task_before_original_profile_cancellation_and_waits_held_finally"
+    ],
+    "assertions": null,
+    "authoredSourceDirectAssertCallSites": 35,
+    "wholeSourceCommit": "88c704a781c150b662d57d023c510845047c1ee2",
+    "qualification": "Actual Windows-only original two Facts in current maintained Home owning project. Filtered two do NOT execute the complete current Home113 parent-declared cohort; entire current owning project is compiled and full113 runtime/discovery is separate and NOT_RUN by this producer. No synthetic installed verifier."
+  },
+  "ordinaryEight": {
+    "total": 8,
+    "actualOwningProjects": 2,
+    "nativeHost": 6,
+    "nativeComposition": 2,
+    "assertions": null,
+    "qualification": "Scope sum of two distinct actual maintained projects, not a fabricated combined testproject or whole legacyHome result."
+  },
+  "originalNativeComposition": {
+    "publicPR14Head": "88c704a781c150b662d57d023c510845047c1ee2",
+    "requiredPR12": "0c014b5a0f552911ebd834c3fac78e0f3966bdc0",
+    "receivingComposition": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+    "fourWholeBodyPins": [
+      {
+        "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsComposition.cs",
+        "bytes": 17595,
+        "sha256": "4455e0f87278e7f3b3428f0041e49a304bcf839df876598170eb203b7b974c8d"
+      },
+      {
+        "path": "9to1 Workspace/Home/Tests/HomeNativeWindowsCompositionTests.cs",
+        "bytes": 10177,
+        "sha256": "c8e7c9ce52953b10ed9cf1b60138606a4f58d6619637169d10327fdaef7b8fa4"
+      },
+      {
+        "path": "apps/Home/src/AvaloniaHome/Program.cs",
+        "bytes": 16141,
+        "sha256": "b93785310ca3b2184ce57ad8074b1bfa88d94c2cf6125f1752ce41e1b6ae5156"
+      },
+      {
+        "path": "docs/home/windows-native-producer.md",
+        "bytes": 3189,
+        "sha256": "f81ed0fb6b2961bf162e3e1e57428b32218032fbf0c17a9c2aa59cb464ceff4c"
+      }
+    ],
+    "defaultInstalledPeerAdmission": "UNAVAILABLE_DEFAULT_REFUSES",
+    "candidateEndpoint": "9to1.home.candidate.v1",
+    "configurationQualification": "Candidate OS-local routing and profile are engineering defaults, not an installed protectedidentity/receipt; native Files/Spaces provider and issued domainports remain separate owning prerequisites."
+  },
+  "retainedPriorE530": {
+    "source": "e5305818cb70459610f7957ae58255cff85d07ea",
+    "run": 37231041584,
+    "managedSix": "PASS_SCOPED_OLD_PRODUCER",
+    "twoNativeExplicitQuits": "PASS_SCOPED_OLD_PRODUCER",
+    "canonicalStateAtThatOldSource": "ABSENT_ZERO_BYTE_LOCK_ONLY",
+    "qualification": "Old no-app-authority Runtime producer; not current PR14 startup/profile/lease/pipe runtime acceptance."
+  },
+  "historical2b0SourceCheckpoint": {
+    "source": "2b0f581564cbe271c1ed6ef2bf94236c47759730",
+    "parent": "a5d25cec2362cbe12df7deb79f58692d26411262",
+    "sourceOnlyPeerC1SHA256": "a1de307822bb997e784a52c22af65ea3d89f7956c364f49d7c49b222bfa8b480",
+    "sourceOnlyPeerC6SHA256": "e74ec8852d59e08a726d80506c84780ecd9529e713ce6590eadd0e8f18c2b4be",
+    "runtime": "NOT_RUN",
+    "qualification": "Immutable historical source-only8plan/peer; never silently relabeled current receiving6ac."
+  },
+  "currentHomeOwningGraph": {
+    "sourceBasis": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+    "literalProjectDefinitions": 44,
+    "missingLiteralProjectReferences": 0,
+    "homeDirectCompileSources": [
+      {
+        "project": "9to1 Workspace/Home/HavenOS.Home.csproj",
+        "sourceInputsCount": 95,
+        "defaultCompileItems": false
+      },
+      {
+        "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+        "sourceInputsCount": 16,
+        "defaultCompileItems": true
+      },
+      {
+        "project": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+        "sourceInputsCount": 2,
+        "defaultCompileItems": true
+      },
+      {
+        "project": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+        "sourceInputsCount": 2,
+        "defaultCompileItems": true
+      }
+    ],
+    "currentLegacyWholeCohortDeclaredByRoot": 113,
+    "actualLegacyWholeDiscoveryOrRuntime": "NOT_RUN",
+    "selectedCompositionCases": 2,
+    "nativeHostUnfilteredCases": 6,
+    "measuredAssertions": null,
+    "graphQualification": "Current ordinary owning projects compile all their real source. Literal project/source map is source-only; actual inherited/conditional/generated MSBuild evaluation belongs to runtime. PR13/PR15/PR16 Home union source conserved."
+  },
+  "canonicalCompilerRepair": {
+    "source": "078febe91a603ac6dc5ebeb995dfbd76d0216f1b",
+    "parent": "6ac6c6ef0e67c62d03eb4b35e8235459899776cb",
+    "wholeBodyPins": [
+      {
+        "path": "9to1 Workspace/Home/Source/Home/Apps/HomePackageOriginalDeviceOwner.cs",
+        "bytes": 45177,
+        "sha256": "82048623bf946102a52bb6072b92e5f2871895b00dd7dc24f861199020d6a3a9",
+        "blob": "5412314e2279ff652f5d9e536379badc93481d60"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+        "bytes": 1754,
+        "sha256": "afb5b161614c4b50264fc89cb08efd52f86e5fbdc89c3fb194ca9c8e804b611b",
+        "blob": "140d4c18cd0c2b17883c4fd11b42b347afbc84bf"
+      }
+    ],
+    "sourceReviewC6SHA256": "d82a43af31bb3aa6f291b9183769c7a361bafed58b7919d3a864a7b55ce3833c",
+    "change": "Nested terminal local declaration and two uses renamed; one actual Home project reference added to Infrastructure. No authority, CAS, control flow, public API, cases or policy change.",
+    "homeSelectedPinChanges": 1,
+    "infrastructureQualification": "Infrastructure project is outside this producer owning Home graph; complete source snapshot retains its reviewed canonical reference. No full Desktop or Web acceptance inferred."
+  },
+  "retained15bdOriginalCompilerNegative": {
+    "source": "15bdff9abb1d1d0a42aead80dd2dc7047733a0a7",
+    "sourceBasis": "6ac6c6ef0e67c62d03eb4b35e8235459899776cb",
+    "homeRun": 37238041279,
+    "homeJob": 111540997220,
+    "homeFailure": "CS0136 before owning-six test discovery; zero warnings, one error. Original two-plus-six cases, native package and GUI quits NOT_RUN.",
+    "webRun": 37238041236,
+    "webJob": 111540996812,
+    "webFailure": "Source publisher failed with CS0136 and separate CS0234 Scene/Present compile closure; browser and sealed tuple NOT_RUN.",
+    "qualification": "Original raw evidence retained unchanged; this new source/catalog proposal is not a relabel of that failed producer and does not claim the separate Web closure repaired."
+  },
+  "currentDependencyTestNamespaceCorrection": {
+    "actualReceivingSource": "ea07713f54279c49891a717156d8bbee4b296042",
+    "wholeOwnerProposal": "5d888e2ea97684b541f2f3e4696b5781b417e880",
+    "wholeBodyPin": {
+      "path": "9to1 Workspace/Home/Tests/HomePackageOriginalDependencyLifecycleTests.cs",
+      "bytes": 26207,
+      "sha256": "90e8413a0322e44f5cd57e5c03c1ca52efe1ac8f6e90f01f403b7d7459ea6951",
+      "blob": "1f4772bc773903df0967bb005c2eda41813ae849"
+    },
+    "sourceReviewC6SHA256": "9b1460d5acb758e0d23482de92b3846398711bb292266e378e94fc654b0e967d",
+    "exactInverse": "Removal of sole 25-byte using HavenOS.Home.Apps line recovers whole original test body. Original113/45/12 authored tests and assertions remain unchanged.",
+    "qualification": "Actual original namespace resolves canonical types; no test policy, oracle, exclusions, implementation or native controller change."
+  },
+  "retainedE4cActualNegative": {
+    "source": "e4c9f98b30c91a8af13e6841242639d68ad1099a",
+    "sourceBasis": "078febe91a603ac6dc5ebeb995dfbd76d0216f1b",
+    "homeRun": 37240537320,
+    "homeJob": 111548197285,
+    "originalArtifactId": 11317146763,
+    "originalContainerBytes": 2608167,
+    "originalContainerSHA256": "554bfd41138963685b877ccac7511779ad97acdeab6a712ce0892bcf6e841ba9",
+    "nativeHostSix": "Original unfiltered normal Release strict6/6PASS/0skip with actual runtime232 unchanged; owning build0warnings0errors.",
+    "compositionFailure": "Actual original owning Release compiler stops32 CS0246/0warnings in dependency-lifecycle test before selected2 discovery.",
+    "compositionTestsPackageAndGuiQuits": "NOT_RUN",
+    "sourceBeforeAfterRows": 17690,
+    "all194CriticalPinsActualGitExact": true,
+    "frozenReadbackSummarySHA256": "727ee397248b462024ef10df80a8543aa8661ab2a8717d2de6d7346bdc2860c0",
+    "webRun": 37240537314,
+    "webJob": 111548196732,
+    "webFirstCause": "Original source publisher CS0234 Present namespace closure missing; browser/new tuple NOT_RUN.",
+    "qualification": "Immutable actual historical negative/scoped6 pass; never relabeled corrected current producer. No successful current eight/package/quit/state result implied."
+  },
+  "currentOutsideHomeOwningGraphChanges": {
+    "sourceBasis": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+    "priorProductBasis": "078febe91a603ac6dc5ebeb995dfbd76d0216f1b",
+    "wholeCurrentRootPins": [
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PersonalisationTests.cs",
+        "blob": "dd3c5b67eddabb87cacc2c0ffb9d533f3603ebb2",
+        "bytes": 18482,
+        "sha256": "59ee0e45d02c3e48bb0b9e6e37af24dfd42a5375a9a4b13e3e4c1b5b3be89c90"
+      },
+      {
+        "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+        "blob": "2be0535a1f77bd9974b241d8b23b853cea053889",
+        "bytes": 7212,
+        "sha256": "ebec03d329f4f58c388d7e49f7666545837bc9075a252bf73190cb71e9e66696"
+      }
+    ],
+    "qualification": "Root-approved actual two-existing-type Web compile links and Desktop avatar fixture are outside this producer Home owning graph. Full snapshot and exact source lineage still bind actual current root; no silent stamping of a later head or Web/Avatar runtime acceptance."
+  },
+  "currentOriginalFixtureCompilerCorrection": {
+    "actualReceivingSource": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+    "wholeCanonicalProposal": "58ff62bcb47309bba355b62304ee6d14ce0fd7e3",
+    "wholeCurrentTestPins": [
+      {
+        "path": "9to1 Workspace/Home/Tests/HomePackageOriginalDependencyLifecycleTests.cs",
+        "bytes": 26317,
+        "sha256": "3400cbcac6350c8fd547d81c7bb029cd748ad7248f0fd45ce97711969e530eb7",
+        "blob": "791750334488cdf93360ee31a6ddbe160a9b1c6e"
+      },
+      {
+        "path": "9to1 Workspace/Home/Tests/HomePackageOriginalDeviceOwnerTests.cs",
+        "bytes": 55232,
+        "sha256": "77bbdd80fea02ce6cbd2d41194c9ffdc378e255bd5c8626bba4a5db9faf301b2",
+        "blob": "d654c7a8e0695d4063538b8cbe525d95551023ac"
+      }
+    ],
+    "sourceReviewC6SHA256": "d4a189cae3560f2358dc0b581684706bdcf201094cd031335e3afae01db9cba3",
+    "change": "Five explicit canonical dependency constructors, guarded nullable fixture session output, and named synchronous Action assertion binding. Only two original test files; all production and original113/45/12 identifiers/assertions remain unchanged.",
+    "qualification": "Compiler-contract fixture corrections preserve original control flow and assertions. Original API throws synchronously at audited refusal. No test exclusions, analyzer suppression, oracle or native controller changes."
+  },
+  "retainedDabActualCompilerNegative": {
+    "source": "dab677ed8d669dac82536cda3fc9483a2cd1daeb",
+    "sourceBasis": "ea07713f54279c49891a717156d8bbee4b296042",
+    "homeRun": 37242268775,
+    "homeJob": 111553187172,
+    "originalArtifactId": 11317734376,
+    "originalContainerBytes": 2607834,
+    "originalContainerSHA256": "a9008ee07af3b669e51c330f86e3f79c199425e5799ce9fbc6f123e21b573c77",
+    "actualNativeHostSix": "Original unfiltered normalRelease strict6/6PASS/0skip, currentruntime232 unchanged; owning build0warnings0errors.",
+    "compositionFailure": "Whole original owning Release test project0warnings/7errors: CS8752x5 dependency array target-new, CS8601x1 nullable fixture output, xUnit2014x1 synchronous Task-returning assertion binding.",
+    "compositionTwoPackageAndGuiProfileStateDrains": "NOT_RUN_BEFORE_DISCOVERY",
+    "sourceBeforeAfterRows": 17690,
+    "actual194PinsGitExact": true,
+    "frozenOriginalReadbackSummarySHA256": "ac2bd689a2f6829293d9b279b8dfd5cb825e5fe461ff88ccf7bd6f4f28a8d005",
+    "actualIndependentReadbackC6SHA256": "25620165054e10c100b6b4b2d0fe212e53eb025c54348d79927ac3b0dc3587f1",
+    "qualification": "Immutable actual history; never relabeled corrected current producer. Independent Web source dab publication remains its own immutable producer tuple; no changed-consumer authentication or current58 browser acceptance inferred."
+  }
+}
