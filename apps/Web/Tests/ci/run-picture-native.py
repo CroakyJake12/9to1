@@ -179,21 +179,52 @@ def main():
         fixture_output = output / "fixture-data/picture"
         result["nativeStarted"] = True
         expected_exit = 0 if args.variant == "current" else 1
+        native_command_error = None
+        log = None
         try:
             log = commands.run("native", [str(apphost), str(fixture_output)], 120)
-        except RuntimeError:
-            # Commands rejects nonzero as a command failure. Only a genuine normal, fully drained
-            # expected native exit1 is admitted as a negative control, never forced cleanup.
-            record = commands.records[-1]
-            if expected_exit != 1 or record["name"] != "native" or not normal_command(record, 1):
-                raise
-            log = (diagnostics / "native.log").read_text(errors="strict")
+        except RuntimeError as error:
+            # Retain the real command failure, but capture its actual fixture
+            # outcomes before ANY expected-exit or intended-negative gate.
+            native_command_error = error
         native_record = commands.records[-1]
+        result["actualNativeCommandRecord"] = native_record
+        if native_command_error is not None:
+            result["actualNativeCommandException"] = repr(native_command_error)
+        native_path = fixture_output / "results.json"
+        if not native_path.is_file():
+            result["nativeResultCaptureState"] = "ABSENT"
+            if native_command_error is not None:
+                raise native_command_error
+            raise RuntimeError("Actual native fixture result is absent; no outcomes invented")
+        result["nativeResultSHA256"] = digest(native_path)
+        result["nativeResultBytes"] = native_path.stat().st_size
+        if result["nativeResultBytes"] > 8 * 1024 * 1024:
+            result["nativeResultCaptureState"] = "OVERSIZE_NOT_COPIED"
+            raise RuntimeError("Actual controlled native result exceeds bounded8MiB diagnostics; no partial outcome accepted")
+        native_bytes = native_path.read_bytes()
+        if len(native_bytes) != result["nativeResultBytes"] or hashlib.sha256(native_bytes).hexdigest() != result["nativeResultSHA256"]:
+            result["nativeResultCaptureState"] = "CHANGED_DURING_READ_NOT_COPIED"
+            raise RuntimeError("Actual native fixture result changed during bounded capture")
+        # Root explicitly authorizes full exceptions/stacks/IDs/paths for ONLY
+        # this approved synthetic PNG/local native fixture, not private providers.
+        (diagnostics / "native-results.json").write_bytes(native_bytes)
+        result["nativeResultDiagnostic"] = "native-results.json"
+        result["nativeResultCaptureState"] = "RAW_CAPTURED_JSON_NOT_PARSED"
+        native = json.loads(native_bytes)
+        result["actualNativeCounters"] = {key: native.get(key) for key in
+            ("discovered", "executed", "passed", "failed", "notRun", "timedOut", "prerequisite", "assertions", "exitCode")}
+        result["nativeResultCaptureState"] = "STRUCTURED_CAPTURED_NOT_VALIDATED"
+        # Commands still rejects nonzero/timeout/forced cleanup. Only a genuine
+        # normal expected native exit1 is eligible as the existing negative.
+        if native_command_error is not None:
+            if expected_exit != 1 or native_record["name"] != "native" or not normal_command(native_record, 1):
+                raise native_command_error
         if not normal_command(native_record, expected_exit):
             raise RuntimeError("Actual native process exit/family is not the required normal result")
-        native = json.loads((fixture_output / "results.json").read_text())
+        if log is None:
+            log = (diagnostics / "native.log").read_text(errors="strict")
         result.update(validate_native(args.variant, native, log, native_record["exit"]))
-        result["nativeResultSHA256"] = digest(fixture_output / "results.json")
         result["fixtureSourcePinManifestSHA256"] = source_pins_sha
         check_sources(directory, args.variant, source_pins)
         if digest(directory / "fixture-source-pins.json") != source_pins_sha:
