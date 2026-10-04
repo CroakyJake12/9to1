@@ -1,4 +1,6 @@
 using System.Net.Sockets;
+using System.IO.Pipes;
+using System.Security.Principal;
 using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -12,7 +14,7 @@ using PermissionRisk = HavenOS.Home.PermissionsTrustNotifications.HomePermission
 namespace HavenOS.Home.Tests;
 
 /// <summary>
-/// Actual Unix socket/held Home lease, canonical manual broker and actual isolated File device
+/// Actual Windows named pipe or Linux Unix socket/held Home lease, canonical manual broker and actual isolated File device
 /// store journeys. Installed identity, catalogue, signer and root channel are explicitly supplied
 /// test configuration. They do not prove protected publisher enrollment, root privilege, signed
 /// native payload, production install/ABI/default activation or a genuine release declaration.
@@ -535,6 +537,9 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         private readonly string _root = Path.Combine(Path.GetTempPath(), "home-package-original-" + Guid.NewGuid().ToString("N"));
         private CancellationTokenSource? _deadline, _connection, _deviceLifetime;
         private Socket? _listener, _client, _accepted;
+        private NamedPipeServerStream? _pipeServer;
+        private NamedPipeClientStream? _pipeClient;
+        private Task? _pipeAccept, _pipeConnect;
         private HomeNativeSessionLease? _lease;
         internal readonly Actors Actors = new();
         internal Verifier Verifier = null!;
@@ -551,9 +556,11 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         internal CancellationToken Token => _deadline!.Token;
         internal async Task InitializeAsync()
         {
-            if (!OperatingSystem.IsLinux())
-                throw new PlatformNotSupportedException("Actual original Unix socket fixture requires Linux; no unsupported-platform pass is claimed.");
-            _deadline = new(TimeSpan.FromSeconds(30)); _connection = new(); _deviceLifetime = new();
+            if (!OperatingSystem.IsLinux() && !OperatingSystem.IsWindows())
+                throw new PlatformNotSupportedException("Actual original socket/pipe fixture requires Linux or Windows; no unsupported-platform pass is claimed.");
+            _deadline = new(TimeSpan.FromSeconds(30));
+            _connection = CancellationTokenSource.CreateLinkedTokenSource(_deadline.Token);
+            _deviceLifetime = new();
             Directory.CreateDirectory(_root);
             Verifier = new(Actors);
             PermissionStore = new(Path.Combine(_root, "permissions.json"));
@@ -567,17 +574,40 @@ public sealed class HomePackageOriginalDeviceOwnerTests
             api = new HomeCoreApi(Runtime, Sessions, Actors);
             Artifacts = new(); Root = new(Actors, Artifacts);
             Owner = new(new FileHomeCoreStateStore(Path.Combine(_root, "device.json"), DevicePersisted), Artifacts, Root, _deviceLifetime.Token);
-            _listener = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-            _client = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-            var address = new UnixDomainSocketEndPoint(Path.Combine(_root, "peer.sock"));
-            _listener.Bind(address); _listener.Listen(1);
-            await _client.ConnectAsync(address, Token); _accepted = await _listener.AcceptAsync(Token);
-            Assert.Equal(Environment.ProcessId, HomeNativePeerObservation.FromAcceptedUnixSocket(_accepted)!.ProcessId);
+            if (OperatingSystem.IsWindows())
+            {
+                var name = "home-package-original-" + Guid.NewGuid().ToString("N");
+                _pipeServer = new(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
+                    PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+                _pipeClient = new(".", name, PipeDirection.InOut, PipeOptions.Asynchronous);
+                _pipeAccept = _pipeServer.WaitForConnectionAsync(_connection.Token);
+                _pipeConnect = _pipeClient.ConnectAsync(_connection.Token);
+                await Task.WhenAll(_pipeAccept, _pipeConnect);
+                var observed = HomeNativePeerObservation.FromConnectedWindowsPipe(_pipeServer)
+                    ?? throw new UnauthorizedAccessException("The actual fixture pipe peer was not observed.");
+                if (observed.ProcessId != Environment.ProcessId)
+                    throw new UnauthorizedAccessException("The actual fixture pipe process differs from this test process.");
+                using var current = WindowsIdentity.GetCurrent();
+                if (observed.OperatingSystemPrincipalId != "windows-sid:" + current.User?.Value)
+                    throw new UnauthorizedAccessException("The actual fixture SID differs from the pipe observation.");
+            }
+            else
+            {
+                _listener = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+                _client = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+                var address = new UnixDomainSocketEndPoint(Path.Combine(_root, "peer.sock"));
+                _listener.Bind(address); _listener.Listen(1);
+                await _client.ConnectAsync(address, Token); _accepted = await _listener.AcceptAsync(Token);
+                Assert.Equal(Environment.ProcessId, HomeNativePeerObservation.FromAcceptedUnixSocket(_accepted)!.ProcessId);
+            }
             _lease = await HomeNativeSessionLease.TryAcquireAsync(Actors, new Paths(_root), Token)
                 ?? throw new InvalidOperationException("Actual original Home lease refused.");
             await Runtime.StartAsync(Token);
-            Session = await Sessions.AcceptUnixAsync(_accepted, _lease, _connection.Token, Token)
-                ?? throw new UnauthorizedAccessException("Supplied synthetic original installed attestation refused.");
+            Session = OperatingSystem.IsWindows()
+                ? await Sessions.AcceptWindowsPipeAsync(_pipeServer!, _lease, _connection.Token, Token)
+                : await Sessions.AcceptUnixAsync(_accepted!, _lease, _connection.Token, Token);
+            if (Session is null)
+                throw new UnauthorizedAccessException("Supplied synthetic original installed attestation refused.");
             var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(Actors, [new PackageResourceOwner(Actors)]), Permissions);
             Adapter = Session.OpenOriginalPackageOperations(Owner, broker);
         }
@@ -597,10 +627,14 @@ public sealed class HomePackageOriginalDeviceOwnerTests
             if (adapterClose is not null) await failures.DrainAsync(adapterClose);
             if (ownerClose is not null) await failures.DrainAsync(ownerClose);
             if (_connection is not null) failures.Attempt(_connection.Cancel);
+            if (_pipeAccept is not null) await failures.DrainAsync(_pipeAccept);
+            if (_pipeConnect is not null) await failures.DrainAsync(_pipeConnect);
             try { if (Session is not null) await Session.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
             try { if (Sessions is not null) await Sessions.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
             try { if (Runtime is not null) await Runtime.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
-            failures.Attempt(() => _accepted?.Dispose()); failures.Attempt(() => _lease?.Dispose());
+            failures.Attempt(() => _accepted?.Dispose());
+            failures.Attempt(() => _pipeServer?.Dispose()); failures.Attempt(() => _pipeClient?.Dispose());
+            failures.Attempt(() => _lease?.Dispose());
             failures.Attempt(() => _client?.Dispose()); failures.Attempt(() => _listener?.Dispose());
             failures.Attempt(() => Artifacts?.Dispose()); failures.Attempt(() => _connection?.Dispose());
             failures.Attempt(() => _deviceLifetime?.Dispose()); failures.Attempt(() => _deadline?.Dispose());
@@ -632,8 +666,17 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         {
             token.ThrowIfCancellationRequested();
             return ValueTask.FromResult<HomeNativeInstalledPeer?>(peer.ProcessId == Environment.ProcessId &&
-                peer.OperatingSystemPrincipalId.StartsWith("unix-euid:", StringComparison.Ordinal) &&
-                original == actors.Current ? Peer : null);
+                SameObservedPrincipal(peer) && original == actors.Current ? Peer : null);
+        }
+        private static bool SameObservedPrincipal(HomeNativeObservedPeer peer)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                using var current = WindowsIdentity.GetCurrent();
+                return current.User is not null && peer.OperatingSystemPrincipalId == "windows-sid:" + current.User.Value;
+            }
+            return OperatingSystem.IsLinux() &&
+                peer.OperatingSystemPrincipalId.StartsWith("unix-euid:", StringComparison.Ordinal);
         }
     }
     private sealed class Paths(string root) : IAppPaths

@@ -14,7 +14,7 @@ When Home is absent on Windows, a separate genuine bootstrap owner must acquire 
 
 ## Validation
 
-The proposal contains 23 test methods representing 45 authored cases; they have not been compiled or run. All prior assertions are retained. The pure planner/policy suite contains 34 cases. The eleven original device-owner cases use genuine Linux Unix sockets, an isolated File store and manual approval, with explicitly scripted installation/artifact/root evidence. Their platform guard refuses on Windows; a Windows named-pipe fixture acquisition successor is required for those owning Windows journeys.
+The proposal contains 23 test methods representing 45 authored cases; they have not been compiled or run. All prior assertions are retained. The pure planner/policy suite contains 34 cases. The eleven original device-owner cases use genuine Windows named pipes or Linux Unix sockets, an isolated File store and manual approval, with explicitly scripted installation/artifact/root evidence. Windows acquisition retains the original pipe accept/connect tasks, observed PID/SID and same held Home lease; partial-failure cleanup independently drains those tasks before disposing the pipes.
 
 Run the pure suite on a supported .NET SDK:
 
@@ -22,7 +22,7 @@ Run the pure suite on a supported .NET SDK:
 dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" --filter FullyQualifiedName~HomePackageOriginalDependencyLifecycleTests
 ```
 
-Run the original device-owner suite on Linux:
+Run the original device-owner suite on Windows or Linux:
 
 ```sh
 dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" --filter FullyQualifiedName~HomePackageOriginalDeviceOwnerTests
