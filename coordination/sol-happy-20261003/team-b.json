@@ -155,14 +155,18 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T16:11:24.414812+00:00",
+  "updatedUTC": "2026-10-04T17:40:46.959693+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
-    "4b6413a9d8b17b394daa7db74b05931cba8269f4"
+    "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+    "0dd58e0b50b99e4ed7996bb57b982e9bda027907",
+    "11b2890f6fe73747db74fa1a0c686648ed971c94",
+    "dbb10e81c865dac61dbfb9f27a16da4e9556e7aa",
+    "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443"
   ],
-  "candidateCommit": "5864fa22990df233fef9b30a27355a2ab722797f",
-  "candidateStatus": "PROVISIONAL_SCOPED_ACTUAL_BROWSER_AND_NATIVE_RESULTS_FULL_ACTIVE31_OPEN",
+  "candidateCommit": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
+  "candidateStatus": "PROVISIONAL_SCOPED_RESULTS_CURRENT_NATIVE_FAILURES_FULL_ACTIVE31_OPEN",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -1288,9 +1292,9 @@
     "owners": "LatestA03:40 record815a13bf preserves historicalACKfields byimmutable5e153eb; no newexact193c/742/35c/Glyph/PictureACK. C23:48 no newhostedports. NewA CardsStudy32/sourcecontracts remainunrun/unpublished; no fabricatedfrontendBank/Burrows. RootsoleBwriter Csoleglobalrelease unchanged."
   },
   "currentExecutableCheckpoint": {
-    "UTC": "2026-10-04T16:11:24.414812+00:00",
-    "sourceHead": "5864fa22990df233fef9b30a27355a2ab722797f",
-    "state": "CONTINUING_REAL_WORKFLOWS_AND_INDEPENDENT_REPRODUCTION",
+    "UTC": "2026-10-04T17:40:46.959693+00:00",
+    "sourceHead": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
+    "state": "ACTIVE_OWNED_PRODUCT_REPAIRS_ACTUAL_FAILURE_LOOPS_AND_INDEPENDENT_CUSTODY",
     "PictureBrowser9": {
       "firstRun": 37206507446,
       "firstSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
@@ -1496,7 +1500,7 @@
         "bytes": 3842,
         "sha256": "2a0c8300321d83fe70d0f8468d24b68e2debbfaa5a298c27919a29350b3bcc5c"
       },
-      "qualification": "Originalfull26+3traces3PNGs locallyreadviaexactpermanentGitbody; rawcausal+actualreadonlyIDBreturns+matchingexportWAVtracebodyindependentlyverified. NEWindep372123 same14fullrawreview244bd complete, its3trace/3PNG transport incomplete. Original390rightclippingactualvisualFAIL remainsopen B-ownedrepair. Hardware/provider/fullWave/fullAT stillopen.",
+      "qualification": "Original14/localdurableIDB full26/literal27/WAVbody reviewed; independent critical14 passed and causalraw independentlyreviewed, fullsecond26 transport1of3 complete. Historical390clip failure preserved; realB-ownednativeviewport nowfits, current64=56PASS8FAIL. FullAT/provider/audiohardware/donor/crossclient/fullWave open.",
       "fullCausalRawPrimary": {
         "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-recorded-raw-review01/recorded-wave14-full-causal-review.json",
         "bytes": 33054,
@@ -1567,12 +1571,12 @@
     "WriteAuthoring": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
     "Planner": "Actual selected original SQLite1/1 PASS; B2+B6 full recorded review complete.",
     "nextExecutables": [
-      "Write realnativepackage actualCI37215109573 publishedcurrent5864 source; fullfirstfailure/rawloop/B2primary/B6independentcriticalreplay aftersourcefreeze",
-      "WaveB-ownedfiniteviewportpolicy fullproduct/nativepeer thenactualnativebaseline/proposal390+native200fonts+same14+freshrealChrome200keyboard/touch proof. No sharedCUI edits/replacement.",
-      "IndependentWave26 complete exact3partGitdelivery/memoryproof/actualIDB/WAV reproduction; first20MBpartprotectedroot+B6 andonlytemporaryretiredafterreadersclosed",
-      "C receiving7ded newintegration candidate actualbrowser9/source review/SpaceHomeGPSFormsownercontracts remainopen"
+      "Wave actualnative repair/meaningful glyph+localpan checks thenactualbrowser14+3 andB6criticalreproduce",
+      "Write initial-focus/save retention/RIDless+cache/validatedasset source07review/rootadopt thenactual7/9/9+original48/new9nativefocus mode",
+      "Independent existingWave full26 secondrun: isolated officialpart02 two<10MB subparts thenpart3/fullIDB+PCM reproduce in memory",
+      "Continue other current31 realowner workflows and exact sharedA/hostedC dependencies without scope reduction"
     ],
-    "completion": "Full active31 requirement scope still outstanding. No accepted integrated head/fullparity claim.",
+    "completion": "FULL_ACTIVE31_AND_LE01_15_INCOMPLETE_CONTINUING_AUTHORISED_WORK",
     "Study": {
       "run": 37210629435,
       "source": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
@@ -1675,32 +1679,77 @@
       "scope": "Entire unchanged originalMotionProject/store/commands/Run realfilesystem edit/refusal/fractionaltimebase workflow, not browser/media decode/render/actualFilesresolution/fullcanonicalmodel/undo/catalogue acceptance."
     },
     "WritePackageBrowser": {
-      "source": "5864fa22990df233fef9b30a27355a2ab722797f",
-      "rootAdoption": {
-        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/write-package-browser-root-adoption.json",
-        "bytes": 3321,
-        "sha256": "9b545e37b2257bbe099d7c812c9caa2249353db796b61eec762146d23b2782cf"
+      "firstRun": 37215109573,
+      "firstHead": "5864fa22990df233fef9b30a27355a2ab722797f",
+      "firstActual": {
+        "nativeSeed": {
+          "passed": 7
+        },
+        "browser": {
+          "passed": 4,
+          "failed": 1,
+          "notRun": 4
+        },
+        "nativeReadback": "9_NOT_RUN"
       },
-      "sourceFreezeSHA256": "369f545f5ee567b24f848ac340372c8a4a6de04fa4bb5e3dbeb5d7e6fb02ee0a",
-      "sourcePeerSHA256": "de364f0903c28e80b3f0723ac3e3597e6f922204bd869e3c76f7559114d6a6b3",
-      "actualRun": 37215109573,
-      "state": "REAL_CURRENT_SOURCE_PUBLICATION_STEP_IN_PROGRESS_OTHERSTEPS_NOT_RUN",
-      "expectedGroups": 9,
-      "nativeExpectedChecks": {
-        "seed": 7,
-        "readback": 9
-      },
-      "scope": "Realownercodec/sourcefilechooser/newindependentcanonicalGUID/richphysicalbetaBold/realIDBSavehistory/downloadwholecodecfieldoptionalbytes/coldbrowserprocessreopen; malformedpackage exactdurable/historypreservationeditorpresenceonly. Sourcefixturetext doesnotwaiveoriginalSpaceFAIL."
+      "firstDefect": "Enabled Download x490 y-76 w189 h30 afterSave lies outside1440x1000 canvas; B-owned unchanged-editor refocus source causal support; pendingdownloadwaiter close rejection preserved",
+      "firstCorrectionHead": "11b2890f6fe73747db74fa1a0c686648ed971c94",
+      "rerun": 37218630581,
+      "rerunHead": "dbb10e81c865dac61dbfb9f27a16da4e9556e7aa",
+      "rerunState": "FAIL_AFTER_NORMAL_RESTORE_BEFORE_ALL_UI",
+      "actualPositiveBytes": 236517804,
+      "unchangedCap": 192000000,
+      "freeBytes": 86809550848,
+      "unchangedFloor": 256000000,
+      "nativeSeedBrowserNativeReadback": "ALL_7_9_9_NOT_RUN",
+      "causeQualification": "Exact added package identities unrecorded; assets originalexcluded. Do not infer runtime-pack cause or focusfix pass.",
+      "nextOwnedSource": "RID-less genuine Linux framework-dependent apphost; BOTH genuine publisher NuGet and HTTP positive-path growth; narrowinitialfocus latch neweditoronly; actualexisting selectedassets bounded512KiB/2MiB/index64KiB; source06 valid uploadguard HOLD being fixed07, no cap/oracle waiver; original48+new9 realScene focus branch requires actualCI invocation",
+      "firstPermanentOriginal": "27c456cda58fd1e690c51eae98b83493bbd43ee8",
+      "rerunPermanentOriginal": "7e31d7393178ca9810f2faabf429a4e7003b285f",
+      "independentRerunReviewSHA": "c815a89f7fe60b37b5f04ad9962bc12c381ccbafc032f7cabd929412e6012117",
+      "wholeRerunIndependentReviewSHA": "5da62a9da88c017f8cfe00da15959818459a042e70006e5750bd1537bdcb0292",
+      "scope": "Actual localPackage/import/editBold/save/revisionHistory/download/readback/coldBrowser; fullSpace/A-owned font metrics/fullformats/providers/donorAT remainopen"
     },
     "WaveResponsive": {
-      "state": "ACTUAL390_VISUALFAIL_CAUSE_B_OWNED_OUTER_SCROLL_HORIZONTAL_AUTO_MEASURES_UNBOUNDED",
-      "visual": {
-        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave-original-narrow-visual-review01.json",
-        "bytes": 2163,
-        "sha256": "4aff8ff9cba6f5b6240fac2eb770145da011481b2782625081811e6d931b285b"
+      "ownedProductHead": "0dd58e0b50b99e4ed7996bb57b982e9bda027907",
+      "currentSourceHead": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
+      "firstNativeRun": 37218630614,
+      "firstActualProposed": {
+        "executed": 13,
+        "passed": 11,
+        "failed": 2,
+        "notRun": 51,
+        "nativeViewport": 390,
+        "nativeOuterExtent": 390,
+        "rootWidth": 358
       },
-      "proposalManifestSHA256": "eae546bf9cd866fd80d1ad6d18cea7255e73d93976b6e87ae613774e809ea640",
-      "sourceOnly": "B5 optionalfinalsurfaceflag defaultfalse/Waveoptin/realwrappedtext+finitefields; B1fullpeer/B3sameassertoriginal-vs-proposedactualnativeCI closure+B5genuineChrome200/keyboard/touch runner active, rootnotadopted/notrun. Sourcecount13description correctionactual12 retained;195widthNOTzoom; proposed200nativefontmetrics distinctfromactualbrowserzoom."
+      "allGroupDiagnosticRun": 37220276958,
+      "allGroupActualProposed": {
+        "executed": 64,
+        "passed": 56,
+        "failed": 8,
+        "notRun": 0,
+        "defaultsPassed": 12,
+        "groups": "390/font1,390/nativefont2,195geometry-only,1200wide;3original-default cohorts"
+      },
+      "originalActualControl": {
+        "executed": 64,
+        "passed": 53,
+        "failed": 11,
+        "defaultPassed": 12,
+        "qualification": "Expected-negative driverSUCCESS does not accept original layout."
+      },
+      "primaryReview": {
+        "path": "b3/wave-responsive-native-0bdd-complete64-review01/REVIEW.json",
+        "bytes": 61798,
+        "sha256": "0e619ca1998937edda294e5e385ee7cdc4f4ac366788e1cc05edd3298419f097"
+      },
+      "causalFacts": "All18 selection-rectangle overruns are recorded trailing-space advances; visible ink of those exact offending lines fits. Three recurring button-caption ink overhangs exceed their text advance allocations but stay within root. Public clipping/parent padding geometry must be reviewed, no .1 waiver. Wide local waveform-scroll failure needs actual local metrics. All original failed assertions retained.",
+      "nativeDiagnosticOnly": "Additive actual15 line fields/source spans/all7group completion; no product/oracle/tolerance change",
+      "browserWorkflowRun": 37218630611,
+      "browserState": "SKIPPED_NATIVE_PREREQUISITE_FAILED_STRICT14_AND_NEW3_NOT_RUN",
+      "browserCriteria": "Actual populated390;Tab/ShiftTab/touch/localwheel/physicalSaveCloseReopen;genuineChrome setZoom/getZoom2. FullAT/theme/providers/crossclient/resource acceptance open",
+      "next": "Complete actual caption/clipping/local-waveform geometry diagnosis; independently review meaningful oracle correction/control only where source/raw establish fixture defect; fix genuine B-owned layout defects; native64 then strict14+new3 actual screenshots/independent reproduction."
     }
   },
   "executableCheckpointHistory": [
@@ -2985,14 +3034,12 @@
     "qualifiedCase": "Real two SQLite repositories same-process CAS one winner revision2/outbox2, delete3/rejectedresurrection/outbox3, explicitrestore sameIDrevision4; no browser/crossprocess/fullPlanneracceptance"
   },
   "currentSourcePreparedExecutableQueue": {
-    "commonCommandsSHA256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
-    "Picture": "Admission04+integration02+native13/15/15 peersCLEAR; rootadoption+freshpublisher+real9browser journey next. OwnerGPSactualPreserve7/8FAIL exactAACKmissing.",
-    "WebPublisher": "B1sourceee86/fullpeer6e63CLEAR ordinaryofficialSDK10.0.401/wasm-tools/Bun1.3.4/sourcebuiltowner; actualnewheadpublishNOT_RUN untiladopt.",
-    "Write": "ExistingrequiredSpace15/durable65 sourceprepared; workflow02 repairsactualmissinggitlinksetup; currentAInputRouterSpaceguard lacking makesexpectedfailure meaningful, no sharedpatch withoutexactACK.",
-    "FilesSitesLifecycle": "03source+14nativecases/bindings05 CLEAR; rootfulladoptionpending; exactrealissuerrevoke+drain portsBLOCKED/registrationoff. Nativeold01/02same14 controls06preparing; nofakeowner/authority.",
-    "AIChat": "RealB-owned denied-refresh privateprojection defect sourcefixSAME10 peersCLEAR; actualoriginalRED/currentPASS ordinaryCI next. Scriptedbackendcontrols unitonly; realpublicDen/store/CUI/turn ports requested.",
-    "SDK": "No localSDK/nativeactive; local03/17 oldcaps held, normalremoteCIavailable",
-    "GUI": "Root/B6 anonymous6 completednormal and lanesreleased; no newGUIgrant untilnewpublication/source/resourcegate."
+    "previousWholeRecord": {
+      "commit": "209ec54e70c615e998858b62443186841fda738b",
+      "field": "currentSourcePreparedExecutableQueue"
+    },
+    "authority": "Read currentExecutableCheckpoint nextExecutables; previous items preserved as historical, not current unadopted queue",
+    "commonCommandsSHA256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
   },
   "currentPreciseOwnerRequests20261004": {
     "delivery": {
@@ -3114,11 +3161,10 @@
   "currentDraftLocalAppsReview": {
     "url": "https://github.com/CroakyJake12/9to1/pull/6",
     "draft": true,
+    "head": "0bdd11cd4c7d90cb09d7f62f84e5f810ca5e3443",
     "base": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
-    "head": "1a8cea03534e2b2767ec806f91dd2c454de94281",
-    "scope": "B-owned Picture/Chat/private-view lifecycle repairs, canonical Boards editor coupling and original scoped CI; C sole release/main writer, no merge approval implied.",
-    "status": "DRAFT_FF_HEAD_UPDATED_REF_VERIFIED_PR_API_CACHE_RECHECK_PENDING",
-    "bodyFile": "/tmp/team-b-local-apps-pr6-body-1538.md"
+    "status": "FF_HEAD_AND_STRUCTURED_PR_BODY_VERIFIED",
+    "scope": "Actual originalowner workflows/B-ownedWaveviewportrepair/Writefocus source with currentfailedgate/initialfocusfollowup; Csolemain/releaseacceptance"
   },
   "latestTeamCIntegrationReceived1405": {
     "coordCommit": "53299e8686d6903e9a60111bb1610a3ed0e10264",
@@ -3369,5 +3415,61 @@
     "state": "SOURCE_PROVISIONAL_UNACCEPTED; existingnative15/normal90/sameTurn8 rawreceivingPASS, actualbrowser9pendingasCJSON",
     "acceptedHead": null,
     "request": "C soleintegrator, receive41file400e+fullWave8874 andexactnewPRsource5864 whenBreview/realCI completes. ExistingHome/Space/GPS/Forms/guardedownerports holds preserved."
+  },
+  "previousExecutableCheckpoint1738": {
+    "commit": "209ec54e70c615e998858b62443186841fda738b",
+    "path": "coordination/sol-happy-20261003/team-b.json",
+    "bytes": 278738,
+    "sha256": "8209ac6aa5786b81a1e0d1068bba80bc5b2114aacc922492d9519d5f52f56944",
+    "field": "currentExecutableCheckpoint",
+    "allOriginalSourceFailuresAndRequirementsRetained": true
+  },
+  "currentPermanentFailedOriginalDelivery1738": {
+    "firstWrite": "27c456cda58fd1e690c51eae98b83493bbd43ee8",
+    "firstWaveControlAndRepair": "af8d14d98479fe23bb2079d24fa8e645a06a5091",
+    "WriteRestoreBudget": "7e31d7393178ca9810f2faabf429a4e7003b285f",
+    "scope": "Entire originalActions bytes/allmemberCRC/bodySHA/Gitblob/fullsource immutablebody/root+B6 verified, allreadersclosed; ONLYthreeNEWdeclaredtemporaryduplicates retired, allpriorprotectedoriginals retained",
+    "latest0bdd": "Two original487207/proposed505915B archives once-downloaded,31+31CRC/fullbodyprimary reviewed; permanent rootdelivery+B6review next, stillNOTPASS"
+  },
+  "latestTeamCIntegrationReceived1738": {
+    "coordinationCommit": "209ec54e70c615e998858b62443186841fda738b",
+    "wholeSHA256": "49eccffd1537b8d04b9f3778b39273380cfbcb1b756e1301c3c644fb7996b4e9",
+    "currentUTC": "2026-10-04T17:01:00.916306+00:00",
+    "provisionalCandidate": "42a88df12835924166d6aa7a9924770eaddc6d8b",
+    "acceptedHead": null,
+    "currentWebExecution": {
+      "source": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "run": 37217686116,
+      "url": "https://github.com/CroakyJake12/9to1/actions/runs/37217686116",
+      "status": "ACTUAL_SOURCE_PUBLISH_RETAINED_WHOLE_TWO_RAWPARTS_AND_ORIGINAL9_WORKFLOW_SUCCESS_BODY_ACQUISITION_PENDING",
+      "previousVerifiedActual": {
+        "source": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+        "run": 37214417698,
+        "discovered": 9,
+        "executed": 9,
+        "passed": 9,
+        "failed": 0,
+        "notRun": 0,
+        "sourceInputs": 4537,
+        "naturallyClosedFamilies": 26,
+        "peerSha256": "84f428f83adf9b7c6e43e1ac9fb7523f6a45946a7b41d0f199c3360aa847f1ac",
+        "qualification": "OriginalwholeZIP36,039,006B notuploaded/readback on7ded. ActualWASM/ILwarnings retained. Nativeoriginalcrop15pixels independentlyequal; localofflinePictureonly."
+      },
+      "retention": "Reviewed originalZIP/manifest/seal plus2separate<=19MiBrawpartartifacts; actualnewtupleexactreassembly/sourcecatalog bodyproof pendingC5/C6, no oldcompiledsubstitution.",
+      "firstActualFailure": {
+        "source": "ce50dacc",
+        "run": 37211850761,
+        "status": "OriginalmissingWavecustodyFAILbrowserNOTRUN_preserved"
+      }
+    },
+    "scope": "C actual originalPicture9 at7ded complete9PASS withC6; newdf sealedtuple raw acquisition pending, currentA-onlyauthcurrent7 NOT_RUN; Bcurrent0bdd notintegrated/no global acceptance. Current nativeSpace/fontmetrics/Home/GPS/guardedprovider owner requests remain open."
+  },
+  "specificationMetadataRecheck1738": {
+    "timeUTC": "2026-10-04T17:40:46.959693+00:00",
+    "modifiedTime": "2026-10-04T11:47:25.349Z",
+    "unchangedSinceFullCurrentExport": true,
+    "wholeCurrentExportSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
+    "active31AndLE01_15Unchanged": true,
+    "TrainingLabExcluded": true
   }
 }
