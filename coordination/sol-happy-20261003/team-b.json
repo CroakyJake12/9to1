@@ -155,13 +155,13 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T15:41:10.049122+00:00",
+  "updatedUTC": "2026-10-04T16:11:24.414812+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "1a8cea03534e2b2767ec806f91dd2c454de94281",
+  "candidateCommit": "5864fa22990df233fef9b30a27355a2ab722797f",
   "candidateStatus": "PROVISIONAL_SCOPED_ACTUAL_BROWSER_AND_NATIVE_RESULTS_FULL_ACTIVE31_OPEN",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -1288,8 +1288,8 @@
     "owners": "LatestA03:40 record815a13bf preserves historicalACKfields byimmutable5e153eb; no newexact193c/742/35c/Glyph/PictureACK. C23:48 no newhostedports. NewA CardsStudy32/sourcecontracts remainunrun/unpublished; no fabricatedfrontendBank/Burrows. RootsoleBwriter Csoleglobalrelease unchanged."
   },
   "currentExecutableCheckpoint": {
-    "UTC": "2026-10-04T15:41:10.049122+00:00",
-    "sourceHead": "1a8cea03534e2b2767ec806f91dd2c454de94281",
+    "UTC": "2026-10-04T16:11:24.414812+00:00",
+    "sourceHead": "5864fa22990df233fef9b30a27355a2ab722797f",
     "state": "CONTINUING_REAL_WORKFLOWS_AND_INDEPENDENT_REPRODUCTION",
     "PictureBrowser9": {
       "firstRun": 37206507446,
@@ -1496,7 +1496,7 @@
         "bytes": 3842,
         "sha256": "2a0c8300321d83fe70d0f8468d24b68e2debbfaa5a298c27919a29350b3bcc5c"
       },
-      "qualification": "Full21causalZIPmembers =20originalJSON/logs+exportreceipt; original26beforeafterequal. Actual14PASS covers import/trim/history/coldprocess/twotabdirtyclose/real1byteChromiumquota two-store abort+recoveronce and advancingaudio. Hardwareaudibility false; originalWAV bytes omittedbyuploader, actualrunner PCM comparisons only.3PNG/3tracesfullbody review pending; originalActions44MBouter metadataonly.",
+      "qualification": "Originalfull26+3traces3PNGs locallyreadviaexactpermanentGitbody; rawcausal+actualreadonlyIDBreturns+matchingexportWAVtracebodyindependentlyverified. NEWindep372123 same14fullrawreview244bd complete, its3trace/3PNG transport incomplete. Original390rightclippingactualvisualFAIL remainsopen B-ownedrepair. Hardware/provider/fullWave/fullAT stillopen.",
       "fullCausalRawPrimary": {
         "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-recorded-raw-review01/recorded-wave14-full-causal-review.json",
         "bytes": 33054,
@@ -1535,8 +1535,31 @@
           "failed": 0,
           "notRun": 0
         },
-        "independentRawReview": "B6_READING_NOT_ACCEPTED_FROM_BADGE",
+        "independentRawReview": {
+          "path": "/tmp/team-b-b6-wave22d-independent-causal-review01/review.json",
+          "bytes": 15150,
+          "sha256": "244bd569f6fb7a50b0e8bc5d334346e30040de2c2f2dfb2a4a786093455afe80"
+        },
         "scope": "RealIDB/audio/export/quota-refusal-and-recoveronce14; rawWAVnotuploaded/hardwareaudibilityunverified; full3trace/3PNGcustodypending; originalActionsouterwholebodyidentitymetadataonly."
+      },
+      "fullOriginal26Custody": {
+        "primary": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/full-original26-git-memory-custody-report.json",
+          "bytes": 232333,
+          "sha256": "e615dc4c0a41e0106ac4ee2f69916cc5a710ca6891a377440d32db850dae5770"
+        },
+        "independent": {
+          "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/review.json",
+          "bytes": 12304,
+          "sha256": "1abfddd455af6bd5bb5efc28f080dbd40ee206a68782ca9524d95290e5a27de4"
+        },
+        "criticalLiteralTwoStoresAndRecoveredWAV": {
+          "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/critical-idb-review.json",
+          "bytes": 15677,
+          "sha256": "4dcf327cb70b44d4f8494d40ea2797c7895894a9965006742ea8ce525d94995c"
+        },
+        "actual": "All26original+360nestedtrace bodies fullCRC/SHA;27readonlyproject/summary returnsdecoded, full6 equalityafteractualquotaStorageFull/coldstart, exactsamependingretry7 IDs/source bytes. Actual288044B PCM16audioBlobtrace SHA71a6402a equalsactualdownloadSHA/full24000silentframes+192000tail equalembeddedcanonicalsource.",
+        "qualification": "Originalrun372087onlyliteraltraceproof; independentrun14causalverifiedandnewfull26transport underway. Downloadfilenamebodynotarchived, matchingtracebodyrecovered, no nonzero pan/fades/hardware acceptance. OriginalActions44MBouterwholeidentitystillmetadataonly."
       }
     },
     "FilesSitesLifecycle": "04ae actual current14/14 plus existingFiles17/Sites18=49 positive native local cases; original01 same14 has6PASS8 intendedFAIL, original02 same14 has12PASS2 intendedFAIL. B4+B6 full5ZIP81member review complete; actual issuer ports remain absent/registration off.",
@@ -1544,10 +1567,10 @@
     "WriteAuthoring": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
     "Planner": "Actual selected original SQLite1/1 PASS; B2+B6 full recorded review complete.",
     "nextExecutables": [
-      "Write realnativepackage Import/newcanonicalcopy/richBold/Save/Download/nativecodec/read-onlymalformedpreservation/newbrowserprocessreopen sourceproposal B2+B4 active, source notadopted/notrun",
-      "OriginalWavefull26/3traces/3PNG permanentGitmemorycustody B1+B6 underway; independentreplay14 rawB6review +newtransport preservation next",
-      "Motion1 unchangedoriginalrawB6review, exactfullschema/sharedownerrequest B3 active",
-      "C receivingce50 actualcurrentnative15/15/138 +normalruntime90/90 +sameTurn8/8; actualbrowser9 sourcebuiltCI pending, sharedHome/Space/GPS/Forms/guardedfactory contracts remainopen"
+      "Write realnativepackage actualCI37215109573 publishedcurrent5864 source; fullfirstfailure/rawloop/B2primary/B6independentcriticalreplay aftersourcefreeze",
+      "WaveB-ownedfiniteviewportpolicy fullproduct/nativepeer thenactualnativebaseline/proposal390+native200fonts+same14+freshrealChrome200keyboard/touch proof. No sharedCUI edits/replacement.",
+      "IndependentWave26 complete exact3partGitdelivery/memoryproof/actualIDB/WAV reproduction; first20MBpartprotectedroot+B6 andonlytemporaryretiredafterreadersclosed",
+      "C receiving7ded newintegration candidate actualbrowser9/source review/SpaceHomeGPSFormsownercontracts remainopen"
     ],
     "completion": "Full active31 requirement scope still outstanding. No accepted integrated head/fullparity claim.",
     "Study": {
@@ -1644,8 +1667,40 @@
         "bytes": 19254,
         "sha256": "3b9824b502b93b117c5ab1dea2fad4d5bbf95d6d7f99b6b7bd7b401327348732"
       },
-      "independent": "B6_RECORDED_REVIEW_PENDING",
+      "independent": {
+        "path": "/tmp/team-b-b6-motion896-recorded-review01/review.json",
+        "bytes": 8362,
+        "sha256": "4962b6840ebcfd85abf98ade3081ef208ff072f7ab83af7fd0c6d5fc0f1c3180"
+      },
       "scope": "Entire unchanged originalMotionProject/store/commands/Run realfilesystem edit/refusal/fractionaltimebase workflow, not browser/media decode/render/actualFilesresolution/fullcanonicalmodel/undo/catalogue acceptance."
+    },
+    "WritePackageBrowser": {
+      "source": "5864fa22990df233fef9b30a27355a2ab722797f",
+      "rootAdoption": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/write-package-browser-root-adoption.json",
+        "bytes": 3321,
+        "sha256": "9b545e37b2257bbe099d7c812c9caa2249353db796b61eec762146d23b2782cf"
+      },
+      "sourceFreezeSHA256": "369f545f5ee567b24f848ac340372c8a4a6de04fa4bb5e3dbeb5d7e6fb02ee0a",
+      "sourcePeerSHA256": "de364f0903c28e80b3f0723ac3e3597e6f922204bd869e3c76f7559114d6a6b3",
+      "actualRun": 37215109573,
+      "state": "REAL_CURRENT_SOURCE_PUBLICATION_STEP_IN_PROGRESS_OTHERSTEPS_NOT_RUN",
+      "expectedGroups": 9,
+      "nativeExpectedChecks": {
+        "seed": 7,
+        "readback": 9
+      },
+      "scope": "Realownercodec/sourcefilechooser/newindependentcanonicalGUID/richphysicalbetaBold/realIDBSavehistory/downloadwholecodecfieldoptionalbytes/coldbrowserprocessreopen; malformedpackage exactdurable/historypreservationeditorpresenceonly. Sourcefixturetext doesnotwaiveoriginalSpaceFAIL."
+    },
+    "WaveResponsive": {
+      "state": "ACTUAL390_VISUALFAIL_CAUSE_B_OWNED_OUTER_SCROLL_HORIZONTAL_AUTO_MEASURES_UNBOUNDED",
+      "visual": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave-original-narrow-visual-review01.json",
+        "bytes": 2163,
+        "sha256": "4aff8ff9cba6f5b6240fac2eb770145da011481b2782625081811e6d931b285b"
+      },
+      "proposalManifestSHA256": "eae546bf9cd866fd80d1ad6d18cea7255e73d93976b6e87ae613774e809ea640",
+      "sourceOnly": "B5 optionalfinalsurfaceflag defaultfalse/Waveoptin/realwrappedtext+finitefields; B1fullpeer/B3sameassertoriginal-vs-proposedactualnativeCI closure+B5genuineChrome200/keyboard/touch runner active, rootnotadopted/notrun. Sourcecount13description correctionactual12 retained;195widthNOTzoom; proposed200nativefontmetrics distinctfromactualbrowserzoom."
     }
   },
   "executableCheckpointHistory": [
@@ -3251,8 +3306,9 @@
       "bytes": 8511,
       "sha256": "b967fbb73dabb34062a70281b96a0e656a2e2b8c1ef53796d0056889669b40b2"
     },
-    "state": "ALL_THREE_EXACT_OFFICIAL_MEMBER_TRANSPORT_PARTS_DURABLY_PUBLISHED_FULL26MEMORY_REVIEW_UNDERWAY",
-    "scope": "Exactextractedoriginal26memberbody transport,newcontainer; originalActionsouterZIP44MBnotwholebodyread/noWAVemittedbody. Rootfullremote readbackall3/B6parts01+02clearpart03pending. ONLYnewroottemporarypart01+02retiredafterprotectedremoteproof/readersclosed; allhistoricaloriginalarchives retained."
+    "state": "ALL_THREE_PROTECTED_GIT_BODIES_FULL26_PRIMARY_AND_B6_MEMORY_READ_PASS",
+    "scope": "Exactextractedoriginal26memberbody transport,newcontainer; originalActionsouterZIP44MBnotwholebodyread/noWAVemittedbody. Rootfullremote readbackall3/B6parts01+02clearpart03pending. ONLYnewroottemporarypart01+02retiredafterprotectedremoteproof/readersclosed; allhistoricaloriginalarchives retained.",
+    "temporaryCustody": "ONLYnewrootpart01/02/03 transportduplicatesretiredaftereachfullprotectedremoteGitbody+B6CRC/readersclosed. Originalallprotectedapp/browserarchives retained."
   },
   "latestTeamCIntegrationReceived1538": {
     "coord": "93c2a3923a5654c4e2d136a5fd07e259411defa4",
@@ -3275,7 +3331,43 @@
       "bytes": 2840,
       "sha256": "ad34235302832d1cda8a80daca0c78ac80e78aea4906f57cd18b715d5c5df08a"
     },
-    "MotionFullCanonicalModel": "B3 exactsource/sharedengine contractrequest inprogress; no competingBmodel",
+    "MotionFullCanonicalModel": {
+      "delivery": "400ecdf1ec36a3d28e742beeba28e223f3ab0d14:docs/releases/sol-happy-20261003/team-b-owner-workflows-actual-review03/motion-owner-request.json",
+      "bytes": 48471,
+      "sha256": "e1604c758ddcc3c3cf2e3e4b552a4a7122043008604b21fb8ff9e9a301d60991",
+      "peerSHA256": "9d85aed02725b304456cecfa907d8d964edd76fec8783f5880e945bae10b93c9",
+      "request": "A exactsame-ownerportablecanonicalmodel/codec/edit/history library andpublictypedactions; ownerchoosesfullschema/migrations/signatures. Actualnative1onlynotfullMotion/FilesGUID/nativeGES/browser. RootdoesnotcreateB-ownedreplacement/sharededit."
+    },
     "existingRequests": "ExactsharedHome742/SpaceD2F/GPSPreserve/FormsRespond8/DataCanvasguardedfactories/Boardsseamless193 CUIport ownerACK stillabsent. Do nottreatnarrowlocaltestsasauthority."
+  },
+  "currentOwnerWorkflowActualReview03Delivery": {
+    "head": "400ecdf1ec36a3d28e742beeba28e223f3ab0d14",
+    "branch": "artifact/team-b-browser-83c24b2",
+    "url": "https://github.com/CroakyJake12/9to1/tree/400ecdf1ec36a3d28e742beeba28e223f3ab0d14/docs/releases/sol-happy-20261003/team-b-owner-workflows-actual-review03",
+    "files": 41,
+    "wholeBodyBytes": 3194049,
+    "indexSHA256": "562c85066bf36d4647387d1a6a539ba3c387f7c334db1374fcae2488444132aa",
+    "wholeOriginalRawZIPs": 7,
+    "allRawZIPMemberCRCAndSHA": 152,
+    "scope": "Wholeprimary/B6Motion1 Mailoriginal1+local3 Canvas8Maps6 newnegative13/2 Accounts7+Wave14critical rawreview/Chat3independent/originalfull26+literalquota/WAV/3actualPNG/390visualFAIL. ExactMotion48471Bownerrequest+peer/sourcepins/57quotes/31APIrows +MailrevisionCASrequest; no fullappacceptance. RootallcopySHAreadback+all7ZIPCRC pass; publicGitpushed."
+  },
+  "currentIndependentWave26TransportProgress": {
+    "head": "6c970e11623c32821d27b11daccdd269f348fc67",
+    "branch": "artifact/team-b-wave22d-independent-member-transport-20261004",
+    "state": "PART01_OF_THREE_DURABLE_FULLREMOTE_BODY_ROOT_AND_B6_PASS; parts02/03notlocaldownloadedyet",
+    "peer": {
+      "path": "/tmp/team-b-b6-wave22d-independent-durable-transport-peers/part01-review.json",
+      "bytes": 2733,
+      "sha256": "a534bca475fb0afcae07b0b33d9d53a2e5be881d622f07174392e99c93c245f5"
+    },
+    "scope": "Newcontainerofindependentrun37212388505officialextractedoriginal26bodies; actualActions44MBouterwholeidentitymetadataonly. Onlyownedtemporarypart01retiredafterbodyproof/readersclosed."
+  },
+  "latestTeamCIntegrationReceived1604": {
+    "coord": "85d87121b49c330fddb448c25c5552bd22a642cf",
+    "CUpdatedUTC": "2026-10-04T15:53:04.694203+00:00",
+    "provisionalCandidate": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+    "state": "SOURCE_PROVISIONAL_UNACCEPTED; existingnative15/normal90/sameTurn8 rawreceivingPASS, actualbrowser9pendingasCJSON",
+    "acceptedHead": null,
+    "request": "C soleintegrator, receive41file400e+fullWave8874 andexactnewPRsource5864 whenBreview/realCI completes. ExistingHome/Space/GPS/Forms/guardedownerports holds preserved."
   }
 }
