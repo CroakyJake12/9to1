@@ -72,13 +72,76 @@
     "originalRecordedCause": "UNESTABLISHED"
   },
   "rootFullBytesCRCDecodeReview": "COMPLETE_READER_CLOSED",
-  "independentFullReview": "PENDING",
+  "independentFullReview": {
+    "state": "B6_0C4E_SELECTED_ORIGINAL_RESPONSIVE_FULLACK_READERS_CLOSED",
+    "UTC": "2026-10-04T21:59:01.638016+00:00",
+    "branch": "artifact/team-b-original-transport-diagnostics-20261004",
+    "head": "c72d8dd12c885e25679b4aa239a66f3401242db1",
+    "path": "docs/releases/sol-happy-20261003/team-b-original-transport-diagnostics/wave-0c4e-original-responsive-selected-diagnostics.zip",
+    "blob": "f423d3a6fc11441031e8ca734c5dd4f94dcb3767",
+    "outerBytes": 7358,
+    "outerSHA256": "06db567517128086adc1cf9296fb3634a1c0074f128263ae987cd21878cfe21c",
+    "indexBlob": "c6c655151da3b799f5369e476eda7a8409166d77",
+    "indexBytes": 2703,
+    "indexSHA256": "463c2b7513ca157a3442ef350ad59eb83e8fef716342107b201f9f317d59395a",
+    "all3WholeCRCBodySHAAndGitSHA1Tree100644": true,
+    "originalMapCount": 53,
+    "originalMapSHA256": "f384d03ef0abe6487c95fb201855cab2f1537e758aae98c92672af5178b2b926",
+    "selectedDecodedBytes": 10411,
+    "actualResponsiveCounts": {
+      "discovered": 3,
+      "executed": 0,
+      "passed": 0,
+      "failed": 0,
+      "notRun": 3
+    },
+    "actualFailure": {
+      "active": "setup",
+      "step": "setup",
+      "type": "Error"
+    },
+    "messageAndStack": "ABSENT_IN_ORIGINAL",
+    "actualErrorsAllZero": true,
+    "actualCleanupEmpty": true,
+    "actualPortRebind": true,
+    "all11CommandsNormalEOFNoSignalsGoneECHILDFamilyClosed": true,
+    "responsive12BirthsNormalExit1EOFNoSignalsGoneECHILD": true,
+    "original14CommandExit0": true,
+    "original14All14RawCasesIndependentlyRead": false,
+    "whole2002238OriginalIndependentlyRead": false,
+    "allReadersClosed": true,
+    "noLocalFilesTempReadsImportsRuntimeOrWatchRestart": true,
+    "browser3Acceptance": false,
+    "cause": "UNESTABLISHED; original setup Error lacks message/stack and exact empty stdout log",
+    "analystCorrection": "Initial checker attempted JSON parse of empty .log; corrected raw zero-byte verification before ACK",
+    "selectedPins": [
+      {
+        "path": "wr-run/raw/results.json",
+        "bytes": 1136,
+        "sha256": "b95bb53b7b25ace305c3cc347d49d9f02584544903bd1c57553231abdb8c14f7",
+        "crc32": 943040621
+      },
+      {
+        "path": "wr-run/diagnostics/wave-responsive-real-browser.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": 0
+      },
+      {
+        "path": "wr-run/diagnostics/commands.json",
+        "bytes": 9275,
+        "sha256": "6dffb3e9595706830ac29b4c674701e5f6f7e8fda522b5887b4acdadd39cdc15",
+        "crc32": 1200077201
+      }
+    ]
+  },
   "temporary": {
     "path": "/workspace/attachments/09597a78-4397-45e1-ac26-bd721c361b15/wave-0c4e-original-responsive-selected-diagnostics.zip",
     "rootOnlyLocalReader": true,
     "readerClosed": true,
-    "retirement": "HELD_UNTIL_FULL_INDEPENDENT_ACK_DURABLE_AND_FRESH_BODY_VERIFICATION"
+    "retirement": "ELIGIBLE_EXACT_NEW_DUPLICATE_ALL_ACTUAL_READERS_CLOSED"
   },
   "wholeOriginalReceivedLocally": false,
-  "acceptance": "FAIL_OR_INCOMPLETE"
+  "acceptance": "FAIL_OR_INCOMPLETE",
+  "coordinatorCorrection": "Owned erroneous repeated read-only tree comparison interrupted SIGINT exit130 before reference mutation or retirement; no cloud job signalled. Replacement comparison caches one actual whole tree."
 }
