@@ -38,10 +38,49 @@ jobs:
         with:
           node-version: "24"
       - name: Publish genuine source with maintained SDK recipe
+        id: public_publish
         run: >-
           python3 apps/Web/Tests/ci/run-ordinary-web-publish.py
           --expected-commit '${{ github.sha }}'
           --output "$RUNNER_TEMP/pb-publish"
+      - name: Retain sealed public Web publication
+        if: always() && steps.public_publish.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-c-public-web-publication-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/pb-publish/public-artifact/wwwroot.zip
+            ${{ runner.temp }}/pb-publish/public-artifact/publish-manifest.json
+            ${{ runner.temp }}/pb-publish/public-artifact/seal.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Split exact sealed ZIP for bounded read-only transport
+        id: public_parts
+        if: always() && steps.public_publish.outcome == 'success'
+        run: >-
+          python3 apps/Web/Tests/ci/split-sealed-publication.py
+          --publication "$RUNNER_TEMP/pb-publish/public-artifact"
+          --output "$RUNNER_TEMP/pb-public-parts"
+          --expected-commit '${{ github.sha }}'
+          --github-output "$GITHUB_OUTPUT"
+      - name: Retain original public ZIP transport part 01
+        if: always() && steps.public_parts.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-c-public-web-part01-${{ github.sha }}
+          path: ${{ runner.temp }}/pb-public-parts/part01
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain original public ZIP transport part 02
+        if: always() && steps.public_parts.outcome == 'success' && steps.public_parts.outputs.part_count == '2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-c-public-web-part02-${{ github.sha }}
+          path: ${{ runner.temp }}/pb-public-parts/part02
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
       - name: Install maintained Playwright and actual Chromium
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/pb-tools/node_modules/playwright
