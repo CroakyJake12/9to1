@@ -1,0 +1,69 @@
+{
+  "receivingCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "proposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+  "exactProposedAdapterBodyPresent": true,
+  "adapterSha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145",
+  "runId": "37208129079",
+  "jobId": "111453539622",
+  "artifactId": "11305292433",
+  "originalDataDirectory": "/workspace/team-c-resume-evidence/windows/affected-three-observations/boards",
+  "status": "PACKAGE_EXTRACTION_AND_WINDOW_PROBE_PASS_UNACCEPTED",
+  "package": {
+    "file": "boards-win-x64-unaccepted.zip",
+    "bytes": 78324943,
+    "sha256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64"
+  },
+  "launch": {
+    "processId": 2828,
+    "sessionId": 2,
+    "windowObserved": true,
+    "windowTitle": "Board \u2014 Boards",
+    "closeRequested": true,
+    "exited": true,
+    "forcedCleanup": false,
+    "exitCode": 0
+  },
+  "nativeNormalAppTests": {
+    "total": "54",
+    "executed": "54",
+    "passed": "54",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "acceptanceVerified": false,
+  "fullAppAcceptance": "NOT_RUN",
+  "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied.",
+  "custody": [
+    {
+      "file": "result.json",
+      "bytes": 58840,
+      "sha256": "cba279e171e0f02da0c000f1e9043aadf7247b1b5646d60cb38bddc04682aa3c"
+    },
+    {
+      "file": "native-controls.trx",
+      "bytes": 77740,
+      "sha256": "d19e3b8d74f9617cad43dfc7045d273ebf4798fad71adf275611f13f9e198760"
+    },
+    {
+      "file": "local-original-custody-receipt.json",
+      "bytes": 2308,
+      "sha256": "d21e5e75efe1ec98c953344e8582db1b65decc8ab40369ab961410387d0a1c33"
+    },
+    {
+      "file": "official-artifact-metadata.json",
+      "bytes": 1890,
+      "sha256": "0fa77158f2b8afbee674dd36d7b194e9034c0c5ce796befbe070ca9d065d0efe"
+    }
+  ]
+}

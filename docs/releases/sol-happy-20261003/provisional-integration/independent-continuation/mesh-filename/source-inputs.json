@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
+  "parent": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "sourceReview": "Only sender-separator normalization expression before existingleaf/invalidchar/fallback/length logic; actualUUIDinbox/hash/quotas/authority unchanged; original3tests preserved plus12actualpathcases+wronghashnegative",
+  "pins": {
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Mesh/MeshFileTransferStore.cs": {
+      "bytes": 8458,
+      "sha256": "bed2d0733cddceaa627451f877de7e50874b25f90c9a54fb9831c54b1ef23e2c"
+    },
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshFileTransferStoreTests.cs": {
+      "bytes": 6941,
+      "sha256": "3abb240d716e025afeb92b9e68231b82fa87ffad7e141321f7e092c6265b2dbb"
+    }
+  }
+}

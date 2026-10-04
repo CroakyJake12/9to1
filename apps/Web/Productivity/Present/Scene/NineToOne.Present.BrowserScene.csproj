@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <PresentOwnerRoot>$(MSBuildThisFileDirectory)../../../../../9to1 Workspace/shared/src</PresentOwnerRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Reuse the original scene/fonts/resources already compiled once as Haven;
+         do not create another assembly with that identity or copy its renderer. -->
+    <ProjectReference Include="../../../Write/Scene/Haven.WriteBrowser.Scene.csproj" />
+    <Compile Include="PresentRetainedSceneControl.cs" />
+    <Compile Include="$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.Structured.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.TextEditing.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.DirectManipulation.cs" Link="Owner/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

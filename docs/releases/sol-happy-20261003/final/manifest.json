@@ -1,0 +1,180 @@
+{
+  "testedCandidate": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+  "testedTree": "c1e9df46618f14985aff5f222706b448a34c65da",
+  "headAfter": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+  "results": [
+    {
+      "name": "sites",
+      "command": [
+        "dotnet",
+        "test",
+        "eng/service-validation/Sites.Source.Tests.csproj",
+        "-c",
+        "Release",
+        "--logger",
+        "trx;LogFileName=sites-final.trx",
+        "--results-directory",
+        "/workspace/team-c/evidence/final-candidate"
+      ],
+      "cwd": "/workspace/team-c/integration",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:45.819166+00:00",
+      "endUTC": "2026-10-03T17:41:49.585115+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/sites.log",
+      "logSha256": "aa32df08a21d45a8eeea3e62611b7b09bd5850bdd7ce7bb8d4eba05776510d11"
+    },
+    {
+      "name": "billing",
+      "command": [
+        "node",
+        "--test",
+        "cloud/billing/test/stripe-webhook.test.mjs"
+      ],
+      "cwd": "/workspace/team-c/integration",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:49.585513+00:00",
+      "endUTC": "2026-10-03T17:41:49.743292+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/billing.log",
+      "logSha256": "ced501ada860c24698ddd946dbb931b3a636858a7ba4dd3c37e5560837986a6b"
+    },
+    {
+      "name": "auth-install",
+      "command": [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:49.743424+00:00",
+      "endUTC": "2026-10-03T17:41:52.763305+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-install.log",
+      "logSha256": "33d228bfe6ec9c8179511fd096a8748f61a2f20f2b5af22ae0d51366018faba5"
+    },
+    {
+      "name": "auth-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:52.763442+00:00",
+      "endUTC": "2026-10-03T17:41:54.933897+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-typecheck.log",
+      "logSha256": "626d520fa1bc395811b71b0b5c5580d3b7932af799932d31f318f2a79c327c14"
+    },
+    {
+      "name": "auth-schema",
+      "command": [
+        "npm",
+        "run",
+        "schema:validate"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:54.934107+00:00",
+      "endUTC": "2026-10-03T17:41:55.060604+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-schema.log",
+      "logSha256": "f690bef4447b74b7c1e80af0bf74073e6620c417aec14e8465dc5450358159dc"
+    },
+    {
+      "name": "auth-ui",
+      "command": [
+        "npm",
+        "run",
+        "build:ui"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:55.060728+00:00",
+      "endUTC": "2026-10-03T17:41:55.217661+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-ui.log",
+      "logSha256": "dab20cc5e615d33a51bb2c51c02a30ca0c7ee787b152eb059f74e8d7608e6bf8"
+    },
+    {
+      "name": "auth-workerd",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 1,
+      "startUTC": "2026-10-03T17:41:55.217787+00:00",
+      "endUTC": "2026-10-03T17:41:56.958937+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-workerd.log",
+      "logSha256": "1ec18444bbf61662bb8e50618330eeebd01a240734d643fe3ebb8f5f969a3ae7"
+    },
+    {
+      "name": "auth-workerd-retry",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:43:12.998911+00:00",
+      "endUTC": "2026-10-03T17:43:24.189096+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-workerd-retry.log",
+      "logSha256": "24fcb1a629fb22fd94672966a4baf6376ce9c9b2683e2c9524154a9e981e43e2",
+      "reason": "Initial process failed before readiness: protected default Wrangler logging directory. Supported task-specific log/config environment paths used; no source/assertion changes."
+    }
+  ],
+  "scope": "Local partial actual-source validation only; no provider/deployment/full acceptance",
+  "trackedSourceHashes": {
+    "9to1 Workspace/Sites/Application/SiteActionAuthorization.cs": "432d43f464575d1a6dac0eaa9d030e861b8eaa5161b4cc1396f2464250a6cbce",
+    "9to1 Workspace/Sites/Application/SiteNameVerificationService.cs": "47e296ee20fe3d3fa06e5ef897748777f4b0921fc67c0fdf8e250f71b7c40a41",
+    "9to1 Workspace/Sites/Application/SiteProjectService.cs": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9",
+    "9to1 Workspace/Sites/Application/SitePublicIdentityService.cs": "c530e336a40e7c1b2fe6c9f4976bc4810e34996298252989ae0dc743e8a3898f",
+    "9to1 Workspace/Sites/Directory.Build.props": "98b0e8bb4707c63edf213c7c3219c10a1efccc6862075b785bc54b0bac2e0814",
+    "9to1 Workspace/Sites/Domain/SiteModels.cs": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+    "9to1 Workspace/Sites/Domain/SiteSlug.cs": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641",
+    "9to1 Workspace/Sites/HavenOS.Sites.csproj": "3cfeb4ebd8e45965638eb84b722e29b1b72bd6fbade34c2c53f8f5bd609e71a9",
+    "9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs": "3eaf6fa80bdcdba8266eb5cd1921ff02cc5f57ce0506537b3ee9d1624a517644",
+    "9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+    "9to1 Workspace/Sites/Infrastructure/FileSiteWorkspaceStore.cs": "4e500164864315c908c46d1b5836048a5e9b3537fdcc3ad99a993832211dd82e",
+    "9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj": "dfa0c1e1b1fbf7188a12bb47206982f46fcdf18507d94fc3a837a7825997faaa",
+    "9to1 Workspace/Sites/Tests/SiteAddressAndStoreTests.cs": "df2bfbe781cf994e9c3db66e7ebacbcf304e2c695311cc60602b56ff9d83ad01",
+    "9to1 Workspace/Sites/Tests/SiteDeploymentSafetyTests.cs": "84f1ec7b11f675bd0d6f60e7b7217e5818bdc9ea8369c2bfd2de632a8d64c41f",
+    "9to1 Workspace/Sites/Tests/SiteDomainVerificationTests.cs": "8c7fc13eb3b0326183a1dbccc270fc604b6ced73038bdeefb27e09b557a46f24",
+    "cloud/billing/README.md": "7847266dcfa8a512ddaa4ad7ee775777effb2dd4ed1369baed0a6bde175e81e8",
+    "cloud/billing/package.json": "f5297362c6ac063cf1bded79b28a6f65d2721d0ca92b94f0325cf25e15045175",
+    "cloud/billing/schema/0001-stripe-inbox.sql": "6cefdd1d93f66439d3041cd02d31eb0e3a622027149de416441bc74ad84ff95e",
+    "cloud/billing/src/inbox-processing.mjs": "772b6902b6ca53c0107fe019d791e089181b441dc98d18f9724c0cc7799cff63",
+    "cloud/billing/src/stripe-webhook.mjs": "bd0e3eab1a62efefee08b578f6985a4ed817c72f9fc06dd785d9020084a3325f",
+    "cloud/billing/test/stripe-webhook.test.mjs": "a71e03c6a2115cf153ab1fee40c6e1c3e8b449aeb46c37180bb6796f5d5aa340",
+    "cloud/cake-id-auth/.gitignore": "5b68ca235f5bcc27a58c6b2457d65627135139ab6c5cf556850eab968b924de5",
+    "cloud/cake-id-auth/HANDOFF.md": "33e0a95cc4e0ed5fca6a5a069e0c9f6f704e0c0471b0f1c7c537481483c4104b",
+    "cloud/cake-id-auth/README.md": "bb9ec1cd4af5720669d039e897f00d8a07b954d79e644de4916a40da98c5f6f6",
+    "cloud/cake-id-auth/migrations/0000_cake_guardrails.sql": "8cd4b84109d4deab88d531b125d59a8a3cf1d87c0cb1abd766bc7ff4cdf5245b",
+    "cloud/cake-id-auth/migrations/0001_better_auth.sql": "7145e80b0d4887c785b7e9897ebe36f8b505777ff06df811781faead6f89631c",
+    "cloud/cake-id-auth/package-lock.json": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098",
+    "cloud/cake-id-auth/package.json": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228",
+    "cloud/cake-id-auth/public/auth-ui.txt": "b1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e",
+    "cloud/cake-id-auth/scripts/build-ui.mjs": "5fda0e019884db0a0c0b86a0b8892702648f0de2999ccc7ca844d020ce2d00e8",
+    "cloud/cake-id-auth/scripts/generate-schema.mjs": "716c88b1dc96a90cc037b89b49c72049f0a2ecd50ab41772e5f5fec3911ece53",
+    "cloud/cake-id-auth/scripts/schema-exporter.ts": "3588b1efd823587528f5d799a017d6544d1b370191d91f7f4893b4acb7d7f643",
+    "cloud/cake-id-auth/scripts/validate-schema.mjs": "ee56ed7e0d0dd487affcdf8fca3fd203edcfac74603b7c769ef00f7f305b4804",
+    "cloud/cake-id-auth/src/assets.d.ts": "4ef8773cbd9f6c8375b8dc86abecb8efa4d7a225545730b0e4843cc7c679e902",
+    "cloud/cake-id-auth/src/auth.ts": "2a6c5baacb77ac4480e11f0ddcb86e0005ea627e569931ea6478cf1faf6f9576",
+    "cloud/cake-id-auth/src/browser.ts": "34d6f759e43dbedb2b9858c7065f16008c833fb2a8680b01ef43f3cfe5641916",
+    "cloud/cake-id-auth/src/contract.ts": "0079dd38eb839278cb8045ae98fe61fb15a5aa19dec4b121003c4d21d8614bdf",
+    "cloud/cake-id-auth/src/env.ts": "23df0c3c8e220d5848c8082887cf57456ae3665c238f327a45d5df202493ca18",
+    "cloud/cake-id-auth/src/index.ts": "5b5e8084471224dad888bdd40aeac6b66074bad218d7d5ec0c199a248e201127",
+    "cloud/cake-id-auth/src/limiter.ts": "84ea958917d7651968f9f5ab8e579b6130e9606e3f94b77c141eca2d1b4da3f7",
+    "cloud/cake-id-auth/src/local.ts": "b92fe0bcdd82d243b4b00d15def21eac6e6198eee79d257eee7f7928a0423155",
+    "cloud/cake-id-auth/src/pages.ts": "fa595ec9110e133325dff0c6ad4f220ceca19d38216f79a55e19f565b3d4b3b6",
+    "cloud/cake-id-auth/src/resource-api.ts": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+    "cloud/cake-id-auth/src/worker-configuration.d.ts": "8aa63811d8d500ab4d0fb5e5991f489118a108395ec988693bea1f50108c7a3c",
+    "cloud/cake-id-auth/tests/integration.mjs": "0ce6579e115e1879e8dc8d7595f4e0aa6a3146e8329517012c744b7c21077363",
+    "cloud/cake-id-auth/tests/password-hash-worker.ts": "e74538e74c207630603a19da6deec0f41ef82b142dd40aa1615e3a11215a04dc",
+    "cloud/cake-id-auth/tests/password-runtime.mjs": "c9e7c7bd74e09a12a8a0d83bec820aaba8c60fd937c71587104d81dcba621b30",
+    "cloud/cake-id-auth/tsconfig.json": "0c0795f6236f72c4558e6a447140f152ba126e51941ba9598f64ff4ba3c02a9e",
+    "cloud/cake-id-auth/wrangler.local.jsonc": "b4508e97ae649e1ceb1a9cf850d19d9dd1970f7d5e0e4ba27668b6f99b0564be",
+    "cloud/cake-id-auth/wrangler.password-test.jsonc": "3231e96e7c8b19b0cf90f88e43080a9a3f0fe978872a8b0c28695fd51bb821f5",
+    "eng/service-validation/README.md": "e4f56aaea941b324640323b85e982295402c62606dde16c4f996596144b5cc1f",
+    "eng/service-validation/Sites.Source.Tests.csproj": "8e0604fbd5d529978c7f2448fea1bec4ed5851abedc46f850539d13b6cc44898"
+  }
+}

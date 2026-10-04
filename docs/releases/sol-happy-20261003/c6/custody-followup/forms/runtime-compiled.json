@@ -1,0 +1,871 @@
+{
+  "target": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Runtime.Tests.dll",
+  "targetSha256": "6ce6fd7ad4b8d184505a4cc436b39bbc0e61fe1e2018d193589cba227184b9a4",
+  "files": [
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/.msCoverageSourceRootsMapping_CakeOS.Cui.Runtime.Tests",
+      "bytes": 56536,
+      "sha256": "9f374e0b2e5c1828a4a92d89170c8234f201432bbe57453f6ba46748b5066722"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Base.dll",
+      "bytes": 2258944,
+      "sha256": "4586ec7d6dfb7f9bac210371f94501098fe67a86b1031574bed3f9c329bc5d00"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Base.pdb",
+      "bytes": 824180,
+      "sha256": "ef16590b58d07d15c346dc03169951dc5f7299478cbcce0df8b3946544bd3b7b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Base.xml",
+      "bytes": 2021500,
+      "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Controls.dll",
+      "bytes": 1298944,
+      "sha256": "67c17527c79c587c2e09f0ecb8559ad6beffeee943c1db8b16f2781731713d33"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Controls.pdb",
+      "bytes": 488624,
+      "sha256": "d15a444d3b4b68248c1b144c920f267a4cb7de93c35ac577287587b5f18441fa"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Controls.xml",
+      "bytes": 1335488,
+      "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.DesignerSupport.dll",
+      "bytes": 70656,
+      "sha256": "3bd229225ad79d13c4f6ea791189323a37365a0959db191c71cc9c2313816301"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.DesignerSupport.pdb",
+      "bytes": 28816,
+      "sha256": "94406d97d98cdc542d2c6c5e06e27c40a6d84fced2233cd782001e6f1dd824cb"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.DesignerSupport.xml",
+      "bytes": 141,
+      "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Desktop.dll",
+      "bytes": 14848,
+      "sha256": "3bb976f52d704ba360aee2e68cb8631778ddbf49f26ae235b34aceb4b4cc918b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Desktop.pdb",
+      "bytes": 14368,
+      "sha256": "13fd8e50288d5cc9cf9a8d17233f4d36ae92863640e199d9ce80632f13cd0051"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Desktop.xml",
+      "bytes": 133,
+      "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Dialogs.dll",
+      "bytes": 242688,
+      "sha256": "40e10289f12ec16647c980ff36dda64464c04a3ac37fe108db78eeccf9a39c29"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Dialogs.pdb",
+      "bytes": 24056,
+      "sha256": "70d6b6e163e2fd84bb30e5fa7015575cd7e29889115961c78e52b4a6c4ee086f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Dialogs.xml",
+      "bytes": 638,
+      "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Fonts.Inter.dll",
+      "bytes": 1896960,
+      "sha256": "f5622a09a0e38960dc4280cff48f127dca545c13108e917ded5b5a46feb77c6d"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Fonts.Inter.pdb",
+      "bytes": 13368,
+      "sha256": "14c93c699da11ae5cc4bffc4ed1df604ae7a4ca8cbb06dec1716b302cf9fb22f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Fonts.Inter.xml",
+      "bytes": 137,
+      "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.FreeDesktop.AtSpi.dll",
+      "bytes": 559616,
+      "sha256": "7754e87ddaa3995c2c4485565bc1a3e10533cfb3646fc1aeca91f358b64386d9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.FreeDesktop.AtSpi.pdb",
+      "bytes": 188836,
+      "sha256": "fffda06a77fbe1561bcdfaedd510d4406ca8723d5d805b7ec45724904ed6856c"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.FreeDesktop.AtSpi.xml",
+      "bytes": 52965,
+      "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.FreeDesktop.dll",
+      "bytes": 200704,
+      "sha256": "f496ed12cabc30c751d22f7d2277ad5684763d839f067145e7a696cb39299965"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.FreeDesktop.pdb",
+      "bytes": 83064,
+      "sha256": "b7b9682542212bd3920ccf4ce0a11267c973caa3b529ea161fe194b54af69ff3"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.FreeDesktop.xml",
+      "bytes": 1857,
+      "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.HarfBuzz.dll",
+      "bytes": 21504,
+      "sha256": "2c3c85f8ddeda32b676b9f3779513a1e9a28991eeef42bb3965fe3cf8753dbb8"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.HarfBuzz.pdb",
+      "bytes": 15564,
+      "sha256": "84f865e26226954da4bef535e753e8eb214bcd3040572434e0dd21f1ff7e8be1"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.HarfBuzz.xml",
+      "bytes": 1114,
+      "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Headless.dll",
+      "bytes": 70144,
+      "sha256": "bc32902863d9227de2bb254b85b82ccfd2c319e6763ec3110cf804397bfa9708"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Headless.pdb",
+      "bytes": 29092,
+      "sha256": "7f64ef0a2c326fa103e8b8c1561db93a13c53766853bd571014702d37323162f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Headless.xml",
+      "bytes": 13264,
+      "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Markup.Xaml.dll",
+      "bytes": 74240,
+      "sha256": "edc395838109752bdf4cf39da3e7ea839c96322a3ff5780f811166e6e0504a4f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Markup.Xaml.pdb",
+      "bytes": 35008,
+      "sha256": "f39c863d84f5d12fcc9ebfb198e84f52023f547a0b41ba2ea7fdb4ecff05c8d9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Markup.Xaml.xml",
+      "bytes": 25476,
+      "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Markup.dll",
+      "bytes": 45056,
+      "sha256": "1d571c8f5bf255a9f8b3fb93da20cd2c6471591c2ad518fa47f114793c84e7c0"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Markup.pdb",
+      "bytes": 22844,
+      "sha256": "0e7b6613f8c47f2a74e36eaf8a63312fab65e135473c4a3c4df575bb297c277a"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Markup.xml",
+      "bytes": 4336,
+      "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Metal.dll",
+      "bytes": 14848,
+      "sha256": "1184bf2c760dc9978636a305a0c219a3fa6e67519e71466d7f586671eb369e63"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Metal.pdb",
+      "bytes": 13336,
+      "sha256": "5ff09079f85bcb2dd42c19fdb05ee40d912dfec44abb7c90474325fd0242808d"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Metal.xml",
+      "bytes": 131,
+      "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.MicroCom.dll",
+      "bytes": 14848,
+      "sha256": "fc7465746e036109676d8f5be4cfceb02e979016c219771e5900c88218209e16"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.MicroCom.pdb",
+      "bytes": 13408,
+      "sha256": "209b984b9bf601a4a53a69cb81c75981faaaf1b0dfd246ac2b66cee33cd6fd21"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.MicroCom.xml",
+      "bytes": 134,
+      "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Native.dll",
+      "bytes": 342528,
+      "sha256": "d18b8e4cd33258bb877f17a580ad5128ca1fe57637131ce007e3b9883cc117e6"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Native.pdb",
+      "bytes": 174956,
+      "sha256": "25fcf641e92380ef1eeede667a5de202aa58675e2e73a5f173ba6dc5da17e325"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Native.xml",
+      "bytes": 9476,
+      "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.OpenGL.dll",
+      "bytes": 116224,
+      "sha256": "dc509fd800e9738cdc391c4e47d84ee4ee9723873e5290917fe5fcd6124ec4d1"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.OpenGL.pdb",
+      "bytes": 47908,
+      "sha256": "86f91138d9797c0aa1fb06188cbc4cd284a0b7df4f71e47071f19ddd40a7433e"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.OpenGL.xml",
+      "bytes": 5602,
+      "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Remote.Protocol.dll",
+      "bytes": 74752,
+      "sha256": "dc2023889efc90f19ec7c4de2f6eb0204663dcc082150fe1a39771f017fa74c4"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Remote.Protocol.pdb",
+      "bytes": 29724,
+      "sha256": "ea7bedc340d9d8c9f61aa07b77a0961df448fecc3d7fef7cbe184721bbc7f002"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Remote.Protocol.xml",
+      "bytes": 70801,
+      "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Skia.dll",
+      "bytes": 122880,
+      "sha256": "fa9278773674888d54126c07ecf3cfe7b941f97f606b9645a382ecab5cef13e1"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Skia.pdb",
+      "bytes": 53592,
+      "sha256": "4082e24a372f4b8fb2aec9e6c0676ab077fa8abc491d8265bbce65815989ac14"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Skia.xml",
+      "bytes": 47094,
+      "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Themes.Fluent.dll",
+      "bytes": 712192,
+      "sha256": "b12c1fe34967dde09b46ed833c126d8a730485bb9c1ec8d900c3baafceb0f44c"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Themes.Fluent.pdb",
+      "bytes": 160412,
+      "sha256": "42024c72d4f7caebb3ccf13c2617152ea0198e8d555daba9290788c2f23777ee"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Themes.Fluent.xml",
+      "bytes": 6894,
+      "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Vulkan.dll",
+      "bytes": 190464,
+      "sha256": "ff4ca41468da9e25a95ca6d6841f6b788be286bc973588bd9234ecc8e7d75cac"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Vulkan.pdb",
+      "bytes": 43872,
+      "sha256": "66d18f9f0cb921204dd895c795e9224945d4790d51a94f7b018408c0618f2ea9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Vulkan.xml",
+      "bytes": 1620,
+      "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Win32.Automation.dll",
+      "bytes": 123392,
+      "sha256": "b276e1cbfbe7a6d49cc2c1479a4a8eb855f194ca352bea76f51a16aaee71473e"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Win32.Automation.pdb",
+      "bytes": 87744,
+      "sha256": "b30d7534d7a0c628087e39bd3eb37a72b454158191cbc63a9474e2e6391f0080"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Win32.Automation.xml",
+      "bytes": 3812,
+      "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Win32.dll",
+      "bytes": 932352,
+      "sha256": "211ad7bb6c50ab22d2615f5fdc2f9a94a44b9e24f121d3242d8bab7219dbb4f6"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Win32.pdb",
+      "bytes": 412048,
+      "sha256": "1deea0a40cabff81111459b94342493b12051256301fdf20a0f4aa46ebf7636a"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.Win32.xml",
+      "bytes": 143346,
+      "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.X11.dll",
+      "bytes": 371712,
+      "sha256": "fdb5de67d1392ba564befc1885cd8f450be09ea2c70038c0f68be6d6bb272f93"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.X11.pdb",
+      "bytes": 88356,
+      "sha256": "4b28e7f1c01ad1da9424cebab4ecc9653eda1c173184f4a4f02fadbd53230b71"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.X11.xml",
+      "bytes": 11685,
+      "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.dll",
+      "bytes": 3584,
+      "sha256": "f8facd28bee17f3ca62f5c9482ccbda097c62796570f9e304eeb74af580bc93f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.pdb",
+      "bytes": 12252,
+      "sha256": "6bd80ea537a60698f0156ccd241125d13e7336e44798e37df16a0de090e1f163"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Avalonia.xml",
+      "bytes": 125,
+      "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Core.dll",
+      "bytes": 76288,
+      "sha256": "329d290a9f33b444497008d9395b16ac55575f0e16fe27a8acaa8e8d5c16152b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Core.pdb",
+      "bytes": 28596,
+      "sha256": "0b0b1d41e39452b4935e8c69bcb2555c8601bbffc98d519607a4c14ac54ee7ae"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Language.dll",
+      "bytes": 11264,
+      "sha256": "d72ddbcaf83690a6bf7d3f1458a5973b82e4e0c98a77261d9fa0fa234602522c"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Language.pdb",
+      "bytes": 13572,
+      "sha256": "8d6b3e22edb02db3a119641f41e62890ab3863fbd26f2bc59285edce47a3d1b2"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Runtime.Tests.deps.json",
+      "bytes": 33618,
+      "sha256": "5901c25176a6e107494e8a9298a915d28b824781feee76f52cfdf98d66a3c17d"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Runtime.Tests.dll",
+      "bytes": 131584,
+      "sha256": "6ce6fd7ad4b8d184505a4cc436b39bbc0e61fe1e2018d193589cba227184b9a4"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Runtime.Tests.pdb",
+      "bytes": 36016,
+      "sha256": "b7757d4fabc34253367ca620e36ccc02b420240c87794aae665ec323c2931e86"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Runtime.Tests.runtimeconfig.json",
+      "bytes": 377,
+      "sha256": "0443d3d0ff16be6ca053c0b2601beab25dd91c2c12e6865d289d6a272207081a"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Runtime.dll",
+      "bytes": 150528,
+      "sha256": "dc5ff6a0e606c9425e42be45d433f4190f97944aafe5672b1790fb20d2b95cd5"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Runtime.pdb",
+      "bytes": 45080,
+      "sha256": "490b87672bc6aaa51b3ca503547112e8d6d2e79a25ac65656ec474f608dea148"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Themes.dll",
+      "bytes": 89600,
+      "sha256": "aa5fc6fcf0ab820d81b65b4a3fd6c24e5d8c0abf0fbee18859c57ea75aad85b7"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/CakeOS.Cui.Themes.pdb",
+      "bytes": 27224,
+      "sha256": "14c42e5d5595a757a086be4799cf3fe6aadf69f6882fbbb71e4d56ee4abbb0f1"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/HarfBuzzSharp.dll",
+      "bytes": 122400,
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/MicroCom.Runtime.dll",
+      "bytes": 16384,
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.TestPlatform.CommunicationUtilities.dll",
+      "bytes": 138272,
+      "sha256": "2eba928c1770209f1fd9f515603a0b4ffbfcadf816681ab36d02b9b36417ab33"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.TestPlatform.CoreUtilities.dll",
+      "bytes": 99360,
+      "sha256": "7837f9df4b11a9844143fc9419e5752bdd50305436adcbf84f82b8a52d5909d7"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.TestPlatform.CrossPlatEngine.dll",
+      "bytes": 318496,
+      "sha256": "2f3b463a227b8f30171f8720164b3c0b90451248e0b2f3e8c3da82c23a3fdfcd"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.TestPlatform.PlatformAbstractions.dll",
+      "bytes": 51784,
+      "sha256": "668c7f0df2c30feac9cea9dce808ccabb72ff575c1e820404124212b4eae1773"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.TestPlatform.Utilities.dll",
+      "bytes": 69192,
+      "sha256": "886ef3ab15251e57ca9c124e41de3c43ba0520a036b876bb709ed325438501fe"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.VisualStudio.CodeCoverage.Shim.dll",
+      "bytes": 17440,
+      "sha256": "e590f0095b103c635c7fd45ad5ff537dd221b0bc2db214717940f59faf4767f0"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.VisualStudio.TestPlatform.Common.dll",
+      "bytes": 248904,
+      "sha256": "96d7b2a7e3f79133e17196fdad189486b59852379385198b5cd857e9947164fb"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+      "bytes": 335392,
+      "sha256": "f6d6bc01a85fd68a0599533fcc0de7357922051bad90012b8ad15de31a4ef5e9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Newtonsoft.Json.dll",
+      "bytes": 712464,
+      "sha256": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/NineToOne.Cui.AI.dll",
+      "bytes": 121856,
+      "sha256": "fe2d289e761565f7c762c0df56a810beb95d911dd1b72b4d6e8e6d96e18d05de"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/NineToOne.Cui.AI.pdb",
+      "bytes": 33892,
+      "sha256": "d161e99b0e8277a6c13827e367975ee8b311ea1fe1366d272887c4a05bc6538f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/SkiaSharp.dll",
+      "bytes": 490528,
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/Tmds.DBus.Protocol.dll",
+      "bytes": 219136,
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/cs/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16416,
+      "sha256": "0b2801c627bed88a606321d10596eb669cfeb88b57bfc5c0b6b7a907b9bb733b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/cs/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "c9d447f731108933fb04c6c590cbc67da8b216798f59dd58fbf59dbe5d4bad12"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/cs/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21064,
+      "sha256": "0b0da78325c153c961a6c909a1a7f76b5351d378183ac97750962b422bc42fed"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/cs/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 20512,
+      "sha256": "ddba6018cac9353a31a4bb74ee2e415d18edb847f3963b15a9761fff43f46f8a"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/cs/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 23584,
+      "sha256": "392d2886733f9f5fb876a6b5a3eb163a121dbc6e85c48e38ad3715b8f8b93dc0"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/de/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "413fc39528636aa78640cf1052e2267ffb527f822b367a61c5e7e46bd1dd0a29"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/de/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "ad8c9259e56b5dc2023f59934678e41656c03f899c93b4e00999884529488cf4"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/de/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21024,
+      "sha256": "6fe68132bd88bb7d68515e76d3bf64331c0f71e31495084d7e17bf67bf8cb760"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/de/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21024,
+      "sha256": "cf403e0e615344f9ae3f721804568cd7c7c37b1232c1d10779e6ca0700ccc27f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/de/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24096,
+      "sha256": "f5ca7f6cc54e69ac8c3035e048f7ee8220f9384ffd7f39b7bdcd3b4c09f32c73"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/es/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16968,
+      "sha256": "16c20a97a4ce2b3a5bd8cda2281c63f0933fb7d38e85a27eecfd12e64fc553cb"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/es/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16968,
+      "sha256": "6477bcc21641285682e54fdc350d8ba425facea0657e2e46c67e6e09742ed4f1"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/es/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21024,
+      "sha256": "a7809082f9672eeab7ff15788e046c0b73b0892e1e93994792a75076a3eb84ee"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/es/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21024,
+      "sha256": "3f2ca95475448aecb4a7a3bd61cfb54f65ee49e3b0c1718d494d55890de45fc9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/es/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24136,
+      "sha256": "c9fa4f31d16631f8b151b320bdde332879cb736124aaf7790f608149e42b30d9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/fr/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "901bbb04f87edd283279c7b1b34445df9d3b81a6723d9c43d7aec063fac4e8b1"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/fr/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16968,
+      "sha256": "7550cf5a25cca79f93c730f6cec1bba68d5b163f5ec8518483e4e0cececd65e5"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/fr/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21064,
+      "sha256": "a2a5ceabeb48e076c56472312ef023a4fc1340a719eed296eae5f8047195947e"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/fr/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21024,
+      "sha256": "60fdc87d0ff56eade63c4992106e7fcfcb1cc4c5e3fe9518ea485c4607fabdb9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/fr/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24096,
+      "sha256": "e2b88446b34c929a7d243d21a49e9ae310d6600e91625bad0899a1d43ca7d68b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/it/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16968,
+      "sha256": "d1f4935b0d01d3e85b21151434270b81884d5a9c6cdf65350765b6d014cd6f87"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/it/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "84e55e5d1f1d880021f4ca597bc44d29198747ce7f090c07ca4828f1b20023e5"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/it/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21024,
+      "sha256": "b91b69c1d9dfb355a499cd2f94ec96ff1777100660f3601652c0f4c354269cbd"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/it/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21024,
+      "sha256": "500741d16d4828ef905d98d50d31bdfda76d487ea5a59dcf05bf659796013fbd"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/it/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24096,
+      "sha256": "aff962c1784c544bf50c8351d22520b80e323871990135af6f4c50ae86b9e5e2"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ja/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16968,
+      "sha256": "fe06deeb2530a2d01cac68b1ab56ac2f35967079e67e1b8f413c5ff4d71bef3e"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ja/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 17440,
+      "sha256": "6e8108a72f199f048118a995c1b3efc77b9f6386d22ee6e38815823e148f26ee"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ja/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 22048,
+      "sha256": "604898b056d06be29e17d1c92163bb173ab7cde1bde888abdac7fc07aa6fed49"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ja/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21576,
+      "sha256": "ea7ba6e180911843b828e9ac8c1bcaaa49153c2fb7d84b18c61e837e696e8b44"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ja/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24608,
+      "sha256": "325f99198381a68b6921ced2c2cd1adc5193baa9dd93bf001bd42a534cc1d148"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ko/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "a44e3ac8d0b7a97df0cfb2d58e5749ea37ebd5552218060453a4ff3e5d503e45"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ko/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "ac3244d43758ae27d170a9e48cd7d4a2d886bfe05a8d10acd42fc6e876bca862"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ko/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21576,
+      "sha256": "df3682794d0873b9c1c2fcfba4c2a6800f1a969606ad5d8e65e595837676cb8f"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ko/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21064,
+      "sha256": "a8dfd14cdfb95568b76f18023198d0059c1a76d574260bfb29a424b6e04efe9b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ko/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24096,
+      "sha256": "45a3ffb5106b9c0f6db6541f210511f6e12bb61f564f5131b455617542ab83c5"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/libHarfBuzzSharp.so",
+      "bytes": 2808040,
+      "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/libSkiaSharp.so",
+      "bytes": 11170240,
+      "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pl/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "b1f9d2bddf7a43c89165f11079f2a3ffcfbce10d555da280504c6f775de278b2"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pl/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16968,
+      "sha256": "d8540e14b28deac5ec59fc8424059dd4718b4d961823ebad87f5630a97cc8940"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pl/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21064,
+      "sha256": "c063d3985be04e7aee6ce8b7a81cd519d3473985104049f6951d61686e2bf728"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pl/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21024,
+      "sha256": "7e47deb26946608b7d3330a1adeaf79c9322bb2ed658debff7e32713ae471d86"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pl/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24096,
+      "sha256": "61d74c9dc8c975d3121a53f7dd0c51e3f0441e567fdcba19e223ffeac8f5ee80"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pt-BR/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16408,
+      "sha256": "cca07eaef212436ca343fe9d4b53c2bdcf73e24926e7a118a0cdf98c50193b42"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pt-BR/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "053a2c820db1744751b8001be8ca058f75766f56e31e43975295d82b57e298c6"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pt-BR/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21064,
+      "sha256": "3b7b2bb3466b979ac567b43671c709bf271b449f8768674a5bc4bdfab2fb6209"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pt-BR/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 21064,
+      "sha256": "e37ad4cf66d94539f0bd9c64145e82d071f2dc0d5eea507c37ab9399d848083e"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/pt-BR/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 24136,
+      "sha256": "57372f171d7cb53d55bcff1af4ffc9aae81ac328bbea3e05fde239363f975d23"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ru/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 17432,
+      "sha256": "037459ed48716c8626d9da8b331645701083f4681f7a9b7afb90604883010663"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ru/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 17440,
+      "sha256": "f284bd8310a0f9837f32698199bae39bbb349d87825f742e1b517e0e1f11a9a8"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ru/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 23072,
+      "sha256": "8ee295aeefc29a6eb3837691b0a86a5b968466eb854d5180a630d427094577e2"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ru/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 23072,
+      "sha256": "3e0baeb2bfebc03a03d516bce710d4fcdfaf2b172d26d7703b410bbaa7904abb"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/ru/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 26144,
+      "sha256": "dfa234200ae134e02f8418f5bab367d867164f09d6296d3e60cca667539d9a92"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/testhost.dll",
+      "bytes": 49696,
+      "sha256": "f9f95f20f7a99215b50cfd511085b31549b26f87afaeb02c0a3c21f6875817e8"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/tr/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "24bc4b4e801da4df13c82af08d256e8fba272977d36a87e302828dc3456a48be"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/tr/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "465553c7a46f6b6dbde162b53a8e9f3248c46b870d837d3a071845f6df7508ed"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/tr/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 21064,
+      "sha256": "5ff24567924e8a229f01a00cff3364cf67ebf80d5c68d74ba57a81345ec38582"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/tr/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 20512,
+      "sha256": "a437bc3672e02156dd975f4882549f9b0e6d45c90cbf841e9d10c0225a37a866"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/tr/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 23624,
+      "sha256": "57778f509a17906886f8f24be6eb551817138efefe90f97907aa29ec8cd8fbf9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/xunit.abstractions.dll",
+      "bytes": 21928,
+      "sha256": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/xunit.assert.dll",
+      "bytes": 187088,
+      "sha256": "bcd9711b22d227ac8cd4c1568e72433a0f576d2ec8aae64ac508081892015b1d"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/xunit.core.dll",
+      "bytes": 70352,
+      "sha256": "2f7feeec8c6dec7df684c25fb80aadb292b963d09723460f03d53c5ad2088acc"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/xunit.execution.dotnet.dll",
+      "bytes": 279760,
+      "sha256": "e70febe547c15f8155db3e2d95c3ba4445a59cbc21a3e7541ab22ed49d3dcf7b"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/xunit.runner.visualstudio.testadapter.dll",
+      "bytes": 1253376,
+      "sha256": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hans/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16416,
+      "sha256": "d98cd509290b3f7c620844d71fdddfe6cf03d56c42c2e11cebfef206110b3e74"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hans/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "8f67ae23bf4707f5ead7e70937b87d6c3c591fc36df37eadce2feb76f85f3090"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hans/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 20000,
+      "sha256": "0e5096a6cee9b20a071dced74687041061f3c3d63000278e506f6c0151286944"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hans/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 20000,
+      "sha256": "9ab7e21a7fcfecba5bfcfa529e84508007e5fe00990186d990a60828b1c330c9"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hans/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 23112,
+      "sha256": "2cc8d6dcef5c3ad1af683bccbcb7e47c59ec4198290856b7c9decb4ab228a1a1"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hant/Microsoft.TestPlatform.CommunicationUtilities.resources.dll",
+      "bytes": 16416,
+      "sha256": "9a0a1974eccb4bf75075cb820d926dc03be7f430e9b66e531c192da1988d2412"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hant/Microsoft.TestPlatform.CoreUtilities.resources.dll",
+      "bytes": 16928,
+      "sha256": "d5b3ec84ad3138d20bec9a0be41ae67593a15cd907574a076bc2419e121e53e5"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hant/Microsoft.TestPlatform.CrossPlatEngine.resources.dll",
+      "bytes": 20552,
+      "sha256": "ed31c2b989f0a507b22799e94a039bde65ec3440bd71b8754c4e98fefe0a7982"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hant/Microsoft.VisualStudio.TestPlatform.Common.resources.dll",
+      "bytes": 20000,
+      "sha256": "fb048074a499bf65450abc45fb6313bc05e9058c8483d6c8a82fb0e1dcb3657a"
+    },
+    {
+      "path": "artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime.Tests/release_linux-x64/zh-Hant/Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll",
+      "bytes": 23112,
+      "sha256": "72a34a8ed254da478a928b6192919da0c40ba43ccf7c60b0f1f2f65a2c6ae051"
+    }
+  ]
+}

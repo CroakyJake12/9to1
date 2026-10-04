@@ -1,0 +1,148 @@
+{
+  "qualifiedScope": "C6 actual integrated HTTPS source pin audit only; no hosted/full acceptance inferred",
+  "candidate": "7f0b1dde7af29dec421d6c0bffc099b3e008e06a",
+  "filePins": 20,
+  "hashErrors": 0,
+  "rows": [
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "deployment/https/prepare-fixture.mjs",
+      "expected": "4c410a07f34a9d77d5e93f217ac0ed6c172335118f210a3d37d8b5522a21e343",
+      "actual": "4c410a07f34a9d77d5e93f217ac0ed6c172335118f210a3d37d8b5522a21e343",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "deployment/https/authenticated.mjs",
+      "expected": "a7ac20b568df6655de57491d59ba06cd378d6f52f3e10f7981a226c179c235b1",
+      "actual": "a7ac20b568df6655de57491d59ba06cd378d6f52f3e10f7981a226c179c235b1",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "deployment/https/authenticated.test.mjs",
+      "expected": "e726681fca645b881bd3552f8a043a51cae502bf581c7c0cc637923a7ceafd56",
+      "actual": "e726681fca645b881bd3552f8a043a51cae502bf581c7c0cc637923a7ceafd56",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "deployment/https/AUTHENTICATED.md",
+      "expected": "7f8823023807c33d01532cf584686872854b6a24e0ba33bb05b7feff5881b204",
+      "actual": "7f8823023807c33d01532cf584686872854b6a24e0ba33bb05b7feff5881b204",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "src/index.ts",
+      "expected": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+      "actual": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "src/auth.ts",
+      "expected": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
+      "actual": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "src/resource-api.ts",
+      "expected": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+      "actual": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "src/email.ts",
+      "expected": "ed288123118c4a65ecb6037cfa4d66b5c875a24268906e575354ce14ab940cec",
+      "actual": "ed288123118c4a65ecb6037cfa4d66b5c875a24268906e575354ce14ab940cec",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "migrations/0000_cake_guardrails.sql",
+      "expected": "8cd4b84109d4deab88d531b125d59a8a3cf1d87c0cb1abd766bc7ff4cdf5245b",
+      "actual": "8cd4b84109d4deab88d531b125d59a8a3cf1d87c0cb1abd766bc7ff4cdf5245b",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "migrations/0001_better_auth.sql",
+      "expected": "7145e80b0d4887c785b7e9897ebe36f8b505777ff06df811781faead6f89631c",
+      "actual": "7145e80b0d4887c785b7e9897ebe36f8b505777ff06df811781faead6f89631c",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "package.json",
+      "expected": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228",
+      "actual": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228",
+      "match": true
+    },
+    {
+      "manifest": "authenticated-source-manifest.json",
+      "path": "package-lock.json",
+      "expected": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098",
+      "actual": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "deployment/https/validate.mjs",
+      "expected": "2ec7dcae2efe112ae1927fb14728d1098e55105e1d88944b79d24783eb0e9a8d",
+      "actual": "2ec7dcae2efe112ae1927fb14728d1098e55105e1d88944b79d24783eb0e9a8d",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "deployment/https/validate.test.mjs",
+      "expected": "ec8650f6ff75b4a1de807ae38f213e1796f32214c46fda1e38ce82a69eeeb68a",
+      "actual": "ec8650f6ff75b4a1de807ae38f213e1796f32214c46fda1e38ce82a69eeeb68a",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "deployment/https/README.md",
+      "expected": "8f951ae69cf7e5de6d8bd5e122d7540bfd0201b09fa372bd9bad9ec050803508",
+      "actual": "8f951ae69cf7e5de6d8bd5e122d7540bfd0201b09fa372bd9bad9ec050803508",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "src/index.ts",
+      "expected": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+      "actual": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "src/auth.ts",
+      "expected": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
+      "actual": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "src/resource-api.ts",
+      "expected": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+      "actual": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "src/contract.ts",
+      "expected": "0079dd38eb839278cb8045ae98fe61fb15a5aa19dec4b121003c4d21d8614bdf",
+      "actual": "0079dd38eb839278cb8045ae98fe61fb15a5aa19dec4b121003c4d21d8614bdf",
+      "match": true
+    },
+    {
+      "manifest": "source-manifest.json",
+      "path": "tests/public-cors.mjs",
+      "expected": "58545b7051fd3f357d503efaa837186d7e0bd0157c418b3736e637bfe72d99e3",
+      "actual": "58545b7051fd3f357d503efaa837186d7e0bd0157c418b3736e637bfe72d99e3",
+      "match": true
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup Condition="'$(EnableDefaultCuiItems)' != 'false'">
+    <Cui Include="**/*.cui" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <None Remove="@(Cui)" />
+    <Content Remove="@(Cui)" />
+  </ItemGroup>
+</Project>

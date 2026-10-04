@@ -1,0 +1,39 @@
+[Unit]
+Description=CakeOS Windows Compatibility Broker
+Documentation=file://@DOC_ROOT@/compatibility/wine/README.md
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=@SOURCE_ROOT@
+ExecStart=@PYTHON@ -m compatibility.wine.haven_compat.cli daemon
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=10s
+UMask=0077
+
+# Pin the per-user data location so sandbox write paths are deterministic.
+Environment=XDG_DATA_HOME=%h/.local/share
+RuntimeDirectory=haven
+RuntimeDirectoryMode=0700
+
+# The broker is a coordinator only. Wine itself runs in separately supervised
+# Bubblewrap services and does not inherit this daemon's mount namespace.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=-%h/.local/share/haven/compat
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+LockPersonality=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_UNIX
+
+[Install]
+WantedBy=graphical-session.target

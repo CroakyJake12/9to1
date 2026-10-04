@@ -1,0 +1,152 @@
+{
+  "status": "SOURCE_REVIEW_ACK_PRE_INVOCATION_ONLY",
+  "sourceCommit": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+  "parentRetainedUninvokedProposal": "af1bef9f25394dc48d389c76dafce3c7c95aa277",
+  "producerSource": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "exactFourAdditions": [
+    {
+      "path": ".github/scripts/boards-packaged-ui-controls.ps1",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "2dc4d6e7c7db5df3b884c9a3b9f29f3cc3d9ef90",
+      "bytes": 20983,
+      "sha256": "130ac54c40e2f1991eed6c251d8ac31aeaccdf0b404ae2ce5a4cc41d7db357e8"
+    },
+    {
+      "path": ".github/validation/boards-packaged-ui-controls.json",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "d65051b2e718ed3c84b5f639bd668e8223c5a565",
+      "bytes": 2571,
+      "sha256": "7edf7fa187a43e307551a2716aeebb341dc4644a5dc2884266985aa6c1bb03ff"
+    },
+    {
+      "path": ".github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "925ef525bc3cd9af0fa5e3680971766ec88feeb8",
+      "bytes": 3669,
+      "sha256": "19819cfc8c6e45b9e9ea7a8ad2907ce5ac9d83649cd904ca5d9fa6ec082262fb"
+    },
+    {
+      "path": "eng/release-validation/boards-packaged-ui/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "9e4c44b3859567b8147b0e8cb53e514050d7e2c4",
+      "bytes": 2204,
+      "sha256": "98b6822cf8b3393d3706563ffa925195b2b1fccdc433778c77ace8a031934968"
+    }
+  ],
+  "allOtherTrackedBodiesAndModesConserved": true,
+  "actualNativeSourcePins": [
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "706f36e47d9ddf9f30c36b3411f81c72aecb7adc",
+      "bytes": 44045,
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Boards.cui",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "4f2824ace49591e056de699eb9f4581c3acebfdf",
+      "bytes": 2863,
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BlockRenderer.cs",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "58ae3026944b03ed9c5d11ba8b38631f2c5371b8",
+      "bytes": 50495,
+      "sha256": "f33c0979ff4a47469bb0ad11684799c5469311d5ada826f043bb04fe0562731a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "77424a20225a5c4ad66f9a6f2438d3caa34071dc",
+      "bytes": 83265,
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "5068f35d120c528c90671804f34b9f2a61075067",
+      "bytes": 41060,
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "5a3e162baaf236a91794696f1de09de97397b068",
+      "bytes": 33696,
+      "sha256": "aeec3484ac7a75156a14a305145851afebdffb66d4a20cf8e75ecc643381d674"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "d6d8c0fc6bfe938920f5561bf21df112d9944bc2",
+      "bytes": 28237,
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ControlAutomationPeer.cs",
+      "mode": "100644",
+      "type": "blob",
+      "oid": "59bfc6a04598354235d23e1c3ad53194d4aae769",
+      "bytes": 12193,
+      "sha256": "abc2ee12e374261fc21f685e921a22468e020d78a45b708fbc70d92364b30b5f"
+    }
+  ],
+  "originalArtifactMetadata": [
+    {
+      "id": 11305252552,
+      "name": "windows-unaccepted-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 78087570,
+      "digest": "sha256:97012e4592d4c0f5da14bedd1ac13b5a6b1988bd292b2e990bccd3cdec30d68f"
+    },
+    {
+      "id": 11305292433,
+      "name": "windows-observation-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 34079,
+      "digest": "sha256:7645fdba070177fd1319112030a11242eacfc5000b8cabb553b0e9f16938b234"
+    }
+  ],
+  "innerPackage": {
+    "file": "boards-win-x64-unaccepted.zip",
+    "bytes": 78324943,
+    "sha256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64"
+  },
+  "originalProducerManifestSha256": "cba279e171e0f02da0c000f1e9043aadf7247b1b5646d60cb38bddc04682aa3c",
+  "exactOriginalFileCount": 282,
+  "originalMetadataAndManifestReadback": "Matches previously independently audited original Boards result and official artifact metadata; wrapper digest remains provider declaration, full package extraction/hash here remains future harness observation.",
+  "reviewedControls": [
+    "Only exact original run/artifact IDs and original inner ZIP are consumed; every extracted file size/hash is checked.",
+    "Real application alone creates absent explicit fixture, canonical document identity and paragraph IDs; no model/API/file write by harness.",
+    "UIAutomation exact process/control/foreground/focus guards precede actual keyboard input; three accessible editors and native values observed.",
+    "Durable title/paragraph, stable identity, normal zero-exit close, actual native reopen display and pre-close existing bytes are required.",
+    "Screenshots are bounded and cropped to own actual foreground window; cleanup is restricted to exact launched processes and forced cleanup cannot establish success.",
+    "Autosave may contribute to durability; no exclusive Ctrl+S causality or broad accessibility/donor/installed-app claim."
+  ],
+  "preInvocationDefectsResolved": [
+    "runner.temp moved from invalid job env to allowed invocation step env.",
+    "Only stream Result access follows bounded Task.Wait(5000); timeout/fault observations are retained and block normal success; failure cleanup also records incomplete drain."
+  ],
+  "independentParser": {
+    "host": "PowerShell 7.6.6 Linux parser only",
+    "exitCode": 0,
+    "errors": 0,
+    "firstHostInitialization": "Exit70 read-only default PowerShell local data path; corrected only task-local XDG data/config/cache directories, HOME/USERPROFILE unchanged."
+  },
+  "runtimeControls": "NOT_RUN: actual Windows PowerShell5.1/UIAutomation/interactive desktop/input capability and new package UI controls require real workflow invocation.",
+  "acceptanceVerified": false,
+  "fullAppAcceptance": "NOT_RUN",
+  "installedHomeTuple": "NOT_RUN",
+  "cleanPcDelivery": "NOT_RUN"
+}

@@ -1,0 +1,81 @@
+{
+  "candidate": "c21878b0de2f84134680f706c6bc0feb12969463",
+  "peerReceipt": "2665f68a6ed15dabe29d4e58dab2fd6281ce604e:docs/releases/sol-happy-20261003/C5-native-r2-c218-peer-review.json",
+  "scope": "Raw local exactsource e0c owning closure plus c218 reader transportdouble positive and two isolated negative probes. No binaries, remoteR2 or fullSites acceptance.",
+  "sourceQualification": "Positive testcopy now includes additive blank-both source/config probes; original12positive TRX/log predates additiveprobe. Exactoriginaltest availablec218. Hashnegative tests unchangedoriginalc218.",
+  "receivingDependencyGate": "Root288d/root0bf lacks original SiteArtifactManifest/SiteOutputFile declarations. Copied completee0c nativepipeline supplies those only in isolated harness. Receivingroot compatibility/adoption BLOCKED until owner sourceclosure delivered/reviewed.",
+  "payloads": [
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/positive.log",
+      "bytes": 673,
+      "sha256": "66eb3a46d86e99f88358356fb8a79f0b05b8f8a421587010674cb370a88a7c7c",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/positive.log"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/negative.log",
+      "bytes": 3840,
+      "sha256": "164870afa150056b768f01da77f67090bc8fdfb7b5829e15f7f6af2425dff099",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/negative.log"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/blank-provenance.log",
+      "bytes": 2117,
+      "sha256": "39217a279e7bbe5c76f270d7b8c119a5195b1dd84dfa0e87ed5861d5312610fc",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/blank-provenance.log"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/positive.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/positive.exit"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/negative.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/negative.exit"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/blank-provenance.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/blank-provenance.exit"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/positive/results/positive.trx",
+      "bytes": 19262,
+      "sha256": "df98f8dfe2974bcc4e9ec0f7ba151722aec8aea5829bb90acc86317668b0a192",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/positive/results/positive.trx"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/negative/results/negative.trx",
+      "bytes": 26009,
+      "sha256": "4c8c55d73a9d5fc6aba62540bbf1c944260d25cd4a5ff3da2cf62974bca5e83b",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/negative/results/negative.trx"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/positive/results/blank-provenance.trx",
+      "bytes": 25058,
+      "sha256": "2942718ffab51e6e3fd641404eebd6b1ceb45a3a3424e4b35b9fa421e88a78c7",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/positive/results/blank-provenance.trx"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/positive/ActualNativeR2.Tests.csproj",
+      "bytes": 718,
+      "sha256": "c30d5c48bcb3ae0804f572d5955eeb937780e9919a6eb32d26b959c507f516a4",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/positive/ActualNativeR2.Tests.csproj"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/positive/R2NativeSiteArtifactReaderTests.cs",
+      "bytes": 3433,
+      "sha256": "847f0cf4695fe9aabdcf6d600251bbce19dda66d6816586a0923852062299e31",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/positive/R2NativeSiteArtifactReaderTests.cs"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-c218/negative/R2NativeSiteArtifactReader.cs",
+      "bytes": 6504,
+      "sha256": "2ab6505f03a87b2c9fe52c795c9d2499fc11f6ebc8bc0b0163b8ac8ee1a0df46",
+      "originalPath": "/workspace/team-c/evidence/c5/native-r2-peer/negative/R2NativeSiteArtifactReader.cs"
+    }
+  ]
+}

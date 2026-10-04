@@ -1,0 +1,137 @@
+{
+  "c2": {
+    "head": "0c8b31e725800a15facce366b8c544a1aa9653bf",
+    "anonymousManifestPinsVerified": 8,
+    "authenticatedManifestPinsVerified": 12,
+    "syntaxWithInheritedProxyCAExit": 0,
+    "review": "6file delta usage/doc/hash corrections only; bothflow assertions unchanged; --use-env-proxy --use-system-ca supported, no network, no TLS fallback.",
+    "scope": "Actual HTTPS NOT_RUN; prior control runtime identities preserved."
+  },
+  "c4": {
+    "head": "3f24ffa8cf77a68e81084954d9640808acf0a63d",
+    "sourceCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+    "sourcePinsVerified": 12,
+    "fullSourceTestsProcedureReviewed": true,
+    "positive": {
+      "exit": 0,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "negative": {
+      "exit": 1,
+      "passed": 0,
+      "failed": 1,
+      "mutation": "Only final owning authority callback omitted in isolatedstore copy; unchanged retirement test detects expected2/actual1."
+    },
+    "initialAttempt": "C6 mutation uniqueness assertion incorrectly expected one callback instead of2; source remainedunchanged, filteredtest passed1; retained explicitunmutated log/TRX. Corrected negative omitted onlylastcall.",
+    "limits": [
+      "Durable metadata/revision/event replay, not actual transfer bytes/Drive/protecteddownload/quota/resume/12HTTPjourneys.",
+      "Repro utility uses Python assert sourcepins; normalPython execution only, optimized-O notvalidated.",
+      "Controlled guard fixture not real OAuth adapter; generalDispose failureaggregation notverified."
+    ]
+  },
+  "c5": {
+    "head": "15f71c7d6b61e42f45caf66fd4a51696aa6d1bb6",
+    "originalRegression": "3b8f5b81913ffade529592878cdf39f93a6087b3",
+    "sourcePinsVerified": 6,
+    "rawEvidenceHashesVerified": 4,
+    "independent": {
+      "exit": 1,
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "total": 3
+    },
+    "observed": "Actualclaimed task completed viaactualservice while cancel secondOpen paused; releasingstalecancel overwritesCommittedcompletion toCancelled, result/idempotency null, freshSQLite reopen confirms.",
+    "originalDatabaseObservations": [
+      {
+        "privateOriginalPath": "/workspace/team-c/evidence/c6/durable-15f/databases/actual-task-04f755d8e9a64f4bbe1b82e2943c6138/tasks.db",
+        "bytes": 942080,
+        "sha256": "a1454ea22c489707cf017113867096096f3c41635818752dfb75b9db94a18629",
+        "rows": [
+          {
+            "status": 6,
+            "resultPresent": true,
+            "idempotencyPresent": true,
+            "payloadSHA256": "28ceb13a6e745b3ef79867a9daf94f677d8a62baa7ea3f5fae81100efa4fedb6"
+          }
+        ]
+      },
+      {
+        "privateOriginalPath": "/workspace/team-c/evidence/c6/durable-15f/databases/actual-task-c3d0b496a5114285944435b6057eb339/tasks.db",
+        "bytes": 942080,
+        "sha256": "3c4d1fa6782b146fafeb74cb8cb39330605c294e9d9b859b56d90b4b99765cc6",
+        "rows": [
+          {
+            "status": 8,
+            "resultPresent": false,
+            "idempotencyPresent": false,
+            "payloadSHA256": "136fdb9eba0ca6c9b35974cada4e383bf9dce18a36661674368a642a413c68c8"
+          }
+        ]
+      },
+      {
+        "privateOriginalPath": "/workspace/team-c/evidence/c6/durable-15f/databases/actual-task-dfbe1303f15d449ba132029570997f67/tasks.db",
+        "bytes": 942080,
+        "sha256": "def307a6e28cc4b9be9b1692b3ab009d7232c74387bc0db9247c70442f3d9e3f",
+        "rows": [
+          {
+            "status": 8,
+            "resultPresent": false,
+            "idempotencyPresent": false,
+            "payloadSHA256": "51cfe7a4ed4962c07b144c5c45da7dc4a659bbac60f9420716f654cd531c14d4"
+          }
+        ]
+      }
+    ],
+    "ownerCASReferenceReviewed": "Exact persistedrawpayload comparison+owner/id/currentterminal guards; proposedmethodSHA verified. Source unchanged; no currentowner/sourceACK/adoption/fixsuccess inferred.",
+    "limits": [
+      "ActuallocalInfrastructure reference on preservedA63 dependencies, not cloudqueue/funding/provider/native acceptance.",
+      "Originalfailure remains activeBLOCKER; no skipped/retry-success concealment.",
+      "Publicprojections are synthetic status/presence/hashes; originals/binariesoutsideGit."
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "durable-negative.log",
+      "bytes": 3817,
+      "sha256": "f91f3b06c4b21432417a154757366b1c2b2a3fca553a999d8fe1bba33da9ce6d"
+    },
+    {
+      "path": "durable-negative.trx",
+      "bytes": 8445,
+      "sha256": "a33842072258c554ebbca15a3a6784fc023d4792ed8ae8014293e1a382280685"
+    },
+    {
+      "path": "files-initial-unmutated-filter.log",
+      "bytes": 589,
+      "sha256": "b9daafeb20ad39fdc26698f3485a680f6006c8c52107aab66fc3e7d9916d6427"
+    },
+    {
+      "path": "files-initial-unmutated-filter.trx",
+      "bytes": 2961,
+      "sha256": "6a18dc4dbe44a2b53923ed3485e80590dde5e7f116d5406a2ed3396b461d394a"
+    },
+    {
+      "path": "files-negative.log",
+      "bytes": 1292,
+      "sha256": "5164e909a0396005d95a6b683cf4990407395d9ad82a91ea97dcfb563aa6eb0c"
+    },
+    {
+      "path": "files-negative.trx",
+      "bytes": 4368,
+      "sha256": "bd2e8e91d1687dba636b8f5f81ac5dc1d87d763ebea03ef930a5ff3713741eb4"
+    },
+    {
+      "path": "files-positive.log",
+      "bytes": 642,
+      "sha256": "5d8346ba0896ddfb575a51b06f4533de5cd56a9d7b65b5ea844ad06a4192193a"
+    },
+    {
+      "path": "files-positive.trx",
+      "bytes": 7161,
+      "sha256": "8c73bf1f11c6dcb0af27760db1015869df8bb61f5f392f1eb9add196ae8b3268"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "project": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+  "target": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+  "files": [
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.deps.json",
+      "bytes": 3947,
+      "sha256": "db4287a67d67809ca7abb5b1ddfb464bc1b08cf66bef8168e3dfb84c4f9c19e0"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "bytes": 754176,
+      "sha256": "c4a2d8698b4c89aeac19fcc9781c49ddf5c2e8372c0068c719f901fbbe02d887"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Microsoft.Build.Framework.dll",
+      "bytes": 47848,
+      "sha256": "a7fbda5d26340af8443e388e57bfa5d0a3ebec904947ac2fcfd7a56a237a297b"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Mono.Cecil.Mdb.dll",
+      "bytes": 39936,
+      "sha256": "28cb367972bdc1cd43e4006306af2fd96d37f4ed4b239ee90e1dc7237a93af7f"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Mono.Cecil.Pdb.dll",
+      "bytes": 90112,
+      "sha256": "a332332633fbcb20e8d50e49b4db7bd1557721417122cf0c5f4c42f2332391d0"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Mono.Cecil.Rocks.dll",
+      "bytes": 27136,
+      "sha256": "bf992f3dce364ebcc3200fa7832ef07e20b4e2dbc3a8a6213ce44e3d239db984"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Mono.Cecil.dll",
+      "bytes": 361472,
+      "sha256": "831dca77470d85cb6ffbea3072daa7a3df5b7c9fcfd9c3f43674a9be99d4bfcf"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/System.Numerics.Vectors.dll",
+      "bytes": 159496,
+      "sha256": "a87fc942c07846ca9b53119dc300a935d67f05578909987d19645f1d02764417"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/System.Threading.Thread.dll",
+      "bytes": 22400,
+      "sha256": "f3d77354a2b2c3b01cb24369c076b9568b95f52c28349541707741658aa173dd"
+    },
+    {
+      "path": "artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/System.Threading.dll",
+      "bytes": 50016,
+      "sha256": "74e07f71df0cc4b67b6bf32f7dd6a10d3f82ae8b5feefa45759ceea78e6aa301"
+    }
+  ]
+}

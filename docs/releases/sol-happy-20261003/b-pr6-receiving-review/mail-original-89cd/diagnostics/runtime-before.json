@@ -1,0 +1,57 @@
+[
+  {
+    "path": "Haven.Application.dll",
+    "bytes": 4078592,
+    "sha256": "7805008c942345d6714fb0fab20f17dbd5449db70caf19c8f51a37ab7364708c"
+  },
+  {
+    "path": "Haven.Application.pdb",
+    "bytes": 717276,
+    "sha256": "7473457241c750d57325d887aef673a24c3ab5e9b6dbf4c381bbb7fe6e2ceafb"
+  },
+  {
+    "path": "Haven.Core.dll",
+    "bytes": 1825792,
+    "sha256": "d3e838d7e0922acb6732e65b36f65df7311e0ba60c00b279cee548c6b5fba862"
+  },
+  {
+    "path": "Haven.Core.pdb",
+    "bytes": 324820,
+    "sha256": "aca79c190756751c1307916785d5271eecde08321678ff82be85e75ef5555952"
+  },
+  {
+    "path": "NineToOne.Cui.AI.dll",
+    "bytes": 122368,
+    "sha256": "ec4c5e738c89532cbd594ac57b0cfc426f798259639d52250dff22295adea0e9"
+  },
+  {
+    "path": "NineToOne.Cui.AI.pdb",
+    "bytes": 33376,
+    "sha256": "2ca6228d3d6fe32a0e6230ae40de9796081300e376133ab2fb61606df8177262"
+  },
+  {
+    "path": "NineToOne.Mail.LocalDurable.Tests",
+    "bytes": 78256,
+    "sha256": "1756c8bc6aeac4432f168e78e36ee19570efbddb717d865b79d5c9adc03a26f7"
+  },
+  {
+    "path": "NineToOne.Mail.LocalDurable.Tests.deps.json",
+    "bytes": 1633,
+    "sha256": "673c350d91b729e09a4dbc24823df4adf1138707e899a43d86f81e97b593da15"
+  },
+  {
+    "path": "NineToOne.Mail.LocalDurable.Tests.dll",
+    "bytes": 46080,
+    "sha256": "45501f4c9008ba12cbbaeaa083deacd2736d5095d242a007ea58514552483cd2"
+  },
+  {
+    "path": "NineToOne.Mail.LocalDurable.Tests.pdb",
+    "bytes": 16108,
+    "sha256": "d837d5503f1e2eb68a2a33efe4f21fc36ddeaffd7170151b2c2c6fcc7aab71fe"
+  },
+  {
+    "path": "NineToOne.Mail.LocalDurable.Tests.runtimeconfig.json",
+    "bytes": 330,
+    "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  }
+]

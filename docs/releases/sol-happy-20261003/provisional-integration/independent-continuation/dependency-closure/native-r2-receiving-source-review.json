@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "ce7f7ce15cc75b5fac40bae2bce20f232a3d6f38",
+  "baseCommit": "3118582d65ecddb452e96e7618e5c19e364fde37",
+  "historicalSource": "b7b4b4ee5cf7b77e75e1bdca0b4a48a22c7ea95b",
+  "review": "ACK only2 additive complete historically reviewed source/test bodies, exact bytes/git blobs/hashes match retained b7 source artifact; existing Sites project/test project and4 protected guards unchanged. Current canonical pipeline/manifest/contracts/authoring types match exact EEC, no reconstructed donor types.",
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Sites/Hosting/R2NativeSiteArtifactReader.cs",
+      "gitBlob": "5554c382aa06a751c0d7a1f60ead77bca2f266c2",
+      "bytes": 6714,
+      "sha256": "d82c24a3ee745cecbc5457d685a0b38cf9732d15f0f2b90d55a1f914236ed749"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Tests/R2NativeSiteArtifactReaderTests.cs",
+      "gitBlob": "d7befcd95e01d95bdb553907955bf9e7b6ab5cc4",
+      "bytes": 5514,
+      "sha256": "c71db97aa1cc7217dfbfca79680609b556f4669158d5e5432a774d4c951bea3b"
+    }
+  ],
+  "protectedInputsVerified": [
+    {
+      "path": "9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+      "gitBlob": "59959c2fe4a8114d8be5fae29d36759a3c43efc1",
+      "bytes": 29696,
+      "sha256": "c530e336a40e7c1b2fe6c9f4976bc4810e34996298252989ae0dc743e8a3898f"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Directory.Build.props",
+      "gitBlob": "56f3d4ce2cc317e46a3d6914c98609b076226d02",
+      "bytes": 663,
+      "sha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/R2SiteArtifactReader.cs",
+      "gitBlob": "9558eab20bdb422d032895376edf339b63b34f65",
+      "bytes": 5577,
+      "sha256": "473c544eab3fbc3c40772ee5455c2151f4b18e913fe31cc3b9ff0adf2c2a0135"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+      "gitBlob": "b11fd09fd6b9daed2fc54cd133a6dfbc92093340",
+      "bytes": 31952,
+      "sha256": "3eaf6fa80bdcdba8266eb5cd1921ff02cc5f57ce0506537b3ee9d1624a517644"
+    },
+    {
+      "path": "9to1 Workspace/Sites/HavenOS.Sites.csproj",
+      "gitBlob": "e60f0fb12ba62d8fe44fde0ad28766af52a161f7",
+      "bytes": 601,
+      "sha256": "f507b445cf59bbf9b45c700ea80f4da08ac080ccce8135c886011f9807a53ec3"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj",
+      "gitBlob": "9b52e8434111307a466d097096e95bad0d807539",
+      "bytes": 674,
+      "sha256": "dfa0c1e1b1fbf7188a12bb47206982f46fcdf18507d94fc3a837a7825997faaa"
+    }
+  ],
+  "canonicalTypeInputsVerified": [
+    {
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "gitBlob": "90de2fd3bc79a3543d8dd57eb4c5d748281e2c29",
+      "bytes": 7715,
+      "sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+      "exactEecOwnerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs",
+      "gitBlob": "3dc6b98fc72b2d7c5deb78b566993b7e461289eb",
+      "bytes": 4280,
+      "sha256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+      "exactEecOwnerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteArtifactAuthoringService.cs",
+      "gitBlob": "b8f3f2a1332907b00b28d838eee7a465b57b7ef2",
+      "bytes": 2143,
+      "sha256": "bd4a5fb680e61f31c4d1c4a16690d9a427be72e4c868d81f25a9da57828bf07f",
+      "exactEecOwnerBytes": true
+    }
+  ],
+  "behavior": "Explicit trusted reference-to-prefix admission, HTTPS safe object paths, no default redirects, complete/unencoded/content-length bounded reads, actual manifest/output hashes, exact provenance/revision/total/output checks. No canonical session/quota/publication authority supplied and no proof of absence of unlisted remote objects.",
+  "qualification": "Normal owning Sites.Tests runtime pending. Original fake HTTP21 controls only; no real R2/provider/scanner/currentSession/import/publication/Files HTTP acceptance or activation."
+}

@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hui="using:Haven.Desktop.HavenUI.Components"
+             xmlns:controls="using:Haven.Desktop.Controls"
+             xmlns:topRail="using:Haven.Desktop.Views.Shell.TopRail"
+             xmlns:sidebar="using:Haven.Desktop.Views.Shell.Sidebar"
+             x:Class="Haven.Desktop.Views.Shell.MainView"
+             x:Name="MainViewRoot">
+
+  <!-- The active New Haven shell is intentionally edge-to-edge. Pages share
+       the window tide; there is no inherited light workspace card around them. -->
+  <Grid RowDefinitions="*,Auto" Background="Transparent" ClipToBounds="True">
+    <topRail:TopRail x:Name="TopRail" Grid.Row="1" />
+
+    <Grid Grid.Row="0"
+          ColumnDefinitions="Auto,*"
+          ColumnSpacing="18"
+          Margin="24,0,24,20"
+          ClipToBounds="True">
+
+      <!-- Classic remains a migration-only control and is never shown by the
+           direct New Haven startup policy. Keeping the named host preserves
+           data migration without allowing its visual composition into New. -->
+      <sidebar:Sidebar x:Name="SidebarControl"
+                       Grid.Column="0"
+                       Width="314"
+                       IsVisible="False" />
+
+      <ContentControl x:Name="NativeSidebarHost"
+                      Grid.Column="0"
+                      Width="330"
+                      IsVisible="False" />
+
+      <hui:HavenAdaptiveSurface x:Name="ContentArea"
+              Grid.Column="1"
+              Background="Transparent"
+              BorderThickness="0"
+              CornerRadius="0"
+              ClipToBounds="True">
+        <Grid>
+          <Grid x:Name="PaneHost" ColumnDefinitions="*,0,0">
+            <ContentControl x:Name="PageContent" Grid.Column="0" Margin="0" />
+            <GridSplitter x:Name="SplitDivider"
+                          Grid.Column="1"
+                          Width="8"
+                          Background="{DynamicResource HavenLineStrongBrush}"
+                          ResizeDirection="Columns"
+                          IsVisible="False"
+                          Focusable="True"
+                          AutomationProperties.Name="Resize split view" />
+            <ContentControl x:Name="SecondaryPageContent"
+                            Grid.Column="2"
+                            Margin="0"
+                            IsVisible="False" />
+          </Grid>
+
+          <!-- Retained as a hidden compatibility host for the existing event
+               wiring. New Haven's page identity lives in the taskbar tab shelf. -->
+          <Grid x:Name="ShellContextBar"
+                IsVisible="False"
+                IsHitTestVisible="False">
+            <StackPanel x:Name="GoModeSwitcher" IsVisible="False">
+              <hui:HavenButton x:Name="GoChatButton" IsVisible="False" />
+              <hui:HavenButton x:Name="GoDashboardButton" IsVisible="False" />
+              <TextBlock x:Name="GoModeLabel" Text="Go" />
+            </StackPanel>
+            <hui:HavenButton x:Name="StoredChatDropdown" IsVisible="False">
+              <TextBlock x:Name="StoredChatLabel" Text="Saved Chat" />
+              <hui:HavenButton.Flyout>
+                <hui:HavenAdaptivePopup>
+                  <StackPanel>
+                    <hui:HavenButton x:Name="SavedChatOption" Content="Saved Chat" />
+                    <hui:HavenButton x:Name="TemporaryChatOption" Content="Temporary Chat" />
+                  </StackPanel>
+                </hui:HavenAdaptivePopup>
+              </hui:HavenButton.Flyout>
+            </hui:HavenButton>
+          </Grid>
+        </Grid>
+      </hui:HavenAdaptiveSurface>
+
+      <Grid x:Name="NativeOverlayLayer"
+            Grid.Column="1"
+            Panel.ZIndex="20"
+            ClipToBounds="True" />
+
+      <hui:HavenAdaptiveSurface x:Name="OverlayHost"
+              Grid.Column="1"
+              Background="{DynamicResource HavenOverlaySurfaceBrush}"
+              CornerRadius="22"
+              ClipToBounds="True"
+              IsVisible="False" />
+    </Grid>
+  </Grid>
+</UserControl>

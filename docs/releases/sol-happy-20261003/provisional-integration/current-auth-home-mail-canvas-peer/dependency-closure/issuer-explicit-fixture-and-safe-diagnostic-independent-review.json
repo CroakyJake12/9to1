@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent validation",
+  "scope": "Explicit two issuer pin successor and safe actual network diagnostics before fresh owned auth7",
+  "candidate": "3f83d8e21b424ba96bf91654412b24065053c975",
+  "parent": "ff453ff9d294d5c4812c9308217cd04be0a88e4d",
+  "changedPaths": [
+    "apps/Web/Tests/LocalAuth/README.md",
+    "apps/Web/Tests/LocalAuth/source-contract.json",
+    "apps/Web/Tests/LocalAuth/preflight.test.cjs",
+    "apps/Web/Tests/LocalAuth/run-local-auth-current.cjs"
+  ],
+  "allOutsideBodiesModeBlobConserved": true,
+  "sourceContract": {
+    "thirteenConsumersUnchangedAndExactActual9afCatalog": true,
+    "issuerFixtureRows": 92,
+    "changedIssuerRowsOnly": [
+      "src/browser.ts",
+      "public/auth-ui.txt"
+    ],
+    "remaining90RowsExact": true,
+    "all92NewRowsWholeFrozenGitBytesHashMatch": true,
+    "sourceBasis": "ff453ff9d294d5c4812c9308217cd04be0a88e4d",
+    "separateTestAndFixtureActualGitHeadsRetained": true
+  },
+  "retainedAcceptance": {
+    "sixFullOrderedFunctionalBlocksWholeByteExact": true,
+    "seventhCompoundFinalCriterionWholeByteExact": true,
+    "callbackExactlyOneStillRequired": true,
+    "unexpectedErrorsZeroStillRequired": true,
+    "sourceSealCustodianNoWeakening": true
+  },
+  "diagnosticBoundary": "Actual request/response/finished/failed and console observers only; fixed endpoint/method/resource/numeric100-599HTTP/failure/phase/console enums, unknown=>OTHER,10000 per-count saturation. No URL/query/body/header/rawerror/status text or broker hooks retained.",
+  "ownOfflineControls": {
+    "node": 32,
+    "python": 11,
+    "passed": 43,
+    "failed": 0,
+    "skipped": 0,
+    "logSha256": "ce341f29baa422e6a412bae3cc31fb19cb3b15c7d1d36328346d60026c9ff4b5",
+    "meaningfulRefusals": "ActualHEAD, changed2fixturepins, source symlink read-order, inventedHEAD, fullasset mutation, private-diagnostic URL/error/fields, countsaturation"
+  },
+  "originalHelpersAndPreparationBodiesUnchanged": true,
+  "truthfulPublicationIdentity": "Actual unchanged sealed9af may remain9af with explicit new fixture HEAD and source pins; no new Web publication required for issuer-only change. Original9af/fulltuple remains immutable and candidate label is not the fixture or test label.",
+  "status": "SOURCE_PREFLIGHT_PREINVOKE_ACK",
+  "authorization": "Root fresh owned issuer originalTTY/preparation generatedplan peer and once actual auth7 required; no C6 private read/browser/issuer/network run.",
+  "fullAuthHostedStrictDotnetAcceptance": false
+}

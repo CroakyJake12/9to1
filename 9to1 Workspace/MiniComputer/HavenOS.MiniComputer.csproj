@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.MiniComputer</AssemblyName>
+    <RootNamespace>HavenOS.Apps.MiniComputer</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\VirtualBox\**\*</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <Content Include="MiniComputer.cui" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

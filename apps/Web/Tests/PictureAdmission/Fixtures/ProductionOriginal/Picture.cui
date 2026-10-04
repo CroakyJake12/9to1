@@ -1,0 +1,49 @@
+<Cui id="picture-browser" product="9-1" version="1">
+  <Actions><Action name="OpenDocumentRow" command="OpenDocument" parameter="{Binding item.ID}" /></Actions>
+  <DefaultTheme value="Default">
+    <StackPanel orientation="Vertical" margin="16" spacing="12" background="{Resource CuiBackgroundBrush}">
+      <TextBlock text="Picture" font-size="30" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+      <TextBlock text="Local raster editor · editable documents and original PNG bytes are saved in this browser. They are not synced to Files or another device. Clearing browser data removes these copies." text-wrapping="Wrap" max-width="760" />
+      <TextBlock text="{Binding Status}" accessible-name="Picture operation status" text-wrapping="Wrap" max-width="760" />
+      <WrapPanel>
+        <Button action="Import" content="Import static PNG" IsEnabled="{Binding NotBusy}" margin="0 0 8 4" />
+        <Button action="Refresh" content="Refresh local documents" margin="0 0 8 4" />
+        <Button action="Reopen" content="Reopen last Picture document" margin="0 0 8 4" />
+        <Button action="Save" content="Save locally" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+        <Button action="Close" content="Save and close" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+      </WrapPanel>
+      <Repeat Source="{Binding Documents}" As="item" Key="{Binding item.ID}" orientation="Vertical" spacing="4"><Button action="OpenDocumentRow" content="{Binding item.Label}" accessible-name="{Binding item.Label}" max-width="720" /></Repeat>
+      <TextBlock text="{Binding Identity}" accessible-name="Picture canonical document identity revision geometry and source" text-wrapping="Wrap" max-width="760" />
+      <Border padding="12" background="{Resource CuiPanelBrush}" corner-radius="8"><Object Type="PictureRasterPreview" accessible-name="Canonical Picture raster preview" max-width="760" /></Border>
+      <WrapPanel>
+        <Button action="Compare" content="{Binding ComparisonLabel}" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+        <Button action="Undo" content="Undo" IsEnabled="{Binding CanUndo}" margin="0 0 8 4" />
+        <Button action="Redo" content="Redo" IsEnabled="{Binding CanRedo}" margin="0 0 8 4" />
+        <Button action="Rotate" content="Rotate clockwise" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+        <Button action="FlipHorizontal" content="Flip horizontally" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+        <Button action="FlipVertical" content="Flip vertically" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+      </WrapPanel>
+      <TextBlock text="Crop in current canvas pixels" font-size="18" />
+      <WrapPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock text="X" /><TextBox text="{Binding CropX, mode=TwoWay, type=string}" accessible-name="Crop left pixel" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock text="Y" /><TextBox text="{Binding CropY, mode=TwoWay, type=string}" accessible-name="Crop top pixel" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock text="Width" /><TextBox text="{Binding CropWidth, mode=TwoWay, type=string}" accessible-name="Crop width pixels" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock text="Height" /><TextBox text="{Binding CropHeight, mode=TwoWay, type=string}" accessible-name="Crop height pixels" width="100" /></StackPanel>
+        <Button action="Crop" content="Apply crop" IsEnabled="{Binding CanEdit}" margin="0 20 8 8" />
+      </WrapPanel>
+      <TextBlock text="Resize with the canonical high-quality raster renderer" font-size="18" />
+      <WrapPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock text="Width" /><TextBox text="{Binding ResizeWidth, mode=TwoWay, type=string}" accessible-name="Resize width pixels" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock text="Height" /><TextBox text="{Binding ResizeHeight, mode=TwoWay, type=string}" accessible-name="Resize height pixels" width="100" /></StackPanel>
+        <Button action="Resize" content="Apply resize" IsEnabled="{Binding CanEdit}" margin="0 20 8 8" />
+      </WrapPanel>
+      <TextBlock text="PNG export · the flattened output is separate from the saved editable document" text-wrapping="Wrap" max-width="760" />
+      <WrapPanel>
+        <Button action="ExportPreserve" content="Export PNG preserving metadata" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+        <Button action="ExportLocation" content="Export PNG removing location" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+        <Button action="ExportAll" content="Export PNG removing all metadata" IsEnabled="{Binding CanEdit}" margin="0 0 8 4" />
+      </WrapPanel>
+      <TextBlock text="Initial adapter limits: static 8-bit PNG; sRGB baseline with alpha; up to 8 MiB source, 4 million pixels, 128 operations, 32 undo steps and 24 MiB local package. Animation, embedded ICC profiles and unsupported colour paths are refused. Raster rendering runs in the foreground. Other formats, advanced raster tools, vector/hybrid elements, shared drawing/text/selection, AI, variants and hosted Files continuity are not connected on this surface." text-wrapping="Wrap" max-width="760" />
+    </StackPanel>
+  </DefaultTheme>
+</Cui>

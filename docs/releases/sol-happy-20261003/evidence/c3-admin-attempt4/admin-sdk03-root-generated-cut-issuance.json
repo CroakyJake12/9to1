@@ -1,0 +1,18 @@
+{
+  "issuer": "Team C root sole global integrator",
+  "issuedUTC": "2026-10-03T21:09:52.731704+00:00",
+  "validationHead": "b7546513952de912ddcfcdff09125b041de2d411",
+  "cutPath": ".github/validation/astra-organisation-full-owning-cut.json",
+  "cutBytes": 2841188,
+  "cutSha256": "67852776a46cd9ed9f5cb0e44ef8779a532b65b99bebd53417535337374594c2",
+  "ownerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "sourceProposal": "f5476552cf0b84133e8f6cc6d735a366cc6479dd",
+  "sourceProposalScope": "Exact reviewed execvp/subreaper plus same-physical-PE embedded symbols with unchanged CodeView/source checks; supported genuine compiler-generated output retention and guarded exclusive/bounded/fsynced extraction. No producer-source modification or key fix.",
+  "rootIndependentVerification": "9455 physical blobs/modes/Git objects/bytes/SHA,22 Gitlinks,3 exact clean materialized dependencies;28 original delivery rows and17 products plus original suite inventory unchanged; all intentional tooling/control bytes match f547.",
+  "independentC1CutReview": "Complete9455physicalmap,28originalrows/frozenmetadata and all23 receiving original-to-new-root mappings plus controls verified.",
+  "independentC5ToolingReview": "fffca3cf4dfbfecfd79bd2fa6af58b035b93f59d; entire new f547 diff and preservation gates ACK; independent18controls PASS; actual whole-task before219/221 with2missing vs fixed221/221 hashes and CodeView identity, all4actualproducercommands/strictdrains pass.",
+  "authorization": "Run complete original owning Accounts/OrgPools/Web Debug/Release SDK driver with these exact fresh external head/cut pins in isolated receiving worktree. Retain full actual source/PDB/embedded-symbol/generated-file/compiler/graph/session/creator/drain evidence and every failure. Original256MiB evidence budget, log/deadline limits/resource floors unchanged. Do not apply product key fix or waive assertions.",
+  "qualification": "Controlled local baseline after reviewed tooling correction only. Installed SDK10.0.401 differs from workflow10.0.301. No shared product-source adoption, provider acceptance or release acceptance; original attempts1/2 remain refused.",
+  "workspaceFreeBytesAtReview": 18696839168,
+  "tmpFreeBytesAtReview": 8876703744
+}

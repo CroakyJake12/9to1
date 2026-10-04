@@ -1,0 +1,28 @@
+{
+  "schema": "c6-independent-canvas-installed-provider-metadata-diagnostic-preinvoke/v1",
+  "candidate": "986b7244911a93402812b955ce2922be47d3c8d2",
+  "basis": "f5a3bc4545d13b3129d8b1efba5c94613e3dc391",
+  "status": "SETUP_ONLY_SOURCE_ACK_ACTUAL_WINDOWS_DIAGNOSTIC_NOT_RUN",
+  "conservation": {
+    "changedHarnessPaths": 3,
+    "outsideProducerNativeEntriesExact": 9478,
+    "originalSelectedNativePinsExact": 25,
+    "allOtherWholeFunctionsExact": 31,
+    "originalMainNativeInputDefaultRoleValueInvokeAndCleanupCriteriaExact": true
+  },
+  "review": {
+    "scope": "Dedicated Windows2022 contents:read3minute job extracts exactly seven actual named source functions, verifies25pins and calls original standard provider setup once. No artifact/package download/extraction/nativeapp/profile/input/approval/model/fixture operation.",
+    "diagnostic": "Original registration exception rethrown even secondary diagnostic capability/output fails. At most8 exception type/HRESULT objects; no rawMessage/ToString. Exact public canonical provider type/field lookup follows existing public framework implementation; field public static expected ClientSideProviderDescription[] only, record presence/type/null/count/completion, no table elements/private members/body.",
+    "limits": "Registration and public static initializer cannot be individually cancelled; whole3minutejob bound explicit. This is capability diagnosis and any successful setup is not a native workflow pass.",
+    "privacy": "No raw exception text, provider table body, arbitrary peer label, filesystem/profile data or credentials exported. Earlier genuine installed assembly system identity/location/SHA snapshots retained."
+  },
+  "independentControls": {
+    "receipt": "/workspace/team-c-c6-durable-validation-20261004/boards-packaged-ui-review/canvas-uia-diagnostic-own-62-controls-result.json",
+    "sha256": "a66388cda0ad96580aba8e716462b7fd421fc834a31e089403cd469ffce8875e",
+    "passed": 62,
+    "parserErrors": 0,
+    "nativeHelperCompilation": "PASS",
+    "qualification": "Actual source-extracted offline guards/privacy/refusal/original-failure-preservation controls on Linux only; no Windows/providerregistration/nativeapp invocation."
+  },
+  "retainedNegative": "f5a3 actual36PASS followed MethodInvocationException before extraction/app. Genuine matching Microsoft GAC client/provider proven, exact inner cause still unobserved; no runtime control relaxation permitted."
+}

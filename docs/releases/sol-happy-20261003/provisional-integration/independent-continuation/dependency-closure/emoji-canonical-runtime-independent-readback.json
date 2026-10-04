@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "candidateCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "canonicalMethod": "Haven.Desktop.Tests.ChatComposerControllerTests.Bundled_catalogue_includes_joined_sequences_modifiers_and_accessible_names",
+  "actualExecution": {
+    "total": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "trxSha256": "dc85f8e1d77073261eb3ff1828308603649a103f34e3a493a4eb026ba1624a8e"
+  },
+  "compiledArtifactIdentities": {
+    "entryDLL": {
+      "path": "bin/CanonicalEmojiCarrier/release_linux-x64/CanonicalEmojiCarrier.dll",
+      "sha256": "bfb18d14de5a6766c2f6f916a006115c8ab4b15d31d7c5973591c1f5f913f986"
+    },
+    "apphost": {
+      "path": "bin/CanonicalEmojiCarrier/release_linux-x64/CanonicalEmojiCarrier",
+      "sha256": "85f60bb109c33d70e51ef7b3a495a255f96a9871f8e331f935674a720d2ad4fb"
+    },
+    "ownerBuildTask": {
+      "sha256": "eeef9f2f2e9c8b7ad2ab4d0cf463a3510ddc75da3c172c429f64e5ebe0cf699e",
+      "bytes": 754176
+    },
+    "sourceBuiltProductionHaven": {
+      "path": "bin/CanonicalEmojiCarrier/release_linux-x64/Haven.dll",
+      "sha256": "57b137f87c4cb79532b240afd0d1e18c6cd03b74bdcc27a8f744cfccc0b90f62",
+      "bytes": 5838848
+    }
+  },
+  "review": "ACK exact canonical Fact exercises actual source-built own Haven manifest resource. Original unchanged four assertions/five calls verify >3000 entries, joined sequences, modifiers and all accessible names. All11 command families source restore/build/VSTest0 exit, normalEOF/ECHILD/familyClosed/zero signals; carrier source and exact production whole-tree inputs unchanged.",
+  "payloadRerun": false,
+  "diagnosticHashes": {
+    "native-submodule-pins.log": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382",
+    "build.log": "2df8820e4f4c0b11f85cafa51169273d8ff096e2f0e1bfcdc1a9fc17b767acc0",
+    "artifact-identities.json": "b5315a820fd0e8f2b5745d60e0b97983915b0fe9f4d7aace98568a671f770043",
+    "git-clean-after.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "restore.log": "ba6876d5a96c87e3d15c7a96bad36987675f0009fc05e1c76ba574d16c69b495",
+    "git-head.log": "1b94b676ec1e2e50bc39059363866be08502a3af12f8e143ab3b9e4d399c63b4",
+    "dotnet-info.log": "f7bb3c0828f676defe0d5f372cc3ecb66f670a7f3fadd005819313f0185f3d88",
+    "target-properties.json": "d0fb72603893c35518557fc4423b7c240c094291b0709ed616020a7c19264005",
+    "commands.json": "874fe1c7df743e4950641f033d14f47b4241c68f7a3d4fc1f0d13c8d08cdbf38",
+    "dotnet-version.log": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+    "source-tree-pins.log": "de0c87862ff0ae061b95ab537ca8f56b1654c420f12269cd8a3fd1801b25826d",
+    "git-clean-before.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "canonical-emoji-control.log": "571f85c5d8889e62dfdcf1e2d19dd75e4ed629e3ab38dca5b13f6244fcce3e67",
+    "target-properties.log": "b418601c86aedfaf567e592a0d03796075f2804ac5e01443d48a4600509cea2a",
+    "result.json": "3a61dce19c43825175fb6e8e6dd67ce7120eec4af4ba759d02b7070c2aba4574",
+    "test-results/canonical-emoji-control.trx": "dc85f8e1d77073261eb3ff1828308603649a103f34e3a493a4eb026ba1624a8e"
+  },
+  "qualification": "Supporting isolated single canonical Fact only. Original full Desktop test project/AvaloniaFact formatting, browser/provider/Windows/full parity NOT_RUN. Existing WriteScene layout failure remains visible."
+}

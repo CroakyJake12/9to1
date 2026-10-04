@@ -1,0 +1,9 @@
+[
+  "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+  "9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj",
+  "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+  "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+  "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+  "9to1 Workspace/shared/tests/Haven.PluginFixture/Haven.PluginFixture.csproj",
+  "framework/CUI/AI/NineToOne.Cui.AI.csproj"
+]

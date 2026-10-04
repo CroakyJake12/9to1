@@ -1,0 +1,132 @@
+{
+  "status": "PROVISIONAL_SOURCE_CRITICAL_TEST_REVIEW_ACK_WHOLE_NORMAL_DEBUG_RELEASE_EXECUTED_WITH_PRESERVED_FAILURES",
+  "sourceCommit": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
+  "basisCommit": "c8783e049fd03efd7f1798e47d6bc7806fb30844",
+  "branch": "team-c/sol-happy-c5-normal-test-contracts-provisional-20261004",
+  "worktree": "/workspace/team-c-c5-normal-test-contracts-provisional",
+  "changedSourcePaths": [
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs",
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs",
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs"
+  ],
+  "scope": "Three one-line compiler contract corrections in original maintained Infrastructure test sources only. No product source, permission policy, analyzer, reference, skip/filter or acceptance denominator changes.",
+  "semantics": [
+    "Use IFormsSubmissionStore local type to invoke real existing default GetPageAsync; retain 503-row paging and uniqueness assertions.",
+    "Assert.Single(predicate) retains asset predicate and exact cardinality.",
+    "Serialize actual canonical ExecutionEvent collection for denied marker leak check across real event fields; retain denied process marker and Running/Failed status assertions."
+  ],
+  "sourceReviewACKs": [
+    "C6 exact three-line source ACK; canonical event serialization stronger than nonexistent Output guard.",
+    "C2 exact three-line source ACK; independent full normal Release415/410pass/5fail/0skip, all three edited critical tests pass, all15105 frozen input bodies unchanged before/after."
+  ],
+  "Debug": {
+    "wholeMaintainedNormalProject": true,
+    "filterUsed": false,
+    "exit": 1,
+    "total": 415,
+    "passed": 404,
+    "failed": 11,
+    "skipped": 0,
+    "compileStatus": "SUCCESS",
+    "warningCount": 0,
+    "allFailures": "failure-review.json",
+    "criticalObservedResults": [
+      {
+        "testName": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_starts_serves_and_stops_a_real_loopback_site",
+        "outcome": "Failed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_detects_real_supported_web_entry_points_without_starting_them",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.External_task_claim_is_exclusive_and_idempotent_completion_is_persisted",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Migration_23_round_trips_graph_feedback_session_notifications_and_sources",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.A_deleted_task_is_not_recreated_by_stale_cancellation",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Renewed_claim_survives_stale_cancellation_and_restart",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: InProgress)",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: Failed)",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Competing_cancellations_commit_once_and_preserve_the_first_commit_after_restart",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Unchanged_valid_JSON_whitespace_does_not_prevent_cancellation",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Caller_cancellation_before_write_leaves_the_durable_task_unchanged",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.FormsSubmissionStoreTests.Response_history_is_not_evicted_and_keyset_pages_have_no_duplicates",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.PresentProductionTests.Native_package_round_trips_presentation_state_and_embedded_assets",
+        "outcome": "Passed"
+      },
+      {
+        "testName": "Haven.Infrastructure.Tests.PresentProductionTests.Native_package_refuses_to_omit_an_unavailable_asset",
+        "outcome": "Passed"
+      }
+    ],
+    "evidence": "Debug/results/normal-infrastructure.trx"
+  },
+  "Release": {
+    "status": "INDEPENDENT_C2_FULL_NORMAL_COMPLETED",
+    "sourceCommit": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
+    "peerReceipt": "C2/peer-review.json",
+    "exit": 1,
+    "total": 415,
+    "passed": 410,
+    "failed": 5,
+    "skipped": 0,
+    "compileStatus": "SUCCESS",
+    "wholeMaintainedNormalProject": true,
+    "filterUsed": false,
+    "evidence": "Release/results/normal-infrastructure.trx",
+    "environmentQualification": "Private XDG_CONFIG_HOME resolves six read-only ApplicationData failures without changing source; HOME/USERPROFILE unchanged. Both original outcomes retained."
+  },
+  "qualification": [
+    "All ten original/new CAS controls plus both owning durable Unified persistence facts pass in actual normal Debug.",
+    "Edited native plugin leak control, typed503 paging and native package exact asset cardinality controls pass.",
+    "Actual whole normal Debug has eleven preserved failures and is not accepted as a full pass.",
+    "Coherent actual EEC native closure in c878 supersedes prior historical one-line7c63 Canvas production body; no old production hunk transplanted.",
+    "Global acceptedHead remains null; owner adoption/current project custody/native/hosted/full gates and verified Windows package delivery remain open."
+  ],
+  "createdUTC": "2026-10-04T13:29:39.146484+00:00"
+}

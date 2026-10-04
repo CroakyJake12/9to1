@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent mandatory pre-invocation reviewer",
+  "sourceCommit": "1541f8e4ae535dc15dc8fb05bd150d8e41c77795",
+  "basis": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "scope": "Four added harness/catalog/workflow/README paths only; original immutable packaged Canvas e2 native source",
+  "conservation": {
+    "outside9478ModeBlobEntries": "UNCHANGED",
+    "nativeSourcePins": 25,
+    "allWholeGitAndPhysicalBodyHashes": "PASS"
+  },
+  "sourceAssessment": [
+    "Actual original artifact IDs/run/head/size/digest/expiry checked before download; inner101349818B package SHA and original418file manifest/extraction hashes required before app launch.",
+    "Actual OS private profile must be absent initially. No identity/grant/config/model writes by harness; actual native folder picker configures only own empty fixture; original OS principal/Profile/Files binding read back.",
+    "Canonical embedded Home approval surface exact create/stroke preview+Pending1/Trusted0+actual Accept once/Finish; no retained-trust injection or uncertain request resubmission.",
+    "Actual native keyboard and stroke use owned PID/control role/fullWorkArea/currentForeground/native HWND/hit-test ancestor and each mouse transition currentCursor guards.",
+    "Before stroke approval prior current Files revision remains; real approved commit must bind structured stroke/native snapshot hash/order/appFiles identities and exact changed bytes; realclose/reopen same revision/hash.",
+    "Both real process closeexit0,empty stderr,eachstream5sdrain required;forcedcleanup/unreleasedmouse/streamorcleanupfailure blocks success.",
+    "Public arbitrary exception text withheld; controlled stage/Check/Wait witnesses retained. Only original logs/controlled screens/counts/IDs/hashes are selected; Home/provider/model payloads/package excluded."
+  ],
+  "independentOfflineControls": {
+    "actualSourceParserErrors": 0,
+    "actualCSharpCompile": "PASS",
+    "actualExtractedRoleVisibilityPointerFinallyPrivacyRefusals": 18,
+    "controls": "18/18 PASS; source guards and failure paths only, no native acceptance"
+  },
+  "verdict": "ACK root sole actual Windows invocation of frozen1541",
+  "qualifications": [
+    "Actual native folder-picker/UIA/rendering/Home one-shot/Files/stroke/runtime acceptance remains NOT_RUN until first actual Windows evidence.",
+    "Existing-state refusal preserves OS state. Test runner is disposable and SDK-present; actual local principal/profile embedded same-process Home is not installed cross-app authenticated Home tuple or account/ACL proof.",
+    "Current-view screenshot is bounded to visible display; donor/font/device/accessibility breadth,signing/noSDKcleanPC/fullApp/global/sourceowner acceptance remains unaccepted.",
+    "No original normal tests/package/window observations repeated or product source changed by C6."
+  ]
+}

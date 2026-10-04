@@ -1,0 +1,509 @@
+[
+  {
+    "name": "git-head",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162580,
+        "birth": 2505511,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.047,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162581,
+        "birth": 2505515,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.04,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-version",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162602,
+        "birth": 2505519,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.139,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "restore",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "restore",
+      "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+      "--configfile",
+      "/workspace/team-c-c4-public-mail-nine-provisional/NuGet.Config",
+      "--disable-parallel",
+      "-p:Configuration=Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162609,
+        "birth": 2505533,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 2.132,
+    "bytes": 626,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "build",
+      "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "-f",
+      "net10.0",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162640,
+        "birth": 2505746,
+        "gone": true
+      },
+      {
+        "pid": 162667,
+        "birth": 2505845,
+        "gone": true
+      },
+      {
+        "pid": 162684,
+        "birth": 2505996,
+        "gone": true
+      },
+      {
+        "pid": 162719,
+        "birth": 2506169,
+        "gone": true
+      },
+      {
+        "pid": 162736,
+        "birth": 2506343,
+        "gone": true
+      },
+      {
+        "pid": 162753,
+        "birth": 2506537,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 9.686,
+    "bytes": 1031,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-0",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/HavenOS.Mail.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162770,
+        "birth": 2506715,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.439,
+    "bytes": 10635,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-1",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162780,
+        "birth": 2506760,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.427,
+    "bytes": 5101,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-2",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/AI/NineToOne.Cui.AI.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162787,
+        "birth": 2506802,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.484,
+    "bytes": 7480,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-3",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Core/CakeOS.Cui.Core.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162797,
+        "birth": 2506851,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.453,
+    "bytes": 4871,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-4",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Language/CakeOS.Cui.Language.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162804,
+        "birth": 2506896,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.466,
+    "bytes": 3188,
+    "familyClosed": true
+  },
+  {
+    "name": "whole-discovery",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "test",
+      "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+      "--no-build",
+      "--no-restore",
+      "-c",
+      "Release",
+      "-f",
+      "net10.0",
+      "--list-tests",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162811,
+        "birth": 2506945,
+        "gone": true
+      },
+      {
+        "pid": 162825,
+        "birth": 2506995,
+        "gone": true
+      },
+      {
+        "pid": 162837,
+        "birth": 2507014,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.391,
+    "bytes": 9956,
+    "familyClosed": true
+  },
+  {
+    "name": "whole-unfiltered-owning-tests",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "test",
+      "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+      "--no-build",
+      "--no-restore",
+      "-c",
+      "Release",
+      "-f",
+      "net10.0",
+      "--logger",
+      "trx;LogFileName=mail72.trx",
+      "--results-directory",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/test-results",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 1,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 162870,
+        "birth": 2507084,
+        "gone": true
+      },
+      {
+        "pid": 162884,
+        "birth": 2507132,
+        "gone": true
+      },
+      {
+        "pid": 162896,
+        "birth": 2507149,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 1,
+    "seconds": 32.544,
+    "bytes": 3377,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163419,
+        "birth": 2510343,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.036,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "git-head-after",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163440,
+        "birth": 2510347,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.039,
+    "bytes": 41,
+    "familyClosed": true
+  }
+]

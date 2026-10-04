@@ -1,0 +1,116 @@
+{
+  "productId": "haven.data",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "haven-data-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Data",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-data",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/haven-data",
+    "arguments": "",
+    "workingDirectory": "/usr/share/haven-data",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/data",
+      "handler": "HavenDataApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.data.launch",
+      "displayName": "Launch Data App",
+      "description": "Ability to launch the Haven Data application",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.data.spreadsheet",
+      "displayName": "Spreadsheet Engine",
+      "description": "Calc spreadsheet engine with formula evaluation",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.data.duckdb",
+      "displayName": "DuckDB Integration",
+      "description": "Query data via DuckDB database engine",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    },
+    {
+      "dependencyId": "dotnet-sdk",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=8.0"
+    },
+    {
+      "dependencyId": "duckdb",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=1.0"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": true,
+    "requiresState": true,
+    "requiresData": true,
+    "customPaths": ["/home/haven/.config/haven-data", "/home/haven/.local/share/haven-data", "/home/haven/.duckdb"]
+  },
+  "permissions": {
+    "requiredGrants": ["files.read", "files.write", "database.access"],
+    "optionalGrants": ["network.access"]
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "haven-data --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T16:00:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-data-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

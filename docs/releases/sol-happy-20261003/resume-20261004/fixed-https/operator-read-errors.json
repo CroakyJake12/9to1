@@ -1,0 +1,25 @@
+{
+  "qualification": "Read-only operator query/precondition mistakes; no product acceptance failure or provider mutation from these SELECTs.",
+  "errorsRetained": [
+    {
+      "query": "SELECT id, resource, scopes FROM oauthResource",
+      "error": "no such column: resource",
+      "correction": "Read actual maintained identifier column; fresh successful receipt retained."
+    },
+    {
+      "query": "reserved owner SELECT from cake_reserved_account",
+      "error": "no such table: cake_reserved_account",
+      "correction": "Use maintained cake_reserved_usernames table; fresh exact fixture readback retained."
+    },
+    {
+      "query": "limiter census from cake_rate_limits",
+      "error": "no such table: cake_rate_limits",
+      "correction": "Use maintained cake_login_attempts; actual final count retained."
+    },
+    {
+      "predicate": "final limiter count equals old value 1",
+      "error": "Actual count 3 after fresh fixture logins",
+      "correction": "Retain all 3 limiter buckets intentionally. No global counter deletion."
+    }
+  ]
+}

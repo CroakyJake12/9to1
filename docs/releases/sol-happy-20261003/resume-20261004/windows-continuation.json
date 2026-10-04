@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "recordedUTC": "2026-10-04T12:13:28.418098+00:00",
+  "role": "C1 read-only Windows/infrastructure continuation discovery",
+  "coordinationHead": "a88c272f75d12027958a9b9b50fafe97658541d2",
+  "priorityDirective": {
+    "path": "coordination/sol-happy-20261003/user-delivery-priority-20261004-2000.md",
+    "sha256": "fcb2b082f92079ade6097b3bdcfb8f31b2d4d47341a30dec70badfe26d45486e",
+    "targetEuropeLondon": "2026-10-04T20:00:00+01:00",
+    "targetUTC": "2026-10-04T19:00:00+00:00",
+    "fullTarget": "Passes1-3 full applicable acceptance and usable deliverables",
+    "protectedMinimum": "All canonical Pass1 Windows/native apps with compatible Home/bootstrap/runtime dependencies; separately scoped Windows acceptance",
+    "qualification": "Repository directive records user intent/context; no new PC mutations, spending, production or main promotion authorization inferred. Deadline is not an acceptance waiver."
+  },
+  "teamA": {
+    "recordPath": "coordination/sol-happy-20261003/team-a.json",
+    "recordBytes": 128878,
+    "recordSha256": "cbbcfdb1ddb767e8294e1d14bca98e9a9c605b6b3a8bc129b441355434828896",
+    "updatedUTC": "2026-10-04T11:50:30.622033+00:00",
+    "canonicalExecutionField": "currentExecution1017",
+    "normalProvisionalCandidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "normalTree": "68eecf040cb3d55adc40da05df77b675102c7a65",
+    "sourceBranch": "astra/launch-integration-20260930",
+    "reviewedSourceDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "reviewedSourceDeliveryQualification": "Exact17 product/6 validation source handoff over A63; source custody/current bounded ACKs separate from Windows package/global acceptance.",
+    "currentStatus": "INCOMPLETE_RUNTIME_AND_USABLE_PC_ARTIFACT_PENDING",
+    "windowsPackageBaseline": "NOT_PUBLISHED_BY_CURRENT_A_RECORD",
+    "pass1WindowsInventory": "NOT_PUBLISHED_BY_CURRENT_A_RECORD",
+    "architectureAndSupportRequirements": "NOT_VERIFIED",
+    "jacobDeliveryRoute": "NOT_VERIFIED",
+    "directiveAcknowledgement": "NOT_FOUND_IN_CURRENT_A_RECORD"
+  },
+  "windowsCapabilities": {
+    "localHost": "Linux",
+    "localShell": "bash",
+    "availableRelevantCommand": "/usr/bin/ssh",
+    "queriedWindowsCommandsAbsent": [
+      "powershell.exe",
+      "pwsh",
+      "wine"
+    ],
+    "supportedRemoteWindowsVmComputerShellTool": "NONE_FOUND_IN_EXPOSED_ALL_TOOLS",
+    "exposedReadOnlyDiscoveryTools": [
+      "mcp__codex_apps__cloud_environment_environment_status",
+      "codex_app__list_projects",
+      "codex_app__list_threads",
+      "codex_app__read_thread_terminal"
+    ],
+    "boundedDiscoveryOutcome": "Bundled environment_status/project/thread reads returned no output before bounded cancellation; no connected Windows host or credential-readiness conclusion inferred.",
+    "configuredNetworkObservation": {
+      "httpPolicy": "unrestricted",
+      "inheritedProxyPreserved": true,
+      "vpnConfigured": false,
+      "tcpDomainGrants": 0,
+      "tcpIpRangeGrants": 0
+    },
+    "windowsRunnerDeclaration": {
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "workflow": ".github/workflows/haven-chat-model-ci.yml",
+      "runner": "windows-latest",
+      "trigger": "workflow_dispatch",
+      "implementedScope": "Debug shared solution build/tests plus automation-worker build and source snapshot upload",
+      "qualification": "Runner declaration is a potential existing execution route, not current accessible Windows execution, release-mode packaging or clean-profile/GUI acceptance. No dispatch performed."
+    },
+    "unsafeForCandidateExistingWindowsWorkflows": [
+      "apply-beta-chat-orchestration.yml",
+      "apply-new-haven-beta-pass.yml",
+      "apply-reasoning-runtime-profile.yml",
+      "repair-beta-feature-pass.yml"
+    ],
+    "unsafeWorkflowReason": "These workflows apply source patches and push HEAD:main; do not dispatch as candidate validation."
+  },
+  "actionableMissingPreconditions": [
+    {
+      "owner": "Team A",
+      "action": "Publish every canonical Pass1 Windows app entrypoint/package/runtime dependency and acceptance blocker inventory, including missing apps."
+    },
+    {
+      "owner": "Team A plus sole Team C integrator",
+      "action": "Select exact provisional Windows package baseline and reviewed source composition; preserve A63/eec/global release lineage."
+    },
+    {
+      "owner": "Team A Windows executor/environment owner",
+      "action": "Confirm supported actual Windows runner/machine and desktop/laptop architecture, bounded disposable profile, compatible Home and clean package launch/GUI acceptance route."
+    },
+    {
+      "owner": "Delivery owner/Jacob",
+      "action": "Provide or verify authorized local destination or accessible immutable download path; source-workspace paths do not establish PC delivery."
+    }
+  ],
+  "independentTeamCWork": {
+    "authorizedHostedValidation": "Reuse existing named isolated CAKE ID Worker/D1 and previously approved bounded anonymous/authenticated fixture sequence with same-time version/settings/census and cleanup/reclosure; root is sole provider writer. Current execution results are recorded separately by root.",
+    "reviewAndIntegration": "Continue exact owner-source handover reviews and bounded C-owned source repair/validation under current claims; no alternative backend or shared owner replacement.",
+    "websiteBlockers": "Current release lacks exact adopted native authoring/renderer/pipeline/test/BuildAsync/authority closure, trusted original session/import action/build root/scanner/transport and editable theme/media parity; minimal wrappers must not overwrite preview.",
+    "deferredIndependentLaterPassWork": "Honor protected Windows capacity; no new later-pass feature expansion or redundant custody-only lane.",
+    "commercialAndProductionHolds": "No new billable activation, paid inference, mail, live Stripe charges, DNS/cutover, WordPress retirement or main acceptance; SH13 policies and actual owner authority bridges remain open."
+  },
+  "claims": {
+    "windowsBuildAttemptPerformed": false,
+    "windowsPackageProduced": false,
+    "windowsAcceptanceVerified": false,
+    "pcDeliveryVerified": false,
+    "providerMutations": 0,
+    "sharedSourceEdits": 0,
+    "recursiveAgents": 0
+  },
+  "qualification": "Read-only evidence discovery plus this requested public-safe receipt. Historical local/unit/native results are not relabelled as current Windows/package/global acceptance."
+}

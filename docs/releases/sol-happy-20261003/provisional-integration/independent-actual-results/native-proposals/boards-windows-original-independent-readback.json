@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "runId": 37208129079,
+  "jobId": 111453539622,
+  "directProviderJobConclusion": "success",
+  "compactOriginalArtifact": {
+    "id": 11305292433,
+    "name": "windows-observation-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+    "size_in_bytes": 34079,
+    "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11305292433",
+    "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11305292433/zip",
+    "expired": false,
+    "created_at": "2026-10-04T14:12:45Z",
+    "expires_at": "2026-10-11T14:12:44Z",
+    "updated_at": "2026-10-04T14:12:45Z",
+    "digest": "sha256:7645fdba070177fd1319112030a11242eacfc5000b8cabb553b0e9f16938b234",
+    "workflow_run": {
+      "id": 37208129079,
+      "repository_id": 1378313608,
+      "head_repository_id": 1378313608,
+      "head_branch": "team-c/sol-happy-c1-windows-affected-three-20261004",
+      "head_sha": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8"
+    }
+  },
+  "originalMembersVerified": [
+    {
+      "name": "cui-tasks-release.log",
+      "bytes": 383,
+      "sha256": "1ee2109b8335a2ffed4ba393b554dc9774b7d6d8b087ffb768e38362c2f33688"
+    },
+    {
+      "name": "launch.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "launch.stdout.log",
+      "bytes": 323,
+      "sha256": "4ab9091ccb20473e4d12df088859e3e890acfa6b5d25825266bcf84d5f287ee3"
+    },
+    {
+      "name": "native-controls-release.log",
+      "bytes": 10957,
+      "sha256": "ea50a41e40d11b25ba5f141084d5ea2b5963658e3cb4872d2f9f22a049be4e67"
+    },
+    {
+      "name": "native-controls.trx",
+      "bytes": 77740,
+      "sha256": "d19e3b8d74f9617cad43dfc7045d273ebf4798fad71adf275611f13f9e198760"
+    },
+    {
+      "name": "publish-release-win-x64.log",
+      "bytes": 9810,
+      "sha256": "ddc7e4e43c9f3e34b177a4366ed1344df3f6c79e185f55d2b654a45eaa7f1a71"
+    },
+    {
+      "name": "result.json",
+      "bytes": 58840,
+      "sha256": "cba279e171e0f02da0c000f1e9043aadf7247b1b5646d60cb38bddc04682aa3c"
+    },
+    {
+      "name": "sdk-info.log",
+      "bytes": 5467,
+      "sha256": "c27d022651bc29d1381bb254168e6e843bc2b1e457259a8bad667c2c7c3b47c3"
+    }
+  ],
+  "actualNativeControls": {
+    "total": "54",
+    "executed": "54",
+    "passed": "54",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "actualPackageProducerObservation": {
+    "file": "boards-win-x64-unaccepted.zip",
+    "bytes": 78324943,
+    "sha256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64"
+  },
+  "actualLaunch": {
+    "processId": 2828,
+    "sessionId": 2,
+    "windowObserved": true,
+    "windowTitle": "Board \u2014 Boards",
+    "closeRequested": true,
+    "exited": true,
+    "forcedCleanup": false,
+    "exitCode": 0
+  },
+  "review": "ACK actual original Windows54 maintained App.Tests pass plus real native package/extraction/window/normalclose zeroexit; genuine fresh default Board startup defect repaired in this scope. Original compact member bytes/hash metadata independently verified; source/harness frozen review applies.",
+  "qualification": "HostedWindowsSDK runner bounded probe only. Original ZIP package hash/extraction are producer observations; C6 did not locally redownload/hash package archive. No no-SDK/installed Home/Donor/signing/full app/owner adoption acceptance. Original first FileNotFound retained."
+}

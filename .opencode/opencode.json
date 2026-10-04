@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "model": "openai/gpt-6-sol"
+    },
+    "general": {
+      "mode": "subagent",
+      "model": "openai/gpt-6-luna"
+    },
+    "explore": {
+      "mode": "subagent",
+      "model": "openai/gpt-6-luna"
+    }
+  }
+}

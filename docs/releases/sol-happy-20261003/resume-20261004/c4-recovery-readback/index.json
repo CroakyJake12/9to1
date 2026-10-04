@@ -1,0 +1,65 @@
+{
+  "basis": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+  "originalRecoveryBytes": 4486,
+  "originalRecoverySHA256": "64b3f43bdbeb03ef5bbef559126b3e02a05cfe501024ca811644e0e5e40e7350",
+  "status": "PROVISIONAL_LOCAL_FIX_PENDING_INDEPENDENT_REVIEW",
+  "sourcePaths": [
+    "cloud/cake-id-auth/deployment/recovery/recovery.py",
+    "cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+    "cloud/cake-id-auth/deployment/recovery/README.md"
+  ],
+  "tests": {
+    "command": "CAKE_RECOVERY_MIGRATIONS=/workspace/team-c-c4-recovery-provisional/cloud/cake-id-auth/migrations python3 -B cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+    "originalControls": 10,
+    "newControls": 4,
+    "implementerExit": 0,
+    "providerRestoration": "NOT_RUN"
+  },
+  "failurePreservation": "Original post-publication same-count FALSE_SUCCESS retained. Intermediate sidecar check refused valid WAL backup because readback created its own sidecars; original failure log retained. Final immutable checks apply only to receipt-matching generated sealed image, never to live source online backup.",
+  "scope": "Private local canonical35 SQLite backup/restore only. No hosted/D1 restore/session/ACL lease/full-platform acceptance.",
+  "publicOutputContainsPrivateValues": false,
+  "originalRegression": {
+    "command": "python3 -B docs/releases/sol-happy-20261003/resume-20261004/c4-recovery-readback/original_readback_regression.py REPO",
+    "exitCode": 1,
+    "preservedFalseSuccesses": 2
+  },
+  "filePins": [
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/recovery.py",
+      "bytes": 6152,
+      "sha256": "9834e944783d863aaafca81f4cb380b412b4110c0e10f52d7bf889ed9c785a95"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+      "bytes": 9707,
+      "sha256": "b7a04830f74c8cdf860c9faae3177baa1ae627e33495b93a06bc9c8c34ab15c1"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/README.md",
+      "bytes": 3401,
+      "sha256": "8841c740968548a52f8d9b909e06cb55b0560297e282a51777a4b2a736b34ef8"
+    }
+  ],
+  "sourceCommit": "67a468250230429fd0b7fab97934a0d664631864",
+  "sourceDiffSHA256": "6e57a8d9f315e7bb4c517a65557e0405b580158f5dd9a8792ad78b9197a6900b",
+  "rawEvidence": [
+    {
+      "path": "original-regression.log",
+      "bytes": 421,
+      "sha256": "425b6ad0170d219471b543de9169052b7ff404143be3ebe1a01dcbe1b06e6c76",
+      "status": "EXPECTED_EXIT1_TWO_ORIGINAL_FALSE_SUCCESS_DEFECTS"
+    },
+    {
+      "path": "fixed-controls.log",
+      "bytes": 1859,
+      "sha256": "c9bec6ae0fdd2bd54033aca30c78cd8b1328c2f182a2277572f314fbf6672b79",
+      "status": "PRESERVED_INTERMEDIATE_NEW_CONTROL_FAILURE"
+    },
+    {
+      "path": "fixed-controls-final.log",
+      "bytes": 709,
+      "sha256": "03044134fd2c8604e0e5c01acabd94d5fa6060858ff6b37ba0cdc43ce3f4cde2",
+      "status": "FINAL_IMPLEMENTER_EXIT0_14_CONTROLS"
+    }
+  ]
+}

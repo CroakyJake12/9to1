@@ -1,0 +1,8 @@
+{
+  "Properties": {
+    "TargetPath": "/workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/HavenOS.Sites.Tests/release_linux-x64/HavenOS.Sites.Tests.dll",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "IsTestProject": "true"
+  }
+}

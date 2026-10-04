@@ -1,0 +1,49 @@
+{
+  "ownerDeliveryCommit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "ackPath": "handoff/team-a/shared/a1-C2-normal-ack-and-source-delivery-map.json",
+  "ackSha256": "025aa34301145e7b4879b4c8dfd033158cf7a7f0556abdf1d8cb611260ebe5c6",
+  "candidateCommit": "b73a45b4a319fe619f517e9bd1ed1f262ba00b33",
+  "verifiedCandidateFiles": {
+    "production": {
+      "bytes": 46109,
+      "sha256": "91cefb9cc982f15a436c41d3cb9a69a8349eae52b427cbd218b4cce03312463e",
+      "gitBlob": "977d15ada778fe39f9de08a895f69246dd8ae2c6"
+    },
+    "tests": {
+      "bytes": 11426,
+      "sha256": "eed40108020f0d876c700736b6afa2d222d9b4889272a63810ed18372d1b4654",
+      "gitBlob": "722dab4cb657a7646f4a611c9b2140a629b12b63"
+    }
+  },
+  "inverseProductionEqualsActualA63": true,
+  "ownerAck": "The precise three identity-binding edits and additive Theory on genuine actual A63 are approved for source integration review. Different future joint body is not a blocker for this independent normal-source improvement. No broader grant, risk, lifecycle or stored-state change is approved.",
+  "changedBlocker": "Exact owner ACK clears source ownership/current-body qualification for independent normal A63 b73 candidate source integration review. Future selected body difference is no longer a blocker for that candidate. Root retains integration decision.",
+  "futureReference": {
+    "deliveredReferenceBytes": 46308,
+    "deliveredReferenceSha256": "ada51273b49a766885edb9477df6dc29ade1ba3a5e33b28114132a64007694f4",
+    "threeEditPreviewSha256": "8555592cd12a293e94e419b4870bf84706f96c3b98435c16cde1e04b84cbf11f",
+    "notAdopted": true,
+    "note": "Future body now delivered as reference text, not installed production source; requires preserving its additional AppliedGrantId correlations in any later composition."
+  },
+  "validation": {
+    "normalHome": {
+      "total": 331,
+      "passed": 331,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0
+    },
+    "unchangedA63Negative": {
+      "total": 2,
+      "failed": 2,
+      "exit": 1
+    },
+    "A1IndependentlyExecutedTests": false
+  },
+  "remainingGaps": [
+    "Real issuer/native/browser/provider acceptance",
+    "auth_revision lifecycle semantics and .NET wire compatibility",
+    "Future selected body composition/runtime acceptance"
+  ],
+  "scope": "Read-only source verification and metadata evidence only; no production/test/release changes"
+}

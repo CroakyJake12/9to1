@@ -1,0 +1,117 @@
+{
+  "status": "READ_ONLY_SCOPE_ASSESSMENT_SOURCE_AND_RUNTIME_UNINVOKED",
+  "harnessBasis": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc",
+  "immutableProducer": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "immutablePackage": "boards-win-x64-unaccepted.zip",
+  "immutablePackageBytes": 78324943,
+  "immutablePackageSha256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64",
+  "packageProducerRun": 37208129079,
+  "newCriterion": "Real NTFS ReadOnly failure must display native Save failed without overwriting saved primary or losing current pending native edit; clearing only that own-file attribute and actual user save retry must persist same identities/text and reopen normally.",
+  "actualCapabilities": {
+    "canonicalPersistence": "Windows File.Replace temp\u2192primary with validated temp; no Windows IOException fallback or readonly clearing.",
+    "failurePresentation": "Adapter SaveAsync catches\u2192SetError; VM statusmap\u2192Save failed; topbar and footer text show existing SaveStateText.",
+    "nativeObservable": "TextBlockAutomationPeer.GetNameCore returns Owner.Text, so standard UIA Text.Name is actual displayed status. Scope to app PID and existing TopBarRight/FooterBar regions, require visible geometry.",
+    "retry": "After actual own-file attribute restore, existing focused Ctrl+S path\u2192canonical SaveAsync success clears adapter error; VM maps Saved and actual file contains expected pending text.",
+    "windowVisibility": "Custom provider source does not explicitly expose Window/Transform patterns. Proposed actual guarded Win+Up via unchanged existing chord, then real window/work-area/status visibility gates; no unobserved UIA resize contract claimed."
+  },
+  "ownedFaultFixture": "Only fresh .9to1board created by actual package inside exclusive own runtime-fixture; exact original attributes captured, real NTFS/ReadOnly observed, no document JSON/model/API writes.",
+  "controls": [
+    "Actual package custody/source/PID/input/drain guards reused; new storage-retry mode only, old67/85 not dispatched.",
+    "Observe canonical initial saved bytes/identities. Set only ReadOnly attribute on own app-created primary; verify exact attributes/NTFS.",
+    "Actual keyboard pending paragraph edit and focused user save must be followed by visible native Save failed and exact saved-primary bytes/hash preservation while ReadOnly stays asserted. Pending native ValuePattern text must remain unchanged.",
+    "Restore exact original primary attributes, actual focused retry must produce visible Saved text and durable expected paragraph/same identities.",
+    "Actual normal close/reopen restores retried edit; attributes/forced-cleanup/drain errors block success. Finally restores own-file attributes before existing process cleanup."
+  ],
+  "qualification": [
+    "Genuine OS storage-error presentation/retry only; no account/Home/ACL/authority entitlement or Home installed-tuple claim.",
+    "Autosave may also fail or succeed; no exclusive Ctrl+S causality claim.",
+    "NTFS attribute must actually obstruct canonical write; otherwise real control fails rather than declaring storagefailure coverage.",
+    "SDK-present Windows only, clipped screenshots/donor/theme/fullApp/clean-PC remain unaccepted."
+  ],
+  "C6ReadOnlyCriterionReview": "ACK_WITH_CONCRETE_BOUNDS: failedstatus after focused save; readback whileReadOnlyasserted; exactattrs finallyrestore beforecleanup; restore/drain/forcedcleanup failures block success; current-owned-peer and durable retry binding.",
+  "proposedNextAction": "Root scope decision and isolated minimal implementation; C6 exact freeze/criterion review mandatory before root invocation.",
+  "previousIndicesUnchanged": {
+    "67": "3443297bd208a7f8b7df49e888476574711ed2b0996bbc988e2c51b00cf347c5",
+    "85": "52869505acaaeefb809991d97b26259863805032c1b0dc74892a37b98a84d37c"
+  },
+  "sourceInputs": [
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "bytes": 44045,
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740",
+      "exactProducerSource": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Boards.cui",
+      "bytes": 2863,
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84",
+      "exactProducerSource": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ShellChrome.cs",
+      "bytes": 2457,
+      "sha256": "f884ba8bd33277a3eacc1783c3ce1cc71d0abfe3fe7f577cb59fa6c6247e4f2a",
+      "exactProducerSource": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "bytes": 83265,
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f",
+      "exactProducerSource": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "bytes": 41060,
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145",
+      "exactProducerSource": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "bytes": 28237,
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c",
+      "exactProducerSource": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/RichBoardSession.cs",
+      "bytes": 19529,
+      "sha256": "e5406be4fd78dc7a7828f9b9646a8f8b0e9896a634753cb920d26b03c5a86134",
+      "exactProducerSource": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app.tests/BoardsVisualTests.cs",
+      "bytes": 17042,
+      "sha256": "e7f5effe4635b2aad672c36eb0e6b3ac3982edcb682981fa1fbcb8581668bbb4",
+      "exactProducerSource": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBlockAutomationPeer.cs",
+      "bytes": 1134,
+      "sha256": "be0f1e249ec2f12a8174fce36fd970f1d7f9f0ff99ebd5d7208861e4f52ba090",
+      "exactProducerSource": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/AutomationPeer.cs",
+      "bytes": 26071,
+      "sha256": "23df5c0d8e5c20d137e17202f78361bc4a210cbe1e4f3e51412c7d9ffc3078ca",
+      "exactProducerSource": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowAutomationPeer.cs",
+      "bytes": 1345,
+      "sha256": "96161e0ce0e01b7176bbccb881155b32885a94e739c54e32f2474d0355a3d500",
+      "exactProducerSource": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowBaseAutomationPeer.cs",
+      "bytes": 2906,
+      "sha256": "39406bd281c8b98ebe8f0d36352d4c706dc731782f7fb5518962893b88a9d2ea",
+      "exactProducerSource": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/AutomationNode.cs",
+      "bytes": 20132,
+      "sha256": "8aa197686196f37e538e4ac08f887f2a31dce838ce6bd8083029532d6c9a3405",
+      "exactProducerSource": true
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "sourceCommit": "1b188a7b0a069d7fc94ae3c0b251f1302b602b63",
+  "package": {
+    "root": "/home/runner/.nuget/packages/xunit.runner.visualstudio/3.1.5",
+    "sha512": "b/tvN9kXtUd3wSSYbC80Ic6y/dYlYbNSvatYiv71iozPhXqM4EaOuHujkIJh85b+wY6dgf25k9ENSy8jN6mlvQ==",
+    "assetsSha512": "tKi7dSTwP4m5m9eXPM2Ime4Kn7xNf4x4zT9sdLO/G4hZVnQCRiMTWoSZqI/pYTVeI27oPPqHBKYI/DjJ9GsYgA==",
+    "metadataContentHash": "tKi7dSTwP4m5m9eXPM2Ime4Kn7xNf4x4zT9sdLO/G4hZVnQCRiMTWoSZqI/pYTVeI27oPPqHBKYI/DjJ9GsYgA==",
+    "physicalArchiveSha512": "b/tvN9kXtUd3wSSYbC80Ic6y/dYlYbNSvatYiv71iozPhXqM4EaOuHujkIJh85b+wY6dgf25k9ENSy8jN6mlvQ==",
+    "files": [
+      {
+        "path": ".nupkg.metadata",
+        "bytes": 178,
+        "sha256": "6ff97d608b81093def8d562973b086090c2754e0791028b0f868378293478479"
+      },
+      {
+        "path": ".signature.p7s",
+        "bytes": 25938,
+        "sha256": "34b7d6907204aaf19109b29dd465971d2964213b2402d89cda0e6817045ccb7d"
+      },
+      {
+        "path": "_content/README.md",
+        "bytes": 5538,
+        "sha256": "842d6eb9496708b66a95a6a10866021d0225e701a41a9de713d8a2cbc66ab70d"
+      },
+      {
+        "path": "_content/logo-128-transparent.png",
+        "bytes": 1895,
+        "sha256": "bf9c034bc8a7080f0cece43c8969a39e8e480671c5b7b7282289fc8fc9194e94"
+      },
+      {
+        "path": "build/net472/xunit.abstractions.dll",
+        "bytes": 21928,
+        "sha256": "7c07e3bce3e1794cffc033302fcf13a003fd320b16e1c09e9d9a221f495566a4"
+      },
+      {
+        "path": "build/net472/xunit.runner.visualstudio.props",
+        "bytes": 705,
+        "sha256": "8325f804d7a43e410a165a5d9c80eec4ffb470ae53738406ee6615beffffd294"
+      },
+      {
+        "path": "build/net472/xunit.runner.visualstudio.testadapter.dll",
+        "bytes": 2103296,
+        "sha256": "11a09508009d43cdfa0e9752cd713c7789bcafb9925c44fcdd849e77986dc190"
+      },
+      {
+        "path": "build/net8.0/xunit.abstractions.dll",
+        "bytes": 21928,
+        "sha256": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c"
+      },
+      {
+        "path": "build/net8.0/xunit.runner.visualstudio.props",
+        "bytes": 705,
+        "sha256": "8325f804d7a43e410a165a5d9c80eec4ffb470ae53738406ee6615beffffd294"
+      },
+      {
+        "path": "build/net8.0/xunit.runner.visualstudio.testadapter.dll",
+        "bytes": 1253376,
+        "sha256": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a"
+      },
+      {
+        "path": "lib/net472/_._",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "lib/net8.0/_._",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "xunit.runner.visualstudio.3.1.5.nupkg",
+        "bytes": 1327518,
+        "sha256": "3b9eb9efcf3840695db33b045901420d14d7562141999e06182fb8894faeb124"
+      },
+      {
+        "path": "xunit.runner.visualstudio.3.1.5.nupkg.sha512",
+        "bytes": 88,
+        "sha256": "c240b7fcb6fed80fbcaae22815751661723e12b82232103a79dae311e9efe110"
+      },
+      {
+        "path": "xunit.runner.visualstudio.nuspec",
+        "bytes": 1513,
+        "sha256": "0e34c46e1420cea8e5260772ff19bcb3d3faa7709136d2d3ba157f48a97362ba"
+      }
+    ]
+  },
+  "actualCopiedAdapter": [
+    {
+      "path": "artifacts/canvas65-managed-build/bin/Haven.Core.Tests/release_linux-x64/xunit.runner.visualstudio.testadapter.dll",
+      "bytes": 1253376,
+      "sha256": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a"
+    }
+  ],
+  "actualCopiedConfiguration": [],
+  "runsettingsCLI": null,
+  "qualification": "Source-bound discovery normalization; non-preenumerated dynamic theory/set mismatch and collisions fail closed, no guessed counts."
+}

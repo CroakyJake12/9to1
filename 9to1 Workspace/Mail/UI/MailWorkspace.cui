@@ -1,0 +1,136 @@
+<Cui id="mail.workspace" version="1" font-family="system-ui" scalable-text="true" high-contrast="semantic" reduced-motion="respect">
+  <Page id="mail-page" role="main" accessible-name="9to1 Mail">
+    <AdaptiveSplit id="mail-shell" compact-breakpoint="860" primary-min-width="0">
+      <Aside id="mail-navigation" role="navigation" accessible-name="Mail navigation" compact-mode="drawer">
+        <Heading level="1">Mail</Heading>
+        <Button id="compose" action="mail.compose" accessible-name="Compose a message" shortcut="Ctrl+N" touch-target="44">Compose</Button>
+        <SearchField id="mail-search" binding="searchText" action="mail.search" accessible-name="Search mail" placeholder="Search mail" clear-action="mail.clear-search" />
+        <List id="unified-navigation" binding="views" role="list" accessible-name="Mail folders" empty-text="Connect an account to begin">
+          <Button id="mail-view" repeat="views" action="mail.open-view" action-argument="{key}" accessible-name="Open {name}" selected="{isSelected}" shortcut-scope="list">
+            <Text binding="name" />
+            <Text binding="unreadCount" tone="muted" />
+          </Button>
+        </List>
+        <Heading level="2">Accounts</Heading>
+        <List id="mail-accounts" binding="accounts" role="list" accessible-name="Connected accounts" empty-text="No accounts connected">
+          <Button id="mail-account" repeat="accounts" action="mail.select-account" action-argument="{accountId}" accessible-name="Open {displayName}" selected="{isSelected}" shortcut-scope="list">
+            <Text binding="displayName" />
+            <Text binding="syncSummary" tone="muted" />
+          </Button>
+        </List>
+        <Button id="manage-accounts" action="mail.accounts.manage" accessible-name="Manage mail accounts">Manage accounts</Button>
+        <Button id="mail-settings" action="mail.settings.open" accessible-name="Mail settings">Settings</Button>
+      </Aside>
+      <Main id="mail-main" accessible-name="Messages and reading pane">
+        <Toolbar id="mail-toolbar" accessible-name="Current mailbox controls" wrap="true">
+          <Heading id="mail-view-title" level="1" binding="viewTitle">Unified Inbox</Heading>
+          <Button action="mail.sync-all" accessible-name="Sync all mail" touch-target="44">Sync all</Button>
+          <Select id="reading-pane-position" binding="paneOptions" selected-binding="settings.readingPane" action="mail.settings.pane" accessible-name="Reading pane position" />
+          <Select id="mail-density" binding="densityOptions" selected-binding="settings.density" action="mail.settings.density" accessible-name="Message density" />
+        </Toolbar>
+        <AdaptiveSplit id="message-reading-layout" compact-breakpoint="680" primary-min-width="0">
+          <Main id="message-list-panel" accessible-name="Message list">
+            <List id="message-list" binding="messages" role="list" accessible-name="Messages" empty-text="No messages in this view">
+              <Article id="message-row" repeat="messages" role="listitem" accessible-name="{senderLabel}, {subject}, {receivedLabel}, {messageState}">
+                <Row id="message-summary" action="mail.open-message" action-argument="{messageId}" wrap="true">
+                  <Text binding="senderLabel" weight="semibold" />
+                  <Text binding="subject" weight="semibold" />
+                  <Text binding="preview" tone="muted" />
+                  <Text binding="receivedLabel" tone="muted" />
+                  <Text binding="indicators" tone="muted" />
+                  <Button action="mail.star" action-argument="{messageId}" accessible-name="{starActionName}" touch-target="44">{starGlyph}</Button>
+                  <Button action="mail.archive" action-argument="{messageId}" accessible-name="Archive {subject}" touch-target="44">Archive</Button>
+                  <Button action="mail.delete" action-argument="{messageId}" accessible-name="Move {subject} to Trash" touch-target="44">Delete</Button>
+                  <Button action="mail.snooze" action-argument="{messageId}" accessible-name="Snooze {subject}" touch-target="44">Snooze</Button>
+                </Row>
+              </Article>
+            </List>
+          </Main>
+          <Main id="reading-pane" accessible-name="Message reading pane">
+            <Column id="message-detail" binding="selectedMessage" visible="{hasSelection}">
+              <Heading id="message-subject" level="2" binding="selectedMessage.subject" />
+              <Row id="message-header" wrap="true">
+                <Text binding="selectedMessage.senderLabel" accessible-name="Actual sender address" />
+                <Text binding="selectedMessage.recipientsLabel" tone="muted" />
+                <Text binding="selectedMessage.receivedLabel" tone="muted" />
+                <Text binding="selectedMessage.authenticationSummary" tone="muted" />
+              </Row>
+              <Row id="message-actions" wrap="true">
+                <Button action="mail.reply" action-argument="{selectedMessage.messageId}" accessible-name="Reply" touch-target="44">Reply</Button>
+                <Button action="mail.reply-all" action-argument="{selectedMessage.messageId}" accessible-name="Reply all" touch-target="44">Reply all</Button>
+                <Button action="mail.forward" action-argument="{selectedMessage.messageId}" accessible-name="Forward" touch-target="44">Forward</Button>
+                <Button action="mail.mark-read" action-argument="{selectedMessage.messageId}" accessible-name="Mark read or unread" touch-target="44">{selectedMessage.readActionLabel}</Button>
+                <Button action="mail.view-source" action-argument="{selectedMessage.messageId}" accessible-name="View message source and headers">Message details</Button>
+              </Row>
+              <Text id="remote-content-status" binding="selectedMessage.remoteContentStatus" role="status" />
+              <Button id="load-remote-content" action="mail.remote-content.allow-message" action-argument="{selectedMessage.messageId}" visible="{selectedMessage.remoteContentBlocked}" accessible-name="Load remote images and content for this message">Load remote content</Button>
+              <ScrollView id="message-body-scroll" restore-position="true">
+                <Html id="message-html-body" binding="selectedMessage.safeHtmlBody" sandbox="true" allow-scripts="false" allow-forms="false" remote-content="{selectedMessage.remoteContentAllowed}" />
+                <Text id="message-plain-body" binding="selectedMessage.plainBody" selectable="true" />
+              </ScrollView>
+              <List id="message-attachments" binding="selectedMessage.attachments" role="list" accessible-name="Message attachments" empty-text="No attachments">
+                <Row id="attachment-row" repeat="selectedMessage.attachments" wrap="true">
+                  <Text binding="fileName" />
+                  <Text binding="sizeLabel" tone="muted" />
+                  <Text binding="securitySummary" role="status" />
+                  <Button action="mail.attachment.open" action-argument="{attachmentId}" accessible-name="Open {fileName}">Open</Button>
+                  <Button action="mail.attachment.save" action-argument="{attachmentId}" accessible-name="Save {fileName} to Files">Save to Files</Button>
+                  <Button action="mail.attachment.board" action-argument="{attachmentId}" accessible-name="Add {fileName} to Board">Add to Board</Button>
+                </Row>
+              </List>
+            </Column>
+            <Text id="mail-empty-selection" visible="{noSelection}" role="status">Select a message to read it here.</Text>
+          </Main>
+        </AdaptiveSplit>
+        <Composer id="mail-compose" accessible-name="Compose email" visible="{isComposing}" sticky="bottom">
+          <Select id="from-identity" binding="compose.fromIdentities" selected-binding="compose.fromIdentityId" action="mail.compose.select-from" accessible-name="From identity" />
+          <TextField id="to-recipients" binding="compose.toText" action="mail.compose.update-to" accessible-name="To" placeholder="To" />
+          <Button action="mail.compose.toggle-cc" accessible-name="Add Cc">Cc</Button>
+          <Button action="mail.compose.toggle-bcc" accessible-name="Add Bcc">Bcc</Button>
+          <TextField id="cc-recipients" binding="compose.ccText" visible="{compose.showCc}" action="mail.compose.update-cc" accessible-name="Cc" />
+          <TextField id="bcc-recipients" binding="compose.bccText" visible="{compose.showBcc}" action="mail.compose.update-bcc" accessible-name="Bcc" />
+          <TextField id="mail-subject" binding="compose.subject" action="mail.compose.update-subject" accessible-name="Subject" />
+          <Toolbar id="compose-formatting" accessible-name="Message formatting">
+            <Button action="mail.compose.bold" accessible-name="Bold">Bold</Button>
+            <Button action="mail.compose.italic" accessible-name="Italic">Italic</Button>
+            <Button action="mail.compose.link" accessible-name="Insert link">Link</Button>
+            <Toggle id="plain-text-mode" binding="compose.plainTextMode" action="mail.compose.plain-text" accessible-name="Plain text mode" />
+            <Button action="mail.compose.attach-files" accessible-name="Attach from Files">Attach</Button>
+          </Toolbar>
+          <TextArea id="mail-compose-body" binding="compose.plainBody" action="mail.compose.update-body" accessible-name="Email body" multiline="true" />
+          <List id="compose-attachments" binding="compose.attachments" role="list" accessible-name="Files to attach" />
+          <Text id="draft-autosave-status" binding="compose.saveStatus" role="status" live="polite" />
+          <Row id="compose-actions" wrap="true">
+            <Button action="mail.compose.close" accessible-name="Close composer">Close</Button>
+            <Button action="mail.compose.discard" accessible-name="Move draft to Trash">Discard draft</Button>
+            <Button id="send-mail" action="mail.send" enabled="{compose.canSend}" accessible-name="Send email" shortcut="Ctrl+Enter" touch-target="44" variant="primary">Send</Button>
+          </Row>
+        </Composer>
+        <Text id="mail-status" binding="status.message" role="status" live="polite" accessible-name="Mail status" />
+        <Component id="FloatingAiBar" role="complementary" accessibility-name="Ask Dulche about Mail">
+          <Surface class="ai-bar" dock="bottom" state="{Binding Mode}">
+            <Stack direction="horizontal" gap="8" accessibility-name="Mail AI access mode">
+              <Text class="mode" value="{Binding AccessModeLabel}" live="polite" />
+              <Button id="ReadOnlyMode" text="Read-only" action="SetReadOnly" accessibility-name="Set AI access to read-only" />
+              <Button id="WriteMode" text="Write" action="SetWriteMode" accessibility-name="Set AI access to write mode" />
+              <Button id="AiModel" text="{Binding ModelPickerLabel}" visible="{Binding ModelPickerAvailable}" action="SelectNextModel" accessibility-name="Choose AI model" />
+              <Button id="ExpandAi" visible="{Binding IsCollapsed}" action="Expand" accessibility-name="Open AI assistant">Ask Dulche</Button>
+            </Stack>
+            <Stack visible="{Binding IsExpanded}" gap="8">
+              <Text class="context" value="{Binding ContextLabel}" />
+              <Input id="AiPrompt" value="{Binding Prompt, mode=TwoWay}" submit="Submit" accessibility-name="Ask about the selected mail" />
+              <Text class="request-state" value="{Binding RequestStateLabel}" live="polite" />
+              <Stack direction="horizontal" gap="8">
+                <Button text="Send" action="Submit" default="true" />
+                <Button text="Stop" action="Cancel" visible="{Binding IsStreaming}" />
+                <Button text="Close" action="Collapse" />
+              </Stack>
+              <RichText value="{Binding Response}" live="polite" />
+              <Text class="error" value="{Binding Error}" visible="{Binding HasError}" live="assertive" />
+            </Stack>
+          </Surface>
+        </Component>
+      </Main>
+    </AdaptiveSplit>
+  </Page>
+</Cui>

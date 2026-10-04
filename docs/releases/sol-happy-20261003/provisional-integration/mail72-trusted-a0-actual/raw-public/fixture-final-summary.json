@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "a0c8748196b90e2c43885e174b5835a7fe2c33e3",
+  "runId": "37229860186",
+  "runAttempt": "1",
+  "normalMailStatus": "PASS_FULL_NORMAL_MAIL72_WITH_REAL_LOOPBACK_TRUSTED_TLS_UNACCEPTED",
+  "javaAttempted": true,
+  "callerAttempted": true,
+  "crlAttempted": true,
+  "javaFamilyDrained": true,
+  "callerFamilyDrained": true,
+  "crlFamilyDrained": true,
+  "introducedRunnerTrustRemoved": true,
+  "primaryFailureType": null,
+  "cleanupFailureTypes": [],
+  "qualification": "Sampled original Linux family custody; synthetic loopback real TLS and normal managed72 only, no native GUI/Home/provider/Windows/full release acceptance.",
+  "fullScopedPass": true
+}

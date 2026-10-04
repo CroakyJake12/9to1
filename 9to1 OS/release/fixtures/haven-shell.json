@@ -1,0 +1,110 @@
+{
+  "productId": "haven.shell",
+  "productType": "SystemSurface",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "cb15dcd1b57c39bc1ac9aaf73891ca4369cd9684",
+    "branch": "main",
+    "tag": "haven-shell-0.1.0"
+  },
+  "donor": {
+    "name": "HavenOS Shell Extension",
+    "repositoryUrl": "https://github.com/CroakyJake12/gnome-shell",
+    "revision": "1d66bb011e56b1759a65eb8d3e9f194c92523baa",
+    "licence": "GPL-2.0-or-later",
+    "licenceUrl": "https://www.gnu.org/licenses/gpl-2.0.html"
+  },
+  "package": {
+    "name": "havenos-shell",
+    "version": "0.1.0",
+    "hashSha256": "731f63dc99c99e535c3ed74a47c5252ad2912e62994aff377b9b6a6c6a65c816",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/share/gnome-shell/extensions/haven-shell@havenos/extension.js",
+    "arguments": "",
+    "workingDirectory": "/usr/share/gnome-shell/extensions/haven-shell@havenos",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "org.gnome.Shell.Extensions.HavenShell",
+    "socketActivation": false,
+    "requiredServices": ["gnome-shell"]
+  },
+  "routes": [
+    {
+      "route": "/shell",
+      "handler": "HavenShellExtension",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.shell.topbar",
+      "displayName": "Top Bar Integration",
+      "description": "Haven-branded top bar with system status",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.shell.overview",
+      "displayName": "Overview Mode",
+      "description": "Custom overview with Haven app grid",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.shell.workspaces",
+      "displayName": "Workspace Management",
+      "description": "Haven workspace switching and management",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "gnome-shell",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=46.0"
+    },
+    {
+      "dependencyId": "mutter",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=46.0"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": false,
+    "requiresState": true,
+    "requiresData": false,
+    "customPaths": ["/etc/gnome-shell/extensions/haven-shell@havenos"]
+  },
+  "permissions": {
+    "requiredGrants": ["system.shell.extension"],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "gnome-extensions info haven-shell@havenos",
+    "expectedOutputPattern": "haven-shell@havenos",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "haven-shell@havenos\n",
+    "stderr": "",
+    "executedAt": "2026-09-12T12:05:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-shell-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}

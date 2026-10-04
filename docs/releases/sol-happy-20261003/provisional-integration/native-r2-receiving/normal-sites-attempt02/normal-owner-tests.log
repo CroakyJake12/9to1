@@ -1,0 +1,5 @@
+Test run for /workspace/team-c-c4-native-r2-receiving-attempt02/9to1 Workspace/Sites/bin/HavenOS.Sites.Tests/release_linux-x64/HavenOS.Sites.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites-attempt02/diagnostics/test-results/normal-sites.trx
+
+Passed!  - Failed:     0, Passed:    76, Skipped:     0, Total:    76, Duration: 342 ms - HavenOS.Sites.Tests.dll (net10.0)

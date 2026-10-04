@@ -1,0 +1,26 @@
+<Cui id="shared-floating-ai-bar" version="1">
+  <Border id="floating-ai-surface" accessible-name="AI assistant">
+    <StackPanel spacing="8">
+      <StackPanel orientation="Horizontal" spacing="8" accessible-name="AI access mode">
+        <TextBlock text="{Binding AccessModeLabel}" />
+        <Button id="ReadOnlyMode" content="Read-only" action="SetReadOnly" accessible-name="Set AI access to read-only" />
+        <Button id="WriteMode" content="Write" action="SetWriteMode" accessible-name="Set AI access to write mode" />
+        <Button id="AiModel" content="{Binding ModelPickerLabel}" IsVisible="{Binding ModelPickerAvailable}" action="SelectNextModel" accessible-name="Choose AI model" />
+        <Button id="ExpandAi" content="✦" IsVisible="{Binding IsCollapsed}" action="Expand" accessible-name="Open AI assistant" />
+      </StackPanel>
+      <StackPanel IsVisible="{Binding IsExpanded}" spacing="8">
+        <TextBlock id="AiContext" text="{Binding ContextLabel}" />
+        <TextBox id="AiPrompt" text="{Binding Prompt, Mode=TwoWay}" accessible-name="Ask about this app" />
+        <TextBlock id="AiRequestStatus" text="{Binding RequestStateLabel}" accessible-name="AI request status" />
+        <StackPanel orientation="Horizontal" spacing="8">
+          <Button id="SendAi" content="Send" action="Submit" />
+          <Button id="StopAi" content="Stop" action="Cancel" IsVisible="{Binding IsStreaming}" />
+          <Button id="FinishActionAudit" content="Finish audit" action="FinishActionAudit" IsVisible="{Binding HasPendingActionAudit}" accessible-name="Retry only the retained Home completion audit" />
+          <Button id="CloseAi" content="Close" action="Collapse" />
+        </StackPanel>
+        <TextBlock id="AiResponse" text="{Binding Response}" text-wrapping="Wrap" />
+        <TextBlock id="AiError" text="{Binding Error}" IsVisible="{Binding HasError}" accessible-name="AI error" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Cui>

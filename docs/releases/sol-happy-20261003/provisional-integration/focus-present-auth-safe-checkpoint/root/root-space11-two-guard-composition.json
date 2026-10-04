@@ -1,0 +1,13 @@
+{
+  "source": "50c9419f91743bf83fbfbbbd5cf15376317991a4",
+  "parent": "ec76a419b66d2e963c9c0b7be110c236db4d62e0",
+  "composed": "ba88e14b2ff1175ce59c882c4a71c99b504a7c6a",
+  "selectedPath": "9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs",
+  "previousSHA256": "eb887775d9c1ec9928acf9a1411c8ab1ebe5e77550ac2f7aae4c478963d927dd",
+  "reviewedSHA256": "35c5126f547ca5106a94a930c664a9015671ee842d3d7f1d9bf6af61d2033f9f",
+  "outsideEntriesConserved": 17026,
+  "AOwnerAck": "PR11 comment5984043065",
+  "BOwnerAck": "sharedSpaceBOwnerAck_20261004T205611.491508+0000; d01e1a3a73b08474d970c721b8fbd18fc81e5b57e97ea017aa59336f74b23c4f",
+  "providedNativeEvidence": "Original15 baseline10PASS1FAIL4NOTRUN; repaired15PASS; 163Debug163Release16focused identity reviewed",
+  "limits": "No independent compiled sourcegraph custody, physical browser, installed or full-app acceptance; private packets excluded"
+}

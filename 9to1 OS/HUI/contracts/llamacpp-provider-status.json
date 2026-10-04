@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "providerId": "llamacpp",
+  "displayName": "llama.cpp",
+  "transport": {
+    "type": "http-over-unix",
+    "socket": "$XDG_RUNTIME_DIR/haven/inference.sock"
+  },
+  "statusReads": {
+    "health": "GET /health",
+    "provider": "GET /v1/provider",
+    "models": "GET /v1/models"
+  },
+  "uiState": {
+    "available": "health.status == \"ok\"",
+    "workerReady": "health.workerReady",
+    "local": "provider.isLocal",
+    "installedModels": "models.models",
+    "loadedModels": "models.models[?loaded == true]"
+  },
+  "failureSemantics": {
+    "ENOENT": "unavailable",
+    "ECONNREFUSED": "unavailable",
+    "malformedResponse": "error"
+  },
+  "modelKeyPrefix": "llamacpp:",
+  "legacyUnqualifiedProvider": "ollama"
+}

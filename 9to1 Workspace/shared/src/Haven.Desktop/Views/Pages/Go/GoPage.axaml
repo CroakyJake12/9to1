@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:backend="using:Haven.Desktop.HavenUI.Backend"
+             x:Class="Haven.Desktop.Views.Pages.Go.GoPage">
+  <!-- Production Go is rendered through one Haven.UI scene surface. Editable
+       text remains a narrow native adapter hosted inside HavenSceneControl. -->
+  <backend:HavenSceneControl x:Name="Scene" />
+</UserControl>

@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "83c24b2f0033fb2828169921fc905a327120143b",
+  "deliveryCommit": "bc04bd3608f2fa29d5cfcb9c5ea86ac054d4bec3",
+  "archiveBytes": 21686097,
+  "archiveSha256": "0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b",
+  "membersCRCVerified": 180,
+  "publishBytes": 35339902,
+  "publishManifestOriginalBytesMatch": true,
+  "runnerSha256": "ff152d4f0547a133b938c5021643edcf1933d8835af5eea4a609626538569dbf",
+  "runnerEdited": false,
+  "modulePathSubstitution": false,
+  "beforeErrors": [],
+  "afterRuntime180FileHashErrors": [],
+  "commandRecord": "attempt1-command.json",
+  "attempts": 1,
+  "counts": {
+    "executed": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "browserVersion": "151.0.7922.173",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "port": 18764,
+  "pageErrors": 0,
+  "managedRuntimeErrors": 0,
+  "requestFailures": 0,
+  "visualInspection": "C6 viewed coldHome,Library,Events PNG. Actual unavailable Library/Events content visible after mouse clicks. Dashboard controls overlap underlying dark messages; visual/layout gate remains failed.",
+  "accessibility": "All4 recorded ARIA snapshots contain status and main only; painted sidebar/navigation/search/actions absent. Control accessibility remains blocked.",
+  "acceptance": "Bounded actual anonymous local Chromium startup/pointer routes only. No authenticated service/provider/fullapp/platform/deployment acceptance. No source incorporation/rebuild. Prior runtimeBLOCKED custody evidence preserved historically; this exact new runtime meets artifact-delivery prerequisite only.",
+  "evidenceHashes": {
+    "post-runtime-hashes.json": "9b52776ffec42436c9b6a938a256270e9fe870287390e1ae9afe00548b36b18a",
+    "local-artifact.json": "ba473d1e11a6dcbdfa0bde50ce7511a0f9e72b633e4c292fa4cee0f41a9e95d5",
+    "browser-publish.json": "88755ebb50f4e650b494f703c6298ff94dba9ce766239c34264e0d34a60a1e7d",
+    "run-independent-pointer-smoke.cjs": "ff152d4f0547a133b938c5021643edcf1933d8835af5eea4a609626538569dbf",
+    "delivery-manifest.json": "b91e4ce19b6f4361fe6fb92cddbabf8260c986da39045901c1e4870f41b25828",
+    "attempt1-command.json": "a3f127528688d0f1bc452a851dfaaf6a83c1f2241f8a33c7c92cc929e101dae6",
+    "attempt1.log": "49104b3379c4cd0790a7872da0af93916fa50530c883314c19b5c9cb863bd134",
+    "attempt1/pointer-disabled-open-studio.html": "2f59023cb017afdbf94e85757a54de15b151cc141adc69011c7d3171d3d22b50",
+    "attempt1/pointer-disabled-open-studio.png": "624ed869664e5b78feeacdd471e2f7aae68c2d2c961a45faf98c448ddb5a0665",
+    "attempt1/independent-production-trace.zip": "1e6c43881ac770ce24cefc39dafa351aba470654ea846dc964d6bae1104f956d",
+    "attempt1/cold-home.html": "2f59023cb017afdbf94e85757a54de15b151cc141adc69011c7d3171d3d22b50",
+    "attempt1/pointer-enabled-library.png": "fb80139d7de49bd3b1ef0cfa2673691fb7aa0e0cc3f061ea60b3dee808feb745",
+    "attempt1/cold-home.png": "624ed869664e5b78feeacdd471e2f7aae68c2d2c961a45faf98c448ddb5a0665",
+    "attempt1/pointer-enabled-events.png": "e085ae4c14cc688e55b1fdf3962fb591c9527146838565b140bf4823f34804f2",
+    "attempt1/pointer-enabled-library.html": "2f59023cb017afdbf94e85757a54de15b151cc141adc69011c7d3171d3d22b50",
+    "attempt1/pointer-enabled-events.html": "2f59023cb017afdbf94e85757a54de15b151cc141adc69011c7d3171d3d22b50",
+    "attempt1/results.json": "b114775a257f9cf7d2da3fc1f15002336239ad6589b9cbcc050a90ab78c0cf1d"
+  }
+}

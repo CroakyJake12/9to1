@@ -1,0 +1,18 @@
+actual-local-picture	Publish genuine source with maintained SDK recipe	﻿2026-10-04T15:08:07.3857431Z ##[group]Run python3 apps/Web/Tests/ci/run-ordinary-web-publish.py --expected-commit 'ce50dacc7189a91ad6c589904610a0cfcd0445e5' --output "$RUNNER_TEMP/pb-publish"
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3858787Z [36;1mpython3 apps/Web/Tests/ci/run-ordinary-web-publish.py --expected-commit 'ce50dacc7189a91ad6c589904610a0cfcd0445e5' --output "$RUNNER_TEMP/pb-publish"[0m
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3950424Z shell: /usr/bin/bash -e {0}
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3950576Z env:
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3950685Z   DOTNET_NOLOGO: 1
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3950810Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3950963Z   DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3951128Z   MSBUILDDISABLENODEREUSE: 1
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3951271Z   PYTHONDONTWRITEBYTECODE: 1
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3951410Z   DOTNET_ROOT: /usr/share/dotnet
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:07.3951543Z ##[endgroup]
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:08.8416476Z {
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:08.8416746Z   "status": "FAIL",
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:08.8417232Z   "sourceCommit": "ce50dacc7189a91ad6c589904610a0cfcd0445e5",
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:08.8417684Z   "scope": "Normal source build/publish and public artifact custody; browser/runtime/provider/deployment/full parity NOT_RUN",
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:08.8418075Z   "error": "RuntimeError('Original linked owner source custody is incomplete')"
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:08.8418290Z }
+actual-local-picture	Publish genuine source with maintained SDK recipe	2026-10-04T15:08:08.8480222Z ##[error]Process completed with exit code 1.

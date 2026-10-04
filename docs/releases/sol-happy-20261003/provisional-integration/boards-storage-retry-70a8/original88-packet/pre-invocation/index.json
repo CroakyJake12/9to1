@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "purpose": "C3 separate storage retry pre-invocation public source and local refusal/conservation controls; no new actual Windows claim",
+  "frozenCommit": "88bbc69d8c22cbf9095ddfc8282460dfc7841d07",
+  "fileCount": 15,
+  "totalBytes": 70110,
+  "files": [
+    {
+      "path": "read-only-scope-assessment.json",
+      "bytes": 6938,
+      "sha256": "515264c8718fbad5c7faacac0767962a63eea14679776f0868058ea5560461f2"
+    },
+    {
+      "path": "frozen-source-conservation.json",
+      "bytes": 5804,
+      "sha256": "2db1149f3ffd4e71d15984cf69a0e86131055cbcaf10389da2a044c583046be6"
+    },
+    {
+      "path": "powershell-parser-receipt.json",
+      "bytes": 378,
+      "sha256": "5fcd98d58cc35ad61ec3f7624922568dff3c3a1bfed416bfaf862a430a56a607"
+    },
+    {
+      "path": "powershell-parser.log",
+      "bytes": 38,
+      "sha256": "49a37f4d87da68c82665f8ff02beb616afd6181cc60aa3f9cede42401a8adbe0"
+    },
+    {
+      "path": "parser-launch-path-refusal.log",
+      "bytes": 43,
+      "sha256": "8d844c95a2823dc5d80f391b9a84677795fa9ccf6524ef3080dfe436bd981b4a"
+    },
+    {
+      "path": "local-conservation-controls.json",
+      "bytes": 862,
+      "sha256": "ddb0b1d444e15abd03d608617e2f6ca2c12c78728f6fe67964a9b8abd31dee92"
+    },
+    {
+      "path": "linux-platform-refusal.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "linux-platform-refusal/result.json",
+      "bytes": 1770,
+      "sha256": "2e2adb3426f8ed9dcbfb1502de0e77aeb9e565c33f2bf8077388f01dd38d349d"
+    },
+    {
+      "path": "probe-actual-finally-guards.ps1",
+      "bytes": 2259,
+      "sha256": "48bf40755398a2a843c86a5dd71592226f7b701554c25773a49baed7a4471152"
+    },
+    {
+      "path": "actual-finally-guards-receipt.json",
+      "bytes": 1188,
+      "sha256": "ec5661ef61e2e3e29b7a423b126f4dc10bcdd44cca23192f3e7f9d2e1c42146a"
+    },
+    {
+      "path": "actual-finally-guards.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "frozen-source/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 37123,
+      "sha256": "cf117539f495d9c13b4152cb75dbea5c81490cc9be50dd911f3a08244639772b"
+    },
+    {
+      "path": "frozen-source/.github/validation/boards-packaged-ui-controls.json",
+      "bytes": 4800,
+      "sha256": "2cfa034436e902e6c84e379c6ac05a5f4102f3b6b09949914b5a4757749bcf8b"
+    },
+    {
+      "path": "frozen-source/.github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "bytes": 3718,
+      "sha256": "cc6f51b745b604f99d84c9defaf62d0d4f405eacf70494ff94b31d5fd03e416a"
+    },
+    {
+      "path": "frozen-source/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 5189,
+      "sha256": "1eaccefc59d8903bc147781f2626b6dcc6a9a2efd2c776a172258159abc811c3"
+    }
+  ],
+  "excluded": "Caches, package binaries, fixture/model state, credentials, signed download URLs; no providers queried by local controls",
+  "oldIndices": "Prior67/85 exact unchanged"
+}

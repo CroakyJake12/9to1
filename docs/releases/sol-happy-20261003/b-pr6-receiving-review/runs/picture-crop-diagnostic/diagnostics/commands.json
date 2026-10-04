@@ -1,0 +1,303 @@
+[
+  {
+    "name": "restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/PictureAdmission.Diagnostics.csproj",
+      "--configfile",
+      "/workspace/team-c-c5-b-picture-eec-closure-provisional/NuGet.Config",
+      "-p:Configuration=Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 85502,
+        "birth": 1218209,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 5.838,
+    "bytes": 707,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "dotnet",
+      "build",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/PictureAdmission.Diagnostics.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+    ],
+    "exit": 1,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 85541,
+        "birth": 1218793,
+        "gone": true
+      },
+      {
+        "pid": 85581,
+        "birth": 1219097,
+        "gone": true
+      },
+      {
+        "pid": 85599,
+        "birth": 1219195,
+        "gone": true
+      },
+      {
+        "pid": 85617,
+        "birth": 1219319,
+        "gone": true
+      },
+      {
+        "pid": 85635,
+        "birth": 1219416,
+        "gone": true
+      },
+      {
+        "pid": 85653,
+        "birth": 1219529,
+        "gone": true
+      },
+      {
+        "pid": 85671,
+        "birth": 1219641,
+        "gone": true
+      },
+      {
+        "pid": 85736,
+        "birth": 1221223,
+        "gone": true
+      },
+      {
+        "pid": 85754,
+        "birth": 1221399,
+        "gone": true
+      },
+      {
+        "pid": 85892,
+        "birth": 1222922,
+        "gone": true
+      },
+      {
+        "pid": 86027,
+        "birth": 1223171,
+        "gone": true
+      },
+      {
+        "pid": 86052,
+        "birth": 1223426,
+        "gone": true
+      },
+      {
+        "pid": 86070,
+        "birth": 1223580,
+        "gone": true
+      },
+      {
+        "pid": 86092,
+        "birth": 1223854,
+        "gone": true
+      },
+      {
+        "pid": 86110,
+        "birth": 1224008,
+        "gone": true
+      },
+      {
+        "pid": 86149,
+        "birth": 1224247,
+        "gone": true
+      },
+      {
+        "pid": 86175,
+        "birth": 1224391,
+        "gone": true
+      },
+      {
+        "pid": 86194,
+        "birth": 1224692,
+        "gone": true
+      },
+      {
+        "pid": 86231,
+        "birth": 1225586,
+        "gone": true
+      },
+      {
+        "pid": 86250,
+        "birth": 1225805,
+        "gone": true
+      },
+      {
+        "pid": 86272,
+        "birth": 1226021,
+        "gone": true
+      },
+      {
+        "pid": 86290,
+        "birth": 1226186,
+        "gone": true
+      },
+      {
+        "pid": 86317,
+        "birth": 1226385,
+        "gone": true
+      },
+      {
+        "pid": 86333,
+        "birth": 1226447,
+        "gone": true
+      },
+      {
+        "pid": 86353,
+        "birth": 1226636,
+        "gone": true
+      },
+      {
+        "pid": 86371,
+        "birth": 1226797,
+        "gone": true
+      },
+      {
+        "pid": 86401,
+        "birth": 1227220,
+        "gone": true
+      },
+      {
+        "pid": 86423,
+        "birth": 1227489,
+        "gone": true
+      },
+      {
+        "pid": 86441,
+        "birth": 1227624,
+        "gone": true
+      },
+      {
+        "pid": 86484,
+        "birth": 1228191,
+        "gone": true
+      },
+      {
+        "pid": 86515,
+        "birth": 1228560,
+        "gone": true
+      },
+      {
+        "pid": 86533,
+        "birth": 1228738,
+        "gone": true
+      },
+      {
+        "pid": 86551,
+        "birth": 1228877,
+        "gone": true
+      },
+      {
+        "pid": 86590,
+        "birth": 1229402,
+        "gone": true
+      },
+      {
+        "pid": 86609,
+        "birth": 1229537,
+        "gone": true
+      },
+      {
+        "pid": 86627,
+        "birth": 1229735,
+        "gone": true
+      },
+      {
+        "pid": 86645,
+        "birth": 1229870,
+        "gone": true
+      },
+      {
+        "pid": 86663,
+        "birth": 1230027,
+        "gone": true
+      },
+      {
+        "pid": 86727,
+        "birth": 1230187,
+        "gone": true
+      },
+      {
+        "pid": 86745,
+        "birth": 1230379,
+        "gone": true
+      },
+      {
+        "pid": 86774,
+        "birth": 1230722,
+        "gone": true
+      },
+      {
+        "pid": 86792,
+        "birth": 1230897,
+        "gone": true
+      },
+      {
+        "pid": 86851,
+        "birth": 1231806,
+        "gone": true
+      },
+      {
+        "pid": 86882,
+        "birth": 1232078,
+        "gone": true
+      },
+      {
+        "pid": 86900,
+        "birth": 1232287,
+        "gone": true
+      },
+      {
+        "pid": 86965,
+        "birth": 1232707,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 1,
+    "seconds": 139.492,
+    "bytes": 8706,
+    "familyClosed": true
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "sharedExistingFunctionCount": 20,
+  "sharedExistingFunctionBodies": "EXACT_BYTE_UNCHANGED",
+  "nativeInputHelper": "EXACT_UNCHANGED_ALREADY_COMPILED",
+  "custodyExtractionAndOldCleanupBody": "EXACT_BYTE_UNCHANGED",
+  "old67And85ScenarioBodies": "EXACT_BYTE_UNCHANGED",
+  "oldArtifactPackageManifestCatalogue": "EXACT_UNCHANGED",
+  "sourcePins": "20/20 exactfd5PASS",
+  "workflow": "YAML structural/read-onlypermissions/validrunnerstepcontext/newmodeonlyPASS",
+  "changedGuards": "Newstoragefinally restores own originalattributes before unchangedcleanup; allnew cleanup failures blocksuccess. Actual source finally5 controlled-refusal cases PASS.",
+  "actualNegativeHostControl": "storage-retry actualLinuxPS7 exits1 atWindowsguard/zero launches; no fixture/attribute/process/nativeoperations",
+  "actualNewWindowsControls": "NOT_RUN_PENDING_C6_AND_ROOT"
+}

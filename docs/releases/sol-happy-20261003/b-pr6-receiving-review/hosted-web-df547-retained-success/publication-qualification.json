@@ -1,0 +1,29 @@
+{
+  "sourceCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "runId": 37217686116,
+  "actualOrdinaryWebPublishAndOriginalBrowserNine": "PASS",
+  "browserCases": {
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "sourceWholeGitBodiesBeforeAfter": 4548,
+  "publicFiles": 285,
+  "originalZipBytes": 36039134,
+  "originalZipSHA256": "443ff20704e09f0cf74796976c25f49b70ef5ed68637ea3f5248bf54178cde10",
+  "manifestSHA256": "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d",
+  "sealSHA256": "7a109f44f92cc21625ba55c25a775d1fcbb89ee77e0acd35a831f6f6da7ac520",
+  "wholeHostedArtifactId": 11308274250,
+  "wholeHostedContainerReadback": false,
+  "wholePayloadReadbackViaOriginalTwoOfficialParts": true,
+  "wholePayloadCopiedIntoGit": false,
+  "originalProducerPublishRootUnmodified": true,
+  "originalWholePhysicalZipRetainedForReviewedLocalAuthDriver": "/tmp/team-c-c5-web-df547-20261004/original-publication/wwwroot.zip",
+  "buildWarningsRetained": [
+    "IL2026",
+    "WASM0001",
+    "IL2104"
+  ],
+  "scope": "Exact official current public bundle custody and original nine DeviceLocal Picture browser controls; no full app/private actor/provider/Windows acceptance. Whole hosted 36MB container exceeds connector cap; exact original three payloads are verified via reviewed bounded parts. No original7ded/B substitution."
+}

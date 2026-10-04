@@ -1,0 +1,955 @@
+diff --git a/.github/scripts/home-windows-original-shutdown.ps1 b/.github/scripts/home-windows-original-shutdown.ps1
+new file mode 100644
+index 00000000..70ad837b
+--- /dev/null
++++ b/.github/scripts/home-windows-original-shutdown.ps1
+@@ -0,0 +1,331 @@
++[CmdletBinding()]
++param(
++    [Parameter(Mandatory = $true)][string]$ExpectedCommit,
++    [Parameter(Mandatory = $true)][string]$OutputDirectory
++)
++Set-StrictMode -Version Latest
++$ErrorActionPreference = 'Stop'
++$PSNativeCommandUseErrorActionPreference = $false
++$repo = (& git rev-parse --show-toplevel).Trim()
++if ($LASTEXITCODE -ne 0) { throw 'An exact source checkout is required.' }
++Set-Location -LiteralPath $repo
++$output = [IO.Path]::GetFullPath($OutputDirectory)
++if (Test-Path -LiteralPath $output) { throw 'Use a fresh task-owned output directory.' }
++if ($output.Equals($repo, [StringComparison]::OrdinalIgnoreCase) -or $output.StartsWith($repo + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
++    throw 'Build and profile outputs must be outside the source checkout.'
++}
++New-Item -ItemType Directory -Path $output | Out-Null
++$diagnostics = Join-Path $output 'diagnostics'
++New-Item -ItemType Directory -Path $diagnostics | Out-Null
++$catalog = Get-Content -LiteralPath '.github/validation/home-windows-original-shutdown.json' -Raw | ConvertFrom-Json
++$result = [ordered]@{
++    schemaVersion = 1; status = 'NOT_RUN'; stage = 'source'; sourceCommit = $ExpectedCommit
++    sourceBasis = $catalog.sourceBasis; platform = 'Windows/win-x64'; commands = @(); nativeProcesses = @()
++    managedCases = $null; buildTaskSHA256 = $null; package = $null; sourceAfterUnchanged = $false
++    acceptedNativeShutdownScope = $false; processSignals = @(); forcedCleanup = $false
++    originalForcedFailure = $catalog.originalForcedFailure
++    qualification = 'Original owning six tests and current unaccepted Home package/visible-window explicit quit only; no installed identity, signing, clean-PC, provider, all-theme or full Home/release acceptance.'
++    ordinaryWindowClose = 'NOT_RUN: Close intentionally keeps Core alive. No original external quit/reopen route exists once the sole HWND is gone; old forced-1 remains retained.'
++    nativePersistenceMutation = 'NOT_RUN: current host exposes no configured writer. Two fresh processes use the original OS LocalApplicationData/9to1/Home route; scoped catalog equality is read-only cold-open observation.'
++}
++function Write-Json([string]$Path, $Value) {
++    $text = ConvertTo-Json -InputObject $Value -Depth 100
++    [IO.File]::WriteAllText($Path, $text + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
++}
++function Save-Result { Write-Json (Join-Path $diagnostics 'result.json') $result }
++function Invoke-DotNet([string]$Name, [string[]]$Arguments) {
++    $started = [DateTime]::UtcNow
++    $log = Join-Path $diagnostics ($Name + '.log')
++    $lines = @(& dotnet @Arguments 2>&1 | Tee-Object -FilePath $log)
++    $code = $LASTEXITCODE
++    $lines | Out-Host
++    $result.commands += [ordered]@{ name = $Name; argv = $Arguments; exitCode = $code; startedUTC = $started.ToString('o'); endedUTC = [DateTime]::UtcNow.ToString('o'); log = [IO.Path]::GetFileName($log) }
++    Save-Result
++    if ((Get-Item -LiteralPath $log).Length -gt 8MB) { throw "$Name exceeded the declared 8MiB log bound." }
++    if ($code -ne 0) { throw "$Name failed with exit code $code; original log retained." }
++    return (($lines | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine)
++}
++function Get-TreeSnapshot {
++    $rows = @()
++    $entries = @(& git -c core.quotepath=false ls-tree -r HEAD)
++    if ($LASTEXITCODE -ne 0) { throw 'Source tree cannot be read.' }
++    foreach ($entry in $entries) {
++        if ($entry -notmatch '^([0-9]{6}) (blob|commit) ([0-9a-f]{40})\t(.+)$') { throw 'Unexpected source tree entry.' }
++        $mode = $Matches[1]; $type = $Matches[2]; $blob = $Matches[3]; $path = $Matches[4]
++        if ($type -eq 'commit') {
++            $actual = (& git -C $path rev-parse HEAD).Trim()
++            if ($LASTEXITCODE -ne 0 -or $actual -cne $blob) { throw "Pinned source gitlink mismatch: $path" }
++            if (@(& git -C $path status --porcelain).Count -ne 0) { throw "Gitlink has changes: $path" }
++            $rows += [ordered]@{ path = $path; mode = $mode; gitBlob = $blob; kind = 'gitlink'; actualCommit = $actual }
++            foreach ($leaf in @(& git -C $path -c core.quotepath=false ls-tree -r HEAD)) {
++                if ($leaf -notmatch '^([0-9]{6}) blob ([0-9a-f]{40})\t(.+)$') { throw 'Unresolved nested gitlink or dependency tree entry.' }
++                $leafMode = $Matches[1]; $leafBlob = $Matches[2]; $leafPath = $Matches[3]; $physical = Join-Path $repo ($path + '/' + $leafPath)
++                $item = Get-Item -LiteralPath $physical -Force
++                if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Linked dependency body is unsupported.' }
++                $rows += [ordered]@{ path = $path + '/' + $leafPath; mode = $leafMode; gitBlob = $leafBlob; kind = 'dependency-body'; bytes = $item.Length; sha256 = (Get-FileHash -LiteralPath $physical -Algorithm SHA256).Hash.ToLowerInvariant() }
++            }
++        } else {
++            $physical = Join-Path $repo $path; $item = Get-Item -LiteralPath $physical -Force
++            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw "Linked source body is unsupported: $path" }
++            $rows += [ordered]@{ path = $path; mode = $mode; gitBlob = $blob; kind = 'source-body'; bytes = $item.Length; sha256 = (Get-FileHash -LiteralPath $physical -Algorithm SHA256).Hash.ToLowerInvariant() }
++        }
++    }
++    return $rows
++}
++function Get-FileCatalog([string]$Root, [switch]$Exclusive) {
++    $rows = @()
++    foreach ($item in @(Get-ChildItem -LiteralPath $Root -Recurse -Force | Sort-Object FullName)) {
++        if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'A task output contains a reparse point.' }
++        if ($item.PSIsContainer) { continue }
++        if ($Exclusive) {
++            $stream = [IO.File]::Open($item.FullName, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
++            try { $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)).ToLowerInvariant() }
++            finally { $stream.Dispose() }
++        } else { $digest = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
++        $rows += [ordered]@{ path = [IO.Path]::GetRelativePath($Root, $item.FullName).Replace('\', '/'); bytes = $item.Length; sha256 = $digest }
++    }
++    return $rows
++}
++function Same-Catalog($Left, $Right) {
++    return (ConvertTo-Json -InputObject @($Left) -Depth 100 -Compress) -ceq (ConvertTo-Json -InputObject @($Right) -Depth 100 -Compress)
++}
++Add-Type -TypeDefinition @'
++using System;
++using System.Runtime.InteropServices;
++public static class HomeOriginalNativeInput {
++    [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
++    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
++    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr window);
++    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
++    [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int key);
++    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr window, int command);
++    [StructLayout(LayoutKind.Explicit, Size=40)] public struct Input {
++        [FieldOffset(0)] public uint Type;
++        [FieldOffset(8)] public ushort VirtualKey;
++        [FieldOffset(10)] public ushort ScanCode;
++        [FieldOffset(12)] public uint Flags;
++        [FieldOffset(16)] public uint Time;
++        [FieldOffset(24)] public UIntPtr ExtraInfo;
++    }
++    [DllImport("user32.dll", SetLastError=true)] private static extern uint SendInput(uint count, Input[] inputs, int size);
++    private static Input Key(ushort key, bool up) => new Input { Type=1, VirtualKey=key, Flags=up ? 2u : 0u };
++    public static uint QuitChord() => SendInput(6, new[] { Key(0x11,false), Key(0x10,false), Key(0x51,false), Key(0x51,true), Key(0x10,true), Key(0x11,true) }, Marshal.SizeOf<Input>());
++    public static uint ReleaseChordKeys() => SendInput(3, new[] { Key(0x51,true), Key(0x10,true), Key(0x11,true) }, Marshal.SizeOf<Input>());
++}
++'@
++function Invoke-OriginalNativeQuit([string]$Label, [string]$Exe) {
++    $stdout = Join-Path $diagnostics ($Label + '-stdout.log'); $stderr = Join-Path $diagnostics ($Label + '-stderr.log')
++    $observed = [ordered]@{ cohort = $Label; pid = $null; sessionId = $null; windowVisible = $false; ownHWND = $false; foregroundVerified = $false; inputEventsSent = 0; exited = $false; exitCode = $null; forcedCleanup = $false; processSignals = @(); outputDrained = $false; originalCuiRootReported = $false; phase = 'launch'; errorType = $null }
++    $nativeProcess = $null
++    try {
++        $nativeProcess = Start-Process -FilePath $Exe -WorkingDirectory ([IO.Path]::GetDirectoryName($Exe)) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
++        $observed.pid = $nativeProcess.Id; $observed.sessionId = $nativeProcess.SessionId; $observed.startedUTC = [DateTime]::UtcNow.ToString('o')
++        $observed.phase = 'visible-own-window'
++        $until = [DateTime]::UtcNow.AddSeconds(45)
++        $window = [IntPtr]::Zero
++        do {
++            $nativeProcess.Refresh()
++            if ($nativeProcess.HasExited) { throw 'Original native process exited before its visible window appeared.' }
++            $window = $nativeProcess.MainWindowHandle
++            if ($window -ne [IntPtr]::Zero -and [HomeOriginalNativeInput]::IsWindowVisible($window)) { break }
++            Start-Sleep -Milliseconds 100
++        } while ([DateTime]::UtcNow -lt $until)
++        if ($window -eq [IntPtr]::Zero -or -not [HomeOriginalNativeInput]::IsWindowVisible($window)) { throw 'No actual visible original Home window was observed.' }
++        [uint32]$ownerPid = 0
++        [void][HomeOriginalNativeInput]::GetWindowThreadProcessId($window, [ref]$ownerPid)
++        if ($ownerPid -ne $nativeProcess.Id) { throw 'Native HWND does not belong to this exact launched process.' }
++        $observed.windowVisible = $true; $observed.ownHWND = $true; $observed.windowTitle = $nativeProcess.MainWindowTitle
++        $observed.phase = 'own-window-focus'
++        [void][HomeOriginalNativeInput]::ShowWindow($window, 9)
++        [void][HomeOriginalNativeInput]::SetForegroundWindow($window)
++        $until = [DateTime]::UtcNow.AddSeconds(5)
++        while ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window -and [DateTime]::UtcNow -lt $until) { Start-Sleep -Milliseconds 100 }
++        if ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window) { throw 'Actual own window foreground could not be verified; no keyboard event sent.' }
++        $observed.foregroundVerified = $true
++        foreach ($key in @(0x10,0x11,0x12)) { if (([HomeOriginalNativeInput]::GetAsyncKeyState($key) -band 0x8000) -ne 0) { throw 'Existing modifier key is held; do not alter unrelated desktop input.' } }
++        $observed.phase = 'owned-input'
++        if ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window -or -not [HomeOriginalNativeInput]::IsWindowVisible($window)) { throw 'Own visible foreground changed before original input; no key event sent.' }
++        try { $observed.inputEventsSent = [HomeOriginalNativeInput]::QuitChord() }
++        finally { $observed.releaseEventsSent = [HomeOriginalNativeInput]::ReleaseChordKeys() }
++        if ($observed.releaseEventsSent -ne 3) { throw 'Win32 did not admit all owned modifier release events.' }
++        if ($observed.inputEventsSent -ne 6) { throw 'Win32 did not admit all original Ctrl+Shift+Q key events.' }
++        $observed.phase = 'original-process-exit'
++        if (-not $nativeProcess.WaitForExit(45000)) { throw 'Original explicit shutdown did not exit within observation bound; no kill/timeout success is allowed.' }
++        $nativeProcess.Refresh(); $observed.exited = $true; $observed.exitCode = $nativeProcess.ExitCode; $observed.endedUTC = [DateTime]::UtcNow.ToString('o')
++        $observed.phase = 'bounded-original-output-drain'
++        $drainDeadline = [DateTime]::UtcNow.AddSeconds(5)
++        foreach ($log in @($stdout,$stderr)) {
++            if ((Get-Item -LiteralPath $log).Length -gt 8MB) { throw 'Native output exceeded declared 8MiB bound.' }
++            while ($true) {
++                try { $stream = [IO.File]::Open($log, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None); $stream.Dispose(); break }
++                catch [IO.IOException] { if ([DateTime]::UtcNow -ge $drainDeadline) { throw }; Start-Sleep -Milliseconds 100 }
++            }
++        }
++        $observed.outputDrained = $true
++        $observed.phase = 'original-cui-root-outcome'
++        $text = Get-Content -LiteralPath $stdout -Raw
++        $observed.originalCuiRootReported = $text -match '\[9-1 Home\] Root: .+ — CUI loaded into window'
++        if ($observed.exitCode -ne 0) { throw 'Actual original process returned a nonzero shutdown outcome.' }
++        if (-not $observed.originalCuiRootReported) { throw 'Original process did not report its canonical CUI root; a window title is insufficient.' }
++        $observed.phase = 'complete'
++        return $observed
++    } catch {
++        $observed.errorType = $_.Exception.GetType().Name
++        if ($nativeProcess -and $nativeProcess.HasExited) { $observed.exited = $true; $observed.exitCode = $nativeProcess.ExitCode }
++        throw
++    } finally {
++        $result.nativeProcesses += $observed
++        Save-Result
++        # Never force-kill or turn timeout into success. If still alive, retain that open family.
++        if ($nativeProcess -and -not $nativeProcess.HasExited) { $result.openNativeProcess = $nativeProcess.Id; Save-Result }
++        if ($nativeProcess) { $nativeProcess.Dispose() }
++    }
++}
++$before = $null
++try {
++    if (-not [OperatingSystem]::IsWindows() -or [Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne [Runtime.InteropServices.Architecture]::X64) { throw 'Actual Windows x64 execution is required.' }
++    if ((& git rev-parse HEAD).Trim() -cne $ExpectedCommit) { throw 'Execution source differs from exact selected commit.' }
++    & git merge-base --is-ancestor $catalog.sourceBasis HEAD
++    if ($LASTEXITCODE -ne 0) { throw 'Execution is outside the frozen reviewed source lineage.' }
++    foreach ($path in @(& git diff --name-only $catalog.sourceBasis HEAD)) {
++        if ($catalog.proposalPaths -cnotcontains $path -and -not $path.StartsWith('docs/releases/sol-happy-20261003/', [StringComparison]::Ordinal)) { throw "Undeclared receiving change: $path" }
++    }
++    $result.runnerImage = $env:ImageVersion
++    $result.osVersion = [Environment]::OSVersion.VersionString
++    $available = [IO.DriveInfo]::new([IO.Path]::GetPathRoot($output)).AvailableFreeSpace
++    $result.initialOutputDriveFreeBytes = $available
++    if ($available -lt 8GB) { throw 'The original native graph requires at least the declared 8GiB disposable output-drive capacity.' }
++    foreach ($link in $catalog.requiredGitlinks) {
++        if ((& git -C $link.path rev-parse HEAD).Trim() -cne $link.commit -or $LASTEXITCODE -ne 0) { throw 'Required current source gitlink is absent or differs.' }
++    }
++    foreach ($pin in $catalog.sourcePins) {
++        if ((Get-FileHash -LiteralPath (Join-Path $repo $pin.path) -Algorithm SHA256).Hash.ToLowerInvariant() -cne $pin.sha256) { throw "Current original source pin mismatch: $($pin.path)" }
++    }
++    if (@(& git status --porcelain).Count -ne 0) { throw 'Source checkout is not clean before invocation.' }
++    $before = @(Get-TreeSnapshot); Write-Json (Join-Path $diagnostics 'source-before.json') $before
++    foreach ($pair in @(@('DOTNET_CLI_HOME','cli'),@('NUGET_PACKAGES','nuget'),@('NUGET_HTTP_CACHE_PATH','http'),@('NUGET_PLUGINS_CACHE_PATH','plugins'),@('TMP','tmp'),@('TEMP','tmp'))) {
++        $privatePath = Join-Path $output $pair[1]; New-Item -ItemType Directory -Path $privatePath -Force | Out-Null
++        [Environment]::SetEnvironmentVariable($pair[0], $privatePath)
++    }
++    if ((Invoke-DotNet 'sdk-version' @('--version')).Trim() -cne '10.0.401') { throw 'Unexpected actual SDK.' }
++    $artifacts = Join-Path $output 'artifacts'
++    $flags = @('--artifacts-path',$artifacts,'-p:UseSharedCompilation=false','--disable-build-servers','-m:1','-nodeReuse:false')
++    $tasksProject = 'framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CakeOS.Cui.Build.Tasks.csproj'
++    $result.stage = 'build-current-tasks'
++    [void](Invoke-DotNet 'cui-tasks-release' (@('build',$tasksProject,'-c','Release','--nologo') + $flags))
++    $taskProperties = Invoke-DotNet 'task-target-properties' @('msbuild',$tasksProject,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",'-getProperty:TargetPath,TargetFramework') | ConvertFrom-Json
++    $tasks = $taskProperties.Properties.TargetPath
++    if (-not (Test-Path -LiteralPath $tasks -PathType Leaf)) { throw 'Actual source-built current Task DLL is missing.' }
++    $result.buildTaskSHA256 = (Get-FileHash -LiteralPath $tasks -Algorithm SHA256).Hash.ToLowerInvariant()
++    $taskFlag = "-p:CuiBuildTasksLocation=$tasks"
++    $project = 'apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj'
++    $result.stage = 'ordinary-owning-six'
++    [void](Invoke-DotNet 'owning-restore' (@('restore',$project,'--configfile','NuGet.Config','--disable-parallel','-p:Configuration=Release',$taskFlag) + $flags))
++    [void](Invoke-DotNet 'owning-build-release' (@('build',$project,'--no-restore','-c','Release',$taskFlag) + $flags))
++    $testProperties = Invoke-DotNet 'test-target-properties' @('msbuild',$project,'-p:Configuration=Release','-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$artifacts",$taskFlag,'-getProperty:TargetPath')
++    $testAssembly = $testProperties.Trim()
++    if (-not (Test-Path -LiteralPath $testAssembly -PathType Leaf)) { throw 'Actual original owning test assembly is missing.' }
++    $testRuntimeRoot = [IO.Path]::GetDirectoryName($testAssembly)
++    $testRuntimeBefore = @(Get-FileCatalog $testRuntimeRoot)
++    Write-Json (Join-Path $diagnostics 'owning-runtime-before.json') $testRuntimeBefore
++    $result.owningAssemblySHA256 = (Get-FileHash -LiteralPath $testAssembly -Algorithm SHA256).Hash.ToLowerInvariant()
++    $discovery = Invoke-DotNet 'owning-discovery' (@('test',$project,'--no-build','--no-restore','-c','Release','--list-tests',$taskFlag) + $flags)
++    $names = @($discovery -split '\r?\n' | ForEach-Object { $_.Trim() } | Where-Object { $_.StartsWith('AvaloniaHome.Tests.', [StringComparison]::Ordinal) })
++    Write-Json (Join-Path $diagnostics 'discovery.json') ([ordered]@{ names = $names; total = $names.Count; filter = $null })
++    if ($names.Count -ne 6) { throw 'Original owning project did not discover all six cases.' }
++    $tests = Join-Path $diagnostics 'test-results'; New-Item -ItemType Directory -Path $tests | Out-Null
++    $deferredTestError = $null
++    try { [void](Invoke-DotNet 'owning-test-release' (@('test',$project,'--no-build','--no-restore','-c','Release','--logger','trx;LogFileName=home-original-six.trx','--results-directory',$tests,$taskFlag) + $flags)) }
++    catch { $deferredTestError = $_ }
++    [xml]$trx = Get-Content -LiteralPath (Join-Path $tests 'home-original-six.trx') -Raw
++    $ns = [Xml.XmlNamespaceManager]::new($trx.NameTable); $ns.AddNamespace('t','http://microsoft.com/schemas/VisualStudio/TeamTest/2010')
++    $counter = $trx.SelectSingleNode('//t:Counters',$ns); $cases = @($trx.SelectNodes('//t:UnitTestResult',$ns))
++    $testRuntimeAfter = @(Get-FileCatalog $testRuntimeRoot -Exclusive)
++    Write-Json (Join-Path $diagnostics 'owning-runtime-after.json') $testRuntimeAfter
++    if (-not (Same-Catalog $testRuntimeBefore $testRuntimeAfter)) { throw 'Actual original test runtime changed during discovery/execution.' }
++    $result.managedCases = [ordered]@{ total = [int]$counter.total; executed = [int]$counter.executed; passed = [int]$counter.passed; failed = [int]$counter.failed; notExecuted = [int]$counter.notExecuted; names = @($cases | ForEach-Object { $_.testName }); filter = $null; assertions = $null; sourceAssertionCallSitesNewClass = 54 }
++    Save-Result
++    if ($deferredTestError) { throw $deferredTestError }
++    if ($counter.total -ne 6 -or $counter.executed -ne 6 -or $counter.passed -ne 6 -or $counter.failed -ne 0 -or $counter.notExecuted -ne 0 -or $cases.Count -ne 6) { throw 'All original owning six cases must pass without skips.' }
++    foreach ($method in $catalog.ordinaryTests.originalMethods) { if (@($cases | Where-Object { $_.testName.Contains($method, [StringComparison]::Ordinal) }).Count -ne [int]$catalog.ordinaryTests.casesByMethod.$method) { throw "Exact original owning method is missing or duplicated: $method" } }
++    if (@($cases | Where-Object { $_.testName -like '*HomeHostOriginalLifetimeTests.*' }).Count -ne 5 -or @($cases | Where-Object { $_.testName -like '*HomeHostRenderTests.Native_home_host_loads_canonical_cui_into_a_measured_window*' }).Count -ne 1) { throw 'Original render case or new original lifetime cases are missing.' }
++    $nativeProject = 'apps/Home/src/AvaloniaHome/AvaloniaHome.csproj'
++    $result.stage = 'native-release-publish'
++    [void](Invoke-DotNet 'native-home-release' (@('build',$nativeProject,'--no-restore','-c','Release','-f','net10.0-windows',$taskFlag) + $flags))
++    $publish = Join-Path $output 'publish'
++    [void](Invoke-DotNet 'publish-release-win-x64' (@('publish',$nativeProject,'-c','Release','-f','net10.0-windows','-r','win-x64','--self-contained','true','-p:PublishSingleFile=false','-p:PublishReadyToRun=false','-p:DebugType=portable',$taskFlag,'-o',$publish,'--nologo') + $flags))
++    foreach ($required in @('AvaloniaHome.exe','AvaloniaHome.deps.json','AvaloniaHome.runtimeconfig.json','UI/Home.cui')) { if (-not (Test-Path -LiteralPath (Join-Path $publish $required) -PathType Leaf)) { throw "Original package sidecar missing: $required" } }
++    $runtimeBefore = @(Get-FileCatalog $publish); Write-Json (Join-Path $diagnostics 'runtime-before.json') $runtimeBefore
++    $publication = Join-Path $output 'public-artifact'; New-Item -ItemType Directory -Path $publication | Out-Null
++    $zip = Join-Path $publication 'home-win-x64.zip'; [IO.Compression.ZipFile]::CreateFromDirectory($publish,$zip)
++    $zipItem = Get-Item -LiteralPath $zip; $zipSHA = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
++    $result.package = [ordered]@{ sourceCommit = $ExpectedCommit; files = $runtimeBefore.Count; zipBytes = $zipItem.Length; zipSHA256 = $zipSHA; authenticodeStatus = (Get-AuthenticodeSignature -LiteralPath (Join-Path $publish 'AvaloniaHome.exe')).Status.ToString(); installedIdentity = 'NOT_SUPPLIED'; donorOrCleanPcAcceptance = $false }
++    Write-Json (Join-Path $publication 'publish-manifest.json') ([ordered]@{ sourceCommit = $ExpectedCommit; publishRoot = $publish; files = $runtimeBefore; archiveBytes = $zipItem.Length; archiveSHA256 = $zipSHA; scope = $result.qualification })
++    Write-Json (Join-Path $publication 'seal.json') ([ordered]@{ sourceCommit = $ExpectedCommit; manifestSHA256 = (Get-FileHash -LiteralPath (Join-Path $publication 'publish-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant(); archiveSHA256 = $zipSHA; archiveBytes = $zipItem.Length })
++    if ($env:GITHUB_OUTPUT) { Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'package_ready=true' }
++    $parts = Join-Path $output 'public-parts'; New-Item -ItemType Directory -Path $parts | Out-Null
++    $partLimit = 19MB; $partCount = [int][Math]::Ceiling($zipItem.Length / $partLimit)
++    if ($partCount -gt 8) { throw 'Original package exceeds the declared eight-part transport bound; retain whole artifact and report failure.' }
++    $partRows = @(); $sourceStream = [IO.File]::OpenRead($zip)
++    try {
++        for ($number=1; $number -le $partCount; $number++) {
++            $partDirectory = Join-Path $parts ('part{0:d2}' -f $number); New-Item -ItemType Directory -Path $partDirectory | Out-Null
++            $partPath = Join-Path $partDirectory 'home-win-x64.zip.part'; $partStream = [IO.File]::Create($partPath)
++            try {
++                [long]$remaining = [Math]::Min($partLimit,$sourceStream.Length-$sourceStream.Position); $buffer = [byte[]]::new(65536)
++                while ($remaining -gt 0) { $read=$sourceStream.Read($buffer,0,[int][Math]::Min($buffer.Length,$remaining)); if ($read -le 0) { throw 'Unexpected original ZIP EOF.' }; $partStream.Write($buffer,0,$read); $remaining-=$read }
++            } finally { $partStream.Dispose() }
++            $partRows += [ordered]@{ part=$number; path=('part{0:d2}/home-win-x64.zip.part' -f $number); bytes=(Get-Item -LiteralPath $partPath).Length; sha256=(Get-FileHash -LiteralPath $partPath -Algorithm SHA256).Hash.ToLowerInvariant() }
++        }
++    } finally { $sourceStream.Dispose() }
++    $reassembly = [Security.Cryptography.IncrementalHash]::CreateHash([Security.Cryptography.HashAlgorithmName]::SHA256)
++    [long]$reassembledBytes = 0
++    try {
++        foreach ($part in $partRows) {
++            $partPath = Join-Path $parts $part.path; $stream = [IO.File]::OpenRead($partPath)
++            try { $buffer=[byte[]]::new(65536); while (($read=$stream.Read($buffer,0,$buffer.Length)) -gt 0) { $reassembly.AppendData($buffer,0,$read); $reassembledBytes += $read } } finally { $stream.Dispose() }
++        }
++        $reassembledSHA = [Convert]::ToHexString($reassembly.GetHashAndReset()).ToLowerInvariant()
++    } finally { $reassembly.Dispose() }
++    if ($reassembledBytes -ne $zipItem.Length -or $reassembledSHA -cne $zipSHA) { throw 'Ordered original ZIP parts do not reproduce the sealed complete archive.' }
++    $partsManifest = [ordered]@{ sourceCommit=$ExpectedCommit; originalArchiveBytes=$zipItem.Length; originalArchiveSHA256=$zipSHA; partBytesLimit=$partLimit; orderedReassemblyVerified=$true; parts=$partRows; reassembly='Concatenate in numeric order; require original whole size/SHA before ZIP use.' }
++    foreach ($partDirectory in @(Get-ChildItem -LiteralPath $parts -Directory)) {
++        Write-Json (Join-Path $partDirectory.FullName 'parts-manifest.json') $partsManifest
++        Copy-Item -LiteralPath (Join-Path $publication 'publish-manifest.json'),(Join-Path $publication 'seal.json') -Destination $partDirectory.FullName
++    }
++    if ($env:GITHUB_OUTPUT) { Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "part_count=$partCount"; Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'publication_ready=true' }
++    $extracted = Join-Path $output 'extracted'; [IO.Compression.ZipFile]::ExtractToDirectory($zip,$extracted)
++    if (-not (Same-Catalog $runtimeBefore @(Get-FileCatalog $extracted))) { throw 'Actual extracted original package differs from the complete published file manifest.' }
++    $actualLocalData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
++    if ([string]::IsNullOrWhiteSpace($actualLocalData)) { throw 'The original OS local application data route is unavailable.' }
++    $probeProfileRoot = Join-Path $actualLocalData '9to1/Home'
++    $result.profileRoute = 'Original FileHomeCoreStateStore.CreateDefault: OS LocalApplicationData/9to1/Home; unchanged disposable runner account, no path override/seed/actor.'
++    $result.profileInitiallyExists = Test-Path -LiteralPath $probeProfileRoot
++    $profileInitial = @(if ($result.profileInitiallyExists) { Get-FileCatalog $probeProfileRoot -Exclusive }); Write-Json (Join-Path $diagnostics 'profile-initial-hashes.json') $profileInitial
++    $result.stage = 'original-native-explicit-quit'
++    [void](Invoke-OriginalNativeQuit 'native-first' (Join-Path $extracted 'AvaloniaHome.exe'))
++    if (-not (Test-Path -LiteralPath $probeProfileRoot -PathType Container)) { throw 'Actual original default store root was not established by the native host.' }
++    $profileFirst = @(Get-FileCatalog $probeProfileRoot -Exclusive); Write-Json (Join-Path $diagnostics 'profile-after-first-hashes.json') $profileFirst
++    [void](Invoke-OriginalNativeQuit 'native-second-same-profile' (Join-Path $extracted 'AvaloniaHome.exe'))
++    $profileSecond = @(Get-FileCatalog $probeProfileRoot -Exclusive); Write-Json (Join-Path $diagnostics 'profile-after-second-hashes.json') $profileSecond
++    if ($result.nativeProcesses.Count -ne 2 -or $result.nativeProcesses[0].pid -eq $result.nativeProcesses[1].pid) { throw 'Two distinct actual fresh native processes are required.' }
++    $result.persistedDefaultStateExists = Test-Path -LiteralPath (Join-Path $probeProfileRoot 'home-core-state.json') -PathType Leaf
++    $result.sameProfileReadOnlyReopenEquivalent = Same-Catalog $profileFirst $profileSecond
++    if (-not $result.sameProfileReadOnlyReopenEquivalent) { throw 'Fresh-process same-profile physical contents changed; preserve first actual mismatch.' }
++    $runtimeAfter = @(Get-FileCatalog $extracted -Exclusive); Write-Json (Join-Path $diagnostics 'runtime-after.json') $runtimeAfter
++    if (-not (Same-Catalog $runtimeBefore $runtimeAfter)) { throw 'Original extracted runtime files changed across native controls.' }
++    $result.status = 'PASS_ORIGINAL_HOME_MANAGED_SIX_AND_VISIBLE_EXPLICIT_NATIVE_QUIT_SCOPED'
++} catch {
++    $result.status = 'FAIL_OR_INCOMPLETE'; $result.failureType = $_.Exception.GetType().Name
++    Write-Error -Message ("Original Home validation failed at {0}: {1}; controlled phase and original logs retained." -f $result.stage, $result.failureType) -ErrorAction Continue
++} finally {
++    try {
++        $after = @(Get-TreeSnapshot); Write-Json (Join-Path $diagnostics 'source-after.json') $after
++        if ($null -ne $before) { $result.sourceAfterUnchanged = Same-Catalog $before $after; if (-not $result.sourceAfterUnchanged) { throw 'Actual source bodies changed during original execution.' } }
++        if (@(& git status --porcelain).Count -ne 0) { throw 'Source checkout was modified during original execution.' }
++    } catch { $result.status = 'FAIL_OR_INCOMPLETE'; $result.finalCustodyFailureType = $_.Exception.GetType().Name }
++    $result.acceptedNativeShutdownScope = $result.status -ceq 'PASS_ORIGINAL_HOME_MANAGED_SIX_AND_VISIBLE_EXPLICIT_NATIVE_QUIT_SCOPED' -and $result.sourceAfterUnchanged
++    Save-Result
++}
++if (-not $result.acceptedNativeShutdownScope) { exit 1 }
++exit 0
+diff --git a/.github/validation/home-windows-original-shutdown.json b/.github/validation/home-windows-original-shutdown.json
+new file mode 100644
+index 00000000..50216d72
+--- /dev/null
++++ b/.github/validation/home-windows-original-shutdown.json
+@@ -0,0 +1,462 @@
++{
++  "schemaVersion": 1,
++  "sourceBasis": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
++  "homeProductionPin": "323ccff8c9cc9b020d511379388bd57a569a138b",
++  "ownerWholeSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
++  "proposalPaths": [
++    ".github/workflows/team-c-home-windows-original-shutdown.yml",
++    ".github/scripts/home-windows-original-shutdown.ps1",
++    ".github/validation/home-windows-original-shutdown.json"
++  ],
++  "sourcePins": [
++    {
++      "path": ".gitmodules",
++      "bytes": 3970,
++      "sha256": "4f8c5945b3ad2cdad05fa79bf6e9e2f5c1b02074f7f8b8391ae3a58494d3d5b9"
++    },
++    {
++      "path": "9to1 Models/Dulche Alpha/Den.csproj",
++      "bytes": 525,
++      "sha256": "65b775f22ea951c66b762fc14c5cb752b2aaf0760da059c121dad2208ec12afa"
++    },
++    {
++      "path": "9to1 Models/Dulche Alpha/Dulche.Runtime.csproj",
++      "bytes": 1160,
++      "sha256": "6815183be9c760e769070254b86cd2689c7d3e0006a7b2b5366c6d0f6c9ea80d"
++    },
++    {
++      "path": "9to1 Workspace/Directory.Build.props",
++      "bytes": 781,
++      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
++    },
++    {
++      "path": "9to1 Workspace/Directory.Build.targets",
++      "bytes": 262,
++      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
++    },
++    {
++      "path": "9to1 Workspace/Directory.Packages.props",
++      "bytes": 2581,
++      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
++    },
++    {
++      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
++      "bytes": 1745,
++      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
++    },
++    {
++      "path": "9to1 Workspace/Home/Source/Home/Core/FileHomeCoreStateStore.cs",
++      "bytes": 17413,
++      "sha256": "7477d619f22c350cdd15ddfa732ba56b259f9a27f42266d82b4b3c1d483ced35"
++    },
++    {
++      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
++      "bytes": 7402,
++      "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3"
++    },
++    {
++      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
++      "bytes": 26062,
++      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
++    },
++    {
++      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreStateService.cs",
++      "bytes": 1340,
++      "sha256": "8b12dc8cb184428442e2990b1c3a0c57f39d5c9437a2d5ce76094aec526faebb"
++    },
++    {
++      "path": "9to1 Workspace/Home/Source/Home/Core/HomeProductivityEngine.cs",
++      "bytes": 36577,
++      "sha256": "b137ac2a2e6594aa3c7a5dcd3562ebf8f685a9b7487231ae60fbda4e37f3311a"
++    },
++    {
++      "path": "9to1 Workspace/Home/Source/Home/HomeCuiScene.cs",
++      "bytes": 35989,
++      "sha256": "8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806"
++    },
++    {
++      "path": "9to1 Workspace/shared/src/Directory.Packages.props",
++      "bytes": 1922,
++      "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
++    },
++    {
++      "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
++      "bytes": 700,
++      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
++    },
++    {
++      "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
++      "bytes": 375,
++      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
++    },
++    {
++      "path": "NuGet.Config",
++      "bytes": 579,
++      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
++    },
++    {
++      "path": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
++      "bytes": 2315,
++      "sha256": "ab1a0ab1fa185d4b66ef6f75d66546be457481947cc655cb164a9842a6b5344c"
++    },
++    {
++      "path": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
++      "bytes": 4607,
++      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72"
++    },
++    {
++      "path": "apps/Home/src/AvaloniaHome/Program.cs",
++      "bytes": 13702,
++      "sha256": "bd1c87199689d36f43020830cad93001bd613b0347c1c015fc7384db93723b38"
++    },
++    {
++      "path": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
++      "bytes": 580,
++      "sha256": "c982787059aa506a2ff687ce1a178d6e6212d158e410408a2839a09392a7fdba"
++    },
++    {
++      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
++      "bytes": 12748,
++      "sha256": "cf95cd6e90782ba9c2371d07e1376bab9a84c72158e694c9cf163821711726e9"
++    },
++    {
++      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
++      "bytes": 10552,
++      "sha256": "6e869188bf9bcf85834c03bbfe4227e6e2040717ac69ef6f244d57f63c83d99c"
++    },
++    {
++      "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
++      "bytes": 453,
++      "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504"
++    },
++    {
++      "path": "framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CakeOS.Cui.Build.Tasks.csproj",
++      "bytes": 768,
++      "sha256": "461a2da8c03cd55545638080e3594829f80ea515c376866c345e39b361f82b57"
++    },
++    {
++      "path": "framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj",
++      "bytes": 1070,
++      "sha256": "f4ec1368c3f9563d3e6fcad54704dad08249e2f9e38786a4c33950d994549434"
++    },
++    {
++      "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
++      "bytes": 495,
++      "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0"
++    },
++    {
++      "path": "framework/CUI/DevTools/src/Haven.CUI.DevTools.csproj",
++      "bytes": 624,
++      "sha256": "4995da61f6dd48bf8f60ab2e62df8b5b56be2d68e09d83411ae8d266c6407501"
++    },
++    {
++      "path": "framework/CUI/Directory.Packages.props",
++      "bytes": 429,
++      "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
++    },
++    {
++      "path": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
++      "bytes": 405,
++      "sha256": "38bb6257791a2ca650635f1b75b0ab186c70c99504220d7ef49223dd14dfdd36"
++    },
++    {
++      "path": "framework/CUI/NuGet.Config",
++      "bytes": 418,
++      "sha256": "0197c948f13e2b8d0e1f52d33687185ed29bc7c01892526985dac04a79e48f81"
++    },
++    {
++      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
++      "bytes": 1315,
++      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
++    },
++    {
++      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
++      "bytes": 90822,
++      "sha256": "aabc12960e3bbc7579da6c840cefa45dff5bee0b397dde7279e34df96a6ed157"
++    },
++    {
++      "path": "framework/CUI/Themes/CakeOS.Cui.Themes.csproj",
++      "bytes": 690,
++      "sha256": "448c242f70873c71b4ec3d6e05cebe032c678f3f7356a667acba5de4bc821de6"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/Directory.Build.props",
++      "bytes": 1496,
++      "sha256": "e3417886b5acf82051e39a84e890bd94c700b242c4bff6e91779843a30e48ef0"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/Directory.Build.targets",
++      "bytes": 208,
++      "sha256": "52a2848bddd7efaeffced859a851d20bdff591579dd1dffda6a92a6c9d60fb43"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/Directory.Packages.props",
++      "bytes": 5112,
++      "sha256": "e49b9733247305ea12e3acae176b34ceedb8cc549423169b68cd264972d26eb5"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/NuGet.Config",
++      "bytes": 881,
++      "sha256": "d3fd147f2b7d433f0059fdb1ce74946d1087d65a42019958ce0626a33e49727e"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj",
++      "bytes": 4348,
++      "sha256": "01bcaf5a6d9829ded172e0f9eb1ac61a28f15b8f1ff8485d345f116f8f3fac16"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
++      "bytes": 4911,
++      "sha256": "3dc8f5c1912653db614982f501d85bdafac2cb200a4d6957920570b825797f1a"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Input/IKeyboardDevice.cs",
++      "bytes": 888,
++      "sha256": "e44fde43fde5eb018eb16ea20ca5602627017bff0760ec0bc235dec464905c99"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.Invoke.cs",
++      "bytes": 31379,
++      "sha256": "7a0d50b80f261a3779363b5b57164792ca620f3ffdbe45b50175d9c0ccd22d29"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.MainLoop.cs",
++      "bytes": 6839,
++      "sha256": "d8efc8770c0afa72c207debf6aee54b0cad86d36cc135fbb17475c9d87e25c30"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.cs",
++      "bytes": 5568,
++      "sha256": "4ebf10c67ec14c51c1efe2401965288cb935651924f5772b5172665f5d7e8602"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/DispatcherOperation.cs",
++      "bytes": 14393,
++      "sha256": "cfcff802dec0a4dbf673503f1bd02c30b30f2a3129e609e9453425588823c6cf"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
++      "bytes": 7712,
++      "sha256": "60e3a5c83a59dfe656f93d266890a95019f5dc50002287d296a860b549ed49ab"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ClassicDesktopStyleApplicationLifetime.cs",
++      "bytes": 10518,
++      "sha256": "09c0afba6fe4004c671217ac430e86c0ea0d8dace1e722cb6a83a83c56b8225a"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IClassicDesktopStyleApplicationLifetime.cs",
++      "bytes": 2930,
++      "sha256": "b9ff25759fe821bf96bb1ae2d149fea132295173967fbd12a07094124cb68408"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IControlledApplicationLifetime.cs",
++      "bytes": 902,
++      "sha256": "de3778330edc8556c40429a559b93f95d2d7a4e380852a8b747ae2d447acff10"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ShutdownRequestedEventArgs.cs",
++      "bytes": 305,
++      "sha256": "ae9ec93a6a6544121eb17eea013c2146cf011510c282eec538afeb7d2a533768"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj",
++      "bytes": 2661,
++      "sha256": "585fc69d868dc41657a901c9b63b804453dbdf84aaa37c291ccad08b5552925c"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj",
++      "bytes": 825,
++      "sha256": "0ee7b483e6b0109f6c630d09e71dbe99c0bc29fc58519ca3dba8184d6fc95355"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj",
++      "bytes": 892,
++      "sha256": "e08808c6fe4379354af6d1f260ea4d5ca7d4a82a5c1c55d1f4df83ec5bdce3fb"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj",
++      "bytes": 496,
++      "sha256": "48219608db2b7a276ad8c21457b457eb301e7634f22fe9a67339f06a6e641501"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
++      "bytes": 3088,
++      "sha256": "83673ae1ee3859b875aa1b91e6469b978ddf36848e2ee186742f966cdc332435"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj",
++      "bytes": 2288,
++      "sha256": "6cedd5f053b4bca3bfe1389b58c9232e95a06cf3e5524734a65b6db805a11804"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj",
++      "bytes": 580,
++      "sha256": "e8674f3b68341ab7700443e30038de65768242144b28b6fe0c6cdbc7e1e47117"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
++      "bytes": 574,
++      "sha256": "8fa5bd2315a68f5baf930fefd73be437110bedb663a25425756cab7a781a17cc"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj",
++      "bytes": 1511,
++      "sha256": "1382b15489d80637e1880307e334a7515a4fe00f2cdbca4fc5df1ec59643d0f0"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj",
++      "bytes": 814,
++      "sha256": "9d290786824bf201dd0f4c496c34b58cc60dc7810d778fb131d1ceb2bdf57453"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj",
++      "bytes": 762,
++      "sha256": "a72e9a35c6a735e48973e5129e01e5f80e1a3f9d016231921bbef0edd9d663f0"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj",
++      "bytes": 807,
++      "sha256": "cf11ea0e4211ecf947cfde57afbf2d83d68564a74c853ceb5576731ef204a935"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj",
++      "bytes": 765,
++      "sha256": "0e93a888d1657cfa52a144ab6f42850b5f91155237b5a6993292c0f3b10d8088"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj",
++      "bytes": 1274,
++      "sha256": "5946ac56ea972919e672d8aa793dfedf166268939369c2f4f6a24cf8dd0bd936"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
++      "bytes": 316,
++      "sha256": "1bf7806839ad3ee73d0f6fe52fa20fb2dc769d07056b891259f7691acea503ee"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
++      "bytes": 1084,
++      "sha256": "a35af8f3ecb1dbf40a9e71428e0427d91f3cb7a8c8ba8db6c5075bacb43df242"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj",
++      "bytes": 1862,
++      "sha256": "071fa8b77582e8de24d63c4d5e8ace5c49170891214f5ad2dd29d0a4fff6ce98"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj",
++      "bytes": 4584,
++      "sha256": "54ecc1584f5f7504e17b1388ff683c6ada93cc6204eb784fcc49dd57f2da4cf1"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj",
++      "bytes": 1411,
++      "sha256": "cf467012d8dde584f87b58060cc22315f23b7b11dc839e0369d8069cdb9a84b3"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
++      "bytes": 1643,
++      "sha256": "9f928d1f0f55adfe47910e0e30893a3b26cdd77a4450f46623d8b2ca7057dc75"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj",
++      "bytes": 896,
++      "sha256": "d396b2c58b745d7b2eda7ec82d26c67eb99a8cfd7505e850e1901549ba84691f"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
++      "bytes": 3027,
++      "sha256": "967071bb22cca3a0d531a87b7301cbd8d4b7029f692c15a6bf92be438a66ff22"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
++      "bytes": 808,
++      "sha256": "293663ec6575c1c32b18d4c4ad5fa232f984dbbd42e309b78dbebacb01c3c9f1"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj",
++      "bytes": 954,
++      "sha256": "3740d7b8c569040dd1ab4ef25395bcf242906c0842b5acba6441dd397df6950a"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj",
++      "bytes": 1105,
++      "sha256": "a70d943298590acecca70dd89693d1d86fe42d4d0522844937d1abb1cb1992cb"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj",
++      "bytes": 1014,
++      "sha256": "33166e06a9189dc564bf298fd25594dc9b3ed5ddb1739beafbbd82fa70ad0a3c"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj",
++      "bytes": 1586,
++      "sha256": "d583e2ebb01116f2d777cd79c80f40214da58aac5860c5811e88428a4dc7d76d"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/src/tools/Directory.Build.props",
++      "bytes": 143,
++      "sha256": "e45c5ee4cb7630d40067d4213ae38c7d28c5d411883e21e33d8bc6f8a3c8da08"
++    },
++    {
++      "path": "global.json",
++      "bytes": 111,
++      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
++    }
++  ],
++  "requiredGitlinks": [
++    {
++      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
++      "commit": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52"
++    },
++    {
++      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
++      "commit": "864a05282841bf04006890f04d11d60d1a046aa9"
++    }
++  ],
++  "ordinaryTests": {
++    "project": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
++    "total": 6,
++    "originalRender": 1,
++    "originalLifetimeNewCases": 5,
++    "measuredAssertions": null,
++    "sourceAssertionCallsNewClass": 54,
++    "originalMethods": [
++      "Native_home_host_loads_canonical_cui_into_a_measured_window",
++      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit",
++      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services",
++      "Original_close_is_published_before_Core_callback_reentry",
++      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close"
++    ],
++    "casesByMethod": {
++      "Native_home_host_loads_canonical_cui_into_a_measured_window": 1,
++      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit": 1,
++      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services": 2,
++      "Original_close_is_published_before_Core_callback_reentry": 1,
++      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close": 1
++    }
++  },
++  "originalForcedFailure": {
++    "source": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
++    "run": 37205981853,
++    "job": 111447135076,
++    "forcedCleanup": true,
++    "exitCode": -1,
++    "status": "RETAINED_ORIGINAL_FAILURE_NO_ACCEPTANCE"
++  },
++  "qualification": "Root-owned disposable Windows source compile and original native explicit quit only; ordinary closed-window external reopen/activation, installed authority/signing/clean-PC/donor/full Home acceptance remain NOT_RUN.",
++  "resourceBounds": {
++    "jobMinutes": 60,
++    "requiredOutputDriveFreeBytes": 8589934592,
++    "perLogPostCompletionMaximumBytes": 8388608,
++    "maximumRawZipParts": 8,
++    "rawPartMaximumBytes": 19922944,
++    "nativeVisibleWindowSeconds": 45,
++    "nativeFocusSeconds": 5,
++    "nativeShutdownSeconds": 45,
++    "automaticAggregateDiskGrowthOrRSSMonitor": false,
++    "forcedShutdownPermitted": false,
++    "nativeOutputDrainSeconds": 5
++  }
++}
+diff --git a/.github/workflows/team-c-home-windows-original-shutdown.yml b/.github/workflows/team-c-home-windows-original-shutdown.yml
+new file mode 100644
+index 00000000..6fcaf12e
+--- /dev/null
++++ b/.github/workflows/team-c-home-windows-original-shutdown.yml
+@@ -0,0 +1,144 @@
++name: Team C original Home Windows shutdown (unaccepted)
++
++on:
++  push:
++    branches: [team-c/sol-happy-home-windows-original-shutdown-20261004]
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++concurrency:
++  group: team-c-home-original-${{ github.ref }}
++  cancel-in-progress: false
++
++jobs:
++  original-home:
++    runs-on: windows-2022
++    timeout-minutes: 60
++    env:
++      AVALONIA_TELEMETRY_OPTOUT: "1"
++      DOTNET_NOLOGO: "1"
++      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
++      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
++      MSBUILDDISABLENODEREUSE: "1"
++    steps:
++      - name: Preserve actual reviewed source bytes
++        shell: pwsh
++        run: |
++          git config --global core.autocrlf false
++          git config --global core.longpaths true
++      - name: Check out the exact selected source
++        uses: actions/checkout@v4
++        with:
++          ref: ${{ github.sha }}
++          fetch-depth: 0
++          persist-credentials: false
++      - name: Acquire only the two current source gitlinks
++        shell: pwsh
++        run: |
++          git submodule update --init --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus
++          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
++      - name: Select the repository SDK on this disposable runner
++        uses: actions/setup-dotnet@v4
++        with:
++          global-json-file: global.json
++      - name: Run all original owning tests and actual native explicit quit
++        id: probe
++        shell: pwsh
++        env:
++          HOME_ORIGINAL_OUTPUT: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}
++        run: |
++          & .github/scripts/home-windows-original-shutdown.ps1 -ExpectedCommit '${{ github.sha }}' -OutputDirectory $env:HOME_ORIGINAL_OUTPUT
++          exit $LASTEXITCODE
++      - name: Retain original diagnostics and all failed observations
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-diagnostics-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
++          if-no-files-found: warn
++          retention-days: 7
++      - name: Retain the actual complete sealed package
++        if: always() && steps.probe.outputs.package_ready == 'true'
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-package-${{ github.sha }}-${{ github.run_attempt }}
++          path: |
++            ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-artifact/home-win-x64.zip
++            ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-artifact/publish-manifest.json
++            ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-artifact/seal.json
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 01
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 1
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part01-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part01
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 02
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 2
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part02-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part02
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 03
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 3
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part03-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part03
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 04
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 4
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part04-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part04
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 05
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 5
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part05-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part05
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 06
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 6
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part06-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part06
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 07
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 7
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part07-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part07
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7
++      - name: Retain exact original ZIP transport part 08
++        if: always() && steps.probe.outputs.publication_ready == 'true' && fromJSON(steps.probe.outputs.part_count || '0') >= 8
++        uses: actions/upload-artifact@v4
++        with:
++          name: team-c-home-original-part08-${{ github.sha }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/home-original-${{ github.run_id }}-${{ github.run_attempt }}/public-parts/part08
++          compression-level: 0
++          if-no-files-found: error
++          retention-days: 7

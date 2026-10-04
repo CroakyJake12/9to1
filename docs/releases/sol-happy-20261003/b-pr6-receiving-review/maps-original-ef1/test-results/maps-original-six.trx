@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="234a2045-c389-459f-91b7-98bd83ed3c3a" name="@0209ad767592 2026-10-04 16:22:15" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T16:22:15.1465261+00:00" queuing="2026-10-04T16:22:15.1465261+00:00" start="2026-10-04T16:22:14.3165457+00:00" finish="2026-10-04T16:22:15.1526446+00:00" />
+  <TestSettings name="default" id="09aa324e-c83e-42aa-8c00-acf76d04ec4d">
+    <Deployment runDeploymentRoot="_0209ad767592_2026-10-04_16_22_15" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="647aa531-67ce-4035-9f63-b286425fec38" testId="e6aad019-cc7e-030a-e756-ce50f1d37ab5" testName="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)" computerName="0209ad767592" duration="00:00:00.0016383" startTime="2026-10-04T16:22:15.0340505+00:00" endTime="2026-10-04T16:22:15.0359606+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="647aa531-67ce-4035-9f63-b286425fec38" />
+    <UnitTestResult executionId="a17d5f79-4f01-47ea-adbe-0455556ed18f" testId="bf6f6642-5183-59b0-32d8-2350a6887837" testName="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)" computerName="0209ad767592" duration="00:00:00.0078571" startTime="2026-10-04T16:22:15.0303517+00:00" endTime="2026-10-04T16:22:15.0339562+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a17d5f79-4f01-47ea-adbe-0455556ed18f" />
+    <UnitTestResult executionId="a63f176c-2790-4682-b951-756b44b33f35" testId="5d9cc8a9-52cc-a8fa-0cd6-80f5efceffc8" testName="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await" computerName="0209ad767592" duration="00:00:00.1506244" startTime="2026-10-04T16:22:14.8599795+00:00" endTime="2026-10-04T16:22:15.0187713+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a63f176c-2790-4682-b951-756b44b33f35" />
+    <UnitTestResult executionId="52211b67-b9b4-4574-b7fc-3da696788a16" testId="4a6ac650-78fd-31f0-b28a-3609e80e37ca" testName="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision" computerName="0209ad767592" duration="00:00:00.0060966" startTime="2026-10-04T16:22:15.0411830+00:00" endTime="2026-10-04T16:22:15.0474276+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="52211b67-b9b4-4574-b7fc-3da696788a16" />
+    <UnitTestResult executionId="1239b784-76bb-4522-a155-6e60ea4ecb3c" testId="d7c484d6-9290-f074-1dd7-94d054a1eda9" testName="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route" computerName="0209ad767592" duration="00:00:00.0047419" startTime="2026-10-04T16:22:15.0360870+00:00" endTime="2026-10-04T16:22:15.0410122+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1239b784-76bb-4522-a155-6e60ea4ecb3c" />
+    <UnitTestResult executionId="926d236a-ab08-487e-a02c-a65c975cac8c" testId="5493babf-c5ea-5699-1a8e-66adad3c4f1c" testName="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route" computerName="0209ad767592" duration="00:00:00.0052368" startTime="2026-10-04T16:22:15.0296532+00:00" endTime="2026-10-04T16:22:15.0298078+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="926d236a-ab08-487e-a02c-a65c975cac8c" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await" storage="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/maps.originalauthoring.tests/release_linux-x64/maps.originalauthoring.tests.dll" id="5d9cc8a9-52cc-a8fa-0cd6-80f5efceffc8">
+      <Execution id="a63f176c-2790-4682-b951-756b44b33f35" />
+      <TestMethod codeBase="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests" name="Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route" storage="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/maps.originalauthoring.tests/release_linux-x64/maps.originalauthoring.tests.dll" id="5493babf-c5ea-5699-1a8e-66adad3c4f1c">
+      <Execution id="926d236a-ab08-487e-a02c-a65c975cac8c" />
+      <TestMethod codeBase="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests" name="Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision" storage="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/maps.originalauthoring.tests/release_linux-x64/maps.originalauthoring.tests.dll" id="4a6ac650-78fd-31f0-b28a-3609e80e37ca">
+      <Execution id="52211b67-b9b4-4574-b7fc-3da696788a16" />
+      <TestMethod codeBase="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests" name="Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)" storage="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/maps.originalauthoring.tests/release_linux-x64/maps.originalauthoring.tests.dll" id="e6aad019-cc7e-030a-e756-ce50f1d37ab5">
+      <Execution id="647aa531-67ce-4035-9f63-b286425fec38" />
+      <TestMethod codeBase="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests" name="Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route" storage="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/maps.originalauthoring.tests/release_linux-x64/maps.originalauthoring.tests.dll" id="d7c484d6-9290-f074-1dd7-94d054a1eda9">
+      <Execution id="1239b784-76bb-4522-a155-6e60ea4ecb3c" />
+      <TestMethod codeBase="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests" name="Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)" storage="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/maps.originalauthoring.tests/release_linux-x64/maps.originalauthoring.tests.dll" id="bf6f6642-5183-59b0-32d8-2350a6887837">
+      <Execution id="a17d5f79-4f01-47ea-adbe-0455556ed18f" />
+      <TestMethod codeBase="/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests" name="Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="e6aad019-cc7e-030a-e756-ce50f1d37ab5" executionId="647aa531-67ce-4035-9f63-b286425fec38" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bf6f6642-5183-59b0-32d8-2350a6887837" executionId="a17d5f79-4f01-47ea-adbe-0455556ed18f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5d9cc8a9-52cc-a8fa-0cd6-80f5efceffc8" executionId="a63f176c-2790-4682-b951-756b44b33f35" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4a6ac650-78fd-31f0-b28a-3609e80e37ca" executionId="52211b67-b9b4-4574-b7fc-3da696788a16" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d7c484d6-9290-f074-1dd7-94d054a1eda9" executionId="1239b784-76bb-4522-a155-6e60ea4ecb3c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5493babf-c5ea-5699-1a8e-66adad3c4f1c" executionId="926d236a-ab08-487e-a02c-a65c975cac8c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="6" executed="6" passed="6" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.07]   Discovering: Maps.OriginalAuthoring.Tests
+[xUnit.net 00:00:00.13]   Discovered:  Maps.OriginalAuthoring.Tests
+[xUnit.net 00:00:00.15]   Starting:    Maps.OriginalAuthoring.Tests
+[xUnit.net 00:00:00.37]   Finished:    Maps.OriginalAuthoring.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

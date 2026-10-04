@@ -1,0 +1,23 @@
+✔ public preflight accepts exact inventories only; no browser or issuer execution (9.859497ms)
+✔ credential-bearing PW debug/preload inheritance is disabled before browser launch (0.328466ms)
+✔ invalid explicit candidate refuses before even reading public binding (0.301505ms)
+✔ actual CLI invalid candidate redacts errors and precedes private read/PW import/listener (38.027903ms)
+✔ mismatched candidate and publication receipt hash refuse (10.131168ms)
+✔ unreviewed runner or source contract refuses (0.711581ms)
+✔ changed receiving critical source refuses even if caller rehashes both catalogs (0.817097ms)
+✔ before/after source mismatch and recorded source mutation refuse (1.045735ms)
+✔ actual full asset body mutation and unlisted asset refuse (12.613265ms)
+✔ public asset symlink refuses even if its target bytes match (4.946267ms)
+✔ fixture source missing body or caller-rehashed alternate implementation refuses (11.858749ms)
+✔ owned private-file contract reads only exact restrictive run, without authenticating (0.951435ms)
+✔ foreign path and permissive private mode refuse (0.359241ms)
+✔ wrong port, external discovery and non-fictional account refuse (0.820092ms)
+✔ private mutation remains an observable failure after read (0.405178ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 198.947399

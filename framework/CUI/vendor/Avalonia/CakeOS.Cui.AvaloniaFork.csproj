@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>CakeOS.Cui.AvaloniaFork</AssemblyName>
+    <RootNamespace>Avalonia</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src/Avalonia.Base/Metadata/**/*.cs" />
+  </ItemGroup>
+</Project>

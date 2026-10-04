@@ -1,0 +1,82 @@
+{
+  "sourceCommit": "a0de5ad5c2975c98140be79dfcac884dea0ef76a",
+  "receivingBase": "43c5b0ebf7d26f46ee9a29ad009e9dd0e68b835a",
+  "scope": "Existing maintained actual projects and source-linked owning project graph; no test/source edits. Chat controlled interface, lifecycle missing owner authority, Picture controlled media are scoped supporting controls.",
+  "qualification": "Root sole integrator. No browser/Windows/provider/full release acceptance. Sequential reuse only task-owned source-built outputs, with complete current actual project graph; no alternate/copied vendor DLL.",
+  "recipeDifferencesFromHostedCI": {
+    "NuGetAudit": false,
+    "taskPrivateWritableXDGConfig": true,
+    "cachedActualNuGetPackages": "/workspace/.tools/nuget/packages",
+    "sharedOwnArtifactsAcrossSerialNormalProjects": true,
+    "sourceCompilerTaskSubstitute": false
+  },
+  "projects": [
+    {
+      "name": "picture15",
+      "project": "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+      "status": "EXECUTED_EXIT_ZERO",
+      "targetProperties": {
+        "TargetPath": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests.dll",
+        "TargetFramework": "net10.0",
+        "RuntimeIdentifier": "linux-x64",
+        "UseAppHost": "true"
+      },
+      "entrySHA256": "fd8ef13f33c91ab12f141d78982c1956fed0c90d4db7f29354c3fee7b360c3da",
+      "apphostSHA256": "539113cd8b25b144650928f32d7f8eca555333c9081e3e25e3ebfbce3a925f07",
+      "buildSucceeded": true,
+      "actualNativeCounts": {
+        "discovered": 15,
+        "executed": 15,
+        "passed": 15,
+        "failed": 0,
+        "notRun": 0,
+        "timedOut": false,
+        "prerequisite": null,
+        "assertions": 138,
+        "exitCode": 0
+      },
+      "actualNative": {
+        "name": "picture15-native",
+        "argv": [
+          "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests",
+          "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/fixture-data/picture15"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 91066,
+            "birth": 1274687,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 1.152,
+        "bytes": 1907,
+        "familyClosed": true
+      },
+      "passLabels": [
+        "PASS independent-target-prepare-and-reject-preserve-active-bitmap-and-canonical",
+        "PASS invalid-route-refused-before-owner-or-device-effects",
+        "PASS controlled-target-read-failure-preserves-active-owner",
+        "PASS typed-input-before-navigation-and-close-is-retained",
+        "PASS typed-input-after-render-fences-native-admission",
+        "PASS acknowledged-owner-edit-after-render-fences-target",
+        "PASS forged-view-state-and-superseded-offer-have-no-authority",
+        "PASS cancelled-late-read-and-pending-close-preserve-owner",
+        "PASS disposal-during-read-fences-late-candidate-without-extra-release",
+        "PASS candidate-preview-does-not-write-native-cache-before-accept",
+        "PASS changed-native-cache-refuses-admission-without-overwrite",
+        "PASS old-retirement-cannot-clear-new-real-canonical-dirty-edit",
+        "PASS actual-raster-crop-history-save-close-reopen-and-pixel-export",
+        "PASS candidate-publication-cannot-write-detached-previous-input",
+        "PASS candidate-observer-reentrant-navigation-waits-coherent-retirement"
+      ],
+      "summaryLines": []
+    }
+  ],
+  "sourceUnchanged": true
+}

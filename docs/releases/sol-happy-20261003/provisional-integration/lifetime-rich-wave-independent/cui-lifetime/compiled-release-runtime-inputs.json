@@ -1,0 +1,452 @@
+[
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Accounts.cui",
+    "bytes": 6365,
+    "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/ActualCallerProbe",
+    "bytes": 78256,
+    "sha256": "11475851f7b336a542406d41d38bd879779621adb277d908f0de7f3027cf8f02"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/ActualCallerProbe.deps.json",
+    "bytes": 27157,
+    "sha256": "b62366f1ddbe80b40c1884424d97b6c4ada312159afe5173b14da06cae26cf0b"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/ActualCallerProbe.dll",
+    "bytes": 57856,
+    "sha256": "73b640e657bc5b8b8c5d8c1a3a03ab43f3c534baf5c04331c7e95b42e5a7cd1b"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/ActualCallerProbe.pdb",
+    "bytes": 21356,
+    "sha256": "f695f5bea9de92d32a50a1b32a79e140455eff89b59a7fcb690b7814e2fdeafc"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/ActualCallerProbe.runtimeconfig.json",
+    "bytes": 330,
+    "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Base.dll",
+    "bytes": 2259456,
+    "sha256": "b0638bb286470e05ef71b39a44fd49f2d7e25abcf3aae9878fca5654c6998711"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Base.pdb",
+    "bytes": 824900,
+    "sha256": "6ea2373197ae5f5df7dcf8866c9edc3dbf39f61764ad87241949875af4a145a4"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Base.xml",
+    "bytes": 2021500,
+    "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Controls.dll",
+    "bytes": 1299456,
+    "sha256": "6f917e03967335437999979784e8ff9826135e9794a559916cfd84190b2247f4"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Controls.pdb",
+    "bytes": 488700,
+    "sha256": "efc167ee112b8a25236220995f0bb2c3c5996ca5c34a34e861f08d4c3502f92f"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Controls.xml",
+    "bytes": 1335488,
+    "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.DesignerSupport.dll",
+    "bytes": 71168,
+    "sha256": "c2035dc757901673e77d12e3d38232c3e95ae50a47ae86616ba16921eb7e1443"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.DesignerSupport.pdb",
+    "bytes": 28388,
+    "sha256": "57460f0dad35e263cf607b59130cacbf020ecf9dce052b3c2a2b93f7fb344844"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.DesignerSupport.xml",
+    "bytes": 141,
+    "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Desktop.dll",
+    "bytes": 15360,
+    "sha256": "177247e7142c4442c5b49c4fd6a589c59672341fe3bd1e33baab7247eb567f29"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Desktop.pdb",
+    "bytes": 13940,
+    "sha256": "a2d216bd75a78bdf8cd52d6a786e47665d451ea6a19d7179a7c96c4c3938fd88"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Desktop.xml",
+    "bytes": 133,
+    "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Dialogs.dll",
+    "bytes": 243200,
+    "sha256": "f433fb069382e734b727d79b7e4a2b09ffc6889ac698c051a2e327e97a54e5f7"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Dialogs.pdb",
+    "bytes": 23656,
+    "sha256": "3a525d2346fcb327267133da2430473566932fb37e2d4e24bf3f2aa23c0d5db8"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Dialogs.xml",
+    "bytes": 638,
+    "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Fonts.Inter.dll",
+    "bytes": 1897472,
+    "sha256": "ba71f7eeadba618954f3a4268df5ed4ebb615c30f3ee43d18cb74d5c8be02de4"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Fonts.Inter.pdb",
+    "bytes": 12940,
+    "sha256": "c1d00891a116d7a85b45be1a77d2636772bfecdbd0fc068db0bbcfd640b50634"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Fonts.Inter.xml",
+    "bytes": 137,
+    "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll",
+    "bytes": 560128,
+    "sha256": "3a16dfe90cc28ae1141c67e2b77f5cd2ba0dc8c14bfee35ffb19d184a949cbb9"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.pdb",
+    "bytes": 188664,
+    "sha256": "d3ab76d39eb19496705c03c6d3287eb355607e2447389b65b81dd47aedacd9ff"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.xml",
+    "bytes": 52965,
+    "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.FreeDesktop.dll",
+    "bytes": 201216,
+    "sha256": "5ec2d972cd98572d11700da73aa36c7e09b77cecad892ef1a03a4cdc08cb0379"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.FreeDesktop.pdb",
+    "bytes": 82736,
+    "sha256": "2ad8072249d7ae4251c65d3fa43e223ef2cedf754c9155891082078d2da3c955"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.FreeDesktop.xml",
+    "bytes": 1857,
+    "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.HarfBuzz.dll",
+    "bytes": 22016,
+    "sha256": "e620315532719e1723f2f772c6d2d1f3c61b905fa42709bb40a49b166d2d90c4"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.HarfBuzz.pdb",
+    "bytes": 15140,
+    "sha256": "423de77b3de506cd58eadf6193ad2333f518366fe338cd58518e38f3a550a244"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.HarfBuzz.xml",
+    "bytes": 1114,
+    "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Headless.dll",
+    "bytes": 71168,
+    "sha256": "205fa9cf5981d94f6ac259c0bb896db40edd6325045389140950fef5a56be8c8"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Headless.pdb",
+    "bytes": 28672,
+    "sha256": "5918a9979dcd849686d3202d17f9bbbc4994068d5d42ce507aab3b8ef3347f94"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Headless.xml",
+    "bytes": 13264,
+    "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Markup.Xaml.dll",
+    "bytes": 74752,
+    "sha256": "4225292fbc5514b0749ffca470cfecd03c6b2d9434d238b80f124388b293afb6"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Markup.Xaml.pdb",
+    "bytes": 34500,
+    "sha256": "f93f2af049a9c82edb5e535e228b77c0a6777b1f02aade205f3b0f6292f1f4d9"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Markup.Xaml.xml",
+    "bytes": 25476,
+    "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Markup.dll",
+    "bytes": 45568,
+    "sha256": "a18ed3462b87708ba799dcc1ec2b41e96a793681ff819b0ea4acd3a185d17160"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Markup.pdb",
+    "bytes": 22424,
+    "sha256": "79e5e251c51c83549008d879b9707e564b99a3e75ef84edee881a1bd600407b0"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Markup.xml",
+    "bytes": 4336,
+    "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Metal.dll",
+    "bytes": 15360,
+    "sha256": "8c7b7b54d13705cdaf9a97bd8b0f8566855854951e4ce086fd465d59094e3a48"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Metal.pdb",
+    "bytes": 12912,
+    "sha256": "e850da6a48085778b12dccc34c01b7c509ac63e80cffcff02008a877d3d40f67"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Metal.xml",
+    "bytes": 131,
+    "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.MicroCom.dll",
+    "bytes": 15360,
+    "sha256": "92eba6f76dc32244f084adfed952114755774b1a5c9ec5c0dcb6561c605329f4"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.MicroCom.pdb",
+    "bytes": 12984,
+    "sha256": "476a1368bcba26c8d1d4e9d9d7fa1ff7e979e6649c74a7d6a03fcdecec188068"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.MicroCom.xml",
+    "bytes": 134,
+    "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Native.dll",
+    "bytes": 343040,
+    "sha256": "3d11ae38a21eabd44e416cc18cf2a91242c5d6fb8685bdd41904847addaed613"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Native.pdb",
+    "bytes": 174576,
+    "sha256": "549998450af24bd7bd6b2b9c6b9d7e8b1fba6af8903616b975f22637c06bddf2"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Native.xml",
+    "bytes": 9476,
+    "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.OpenGL.dll",
+    "bytes": 116736,
+    "sha256": "216b81353176ac0d069bdb5bd7cf23f63a82c00065c2cfb34b6ef2f0395254d5"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.OpenGL.pdb",
+    "bytes": 47528,
+    "sha256": "7b1a0687e0333b5d8874b5344b142ea28607adc1eb3be6ba1be1efd85e840dc5"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.OpenGL.xml",
+    "bytes": 5602,
+    "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Remote.Protocol.dll",
+    "bytes": 75776,
+    "sha256": "afbdc76474f8e6c26a299d88cb04de9987c4c41504849fd5e849a714ccbb2932"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Remote.Protocol.pdb",
+    "bytes": 29312,
+    "sha256": "12d2c4b5561cf654231a77180299ac510b5f6f9f69e6fe9b29efcd227652c6f2"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Remote.Protocol.xml",
+    "bytes": 70801,
+    "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Skia.dll",
+    "bytes": 123392,
+    "sha256": "9764e58e2c5b58bf4a85fc2b3d5ef04e01d4dbdce9ad370da51049e4335c974b"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Skia.pdb",
+    "bytes": 53068,
+    "sha256": "320136a3ad81bbcf75013031d76256cfdce823480b60d334dfd3815bc36bea74"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Skia.xml",
+    "bytes": 47094,
+    "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Themes.Fluent.dll",
+    "bytes": 712704,
+    "sha256": "ed2b70a76439abc0c0ef9a9a2a8af9ae26a06481b316ea9a2c80326c132b7682"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Themes.Fluent.pdb",
+    "bytes": 159940,
+    "sha256": "9bc3e504ab5ba2abce56657ebb9e7b093bbd9388cc922a8119f9ffde874624f0"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Themes.Fluent.xml",
+    "bytes": 6894,
+    "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Vulkan.dll",
+    "bytes": 190976,
+    "sha256": "976ca642c9065f38331c09c75106533ac18bc424ecc1d4038b8df63aedd36b1b"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Vulkan.pdb",
+    "bytes": 43492,
+    "sha256": "58fbf6796dc22f30e3d59c127d9ecca6fe5db94c7efd87eea0bfcde2be5ce39c"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Vulkan.xml",
+    "bytes": 1620,
+    "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Win32.Automation.dll",
+    "bytes": 123904,
+    "sha256": "df192f553e874d66313b09012e87b840c4ef52c153c05c24d97956b24bf2bc47"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Win32.Automation.pdb",
+    "bytes": 87504,
+    "sha256": "4db7c1c2a21720d3ce1b6266c00f8ab22b25bce249d5dbf5e281d9a4bdb37b48"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Win32.Automation.xml",
+    "bytes": 3812,
+    "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Win32.dll",
+    "bytes": 932864,
+    "sha256": "5928ee6b136c57720fbb212864ff74132fb03438d852fe614019d11e868efc26"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Win32.pdb",
+    "bytes": 411976,
+    "sha256": "d276fe352cd9e52a1d3f09dfc7a88bad489fef3bdd57652de86a44972b5ac29a"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.Win32.xml",
+    "bytes": 143346,
+    "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.X11.dll",
+    "bytes": 372224,
+    "sha256": "30a4070b9202e80458f1643fc2b4786479e1e885a4290bf21f1a4285d291ca1e"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.X11.pdb",
+    "bytes": 88012,
+    "sha256": "0f5a0c1dd521f94678ec95a00abcd4dfea3191605218f14007c6bb7b522a72c2"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.X11.xml",
+    "bytes": 11685,
+    "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.dll",
+    "bytes": 4096,
+    "sha256": "48ee46e6917dbf2957cc8991059d06f909c4a1ff34e5423a2945fc26447d272d"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.pdb",
+    "bytes": 11852,
+    "sha256": "e0a17cfa1d5012d49b49c8f0b672292cb320891c417823967dc9c7bfee1ff4e4"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Avalonia.xml",
+    "bytes": 125,
+    "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Core.dll",
+    "bytes": 78336,
+    "sha256": "850d86c9591b8de0d8c9125ad4a52dc0d1ab1852e5ee6addf4871b3227cc8611"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Core.pdb",
+    "bytes": 28144,
+    "sha256": "f516403201439633ede6ddd0cf7a5ccb553f30cfb9b9257d7fe7b126df44e2ac"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Language.dll",
+    "bytes": 11776,
+    "sha256": "e5f7df48487aa903db8855c567e7e0a8e3e0dde386ff28d6c305a12c6cae1986"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Language.pdb",
+    "bytes": 12984,
+    "sha256": "3587b96557d9893dba3d592f765ee54f162a34c6702972b84c660240780bd336"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+    "bytes": 151552,
+    "sha256": "e1fbc826aef558e303d60cc1525e7fd17385d3a202c369d0032543609ee24e7d"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Runtime.pdb",
+    "bytes": 44500,
+    "sha256": "e36d339e89f7f11d7bd6df9277326ad04c0fb2e6e1200f1df67eb86db90bea07"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Themes.dll",
+    "bytes": 90112,
+    "sha256": "cf0630a42487e94918a3e664a2bf8b8aca831bda5bf09d84e1f33778042c635d"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/CakeOS.Cui.Themes.pdb",
+    "bytes": 26608,
+    "sha256": "04e34d7a0a0bde4854313b5fe06ae75f9aef825d729f037d3ea7e4a6cb770fb7"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/HarfBuzzSharp.dll",
+    "bytes": 122400,
+    "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/MicroCom.Runtime.dll",
+    "bytes": 16384,
+    "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/SkiaSharp.dll",
+    "bytes": 490528,
+    "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+  },
+  {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/original-three/bin/Release/net10.0/Tmds.DBus.Protocol.dll",
+    "bytes": 219136,
+    "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+  }
+]

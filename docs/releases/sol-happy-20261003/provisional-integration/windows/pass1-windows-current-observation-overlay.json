@@ -1,0 +1,560 @@
+{
+  "schema": "team-c-pass1-windows-current-observation-overlay/v1",
+  "recordedUtc": "2026-10-04T15:57:09.698723+00:00",
+  "frozenManifest": {
+    "path": "docs/releases/sol-happy-20261003/provisional-integration/windows/pass1-windows-package-observation-manifest.json",
+    "sha256": "480368dfa02aea0b2dadd168706bb46ade5083311081ae5cdc935d212c5ea7ff",
+    "historicalBodyUnchanged": true
+  },
+  "currentGlobalSourceForWeb": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+  "counts": {
+    "requiredWindowsGroups": 29,
+    "fullAcceptanceVerified": 0,
+    "packagesDelivered": 0
+  },
+  "qualification": "These current bounded package observations supplement the immutable historical manifest. They do not change its original GUI_NOT_RUN entries or reattribute fd5 Windows package results to the current global source. Package bytes remain unsigned SDK-present exploratory outputs, without accepted installed Home tuple or clean-PC/local delivery.",
+  "apps": [
+    {
+      "name": "Home",
+      "category": "Workspace",
+      "canonicalParagraphs": [
+        1181,
+        1461
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": "home",
+      "packageEntryPointStatus": "PROVISIONAL_EXISTING_GRAPHICAL_ENTRYPOINT_WITH_OBSERVATION",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "9to1 Admin",
+      "category": "Workspace",
+      "canonicalParagraphs": [
+        1462,
+        1507
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Files",
+      "category": "Workspace",
+      "canonicalParagraphs": [
+        1508,
+        1672
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Connect",
+      "category": "Workspace",
+      "canonicalParagraphs": [
+        1673,
+        1768
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Mail",
+      "category": "Workspace",
+      "canonicalParagraphs": [
+        1769,
+        1904
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Games",
+      "category": "Workspace",
+      "canonicalParagraphs": [
+        1905,
+        2034
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Spaces",
+      "category": "AI",
+      "canonicalParagraphs": [
+        2035,
+        2225
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Spaces/HavenOS.Spaces.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Vision & Voice",
+      "category": "AI",
+      "canonicalParagraphs": [
+        2226,
+        2391
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "AI Studio",
+      "category": "AI",
+      "canonicalParagraphs": [
+        2392,
+        2570
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": "studio",
+      "packageEntryPointStatus": "PROVISIONAL_EXISTING_GRAPHICAL_ENTRYPOINT_WITH_OBSERVATION",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Play",
+      "category": "AI",
+      "canonicalParagraphs": [
+        2571,
+        2679
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Write",
+      "category": "Productivity",
+      "canonicalParagraphs": [
+        2680,
+        2843
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Present",
+      "category": "Productivity",
+      "canonicalParagraphs": [
+        2844,
+        3192
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Present/HavenOS.Present.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": "present",
+      "packageEntryPointStatus": "PROVISIONAL_EXISTING_GRAPHICAL_ENTRYPOINT_WITH_OBSERVATION",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Canvas",
+      "category": "Productivity",
+      "canonicalParagraphs": [
+        3193,
+        3555
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Canvas/HavenOS.Canvas.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": "canvas",
+      "packageEntryPointStatus": "PROVISIONAL_EXISTING_GRAPHICAL_ENTRYPOINT_WITH_OBSERVATION",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Boards",
+      "category": "Productivity",
+      "canonicalParagraphs": [
+        3556,
+        3722
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": "boards",
+      "packageEntryPointStatus": "PROVISIONAL_EXISTING_GRAPHICAL_ENTRYPOINT_WITH_OBSERVATION",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [
+        {
+          "criterion": "Actual package keyboard title/paragraph edits, durable save, normal close/reopen restores canonical values",
+          "harnessSource": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+          "run": 37210601635,
+          "checks": 67,
+          "status": "PASS_BOUNDED_SDK_PRESENT_WINDOWS2022",
+          "normalExits": [
+            0,
+            0
+          ],
+          "indexSha256": "3443297bd208a7f8b7df49e888476574711ed2b0996bbc988e2c51b00cf347c5"
+        },
+        {
+          "criterion": "Actual native Bold, application undo/redo, canonical runs/history, save/normal close/reopen",
+          "harnessSource": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc",
+          "run": 37212180165,
+          "checks": 85,
+          "status": "PASS_BOUNDED_SDK_PRESENT_WINDOWS2022",
+          "nativeBoldStates": [
+            "Off",
+            "On",
+            "UndoOff",
+            "RedoOn",
+            "ReopenOn"
+          ],
+          "normalExits": [
+            0,
+            0
+          ],
+          "indexSha256": "52869505acaaeefb809991d97b26259863805032c1b0dc74892a37b98a84d37c",
+          "independentAckSha256": "a794d143c828c2d0102a78a6f0fa8c5d69ca86f1a8b287866062e8a765b52c74"
+        },
+        {
+          "criterion": "Real primary-file storage failure, visible Save failed, pending real editor, user retry and durable reopen",
+          "status": "PROPOSAL_PREPARATION_NOT_RUN"
+        }
+      ],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Planner",
+      "category": "Productivity",
+      "canonicalParagraphs": [
+        3723,
+        3887
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Automations",
+      "category": "Productivity",
+      "canonicalParagraphs": [
+        3888,
+        4055
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Picture",
+      "category": "Creativity",
+      "canonicalParagraphs": [
+        4056,
+        4252
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Picture/HavenOS.Images.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": "picture",
+      "packageEntryPointStatus": "PROVISIONAL_EXISTING_GRAPHICAL_ENTRYPOINT_WITH_OBSERVATION",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Wave",
+      "category": "Creativity",
+      "canonicalParagraphs": [
+        4253,
+        4457
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Motion",
+      "category": "Creativity",
+      "canonicalParagraphs": [
+        4458,
+        4631
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Data",
+      "category": "Data",
+      "canonicalParagraphs": [
+        4632,
+        4893
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Data/App/HavenOS.Data.App.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Forms",
+      "category": "Data",
+      "canonicalParagraphs": [
+        4894,
+        5120
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Dev",
+      "category": "Developer",
+      "canonicalParagraphs": [
+        5121,
+        5390
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Dev/HavenOS.Dev.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Stacks",
+      "category": "Developer",
+      "canonicalParagraphs": [
+        5391,
+        5788
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Stacks/HavenOS.Stacks.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Sites",
+      "category": "Developer",
+      "canonicalParagraphs": [
+        5789,
+        6109
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Sites/HavenOS.Sites.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Terminal",
+      "category": "Developer",
+      "canonicalParagraphs": [
+        6110,
+        6339
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Terminal/HavenOS.Terminal.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Mini Computer",
+      "category": "Developer",
+      "canonicalParagraphs": [
+        6340,
+        6627
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/MiniComputer/HavenOS.MiniComputer.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Browse",
+      "category": "Utilities",
+      "canonicalParagraphs": [
+        6628,
+        6723
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": "9to1 Workspace/Browse/HavenOS.Apps.Browse.csproj",
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Maps",
+      "category": "Utilities",
+      "canonicalParagraphs": [
+        6724,
+        6814
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    },
+    {
+      "name": "Shelf",
+      "category": "Utilities",
+      "canonicalParagraphs": [
+        6858,
+        6895
+      ],
+      "windowsRequired": true,
+      "receivingProjectCandidate": null,
+      "ownerSelectedInstalledEntryPoint": "NOT_SUPPLIED",
+      "packageObservation": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "fullAccepted": false,
+      "delivered": false,
+      "currentBoundedPackageCriteria": [],
+      "remainingMandatoryGates": "Installed Home/runtime/package declaration and trust/signing; cleanSDK-free Windows install/bootstrap/repair; full applicable donor/UI/API/permissions/accessibility/recovery/provider/cross-app criteria; verified delivery destination. Preserve additional product-specific frozen failures and NOT_RUN gates."
+    }
+  ],
+  "originalRichHarnessFailure": {
+    "source": "9c3aa3d17006f7818fabc5e049a77e39ddfdc209",
+    "run": 37211762149,
+    "checksBeforeFailure": 35,
+    "cause": "Harness PowerShell dynamic-scope variable shadowing; exact scoped correction retained, actual named Bold presence was not a product failure."
+  },
+  "originalManifestGates": [
+    "Owner-selected complete29 installed entrypoint/package inventory and supported shared-host routes remain undeclared; library or CLI metadata is not substituted for GUI app acceptance.",
+    "Owner-selected installed Home package/AppID/version/ABI/service tuple and genuine trusted bootstrap/route contracts remain unverified.",
+    "Actual Windows Studio avatar-positive native control fails the existing unverified-platform Picture glycin route; no donor fallback or platform guard waiver.",
+    "Home explicit authorized process shutdown, clean no-SDK Windows install, final signing/publisher route, full donor/accessibility/provider/cross-app acceptance and authorized PC delivery remain unverified."
+  ]
+}

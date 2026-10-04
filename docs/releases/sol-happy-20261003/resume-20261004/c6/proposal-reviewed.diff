@@ -1,0 +1,266 @@
+diff --git a/cloud/cake-id-auth/deployment/README.md b/cloud/cake-id-auth/deployment/README.md
+index c897e13b..5d31758d 100644
+--- a/cloud/cake-id-auth/deployment/README.md
++++ b/cloud/cake-id-auth/deployment/README.md
+@@ -1,5 +1,7 @@
+ This package prepares the new isolated `cake-id-release-validation` Worker. It never targets the existing email-only `cake` Worker. The proposed issuer, API resource and initial allowed web origin are exactly `https://cake-id-release-validation.jcbailey008.workers.dev`. No OAuth client or callback is provisioned by this package.
+ 
++The prepared/build configurations enable `global_fetch_strictly_public` alongside `nodejs_compat` so the maintained bearer verifier's exact issuer JWKS fetch reaches the public Worker. [Cloudflare documents](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public) that own-zone requests otherwise bypass Workers and route to the origin. This configuration proposal preserves the approved 1000ms CPU limit, bindings, secrets, producer/verifier source and closed exposure. Root must review and retain actual configuration/version readback before a bounded new hosted run; this source change alone does not prove the cause of the retained original hosted 401.
++
+ Compile locally from `cloud/cake-id-auth`:
+ 
+ ```
+@@ -23,4 +25,4 @@ Real HTTPS acceptance still requires provider creation/deployment receipts, secr
+ 
+ Initial provider observability is disabled: authorization URLs can contain codes/state. Enable logging or tracing only after a reviewed redaction policy; never publish raw authentication URLs or secrets.
+ 
+-`upload-manifest.json` enumerates both actual module parts; uploading only index.js would omit its maintained auth UI text import. `artifact-manifest.json` binds their SHA256 hashes. CPU limits remain an operator budget decision; local wall-clock password timings do not establish Cloudflare CPU usage. Root must set the approved explicit limit before live upload.
++`upload-manifest.json` enumerates both actual module parts; uploading only index.js would omit its maintained auth UI text import. `artifact-manifest.json` binds their SHA256 hashes. This continuation records the existing approved explicit 1000ms CPU limit in generated/build configuration; local wall-clock password timings do not establish Cloudflare CPU usage. Root must verify that exact limit in actual provider readback before live execution.
+diff --git a/cloud/cake-id-auth/deployment/https/AUTHENTICATED.md b/cloud/cake-id-auth/deployment/https/AUTHENTICATED.md
+index e724eab7..8d29e498 100644
+--- a/cloud/cake-id-auth/deployment/https/AUTHENTICATED.md
++++ b/cloud/cake-id-auth/deployment/https/AUTHENTICATED.md
+@@ -1,5 +1,7 @@
+ Second-stage package: offline preparation, NOT_RUN against hosted HTTPS. It preserves production source, schema, roles, PKCE, resource enforcement, mail failures and reserved authority. Root alone performs remote mutations under the existing isolated-test authorization.
+ 
++The retained historical version713 run has a separate failed current-account bearer assertion; this document's original source-only history is not a new pass claim. For a reviewed new provider version, append its actual same-time readback UUID to the driver command: `node --use-env-proxy --use-system-ca deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json PROVIDER_VERSION_UUID`. The original713 version remains the compatibility default. Pin validation occurs before output acquisition or any authenticated request; new evidence retains the explicit pin. This label remains operator-provided provenance, requiring actual provider readback.
++
+ Fixture preconditions are exactly two fictional nonadmin users, two credential accounts, one public PKCE client and one canonical resource link. Seeded `emailVerified=1` is explicitly a fictional fixture assumption, not evidence of verification delivery, registration or recovery. The public client is seeded as a fixture; administrator registration remains NOT_RUN. Roles remain NULL, no canonical admin is promoted, no actual person is impersonated, no CroakyJake reservation/grant is bound and no local outbox is enabled.
+ 
+ Root sequence after network policy and isolated endpoint readiness:
+diff --git a/cloud/cake-id-auth/deployment/https/README.md b/cloud/cake-id-auth/deployment/https/README.md
+index 0c0de7fc..c2553e60 100644
+--- a/cloud/cake-id-auth/deployment/https/README.md
++++ b/cloud/cake-id-auth/deployment/https/README.md
+@@ -10,6 +10,8 @@ node --use-env-proxy --use-system-ca deployment/https/validate.mjs /workspace/te
+ 
+ Use the inherited managed proxy and CA trust for remote execution; the Node24 flags above preserve that supported route. The output path must be new. Transport/assertion failures and independent evidence-write failures remain separately observable; existing evidence is never overwritten. Requests omit credentials, never follow redirects and have15-second abort signals. Output retains status/CORS/path metadata, not response bodies, cookies or tokens. No secrets are required.
+ 
++After a reviewed configuration change creates a new provider version, append its exact same-time provider UUID as an optional final argument: `node --use-env-proxy --use-system-ca deployment/https/validate.mjs NEW_PUBLIC_RESULT.json PROVIDER_VERSION_UUID`. The original713 version remains the default for historical invocation compatibility. Malformed pins refuse before requests; explicit pins propagate to new success/failure evidence. A valid UUID is only an operator pin and does not itself prove a deployment. Preserve original manifests/results and bind each new result to actual provider readback.
++
+ Assertions follow maintained integration/public-cors semantics: exact issuer/discovery endpoints/S256/code, public-only JWKS, exact-path public CORS without credential grant, foreign/opaque origin denial, public page security headers, unauthenticated account denial, malformed reset rejection and unknown-client/invalid-code token rejection. The malformed reset has no password/token and is rejected by pinned library body validation before consuming recovery tokens. No verification/recovery request, registration, login or administrative request is sent. Discovery/JWKS may initialise the library's own issuer signing key if none exists; this is maintained server GET behaviour, not a credential or account fixture.
+ 
+ Offline controls deliberately reject controlled transport loss, redirects, wildcard CORS, foreign discovery issuer and output overwrite while retaining both original and write exceptions. They are driver validation only. The actual HTTPS phase does not demonstrate registration, delivery, valid PKCE token exchange, account switching, profile/session mutation, organisation membership, browser/native continuity or production readiness.
+diff --git a/cloud/cake-id-auth/deployment/https/authenticated.mjs b/cloud/cake-id-auth/deployment/https/authenticated.mjs
+index 9062c2a0..20ae4887 100644
+--- a/cloud/cake-id-auth/deployment/https/authenticated.mjs
++++ b/cloud/cake-id-auth/deployment/https/authenticated.mjs
+@@ -7,7 +7,7 @@ import {dirname,join} from 'node:path';
+ import {createAuthClient} from 'better-auth/client';
+ import {oauthProviderClient} from '@better-auth/oauth-provider/client';
+ import {createLocalJWKSet,jwtVerify} from 'jose';
+-import {origin} from './validate.mjs';
++import {origin,defaultDeploymentVersion,deploymentPin} from './validate.mjs';
+ 
+ const issuer=`${origin}/api/auth`;
+ const callback='https://client.example.test:5096/callback';
+@@ -34,7 +34,8 @@ export async function privateFixture(path) {
+   let closing;try{await file.close();}catch(error){closing=error;}
+   if(primary&&closing)throw new AggregateError([primary,closing],'Private fixture read and close failed');if(primary)throw primary;if(closing)throw closing;return result;
+ }
+-export async function authenticated(fixture,{request=fetch}={}) {
++export async function authenticated(fixture,{request=fetch,deploymentVersion=defaultDeploymentVersion}={}) {
++  const operatorPinnedDeploymentVersion=deploymentPin(deploymentVersion);
+   let count=0;const assert=new Proxy(nodeAssert,{get(target,key){const fn=target[key];return typeof fn==='function'? (...args)=>{count++;return fn(...args)}:fn}});
+   const cookies=new Map();let activeURL=new URL(origin);
+   const savedFetch=globalThis.fetch,savedWindow=globalThis.window;
+@@ -120,19 +121,20 @@ export async function authenticated(fixture,{request=fetch}={}) {
+     assert.equal((await api(`/api/account/sessions/${access.sid}`,tokens.access_token,{method:'DELETE'})).status,204);
+     assert.equal((await api('/api/account/current',tokens.access_token)).status,401);
+     const revokedRefresh=await token({grant_type:'refresh_token',client_id:fixture.clientId,refresh_token:rotated.refresh_token,resource:origin});assert.equal(revokedRefresh.status,400);assert.equal((await revokedRefresh.json()).error,'invalid_grant');
+-    return {result:'passed',assertions:count,observations,operatorPinnedDeploymentVersion:'713c1695-7e21-489b-bc97-906450972cfa',qualification:'Actual Node HTTPS transport with maintained client hooks and real library tokens; seeded fictional identities/client are preconditions. No browser UI/native/registration/mail/admin provisioning acceptance.'};
++    return {result:'passed',assertions:count,observations,operatorPinnedDeploymentVersion,qualification:'Actual Node HTTPS transport with maintained client hooks and real library tokens; seeded fictional identities/client are preconditions. No browser UI/native/registration/mail/admin provisioning acceptance.'};
+   } finally {globalThis.fetch=savedFetch;globalThis.window=savedWindow;cookies.clear();}
+ }
+-export async function runAuthenticated(fixturePath,resultPath,{journey=authenticated}={}) {
++export async function runAuthenticated(fixturePath,resultPath,{journey=authenticated,deploymentVersion=defaultDeploymentVersion}={}) {
++  const operatorPinnedDeploymentVersion=deploymentPin(deploymentVersion);
+   // Acquire the new evidence file before any authenticated request/mutation.
+   const file=await open(resultPath,'wx',0o600);let primary,result;
+-  try {const fixture=await privateFixture(fixturePath);result=await journey(fixture);await file.writeFile(JSON.stringify(result,null,2)+'\n');await file.sync();}catch(error){primary=error;}
++  try {const fixture=await privateFixture(fixturePath);result=await journey(fixture,{deploymentVersion:operatorPinnedDeploymentVersion});await file.writeFile(JSON.stringify(result,null,2)+'\n');await file.sync();}catch(error){primary=error;}
+   let closing;try{await file.close();}catch(error){closing=error;}
+   if(primary&&closing)throw new AggregateError([primary,closing],'Journey/evidence and close failed');if(primary)throw primary;if(closing)throw closing;return result;
+ }
+ if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url) {
+-  if(process.argv.length!==4)throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json');
+-  try {const result=await runAuthenticated(process.argv[2],process.argv[3]);console.log(JSON.stringify({result:result.result,assertions:result.assertions}));}
++  if(![4,5].includes(process.argv.length))throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json [PROVIDER_VERSION_UUID]');
++  try {const result=await runAuthenticated(process.argv[2],process.argv[3],{deploymentVersion:process.argv[4]});console.log(JSON.stringify({result:result.result,assertions:result.assertions}));}
+   catch(error){
+     let evidenceError;const filename=`private-run-error-${randomBytes(8).toString('hex')}.json`;
+     const describe=e=>({name:e.name,message:e.message,stack:e.stack,...(e instanceof AggregateError?{errors:e.errors.map(describe)}:{})});
+diff --git a/cloud/cake-id-auth/deployment/https/authenticated.test.mjs b/cloud/cake-id-auth/deployment/https/authenticated.test.mjs
+index 3d067850..93ac4daf 100644
+--- a/cloud/cake-id-auth/deployment/https/authenticated.test.mjs
++++ b/cloud/cake-id-auth/deployment/https/authenticated.test.mjs
+@@ -1,11 +1,11 @@
+ import assert from 'node:assert/strict';
+-import {mkdtemp,readFile,writeFile,chmod,symlink,rm} from 'node:fs/promises';
++import {mkdtemp,readFile,writeFile,chmod,symlink,rm,stat} from 'node:fs/promises';
+ import {tmpdir} from 'node:os';
+ import {join} from 'node:path';
+ import {execFileSync} from 'node:child_process';
+ import {prepare,resourcePrecondition} from './prepare-fixture.mjs';
+ import {privateFixture,authenticated,runAuthenticated} from './authenticated.mjs';
+-import {origin} from './validate.mjs';
++import {origin,defaultDeploymentVersion} from './validate.mjs';
+ const receipt={databaseId:'fb094287-efab-4d3c-b9d5-c588a83d6f42',response:{status:200,success:true,result:[{success:true,results:[{identifier:origin}]}]}};
+ // This synthetic readback is an offline structural control, never provider evidence.
+ for(const value of [{},{...receipt,databaseId:'foreign'},{...receipt,response:{...receipt.response,result:[]}},{...receipt,response:{...receipt.response,result:[{success:true,results:[{identifier:'https://foreign.example.test'}]}]}}])assert.throws(()=>resourcePrecondition(value));
+@@ -14,6 +14,17 @@ try {
+   const directory=join(owned,'new');const manifest=await prepare(directory,receipt);assert.deepEqual(manifest.rows,{users:2,credentials:2,clients:1,resourceLinks:1});
+   await assert.rejects(prepare(directory,receipt),error=>error.code==='EEXIST');
+   const path=join(directory,'fixture.json');const fixture=await privateFixture(path);assert.equal(fixture.accounts.length,2);
++  const newVersion='8c60f7a9-9f8a-4e4c-97d3-d806d1507e31';let pinRequests=0,pinJourneys=0;
++  for(const deploymentVersion of ['',null,42,newVersion.toUpperCase(),` ${newVersion}`,'00000000-0000-0000-0000-000000000000','https://foreign.example.test']) {
++    await assert.rejects(authenticated(fixture,{deploymentVersion,request:async()=>{pinRequests++;throw new Error('Unexpected request');}}),/Deployment version/);
++    await assert.rejects(runAuthenticated(path,join(owned,'invalid-pin-result.json'),{deploymentVersion,journey:async()=>{pinJourneys++;}}),/Deployment version/);
++  }
++  assert.equal(pinRequests,0);assert.equal(pinJourneys,0);await assert.rejects(stat(join(owned,'invalid-pin-result.json')),error=>error.code==='ENOENT');
++  for(const [label,deploymentVersion,expected] of [['default',undefined,defaultDeploymentVersion],['explicit',newVersion,newVersion]]) {
++    const output=join(owned,`pin-${label}-result.json`);
++    const result=await runAuthenticated(path,output,{deploymentVersion,journey:async(actual,options)=>{assert.equal(actual.clientId,fixture.clientId);assert.equal(options.deploymentVersion,expected);return {result:'passed',operatorPinnedDeploymentVersion:options.deploymentVersion,qualification:'Offline propagation control only'};}});
++    assert.equal(result.operatorPinnedDeploymentVersion,expected);assert.equal(JSON.parse(await readFile(output)).operatorPinnedDeploymentVersion,expected);
++  }
+   await chmod(path,0o644);await assert.rejects(privateFixture(path),/private bounded/);await chmod(path,0o600);
+   const alias=join(owned,'alias');await symlink(path,alias);await assert.rejects(privateFixture(alias),error=>error.code==='ELOOP');
+   const existingOutput=join(owned,'existing-result.json');await writeFile(existingOutput,'preserved');let journeys=0;await assert.rejects(runAuthenticated(path,existingOutput,{journey:async()=>{journeys++;}}),error=>error.code==='EEXIST');assert.equal(journeys,0);assert.equal(await readFile(existingOutput,'utf8'),'preserved');
+diff --git a/cloud/cake-id-auth/deployment/https/validate.mjs b/cloud/cake-id-auth/deployment/https/validate.mjs
+index 25a7ed30..866585ff 100644
+--- a/cloud/cake-id-auth/deployment/https/validate.mjs
++++ b/cloud/cake-id-auth/deployment/https/validate.mjs
+@@ -3,8 +3,14 @@ import {writeFile} from 'node:fs/promises';
+ import {pathToFileURL} from 'node:url';
+ 
+ export const origin='https://cake-id-release-validation.jcbailey008.workers.dev';
++export const defaultDeploymentVersion='713c1695-7e21-489b-bc97-906450972cfa';
++export function deploymentPin(value=defaultDeploymentVersion) {
++  if(typeof value!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value))throw new TypeError('Deployment version must be a lowercase UUIDv4 from actual provider readback');
++  return value;
++}
+ const issuer=`${origin}/api/auth`;
+-export async function validate({request=fetch,output}={}) {
++export async function validate({request=fetch,output,deploymentVersion=defaultDeploymentVersion}={}) {
++  const operatorPinnedDeploymentVersion=deploymentPin(deploymentVersion);
+   const observations=[];
+   let assertions=0;
+   const equal=(actual,expected,message)=>{assert.equal(actual,expected,message);assertions++;};
+@@ -50,16 +56,16 @@ export async function validate({request=fetch,output}={}) {
+     const rejection=await invalid.json();ok(['invalid_client','invalid_grant','invalid_request'].includes(rejection.error),'Maintained OAuth error denies an unregistered client/invalid code');ok(!rejection.access_token&&!rejection.refresh_token&&!rejection.id_token);
+     // Schema validation rejects before reset-token consumption, password changes or delivery.
+     const reset=await get('/api/auth/reset-password',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'});equal(reset.status,400);
+-    const result={result:'passed',assertions,observations,issuer,operatorPinnedDeploymentVersion:'713c1695-7e21-489b-bc97-906450972cfa',qualification:'Anonymous deployed HTTPS phase only; deployment version is operator-pinned, not observed by HTTP. Root must bind same-time provider readback. No users/client provisioning, email delivery, valid OAuth tokens, session journeys or native interoperability accepted.'};
++    const result={result:'passed',assertions,observations,issuer,operatorPinnedDeploymentVersion,qualification:'Anonymous deployed HTTPS phase only; deployment version is operator-pinned, not observed by HTTP. Root must bind same-time provider readback. No users/client provisioning, email delivery, valid OAuth tokens, session journeys or native interoperability accepted.'};
+     if(output) await writeFile(output,JSON.stringify(result,null,2)+'\n',{flag:'wx'});
+     return result;
+   } catch(error) {
+     primary=error;
+-    if(output) try {await writeFile(output,JSON.stringify({result:'failed',assertions,observations,error:{name:error.name,message:error.message}},null,2)+'\n',{flag:'wx'});}catch(cleanup){throw new AggregateError([primary,cleanup],'Validation and evidence write failed');}
++    if(output) try {await writeFile(output,JSON.stringify({result:'failed',assertions,observations,operatorPinnedDeploymentVersion,error:{name:error.name,message:error.message}},null,2)+'\n',{flag:'wx'});}catch(cleanup){throw new AggregateError([primary,cleanup],'Validation and evidence write failed');}
+     throw primary;
+   }
+ }
+ if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url) {
+-  if(process.argv.length!==3) throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/validate.mjs NEW_PUBLIC_RESULT.json');
+-  console.log(JSON.stringify(await validate({output:process.argv[2]})));
++  if(![3,4].includes(process.argv.length)) throw new Error('Usage: node --use-env-proxy --use-system-ca deployment/https/validate.mjs NEW_PUBLIC_RESULT.json [PROVIDER_VERSION_UUID]');
++  console.log(JSON.stringify(await validate({output:process.argv[2],deploymentVersion:process.argv[3]})));
+ }
+diff --git a/cloud/cake-id-auth/deployment/https/validate.test.mjs b/cloud/cake-id-auth/deployment/https/validate.test.mjs
+index 619255ac..f4e6aea1 100644
+--- a/cloud/cake-id-auth/deployment/https/validate.test.mjs
++++ b/cloud/cake-id-auth/deployment/https/validate.test.mjs
+@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
+ import {mkdtemp,writeFile,readFile,rm} from 'node:fs/promises';
+ import {tmpdir} from 'node:os';
+ import {join} from 'node:path';
+-import {validate,origin} from './validate.mjs';
++import {validate,origin,defaultDeploymentVersion,deploymentPin} from './validate.mjs';
+ const owned=await mkdtemp(join(tmpdir(),'cake-https-driver-'));
+ let primary;
+ try {
+@@ -10,13 +10,22 @@ try {
+   const path=join(owned,'transport.json');
+   await assert.rejects(validate({output:path,request:async url=>{assert.equal(url.origin,origin);throw transport;}}),error=>error===transport);
+   assert.equal(JSON.parse(await readFile(path)).result,'failed');
++  assert.equal(JSON.parse(await readFile(path)).operatorPinnedDeploymentVersion,defaultDeploymentVersion);
++  const newVersion='8c60f7a9-9f8a-4e4c-97d3-d806d1507e31';
++  assert.equal(deploymentPin(),defaultDeploymentVersion);assert.equal(deploymentPin(newVersion),newVersion);
++  let requests=0;
++  for(const deploymentVersion of ['',null,42,newVersion.toUpperCase(),` ${newVersion}`,'00000000-0000-0000-0000-000000000000','https://foreign.example.test'])await assert.rejects(validate({deploymentVersion,request:async()=>{requests++;throw transport;}}),/Deployment version/);
++  assert.equal(requests,0,'Invalid deployment pins refuse before requests');
++  const pinned=join(owned,'new-version-transport.json');
++  await assert.rejects(validate({deploymentVersion:newVersion,output:pinned,request:async()=>{throw transport;}}),error=>error===transport);
++  assert.equal(JSON.parse(await readFile(pinned)).operatorPinnedDeploymentVersion,newVersion,'Failure evidence carries the explicitly reviewed pin');
+   await assert.rejects(validate({request:async()=>new Response(null,{status:302,headers:{Location:'https://foreign.example.test'}})}),/Unexpected redirect/);
+   await assert.rejects(validate({request:async()=>new Response('{}',{status:200,headers:{'Access-Control-Allow-Origin':'*'}})}));
+   await assert.rejects(validate({request:async()=>Response.json({issuer:'https://foreign.example.test'},{headers:{'Access-Control-Allow-Origin':origin,Vary:'Origin'}})}));
+   const existing=join(owned,'existing.json');await writeFile(existing,'preserved');
+   await assert.rejects(validate({output:existing,request:async()=>{throw transport;}}),error=>error instanceof AggregateError&&error.errors[0]===transport&&error.errors[1].code==='EEXIST');
+   assert.equal(await readFile(existing,'utf8'),'preserved');
+-  console.log('PASS: 7 offline driver refusal/failure-preservation controls; no deployed-service acceptance');
++  console.log('PASS: original 7 refusal/failure-preservation controls plus deployment pin preflight/propagation; no deployed-service acceptance');
+ }catch(error){primary=error;}
+ let cleanup;try{await rm(owned,{recursive:true});}catch(error){cleanup=error;}
+ if(primary&&cleanup)throw new AggregateError([primary,cleanup],'Driver control and cleanup failed');
+diff --git a/cloud/cake-id-auth/deployment/prepare.mjs b/cloud/cake-id-auth/deployment/prepare.mjs
+index 0f15f1f6..87644a9e 100644
+--- a/cloud/cake-id-auth/deployment/prepare.mjs
++++ b/cloud/cake-id-auth/deployment/prepare.mjs
+@@ -4,7 +4,7 @@ export function configuration(receipt) {
+   if (receipt.database_name !== 'cake-id-release-validation' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(receipt.database_id ?? '') || receipt.database_id === '00000000-0000-0000-0000-000000000000') throw new Error('Actual isolated D1 creation receipt required');
+   if (!/^[0-9a-f]{32}$/.test(receipt.account_id ?? '')) throw new Error('Actual Cloudflare account ID required');
+   const origin='https://cake-id-release-validation.jcbailey008.workers.dev';
+-  return {$schema:'../node_modules/wrangler/config-schema.json',name:'cake-id-release-validation',account_id:receipt.account_id,main:'../src/index.ts',compatibility_date:'2026-10-01',compatibility_flags:['nodejs_compat'],workers_dev:false,preview_urls:false,observability:{enabled:false},secrets:{required:['AUTH_SECRET','LOGIN_LIMITER_KEY']},vars:{APP_MODE:'production',EMAIL_CAPTURE:'false',AUTH_BASE_URL:origin,API_RESOURCE:origin,ALLOWED_WEB_ORIGINS:origin,LOGIN_MAX_ATTEMPTS:'8',LOGIN_WINDOW_SECONDS:'900',LOGIN_LOCK_SECONDS:'1800'},d1_databases:[{binding:'DB',database_name:receipt.database_name,database_id:receipt.database_id,migrations_dir:'../migrations'}]};
++  return {$schema:'../node_modules/wrangler/config-schema.json',name:'cake-id-release-validation',account_id:receipt.account_id,main:'../src/index.ts',compatibility_date:'2026-10-01',compatibility_flags:['nodejs_compat','global_fetch_strictly_public'],workers_dev:false,preview_urls:false,observability:{enabled:false},limits:{cpu_ms:1000},secrets:{required:['AUTH_SECRET','LOGIN_LIMITER_KEY']},vars:{APP_MODE:'production',EMAIL_CAPTURE:'false',AUTH_BASE_URL:origin,API_RESOURCE:origin,ALLOWED_WEB_ORIGINS:origin,LOGIN_MAX_ATTEMPTS:'8',LOGIN_WINDOW_SECONDS:'900',LOGIN_LOCK_SECONDS:'1800'},d1_databases:[{binding:'DB',database_name:receipt.database_name,database_id:receipt.database_id,migrations_dir:'../migrations'}]};
+ }
+ if (process.argv[1] && resolve(process.argv[1])===resolve(import.meta.dirname,'prepare.mjs')) {
+   const {readFileSync}=await import('node:fs');
+diff --git a/cloud/cake-id-auth/deployment/wrangler.build.json b/cloud/cake-id-auth/deployment/wrangler.build.json
+index 58b0ba64..438c572b 100644
+--- a/cloud/cake-id-auth/deployment/wrangler.build.json
++++ b/cloud/cake-id-auth/deployment/wrangler.build.json
+@@ -4,13 +4,17 @@
+   "main": "../src/index.ts",
+   "compatibility_date": "2026-10-01",
+   "compatibility_flags": [
+-    "nodejs_compat"
++    "nodejs_compat",
++    "global_fetch_strictly_public"
+   ],
+   "workers_dev": false,
+   "preview_urls": false,
+   "observability": {
+     "enabled": false
+   },
++  "limits": {
++    "cpu_ms": 1000
++  },
+   "vars": {
+     "APP_MODE": "production",
+     "EMAIL_CAPTURE": "false"
+diff --git a/cloud/cake-id-auth/tests/deployment-config.mjs b/cloud/cake-id-auth/tests/deployment-config.mjs
+index 7d5e31e5..906638f3 100644
+--- a/cloud/cake-id-auth/tests/deployment-config.mjs
++++ b/cloud/cake-id-auth/tests/deployment-config.mjs
+@@ -1,8 +1,18 @@
+ import assert from 'node:assert/strict';
++import {readFile} from 'node:fs/promises';
+ import {configuration} from '../deployment/prepare.mjs';
+ for (const receipt of [{},{database_name:'cake'},{database_name:'cake-id-release-validation',database_id:'00000000-0000-0000-0000-000000000000'},{database_name:'cake-id-release-validation',database_id:'not-a-uuid'}]) assert.throws(()=>configuration(receipt));
+ // Synthetic fixture exercises validation only; this ID is never written or deployed.
+ const config=configuration({account_id:'a'.repeat(32),database_name:'cake-id-release-validation',database_id:'12345678-1234-1234-1234-123456789abc'});
+ assert.equal(config.main,'../src/index.ts');assert.equal(config.vars.EMAIL_CAPTURE,'false');assert.equal(config.vars.AUTH_BASE_URL,config.vars.API_RESOURCE);assert.equal(config.vars.ALLOWED_WEB_ORIGINS,config.vars.AUTH_BASE_URL);assert.equal(config.send_email,undefined);assert.deepEqual(config.secrets.required,['AUTH_SECRET','LOGIN_LIMITER_KEY']);
+ assert.equal(config.vars.LOGIN_MAX_ATTEMPTS,'8');assert.equal(config.vars.LOGIN_WINDOW_SECONDS,'900');assert.equal(config.vars.LOGIN_LOCK_SECONDS,'1800');assert.equal(config.workers_dev,false);assert.deepEqual(config.observability,{enabled:false});
+-console.log('PASS: 15 isolated deployment configuration assertions; synthetic receipt not deployed');
++const build=JSON.parse(await readFile(new URL('../deployment/wrangler.build.json',import.meta.url),'utf8'));
++for(const candidate of [config,build]) {
++  assert.deepEqual(candidate.compatibility_flags,['nodejs_compat','global_fetch_strictly_public']);
++  assert.deepEqual(candidate.limits,{cpu_ms:1000});assert.equal(candidate.preview_urls,false);
++  assert.equal(candidate.workers_dev,false);assert.deepEqual(candidate.observability,{enabled:false});
++  assert.equal(candidate.main,'../src/index.ts');
++  assert.equal(candidate.vars.APP_MODE,'production');assert.equal(candidate.vars.EMAIL_CAPTURE,'false');assert.equal(candidate.send_email,undefined);
++}
++assert.deepEqual(config.d1_databases,[{binding:'DB',database_name:'cake-id-release-validation',database_id:'12345678-1234-1234-1234-123456789abc',migrations_dir:'../migrations'}]);
++console.log('PASS: isolated config guards plus public self-fetch, unchanged CPU/bindings/secrets/exposure controls; synthetic receipt not deployed');

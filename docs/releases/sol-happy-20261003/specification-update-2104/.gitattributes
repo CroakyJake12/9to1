@@ -1,0 +1,3 @@
+# Preserve exact captured canonical text and its source diff.
+native-text.txt whitespace=-blank-at-eol
+nonblank.diff whitespace=-blank-at-eol

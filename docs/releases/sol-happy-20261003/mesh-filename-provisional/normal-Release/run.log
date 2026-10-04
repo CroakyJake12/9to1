@@ -1,0 +1,54 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Haven.PluginFixture -> /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/Haven.PluginFixture/release/Haven.PluginFixture.dll
+  NineToOne.Cui.AI -> /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/NineToOne.Cui.AI/release/NineToOne.Cui.AI.dll
+  Haven.Core -> /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/Haven.Core/release/Haven.Core.dll
+  Haven.Application -> /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/Haven.Application/release/Haven.Application.dll
+  Haven.Browser -> /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/Haven.Browser/release/Haven.Browser.dll
+  Haven.Infrastructure -> /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/Haven.Infrastructure/release/Haven.Infrastructure.dll
+  Haven.Infrastructure.Tests -> /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll
+Test run for /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.06]     Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks [FAIL]
+  Failed Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks [16 ms]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: [PresentCompatibilityIssue { IssueId = 6ece84c7-67a2-4902-a2d6-20f45bac1f4b, Severity = Warning, Direction = Export, FeatureType = slide-layout, SourceTargetId = 08f6a2ed-a54e-40cc-91ff-e14c01db2fba, Description = The source slide layout relationship is replaced by a blank PPTX layout., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = c60dd18e-68fd-4bf6-ae2e-0d67369269ed, Severity = Warning, Direction = Export, FeatureType = object-type, SourceTargetId = 79d7fc57-ec44-4a65-9839-e3cb02bc011a, Description = The GenUi object is represented by explanatory text; its interactive or visual behavior is not preserved., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = 33357768-7007-4b80-87ca-e4c091977f81, Severity = Warning, Direction = Export, FeatureType = object-type, SourceTargetId = 48ca9e41-96cd-46fc-8f62-307eef6bc898, Description = The Image object is represented by explanatory text; its interactive or visual behavior is not preserved., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = acbd87f2-8dbe-48bb-8d38-cce9176c0dd3, Severity = Warning, Direction = Export, FeatureType = slide-layout, SourceTargetId = a260e3eb-c9c8-47be-8aca-09362207b2ca, Description = The source slide layout relationship is replaced by a blank PPTX layout., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = 579aa57a-e58c-4d8f-9471-854689600a6c, Severity = Warning, Direction = Export, FeatureType = presentation-structure, SourceTargetId = 82cb3c7d-ebb2-4abb-a4cf-4922e627d077, Description = Source themes, masters, layouts, and sections are not preserved by the PPTX writer., Resolution = Degraded }]
+  Stack Trace:
+     at Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks() in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs:line 278
+   at Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks() in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs:line 279
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:12.82]     Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_starts_serves_and_stops_a_real_loopback_site [FAIL]
+  Failed Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_starts_serves_and_stops_a_real_loopback_site [10 s]
+  Error Message:
+   System.InvalidOperationException : Project preview failed to start. System.IO.IOException: Read-only file system : '%USERPROFILE%/.dotnet'
+   at System.IO.FileSystem.CreateDirectory(String fullPath, UnixFileMode unixCreateMode)
+   at System.IO.Directory.CreateDirectory(String path)
+   at Microsoft.Extensions.EnvironmentAbstractions.DirectoryWrapper.CreateDirectory(String path)
+   at Microsoft.DotNet.Configurer.FileSystemExtensions.<>c__DisplayClass0_0.<CreateIfNotExists>b__0()
+   at Microsoft.DotNet.Cli.Utils.FileAccessRetrier.RetryOnIOException(Action action)
+   at Microsoft.DotNet.Configurer.DotnetFirstTimeUseConfigurer.Configure()
+   at Microsoft.DotNet.Cli.Program.ConfigureDotNetForFirstTimeUse(IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel, IAspNetCertificateSentinel aspNetCertificateSentinel, IFileSentinel toolPathSentinel, Boolean isDotnetBeingInvokedFromNativeInstaller, DotnetFirstRunConfiguration dotnetFirstRunConfiguration, IEnvironmentProvider environmentProvider, Dictionary`2 performanceMeasurements, Boolean skipFirstTimeUseCheck)
+   at Microsoft.DotNet.Cli.Program.ProcessArgs(String[] args, TimeSpan startupTime)
+   at Microsoft.DotNet.Cli.Program.Main(String[] args)
+---- System.InvalidOperationException : The preview process exited before becoming ready.
+  Stack Trace:
+     at Haven.Infrastructure.WebProjectPreviewProvider.StartAsync(String projectRoot, CancellationToken cancellationToken) in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Infrastructure/Preview/WebProjectPreviewProvider.cs:line 65
+   at Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_starts_serves_and_stops_a_real_loopback_site() in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/UnifiedExecutionPersistenceTests.cs:line 150
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Haven.Infrastructure.WebProjectPreviewProvider.WaitUntilReadyAsync(WebPreviewSession session, CancellationToken cancellationToken) in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Infrastructure/Preview/WebProjectPreviewProvider.cs:line 108
+   at Haven.Infrastructure.WebProjectPreviewProvider.StartAsync(String projectRoot, CancellationToken cancellationToken) in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Infrastructure/Preview/WebProjectPreviewProvider.cs:line 47
+[xUnit.net 00:00:27.78]     Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run [FAIL]
+  Failed Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run [74 ms]
+  Error Message:
+   System.UnauthorizedAccessException : All requested package permissions must be reviewed and granted explicitly.
+  Stack Trace:
+     at Haven.Application.ExtensionManager.InstallCoreAsync(DiscoveredExtensionPackage discovered, ExtensionPermission explicitlyGrantedPermissions, CancellationToken cancellationToken) in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionManager.cs:line 165
+   at Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run() in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs:line 290
+   at Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run() in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs:line 325
+   at Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run() in /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs:line 325
+--- End of stack trace from previous location ---
+Results File: /workspace/team-c-resume-evidence/c5-mesh-filename-provisional/normal-Release/results/normal-infrastructure.trx
+
+Failed!  - Failed:     3, Passed:   425, Skipped:     0, Total:   428, Duration: 29 s - Haven.Infrastructure.Tests.dll (net10.0)

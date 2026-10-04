@@ -1,0 +1,104 @@
+{
+  "productId": "haven.settings",
+  "productType": "Service",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "cb15dcd1b57c39bc1ac9aaf73891ca4369cd9684",
+    "branch": "main",
+    "tag": "haven-settings-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Settings Service",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-settings-service",
+    "version": "0.1.0",
+    "hashSha256": "c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567890a",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/lib/haven-settings/haven-settings-daemon",
+    "arguments": "--system",
+    "workingDirectory": "/etc/haven/settings",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "haven-settings",
+    "socketName": "haven-settings.socket",
+    "dbusName": "org.haven.Settings",
+    "socketActivation": true,
+    "requiredServices": ["dbus", "systemd-journald"]
+  },
+  "routes": [
+    {
+      "route": "/settings",
+      "handler": "SettingsGetHandler",
+      "methods": ["GET"]
+    },
+    {
+      "route": "/settings/{key}",
+      "handler": "SettingsSetHandler",
+      "methods": ["PUT", "PATCH"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.settings.read",
+      "displayName": "Read Settings",
+      "description": "Read system and user settings",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.settings.write",
+      "displayName": "Write Settings",
+      "description": "Write system and user settings",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "libglib2.0-0",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=2.78"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": false,
+    "requiresState": false,
+    "requiresData": false,
+    "customPaths": ["/etc/haven/settings.v1.json", "/home/haven/.config/haven/settings.v1.json"]
+  },
+  "permissions": {
+    "requiredGrants": ["settings.read", "settings.write"],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "haven-settings-cli get test.setting",
+    "expectedOutputPattern": ".*",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": false,
+    "exitCode": -1,
+    "stdout": "",
+    "stderr": "Not yet implemented",
+    "executedAt": "2026-09-12T12:25:00Z",
+    "evidenceArtifactPath": null
+  },
+  "provenanceState": "Blocked",
+  "imageInclusionState": "NotApplicable",
+  "approvedVmState": "Failed"
+}

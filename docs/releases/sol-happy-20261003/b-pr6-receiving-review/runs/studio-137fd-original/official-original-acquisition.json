@@ -1,0 +1,157 @@
+{
+  "sourceCommit": "137fd22e4cf0379d04adcd6da4c82a1443f5c911",
+  "runId": 37226116568,
+  "scope": "All three unchanged matrix jobs; raw original diagnostic containers/members fully validated. Whole compiledpackage artifacts exceed32MiB cap and were not downloaded; no installed/fullglobal/sourceowneradoption inference.",
+  "containers": [
+    {
+      "target": "studio",
+      "artifactId": 11311409688,
+      "containerBytes": 34491,
+      "containerSHA256": "b3fba8f5ea2d7e4773cc202824dd753bddd4e6607a3e51c453ad98f5bf8942cf",
+      "originalContainer": "/workspace/attachments/29e21285-6b60-4b4a-9ee0-9c99a565fff5/studio-catalog-studio-original-observation.zip",
+      "members": [
+        {
+          "path": "cui-tasks-release.log",
+          "bytes": 383,
+          "sha256": "68f2076eb13bc6f6d1537d032c88f29de8607cfc7974c999ac4b79622c2433ed"
+        },
+        {
+          "path": "launch.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "launch.stdout.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "native-controls-release.log",
+          "bytes": 13014,
+          "sha256": "9a3695030cb52485a6ca51520152a215871d06c8ebece948b1a61dd55bb877b1"
+        },
+        {
+          "path": "native-controls.trx",
+          "bytes": 23055,
+          "sha256": "aa473dbd3c91c94f21283d91d77b8a6cdfdc79dfcdd4f4212bd686ce36b055c6"
+        },
+        {
+          "path": "publish-release-win-x64.log",
+          "bytes": 11839,
+          "sha256": "1456e8a67f18db5122308c231753c755a47653359be8dbf53141451f8904eca6"
+        },
+        {
+          "path": "sdk-info.log",
+          "bytes": 5467,
+          "sha256": "c27d022651bc29d1381bb254168e6e843bc2b1e457259a8bad667c2c7c3b47c3"
+        },
+        {
+          "path": "result.json",
+          "bytes": 90093,
+          "sha256": "2821f3ad89c58df036f11018fc7f5b77e1fed8378ab48f8e0c8ed58848b21af0"
+        }
+      ],
+      "resultPath": "/workspace/team-c-resume-evidence/c5-studio-gif-catalog-actual-137fd/studio/result.json"
+    },
+    {
+      "target": "boards",
+      "artifactId": 11311379424,
+      "containerBytes": 35868,
+      "containerSHA256": "838833a083369990851bb2994a64de287968a0fa511762f6b21efa7ba5d4af13",
+      "originalContainer": "/workspace/attachments/27325d13-9e1e-41dc-ad9d-86f2d1b97940/studio-catalog-boards-original-observation.zip",
+      "members": [
+        {
+          "path": "launch.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cui-tasks-release.log",
+          "bytes": 382,
+          "sha256": "a05cbf6da223dc3b33dbe4e53c1e8e36fdf6d4af2e9ad0b1ebf61ea420f7b89d"
+        },
+        {
+          "path": "launch.stdout.log",
+          "bytes": 323,
+          "sha256": "ec16b7d60581b4fc04f787933d6f496290ece9db5e5e46a4ed096c1ba473d6d8"
+        },
+        {
+          "path": "native-controls-release.log",
+          "bytes": 10960,
+          "sha256": "32d58224938c2b307c384c40969bfcc486bd1f06f179849f2cc94c73eb0a64e5"
+        },
+        {
+          "path": "native-controls.trx",
+          "bytes": 77740,
+          "sha256": "973dfef95815a2975df3954c05177d620da4b52c59449e50d1d21b3813d4f733"
+        },
+        {
+          "path": "publish-release-win-x64.log",
+          "bytes": 9827,
+          "sha256": "a8b84434c716d20ac1608fe51f3481bfef8679a2528d21c020143e9f9ba58ecf"
+        },
+        {
+          "path": "result.json",
+          "bytes": 71157,
+          "sha256": "f34d9fc37732a2e5e01cdcf7c8b3ca80aff88b7d8bd11fe89b1841570fd5bab2"
+        },
+        {
+          "path": "sdk-info.log",
+          "bytes": 5467,
+          "sha256": "c27d022651bc29d1381bb254168e6e843bc2b1e457259a8bad667c2c7c3b47c3"
+        }
+      ],
+      "resultPath": "/workspace/team-c-resume-evidence/c5-studio-gif-catalog-actual-137fd/boards/result.json"
+    },
+    {
+      "target": "present",
+      "artifactId": 11311654764,
+      "containerBytes": 38629,
+      "containerSHA256": "8fae9a9d7cab188e9f99f4857682d0d938201447d2ba46f8bf42361e3c53360c",
+      "originalContainer": "/workspace/attachments/1ef8e297-3b0e-4aa9-a4e2-f448bd250098/studio-catalog-present-original-observation.zip",
+      "members": [
+        {
+          "path": "launch.stdout.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "launch.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cui-tasks-release.log",
+          "bytes": 383,
+          "sha256": "c4ff255fb847e580ecee13f9464a225ce9fcd2fa2413cb33c50632a68dd1177c"
+        },
+        {
+          "path": "native-controls-release.log",
+          "bytes": 15671,
+          "sha256": "2a87a9c30cf837bb7a8dc8f74d874fe7074895dec3b6ba6f093972a815dc78a3"
+        },
+        {
+          "path": "native-controls.trx",
+          "bytes": 21429,
+          "sha256": "10e5d7f1c97284ac2bd47ae042a3ea382ac3ecc61c79e389fe8f4162dc117f95"
+        },
+        {
+          "path": "publish-release-win-x64.log",
+          "bytes": 14603,
+          "sha256": "7fb7064937668afc7cd919f04723b4299c16b0d3eca4cdaf2c4ce07e57692445"
+        },
+        {
+          "path": "result.json",
+          "bytes": 102903,
+          "sha256": "e477ace146309221ea821fa217fc18c5aac5505d05a412fbc20f9be335d742b4"
+        },
+        {
+          "path": "sdk-info.log",
+          "bytes": 5467,
+          "sha256": "c27d022651bc29d1381bb254168e6e843bc2b1e457259a8bad667c2c7c3b47c3"
+        }
+      ],
+      "resultPath": "/workspace/team-c-resume-evidence/c5-studio-gif-catalog-actual-137fd/present/result.json"
+    }
+  ]
+}

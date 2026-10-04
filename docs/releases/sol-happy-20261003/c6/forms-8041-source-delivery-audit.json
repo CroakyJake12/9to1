@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "files": [
+    {
+      "path": "apps/Web/Forms/FormsBrowserRoute.cs",
+      "bytes": 7829,
+      "sha256": "20543ec0557eac26b37b8a78577f19be182334f4bbab1e43f2d7f10a6e54b7d2"
+    },
+    {
+      "path": "apps/Web/Forms/FormsBrowserSession.cs",
+      "bytes": 9964,
+      "sha256": "4c3ce6c0f255ed16c0a102ea5e1490c12d8781c60ca281bd2b25cfb2548a2e3e"
+    }
+  ],
+  "review": "Both complete bodies read independently. Original Forms workspace/host session retained, presentation admission and freshness checks, unknown write outcome and close refusal explicit. Publish/respond actions unavailable. Source availability gate only closed; no owner API contract, guarded mutation, async revocation/disposal, actual browser runtime or deployed acceptance inferred.",
+  "historicalAbsence": "f8de/0dce absence records preserved; new delivery does not relabel them.",
+  "runtime": "NOT_RUN"
+}

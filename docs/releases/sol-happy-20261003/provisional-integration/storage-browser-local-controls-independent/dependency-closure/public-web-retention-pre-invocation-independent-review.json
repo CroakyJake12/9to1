@@ -1,0 +1,19 @@
+{
+  "recordedUTC": "2026-10-04T16:04:59.331473+00:00",
+  "state": "ACK_WORKFLOW_ONLY_EXACT_SEALED_PUBLICATION_RETENTION",
+  "proposal": "ad815f1783c762fd9ba4e35f460f8d0c558944c4",
+  "parent": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+  "onlyChangedPath": ".github/workflows/team-c-ordinary-web-picture.yml",
+  "diff": "12 additions/0 deletions",
+  "workflowSha256": "ea114313112e32589b878fcaf431bb6516f68174b21fa3fd5c107ff56096a3d0",
+  "allOtherTreeEntriesConserved": true,
+  "all11MaintainedCodeProjectGuardOracleInputsExact": true,
+  "parsedWholeWorkflowInverseEqualsParent": true,
+  "retention": "Only original generatedpublicwwwroot.zip/publish-manifest.json/seal.json, immediately after actual publisher, success-outcome guard even if laterbrowser fails; missingfiles error/7dayexpiry; contentsread-only unchanged.",
+  "privacy": "Retains only public static Web output and exact original manifest/seal; no diagnostics cache/private fixture/token/profile directories or wildcard upload. Existing publisher validates source/custody/receipt/ZIP before success.",
+  "qualification": [
+    "Future exact source run required; existing7ded successfulrun does not retroactively retain actual sealedZIP/manifest/seal.",
+    "Current public binary artifact outer/inner size not known until actual generation;128MiBpublisherlimit preserved. Reception/download/readback requires actual metadata/originalbytes, not stage-success inference.",
+    "No publisher/browser assertions/source/decoder/ownercontracts/privatefixture edits; no account/provider/browser/fullrelease acceptance promoted."
+  ]
+}

@@ -1,0 +1,7 @@
+Write-Error: /workspace/team-c-c6-durable-validation-20261004/boards-packaged-ui-review/probe-home-final-local-boundaries-corrected.ps1:8
+Line |
+   8 |  … TPUT'}catch{. ([scriptblock]::Create($main.CatchClauses[0].Body.Exten …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Original Home validation failed at CONTROLLED: RuntimeException;
+     | controlled phase and original logs retained.
+fatal: not a git repository (or any of the parent directories): .git

@@ -1,0 +1,67 @@
+{
+  "schema": "combined-worker-logs-exact-checkpoint-readback/v1",
+  "londonTime": "2026-10-04 19:13",
+  "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+  "revision": "AHj4eMS6xSyrxM-UAJH1KUqBvNxZHKAdBbyKZR0hHCgYxWTxWieWUZMHNYrqHoIOXQvC6Pk2E-iJ2os2xWUtkNPm73EtUPmPXHrgg-p0UA8",
+  "entries": [
+    [
+      "Checkpoint 19:13",
+      "% Progress:",
+      "    Implementation - About 65% of original Windows packaging preparation; low confidence. Reported expanded30/LE scope not yet measured ;",
+      "    Acceptance Verified - Original Windows0/29 verified and0/29 delivered; reported expanded scope0/30 ;",
+      "Change Summary: Team C,04 October. Home's four approved-owner source bodies are composed provisionally; normal six-case Windows and real package quit tests are being prepared. Canvas diagnostics expose native Edit/Button controls as UIA Pane without patterns; standard provider setup is being corrected. Present startup omits workspace mounting. Team A reports revised Monday targets and Cards as30th app; direct assignment clarification is pending.",
+      "Evidence: Global2a01054b includes Home323ccff8. Canvas37222459785:58PASS then original20s address timeout, forced-1. Present37222461709:44PASS then original File-menu timeout, no forced cleanup and two drains. Neither is full acceptance.",
+      "Next Action: BLOCKED — all-app installed acceptance needs Team A canonical entrypoints/Home/runtime tuple and an authorized clean Windows delivery route. Independent reviewed source fixes and Windows executions continue."
+    ],
+    [
+      "Checkpoint 19:13",
+      "% Progress:",
+      "    Implementation - About 60% of inspected Terra-Form editor/runtime groups; low confidence for wider Pass2 ;",
+      "    Acceptance Verified - Full Pass2 acceptance open; no all-app acceptance inferred from regression totals ;",
+      "Change Summary: Final ordinary infrastructure regression is independently green after the Unix plugin child temporary-directory fix. The cumulative receiving packet is published with original failures and peer receipts preserved. Home and account diagnostic source changes are attributed separately. Public Mail nine-body closure is reviewed for provisional composition; native UI and real TLS fixture gates remain outstanding.",
+      "Evidence: Actual5ec2965e normal434/434,0skip/fail, seven owning projects and unchanged213 runtime members. Published549 payloads84,054,416 bytes/index1413f28f. Mail1c78a610 source/recipe peer49da3b8c; no new Mail execution yet. Team B reports56/64 native viewport checks.",
+      "Next Action: BLOCKED — Write needs canonical measured text/caret/input ports; Motion needs render/decode/Files integration; Mail needs native UI closure and genuine TLS fixtures. Execute available reviewed Home/Present/Canvas and Mail closures without weakening assertions."
+    ],
+    [
+      "Checkpoint 19:13",
+      "% Progress:",
+      "    Implementation - About 70% of inspected Sol Happy service foundations; low confidence for wider Pass3 ;",
+      "    Acceptance Verified - Full service/pass acceptance open; original Windows0/29 verified and0/29 delivered ;",
+      "Change Summary: The first account browser run retains2PASS/1FAIL/4NOT_RUN at issuer-form readiness. The changed diagnostic retry stopped during unresolved Chromium launch:0PASS/1FAIL/6NOT_RUN, so popup/fetch/status probes are unobserved. Its five browser-family identities closed cleanly; original issuer7148 stopped through its owned session with strict reaping and final exit zero. No issuer or broker cause is inferred.",
+      "Evidence: Retained df547b5c Web publication/browser9 passes remains bound to that producer, not new Home source. Diagnostic testdde012fa on fixturedf; C6d52fc335 confirms clean custody, unchanged pins and no browser signals. Hosted identity0f6 retains138/165 passes with endpoints closed; no repeated identity validation.",
+      "Next Action: BLOCKED — live effects need canonical actor/session/Files/import/scanner/settlement ports and approved commercial policy. Continue precise account startup diagnosis and independently executable source/Windows work; Monday target change remains reported pending direct clarification."
+    ]
+  ],
+  "checks": [
+    {
+      "pass": 1,
+      "text": true,
+      "heading": true,
+      "bold": true,
+      "fonts": true,
+      "indents": true,
+      "semicolons": true,
+      "blocked": true
+    },
+    {
+      "pass": 2,
+      "text": true,
+      "heading": true,
+      "bold": true,
+      "fonts": true,
+      "indents": true,
+      "semicolons": true,
+      "blocked": true
+    },
+    {
+      "pass": 3,
+      "text": true,
+      "heading": true,
+      "bold": true,
+      "fonts": true,
+      "indents": true,
+      "semicolons": true,
+      "blocked": true
+    }
+  ]
+}

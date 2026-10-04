@@ -1,0 +1,22 @@
+file:///workspace/team-c/c3-billing-hosted/cloud/billing/test/run-workerd.mjs:47
+if(primary||cleanup)throw new AggregateError([primary,cleanup].filter(Boolean),`Billing fixture refused; evidence retained ${dir}`);
+                          ^
+
+AggregateError: Billing fixture refused; evidence retained /workspace/team-c/evidence/c3/billing-workerd-tz3LbD
+    at file:///workspace/team-c/c3-billing-hosted/cloud/billing/test/run-workerd.mjs:47:27
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  [errors]: [
+    AssertionError [ERR_ASSERTION]: Actual workload must exit normally; strict receipt covers every descendant
+        at file:///workspace/team-c/c3-billing-hosted/cloud/billing/test/run-workerd.mjs:39:9
+        at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: false,
+      expected: true,
+      operator: '==',
+      diff: 'simple'
+    }
+  ]
+}
+
+Node.js v24.19.0

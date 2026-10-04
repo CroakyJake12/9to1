@@ -1,0 +1,119 @@
+{
+  "candidateCommit": "40cd428fb65b0fee96cb5a9755ca40d37d53b8e4",
+  "basis": "127c8e1a61298522bc06b4484db806777d41bac2",
+  "branch": "team-c/sol-happy-c3-preview-environment",
+  "changedPaths": [
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Preview/WebProjectPreviewProvider.cs",
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/UnifiedExecutionPersistenceTests.cs"
+  ],
+  "dirtyStatusAfterWholeTests": "",
+  "providerOutsideAllowlistAndCommentByteIdentical": true,
+  "allOtherExistingTestMethodsAndFixturesByteIdentical": true,
+  "unchangedOwnerSubtrees": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core",
+      "basisGitTree": "d74148e0dfb2943eb2790528f10b0d6934aaf877",
+      "candidateGitTree": "d74148e0dfb2943eb2790528f10b0d6934aaf877",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application",
+      "basisGitTree": "81c92f83bb6e2101c0e92c746e9ba325f12b15f0",
+      "candidateGitTree": "81c92f83bb6e2101c0e92c746e9ba325f12b15f0",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop",
+      "basisGitTree": "3562a20def9a36b8a833022bc37a8d0ef6612214",
+      "candidateGitTree": "3562a20def9a36b8a833022bc37a8d0ef6612214",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Browser",
+      "basisGitTree": "6bec5114eaf965342357cbdf8466ece8ff73621c",
+      "candidateGitTree": "6bec5114eaf965342357cbdf8466ece8ff73621c",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.UI",
+      "basisGitTree": "2ca5708b1039db864d61f6c20e1403221c8ecea4",
+      "candidateGitTree": "2ca5708b1039db864d61f6c20e1403221c8ecea4",
+      "unchanged": true
+    },
+    {
+      "path": "framework/CUI",
+      "basisGitTree": "b31efa19f6042515205e6018db64e1e6ad21b8e2",
+      "candidateGitTree": "b31efa19f6042515205e6018db64e1e6ad21b8e2",
+      "unchanged": true
+    }
+  ],
+  "inputs": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Preview/WebProjectPreviewProvider.cs",
+      "gitBlob": "274f7460228f329915509305bb99b53ab243b872",
+      "bytes": 10741,
+      "sha256": "516f99ec060e73cd98716b2e7d50e9b3994dc51b0633adee7eaef445e77f822d"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/UnifiedExecutionPersistenceTests.cs",
+      "gitBlob": "cbf7099e3856962c0c8ea194b51cff4615f4fd1b",
+      "bytes": 15941,
+      "sha256": "6d32c180b0f08450e7f4d2cf10c7d7dc3ac45837ffad25011ad5f04f521fd6ff"
+    },
+    {
+      "path": "global.json",
+      "gitBlob": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "gitBlob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "gitBlob": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "gitBlob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+      "bytes": 2581,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+      "gitBlob": "eafccb98196ed8ef72286845276487ece2fc7180",
+      "bytes": 1922,
+      "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Preview/ProjectPreviewAbstractions.cs",
+      "gitBlob": "9413698d5646d0ffe329901d0d1a557f78eeb26e",
+      "bytes": 798,
+      "sha256": "d72e07ac7c05a319e135cee019172cfcf35841af08377222ca7a09090d1c25c8"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+      "gitBlob": "9809bd4d4c9f8f089974fb80c101b05b47445081",
+      "bytes": 1685,
+      "sha256": "f813b0861f9f9ce00895f178d96e7f7711cb73b611be7f6a8fc9eac0690fd81b"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "gitBlob": "5d4ae9ca85e64ad0c8cd27f07842db6efa6d3ffe",
+      "bytes": 1115,
+      "sha256": "967c5763d7d0f1423ab21b51368a07f6038a886c4a56ff501de7361407b1f4c2"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Directory.Build.props",
+      "gitBlob": "4277c0a7a01ed0f9a571f206bb570977d789d31f",
+      "bytes": 452,
+      "sha256": "16bad3b454b9c6fabe8366ba68cde17ea72463693e10b831158fa4ccd4543179"
+    }
+  ],
+  "qualification": "No active owner source replacement; isolated proposal. Caller profile locations are copied verbatim when nonempty, with no fallback inference; existing permission, shell-free launch, arguments, loopback, cancellation, event, watcher and process-drain bodies are unchanged."
+}

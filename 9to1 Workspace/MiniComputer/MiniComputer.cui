@@ -1,0 +1,25 @@
+<Cui product="mini-computer" version="1">
+  <Page id="mini-computer.root" title="Mini Computer">
+    <Toolbar>
+      <Button id="mini-computer.refresh" action="mini-computer.providers.refresh">Refresh provider status</Button>
+      <Button id="mini-computer.vm.create" action="mini-computer.vm.create">Create virtual machine</Button>
+    </Toolbar>
+    <Section id="mini-computer.provider" title="Virtualisation provider">
+      <Status id="mini-computer.provider.status" source="mini-computer.provider.status">Provider status</Status>
+      <Status id="mini-computer.provider.capabilities" source="mini-computer.provider.capabilities">Provider capabilities</Status>
+    </Section>
+    <Section id="mini-computer.machines" title="Virtual machines">
+      <List id="mini-computer.vm.list" source="mini-computer.vm.list" item-key="VMID">
+        <TextBlock id="mini-computer.vm.name" text="{Binding Name}" />
+        <Status id="mini-computer.vm.state" source="{Binding LifecycleState}" />
+        <Button id="mini-computer.vm.open" action="mini-computer.vm.open-console">Open console</Button>
+      </List>
+      <EmptyState id="mini-computer.vm.empty" when="mini-computer.vm.list.empty">
+        No virtual machines are registered with this provider.
+      </EmptyState>
+    </Section>
+    <Section id="mini-computer.snapshots" title="Snapshots">
+      <Tree id="mini-computer.snapshot.tree" source="mini-computer.snapshot.graph" item-key="SnapshotID" />
+    </Section>
+  </Page>
+</Cui>

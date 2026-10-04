@@ -1,0 +1,1026 @@
+[
+  {
+    "name": "git-head",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 2690,
+        "birth": 4410,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.06,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 2692,
+        "birth": 4416,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.374,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "tracked-source-tree",
+    "argv": [
+      "git",
+      "ls-tree",
+      "-rz",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 2715,
+        "birth": 4453,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.323,
+    "bytes": 2611835,
+    "familyClosed": true
+  },
+  {
+    "name": "native-submodule-pins",
+    "argv": [
+      "git",
+      "submodule",
+      "status",
+      "--recursive",
+      "--",
+      "framework/CUI/vendor/Avalonia/external/XamlX",
+      "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 2716,
+        "birth": 4516,
+        "gone": true
+      },
+      {
+        "pid": 2717,
+        "birth": 4517,
+        "gone": true
+      },
+      {
+        "pid": 2741,
+        "birth": 4519,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.081,
+    "bytes": 202,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-version",
+    "argv": [
+      "dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 2752,
+        "birth": 4525,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 2.45,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-info",
+    "argv": [
+      "dotnet",
+      "--info"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 2760,
+        "birth": 4770,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.226,
+    "bytes": 2962,
+    "familyClosed": true
+  },
+  {
+    "name": "wasm-tools-install",
+    "argv": [
+      "dotnet",
+      "workload",
+      "install",
+      "wasm-tools",
+      "--skip-manifest-update",
+      "--configfile",
+      "/home/runner/work/9to1/9to1/NuGet.Config"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 2768,
+        "birth": 4892,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 14.319,
+    "bytes": 1995,
+    "familyClosed": true
+  },
+  {
+    "name": "wasm-tools-list",
+    "argv": [
+      "dotnet",
+      "workload",
+      "list"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 8778,
+        "birth": 6324,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.373,
+    "bytes": 330,
+    "familyClosed": true
+  },
+  {
+    "name": "bun-tool-install",
+    "argv": [
+      "dotnet",
+      "tool",
+      "install",
+      "Bun.Unofficial.Tool",
+      "--version",
+      "1.3.4",
+      "--tool-path",
+      "/home/runner/work/_temp/pb-publish/tools",
+      "--configfile",
+      "/home/runner/work/9to1/9to1/NuGet.Config"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 8786,
+        "birth": 6362,
+        "gone": true
+      },
+      {
+        "pid": 8801,
+        "birth": 6447,
+        "gone": true
+      },
+      {
+        "pid": 8810,
+        "birth": 6459,
+        "gone": true
+      },
+      {
+        "pid": 8826,
+        "birth": 6711,
+        "gone": true
+      },
+      {
+        "pid": 8834,
+        "birth": 6724,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 4.599,
+    "bytes": 130,
+    "familyClosed": true
+  },
+  {
+    "name": "bun-version",
+    "argv": [
+      "/home/runner/work/_temp/pb-publish/tools/bun",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 8847,
+        "birth": 6822,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.057,
+    "bytes": 6,
+    "familyClosed": true
+  },
+  {
+    "name": "locked-assets-install",
+    "argv": [
+      "/home/runner/work/_temp/pb-publish/tools/bun",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 8848,
+        "birth": 6828,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.483,
+    "bytes": 501,
+    "familyClosed": true
+  },
+  {
+    "name": "owner-assets-build",
+    "argv": [
+      "/home/runner/work/_temp/pb-publish/tools/bun",
+      "build.js"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 8857,
+        "birth": 6876,
+        "gone": true
+      },
+      {
+        "pid": 8863,
+        "birth": 6880,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.118,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "apps/Web/NineToOne.Web.csproj",
+      "--artifacts-path",
+      "/home/runner/work/_temp/pb-publish/artifacts",
+      "--configfile",
+      "/home/runner/work/9to1/9to1/NuGet.Config",
+      "--disable-build-servers",
+      "-p:Configuration=Release",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/pb-publish/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:UseSharedCompilation=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 8872,
+        "birth": 6888,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 14.46,
+    "bytes": 6080,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "dotnet",
+      "msbuild",
+      "apps/Web/NineToOne.Web.csproj",
+      "-p:Configuration=Release",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/home/runner/work/_temp/pb-publish/artifacts",
+      "-target:Build",
+      "-getItem:ResolvedRuntimePack,NativeFileReference",
+      "-getProperty:TargetFramework,RuntimeIdentifier,NETCoreSdkVersion,MicrosoftNetCoreAppRuntimePackDir,MicrosoftNetCoreAppRuntimePackRidNativeDir,_WasmRuntimePackVersion",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/pb-publish/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:UseSharedCompilation=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 8900,
+        "birth": 8347,
+        "gone": true
+      },
+      {
+        "pid": 8921,
+        "birth": 8940,
+        "gone": true
+      },
+      {
+        "pid": 8940,
+        "birth": 9216,
+        "gone": true
+      },
+      {
+        "pid": 8958,
+        "birth": 9390,
+        "gone": true
+      },
+      {
+        "pid": 8976,
+        "birth": 9518,
+        "gone": true
+      },
+      {
+        "pid": 8994,
+        "birth": 9672,
+        "gone": true
+      },
+      {
+        "pid": 9012,
+        "birth": 9825,
+        "gone": true
+      },
+      {
+        "pid": 9063,
+        "birth": 12389,
+        "gone": true
+      },
+      {
+        "pid": 9083,
+        "birth": 12613,
+        "gone": true
+      },
+      {
+        "pid": 9137,
+        "birth": 14729,
+        "gone": true
+      },
+      {
+        "pid": 9173,
+        "birth": 15050,
+        "gone": true
+      },
+      {
+        "pid": 9193,
+        "birth": 15216,
+        "gone": true
+      },
+      {
+        "pid": 9211,
+        "birth": 15518,
+        "gone": true
+      },
+      {
+        "pid": 9231,
+        "birth": 15862,
+        "gone": true
+      },
+      {
+        "pid": 9250,
+        "birth": 16052,
+        "gone": true
+      },
+      {
+        "pid": 9272,
+        "birth": 16390,
+        "gone": true
+      },
+      {
+        "pid": 9293,
+        "birth": 17267,
+        "gone": true
+      },
+      {
+        "pid": 9336,
+        "birth": 18515,
+        "gone": true
+      },
+      {
+        "pid": 9355,
+        "birth": 18802,
+        "gone": true
+      },
+      {
+        "pid": 9374,
+        "birth": 19081,
+        "gone": true
+      },
+      {
+        "pid": 9392,
+        "birth": 19276,
+        "gone": true
+      },
+      {
+        "pid": 9407,
+        "birth": 19307,
+        "gone": true
+      },
+      {
+        "pid": 9429,
+        "birth": 19617,
+        "gone": true
+      },
+      {
+        "pid": 9454,
+        "birth": 19885,
+        "gone": true
+      },
+      {
+        "pid": 9472,
+        "birth": 20173,
+        "gone": true
+      },
+      {
+        "pid": 9495,
+        "birth": 20695,
+        "gone": true
+      },
+      {
+        "pid": 9515,
+        "birth": 21028,
+        "gone": true
+      },
+      {
+        "pid": 9533,
+        "birth": 21189,
+        "gone": true
+      },
+      {
+        "pid": 9572,
+        "birth": 21978,
+        "gone": true
+      },
+      {
+        "pid": 9609,
+        "birth": 22579,
+        "gone": true
+      },
+      {
+        "pid": 9627,
+        "birth": 22794,
+        "gone": true
+      },
+      {
+        "pid": 9651,
+        "birth": 22963,
+        "gone": true
+      },
+      {
+        "pid": 9673,
+        "birth": 23644,
+        "gone": true
+      },
+      {
+        "pid": 9692,
+        "birth": 23805,
+        "gone": true
+      },
+      {
+        "pid": 9711,
+        "birth": 24058,
+        "gone": true
+      },
+      {
+        "pid": 9729,
+        "birth": 24220,
+        "gone": true
+      },
+      {
+        "pid": 9748,
+        "birth": 24421,
+        "gone": true
+      },
+      {
+        "pid": 9766,
+        "birth": 24610,
+        "gone": true
+      },
+      {
+        "pid": 9785,
+        "birth": 24843,
+        "gone": true
+      },
+      {
+        "pid": 9818,
+        "birth": 25334,
+        "gone": true
+      },
+      {
+        "pid": 9836,
+        "birth": 25539,
+        "gone": true
+      },
+      {
+        "pid": 9879,
+        "birth": 26871,
+        "gone": true
+      },
+      {
+        "pid": 9904,
+        "birth": 27205,
+        "gone": true
+      },
+      {
+        "pid": 9922,
+        "birth": 27455,
+        "gone": true
+      },
+      {
+        "pid": 9949,
+        "birth": 27945,
+        "gone": true
+      },
+      {
+        "pid": 9970,
+        "birth": 28130,
+        "gone": true
+      },
+      {
+        "pid": 9988,
+        "birth": 28307,
+        "gone": true
+      },
+      {
+        "pid": 10012,
+        "birth": 28639,
+        "gone": true
+      },
+      {
+        "pid": 10033,
+        "birth": 28723,
+        "gone": true
+      },
+      {
+        "pid": 10054,
+        "birth": 29000,
+        "gone": true
+      },
+      {
+        "pid": 10073,
+        "birth": 29203,
+        "gone": true
+      },
+      {
+        "pid": 10099,
+        "birth": 29610,
+        "gone": true
+      },
+      {
+        "pid": 10138,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10139,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10140,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10141,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10142,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10143,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10145,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10147,
+        "birth": 30308,
+        "gone": true
+      },
+      {
+        "pid": 10161,
+        "birth": 30334,
+        "gone": true
+      },
+      {
+        "pid": 10164,
+        "birth": 30336,
+        "gone": true
+      },
+      {
+        "pid": 10165,
+        "birth": 30427,
+        "gone": true
+      },
+      {
+        "pid": 10166,
+        "birth": 30427,
+        "gone": true
+      },
+      {
+        "pid": 10172,
+        "birth": 30442,
+        "gone": true
+      },
+      {
+        "pid": 10183,
+        "birth": 30469,
+        "gone": true
+      },
+      {
+        "pid": 10189,
+        "birth": 30622,
+        "gone": true
+      },
+      {
+        "pid": 10201,
+        "birth": 30650,
+        "gone": true
+      },
+      {
+        "pid": 10238,
+        "birth": 32664,
+        "gone": true
+      },
+      {
+        "pid": 10240,
+        "birth": 32664,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 247.109,
+    "bytes": 20993,
+    "familyClosed": true
+  },
+  {
+    "name": "publish",
+    "argv": [
+      "dotnet",
+      "publish",
+      "apps/Web/NineToOne.Web.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/home/runner/work/_temp/pb-publish/artifacts",
+      "--output",
+      "/home/runner/work/_temp/pb-publish/sdk-publish",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/pb-publish/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:UseSharedCompilation=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 10255,
+        "birth": 33059,
+        "gone": true
+      },
+      {
+        "pid": 10286,
+        "birth": 33639,
+        "gone": true
+      },
+      {
+        "pid": 10326,
+        "birth": 34898,
+        "gone": true
+      },
+      {
+        "pid": 10359,
+        "birth": 35548,
+        "gone": true
+      },
+      {
+        "pid": 10378,
+        "birth": 35648,
+        "gone": true
+      },
+      {
+        "pid": 10400,
+        "birth": 35761,
+        "gone": true
+      },
+      {
+        "pid": 10426,
+        "birth": 37584,
+        "gone": true
+      },
+      {
+        "pid": 10445,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10446,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10447,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10449,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10450,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10451,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10454,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10456,
+        "birth": 37735,
+        "gone": true
+      },
+      {
+        "pid": 10466,
+        "birth": 37748,
+        "gone": true
+      },
+      {
+        "pid": 10470,
+        "birth": 37749,
+        "gone": true
+      },
+      {
+        "pid": 10473,
+        "birth": 37752,
+        "gone": true
+      },
+      {
+        "pid": 10474,
+        "birth": 37769,
+        "gone": true
+      },
+      {
+        "pid": 10475,
+        "birth": 37770,
+        "gone": true
+      },
+      {
+        "pid": 10481,
+        "birth": 37781,
+        "gone": true
+      },
+      {
+        "pid": 10492,
+        "birth": 37815,
+        "gone": true
+      },
+      {
+        "pid": 10497,
+        "birth": 37877,
+        "gone": true
+      },
+      {
+        "pid": 10498,
+        "birth": 37882,
+        "gone": true
+      },
+      {
+        "pid": 10510,
+        "birth": 37909,
+        "gone": true
+      },
+      {
+        "pid": 10520,
+        "birth": 39740,
+        "gone": true
+      },
+      {
+        "pid": 10521,
+        "birth": 39740,
+        "gone": true
+      },
+      {
+        "pid": 10535,
+        "birth": 40007,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 112.433,
+    "bytes": 328409,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 10567,
+        "birth": 44338,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.317,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "git-head-after",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 10590,
+        "birth": 44370,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.051,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "receipt-verify",
+    "argv": [
+      "node",
+      "apps/Web/Tests/verify-publish-receipt.cjs",
+      "/home/runner/work/_temp/pb-publish/public-artifact/publish-manifest.json",
+      "/home/runner/work/_temp/pb-publish/sdk-publish/wwwroot",
+      "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 10591,
+        "birth": 44375,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.149,
+    "bytes": 700,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-final",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 10598,
+        "birth": 44691,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.327,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]

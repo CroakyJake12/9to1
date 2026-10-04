@@ -1,0 +1,110 @@
+{
+  "productId": "cakeos.launcher",
+  "productType": "BackgroundComponent",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "cakeos-launcher-0.1.0"
+  },
+  "donor": {
+    "name": "CakeOS Launcher",
+    "repositoryUrl": "https://github.com/CroakyJake12/CakeOS",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/CakeOS/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "cakeos-launcher",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/lib/cakeos/launcher/cakeos-launcher-daemon",
+    "arguments": "--daemon",
+    "workingDirectory": "/var/lib/cakeos/launcher",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "cakeos-launcher",
+    "socketName": "cakeos-launcher.socket",
+    "dbusName": "org.cakeos.Launcher",
+    "socketActivation": true,
+    "requiredServices": ["dbus", "systemd-journald"]
+  },
+  "routes": [
+    {
+      "route": "/launcher/launch",
+      "handler": "LaunchHandler",
+      "methods": ["POST"]
+    },
+    {
+      "route": "/launcher/apps",
+      "handler": "ListAppsHandler",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "cakeos.launcher.launch",
+      "displayName": "Application Launch",
+      "description": "Launch applications via Haven Shell integration",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "cakeos.launcher.discover",
+      "displayName": "Application Discovery",
+      "description": "Discover and list available applications",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "haven.shell",
+      "kind": "RequiredProduct",
+      "versionConstraint": ">=0.1.0"
+    },
+    {
+      "dependencyId": "libglib2.0-0",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=2.78"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": false,
+    "requiresState": true,
+    "requiresData": false,
+    "customPaths": ["/etc/cakeos/launcher", "/var/lib/cakeos/launcher"]
+  },
+  "permissions": {
+    "requiredGrants": ["launcher.launch", "launcher.discover", "process.exec"],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "systemctl --user is-active cakeos-launcher",
+    "expectedOutputPattern": "active",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "active\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T16:15:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/cakeos-launcher-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

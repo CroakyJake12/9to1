@@ -1,0 +1,56 @@
+{
+  "reviewed_auth_commit": "53edc25e104e3c5d56d64563038f957a6b2533b1",
+  "auth_parent": "dc6725dd91ee83566efd9cbba33fbded436c0d2e",
+  "root_harness_reviewed_commit": "467e9d6384ab59869de0a57f2908973778d31627",
+  "root_harness_tested_commit": "ddbab7ceafd164b1b1ec771dd0873ada87ab2eb8",
+  "findings": [
+    "No blocking finding for bounded required-profile/whitelist/owner-binding changes.",
+    "Reserved username positive trusted-owner branch remains untested; no verified Jacob identity or free Business grant provisioned.",
+    "Single(collection,predicate) matches Single(collection.Where(predicate)); no assertion weakening or analyzer suppression.",
+    "Default source-linked Sites39/39 is bounded domain/persistence evidence, not normal full app or deployed acceptance."
+  ],
+  "source_hashes": [
+    {
+      "commit": "53edc25e104e3c5d56d64563038f957a6b2533b1",
+      "path": "cloud/cake-id-auth/src/auth.ts",
+      "sha256": "2a6c5baacb77ac4480e11f0ddcb86e0005ea627e569931ea6478cf1faf6f9576",
+      "present_in_commit": true
+    },
+    {
+      "commit": "53edc25e104e3c5d56d64563038f957a6b2533b1",
+      "path": "cloud/cake-id-auth/src/resource-api.ts",
+      "sha256": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+      "present_in_commit": true
+    },
+    {
+      "commit": "53edc25e104e3c5d56d64563038f957a6b2533b1",
+      "path": "cloud/cake-id-auth/tests/integration.mjs",
+      "sha256": "16e82b234c4a97324f5049864b8afbb85d3483ba58d1356035dd25a2e5c3edc4",
+      "present_in_commit": true
+    },
+    {
+      "commit": "53edc25e104e3c5d56d64563038f957a6b2533b1",
+      "path": "cloud/cake-id-auth/public/auth-ui.txt",
+      "sha256": "b1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e",
+      "present_in_commit": true
+    },
+    {
+      "commit": "ddbab7ceafd164b1b1ec771dd0873ada87ab2eb8",
+      "path": "eng/service-validation/Sites.Source.Tests.csproj",
+      "sha256": "8e0604fbd5d529978c7f2448fea1bec4ed5851abedc46f850539d13b6cc44898",
+      "present_in_commit": true
+    },
+    {
+      "commit": "ddbab7ceafd164b1b1ec771dd0873ada87ab2eb8",
+      "path": "eng/service-validation/README.md",
+      "sha256": "e4f56aaea941b324640323b85e982295402c62606dde16c4f996596144b5cc1f",
+      "present_in_commit": true
+    },
+    {
+      "commit": "ddbab7ceafd164b1b1ec771dd0873ada87ab2eb8",
+      "path": "9to1 Workspace/Sites/Tests/SiteAddressAndStoreTests.cs",
+      "sha256": "df2bfbe781cf994e9c3db66e7ebacbcf304e2c695311cc60602b56ff9d83ad01",
+      "present_in_commit": true
+    }
+  ]
+}

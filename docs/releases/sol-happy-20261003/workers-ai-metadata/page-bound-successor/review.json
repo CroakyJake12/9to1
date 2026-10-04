@@ -1,0 +1,84 @@
+{
+  "supersedesProposalHead": "50fbda8552b6f22ab842aad402255c7d00225c03",
+  "status": "PROPOSED_OWNER_ACK_PENDING",
+  "change": "Reject actual catalogue result arrays larger than requested100 before enumeration; one negative asserts no followup and unhealthy result. Original proposal/evidence unchanged.",
+  "sourceBindings": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+      "bytes": 34906,
+      "sha256": "8d907d23fbc5ce7cbfdc90322722e2d668f00efb9f6383712225047ade339d4f"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs",
+      "bytes": 10151,
+      "sha256": "7a4db7e89535112817c495bca06bfe75bea721df7503ec57b63b612403d9d9c5"
+    }
+  ],
+  "verification": {
+    "before": {
+      "provider": "exact50fb",
+      "failed": 1,
+      "passed": 23,
+      "total": 24,
+      "failure": "Assert.Single actual32 calls"
+    },
+    "fixedDebug": {
+      "passed": 24,
+      "failed": 0,
+      "total": 24
+    },
+    "fixedRelease": {
+      "passed": 24,
+      "failed": 0,
+      "total": 24
+    },
+    "commandTemplate": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c5/dotnet-home /workspace/.tools/dotnet/dotnet test PROJECT -c CONFIG --logger trx --results-directory RESULTS",
+    "generator": "docs/releases/sol-happy-20261003/c5-workers-ai-harness.py",
+    "negativeProject": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/negative/C5.Provider.Tests.csproj",
+    "fixedProject": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/fixed/C5.Provider.Tests.csproj"
+  },
+  "limits": "Bounds parsed row count and request pagination; HTTP body bytes are not separately bounded. This is metadata, no inference, pricing, entitlement or settlement.",
+  "unchangedGates": [
+    "TeamA provider ownership ACK",
+    "Current actual Application Canvas CS1593 blocks normal full project build, already retained50fb",
+    "Output-token cap and canonical funding/usage conversion",
+    "No real provider inference/email activation"
+  ],
+  "evidence": [
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-metadata/page-bound-successor/provider-50fb.cs",
+      "originalPath": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/provider-50fb.cs",
+      "sha256": "b48423585970123b592243014989f4132adb90092ef2a57ec0d472bca6a4ea0e"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-metadata/page-bound-successor/negative-final.log",
+      "originalPath": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/negative-final.log",
+      "sha256": "f4b8e694084dac4dab9934928f4bc712aeecd6141efb79e61880472025617445"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-metadata/page-bound-successor/fixed-debug-final.log",
+      "originalPath": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/fixed-debug-final.log",
+      "sha256": "35f098899d3acd4c89a6ea50b25151b75494ae9e00c75b7a4cbaabeaccb1a5a1"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-metadata/page-bound-successor/fixed-release-final.log",
+      "originalPath": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/fixed-release-final.log",
+      "sha256": "8a74e5aeb54eb15c7a6ce858db1f20d9eb316f8d47bebf8776421f0993780d2c"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-metadata/page-bound-successor/negative-final.trx",
+      "originalPath": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/negative/results/negative-final.trx",
+      "sha256": "40b2bbeded546b6c0c49198e6fe655b070ce16d2cde50267b09304a6b17883c2"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-metadata/page-bound-successor/fixed-debug-final.trx",
+      "originalPath": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/fixed/results/fixed-debug-final.trx",
+      "sha256": "08a3c75cb7aaba094e70414653838d7fd5dd187e60a1c01fc86978166ac44e48"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-metadata/page-bound-successor/fixed-release-final.trx",
+      "originalPath": "/workspace/team-c/evidence/c5/workers-ai/page-bound-successor/fixed/results/fixed-release-final.trx",
+      "sha256": "d3fd88500e4a6d3bfd45a1e52afa8e4f5da3bf699aafeb282e212320563791ac"
+    }
+  ]
+}

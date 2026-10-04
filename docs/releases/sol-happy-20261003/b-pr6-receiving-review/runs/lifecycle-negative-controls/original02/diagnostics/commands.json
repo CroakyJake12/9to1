@@ -1,0 +1,141 @@
+[
+  {
+    "name": "restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "apps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original02.Tests.csproj",
+      "--configfile",
+      "/workspace/team-c-c5-b-pr6-receiving/NuGet.Config",
+      "-p:Configuration=Release",
+      "--disable-parallel",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 83048,
+        "birth": 1144621,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 5.369,
+    "bytes": 729,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "dotnet",
+      "build",
+      "apps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original02.Tests.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 83067,
+        "birth": 1145158,
+        "gone": true
+      },
+      {
+        "pid": 83094,
+        "birth": 1145858,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 9.525,
+    "bytes": 7710,
+    "familyClosed": true
+  },
+  {
+    "name": "target-properties",
+    "argv": [
+      "dotnet",
+      "msbuild",
+      "apps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original02.Tests.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts",
+      "-getProperty:TargetPath,UseAppHost",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 83111,
+        "birth": 1146111,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.561,
+    "bytes": 266,
+    "familyClosed": true
+  },
+  {
+    "name": "native",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/FilesSites.PrivateLifecycle.Original02.Tests/release_linux-x64/FilesSites.PrivateLifecycle.Original02.Tests",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/lifecycle-negative-controls/original02/fixture-data"
+    ],
+    "exit": 1,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 83121,
+        "birth": 1146167,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 1,
+    "seconds": 3.932,
+    "bytes": 2026,
+    "familyClosed": true
+  }
+]

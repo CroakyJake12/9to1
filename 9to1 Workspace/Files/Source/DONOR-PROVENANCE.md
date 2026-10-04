@@ -1,0 +1,3 @@
+# Files donor source verification
+
+The existing source in `Source/Files/` was left intact. It matches the source/code/test blobs from https://github.com/files-community/Files at exact upstream commit `21d407b51dbc2b1bd2733ef615d727345d5dd16f` (`main` at the 2026-09-20 import); `src` tree `d4a883424a2d11cb460774a9fb41debbe5c96363` and `tests` tree `be743d924b432091a7229d9f8b80091c9b1290b1` match that upstream commit. The imported tree excludes upstream `.gitattributes`, `.gitignore`, and `.github` only; this is the import-omissions record. `Source/Files/LICENSE-MIT` and `Source/Files/LICENSE-MPL` remain intact. No controlled fork was required because the source was already app-local. Its Windows runtime/build was not revalidated in the donor pass.

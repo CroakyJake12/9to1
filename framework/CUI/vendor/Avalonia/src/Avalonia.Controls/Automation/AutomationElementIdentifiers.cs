@@ -1,0 +1,52 @@
+﻿using Avalonia.Automation.Peers;
+
+namespace Avalonia.Automation
+{
+    /// <summary>
+    /// Contains values used as automation property identifiers by UI Automation providers.
+    /// </summary>
+    public static class AutomationElementIdentifiers
+    {
+        /// <summary>
+        /// Identifies the bounding rectangle automation property. The bounding rectangle property
+        /// value is returned by the <see cref="AutomationPeer.GetBoundingRectangle"/> method.
+        /// </summary>
+        public static AutomationProperty BoundingRectangleProperty { get; } = new AutomationProperty();
+
+        /// <summary>
+        /// Identifies the class name automation property. The class name property value is returned
+        /// by the <see cref="AutomationPeer.GetClassName"/> method.
+        /// </summary>
+        public static AutomationProperty ClassNameProperty { get; } = new AutomationProperty();
+
+        /// <summary>
+        /// Identifies the name automation property. The class name property value is returned
+        /// by the <see cref="AutomationPeer.GetName"/> method.
+        /// </summary>
+        public static AutomationProperty NameProperty { get; } = new AutomationProperty();
+
+        /// <summary>
+        /// Identifies the helpText automation property. The class name property value is returned
+        /// by the <see cref="AutomationPeer.GetHelpText"/> method.
+        /// </summary>
+        public static AutomationProperty HelpTextProperty { get; } = new AutomationProperty();
+
+        /// <summary>
+        /// Identifies the itemStatus automation property. The class name property value is returned
+        /// by the <see cref="AutomationPeer.GetItemStatus"/> method.
+        /// </summary>
+        public static AutomationProperty ItemStatusProperty { get; } = new AutomationProperty();
+
+        /// <summary>
+        /// Identifies the landmark type automation property. The class name property value is returned
+        /// by the <see cref="AutomationPeer.GetLandmarkType"/> method.
+        /// </summary>
+        public static AutomationProperty LandmarkTypeProperty { get; } = new AutomationProperty();
+
+        /// <summary>
+        /// Identifies the heading level automation property. The class name property value is returned
+        /// by the <see cref="AutomationPeer.GetHeadingLevel"/> method.
+        /// </summary>
+        public static AutomationProperty HeadingLevelProperty { get; } = new AutomationProperty();
+    }
+}

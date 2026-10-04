@@ -1,0 +1,55 @@
+{
+  "status": "EXACT_EXISTING_DELIVERED_PROVISIONAL_LIFETIME_SOURCE_ACK_UNACCEPTED",
+  "sourceCommit": "fe64ee093177fe359efabf69bd748e967f99caa6",
+  "parent": "aeb98ffe615272508301c2ec3f39dfbbe3b8e8f7",
+  "delivery": "ffdf22e8a05ad3973e328d7ef038b0bc77fb304e",
+  "archive": {
+    "bytes": 99777,
+    "sha256": "8a1c5e1f18fc3563ce1720ed40029149201fb30ad70b50037a22e3ec4ee67078",
+    "all33CrcMemberBytesHashesAndExtractionVerified": true
+  },
+  "selectedWholeBodies": [
+    {
+      "path": "framework/CUI/Core/CuiRuntimeContracts.cs",
+      "parentSha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4",
+      "bytes": 2311,
+      "sha256": "91ab48bed44e0b933a7aa7166c7e0afdd9df5a7f61afd318ec65996aaf4fe805",
+      "treeEntry": "100644 blob dba756f29ce02d559fe3a00f64a7d65b0b84a9fe"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "parentSha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
+      "bytes": 90822,
+      "sha256": "aabc12960e3bbc7579da6c840cefa45dff5bee0b397dde7279e34df96a6ed157",
+      "treeEntry": "100644 blob aa385c7df454ff67db15fe792831d6718afbf5b9"
+    },
+    {
+      "path": "apps/Web/Accounts/AccountBrowserBindings.cs",
+      "parentSha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d",
+      "bytes": 25366,
+      "sha256": "6e996d786b604d85f4b2c565410e66f359b2b86c878ce6f633bf1e0aceea8326",
+      "treeEntry": "100644 blob 463e74f4c3c0a73a1fd2b1a84d8a4b56467d3c4f"
+    }
+  ],
+  "allOtherTrackedBodyModeBlobUnchanged": true,
+  "approvedSynchronousTextChangingPreserved": true,
+  "wholeDefaultGenericDispatchTokenAndGuardPathPreserved": true,
+  "originalThreeProbe": {
+    "bytes": 7422,
+    "sha256": "14dfe0c768bd63a2c11eb47bdd0e0446b78d71546c10d0e40e02630d705a3bfc"
+  },
+  "semanticReview": [
+    "Additive canonical token-role record/interface does not confer authority or choose commands. Existing direct ICuiActionDispatcher signatures and true caller token forwarding are retained.",
+    "Loader selects optional host interface only for an actual admitted current native Button event; ViewCancellation is its existing loader lifetime and CallerCancellation is None for that native event. Generic fallback remains originalview token with unchanged gate/invocation/availability/current-binding/disposal and actionidle tracking.",
+    "Account ordinary reads/profile writes keep caller plus account-view lifetime and newactualCUIview cancellation; generation/privatecontext/permission/record validation, nonqueuedoperationgate and true drains preserved.",
+    "Only existing validated sign-in/session-mutation broker handoff unregisters view retirement, retaining existing linked truecaller cancellation and alreadyobserved cancellation. View boundary settles before broker reset; brokercontinuation is separately tracked, so viewdrain canfinish without canceling its own selected work.",
+    "CancellationTokenRegistration disposal precedes requestCTS disposal and synchronizes started callbacks; it does not revive already canceled requests. Existing trusted broker/transport must still honor cancellation and validated authority."
+  ],
+  "sourceOwnerAdoption": "PENDING; originaldelivery markedsourceonly. User/rootexplicitprovisional composition/testing authorization permits this isolatedcandidate; no owner ACK fabricated.",
+  "runtimeQualification": "Original3/current90/15/6 results to be separately audited. Addedgenericpreservation fixture initially failed Load before dispatch due undeclared action; originalfailure retained and fixturecorrection awaiting evidence.",
+  "limitations": [
+    "Source-only peer does not establish actual browser sign-in, issuer/token/servermutation authority, productionprincipal/owner-group fence registration or fullaccount/29app parity.",
+    "No activeowner/rootsource edits by C6; no provider/credentials/privatefixture reads or payload replay in source review."
+  ],
+  "acceptanceVerified": false
+}

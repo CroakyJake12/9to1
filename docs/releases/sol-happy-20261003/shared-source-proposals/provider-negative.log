@@ -1,0 +1,91 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/evidence/c5/reconciled/negative-routing-harness/C5.Provider.Tests.csproj (in 211 ms).
+  1 of 2 projects are up-to-date for restore.
+  Haven.Core -> /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Core/bin/Debug/net10.0/Haven.Core.dll
+  C5.Provider.Tests -> /workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll
+Test run for /workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.27]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [FAIL]
+[xUnit.net 00:00:00.28]     Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "data: {\"error\":{\"message\":\"private error deta"···) [FAIL]
+  Failed Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "data: {\"error\":{\"message\":\"private error deta"···) [49 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs:line 29
+--- End of stack trace from previous location ---
+  Failed Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [34 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 34
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "data: {\"choices\":[{\"delta\":{},\"finish_reason\"···) [FAIL]
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "") [FAIL]
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: "") [FAIL]
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "") [FAIL]
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [FAIL]
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [FAIL]
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(completed: False) [FAIL]
+  Failed Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "data: {\"choices\":[{\"delta\":{},\"finish_reason\"···) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 34
+--- End of stack trace from previous location ---
+  Failed Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "") [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 34
+--- End of stack trace from previous location ---
+  Failed Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: "") [1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(String prefix) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 52
+--- End of stack trace from previous location ---
+  Failed Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "") [3 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs:line 29
+--- End of stack trace from previous location ---
+  Failed Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs:line 29
+--- End of stack trace from previous location ---
+  Failed Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [3 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(String prefix) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 52
+--- End of stack trace from previous location ---
+  Failed Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(completed: False) [1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(Boolean completed) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 99
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response [FAIL]
+  Failed Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response [2 ms]
+  Error Message:
+   Assert.ThrowsAny() Failure: No exception was thrown
+Expected: typeof(System.OperationCanceledException)
+  Stack Trace:
+     at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response() in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 71
+   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response() in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 73
+--- End of stack trace from previous location ---
+Results File: /workspace/team-c/evidence/c5/reconciled/negative/c5-reconciled-negative.trx
+
+Failed!  - Failed:    10, Passed:    14, Skipped:     0, Total:    24, Duration: 114 ms - C5.Provider.Tests.dll (net10.0)

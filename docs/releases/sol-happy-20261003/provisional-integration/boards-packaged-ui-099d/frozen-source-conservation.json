@@ -1,0 +1,88 @@
+{
+  "candidateCommit": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+  "branch": "team-c/sol-happy-c3-boards-packaged-ui-20261004",
+  "basis": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "changes": [
+    {
+      "path": ".github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 20983,
+      "sha256": "130ac54c40e2f1991eed6c251d8ac31aeaccdf0b404ae2ce5a4cc41d7db357e8",
+      "gitBlob": "2dc4d6e7c7db5df3b884c9a3b9f29f3cc3d9ef90"
+    },
+    {
+      "path": ".github/validation/boards-packaged-ui-controls.json",
+      "bytes": 2571,
+      "sha256": "7edf7fa187a43e307551a2716aeebb341dc4644a5dc2884266985aa6c1bb03ff",
+      "gitBlob": "d65051b2e718ed3c84b5f639bd668e8223c5a565"
+    },
+    {
+      "path": ".github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "bytes": 3669,
+      "sha256": "19819cfc8c6e45b9e9ea7a8ad2907ce5ac9d83649cd904ca5d9fa6ec082262fb",
+      "gitBlob": "925ef525bc3cd9af0fa5e3680971766ec88feeb8"
+    },
+    {
+      "path": "eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 2204,
+      "sha256": "98b6822cf8b3393d3706563ffa925195b2b1fccdc433778c77ace8a031934968",
+      "gitBlob": "9e4c44b3859567b8147b0e8cb53e514050d7e2c4"
+    }
+  ],
+  "allNativeOwnerSourceTrees": [
+    {
+      "path": "9to1 Workspace",
+      "basisGitTree": "5674e4b1f5120a7cafc82ab7471fc42f53d1a353",
+      "candidateGitTree": "5674e4b1f5120a7cafc82ab7471fc42f53d1a353",
+      "unchanged": true
+    },
+    {
+      "path": "framework",
+      "basisGitTree": "4906b174a03c260011beed2951f1d8d2964e89b9",
+      "candidateGitTree": "4906b174a03c260011beed2951f1d8d2964e89b9",
+      "unchanged": true
+    },
+    {
+      "path": "apps",
+      "basisGitTree": "bd1a6b870182275bc1ff05a5949ed5d1b829f018",
+      "candidateGitTree": "bd1a6b870182275bc1ff05a5949ed5d1b829f018",
+      "unchanged": true
+    }
+  ],
+  "sourceStatus": "",
+  "nativeSourcePins": [
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Boards.cui",
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BlockRenderer.cs",
+      "sha256": "f33c0979ff4a47469bb0ad11684799c5469311d5ada826f043bb04fe0562731a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+      "sha256": "aeec3484ac7a75156a14a305145851afebdffb66d4a20cf8e75ecc643381d674"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ControlAutomationPeer.cs",
+      "sha256": "abc2ee12e374261fc21f685e921a22468e020d78a45b708fbc70d92364b30b5f"
+    }
+  ],
+  "nativeWindowsRuntime": "NOT_RUN_PENDING_C6_REVIEW_AND_ROOT_INVOCATION",
+  "qualification": "No existing native UI/contract/test/rebuild/bootstrap source changed. This is a provisional actual packaged-GUI workflow, not a headless/session/API substitute. Installed Home tuple/fullApp/clean-PC remain unaccepted."
+}

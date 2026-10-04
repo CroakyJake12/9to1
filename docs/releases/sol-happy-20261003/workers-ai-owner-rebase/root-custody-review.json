@@ -1,0 +1,129 @@
+{
+  "recordedUTC": "2026-10-04T10:08:50.536752+00:00",
+  "proposalCommit": "65f23458328ab38458ffbfbd4743ea197e49d50f",
+  "providerBeforeCommit": "57ebc7e202f65d489493e6c2a71a6436dfd8a696",
+  "rootReview": "Complete two-span diff and surrounding provider interactions plus harness/real Infrastructure-reference test project read. Entire inverse recovers exact owner basis; no code outside metadata spans changes.",
+  "wholeTwoSpanInverseExact": true,
+  "publicPayloads": [
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/00-owner-rebase-final-Debug.log",
+      "bytes": 862,
+      "sha256": "5efd0ce549f8279975cf0d7791b20ef95221a14e6b951e5132bfa2f4334cc6a8"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/01-owner-rebase-final-Debug.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/02-owner-rebase-final-Release.log",
+      "bytes": 759,
+      "sha256": "086a08c5d9cdeca0c335b69989c5c761feccac939af64607c988bc4041199df8"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/03-owner-rebase-final-Release.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/04-owner-rebase-negative.log",
+      "bytes": 9949,
+      "sha256": "c2629e188bd98eeff0e48860cd6c00ddd01ce921119ca5c92184e1e67f326f98"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/05-owner-rebase-negative.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/06-owner-rebase-production.log",
+      "bytes": 2708,
+      "sha256": "07ce458410be8961ded813079eb92fc80c8d7c88dd947c1747638a5e91cec80d"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/07-owner-rebase-production.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/08-owner-rebase-production-Release.log",
+      "bytes": 1884,
+      "sha256": "72d7ed00b8fe44080b2372ea84088bcb19b8cd8ccf92e122b1ce011490828d8b"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/09-owner-rebase-production-Release.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/10-owner-rebase-final-sources.log",
+      "bytes": 2039,
+      "sha256": "709c18a8e82eb55fe5e858cb28c0a2a0acec5c2d298862041259929a785a9099"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/11-owner-negative.trx",
+      "bytes": 66327,
+      "sha256": "3ef96cc75519a5456b515bd763417369e8ba53a19c629605e093e7de2d0cb91d"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/12-owner-Debug.trx",
+      "bytes": 48984,
+      "sha256": "4af1a2af814d98cc4fd93a973c214ee4b11b673b1c695b66251f03f343c757e6"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/13-owner-Release.trx",
+      "bytes": 49108,
+      "sha256": "d6510bf6467335bf323847a3ac7d93a16b7919372476c7dfdd267960ad9fcf6b"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/14-owner-production-release.trx",
+      "bytes": 51754,
+      "sha256": "661ce374c6b8e50a7d3ec696dc631b47fa68a9bd780e93a8a64531bb3ae248c7"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/15-EndpointOwnerFull.cs.txt",
+      "bytes": 5655,
+      "sha256": "74fd31c55ee32e67509c4b3c8266a557421940d3e5b12f14d38024591c03cac4"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/16-EndpointDiRedirectNotRun.cs.txt",
+      "bytes": 2135,
+      "sha256": "0f27a3ecc7d3900ef1380552e0667eb6b2c6f1525b2618e9b6ff744dbf8b35b1"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/17-C5.Provider.Tests.csproj",
+      "bytes": 2389,
+      "sha256": "54b870a5f55c9cba79ed0656d5c0133784a45645457b307d8cafc7eebb68fda6"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/evidence/18-C5.Provider.Tests.csproj",
+      "bytes": 1444,
+      "sha256": "6e58832e8f761eb688fea1a20b092472f269486c66dd04a3853c23ae890ce6ad"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/owner-conditional-ack.json",
+      "bytes": 4851,
+      "sha256": "0eb30a67cf57e6be972bf09553d1a7150a384f335ab049bcc27dfe11dd8bc7ff"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/proposal.json",
+      "bytes": 11463,
+      "sha256": "30e28ff61a64f59dd8ab98786d5d173dda040fe2ead665fb981c7f5e3350f5b3"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/workers-ai-owner-rebase/provider-owner-before.cs.txt",
+      "bytes": 30593,
+      "sha256": "fd162747b5b95cb02bb5ca2e47cf7c596353d92a30551080622f265e24cbebd0"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/c5-workers-ai-harness.py",
+      "bytes": 6641,
+      "sha256": "1b6fd41c136a6dbf14594b3ae575a672920f31b16e4279364856b8eb95231276"
+    }
+  ],
+  "publicPayloadsVerified": 23,
+  "providerExecutableAdopted": false,
+  "testProject1665BodyDelivered": false,
+  "qualification": "Exact documentation/raw/source-evidence publication only. C6 dac58790 independently passes actual Infrastructure-reference32Debug/32Release and ownerbasisnegative11fail/20pass; full current normal project/sourcecut/native/provider/inference gates remain separate. Original source evidence bytes preserved, including final blank line of exact excluded-method excerpt.",
+  "independentPeerCommit": "dac58790dc0d22f291ec96c7c33d809812b42024"
+}

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>NineToOne.Motion.OriginalProjectWorkflow.Tests</AssemblyName>
+    <RepositoryRoot Condition="'$(RepositoryRoot)' == ''">$(MSBuildProjectDirectory)/../../../..</RepositoryRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="OriginalWorkflowEntry.cs" />
+    <Compile Include="$(RepositoryRoot)/9to1 Workspace/Motion/MotionProject.cs;$(RepositoryRoot)/9to1 Workspace/Motion/MotionProjectCommands.cs;$(RepositoryRoot)/9to1 Workspace/Motion/MotionProjectWorkflowTest.cs" Link="ActualOwnerSource/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

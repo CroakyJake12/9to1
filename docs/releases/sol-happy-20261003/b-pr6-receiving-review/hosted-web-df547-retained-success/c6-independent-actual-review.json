@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent retained publication and actual browser evidence reviewer",
+  "sourceCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "runId": 37217686116,
+  "jobId": 111481442791,
+  "providerJobAndArtifactReadback": "Independent original provider metadata saved beside this receipt",
+  "archiveCustody": [
+    {
+      "artifactId": 11308169581,
+      "bytes": 19977649,
+      "sha256": "47ab5ccbb216431c640345d6f7365bd06b70a591bc1c1b44fd39867c96f9ff92",
+      "members": 4,
+      "crcAndEveryMemberOriginalBody": "PASS"
+    },
+    {
+      "artifactId": 11308139722,
+      "bytes": 16170895,
+      "sha256": "1312a2d50fbe4bf44ca20ab12d450bff7c9677b9119253af4368694c725202e2",
+      "members": 4,
+      "crcAndEveryMemberOriginalBody": "PASS"
+    },
+    {
+      "artifactId": 11308889500,
+      "bytes": 1620619,
+      "sha256": "e453f524af96cf9c5e15b0191d3308ada1fb2fb929a12747932bef699d206a17",
+      "members": 27,
+      "crcAndEveryMemberOriginalBody": "PASS"
+    },
+    {
+      "artifactId": 11309450284,
+      "bytes": 28783550,
+      "sha256": "b25f6492d04f3a6e40c5f72e75918c55fcfbe81b5f7969ee828338664984ca0c",
+      "members": 15,
+      "crcAndEveryMemberOriginalBody": "PASS"
+    }
+  ],
+  "originalPublication": {
+    "manifestBytes": 52814,
+    "manifestSha256": "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d",
+    "sealBytes": 395,
+    "sealSha256": "7a109f44f92cc21625ba55c25a775d1fcbb89ee77e0acd35a831f6f6da7ac520",
+    "zipBytes": 36039134,
+    "zipSha256": "443ff20704e09f0cf74796976c25f49b70ef5ed68637ea3f5248bf54178cde10",
+    "orderedTwoPartConcatenation": "PASS",
+    "all285CRCPathSizeBodySHAInventory": "PASS",
+    "assetBytes": 59201582,
+    "beforeAfterFinal4548ActualGitBodyCatalog": "PASS",
+    "sourceCatalogSha256": "85aa205dd54992727b6e715b5cd05585b311b040dffc35284b13eb905fafcc94",
+    "producerFlagsPreserved": {
+      "runtimeVerified": false,
+      "deploymentVerified": false,
+      "fullParityVerified": false
+    }
+  },
+  "actualBrowser": {
+    "counts": {
+      "discovered": 9,
+      "executed": 9,
+      "passed": 9,
+      "failed": 0,
+      "notRun": 0
+    },
+    "runnerOracleGitAndStartEndExact": "PASS",
+    "bundleInventoryExactOriginalManifestBeforeAfter": "PASS",
+    "twoChromiumPids": [
+      11402,
+      11509
+    ],
+    "contextsServerPortClosed": true,
+    "commandFamilies": 26,
+    "allNormalEOF_ECHILD_FamilyClosed_NoSignals": true,
+    "traces": [
+      {
+        "name": "picture-first-process.zip",
+        "members": 123,
+        "requests": 87,
+        "crcAndLoopbackNoCredentials": "PASS"
+      },
+      {
+        "name": "picture-final-process.zip",
+        "members": 129,
+        "requests": 261,
+        "crcAndLoopbackNoCredentials": "PASS"
+      }
+    ],
+    "crop15RGBApixelsExactCanonicalFixture": "PASS"
+  },
+  "privacy": "Original diagnostics/results/trace members scanned without actual secret-pattern or signed download URL; trace requests only controlled loopback with no cookies or Authorization. Controlled source/fixture UUIDs/GPS/literal base64 are retained with original scope.",
+  "verdict": "ACK exact original df publication tuple transported through official immutable parts, actual source catalogs and original nine browser groups",
+  "qualifications": [
+    "Official whole three-file artifact11308274250 retained; original container35964419B exceeds32MiB connector download cap and was not independently downloaded. Exact inner ZIP and original metadata are independently read through official part containers and whole reassembly.",
+    "No metadata/root/source identity rewriting; original publisher absolute publishRoot remains unchanged. Consumer-local extraction/rebinding is separate prepared execution work.",
+    "Runtime10.0.12 SDK10.0.401/nativeSkia+HarfBuzz metadata qualified to exact producer diagnostics; independent downloaded runtime library execution NOT_RUN.",
+    "Publisher IL2026/WASM0001/IL2104 warnings retained. No actual browser repeat or new native tests performed.",
+    "Nine controlled local Picture groups and byte custody do not establish actual accounts/issuer/provider, full metadata/GPS/native/donor/device/accessibility/installed/full-app or whole-release acceptance."
+  ]
+}

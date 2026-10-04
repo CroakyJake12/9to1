@@ -1,0 +1,168 @@
+{
+  "checkedUTC": "2026-10-04T11:34:47.083973+00:00",
+  "releaseCandidate": "7f0b1dde7af29dec421d6c0bffc099b3e008e06a",
+  "fetchedCoordinationRef": "5a25eb5bd75d42b0d103b0424030c5beb86b146d",
+  "teamARecordSHA256": "b0e493feec82b6ef17047e4a818c918f439ccf29479c9531c92c4ddf2c545e5e",
+  "teamBRecordSHA256": "df2f200db792c91d9d52a44b96f29caf8ec7e9c36df891b71d2794767c45c10b",
+  "teamACanonicalExecutionField": "currentExecution1012",
+  "teamBCandidateCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "filesOwnerSource": null,
+  "sitesSelectedOwnerSource": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "currentCandidateBodyPins": [
+    {
+      "scope": "Files",
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.cs",
+      "expectedBytes": 15052,
+      "expectedSHA256": "e4bf664776fb62ac77980943b66cece3eebc21a94b31a4fa2b23a06b13d6d5c4",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Files",
+      "path": "9to1 Workspace/Files/CUI/Services/FilesCommitAuthorityGuard.cs",
+      "expectedBytes": 1876,
+      "expectedSHA256": "f489bf53d1c5618d7e23ddcf255b0bd0bdbf63f726d3f91545082a61116f58c8",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Files",
+      "path": "9to1 Workspace/Files/CUI/Services/VersionedJsonStateStore.cs",
+      "expectedBytes": 9496,
+      "expectedSHA256": "5736e28865831da0033f106ed2041e7429ab81dfb6fe9b185a1065be305254d6",
+      "existsOnCurrentCandidate": true,
+      "currentBytes": 4565,
+      "currentSHA256": "021ca28e223247c1b42d5aeff9926821aa2d302452a2c421e1c221fe00d0ee9a",
+      "currentCandidateMatchesSelectedOwnerBody": false
+    },
+    {
+      "scope": "Files",
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Identity.cs",
+      "expectedBytes": 4790,
+      "expectedSHA256": "450f098e7ef07380a584b0d6aed09391afdf89a682f8cd85af62c489adc1bcf3",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Files",
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.OriginalStructuralReceipts.cs",
+      "expectedBytes": 2618,
+      "expectedSHA256": "eadaf3d2471ccc96a002eb37771f7e951a8ce45e7bad91f6c783b781ee15aa00",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Files",
+      "path": "9to1 Workspace/Accounts/Authentication.cs",
+      "expectedBytes": 8923,
+      "expectedSHA256": "b4314c8274f73c55a433dd99f48b8d25cfc75d24bf3130fbc5280494110a541f",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Files",
+      "path": "9to1 Workspace/Web/SitesWebDomain.cs",
+      "expectedBytes": 5765,
+      "expectedSHA256": "da18aa0ff556addf8141655f6a877d59fb39622889e8dc39db7377011fee325e",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Domain/SiteModels.cs",
+      "expectedBytes": 8654,
+      "expectedSHA256": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+      "existsOnCurrentCandidate": true,
+      "currentBytes": 8654,
+      "currentSHA256": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+      "currentCandidateMatchesSelectedOwnerBody": true
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Domain/SiteSlug.cs",
+      "expectedBytes": 5341,
+      "expectedSHA256": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641",
+      "existsOnCurrentCandidate": true,
+      "currentBytes": 5341,
+      "currentSHA256": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641",
+      "currentCandidateMatchesSelectedOwnerBody": true
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Runtime/SiteDocumentRenderer.cs",
+      "expectedBytes": 13403,
+      "expectedSHA256": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Application/SiteAuthoringService.cs",
+      "expectedBytes": 9127,
+      "expectedSHA256": "61b33ac84e4b6cb73782e9c25164b2101bd0b890e9408d0494a5686eef3fba1f",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Application/SiteProjectService.cs",
+      "expectedBytes": 9018,
+      "expectedSHA256": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9",
+      "existsOnCurrentCandidate": true,
+      "currentBytes": 9018,
+      "currentSHA256": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9",
+      "currentCandidateMatchesSelectedOwnerBody": true
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Infrastructure/FileSiteWorkspaceStore.cs",
+      "expectedBytes": 10005,
+      "expectedSHA256": "e3ec22beb78ca0240c317b9e30db2fceeb2a3cd928ff27a051a2a666a1dc876c",
+      "existsOnCurrentCandidate": true,
+      "currentBytes": 9390,
+      "currentSHA256": "4e500164864315c908c46d1b5836048a5e9b3537fdcc3ad99a993832211dd82e",
+      "currentCandidateMatchesSelectedOwnerBody": false
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs",
+      "expectedBytes": 4280,
+      "expectedSHA256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+      "existsOnCurrentCandidate": true,
+      "currentBytes": 4280,
+      "currentSHA256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+      "currentCandidateMatchesSelectedOwnerBody": true
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "expectedBytes": 7715,
+      "expectedSHA256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+      "existsOnCurrentCandidate": false
+    },
+    {
+      "scope": "Sites",
+      "path": "9to1 Workspace/Sites/Tests/SiteAuthoringBuildTests.cs",
+      "expectedBytes": 4074,
+      "expectedSHA256": "4c851081ac7a1f970f4918318fe47145a68cd92d9773c105391d59587d851a97",
+      "existsOnCurrentCandidate": false
+    }
+  ],
+  "status": "BLOCKED_MISSING_OWNER_EXECUTABLE_ADOPTION_AND_AUTHORITY_PORTS",
+  "safeReadOnlyWorkComplete": [
+    "Live canonical specification current revision/content continuity; identical bytes",
+    "Existing A/B coordination qualifications and exact C4 source-owner receipt review",
+    "Current candidate bytes compared to advertised selected owner Files/Sites bodies"
+  ],
+  "requiredOwnerDelivery": [
+    "Files original registered authenticated session/client/token async lifetime, lease order, cancellation and revoke-versus-commit publication semantics",
+    "Files original-store List/Get/receipt read and authorized response publication ports",
+    "Exact current protectedDrive transfer/resume/quota/cursor owner source and approved authenticated port closure",
+    "Explicit selected five-body normal-a63 Sites owner adoption preserving guarded store, plus current native import action/lifetime composition",
+    "Trusted existing Sites BuildAsync registration with original Files authority, unique build root, real secret scanner and approved authenticated immutable remote namespace/provider mapping"
+  ],
+  "preservedStates": {
+    "filesHTTPJourneys": {
+      "count": 12,
+      "status": "NOT_RUN"
+    },
+    "r2ProviderBytesAcceptance": "NOT_RUN",
+    "sitesProviderAcceptance": "NOT_RUN",
+    "globalAcceptedHead": null
+  },
+  "externalWrites": 0,
+  "sourceEdits": 0,
+  "runtimeAcceptanceClaims": 0
+}

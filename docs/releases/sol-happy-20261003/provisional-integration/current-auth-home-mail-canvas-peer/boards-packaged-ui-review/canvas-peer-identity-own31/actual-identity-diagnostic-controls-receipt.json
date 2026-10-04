@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "sourceSha256": "c805cbadd147fc5aa185762ce2d0333ebfa06ff463fdfc7b3d66ee155d33516d",
+  "parserErrors": 0,
+  "controlCount": 31,
+  "controls": [
+    {
+      "case": "null-runtime-id-unobserved",
+      "passed": true
+    },
+    {
+      "case": "runtime-id-refuses-empty",
+      "passed": true
+    },
+    {
+      "case": "runtime-id-refuses-oversized33",
+      "passed": true
+    },
+    {
+      "case": "inclusive32-runtime-id-bound",
+      "passed": true
+    },
+    {
+      "case": "signed-int32-little-endian-hash",
+      "passed": true
+    },
+    {
+      "case": "runtime-id-output-metadata-only",
+      "passed": true
+    },
+    {
+      "case": "different-captured-peer-native-and-runtime-metadata",
+      "passed": true
+    },
+    {
+      "case": "same-captured-peer-native-and-runtime-metadata",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-foreign-editor-pid",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-foreign-focus-pid",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-wrong-editor-role",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-wrong-focus-role",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-exited-process",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-zero-picker",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-foreign-picker-pid",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-foreign-foreground",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-non-element-editor",
+      "passed": true
+    },
+    {
+      "case": "captured-pair-refuses-non-element-focus",
+      "passed": true
+    },
+    {
+      "case": "native-metadata-zero-editor-hwnd",
+      "passed": true
+    },
+    {
+      "case": "native-metadata-foreign-editor-native-pid",
+      "passed": true
+    },
+    {
+      "case": "native-metadata-private-native-class",
+      "passed": true
+    },
+    {
+      "case": "native-metadata-zero-kernel-focus",
+      "passed": true
+    },
+    {
+      "case": "runtime-diagnostic-typed-compare-throw",
+      "passed": true
+    },
+    {
+      "case": "runtime-diagnostic-editor-runtime-throw",
+      "passed": true
+    },
+    {
+      "case": "runtime-diagnostic-focus-runtime-throw",
+      "passed": true
+    },
+    {
+      "case": "runtime-diagnostic-oversized-runtime",
+      "passed": true
+    },
+    {
+      "case": "runtime-diagnostic-null-runtime",
+      "passed": true
+    },
+    {
+      "case": "normal-observation-does-not-read-diagnostics-or-private-value",
+      "passed": true
+    },
+    {
+      "case": "typed-diagnostic-difference-cannot-override-original-identity-refusal",
+      "passed": true
+    },
+    {
+      "case": "original-timeout-preserved-diagnostic-capability-throw",
+      "passed": true
+    },
+    {
+      "case": "original-timeout-preserved-diagnostic-output-throw",
+      "passed": true
+    }
+  ],
+  "qualification": "Actual extracted two new/affected source helpers and unchanged original catch, controlled Linux capability signatures/refusals only. No installed UIA methods/provider/app/package/OS input/private profile/model/canonical state or Windows acceptance. Unchanged47/65 not repeated."
+}

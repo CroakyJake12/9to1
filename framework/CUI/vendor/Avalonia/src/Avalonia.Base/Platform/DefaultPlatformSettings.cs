@@ -1,0 +1,60 @@
+﻿using System;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
+using Avalonia.Media;
+using Avalonia.Metadata;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+
+namespace Avalonia.Platform
+{
+    /// <summary>
+    /// A default implementation of <see cref="IPlatformSettings"/> for platforms.
+    /// </summary>
+    [PrivateApi]
+    public class DefaultPlatformSettings : IPlatformSettings
+    {
+        private const int TouchTapSize = 10;
+        private const int TouchDoubleTapSize = 50; // Default TouchModeN_DtapDist value on win32
+        public virtual Size GetTapSize(PointerType type)
+        {
+            return type switch
+            {
+                PointerType.Touch or PointerType.Pen => new(TouchTapSize, TouchTapSize),
+                _ => new(4, 4),
+            };
+        }
+
+        public virtual Size GetDoubleTapSize(PointerType type)
+        {
+            return type switch
+            {
+                PointerType.Touch or PointerType.Pen => new(TouchDoubleTapSize, TouchDoubleTapSize),
+                _ => new(4, 4),
+            };
+        }
+
+        public virtual TimeSpan GetDoubleTapTime(PointerType type) => TimeSpan.FromMilliseconds(500);
+
+        public virtual TimeSpan HoldWaitDuration => TimeSpan.FromMilliseconds(300);
+
+        public PlatformHotkeyConfiguration HotkeyConfiguration =>
+            AvaloniaLocator.Current.GetRequiredService<PlatformHotkeyConfiguration>();
+
+        public virtual PlatformColorValues GetColorValues()
+        {
+            return new PlatformColorValues
+            {
+                ThemeVariant = PlatformThemeVariant.Light
+            };
+        }
+
+        public virtual event EventHandler<PlatformColorValues>? ColorValuesChanged;
+
+        protected void OnColorValuesChanged(PlatformColorValues colorValues)
+        {
+            Dispatcher.UIThread.Send(
+                _ => ColorValuesChanged?.Invoke(this, colorValues));
+        }
+    }
+}

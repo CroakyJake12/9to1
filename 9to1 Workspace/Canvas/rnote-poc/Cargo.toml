@@ -1,0 +1,21 @@
+[package]
+name = "cakeos-canvas-rnote-poc"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+publish = false
+license = "GPL-3.0-or-later"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+anyhow = "1.0"
+futures = { version = "0.3", features = ["executor"] }
+nalgebra = "0.34.0"
+rnote-compose = { git = "https://github.com/flxzt/rnote", rev = "8cac558fa73ee63d958cec05124ea2fdbd7d608d", package = "rnote-compose", default-features = false }
+rnote-engine = { git = "https://github.com/flxzt/rnote", rev = "8cac558fa73ee63d958cec05124ea2fdbd7d608d", package = "rnote-engine", default-features = false }
+
+[dev-dependencies]
+flate2 = "1.1"
+serde_json = "1.0"

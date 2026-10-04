@@ -1,0 +1,75 @@
+{
+  "requestCoordination": "049876dd3257cf8cce6456383c6805f619dc3c9f",
+  "reviewedSource": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "state": "PROPOSED_NOT_ADOPTED; TECHNICAL_OWNER_ACK_REQUIRED",
+  "sourceProofs": [
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Web/SitesWebDomain.cs",
+      "bytes": 5765,
+      "sha256": "da18aa0ff556addf8141655f6a877d59fb39622889e8dc39db7377011fee325e",
+      "blob": "26292ac08052bc7c8cfa5e938bcaeed806a3a932"
+    },
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Web/Program.cs",
+      "bytes": 10977,
+      "sha256": "81462812cab372cf11f80db938ebb375e666a4eedbe23fcf176526b4f26d99e1",
+      "blob": "afa4f007754cf9820a91e8e6bc6d4bd135bbd434"
+    },
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Web/CakeAuthenticatedResourceActorSource.cs",
+      "bytes": 1247,
+      "sha256": "5d2b9d236857a5701615e928dfc8659d43a5f56913351e8628085e97f5c4a9c0",
+      "blob": "fda29d142d34c025d2581068f7159c71c3d1b72d"
+    },
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Web/WorkspaceWebDomain.cs",
+      "bytes": 1102,
+      "sha256": "ca96afd767235b673e075876348a881ef2bc492d36aea061a6ab6cca66234fed",
+      "blob": "9d31ee7375c46df7f8d11f86a95974332459f71f"
+    },
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+      "bytes": 18979,
+      "sha256": "782a90fd485a8126aef986ad964ee938535ce1791466320882ebce4fd360d149",
+      "blob": "badcbb61b72d4941df55441d223d6355715e03d0"
+    },
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.cs",
+      "bytes": 13061,
+      "sha256": "174f3dff88be82b616e3d284d83c1a507eeb412f951fe29ee70d1bd2387d6756",
+      "blob": "43469d0861f212b57cd1fbfabffd6e1b77455f4a"
+    },
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Files/CUI/Services/FilesCommitAuthorityGuard.cs",
+      "bytes": 1313,
+      "sha256": "961066152c206761a34e5721a78e85fff3298377551427326f86c756833fa832",
+      "blob": "217b241bc68d9fb6cb4eceea0db51b8b51a5ac65"
+    },
+    {
+      "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Content.cs",
+      "bytes": 10812,
+      "sha256": "aa639c09aff402bc2c0c339c6abbdee5be29c32db2e662affd4318eb8b72941d",
+      "blob": "295e9e3effc01162a4b64c7297d5763ea0adb5b0"
+    }
+  ],
+  "runtimeTestsRun": false,
+  "publicWireInventedOrAdopted": false,
+  "ProjectSeamsResolved": false,
+  "scope": "Existing personal owner folder transport only, reuse current provider/store; separate bytes/admission and remote actor seams",
+  "ackRequests": [
+    "A4 actual guarded structural mutation/original-store/idempotency ordering review",
+    "A4+B exact additive folder request fields and preserved List/Get serializer/result shape",
+    "C2/A1 actual local session freshness callback; genuine remoteWorker boundary later",
+    "C3 byte quota reservation/admission; no independent balance",
+    "Root/C3/TeamA serial current eecadfc WebProgram composition preserving Admin"
+  ],
+  "nextConcreteWork": "After bounded ACK, implement exact existing folder adapter+dedicated actual HTTP durable/negative tests using maintained local controlled registered-client PKCE fixture; staging unavailable does not block these tests."
+}

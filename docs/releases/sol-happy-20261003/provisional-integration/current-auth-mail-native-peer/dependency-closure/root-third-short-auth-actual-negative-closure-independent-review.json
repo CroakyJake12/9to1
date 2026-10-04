@@ -1,0 +1,81 @@
+{
+  "schema": "c6-independent-third-short-local-auth-actual-negative-closed/v1",
+  "producer": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "test": "17783bf2c8d8b230d01f9ed9855352715e409a5e",
+  "fixture": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "counts": {
+    "discovered": 7,
+    "executed": 3,
+    "passed": 2,
+    "failed": 1,
+    "notRun": 4
+  },
+  "result": {
+    "path": "/tmp/c-auth-df-r3/results/results.json",
+    "bytes": 3700,
+    "sha256": "35d2ce674249bb6da59e7471efda442bcb61f2c785c1470bf96317c4703fa8b5"
+  },
+  "browserVersion": "151.0.7922.173",
+  "actualReceiverObservation": {
+    "invalidURLRejected": true,
+    "nativeFunction": true,
+    "window": {
+      "synchronousThrow": false,
+      "returnedPromise": true,
+      "rejected": true,
+      "classification": "INVALID_URL"
+    },
+    "other": {
+      "synchronousThrow": false,
+      "returnedPromise": true,
+      "rejected": true,
+      "classification": "ILLEGAL_INVOCATION"
+    }
+  },
+  "actualPopupAndProtocol": {
+    "popupOpened": true,
+    "popupClosed": true,
+    "closePhase": "actual-issuer-signin-form",
+    "originBins": {
+      "blank": 1,
+      "issuer": 0,
+      "client": 0,
+      "other": 0
+    },
+    "discoveryAttempts": 0,
+    "discoveryResponses": 0,
+    "authorizeCallbackTokenCurrentProfileSessionsSignoutAPICountsAllZero": true,
+    "publicStatusCodes": [
+      "Loading",
+      "PermissionRequired",
+      "Loading",
+      "Ready",
+      "PermissionRequired",
+      "AuthenticationRequired"
+    ],
+    "formError": "TARGET_CLOSED"
+  },
+  "interpretation": "Short safe temp path allowed actual Chromium launch/native ready and normal close. Physical PKCE fails TARGET_CLOSED while popup remains blank and closes before any recorded discovery attempt. Actual malformed-URL native fetch receiver control distinguishes genuine Window INVALID_URL from plain-object ILLEGAL_INVOCATION; production default-fetch receiver source must be independently reviewed before a product correction/new producer. Default protocolValid/sameSubject remain unexercised defaults, not evidence. No authenticated subject, JOSE/PKCE/profile/session/signout/tokenless acceptance established.",
+  "browserCustody": {
+    "path": "/tmp/c-auth-df-r3/control/owned-family-receipt.json",
+    "sha256": "08480d62dc0aff2aa96e9ddb4f557acd6113f5c036a4cbea6defd16cd8a2aa2a",
+    "originalKernelIdentities": 11,
+    "allIndependentlyAbsentOriginalBirths": true,
+    "naturalClosedExitCode": 1,
+    "allZeroSignalsNoForcedCleanupDeadlineBudgetIdentityFailure": true,
+    "kernelOwnChildrenECHILD": true,
+    "pinsUnchanged": true,
+    "normalRebind5096Closed": true
+  },
+  "originalIssuerClosure": {
+    "path": "/workspace/team-c-resume-evidence/root-auth-third-short-original-session-close.json",
+    "sha256": "4b3165eeed9748e694d0fb11a2196a0853cf4f89f1d1439a503507def957caf9",
+    "sameOriginalRootTTY": 24402,
+    "exactStopNewline": true,
+    "strictReapedOriginalsDisappearedFinalActualExit0": true,
+    "originalBirthsIndependentlyAbsent": true,
+    "ownRunAndDevVarsAbsentWithoutPrivateBodyRead": true,
+    "maintainedIssuerSignalsPreservedSeparateFromBrowserZeroSignals": true
+  },
+  "qualification": "Actual current df local browser result only. First original sign-in failure and second setup failure preserved; no hosted identity/.NETRSA/auth_revision/provider/Home/global acceptance or unchanged retry."
+}

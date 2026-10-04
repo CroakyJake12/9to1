@@ -1,0 +1,117 @@
+{
+  "productId": "cakeos.model-picker",
+  "productType": "BackgroundComponent",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "cakeos-model-picker-0.1.0"
+  },
+  "donor": {
+    "name": "CakeOS Model Picker",
+    "repositoryUrl": "https://github.com/CroakyJake12/CakeOS",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/CakeOS/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "cakeos-model-picker",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/lib/cakeos/model-picker/cakeos-model-picker-daemon",
+    "arguments": "--daemon",
+    "workingDirectory": "/var/lib/cakeos/model-picker",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "cakeos-model-picker",
+    "socketName": "cakeos-model-picker.socket",
+    "dbusName": "org.cakeos.ModelPicker",
+    "socketActivation": true,
+    "requiredServices": ["dbus", "systemd-journald", "cakeos-go-router"]
+  },
+  "routes": [
+    {
+      "route": "/models",
+      "handler": "ListModelsHandler",
+      "methods": ["GET"]
+    },
+    {
+      "route": "/models/{id}/select",
+      "handler": "SelectModelHandler",
+      "methods": ["POST"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "cakeos.model-picker.list",
+      "displayName": "Model Listing",
+      "description": "List available LLM models from providers",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "cakeos.model-picker.select",
+      "displayName": "Model Selection",
+      "description": "Select and configure active model for inference",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "cakeos.go-router",
+      "kind": "RequiredProduct",
+      "versionConstraint": ">=0.1.0"
+    },
+    {
+      "dependencyId": "libglib2.0-0",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=2.78"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": true,
+    "requiresState": true,
+    "requiresData": false,
+    "customPaths": ["/etc/cakeos/model-picker", "/var/lib/cakeos/model-picker"]
+  },
+  "permissions": {
+    "requiredGrants": ["model.list", "model.select", "provider.access"],
+    "optionalGrants": []
+  },
+  "providers": [
+    {
+      "providerId": "llamacpp",
+      "transportType": "http-over-unix",
+      "legacyUnqualifiedProvider": "ollama",
+      "models": ["llama-3.2-3b", "llama-3.1-8b", "mistral-7b", "phi-3-mini"]
+    }
+  ],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "systemctl --user is-active cakeos-model-picker",
+    "expectedOutputPattern": "active",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "active\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T16:20:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/cakeos-model-picker-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

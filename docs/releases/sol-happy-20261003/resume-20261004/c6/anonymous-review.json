@@ -1,0 +1,57 @@
+{
+  "observedUTC": "2026-10-04T11:37:48.312883+00:00",
+  "reviewer": "C6 independent validation",
+  "anonymous": {
+    "result": "PASS",
+    "assertions": 138,
+    "requests": 22,
+    "scope": "Real isolated Worker anonymous HTTPS only; result pinned to pre/post observed provider713, exact D1, cpu1000. No browser/native/authenticated/registration/mail/admin/full release claim."
+  },
+  "checks": [
+    "Actual anonymous result wholly reviewed, all22 public status/CORS observations inspected",
+    "Root provider pre/post active version713100% exact and endpoint enabled/previewsfalse",
+    "Canonical maintained resource exactly1 identifier observed",
+    "Offline anonymous7 controls exit0",
+    "Offline authenticated original prerequisite refusal missing better-auth retained; after root package install exact controls exit0",
+    "All20 current integrated source manifest pins match",
+    "Fixture rollback scoped by exact identities; independent verification has noFK; afterjourney separate exactlinked count/cleanup needed"
+  ],
+  "fixtureCleanup": "PENDING_ROOT_AUTHENTICATED_PHASE_RECONCILIATION",
+  "globalRelease": "BLOCKED_PENDING_FULL_REQUIRED_ACCEPTANCE",
+  "acceptedHead": null,
+  "remaining": [
+    "Current owner source adoption/authority and native lifetime integration",
+    "Real browser/native/installed/crossapp/full applicable semantic acceptance",
+    "SH13 unresolved consequential policies/service/mail/Stripe/AI integration",
+    "Full recovery including D1 restoration/Files R2 bytes",
+    "Verified exact tested local PC delivery"
+  ],
+  "providerMutationsByC6": false,
+  "evidence": [
+    {
+      "path": "/workspace/team-c-resume-evidence/https/anonymous-result.json",
+      "bytes": 3937,
+      "sha256": "37e6a0732d2b4d18a7918d37a09e9df7563c4193870c8b3f7159ba80959e5152"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/provider-metadata-pre.json",
+      "bytes": 9933,
+      "sha256": "e6b542a056223c95220fe67cc0a9030f31e9406a81bbeb2643841910ee9dcbca"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/anonymous-provider-post.json",
+      "bytes": 4375,
+      "sha256": "e798c88e25ee585c10c8db34a0758032e92f8e76dadc41f6dc4a3640716a6efd"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/exposure-enable.json",
+      "bytes": 430,
+      "sha256": "04a0156d1c072216b15c55769ed2b379046f6bcb86246deb1dbd84ce399e3f49"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/resource-receipt.json",
+      "bytes": 840,
+      "sha256": "f43fff9a630eedf2067aad9431d7147a6ed380f498942cdc101b54b128bdbe2b"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "state": "NOT_RUN_ORCHESTRATION_SETUP",
+  "sourceCommit": "ef1d3a7546c130ef5948fab0711ef5d9feca9381",
+  "orchestrationSha256": "22c816f59562dff319d44ae544000782f4104b5dc1633ee3c08090e127453664",
+  "driverExitCode": 1,
+  "commandsExecuted": 0,
+  "nativeTestsExecuted": 0,
+  "cause": "TMPDIR/TMP/TEMP share task tmp directory; wrapper repeated mkdir without exist_ok=True",
+  "productionOrTestSourceChanged": false,
+  "preservedOutput": "/tmp/team-c-c5-maps-original-ef1-20261004",
+  "correctedOutput": "/tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected"
+}

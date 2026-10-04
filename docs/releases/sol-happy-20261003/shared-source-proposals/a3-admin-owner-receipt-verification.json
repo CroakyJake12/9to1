@@ -1,0 +1,24 @@
+{
+  "coordCommit": "ef1a11f7",
+  "originalReceipt": "a3-admin-key-launcher-subreaper-owner-receipt.json",
+  "bytes": 4295,
+  "sha256": "6ed615daab3bcc08fe20a84cdd15935667af5ed677208757c12a1e8fa1300c99",
+  "recordedUTC": "2026-10-03T21:54:23.304005+00:00",
+  "originalGitSourceVerifications": [
+    {
+      "proposal": "lifecycleKey",
+      "commit": "2ee0365b7175a8b8dcf8160bc74185c9c887a5d9",
+      "sourceBytesAndHashVerified": true
+    },
+    {
+      "proposal": "pathLauncher",
+      "commit": "a93987b6d5286fed4e10bbdfda16f8f0cf763a6d",
+      "sourceBytesAndHashVerified": true
+    }
+  ],
+  "subreaperFourOriginalSourceHashesVerified": true,
+  "ownerQualifiedAck": "Key2ee0365b and PATH launchera93987 source ACK clear only; no adoption/runtime acceptance.",
+  "subreaper": "HELD: preserve body+same-handle close errors independently; control fixture protected acquisitions, independent cleanup and actual original-work settlement required.",
+  "sdk6": "4472 complete map valid but root external pin NOT issued; full attempt NOT_RUN while custody hold is corrected.",
+  "qualification": "Actual SDK5 115commands/strictdrains and twoDebug suites historical; original failures retained. No owner/runtime/global acceptance inferred."
+}

@@ -1,0 +1,5 @@
+Test run for /tmp/team-c-c5-mail-original-89cd-20261004/artifacts/bin/Mail.OriginalDraft.Tests/release_linux-x64/NineToOne.Mail.OriginalDraft.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /tmp/team-c-c5-mail-original-89cd-20261004/test-results/mail-original-draft.trx
+
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 103 ms - NineToOne.Mail.OriginalDraft.Tests.dll (net10.0)

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "sourceBase": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "frozenCommit": "a0be9e297f457b7576568b7f1a11b1cefca46e9f",
+  "sourceFilesVerified": [
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeWindow.cs",
+      "bytes": 15374,
+      "sha256": "fc0bc6f5d49e75d46f8e3400deef41cef9ad195adeab82337dcfc0ec2a4398ba",
+      "gitBlob": "06ec540eb78bc4490b8cfc9acc86e849ebe9ebe6"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs",
+      "bytes": 11482,
+      "sha256": "fee818109f0d51153cdc0afbd5536ad93255208273c2c7a0a2ec05345341cea2",
+      "gitBlob": "2a8d977a9d24df4fc7213357556de39ee67c3401"
+    }
+  ],
+  "review": "Existing editor detach/host disposal and later workspace/model resets marshal to existing UI dispatcher. Captured Preview disposal remains awaited between phases. Original authority, cancellation guard and phase order retained. New off-UI real owned-Den/mounted editor control requires disposed owner and empty editor/picker before return; original permission/import assertions retained.",
+  "qualification": "Source ACK. Implementer normal Release 2/3 pass: new real background Den disposal and original permission case pass; original avatar-positive import fails actual missing libglycin.so. No independent runtime rerun or Windows acceptance."
+}

@@ -1,0 +1,7 @@
+<Page Name="BoardsRoot" Layout="Grid" Width="100%" Height="100%" Rows="Auto Auto Auto 1fr Auto" Gap="12px" Padding="22px" Background="Surface">
+  <Text Name="BoardTitle" Row="0" Content="Haven Boards" Level="H1" />
+  <Text Row="1" Content="Structured board · local first" Foreground="TextSecondary" FontSize="12" />
+  <Container Name="BoardToolbar" Row="2" Layout="Horizontal" Width="100%" Gap="8px" />
+  <Container Name="BoardLanes" Row="3" Layout="Horizontal" Width="100%" Height="100%" Overflow="Scroll" Clip="true" Gap="12px" />
+  <Text Name="Status" Row="4" Content="" Foreground="TextSecondary" FontSize="11" Visibility="Collapsed" />
+</Page>

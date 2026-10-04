@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Spaces</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Spaces</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
+    <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
+    <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
+    <EmbeddedResource Include="UI\Chat\ChatSpace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatSpace.cui" />
+    <EmbeddedResource Include="UI\Home\SpacesHome.cui" LogicalName="HavenOS.Apps.Spaces.UI.Home.SpacesHome.cui" />
+    <None Update="UI\Chat\ChatSpace.cui" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="UI\Home\SpacesHome.cui" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

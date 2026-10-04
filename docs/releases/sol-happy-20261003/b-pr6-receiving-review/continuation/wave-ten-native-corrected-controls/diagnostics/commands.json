@@ -1,0 +1,349 @@
+[
+  {
+    "name": "head-before",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103569,
+        "birth": 1474199,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.031,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103570,
+        "birth": 1474202,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.029,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "files-workflow-configured",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "--files-workflow-test"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103591,
+        "birth": 1474205,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.29,
+    "bytes": 97,
+    "familyClosed": true
+  },
+  {
+    "name": "cli-create",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "--project-create",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/fixture-data/console-roundtrip.waveproject.json",
+      "C5 original native track"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103604,
+        "birth": 1474234,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.104,
+    "bytes": 243,
+    "familyClosed": true
+  },
+  {
+    "name": "cli-open",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "project",
+      "open",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/fixture-data/console-roundtrip.waveproject.json"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103612,
+        "birth": 1474245,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.112,
+    "bytes": 428,
+    "familyClosed": true
+  },
+  {
+    "name": "cli-add-track",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "project",
+      "add-track",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/fixture-data/console-roundtrip.waveproject.json",
+      "0",
+      "C5 additional native track"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103620,
+        "birth": 1474256,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.112,
+    "bytes": 587,
+    "familyClosed": true
+  },
+  {
+    "name": "cli-stale-revision",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "project",
+      "add-track",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/fixture-data/console-roundtrip.waveproject.json",
+      "0",
+      "C5 stale must refuse"
+    ],
+    "exit": 2,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103628,
+        "birth": 1474267,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 2,
+    "seconds": 0.104,
+    "bytes": 107,
+    "familyClosed": true
+  },
+  {
+    "name": "cli-reopen",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "project",
+      "open",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/fixture-data/console-roundtrip.waveproject.json"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103636,
+        "birth": 1474278,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.12,
+    "bytes": 587,
+    "familyClosed": true
+  },
+  {
+    "name": "browser-engine-restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "apps/Web/Wave/Engine/NineToOne.Wave.BrowserEngine.csproj",
+      "--configfile",
+      "/workspace/team-c-c5-wave-canonical5-provisional/NuGet.Config",
+      "-p:Configuration=Release",
+      "--disable-parallel",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103644,
+        "birth": 1474290,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.122,
+    "bytes": 213,
+    "familyClosed": true
+  },
+  {
+    "name": "browser-engine-build",
+    "argv": [
+      "dotnet",
+      "build",
+      "apps/Web/Wave/Engine/NineToOne.Wave.BrowserEngine.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103663,
+        "birth": 1474402,
+        "gone": true
+      },
+      {
+        "pid": 103685,
+        "birth": 1474493,
+        "gone": true
+      },
+      {
+        "pid": 103687,
+        "birth": 1474499,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 2.777,
+    "bytes": 422,
+    "familyClosed": true
+  },
+  {
+    "name": "head-after",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103710,
+        "birth": 1474699,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.03,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103711,
+        "birth": 1474702,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.037,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]

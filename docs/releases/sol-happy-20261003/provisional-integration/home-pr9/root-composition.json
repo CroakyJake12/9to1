@@ -1,0 +1,26 @@
+{
+  "base": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+  "proposal": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+  "composed": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+  "wholeFiles": [
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "bytes": 13971,
+      "sha256": "b1fd87d2d04fc49b5e1efae86c776d18044e0ddee1be49fd961edc62985d5a9d"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "bytes": 12801,
+      "sha256": "f0c4c86cf65aeed50112e5cae6f7c5ef0ffd5e9dd7558a3b9cbc70f0f96230d6"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "bytes": 11653,
+      "sha256": "1554ba89446e238ad4aba99ed7043e0bc1d9f85daf0a0cad2567aad0c4458d1c"
+    }
+  ],
+  "unchangedOutsidePaths": 16685,
+  "sourcePeer": "c4d8ae485d7b2131f747bf6f379a1add9538776ef7540b98c9ed0885306e687e",
+  "state": "UNACCEPTED_EXACT_THREE_SOURCE_COMPOSED",
+  "runtime": "External actual original6 PASS reported; raw evidence held separately; root packaged Windows not yet executed."
+}

@@ -1,0 +1,134 @@
+{
+  "testedCandidate": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+  "testedTree": "c1e9df46618f14985aff5f222706b448a34c65da",
+  "reviewedDescendant": "b2c2ea6412ec15b83dc3b3f9e6da0babd80e86a9",
+  "descendantChangedPaths": [
+    "cloud/cake-id-auth/CONTRACT_COMPATIBILITY.md",
+    "cloud/cake-id-auth/README.md"
+  ],
+  "results": [
+    {
+      "name": "sites",
+      "command": [
+        "dotnet",
+        "test",
+        "eng/service-validation/Sites.Source.Tests.csproj",
+        "-c",
+        "Release",
+        "--logger",
+        "trx;LogFileName=sites-final.trx",
+        "--results-directory",
+        "/workspace/team-c/evidence/final-candidate"
+      ],
+      "cwd": "/workspace/team-c/integration",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:45.819166+00:00",
+      "endUTC": "2026-10-03T17:41:49.585115+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/sites.log",
+      "logSha256": "aa32df08a21d45a8eeea3e62611b7b09bd5850bdd7ce7bb8d4eba05776510d11"
+    },
+    {
+      "name": "billing",
+      "command": [
+        "node",
+        "--test",
+        "cloud/billing/test/stripe-webhook.test.mjs"
+      ],
+      "cwd": "/workspace/team-c/integration",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:49.585513+00:00",
+      "endUTC": "2026-10-03T17:41:49.743292+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/billing.log",
+      "logSha256": "ced501ada860c24698ddd946dbb931b3a636858a7ba4dd3c37e5560837986a6b"
+    },
+    {
+      "name": "auth-install",
+      "command": [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:49.743424+00:00",
+      "endUTC": "2026-10-03T17:41:52.763305+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-install.log",
+      "logSha256": "33d228bfe6ec9c8179511fd096a8748f61a2f20f2b5af22ae0d51366018faba5"
+    },
+    {
+      "name": "auth-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:52.763442+00:00",
+      "endUTC": "2026-10-03T17:41:54.933897+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-typecheck.log",
+      "logSha256": "626d520fa1bc395811b71b0b5c5580d3b7932af799932d31f318f2a79c327c14"
+    },
+    {
+      "name": "auth-schema",
+      "command": [
+        "npm",
+        "run",
+        "schema:validate"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:54.934107+00:00",
+      "endUTC": "2026-10-03T17:41:55.060604+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-schema.log",
+      "logSha256": "f690bef4447b74b7c1e80af0bf74073e6620c417aec14e8465dc5450358159dc"
+    },
+    {
+      "name": "auth-ui",
+      "command": [
+        "npm",
+        "run",
+        "build:ui"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:41:55.060728+00:00",
+      "endUTC": "2026-10-03T17:41:55.217661+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-ui.log",
+      "logSha256": "dab20cc5e615d33a51bb2c51c02a30ca0c7ee787b152eb059f74e8d7608e6bf8"
+    },
+    {
+      "name": "auth-workerd",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 1,
+      "startUTC": "2026-10-03T17:41:55.217787+00:00",
+      "endUTC": "2026-10-03T17:41:56.958937+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-workerd.log",
+      "logSha256": "1ec18444bbf61662bb8e50618330eeebd01a240734d643fe3ebb8f5f969a3ae7"
+    },
+    {
+      "name": "auth-workerd-retry",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/team-c/integration/cloud/cake-id-auth",
+      "exitCode": 0,
+      "startUTC": "2026-10-03T17:43:12.998911+00:00",
+      "endUTC": "2026-10-03T17:43:24.189096+00:00",
+      "log": "/workspace/team-c/evidence/final-candidate/auth-workerd-retry.log",
+      "logSha256": "24fcb1a629fb22fd94672966a4baf6376ce9c9b2683e2c9524154a9e981e43e2",
+      "reason": "Initial process failed before readiness: protected default Wrangler logging directory. Supported task-specific log/config environment paths used; no source/assertion changes."
+    }
+  ],
+  "scope": "Root execution independently audited, not C6 replay. Startup failure retained; local partial evidence only.",
+  "documentOnlyHashChanges": [
+    "source:cloud/cake-id-auth/README.md"
+  ],
+  "runtimeTestHashMismatches": []
+}

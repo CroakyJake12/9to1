@@ -1,0 +1,224 @@
+{
+  "publicationCommit": "457dbe9e8d397765e81b3c801517bad7d0d3dee6",
+  "historicalPublication": "56f971e5dd99413257b2e02c80cbb9ccb1b34128",
+  "sourceCommit": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+  "rootExactFileAdoption": "21cdc40f",
+  "checks": [
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/README.md",
+      "bytes": 7614,
+      "sha256": "0445fd88e5558ad32901ebe03565acec7f2c8ad826874f85cc691537d5262ee9"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/evidence.json",
+      "bytes": 9150,
+      "sha256": "cdebb4b9f845156e2f814deb24764b41a623c1ef890acd5ea565f95ff010aff7"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-6d7-kernel.log",
+      "bytes": 1145,
+      "sha256": "0d99d3daa11f30657b662588b10ec05ba0a7ca6800344e9f897b8115641058e6"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-708-kernel.log",
+      "bytes": 1145,
+      "sha256": "d889961513cc94593338e3d015704cddf65a9351469ebdfb4c9f3de9131ee418"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-708-pty.log",
+      "bytes": 1525,
+      "sha256": "26dc15cbe7605257f5a9cd3bfe7d02300ac7b31c74967423066d73c9c7de088d"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-998-launch.log",
+      "bytes": 115,
+      "sha256": "4e1410ce78da4660483dd2dcda6f1513e8df873cab51d8b8258d43f50b86dfcd"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-deee-8799-smoke.log",
+      "bytes": 1101,
+      "sha256": "8b01e67ab48716205a2966fe389155e60d7b44f8d780d7f9be6e0ee4a22186aa"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-deee-launch.log",
+      "bytes": 115,
+      "sha256": "4e1410ce78da4660483dd2dcda6f1513e8df873cab51d8b8258d43f50b86dfcd"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-ef6-8799-smoke.log",
+      "bytes": 1101,
+      "sha256": "fa577be769a3735d18d818deac05bbcad55ca2cf7b722948f7d88d427d269559"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-ef6-control.log",
+      "bytes": 91,
+      "sha256": "88457ee3334e02838a4fda14028328e6881f617b399497ea95564a5edbb05b07"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/c1-recovery-ef6-pty.log",
+      "bytes": 1891,
+      "sha256": "99a899295dd87852f1937ceabaa407dc2925caba056fe5016f60e7e9f0310b76"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/coordinator-transport-observation.txt",
+      "bytes": 482,
+      "sha256": "ea0e87b5218ba47ace40340ee915a0b054e9520311494cde0288e6b5feea40ce"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-caller-disposal.log",
+      "bytes": 91,
+      "sha256": "88457ee3334e02838a4fda14028328e6881f617b399497ea95564a5edbb05b07"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-launch-close-final.log",
+      "bytes": 115,
+      "sha256": "4e1410ce78da4660483dd2dcda6f1513e8df873cab51d8b8258d43f50b86dfcd"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-launch-close-protected-final.log",
+      "bytes": 115,
+      "sha256": "4e1410ce78da4660483dd2dcda6f1513e8df873cab51d8b8258d43f50b86dfcd"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-launch-close-protected.log",
+      "bytes": 115,
+      "sha256": "4e1410ce78da4660483dd2dcda6f1513e8df873cab51d8b8258d43f50b86dfcd"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-launch-close.log",
+      "bytes": 115,
+      "sha256": "4e1410ce78da4660483dd2dcda6f1513e8df873cab51d8b8258d43f50b86dfcd"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-network.log",
+      "bytes": 99,
+      "sha256": "448b73901125dd4dcaf47267e809aadf1d36252a6a4c3df550faedde290ead89"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-npm-ci-corrected.log",
+      "bytes": 25,
+      "sha256": "93ea9f73bb4f587cfecbd87354ce9a123940df8c55068b76bd79cea5e1462cbb"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-npm-ci.log",
+      "bytes": 1246,
+      "sha256": "ff5ea5c0a52025f344e227c925ca2e9c12d0e4eedaaaf28757b0de0167007da2"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-original-nine.log",
+      "bytes": 1145,
+      "sha256": "177514b58dd48b8b92f87fb1d8782d06b2ef673bd1d027b88937f3b6a5b37ac1"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-port-runtime.log",
+      "bytes": 102,
+      "sha256": "0bece20d33720ddad4b68cf2e72905e48f9eab5ba49a56f88619121245ddea1c"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-pty-final-eight.log",
+      "bytes": 1525,
+      "sha256": "96485d550f10ba5d3170c82eff0c9c735c6d02ae8927a58d3032c951d5172231"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-pty-final.log",
+      "bytes": 1367,
+      "sha256": "6265f23b7b855aa1ca482e83cd5658006462dc771102a0285931ff46d97ce5f7"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-pty-first.log",
+      "bytes": 4380,
+      "sha256": "935a38edc646db6b4c55da99f5db9325fb46a160fe383f01652349c2cb3e20f9"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-pty-nine-control.log",
+      "bytes": 1714,
+      "sha256": "c99d17d9b85c5a7e17e40e6b13222a2b6856028423ef3c8328e1027d02e304c8"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-pty-postlaunch.log",
+      "bytes": 1525,
+      "sha256": "70fadced481d562d7f833fafffc2c768be8e859026982bfe239766fb562b844f"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-pty-second.log",
+      "bytes": 935,
+      "sha256": "b9fc1923418c7c2cf2a71ae1793c23b4ae62323d021ffd5bf7c46f5679e45f89"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/fixture-recovery-pty-ten-control.log",
+      "bytes": 1891,
+      "sha256": "aa8e70e93ed44e4f1fe21cf563d208f28c163abf5b0a896dfb8a1c64aeb894dc"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/raw/original-to-final-fixture.patch",
+      "bytes": 29049,
+      "sha256": "ae257d285807cba56dc05e560c135ab3c657cb23df51e8fc7a07ce47d16c0198"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/receiver-original-request.json",
+      "bytes": 5145,
+      "sha256": "09be131a2a0e85b339aa8ba19c1f74530fce8b98dbe212070a7602b4fcee4f95"
+    },
+    {
+      "path": "handoff/team-c/browser-fixture-recovery/source-manifest.json",
+      "bytes": 3342,
+      "sha256": "4f4b278ff6b00f269f99a9adf63d22e31347e79f2f21d9814200cebd4a8fd0e7"
+    }
+  ],
+  "rawIndexedCount": 28,
+  "sourceFilesVerified": 11,
+  "protectedUnchangedFilesVerified": 15,
+  "authDeltaPaths": [
+    "cloud/cake-id-auth/tests/browser-fixture.mjs",
+    "cloud/cake-id-auth/tests/fixture-caller-control.mjs",
+    "cloud/cake-id-auth/tests/fixture-control.mjs",
+    "cloud/cake-id-auth/tests/fixture-control.test.mjs",
+    "cloud/cake-id-auth/tests/fixture-launch.mjs",
+    "cloud/cake-id-auth/tests/fixture-launch.test.mjs",
+    "cloud/cake-id-auth/tests/fixture-network.mjs",
+    "cloud/cake-id-auth/tests/fixture-network.test.mjs",
+    "cloud/cake-id-auth/tests/fixture-port-runtime.test.mjs",
+    "cloud/cake-id-auth/tests/fixture-pty.test.py",
+    "cloud/cake-id-auth/tests/linux-fixture-custodian.py"
+  ],
+  "errors": [],
+  "actualC1Smoke": {
+    "sourceCommit": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "toolSession": 43999,
+    "cwd": "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth",
+    "argv": [
+      "node",
+      "tests/browser-fixture.mjs"
+    ],
+    "explicitEnvironment": {
+      "XDG_CONFIG_HOME": "/workspace/team-c/evidence/c1/xdg",
+      "CAKE_BROWSER_FIXTURE_PORT": "8799",
+      "CAKE_BROWSER_FIXTURE_SMOKE": "1"
+    },
+    "otherEnvironment": "inherited",
+    "shellCommand": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c1/xdg CAKE_BROWSER_FIXTURE_PORT=8799 CAKE_BROWSER_FIXTURE_SMOKE=1 node tests/browser-fixture.mjs > /workspace/team-c/evidence/c1/public-cors-review/recovery-ef6-8799-smoke.log 2>&1",
+    "exit": 0,
+    "confirmation": "C1 confirmed exact original argv/environment/cwd/source after publication; no rerun"
+  },
+  "method": "Read-only immutable Git blobs; SHA256, source/base/adoption comparison, binary magic/suffix and credential patterns. No runtime or original payload execution. Raw original private manifest paths are locators only; no private values published.",
+  "qualification": "Bounded fixture bootstrap/process custody only. Historical failures retained. Old B receiver family HELD; no browser/OAuth journey, provider, deployment or full release acceptance. Original 56 command metadata superseded explicitly, raw bytes unchanged.",
+  "rootPublicationOverlay": "6163b709",
+  "rootPublicPayloadComparisons": 32,
+  "rootOverlayErrors": [],
+  "attributeCorrection": {
+    "path": ".gitattributes",
+    "rule": "handoff/team-c/browser-fixture-recovery/raw/original-to-final-fixture.patch -whitespace",
+    "finalRootByteEqual": true,
+    "preservedPatchSha256": "ae257d285807cba56dc05e560c135ab3c657cb23df51e8fc7a07ce47d16c0198"
+  },
+  "rawObserved": {
+    "c1FinalPTY": "Ran 10 tests; OK",
+    "c1Disposal": "PASS exact listener/input disposal and original drain+disposal Error identities preserved",
+    "c1Smoke": {
+      "accounts": 2,
+      "strictReaped": true,
+      "originalsDisappeared": true,
+      "kernelReaps": 5
+    }
+  }
+}

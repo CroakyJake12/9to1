@@ -1,0 +1,127 @@
+﻿using System;
+using System.Diagnostics;
+using Avalonia.Controls.Platform;
+using Avalonia.Reactive;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
+using Avalonia.Platform;
+using Avalonia.Rendering;
+using Avalonia.Rendering.Composition;
+using Avalonia.Threading;
+using System.Collections.Generic;
+
+namespace Avalonia.Headless
+{
+    public static class AvaloniaHeadlessPlatform
+    {
+        internal static Compositor? Compositor { get; private set; }
+        private static RenderTimer? s_renderTimer;
+
+        private class RenderTimer : DefaultRenderTimer
+        {
+            private readonly int _framesPerSecond;
+            private Action? _forceTick; 
+            protected override IDisposable StartCore(Action<TimeSpan> tick)
+            {
+                var st = Stopwatch.StartNew();
+                _forceTick = () => tick(st.Elapsed);
+
+                var timer = new DispatcherTimer(DispatcherPriority.UiThreadRender)
+                {
+                    Interval = TimeSpan.FromSeconds(1.0 / _framesPerSecond),
+                    Tag = "HeadlessRenderTimer"
+                };
+                timer.Tick += (s, e) => tick(st.Elapsed);
+                timer.Start();
+
+                return Disposable.Create(() =>
+                {
+                    _forceTick = null;
+                    timer.Stop();
+                });
+            }
+
+            public RenderTimer(int framesPerSecond) : base(framesPerSecond)
+            {
+                _framesPerSecond = framesPerSecond;
+            }
+
+            public override bool RunsInBackground => false;
+
+            public void ForceTick() => _forceTick?.Invoke();
+        }
+
+        private class HeadlessWindowingPlatform : IWindowingPlatform
+        {
+            readonly PixelFormat _frameBufferFormat;
+            public HeadlessWindowingPlatform(PixelFormat frameBufferFormat)
+            {
+                _frameBufferFormat = frameBufferFormat;
+            }
+            public IWindowImpl CreateWindow() => new HeadlessWindowImpl(false, _frameBufferFormat);
+            public ITopLevelImpl CreateEmbeddableTopLevel() => CreateEmbeddableWindow();
+
+            public IWindowImpl CreateEmbeddableWindow() => throw new PlatformNotSupportedException();
+
+            public ITrayIconImpl? CreateTrayIcon() => null;
+
+            public void GetWindowsZOrder(ReadOnlySpan<IWindowImpl> windows, Span<long> zOrder)
+            {
+                for (var i = 0; i < windows.Length; ++i)
+                {
+                    zOrder[i] = (windows[i] as HeadlessWindowImpl)?.ZOrder ?? 0;
+                }
+            }
+        }
+        
+        internal static void Initialize(AvaloniaHeadlessPlatformOptions opts)
+        {
+            var clipboardImpl = new HeadlessClipboardImplStub();
+            var clipboard = new Clipboard(clipboardImpl);
+
+            AvaloniaLocator.CurrentMutable
+                .Bind<IClipboardImpl>().ToConstant(clipboardImpl)
+                .Bind<IClipboard>().ToConstant(clipboard)
+                .Bind<ICursorFactory>().ToSingleton<HeadlessCursorFactoryStub>()
+                .Bind<IPlatformSettings>().ToSingleton<DefaultPlatformSettings>()
+                .Bind<IPlatformIconLoader>().ToSingleton<HeadlessIconLoaderStub>()
+                .Bind<IKeyboardDevice>().ToConstant(new KeyboardDevice())
+                .Bind<IRenderLoop>().ToConstant(Rendering.RenderLoop.FromTimer(s_renderTimer = new RenderTimer(60)))
+                .Bind<IWindowingPlatform>().ToConstant(new HeadlessWindowingPlatform(opts.FrameBufferFormat))
+                .Bind<PlatformHotkeyConfiguration>().ToSingleton<PlatformHotkeyConfiguration>()
+                .Bind<KeyGestureFormatInfo>().ToConstant(new KeyGestureFormatInfo(new Dictionary<Key, string>() { }));
+            Compositor = new Compositor( null);
+        }
+
+        /// <summary>
+        /// Forces renderer to process a rendering timer tick.
+        /// Use this method before calling <see cref="HeadlessWindowExtensions.GetLastRenderedFrame"/>. 
+        /// </summary>
+        /// <param name="count">Count of frames to be ticked on the timer.</param>
+        public static void ForceRenderTimerTick(int count = 1)
+        {
+            for (var c = 0; c < count; c++)
+                s_renderTimer?.ForceTick();
+
+        }
+    }
+
+    public class AvaloniaHeadlessPlatformOptions
+    {
+        public bool UseHeadlessDrawing { get; set; } = true;
+        public PixelFormat FrameBufferFormat { get; set; } = PixelFormat.Rgba8888;
+    }
+
+    public static class AvaloniaHeadlessPlatformExtensions
+    {
+        public static AppBuilder UseHeadless(this AppBuilder builder, AvaloniaHeadlessPlatformOptions opts)
+        {
+            if(opts.UseHeadlessDrawing)
+                builder = builder.UseRenderingSubsystem(HeadlessPlatformRenderInterface.Initialize, "Headless");
+            return builder
+                .UseStandardRuntimePlatformSubsystem()
+                .UseWindowingSubsystem(() => AvaloniaHeadlessPlatform.Initialize(opts), "Headless")
+                .UseHarfBuzz();
+        }
+    }
+}

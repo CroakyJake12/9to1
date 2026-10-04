@@ -1,0 +1,5 @@
+SDK attempt6 exact fresh receiving head 9b29cae76576554d09b10e644d818fad2cdca71a refused with exit1 after103 commands, all exit0 and103 strict drains true. The original whole Debug Accounts and OrgPools suites each exited0; Web and Release did not execute. No completed whole configuration is recorded.
+
+The retained actual Sites query triggered the tooling generated owner-root assertion. Original Sites Directory.Build.props explicitly declares project-local bin/obj owner paths; SDK default artifact base paths apply only when these declarations are empty. This is a preserved refusal, not a passed source gate or a changed producer. All original source/PDB/restore/custody assertions and previous failures remain. No product key fix or global source adoption. SDK10.0.401 varies from workflow10.0.301.
+
+Binary payloads remain at the indexed external receiving paths; recursively scanned publication contains no PE/PDB/ELF/ZIP binaries. Exact root pins, outer argv, actual source/compiler/restore/process receipts and all executed command logs are retained.

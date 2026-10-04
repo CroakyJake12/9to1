@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "status": "ACTUAL_ORIGINAL_NATIVE_NEGATIVE_ACK_FOCUS_REPAIR_CONFIRMED",
+  "sourceCommit": "9534c5a0fbff85a64a763e4564deca67f0aa04c9",
+  "runId": 37234364549,
+  "jobId": 111530426617,
+  "artifactId": 11314119555,
+  "artifactBytes": 40177,
+  "artifactSha256": "d7db05451bbbc8fd5fa029078f8b878655b819d91ebdbf807a7a48226915dd59",
+  "originalResultSha256": "12098c4205a5465dc18e01fa37ef15af6f91900beda3a1bbcd8dfbaa1e4ed581",
+  "reviewedAtUtc": "2026-10-04T21:07:22.117781+00:00",
+  "provider": "Independent official job failure and exact head/artifact size/digest verified. Full original ZIP CRC/four member copies and actual screenshot hash verified.",
+  "rawChecks": {
+    "total": 75,
+    "passed": 75,
+    "failed": 0,
+    "qualification": "Exact raw checks count75; implementer initial76 description is not the original result count."
+  },
+  "focusAndValue": "Actual baseline lower field HWND131470 -> new address HWND66222, both own PID7016/nativeEdit/kernel match/modal child. Genuine changed identity and HWND verified, one original typing reaches exact private fixture path according to unchanged exact-value Check; no private raw value inspected.",
+  "nativeFolderSelection": "Genuine bounded default-button metadata completed, actual ID1/GetDlgItem nativeButton66110 plus exact Select Folder UIA Button/Invoke admitted. Picker disappeared and actual app foreground returned; later source setup-stage reached.",
+  "originalFailure": {
+    "type": "System.Management.Automation.SessionStateUnauthorizedAccessException",
+    "stage": "actual-native-files-setup",
+    "rawExceptionText": "WITHHELD"
+  },
+  "sourceCausalAssessment": "First unconditional $home assignment at source line700 follows folder setup. PowerShell HOME is readonly, so the observed SessionStateUnauthorizedAccessException and stage are consistent with that assignment; second same protected variable exists line526. Raw exception text/precise scriptLine withheld, so exact throw-site is source-grounded inference pending extracted assignment reproduction, not additional runtime stack evidence.",
+  "screenshotAssessment": "Actual1024x705 Canvas mainview, no document selected, Pending requests0/Trusted grants0, picker absent. No Canvas content/stroke/approval/durable reopen shown.",
+  "cleanup": "Separate failureCleanup actual own main CloseMainWindow/exited0, both five-second streams drained, stderr whitespace-only, no forced cleanup. Original launch record remains pre-cleanup exitedfalse/null and is not relabeled as ordinary acceptance.",
+  "downstream": "No requests or Canvas state receipts; approvals, creation, stroke, save/reopen and full app acceptance remain NOT_RUN.",
+  "privateContentsRead": "NONE; public result/ZIP/source/screenshot only.",
+  "reviewFindings": [
+    {
+      "scope": "Existing C-owned harness variable",
+      "finding": "Protected PowerShell $home assignment before later actual authority checks; minimal variable rename may preserve all original criteria.",
+      "permission": "Root sole frozen successor review and invocation; no product/fixture/approval mutation by C6."
+    }
+  ]
+}

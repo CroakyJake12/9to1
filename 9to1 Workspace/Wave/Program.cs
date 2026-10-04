@@ -1,0 +1,673 @@
+using System.Globalization;
+using System.Text;
+
+namespace HavenOS.Apps.Wave;
+
+internal sealed record WaveformPreview(
+    string SourcePath,
+    double DurationSeconds,
+    int SampleRate,
+    int Channels,
+    float[] Peaks,
+    long DataOffset,
+    long DataSize,
+    ushort BlockAlign,
+    uint ByteRate,
+    ushort FormatTag = 1,
+    ushort BitsPerSample = 16,
+    byte[]? FormatPayload = null);
+
+internal sealed record WaveSurfaceState(bool IsLoaded, string Message, WaveformPreview? Preview)
+{
+    public static WaveSurfaceState Failed(string message) => new(false, message, null);
+    public static WaveSurfaceState Loaded(WaveformPreview preview) => new(true, "Audio loaded.", preview);
+}
+
+internal static class WaveSurface
+{
+    public static WaveSurfaceState Load(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return WaveSurfaceState.Failed("Choose a local WAV file.");
+
+        try
+        {
+            var fullPath = Path.GetFullPath(path);
+            if (!File.Exists(fullPath))
+                return WaveSurfaceState.Failed("The selected audio file does not exist.");
+
+            return WaveSurfaceState.Loaded(PcmWaveformReader.Decode(fullPath));
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException
+            or OverflowException)
+        {
+            return WaveSurfaceState.Failed("Wave could not decode this file. Supported WAV samples are 8/16/24/32-bit PCM and 32/64-bit IEEE floating point.");
+        }
+    }
+}
+
+internal static class PcmWaveformReader
+{
+    private const int PeakCount = 512;
+    private const int FramesPerProbe = 1024;
+
+    public static WaveformPreview Decode(string path)
+    {
+        using var stream = File.OpenRead(path);
+        using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
+
+        if (ReadFourCc(reader) != "RIFF") throw new InvalidDataException("Missing RIFF header.");
+        var riffSize = reader.ReadUInt32();
+        if ((long)riffSize + 8 != stream.Length) throw new InvalidDataException("RIFF size does not match file length.");
+        if (ReadFourCc(reader) != "WAVE") throw new InvalidDataException("Missing WAVE header.");
+
+        ushort formatTag = 0;
+        ushort channels = 0;
+        uint sampleRate = 0;
+        uint byteRate = 0;
+        ushort blockAlign = 0;
+        ushort bitsPerSample = 0;
+        long dataOffset = -1;
+        long dataSize = 0;
+        var hasFormat = false;
+        byte[]? formatPayload = null;
+
+        while (stream.Position + 8 <= stream.Length)
+        {
+            var chunkId = ReadFourCc(reader);
+            var chunkSize = reader.ReadUInt32();
+            var chunkStart = stream.Position;
+            var chunkEnd = checked(chunkStart + chunkSize);
+            if (chunkEnd > stream.Length) throw new InvalidDataException("WAV chunk exceeds file length.");
+
+            if (chunkId == "fmt ")
+            {
+                if (hasFormat) throw new InvalidDataException("WAV contains multiple format chunks.");
+                if (chunkSize is < 16 or > 128) throw new NotSupportedException("WAV format metadata exceeds supported bounds.");
+                formatPayload = reader.ReadBytes(checked((int)chunkSize));
+                stream.Position = chunkStart;
+                formatTag = reader.ReadUInt16();
+                channels = reader.ReadUInt16();
+                sampleRate = reader.ReadUInt32();
+                byteRate = reader.ReadUInt32();
+                blockAlign = reader.ReadUInt16();
+                bitsPerSample = reader.ReadUInt16();
+                if (formatTag == 0xfffe)
+                {
+                    if (chunkSize < 40) throw new InvalidDataException("Invalid extensible WAV format.");
+                    var extensionSize = reader.ReadUInt16();
+                    if (extensionSize < 22 || extensionSize + 18 > chunkSize) throw new InvalidDataException("Invalid extensible WAV extension size.");
+                    var validBits = reader.ReadUInt16();
+                    _ = reader.ReadUInt32(); // Channel order remains the source's canonical interleaved order.
+                    var subtype = new Guid(reader.ReadBytes(16));
+                    if (validBits == 0 || validBits > bitsPerSample) throw new InvalidDataException("Invalid WAV valid-bit count.");
+                    formatTag = subtype == new Guid("00000001-0000-0010-8000-00aa00389b71") ? (ushort)1
+                        : subtype == new Guid("00000003-0000-0010-8000-00aa00389b71") ? (ushort)3
+                        : throw new NotSupportedException("Unsupported extensible WAV subtype.");
+                }
+                hasFormat = true;
+            }
+            else if (chunkId == "data")
+            {
+                if (dataOffset >= 0) throw new NotSupportedException("Multiple WAV data chunks require a different container decoder.");
+                dataOffset = chunkStart;
+                dataSize = chunkSize;
+            }
+
+            stream.Position = chunkEnd;
+            if ((chunkSize & 1) != 0 && stream.Position < stream.Length)
+                stream.Position++;
+        }
+
+        if (!hasFormat || dataOffset < 0 || dataSize <= 0)
+            throw new InvalidDataException("WAV format or data chunk is missing.");
+        if (!(formatTag == 1 && bitsPerSample is 8 or 16 or 24 or 32)
+            && !(formatTag == 3 && bitsPerSample is 32 or 64))
+            throw new NotSupportedException("Unsupported WAV sample representation.");
+        if (channels == 0 || sampleRate == 0 || sampleRate > (uint)int.MaxValue)
+            throw new InvalidDataException("WAV format values are invalid.");
+
+        var expectedBlockAlign = channels * (bitsPerSample / 8);
+        if (blockAlign != expectedBlockAlign)
+            throw new InvalidDataException("WAV block alignment is unsupported.");
+        if (byteRate != checked((ulong)sampleRate * blockAlign))
+            throw new InvalidDataException("WAV byte rate does not match its frame configuration.");
+        if (dataSize % blockAlign != 0)
+            throw new InvalidDataException("WAV data ends with an incomplete audio frame.");
+
+        var totalFrames = dataSize / blockAlign;
+        if (totalFrames <= 0) throw new InvalidDataException("WAV contains no audio frames.");
+
+        var peaks = new float[PeakCount];
+        for (var bucket = 0; bucket < PeakCount; bucket++)
+        {
+            var bucketStart = Math.Min(totalFrames - 1, totalFrames * bucket / PeakCount);
+            var bucketEnd = Math.Clamp(totalFrames * (bucket + 1) / PeakCount, bucketStart + 1, totalFrames);
+            var probeFrames = Math.Min(FramesPerProbe, bucketEnd - bucketStart);
+            var probeStart = bucketStart + Math.Max(0, (bucketEnd - bucketStart - probeFrames) / 2);
+            stream.Position = checked(dataOffset + probeStart * blockAlign);
+
+            var peak = 0f;
+            for (long frame = 0; frame < probeFrames; frame++)
+            {
+                for (var channel = 0; channel < channels; channel++)
+                {
+                    var amplitude = (float)Math.Min(1, Math.Abs(ReadNormalizedSample(reader, formatTag, bitsPerSample)));
+                    peak = Math.Max(peak, amplitude);
+                }
+            }
+
+            peaks[bucket] = Math.Clamp(peak, 0f, 1f);
+        }
+
+        var durationSeconds = totalFrames / (double)sampleRate;
+        return new WaveformPreview(Path.GetFullPath(path), durationSeconds, (int)sampleRate, channels, peaks, dataOffset, dataSize, blockAlign, byteRate, formatTag, bitsPerSample, formatPayload);
+    }
+
+    public static double ReadNormalizedSample(BinaryReader reader, ushort formatTag, ushort bitsPerSample)
+    {
+        var sample = (formatTag, bitsPerSample) switch
+        {
+            (1, 8) => (reader.ReadByte() - 128) / 128d,
+            (1, 16) => reader.ReadInt16() / 32768d,
+            (1, 24) => ReadSigned24(reader) / 8388608d,
+            (1, 32) => reader.ReadInt32() / 2147483648d,
+            (3, 32) => reader.ReadSingle(),
+            (3, 64) => reader.ReadDouble(),
+            _ => throw new NotSupportedException("Unsupported WAV sample representation.")
+        };
+        if (!double.IsFinite(sample)) throw new InvalidDataException("WAV contains a non-finite sample.");
+        return sample;
+    }
+    private static int ReadSigned24(BinaryReader reader)
+    {
+        var sample = reader.ReadByte() | reader.ReadByte() << 8 | reader.ReadByte() << 16;
+        return (sample & 0x800000) != 0 ? sample | unchecked((int)0xff000000) : sample;
+    }
+
+    private static string ReadFourCc(BinaryReader reader)
+    {
+        var bytes = reader.ReadBytes(4);
+        if (bytes.Length != 4) throw new EndOfStreamException();
+        return Encoding.ASCII.GetString(bytes);
+    }
+}
+
+internal static class WaveConsoleSurface
+{
+    private const string Levels = " ▁▂▃▄▅▆▇█";
+
+    public static string Render(WaveformPreview preview, int columns = 64)
+    {
+        columns = Math.Clamp(columns, 8, 128);
+        var builder = new StringBuilder(columns);
+        for (var column = 0; column < columns; column++)
+        {
+            var sourceIndex = columns == 1
+                ? 0
+                : (int)Math.Round(column * (preview.Peaks.Length - 1d) / (columns - 1d));
+            var peak = Math.Clamp(preview.Peaks[sourceIndex], 0f, 1f);
+            var level = Math.Clamp((int)Math.Round(peak * (Levels.Length - 1)), 0, Levels.Length - 1);
+            builder.Append(Levels[level]);
+        }
+
+        return builder.ToString();
+    }
+}
+
+internal sealed record WaveTrimResult(bool Succeeded, string Message, string? OutputPath = null)
+{
+    public static WaveTrimResult Failed(string message) => new(false, message);
+    public static WaveTrimResult Saved(string path, double durationSeconds) => new(true, $"Trimmed audio saved ({durationSeconds.ToString("0.###", CultureInfo.InvariantCulture)}s).", path);
+}
+
+internal static class PcmWaveTrimmer
+{
+    private const int CopyBufferSize = 64 * 1024;
+
+    public static WaveTrimResult Trim(string? inputPath, double startSeconds, double endSeconds, string? outputPath)
+    {
+        if (string.IsNullOrWhiteSpace(inputPath) || string.IsNullOrWhiteSpace(outputPath))
+            return WaveTrimResult.Failed("Choose an input WAV file and a new output path.");
+        if (!double.IsFinite(startSeconds) || !double.IsFinite(endSeconds))
+            return WaveTrimResult.Failed("Trim times must be finite numbers of seconds.");
+
+        var loaded = WaveSurface.Load(inputPath);
+        if (!loaded.IsLoaded || loaded.Preview is null)
+            return WaveTrimResult.Failed(loaded.Message);
+
+        var preview = loaded.Preview;
+        string fullInput;
+        string fullOutput;
+        try
+        {
+            fullInput = Path.GetFullPath(inputPath);
+            fullOutput = Path.GetFullPath(outputPath);
+        }
+        catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
+        {
+            return WaveTrimResult.Failed("Choose valid local input and output paths.");
+        }
+
+        var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (string.Equals(fullInput, fullOutput, pathComparison))
+            return WaveTrimResult.Failed("Wave never trims over the source file. Choose a different output path.");
+        if (startSeconds < 0 || endSeconds <= startSeconds || endSeconds > preview.DurationSeconds)
+            return WaveTrimResult.Failed($"Trim range must satisfy 0 <= start < end <= {preview.DurationSeconds.ToString("0.###", CultureInfo.InvariantCulture)} seconds.");
+
+        var frameCount = preview.DataSize / preview.BlockAlign;
+        var startFrame = Math.Min(frameCount, (long)Math.Ceiling(startSeconds * preview.SampleRate));
+        var endFrame = Math.Min(frameCount, (long)Math.Ceiling(endSeconds * preview.SampleRate));
+        if (endFrame <= startFrame)
+            return WaveTrimResult.Failed("The trim range does not contain a complete audio frame.");
+
+        var outputDataSize = checked((uint)((endFrame - startFrame) * preview.BlockAlign));
+        var formatPayload = preview.FormatPayload ?? throw new InvalidDataException("Source format metadata is unavailable.");
+        var overhead = checked(20u + (uint)formatPayload.Length + (uint)(formatPayload.Length & 1) + (preview.FormatTag == 3 ? 12u : 0u) + (outputDataSize & 1));
+        if (outputDataSize > uint.MaxValue - overhead)
+            return WaveTrimResult.Failed("The selected audio is too large for a standard RIFF/WAV output file.");
+
+        var outputCreated = false;
+        try
+        {
+            using var input = File.OpenRead(fullInput);
+            input.Position = checked(preview.DataOffset + startFrame * preview.BlockAlign);
+            using var output = new FileStream(fullOutput, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            outputCreated = true;
+            using (var writer = new BinaryWriter(output, Encoding.UTF8, leaveOpen: true))
+            {
+                writer.Write(Encoding.ASCII.GetBytes("RIFF"));
+                writer.Write(overhead + outputDataSize);
+                writer.Write(Encoding.ASCII.GetBytes("WAVE"));
+                writer.Write(Encoding.ASCII.GetBytes("fmt "));
+                writer.Write((uint)formatPayload.Length);
+                writer.Write(formatPayload);
+                if ((formatPayload.Length & 1) != 0) writer.Write((byte)0);
+                if (preview.FormatTag == 3)
+                {
+                    writer.Write(Encoding.ASCII.GetBytes("fact")); writer.Write(4u);
+                    writer.Write(checked((uint)(endFrame - startFrame)));
+                }
+                writer.Write(Encoding.ASCII.GetBytes("data"));
+                writer.Write(outputDataSize);
+            }
+
+            CopyExactly(input, output, outputDataSize);
+            if ((outputDataSize & 1) != 0) output.WriteByte(0);
+            return WaveTrimResult.Saved(fullOutput, (endFrame - startFrame) / (double)preview.SampleRate);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or OverflowException)
+        {
+            if (!outputCreated && File.Exists(fullOutput))
+                return WaveTrimResult.Failed("The output file already exists. Wave will not overwrite it.");
+            if (outputCreated)
+            {
+                try { File.Delete(fullOutput); }
+                catch (IOException) { return WaveTrimResult.Failed("Trim failed and a partial output file may remain. Remove it before retrying."); }
+                catch (UnauthorizedAccessException) { return WaveTrimResult.Failed("Trim failed and a partial output file may remain. Remove it before retrying."); }
+            }
+            return WaveTrimResult.Failed("Wave could not write the trimmed output file. The input was left unchanged.");
+        }
+    }
+
+    private static void CopyExactly(Stream input, Stream output, long byteCount)
+    {
+        var buffer = new byte[CopyBufferSize];
+        while (byteCount > 0)
+        {
+            var requested = (int)Math.Min(buffer.Length, byteCount);
+            var read = input.Read(buffer, 0, requested);
+            if (read == 0) throw new EndOfStreamException("The WAV data chunk ended before the selected frames were copied.");
+            output.Write(buffer, 0, read);
+            byteCount -= read;
+        }
+    }
+}
+
+internal static class WaveSelfTest
+{
+    public static void Run()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "HavenOS-Wave-SelfTest", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var tonePath = Path.Combine(directory, "tone.wav");
+            WriteTone(tonePath, sampleRate: 8000, seconds: 1);
+            var loaded = WaveSurface.Load(tonePath);
+            Require(loaded.IsLoaded, loaded.Message);
+            Require(loaded.Preview is not null, "Loaded state did not include a preview.");
+            var preview = loaded.Preview!;
+            Require(preview.Peaks.Length == 512, "Expected 512 bounded waveform peaks.");
+            Require(preview.SampleRate == 8000, "Sample rate was not preserved.");
+            Require(preview.Channels == 1, "Channel count was not preserved.");
+            Require(preview.DurationSeconds is >= .99 and <= 1.01, "Duration was outside the expected one-second window.");
+            Require(preview.Peaks.Any(peak => peak > .2f), "Generated waveform did not contain real signal peaks.");
+            Require(preview.Peaks.All(peak => peak is >= 0f and <= 1f), "Waveform peaks escaped the bounded range.");
+
+            var trimmedPath = Path.Combine(directory, "trimmed.wav");
+            var trim = PcmWaveTrimmer.Trim(tonePath, .25, .75, trimmedPath);
+            Require(trim.Succeeded && trim.OutputPath == trimmedPath, trim.Message);
+            var trimmed = WaveSurface.Load(trimmedPath);
+            Require(trimmed.IsLoaded && trimmed.Preview is not null, "Trimmed output did not load as a valid WAV file.");
+            Require(trimmed.Preview!.DurationSeconds is >= .499 and <= .501, "Trimmed output did not contain the selected half-second.");
+            var sourceBytes = File.ReadAllBytes(tonePath);
+            var trimmedBytes = File.ReadAllBytes(trimmedPath);
+            var expectedSelection = sourceBytes.AsSpan(44 + 2000 * sizeof(short), 4000 * sizeof(short)).ToArray();
+            var actualSelection = trimmedBytes.AsSpan(44).ToArray();
+            Require(expectedSelection.SequenceEqual(actualSelection), "Trimmed output did not preserve the exact selected PCM frames.");
+
+            var protectedPath = Path.Combine(directory, "protected.wav");
+            File.WriteAllText(protectedPath, "keep existing file");
+            var protectedBytes = File.ReadAllBytes(protectedPath);
+            var overwrite = PcmWaveTrimmer.Trim(tonePath, 0, .5, protectedPath);
+            Require(!overwrite.Succeeded && overwrite.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase) && File.ReadAllBytes(protectedPath).SequenceEqual(protectedBytes), "Trim must report and preserve an existing output file.");
+            var inPlace = PcmWaveTrimmer.Trim(tonePath, 0, .5, tonePath);
+            Require(!inPlace.Succeeded && File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Trim must leave its source file unchanged.");
+            var invalidRange = PcmWaveTrimmer.Trim(tonePath, .75, .25, Path.Combine(directory, "invalid-range.wav"));
+            Require(!invalidRange.Succeeded, "An inverted trim range must be rejected.");
+
+            var shortPath = Path.Combine(directory, "short.wav");
+            WriteTone(shortPath, sampleRate: 16, seconds: 1);
+            var shortAudio = WaveSurface.Load(shortPath);
+            Require(shortAudio.IsLoaded && shortAudio.Preview?.Peaks.Length == 512, "Very short PCM audio must remain bounded and decodable.");
+
+            var invalidPath = Path.Combine(directory, "invalid.wav");
+            File.WriteAllText(invalidPath, "not a wave file");
+            var invalid = WaveSurface.Load(invalidPath);
+            Require(!invalid.IsLoaded && invalid.Preview is null, "Corrupt audio must fail closed.");
+
+            var projectPath = Path.Combine(directory, "session.waveproject.json");
+            var project = WaveProjectStore.Create("Voice", sampleRate: 8000, channels: 1);
+            var trackId = project.Tracks[0].TrackId;
+            project = WaveProjectStore.AddWavClip(project, trackId, tonePath, .5);
+            WaveProjectStore.Save(projectPath, project);
+            var reopenedProject = WaveProjectStore.Open(projectPath);
+            var clip = reopenedProject.Tracks.Single().Clips.Single();
+            Require(reopenedProject.ProjectId == project.ProjectId && reopenedProject.Revision == 1, "Project identity or revision did not survive reopen.");
+            Require(clip.ClipId != Guid.Empty && clip.SourceReferenceId != Guid.Empty && clip.TimelineStartFrame == 4000 && clip.FrameCount == 8000,
+                "Imported clip identity, source range, or timeline placement was not preserved.");
+            Require(File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Project clip creation modified source audio.");
+            var originalProjectBytes = File.ReadAllBytes(projectPath);
+            var originalTrack = reopenedProject.Tracks[0];
+            foreach (var invalidProject in new[]
+            {
+                reopenedProject with { Tracks = [null!] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = [null!] }] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = null! }] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = [clip with { SourceStartFrame = long.MaxValue }] }] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = [clip with { TimelineStartFrame = long.MaxValue }] }] }
+            })
+            {
+                var rejected = false;
+                try { WaveProjectStore.Save(projectPath, invalidProject with { Revision = reopenedProject.Revision + 1 }, reopenedProject.Revision); }
+                catch (InvalidDataException) { rejected = true; }
+                Require(rejected && File.ReadAllBytes(projectPath).SequenceEqual(originalProjectBytes),
+                    "Malformed or overflowing Wave ranges must be rejected before replacing the canonical project.");
+            }
+            var exportPath = Path.Combine(directory, "project-mix.wav");
+            var exportedFrames = WaveProjectExporter.ExportPcm16(reopenedProject, exportPath);
+            Require(exportedFrames == 12000, "Project export did not include the leading timeline silence and full clip duration.");
+            var exported = WaveSurface.Load(exportPath);
+            Require(exported.IsLoaded && exported.Preview is not null && exported.Preview.DurationSeconds is >= 1.499 and <= 1.501,
+                "Project export did not produce a valid WAV spanning the timeline.");
+            var exportedBytes = File.ReadAllBytes(exportPath);
+            Require(exportedBytes.AsSpan(44, 4000 * sizeof(short)).ToArray().All(value => value == 0), "Project export did not preserve the clip's timeline offset as silence.");
+            Require(exportedBytes.AsSpan(44 + 4000 * sizeof(short)).SequenceEqual(sourceBytes.AsSpan(44, 8000 * sizeof(short))),
+                "Project export did not preserve the imported PCM frames exactly.");
+            var reopenedAfterExport = WaveProjectStore.Open(projectPath);
+            Require(reopenedAfterExport.ProjectId == reopenedProject.ProjectId && reopenedAfterExport.Revision == reopenedProject.Revision
+                && reopenedAfterExport.Tracks[0].Clips[0].ClipId == clip.ClipId, "Export changed canonical project identity or revision.");
+            var splitProject = WaveProjectEdits.Split(reopenedProject, reopenedProject.Revision, clip.ClipId, 8000);
+            Require(splitProject.Tracks[0].Clips.Count == 2 && splitProject.Tracks[0].Clips[0].ClipId == clip.ClipId
+                && splitProject.Tracks[0].Clips[1].SourceReferenceId == clip.SourceReferenceId, "Split lost canonical source or left-clip identity.");
+            var editedPath = Path.Combine(directory, "edited.waveproject.json");
+            WaveProjectStore.Save(editedPath, splitProject, -1);
+            var roundTrip = WaveProjectStore.Open(editedPath);
+            var splitExportPath = Path.Combine(directory, "split.wav");
+            WaveProjectExporter.ExportPcm16(roundTrip, splitExportPath);
+            Require(File.ReadAllBytes(splitExportPath).SequenceEqual(exportedBytes), "A non-destructive split changed audible PCM output.");
+            var joinRight = roundTrip.Tracks[0].Clips[1];
+            var joinedProject = WaveProjectEdits.Join(roundTrip, roundTrip.Revision, clip.ClipId, joinRight.ClipId);
+            var joinedClip = joinedProject.Tracks[0].Clips.Single();
+            Require(joinedClip.ClipId == clip.ClipId && joinedClip.SourceReferenceId == clip.SourceReferenceId
+                && joinedClip.FrameCount == clip.FrameCount && joinedClip.SourceStartFrame == clip.SourceStartFrame,
+                "Join changed canonical source identity or range.");
+            WaveProjectStore.Save(editedPath, joinedProject, roundTrip.Revision);
+            var joinedReopen = WaveProjectStore.Open(editedPath);
+            Require(joinedReopen.Revision == joinedProject.Revision && joinedReopen.Tracks[0].Clips.Single() == joinedClip,
+                "Physical joined-project reopen changed range or identity.");
+            var joinedExport = Path.Combine(directory, "joined.wav"); WaveProjectExporter.ExportPcm16(joinedReopen, joinedExport);
+            Require(File.ReadAllBytes(joinedExport).SequenceEqual(exportedBytes), "Compatible source join changed audible output.");
+            foreach (var incompatible in new[]
+            {
+                joinRight with { Gain = .5 }, joinRight with { SourceStartFrame = joinRight.SourceStartFrame + 1 },
+                joinRight with { TimelineStartFrame = joinRight.TimelineStartFrame + 1 }, joinRight with { FadeInFrames = 1 },
+                joinRight with { SourceReferenceId = Guid.NewGuid() }
+            })
+            {
+                var candidate = roundTrip with { Tracks = [roundTrip.Tracks[0] with { Clips = [roundTrip.Tracks[0].Clips[0], incompatible] }] };
+                var denied = false;
+                try { WaveProjectEdits.Join(candidate, candidate.Revision, clip.ClipId, joinRight.ClipId); }
+                catch (NotSupportedException) { denied = true; }
+                Require(denied, "Incompatible source/processing join must deny rather than silently alter audio.");
+            }
+            Require(File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Join modified canonical PCM source bytes.");
+            var staleSaveRejected = false;
+            try { WaveProjectStore.Save(editedPath, roundTrip, 0); }
+            catch (InvalidOperationException exception) when (exception.Message == "RevisionConflict") { staleSaveRejected = true; }
+            Require(staleSaveRejected, "Stale file-save revisions must conflict instead of overwriting newer project data.");
+            var trimmedProject = WaveProjectEdits.Trim(roundTrip, roundTrip.Revision, clip.ClipId, 1000, 1000);
+            var trimmedClip = trimmedProject.Tracks[0].Clips[0];
+            Require(trimmedClip.SourceStartFrame == 1000 && trimmedClip.TimelineStartFrame == 5000 && trimmedClip.FrameCount == 2000,
+                "Trim did not preserve source/timeline ranges.");
+            var faded = WaveProjectEdits.SetClipProcessing(reopenedProject, reopenedProject.Revision, clip.ClipId, .5, 1000, 1000);
+            var fadedPath = Path.Combine(directory, "faded.wav");
+            WaveProjectExporter.ExportPcm16(faded, fadedPath);
+            var fadedBytes = File.ReadAllBytes(fadedPath);
+            Require(fadedBytes.AsSpan(44 + 4000 * sizeof(short), sizeof(short)).ToArray().All(value => value == 0), "Fade-in did not start at silence.");
+            Require(File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Clip editing or mixing modified source PCM bytes.");
+            var muted = WaveProjectEdits.SetTrackMixer(reopenedProject, reopenedProject.Revision, trackId, 1, 0, true, false);
+            var mutedPath = Path.Combine(directory, "muted.wav");
+            Require(WaveProjectExporter.ExportPcm16(muted, mutedPath) == exportedFrames, "Mute changed project duration.");
+            Require(File.ReadAllBytes(mutedPath).AsSpan(44).ToArray().All(value => value == 0), "Muted track leaked audio into export.");
+            File.Delete(tonePath);
+            var missingSourceRejected = false;
+            try { _ = WaveProjectExporter.ExportPcm16(reopenedAfterExport, Path.Combine(directory, "missing-source.wav")); }
+            catch (FileNotFoundException exception) when (exception.Message.Contains("SourceUnavailable", StringComparison.Ordinal)) { missingSourceRejected = true; }
+            Require(missingSourceRejected, "Export must explicitly reject a missing/moved source without substituting audio.");
+            var alteredSource = sourceBytes.ToArray();
+            alteredSource[^1] ^= 0x7f;
+            File.WriteAllBytes(tonePath, alteredSource);
+            var changedSourceRejected = false;
+            var rejectedExportPath = Path.Combine(directory, "changed-source.wav");
+            try { _ = WaveProjectExporter.ExportPcm16(reopenedAfterExport, rejectedExportPath); }
+            catch (InvalidDataException exception) when (exception.Message.Contains("SourceChanged", StringComparison.Ordinal)) { changedSourceRejected = true; }
+            Require(changedSourceRejected && !File.Exists(rejectedExportPath), "Export must reject altered source bytes without leaving a partial output.");
+            var unsupportedProjectPath = Path.Combine(directory, "future.waveproject.json");
+            File.WriteAllText(unsupportedProjectPath, "{\"SchemaVersion\":99}");
+            var rejectedFutureSchema = false;
+            try { _ = WaveProjectStore.Open(unsupportedProjectPath); }
+            catch (InvalidDataException) { rejectedFutureSchema = true; }
+            Require(rejectedFutureSchema, "Unknown project schema versions must be rejected explicitly.");
+
+            Console.WriteLine("Wave self-test passed: PCM waveform load, exact trim/export, overwrite protection, short-file bounds, fail-closed invalid input, versioned project save/reopen, timeline mix export, source integrity, and missing-source rejection.");
+        }
+        finally
+        {
+            try { Directory.Delete(directory, recursive: true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    private static void WriteTone(string path, int sampleRate, int seconds)
+    {
+        const short channels = 1;
+        const short bitsPerSample = 16;
+        var sampleCount = checked(sampleRate * seconds);
+        var dataSize = checked(sampleCount * channels * bitsPerSample / 8);
+
+        using var stream = File.Create(path);
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: false);
+        writer.Write(Encoding.ASCII.GetBytes("RIFF"));
+        writer.Write(checked(36 + dataSize));
+        writer.Write(Encoding.ASCII.GetBytes("WAVE"));
+        writer.Write(Encoding.ASCII.GetBytes("fmt "));
+        writer.Write(16);
+        writer.Write((short)1);
+        writer.Write(channels);
+        writer.Write(sampleRate);
+        writer.Write(checked(sampleRate * channels * bitsPerSample / 8));
+        writer.Write((short)(channels * bitsPerSample / 8));
+        writer.Write(bitsPerSample);
+        writer.Write(Encoding.ASCII.GetBytes("data"));
+        writer.Write(dataSize);
+
+        for (var index = 0; index < sampleCount; index++)
+        {
+            var sample = Math.Sin(2 * Math.PI * 440 * index / sampleRate);
+            writer.Write((short)(sample * short.MaxValue * .65));
+        }
+    }
+
+    private static void Require(bool condition, string message)
+    {
+        if (!condition) throw new InvalidOperationException(message);
+    }
+}
+
+internal static class Program
+{
+    private static int Main(string[] args)
+    {
+        Console.OutputEncoding = Encoding.UTF8;
+        if (args.Length == 1 && args[0] == "--markers-regions-test") return WaveMarkersRegionsWorkflowTest.Run();
+        if (args.Length == 1 && args[0] == "--pcm-formats-test") return WavePcmFormatsWorkflowTest.Run();
+        if (args.Length == 1 && args[0] == "--files-workflow-test") return WaveFilesProjectWorkflowTest.RunAsync().GetAwaiter().GetResult();
+        if (args.Length > 0 && args[0] == "project") return WaveProjectCommands.Run(args);
+
+        if (args.Length == 1 && string.Equals(args[0], "--self-test", StringComparison.Ordinal))
+        {
+            try
+            {
+                WaveSelfTest.Run();
+                return 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                Console.Error.WriteLine($"Wave self-test failed: {exception.Message}");
+                return 1;
+            }
+        }
+
+        var isTrimCommand = args.Length == 5 && string.Equals(args[0], "--trim", StringComparison.Ordinal);
+        var isCreateProjectCommand = args.Length is 2 or 3 && string.Equals(args[0], "--project-create", StringComparison.Ordinal);
+        var isImportProjectCommand = args.Length == 4 && string.Equals(args[0], "--project-import", StringComparison.Ordinal);
+        var isExportProjectCommand = args.Length == 3 && string.Equals(args[0], "--project-export", StringComparison.Ordinal);
+        if (args.Length != 1 && !isTrimCommand && !isCreateProjectCommand && !isImportProjectCommand && !isExportProjectCommand)
+        {
+            Console.WriteLine("HavenOS Wave — standalone audio surface");
+            Console.WriteLine("Usage: HavenOS.Wave <local-pcm-wave-file>");
+            Console.WriteLine("       HavenOS.Wave --trim <input.wav> <start-seconds> <end-seconds> <new-output.wav>");
+            Console.WriteLine("       HavenOS.Wave --project-create <project.waveproject.json> <track-name>");
+            Console.WriteLine("       HavenOS.Wave --project-import <project.waveproject.json> <input.wav> <timeline-start-seconds>");
+            Console.WriteLine("       HavenOS.Wave --project-export <project.waveproject.json> <new-output.wav>");
+            Console.WriteLine("Validation: HavenOS.Wave --self-test");
+            return 2;
+        }
+
+        if (isCreateProjectCommand)
+        {
+            try
+            {
+                var project = WaveProjectStore.Create(args.Length == 3 ? args[2] : null);
+                WaveProjectStore.Save(args[1], project);
+                Console.WriteLine($"Created Wave project {project.ProjectId} with track {project.Tracks[0].TrackId}: {Path.GetFullPath(args[1])}");
+                return 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException)
+            {
+                Console.Error.WriteLine($"Wave could not create the project: {exception.Message}");
+                return 1;
+            }
+        }
+
+        if (isImportProjectCommand)
+        {
+            if (!double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out var timelineStart))
+            {
+                Console.Error.WriteLine("Timeline start must be a number of seconds using invariant decimal notation.");
+                return 2;
+            }
+            try
+            {
+                var project = WaveProjectStore.Open(args[1]);
+                if (project.Tracks.Count == 0)
+                    throw new InvalidDataException("The project has no track. Create a track before importing audio.");
+                project = WaveProjectStore.AddWavClip(project, project.Tracks[0].TrackId, args[2], timelineStart);
+                WaveProjectStore.Save(args[1], project);
+                Console.WriteLine($"Imported clip into project {project.ProjectId}; revision {project.Revision}.");
+                return 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException or NotSupportedException or OverflowException)
+            {
+                Console.Error.WriteLine($"Wave could not import the clip: {exception.Message}");
+                return 1;
+            }
+        }
+
+        if (isExportProjectCommand)
+        {
+            try
+            {
+                var project = WaveProjectStore.Open(args[1]);
+                var frameCount = WaveProjectExporter.ExportPcm16(project, args[2]);
+                Console.WriteLine($"Exported project {project.ProjectId} ({frameCount} frames) to {Path.GetFullPath(args[2])}.");
+                return 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException or NotSupportedException or OverflowException or InvalidOperationException)
+            {
+                Console.Error.WriteLine($"Wave could not export the project: {exception.Message}");
+                return 1;
+            }
+        }
+
+        if (args.Length == 5 && string.Equals(args[0], "--trim", StringComparison.Ordinal))
+        {
+            if (!double.TryParse(args[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var startSeconds)
+                || !double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out var endSeconds))
+            {
+                Console.Error.WriteLine("Trim times must be numbers of seconds using invariant decimal notation.");
+                return 2;
+            }
+
+            var result = PcmWaveTrimmer.Trim(args[1], startSeconds, endSeconds, args[4]);
+            if (!result.Succeeded)
+            {
+                Console.Error.WriteLine(result.Message);
+                return 1;
+            }
+
+            Console.WriteLine($"{result.Message} {result.OutputPath}");
+            return 0;
+        }
+
+        var state = WaveSurface.Load(args[0]);
+        if (!state.IsLoaded || state.Preview is null)
+        {
+            Console.Error.WriteLine(state.Message);
+            return 1;
+        }
+
+        var preview = state.Preview;
+        Console.WriteLine($"Wave — {Path.GetFileName(preview.SourcePath)}");
+        Console.WriteLine($"{preview.DurationSeconds.ToString("0.00", CultureInfo.InvariantCulture)}s · {preview.SampleRate} Hz · {preview.Channels} channel(s)");
+        Console.WriteLine(WaveConsoleSurface.Render(preview));
+        return 0;
+    }
+}

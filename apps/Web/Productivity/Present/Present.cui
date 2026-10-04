@@ -1,0 +1,44 @@
+<Cui id="present.browser" version="1">
+  <Actions>
+    <Action name="OpenSavedPresentation" command="Open" parameter="{Binding saved}" />
+    <Action name="SelectPresentationSlide" command="SelectSlide" parameter="{Binding slide}" />
+  </Actions>
+  <Grid RowDefinitions="Auto,Auto,*" margin="12">
+    <TextBlock grid-row="0" text="{Binding Title}" font-size="24" />
+    <StackPanel grid-row="1" margin="0,8">
+      <WrapPanel>
+        <Button content="New presentation" action="Create" is-enabled="{Binding CanCreate}" />
+        <Button content="Save" action="Save" is-enabled="{Binding CanSave}" />
+        <Button content="Close" action="Close" is-enabled="{Binding CanClose}" />
+        <Button content="Add slide" action="AddSlide" is-enabled="{Binding CanEdit}" />
+        <Button content="Duplicate slide" action="DuplicateSlide" is-enabled="{Binding CanEdit}" />
+        <Button content="Add text" action="AddText" is-enabled="{Binding CanEdit}" />
+        <Button content="Add shape" action="AddShape" is-enabled="{Binding CanEdit}" />
+        <Button content="Undo" action="Undo" is-enabled="{Binding CanUndo}" />
+        <Button content="Redo" action="Redo" is-enabled="{Binding CanRedo}" />
+      </WrapPanel>
+      <TextBlock text="{Binding Status}" accessible-name="Presentation save status" text-wrapping="Wrap" />
+      <If Condition="{Binding HasUnknownCommitOutcome}"><Button content="Inspect saved state" action="Inspect" is-enabled="{Binding CanInspect}" /></If>
+    </StackPanel>
+    <Grid grid-row="2" ColumnDefinitions="220,*">
+      <ScrollViewer grid-column="0">
+        <StackPanel>
+          <TextBlock text="Saved presentations on this browser" text-wrapping="Wrap" />
+          <Button content="Refresh presentations" action="Refresh" is-enabled="{Binding CanBrowse}" />
+          <Repeat Source="{Binding Documents}" As="saved" Key="{Binding saved.Id}">
+            <Button content="{Binding saved.Title}" action="OpenSavedPresentation" is-enabled="{Binding CanBrowse}" />
+          </Repeat>
+          <TextBlock text="Slides" font-size="16" margin="0,12,0,4" />
+          <Repeat Source="{Binding Slides}" As="slide" Key="{Binding slide.Id}">
+            <Button content="{Binding slide.Title}" action="SelectPresentationSlide" is-enabled="{Binding CanBrowse}" />
+          </Repeat>
+        </StackPanel>
+      </ScrollViewer>
+      <Grid grid-column="1" RowDefinitions="*,Auto,Auto">
+        <Object Type="PresentSlideCanvas" />
+        <TextBlock grid-row="1" text="{Binding SlideStatus}" accessible-name="Current slide" />
+        <TextBox grid-row="2" text="{Binding SpeakerNotes, Mode=TwoWay}" is-enabled="{Binding CanEdit}" accepts-return="True" accessible-name="Speaker notes" />
+      </Grid>
+    </Grid>
+  </Grid>
+</Cui>

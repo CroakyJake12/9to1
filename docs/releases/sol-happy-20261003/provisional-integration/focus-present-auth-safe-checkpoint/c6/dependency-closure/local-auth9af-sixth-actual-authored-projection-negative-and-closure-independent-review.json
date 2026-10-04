@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "status": "ACTUAL_ORIGINAL_R6_NEGATIVE_AND_BOTH_CLOSURES_ACK",
+  "reviewedAtUtc": "2026-10-04T21:06:06.373889+00:00",
+  "candidateSourceCommit": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+  "testSourceCommit": "139cc140227391ba79292f285d836c63ebb7f626",
+  "fixtureSourceCommit": "ff453ff9d294d5c4812c9308217cd04be0a88e4d",
+  "originalResultSha256": "662d566a63fc42fb3b0a916cce4326c2cb5225f2dd2b8eccbb75ea3db49955f8",
+  "originalBrowserCustodySha256": "84611175c2814fa44428ba90ae4bc342af6ea4a335049328578db12819a89eef",
+  "originalRootIssuerObservedToolReceiptSha256": "61cdef37c3971454585aa6f141addfdc3010b4c833718dbfb98679776cd9748a",
+  "originalSevenCounters": {
+    "discovered": 7,
+    "executed": 4,
+    "passed": 2,
+    "failed": 2,
+    "notRun": 3
+  },
+  "physicalPkce": "PASS: actual native sign-in, genuine issuer consent, S256/state/nonce/code binding and real JOSE/current verification, exact callback1/token1/discovery1/JWKS1/current2/profile1/sessions1, sameSubject/protocolValid true.",
+  "originalProjectionFailure": "Original 15s four-authored-label projection criterion failed at15002ms; profileName exactly one textbox, accountId/sessionId/profileRevision zero fixed-label matches across34 peers, no read failure/truncation. API/profile response200 is separate from actual accessible projection.",
+  "originalCompoundCloseFailure": "Sole unexpected console RESOURCE_LOAD_FAILED is fixed PUBLIC_CLIENT request GET404; requestFailed0 and cleanupFailures empty. Compoundcase remainsFAIL, no public asset damage or physical close failure inferred.",
+  "downstream": "Original physical server signout, retained-peer/tokenless refusal and terminal native/broker join threeNOT_RUN.",
+  "browserCustody": {
+    "originalSession": 19671,
+    "state": "CLOSED",
+    "exitCode": 1,
+    "actualOwnedBirths": 12,
+    "signalCount": 0,
+    "forcedCleanup": false,
+    "deadlineFailure": false,
+    "budgetFailure": false,
+    "finalKernelReceipt": "ECHILD",
+    "actualBirthsIndependentlyGone": true,
+    "sourcePinsAfter": 5387,
+    "originalAssetsAfter": 285,
+    "allExact": true
+  },
+  "issuerCustody": {
+    "originalSession": 71539,
+    "literalStopSubmitted": true,
+    "drained": true,
+    "strictReaped": true,
+    "originalsDisappeared": true,
+    "observedFinalExitCode": 0,
+    "actualOwnedReaps": 4,
+    "observedOwnedSigtermRecords": 6,
+    "actualBirthsIndependentlyGone": true,
+    "receiptQualifier": "Root parsed observed original tool evidence, explicitly not raw terminal byte identity. Issuer retained stop signals are separate from browser zero-signal closure."
+  },
+  "metadataOnlyPostconditions": "Own run absent, .dev.vars absent, .local-run empty and ports8799/5096 rebind closed. No private contents read.",
+  "scope": "No local auth acceptance, hosted identity, .NETRSA, auth_revision, installedHome, full app or downstream behavior inferred. All five earlier original negatives/source identities remain unchanged.",
+  "reviewFindings": []
+}

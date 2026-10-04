@@ -1,0 +1,18 @@
+/* Haven shell visual primitive — optional, fail-closed, non-boot-critical.
+ * Provides one stable hook a future Haven shell extension MAY use.
+ * Inert unless an extension adds `.haven-shell-pill` nodes.
+ * No core GNOME selectors overridden. No boot dependency.
+ * Prior taskbar/shell donor work (HavenAI Avalonia) is ADAPT reference only.
+ */
+
+.haven-shell-pill {
+  background-color: #16262C;
+  border: 1px solid #274049;
+  border-radius: 999px;
+  color: #EAF4F1;
+}
+
+.haven-shell-pill .haven-accent-dot {
+  background-color: #3ED598;
+  border-radius: 50%;
+}

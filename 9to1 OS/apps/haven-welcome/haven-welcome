@@ -1,0 +1,135 @@
+#!/bin/sh
+# Haven Welcome -- tiny Haven-native home surface (B7 proof).
+#
+# Purpose: first-run/home launcher card. Prints a short welcome and the
+# Spaces-home starting point. No network, no privilege escalation, no
+# HavenAI/Avalonia runtime, no background services.
+#
+# Fail-closed: unknown arguments, broken environment, or a requested GUI
+# that cannot be shown all exit non-zero without side effects.
+set -eu
+
+PROG='haven-welcome'
+VERSION='0.1.0'
+
+usage() {
+    cat <<USAGE
+Usage: $PROG [--help] [--version] [--check] [--gui]
+
+  no args    print the Haven Welcome card to stdout (exit 0)
+  --help     print this help and exit 0
+  --version  print version and exit 0
+  --check    self-check: verify sibling desktop entry and icon exist (exit 0/1)
+  --gui      show a graphical welcome if a display + dialog helper exists,
+             otherwise fail closed (exit 1). No fallback side effects.
+
+Exit codes: 0 ok, 1 unavailable/failed check, 2 misuse.
+USAGE
+}
+
+# Resolve the directory containing this script.  The package deliberately
+# uses a standard freedesktop layout rather than copying the source-tree
+# neighbours beside /usr/bin/haven-welcome, so --check recognises both
+# layouts and never writes.
+script_dir() {
+    # dirname/$0 is POSIX; CDPATH= avoids surprising cd behaviour.
+    CDPATH= cd -- "$(dirname -- "$0")" && pwd
+}
+
+do_check() {
+    dir="$(script_dir)"
+    fail=0
+    if [ -f "$dir/haven-welcome.desktop" ] && [ -f "$dir/icons/haven-welcome.svg" ]; then
+        layout='source tree'
+    elif [ "$dir" = '/usr/bin' ] && \
+         [ -f /usr/share/applications/haven-welcome.desktop ] && \
+         [ -f /usr/share/icons/hicolor/scalable/apps/haven-welcome.svg ]; then
+        layout='installed system'
+    else
+        printf '%s: missing desktop entry or icon for source-tree/installed layout\n' "$PROG" >&2
+        fail=1
+    fi
+    if [ ! -x "$0" ] && [ ! -r "$0" ]; then
+        printf '%s: script is neither executable nor readable\n' "$PROG" >&2
+        fail=1
+    fi
+    if [ "$fail" -eq 0 ]; then
+        printf '%s: self-check ok (%s)\n' "$PROG" "$layout"
+        return 0
+    fi
+    return 1
+}
+
+do_gui() {
+    # Fail closed when there is no graphical session.
+    if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
+        printf '%s: no display (DISPLAY/WAYLAND_DISPLAY unset); refusing GUI\n' "$PROG" >&2
+        return 1
+    fi
+    # Only use an existing dialog helper; never install, download, or exec
+    # anything else.
+    if command -v zenity >/dev/null 2>&1; then
+        zenity --info --no-wrap \
+            --title='Welcome to HavenOS' \
+            --text='Welcome to HavenOS.\n\nStart in Spaces home. This welcome surface does nothing else.' \
+            --icon-name='haven-welcome'
+        return $?
+    fi
+    printf '%s: no dialog helper (zenity) available; refusing GUI\n' "$PROG" >&2
+    return 1
+}
+
+print_card() {
+    cat <<CARD
+Welcome to HavenOS.
+
+Start in Spaces home.
+This tiny welcome surface lists your starting point and exits.
+It opens nothing, changes nothing, and needs no network.
+
+Next: open Spaces to see your home views.
+CARD
+}
+
+# No arguments: print card.
+if [ "$#" -eq 0 ]; then
+    print_card
+    exit 0
+fi
+
+case "${1:-}" in
+    --help|-h)
+        usage
+        exit 0
+        ;;
+    --version)
+        printf '%s %s\n' "$PROG" "$VERSION"
+        exit 0
+        ;;
+    --check)
+        if [ "$#" -ne 1 ]; then
+            printf '%s: --check takes no extra arguments\n' "$PROG" >&2
+            exit 2
+        fi
+        do_check
+        exit $?
+        ;;
+    --gui)
+        if [ "$#" -ne 1 ]; then
+            printf '%s: --gui takes no extra arguments\n' "$PROG" >&2
+            exit 2
+        fi
+        do_gui
+        exit $?
+        ;;
+    --*)
+        printf '%s: unknown option: %s\n' "$PROG" "$1" >&2
+        usage >&2
+        exit 2
+        ;;
+    *)
+        printf '%s: unexpected argument: %s\n' "$PROG" "$1" >&2
+        usage >&2
+        exit 2
+        ;;
+esac

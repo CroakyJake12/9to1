@@ -1,0 +1,21 @@
+PASS actual-files-dirty-refusal-save-close-canonical-reopen
+PASS actual-files-held-init-fence-failure-awaits
+PASS actual-sites-dirty-refusal-save-close-canonical-reopen
+PASS actual-sites-held-init-fence-failure-awaits
+PASS actual-files-populated-draft-clears-on-fence-failure
+PASS actual-sites-populated-draft-clears-on-fence-failure
+PASS actual-files-reentrant-negative-owner-drain-issued-once
+PASS actual-sites-reentrant-negative-owner-drain-issued-once
+PASS actual-files-held-preparation-opening-remains-issued
+PASS actual-sites-held-preparation-opening-remains-issued
+PASS actual-files-repeated-missing-fence-stays-failed
+PASS actual-sites-repeated-missing-fence-stays-failed
+FAIL actual-files-owner-action-reentry-joins-fence-settlement: System.Exception: Owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled.
+   at Program.<<Main>$>g__Check|0_0(Boolean ok, String message) in /workspace/team-c-c5-b-pr6-receiving/apps/Web/Files/Tests/Lifecycle/Program.cs:line 36
+   at Program.<<Main>$>g__FilesFenceSettlement|0_21(String root) in /workspace/team-c-c5-b-pr6-receiving/apps/Web/Files/Tests/Lifecycle/Program.cs:line 298
+   at Program.<Main>$(String[] args) in /workspace/team-c-c5-b-pr6-receiving/apps/Web/Files/Tests/Lifecycle/Program.cs:line 30
+FAIL actual-sites-owner-action-reentry-joins-fence-settlement: System.Exception: Native owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled.
+   at Program.<<Main>$>g__Check|0_0(Boolean ok, String message) in /workspace/team-c-c5-b-pr6-receiving/apps/Web/Files/Tests/Lifecycle/Program.cs:line 36
+   at Program.<<Main>$>g__SitesFenceSettlement|0_22(String root) in /workspace/team-c-c5-b-pr6-receiving/apps/Web/Files/Tests/Lifecycle/Program.cs:line 340
+   at Program.<Main>$(String[] args) in /workspace/team-c-c5-b-pr6-receiving/apps/Web/Files/Tests/Lifecycle/Program.cs:line 30
+RESULT expected=14 executed=14 passed=12 failed=2; realOwnerGroupAuthority=BLOCKED browser=NOT_RUN

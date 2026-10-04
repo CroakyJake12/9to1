@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "frozenCommit": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+  "basis": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "review": "ACK source scope+exactbody/pin/hashlineage",
+  "soleNativeDelta": "Home Program exactly2BCLimports; all method/bootstrap/policy/UI bodies unchanged",
+  "sourcePinsVerified": 14,
+  "sourcePathsOnly": [
+    ".github/scripts/windows-package-probe.ps1",
+    ".github/validation/windows-package-owner-request.json",
+    ".github/validation/windows-package-probe.json",
+    ".github/workflows/team-c-windows-package-probe.yml",
+    "apps/Home/src/AvaloniaHome/Program.cs"
+  ],
+  "onlyHomeRetry": true,
+  "originalSevenProbesAnd29ProductVisibilityRetained": true,
+  "compactObservationArtifactsSeparateFromPackageZIP": true,
+  "qualification": "Normal compilerPASS exists separately; actual successorWindows compile/package/extraction/process/window/close stillNOT_RUN; no Home/bootstrap/fullapp/owneracceptance"
+}

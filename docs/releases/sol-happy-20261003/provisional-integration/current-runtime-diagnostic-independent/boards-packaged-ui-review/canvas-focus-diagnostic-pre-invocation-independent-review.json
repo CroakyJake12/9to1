@@ -1,0 +1,53 @@
+{
+  "scope": "Independent diagnostic-only pre-invocation Canvas review following genuine 63 address-focus timeout; no new native runtime or acceptance claim.",
+  "status": "ACK_FOR_ROOT_OWNED_SINGLE_BOUNDED_WINDOWS_DIAGNOSTIC_INVOCATION",
+  "candidate": "eb46585ab53a1379d7965517b4213dcd24f6876e",
+  "originalProducer": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "original63NegativePreserved": true,
+  "exactFourHarnessAdditionsSinceProducer": [
+    {
+      "path": ".github/scripts/canvas-packaged-ui-controls.ps1",
+      "bytes": 47859,
+      "sha256": "05b87bb32d555dde37719e9adc07083274134352f153a615e746e9d6f0f047de"
+    },
+    {
+      "path": ".github/validation/canvas-packaged-ui-controls.json",
+      "bytes": 5785,
+      "sha256": "99948ba81d267af2d0b75989c72f3f22fdd702d20214827f064af805c1becef9"
+    },
+    {
+      "path": ".github/workflows/team-c-canvas-packaged-ui-controls.yml",
+      "bytes": 3707,
+      "sha256": "282c0e66047fc0280d43b2afca2a300ab10b0363ad39061640c0c9ed740e6b3c"
+    },
+    {
+      "path": "eng/release-validation/canvas-packaged-ui/README.md",
+      "bytes": 6256,
+      "sha256": "07bdd3371ac49b49cef61e5ba568bbff3a7f37efad037d5eb3bf20fc9ce5ed0b"
+    }
+  ],
+  "outsideModeKindBlobEntriesConserved": 9478,
+  "nativeSourcePinsExact": 25,
+  "originalAddressEditCriterion": "Exact global FocusedElement actual PID and ControlType.Edit, original literal20-second Wait, then existing owned control/tree/foreground input guards unchanged. No target repair/input fallback/oracle weakening.",
+  "diagnostic": "Read-only GetGUIThreadInfo/kernel focus HWND versus UIA focused peer. Fixed PID/HWND/IsChild/role/pattern-support/enabled/offscreen/rectangle, booleans matching literal Cancel or Select Folder only; no raw names/values/captions/profile paths/file list. Maximum128 output peers per UIA/native enumeration, partial original witness retained if diagnostic capability or output fails.",
+  "nativeReadSemantics": "GUITHREADINFO initialized with correct full struct size, expected picker PID thread queried, foreign focus title/class reading gated on actual expectedPID. EnumChildWindows callback stops collecting at128 and is kept alive. Current separate origin/cleanup observation unchanged.",
+  "originalFailureAndCleanup": "Actual original timeout/Cancel failure rethrown even on diagnostic/output refusal; original Cancel guarded action/main criterion/outer private catch/cleanup preserved. Unreleased input, Cancel/drain/cleanup failures and forced cleanup remain failedexit1; no uncertain Home request resubmit.",
+  "independentControls": {
+    "count": 36,
+    "passed": 36,
+    "PowerShellAstErrors": 0,
+    "actualEmbeddedCSharpCompiled": true,
+    "nativeWindowsApiInvoked": false,
+    "actualAddressAndCancelCatchDiagnosticFailureConservation": 4
+  },
+  "boundsQualification": "128 bounds selected output, not an independent bound on UIA FindAll enumeration memory or arbitrary platform API latency. Existing workflow/observation bounds retained; no claim of aggregate RSS enforcement.",
+  "package": {
+    "file": "canvas-win-x64-unaccepted.zip",
+    "bytes": 101349818,
+    "sha256": "dd24a1082fa6ac571068d3b0bcf941bbb497c4d7f07a67eb78752a15f711ef0a"
+  },
+  "acceptanceVerified": false,
+  "fullAppAcceptance": "NOT_RUN",
+  "installedHomeTuple": "NOT_RUN",
+  "cleanPcDelivery": "NOT_RUN"
+}

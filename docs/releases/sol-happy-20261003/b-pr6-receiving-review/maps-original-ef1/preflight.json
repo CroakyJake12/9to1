@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "ef1d3a7546c130ef5948fab0711ef5d9feca9381",
+  "sourceCheckout": "/workspace/c1-maps-original-owner-controls",
+  "taskOrchestration": "/workspace/team-c-resume-evidence/run-c5-maps-original-ef1.py",
+  "orchestrationBytes": 8980,
+  "orchestrationSha256": "22c816f59562dff319d44ae544000782f4104b5dc1633ee3c08090e127453664",
+  "actualOwningProject": "apps/Web/Productivity/Maps/Tests/Maps.OriginalAuthoring.Tests.csproj",
+  "configuration": "Release",
+  "framework": "net10.0",
+  "runtime": "linux-x64",
+  "testFilter": null,
+  "output": "/tmp/team-c-c5-maps-original-ef1-20261004",
+  "tmpFreeBytes": 3507662848,
+  "workspaceFreeBytes": 1141977088,
+  "privateCaches": true,
+  "existingSdk": "10.0.401",
+  "HOME_USERPROFILE_overridden": false,
+  "fixed889CombinedRunnerImportedOrRebound": false,
+  "noProviderOrSourceChanges": true
+}

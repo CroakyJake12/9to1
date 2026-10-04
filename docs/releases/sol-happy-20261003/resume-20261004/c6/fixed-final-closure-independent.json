@@ -1,0 +1,199 @@
+{
+  "observedAt": "2026-10-04T12:09:30.977Z",
+  "qualification": "C6 independent final revised-run closure; readonly metadata/counts no credentials/values selected",
+  "exposure": {
+    "result": {
+      "enabled": false,
+      "previews_enabled": false
+    },
+    "success": true,
+    "errors": [],
+    "messages": [],
+    "status": 200
+  },
+  "activeDeployment": {
+    "status": 200,
+    "success": true,
+    "result": [
+      {
+        "id": "e9774b5d-c858-4988-866a-7c15d8e71030",
+        "versions": [
+          {
+            "version_id": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+            "percentage": 100
+          }
+        ]
+      }
+    ]
+  },
+  "settings": {
+    "status": 200,
+    "success": true,
+    "result": {
+      "compatibility_date": "2026-10-01",
+      "compatibility_flags": [
+        "nodejs_compat",
+        "global_fetch_strictly_public"
+      ],
+      "limits": {
+        "cpu_ms": 1000
+      },
+      "bindings": [
+        {
+          "name": "ALLOWED_WEB_ORIGINS",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev",
+          "type": "plain_text"
+        },
+        {
+          "name": "API_RESOURCE",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev",
+          "type": "plain_text"
+        },
+        {
+          "name": "APP_MODE",
+          "text": "production",
+          "type": "plain_text"
+        },
+        {
+          "name": "AUTH_BASE_URL",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev",
+          "type": "plain_text"
+        },
+        {
+          "type": "secret_text",
+          "name": "AUTH_SECRET"
+        },
+        {
+          "database_id": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+          "id": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+          "name": "DB",
+          "type": "d1"
+        },
+        {
+          "name": "EMAIL_CAPTURE",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "type": "secret_text",
+          "name": "LOGIN_LIMITER_KEY"
+        },
+        {
+          "name": "LOGIN_LOCK_SECONDS",
+          "text": "1800",
+          "type": "plain_text"
+        },
+        {
+          "name": "LOGIN_MAX_ATTEMPTS",
+          "text": "8",
+          "type": "plain_text"
+        },
+        {
+          "name": "LOGIN_WINDOW_SECONDS",
+          "text": "900",
+          "type": "plain_text"
+        }
+      ]
+    }
+  },
+  "version": {
+    "status": 200,
+    "success": true,
+    "result": {
+      "id": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+      "script": {
+        "etag": "16d950eba719b5af8204223bd5230d9605e0560d091628d3db9d0830fac69d2b",
+        "handlers": [
+          "fetch"
+        ],
+        "named_handlers": [
+          {
+            "name": "fetchRequest",
+            "handlers": [
+              "class"
+            ]
+          }
+        ],
+        "last_deployed_from": "api"
+      },
+      "script_runtime": {
+        "compatibility_date": "2026-10-01",
+        "compatibility_flags": [
+          "nodejs_compat",
+          "global_fetch_strictly_public"
+        ],
+        "usage_model": "standard",
+        "limits": {
+          "cpu_ms": 1000
+        }
+      }
+    }
+  },
+  "databaseId": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+  "census": {
+    "result": [
+      {
+        "results": [
+          {
+            "users": 0,
+            "accounts": 0,
+            "sessions": 0,
+            "clients": 0,
+            "client_resource_links": 0,
+            "resources": 1,
+            "jwks": 1,
+            "access_tokens": 0,
+            "refresh_tokens": 0,
+            "consents": 0,
+            "verifications": 0,
+            "limiter_rows": 3,
+            "reserved_owner": null
+          }
+        ],
+        "success": true,
+        "meta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.3851
+          },
+          "duration": 0.3851,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": false,
+          "size_after": 253952,
+          "rows_read": 6,
+          "rows_written": 0,
+          "total_attempts": 1
+        }
+      },
+      {
+        "results": [],
+        "success": true,
+        "meta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.0722
+          },
+          "duration": 0.0722,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": false,
+          "size_after": 253952,
+          "rows_read": 7,
+          "rows_written": 0,
+          "total_attempts": 1
+        }
+      }
+    ],
+    "errors": [],
+    "messages": [],
+    "success": true,
+    "status": 200
+  }
+}

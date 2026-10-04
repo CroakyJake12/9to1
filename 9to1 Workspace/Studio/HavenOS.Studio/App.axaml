@@ -1,0 +1,27 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fluent="using:Avalonia.Themes.Fluent"
+             x:Class="HavenOS.AIStudio.App"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <fluent:FluentTheme />
+    <Style Selector="Button.nav">
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="#AEBBCC" />
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="MinHeight" Value="38" />
+    </Style>
+    <Style Selector="Button.nav:pointerover">
+      <Setter Property="Background" Value="#1A2633" />
+      <Setter Property="Foreground" Value="#F3F6FA" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#C7D9FF" />
+      <Setter Property="Foreground" Value="#17243A" />
+      <Setter Property="BorderBrush" Value="#C7D9FF" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </Application.Styles>
+</Application>

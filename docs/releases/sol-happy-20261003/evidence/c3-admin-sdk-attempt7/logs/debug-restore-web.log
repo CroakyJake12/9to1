@@ -1,0 +1,52 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 201 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.DesignerSupport/Avalonia.DesignerSupport.csproj (in 241 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj (in 20 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj (in 241 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/Themes/CakeOS.Cui.Themes.csproj (in 5 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 2 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj (in 265 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 2 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 16 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj (in 2 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 2 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj (in 27 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Sites/HavenOS.Sites.csproj (in 7 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Web/NineToOne.Web.csproj (in 15 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Home/HavenOS.Home.csproj (in 9 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj (in 57 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj (in 13 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Accounts/Remote/NineToOne.Accounts.Remote.csproj (in 3 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 3 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Models/Dulche Alpha/Den.csproj (in 1 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Web/Tests/Web.Specs.csproj (in 63 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj (in 46 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Admin/NineToOne.Admin.csproj (in 32 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj (in 23 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj (in 13 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj (in 11 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj (in 3 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj (in 19 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj (in 28 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj (in 10 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj (in 5 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj (in 6 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj (in 38 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj (in 6 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj (in 7 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj (in 12 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj (in 11 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj (in 4 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj (in 4 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj (in 3 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj (in 3 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj (in 11 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj (in 11 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj (in 5 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj (in 8 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj (in 7 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj (in 5 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj (in 8 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj (in 12 ms).
+  Restored /workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj (in 19 ms).
+  1 of 51 projects are up-to-date for restore.

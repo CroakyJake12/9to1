@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "status": "FROZEN_UNACCEPTED_SOURCE_ONLY_PREINVOCATION_REVIEW_REQUIRED",
+  "generatedUTC": "2026-10-04T18:20:48.257563+00:00",
+  "sourceCommit": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "parent": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+  "worktree": "/tmp/team-c-c5-home-windows-harness-provisional-20261004",
+  "branch": "team-c/sol-happy-c5-home-windows-harness-provisional-20261004",
+  "changed": [
+    {
+      "path": ".github/scripts/home-windows-original-shutdown.ps1",
+      "modeBlob": "100644 blob 70ad837bb8e37a4eaa99639a0d19fa04fcce36ce",
+      "bytes": 30217,
+      "sha256": "826521e5fdf080c4aa5fcd3ddfa896e2d1c511373db100305684080b27d6387a"
+    },
+    {
+      "path": ".github/validation/home-windows-original-shutdown.json",
+      "modeBlob": "100644 blob 50216d72325f4cdfeee535fb05782a4be351c3ac",
+      "bytes": 18576,
+      "sha256": "e4643d06a70f81342318911602e5eac61ce17b249be5d72f852fb632fe594942"
+    },
+    {
+      "path": ".github/workflows/team-c-home-windows-original-shutdown.yml",
+      "modeBlob": "100644 blob 6fcaf12e2458cab231690025ef670a26eb1a8cd3",
+      "bytes": 7272,
+      "sha256": "ee9b7ca0dd1e12da5ef300ced25073c0ee12e7836ef313610b325d1ea7ee07cf"
+    }
+  ],
+  "outsideEntriesUnchanged": 16504,
+  "homeWholeSourceOwner": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+  "homeProductionPin": "323ccff8c9cc9b020d511379388bd57a569a138b",
+  "all79SourcePinsMatchExactReceivingGit": true,
+  "requiredGitlinks": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+      "commit": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "commit": "864a05282841bf04006890f04d11d60d1a046aa9"
+    }
+  ],
+  "runner": "windows-2022",
+  "SDK": "10.0.401 from unchanged global.json; official setup on disposable runner only",
+  "testSequence": [
+    "actual source-built CUI Tasks Release",
+    "original owning normal unfiltered Release restore/build/discovery/six TRX cases",
+    "actual unchanged native Home Release",
+    "original self-contained win-x64 publish",
+    "exact ZIP/members/manifest/seal/eight maximum19MiB originalparts and orderedSHA proof",
+    "actual extracted own visible focused HWND, declared CtrlShiftQ, original exit0/output drain/no forcedcleanup",
+    "second fresh original process same actual canonical OS Home profile, explicit quit0, physical hash and lock-release comparisons"
+  ],
+  "ordinaryManagedCases": {
+    "project": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+    "total": 6,
+    "originalRender": 1,
+    "originalLifetimeNewCases": 5,
+    "measuredAssertions": null,
+    "sourceAssertionCallsNewClass": 54,
+    "originalMethods": [
+      "Native_home_host_loads_canonical_cui_into_a_measured_window",
+      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit",
+      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services",
+      "Original_close_is_published_before_Core_callback_reentry",
+      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close"
+    ],
+    "casesByMethod": {
+      "Native_home_host_loads_canonical_cui_into_a_measured_window": 1,
+      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit": 1,
+      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services": 2,
+      "Original_close_is_published_before_Core_callback_reentry": 1,
+      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close": 1
+    }
+  },
+  "nativeProfileRoute": "Unchanged FileHomeCoreStateStore.CreateDefault uses Windows LocalApplicationData/9to1/Home. No HAVEN_DATA_DIR/LOCALAPPDATA/HOME/USERPROFILE/actor/config/source override or injected persistence seed. Only scoped relative filename/size/SHA catalogs retained; profile bodies excluded.",
+  "normalRuntimeCustody": "Actual source-built owning TargetPath and complete physical test runtime before/after; full published/extracted runtime before/after; full Git/current two gitlink bodies before/after",
+  "controlLimits": {
+    "jobMinutes": 60,
+    "requiredOutputDriveFreeBytes": 8589934592,
+    "perLogPostCompletionMaximumBytes": 8388608,
+    "maximumRawZipParts": 8,
+    "rawPartMaximumBytes": 19922944,
+    "nativeVisibleWindowSeconds": 45,
+    "nativeFocusSeconds": 5,
+    "nativeShutdownSeconds": 45,
+    "automaticAggregateDiskGrowthOrRSSMonitor": false,
+    "forcedShutdownPermitted": false,
+    "nativeOutputDrainSeconds": 5
+  },
+  "originalForcedFailure": {
+    "source": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+    "run": 37205981853,
+    "job": 111447135076,
+    "forcedCleanup": true,
+    "exitCode": -1,
+    "status": "RETAINED_ORIGINAL_FAILURE_NO_ACCEPTANCE"
+  },
+  "remainingNativeGates": [
+    "default window-close intentionally keeps Core/process alive; no original external reopen/quit route after HWND gone, therefore NOT_RUN",
+    "native consequential persistence mutation NOT_RUN; current host writer unconfigured. Managed real store/write/drain assertions are retained separately",
+    "installed identity/signing/noSDK-cleanPC/donor/fullHome/all-theme/provider acceptance NOT_RUN"
+  ],
+  "preservedControls": [
+    "original render Fact unchanged",
+    "all54 source Assert call-sites in new original lifetime class; measured runtime assertion count NULL",
+    "all product/fixtures/projects/policies/native controls unmodified",
+    "original 7e CloseMainWindow forced-1 and previous compile failure preserved"
+  ],
+  "workflowCustody": "Read-only contents permission; exact github.sha; checkout history and no credentials; onlytwo maintained actual gitlink sources; source guard refuses other product changes; dedicated one branch/root sole push; 60minute job; official selected SDK no workloads/providers/deployment; no forced native cleanup or timeout success; natural actual subprocess exit recorded and exclusive stdout/stderr locks released. This does not claim Linux Commands ECHILD semantics on Windows or aggregate memory monitoring. Complete package_ready separate from part publication_ready. External exception text not emitted; only actual stage/phase/type. Three owned release events checked; no unbounded drain call.",
+  "retention": "Diagnostics incl all raw failed logs and TRX; full original ZIP+manifest+seal even if native observation fails after publication; each originalpart artifact <=19MiB+metadata/no recompression oforiginalZIP; private profile bodies excluded.",
+  "localValidation": [
+    {
+      "kind": "PowerShell7.6.6 AST parser",
+      "result": "PASS; allscript no syntax errors; taskprivate XDG dirs due read-only host default, no HOME override"
+    },
+    {
+      "kind": "inline C# native input declarations",
+      "result": "PASS compilation only, NO Win32 calls"
+    },
+    {
+      "kind": "PowerShell dynamic dict/property contracts",
+      "result": "PASS"
+    },
+    {
+      "kind": "YAML/JSON/source pins",
+      "result": "PASS; exact3source-onlypaths79pins15steps10artifactsteps/two actual gitlinks/max trackedpath360; core.longpaths+noCRLF required"
+    },
+    {
+      "kind": "git diff check",
+      "result": "PASS"
+    }
+  ],
+  "actualWindowsExecution": "NOT_RUN; root sole publication and invocation after C6/C1 source review; no localheavy restore/build performed",
+  "latestGlobalQualification": "Exact 2a-derived producer; root a2c2 adds9Mail bodies outside Home graph. This proposal does not relabel older retained df Web/auth publication or all latest global product acceptance.",
+  "previousFrozenProposal": "0a8c34ab3a098264d0d6f8c13861e1ba3acf2a1b",
+  "correctiveSourceCommit": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "peerCorrections": [
+    "Complete sealed-package readiness independent of boundedparts readiness; entire package retained even when >8parts refuses transport",
+    "No arbitrary external exception text exported: actual controlled stages/phases+exceptiontype retained, no inner exception Messages",
+    "All3owned modifier release events must be admitted; own visibleforeground rechecked immediatelybeforeinput",
+    "Removed parameterless unboundedWaitForExit; originalexit bounded45s, exclusive output drain bounded5s"
+  ]
+}

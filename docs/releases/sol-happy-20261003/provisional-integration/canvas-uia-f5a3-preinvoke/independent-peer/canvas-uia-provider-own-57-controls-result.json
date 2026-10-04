@@ -1,0 +1,296 @@
+{
+  "status": "PASS",
+  "parserVersion": "7.6.6",
+  "parserErrors": 0,
+  "sourceSha256": "6cfbf80464921994b91e63aa66a994ea4ad47fe173b8bb9e9a362a94044aa76e",
+  "controlsPassed": 57,
+  "controls": [
+    {
+      "case": "foreign-process",
+      "passed": true,
+      "actualSourceGuardMessage": "Native control has the exact owned process and role"
+    },
+    {
+      "case": "wrong-role",
+      "passed": true,
+      "actualSourceGuardMessage": "Native control has the exact owned process and role"
+    },
+    {
+      "case": "disabled",
+      "passed": true,
+      "actualSourceGuardMessage": "Native control is enabled and visible with real geometry"
+    },
+    {
+      "case": "offscreen",
+      "passed": true,
+      "actualSourceGuardMessage": "Native control is enabled and visible with real geometry"
+    },
+    {
+      "case": "zero-width",
+      "passed": true,
+      "actualSourceGuardMessage": "Native control is enabled and visible with real geometry"
+    },
+    {
+      "case": "zero-height",
+      "passed": true,
+      "actualSourceGuardMessage": "Native control is enabled and visible with real geometry"
+    },
+    {
+      "case": "left-outside",
+      "passed": true,
+      "actualSourceGuardMessage": "Native pointer must fit actual virtual screen bounds."
+    },
+    {
+      "case": "right-outside",
+      "passed": true,
+      "actualSourceGuardMessage": "Native pointer must fit actual virtual screen bounds."
+    },
+    {
+      "case": "top-outside",
+      "passed": true,
+      "actualSourceGuardMessage": "Native pointer must fit actual virtual screen bounds."
+    },
+    {
+      "case": "bottom-outside",
+      "passed": true,
+      "actualSourceGuardMessage": "Native pointer must fit actual virtual screen bounds."
+    },
+    {
+      "case": "invalid-width",
+      "passed": true,
+      "actualSourceGuardMessage": "Native pointer must fit actual virtual screen bounds."
+    },
+    {
+      "case": "invalid-height",
+      "passed": true,
+      "actualSourceGuardMessage": "Native pointer must fit actual virtual screen bounds."
+    },
+    {
+      "case": "unreleased-mouse",
+      "passed": true,
+      "actualSourceGuardMessage": "FAILED_OR_BLOCKED_UNACCEPTED"
+    },
+    {
+      "case": "forced-cleanup",
+      "passed": true,
+      "actualSourceGuardMessage": "FAILED_OR_BLOCKED_UNACCEPTED"
+    },
+    {
+      "case": "drain-failure",
+      "passed": true,
+      "actualSourceGuardMessage": "FAILED_OR_BLOCKED_UNACCEPTED"
+    },
+    {
+      "case": "cleanup-failure",
+      "passed": true,
+      "actualSourceGuardMessage": "FAILED_OR_BLOCKED_UNACCEPTED"
+    },
+    {
+      "case": "cancel-failure",
+      "passed": true,
+      "actualSourceGuardMessage": "FAILED_OR_BLOCKED_UNACCEPTED"
+    },
+    {
+      "case": "clean",
+      "passed": true,
+      "actualSourceGuardMessage": "CONTROLLED_PASS"
+    },
+    {
+      "case": "private-external-exception-redacted",
+      "passed": true,
+      "actualSourceGuardMessage": "WITHHELD; controlled stage retained"
+    },
+    {
+      "case": "picker-refuses-foregroundProcessId",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-refuses-nativeTitleMatches",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-refuses-ownerChainMatches",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-refuses-uiaProcessId",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-refuses-uiaRole",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-refuses-uiaTitleMatches",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-refuses-uiaWindowHandle",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-refuses-foregroundWindowHandle",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual snapshot predicate refused before any capability/action"
+    },
+    {
+      "case": "picker-diagnostic-capability-refusal",
+      "passed": true,
+      "actualSourceGuardMessage": "Original timeout retained; secondary type only"
+    },
+    {
+      "case": "picker-diagnostic-output-refusal",
+      "passed": true,
+      "actualSourceGuardMessage": "Original timeout retained; secondary type only"
+    },
+    {
+      "case": "absent-picker-never-cancelled",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual Cancel function returned before any native action"
+    },
+    {
+      "case": "cancellation-refusal-still-closes-disposes-and-fails",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual outer finally retained refusal and continued owned cleanup"
+    },
+    {
+      "case": "cleanup-observation-preserves-original-phase-witness",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual routing statement retained separate original and cleanup snapshots"
+    },
+    {
+      "case": "address-diagnostic-capability-refusal",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual catch retained original failure; secondary type only"
+    },
+    {
+      "case": "address-diagnostic-output-refusal",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual catch retained original failure; secondary type only"
+    },
+    {
+      "case": "cancel-diagnostic-capability-refusal",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual catch retained original failure; secondary type only"
+    },
+    {
+      "case": "cancel-diagnostic-output-refusal",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual catch retained original failure; secondary type only"
+    },
+    {
+      "case": "standard-provider-valid-tuple",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual pure predicate admitted controlled genuine installed tuple only; no registration performed"
+    },
+    {
+      "case": "standard-provider-refuses-name",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "standard-provider-refuses-version",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "standard-provider-refuses-culture",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "standard-provider-refuses-publicKeyToken",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "standard-provider-refuses-globalAssemblyCache",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "standard-provider-refuses-beneathWindowsDirectory",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "standard-provider-refuses-location",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "standard-provider-refuses-sha256",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual provider predicate refused before registration"
+    },
+    {
+      "case": "owned-default-button-valid-tuple",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual pure predicate admitted controlled owned tuple only; no OS metadata/read/input performed"
+    },
+    {
+      "case": "default-button-refuses-nativeWindowHandle",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-nativeProcessId",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-nativeIsPickerChild",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-nativeClass",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-nativeCaptionMatchesSelectFolder",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-uiaProcessId",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-uiaWindowHandle",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-uiaRole",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "default-button-refuses-uiaNameMatchesSelectFolder",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual metadata predicate refused before any native/default button action"
+    },
+    {
+      "case": "missing-managed-legacy-type-is-unobserved",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual reader retained common observations, explicit unavailable type and null Legacy/default fields; no name text"
+    },
+    {
+      "case": "pattern-read-refusal-retains-phase-not-text",
+      "passed": true,
+      "actualSourceGuardMessage": "Actual reader records failed value read phase/type only; Legacy/default remain unobserved"
+    }
+  ],
+  "nativeCSharpCompilation": "PASS",
+  "qualification": "Actual source functions/C# input-bounds/finally refusal controls only; controlled process/element metadata and failure outcomes. Private exception sentinel withheld by actual outer catch. No external Windows API invocation, live app/UIA/provider/profile/model or actual native acceptance."
+}

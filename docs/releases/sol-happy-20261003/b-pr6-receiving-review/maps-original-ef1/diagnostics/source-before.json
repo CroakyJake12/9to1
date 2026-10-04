@@ -1,0 +1,2912 @@
+[
+  {
+    "path": "9to1 Workspace/Directory.Build.props",
+    "gitBlob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+    "bytes": 781,
+    "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+  },
+  {
+    "path": "9to1 Workspace/Directory.Build.targets",
+    "gitBlob": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc",
+    "bytes": 262,
+    "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+  },
+  {
+    "path": "9to1 Workspace/Directory.Packages.props",
+    "gitBlob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+    "bytes": 2581,
+    "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+    "gitBlob": "eafccb98196ed8ef72286845276487ece2fc7180",
+    "bytes": 1922,
+    "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Abstractions.cs",
+    "gitBlob": "288c25de08d1e8fa7cc7058239409079eef3304e",
+    "bytes": 29416,
+    "sha256": "ff79738a76c7cccd6952c4922c3edf0fde129107427acb44140d151731ee8074"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Actions/ProviderResolution.cs",
+    "gitBlob": "c527c75e5c1463e3e6f3c22be3f19de4892d1eb2",
+    "bytes": 7941,
+    "sha256": "cf34b5d80256a963da3858fa9bf9a34807ac0da000d21c1a9cfededa91282140"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/AdvancedCodeIntelligenceAbstractions.cs",
+    "gitBlob": "718b002b6189d8237ca630489f0471699f4078e6",
+    "bytes": 4347,
+    "sha256": "c62cfabe6a3026f89e9f9e381bb63ba080e0bf4a98bfcc8fafad7a6bfb6238fe"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentActivityObservation.cs",
+    "gitBlob": "6825f47dc9afceeeceb58a4ca03dccc05098e117",
+    "bytes": 3857,
+    "sha256": "33a20309f0063e37748270c85d6e53da9d0313d746b6934fc7be7132cc9d1381"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentTaskRuntimeService.cs",
+    "gitBlob": "5dc96e114571b7354103744bac9b0a0e6b0e5ddf",
+    "bytes": 17221,
+    "sha256": "69442ce3cc97dd2e9e4804c0728e087576692f098864e7b96bb463426403ae1b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ApkLaunchAbstractions.cs",
+    "gitBlob": "bcae4e709221e9d1086a707966499f4fd8d2c780",
+    "bytes": 2517,
+    "sha256": "b8a6c9942ac347e54be0e3654e7fd86dbdfcac4f04ec342c8db6850cd561d162"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/AttachmentProcessingAbstractions.cs",
+    "gitBlob": "cd4c00c55a212f592e7abd7f1fe5f118a5993935",
+    "bytes": 2590,
+    "sha256": "96faf42cb468685c3a30b63514433683e0d8a2a66b1313ada0cad68833fc55b5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/ConversationSpaceCommitContracts.cs",
+    "gitBlob": "22283d0a607836c9e426dcbf350a62fa8b44c3d9",
+    "bytes": 2031,
+    "sha256": "e09a5a19e35b8c368b46f8008af1b7d54df24d12ab2ecccb3948d99476f7d137"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/HomeNativeControlledLaunch.cs",
+    "gitBlob": "d454f3e373b02ccbe35e17b7460c32409a910dab",
+    "bytes": 1553,
+    "sha256": "aada7a0c91198739f34e50ab7de0ab5a437f4b6453ab1001c7c4ebfa7ff96aa1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/HomeNativePeerIdentity.cs",
+    "gitBlob": "ded1286cbb9b27c9218917b2f58552de26206488",
+    "bytes": 2467,
+    "sha256": "ae17d6f123809a8e6df1de18b9126622f250d4f53d5584ae03c6a29b12bb337b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/InstalledApplicationOriginalActorRegistry.cs",
+    "gitBlob": "14ac96a285976f057a8578a0eb8732287cb68379",
+    "bytes": 645,
+    "sha256": "eab5899c193a90e448a00389d977a5d8930a9ea78dd63bf69513857d861c5043"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/InstalledApplications.cs",
+    "gitBlob": "886e69442fd4290fe5f5614e8d67cf1e13969176",
+    "bytes": 1953,
+    "sha256": "63629f5c47b040a3d2f96839965e98a642fcc024a6473e65cb332b1f6005c6ee"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceAuthorization.cs",
+    "gitBlob": "7f384ca48aa1e1d971bef887d904951b475e605e",
+    "bytes": 11982,
+    "sha256": "f7bf97f06b6a30a9a3788bc3663043ff54c5c982b2552b9e35756254ff10a23a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceStoreIdentity.cs",
+    "gitBlob": "fe70745d27d3c242f3887e324bae6f386363e7d8",
+    "bytes": 428,
+    "sha256": "ef361c394d38666108dc839aebf9895fe0a6651ec33b14d4287a5bd75dac15f4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceStoreOwnership.cs",
+    "gitBlob": "8d57b9e8ffc18833410c9e80a49ce6e8a462e4b3",
+    "bytes": 1221,
+    "sha256": "a6d8ede058ed2989b597c7a5d1e1a56c799faed1d65fde716a81bc3089ebf44c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/VersionedSettingsCompareExchange.cs",
+    "gitBlob": "5c4fb34f8c3f8d2671befc7bc36cd47147984761",
+    "bytes": 2080,
+    "sha256": "750e0db267824e6c593a69857cb2cc44bacf6632a7140fe0081bd35ba4c3cb27"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/AutomationDeliveryAbstractions.cs",
+    "gitBlob": "9401933e0f2ed01cfde54c61cee58e11c6afc856",
+    "bytes": 1171,
+    "sha256": "c12b86acb9929fcf84952b893c71f93002c7f3b84b0cebb78cc31119b42b3ced"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationDefinitionCallerContracts.cs",
+    "gitBlob": "f1d07e6e61d952290d39bf021206d102776f0e19",
+    "bytes": 1803,
+    "sha256": "442fd39e8e862eddda4ccf136c547c5739e7d9bea2e53f23ec24abc4afefa1c4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationGraphAiEditor.cs",
+    "gitBlob": "1f94836c4396f4dbe73b3c5d02451dd7814fbff7",
+    "bytes": 9590,
+    "sha256": "b6448162d79652dc0fd2446b44da3c037e14eec516d108b60dd8ad5721de1f76"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationGraphDefinition.cs",
+    "gitBlob": "d8dc28f52dd2c582b08fa29763659d68c9438f36",
+    "bytes": 4646,
+    "sha256": "b8972ef695e396d44593b42a0c26044f74444e6c7a7727a3853623f7a0e3549b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationGraphPublicationPreparation.cs",
+    "gitBlob": "c4103104106737cc8dcf8dd5312445df3a494e0e",
+    "bytes": 1697,
+    "sha256": "7281b8bda2e34de3430f3d0c2261fe9bfacc3479b2c00c8e4f9a0d2db1867322"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationGraphRuntime.cs",
+    "gitBlob": "db07e0eb32c6fc6d07a4c36f2844b657349c886e",
+    "bytes": 20453,
+    "sha256": "f568d436a5bb36395e10061ab7b40b8e083403e565b626395cdd52a35d903a20"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationGraphTestRunner.cs",
+    "gitBlob": "64b1221d42b7f71a635f38190e7d00bc90ab6c5b",
+    "bytes": 1541,
+    "sha256": "02db3e2b8957cc86425e2464fee6807d1a49bebfb6bcf10c06bf3642e5b3bda4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationGraphValues.cs",
+    "gitBlob": "3f5992a8c445d99318b8265a3c415d5187adac34",
+    "bytes": 2364,
+    "sha256": "613e99c121e348ebc53d201fa457d7d3e8e04c04a7d6fd7964ffff4c6ff3c5f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationOwnerCommitContracts.cs",
+    "gitBlob": "a802283e626bdf041fb2006647154ec287f01e4c",
+    "bytes": 15462,
+    "sha256": "555a89ab0cc81dc89c65795f10e89a8405d54d0aae9f1b3795e2aa55397e35dd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/BuiltInAutomationActionNodes.cs",
+    "gitBlob": "e2a9a0f94bea1f7325f61069cbe0e5e3cbe19faa",
+    "bytes": 10980,
+    "sha256": "f421ad3f2459db8bfc7630820a1808e447691d186ae28c03777ed1fb4c9e15b4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/DeviceAutomationActions.cs",
+    "gitBlob": "521d555828911a1c39ada7d9e60c0921ac98cfba",
+    "bytes": 12460,
+    "sha256": "40ac5647bea6a7adee91c4f12becb528c1347c3825f88e36c4aa8b5eb3c3e85a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/NodeGraphAutomationAdapter.cs",
+    "gitBlob": "dcc3112cc27014a089722e10fe9dd8c701db3c0f",
+    "bytes": 4792,
+    "sha256": "1c22d09d6c1bf3685d8e2dc3f8c28fa1ff0026e76704a254c8303d173411b8f9"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/ReusableDeviceWorkflowRunner.cs",
+    "gitBlob": "20f9981a7ab9e5fd2339b051185a27bbe7c6dfdc",
+    "bytes": 4978,
+    "sha256": "a3720d752b4df30d0ca3563abaeec0cc8a8a8c255edf9e195f43a3c270526aa0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/ScheduledGraphAutomation.cs",
+    "gitBlob": "0f1d16b151fd8fdf334addd0f5dfaddcf83cd4b5",
+    "bytes": 11247,
+    "sha256": "39ab4e99d4baa732c8e7efd1321b4159ac8a1d7160ee4e568859da17874b6687"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Automations/ScheduledTaskRuntime.cs",
+    "gitBlob": "4b3623fd95a5ef5e3c6f874e3fe3f6378d3d878a",
+    "bytes": 21161,
+    "sha256": "eec804f7b46168531173ef1d07d7f08e572741fbc3e7abbc5f680296679dd5dd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsOperations.cs",
+    "gitBlob": "1d2dd534100b69444a1188297441b7e3afca84b3",
+    "bytes": 12399,
+    "sha256": "43a38677fb29208f5eec2e99f7c801ba7c4b5ac5ef6e15027593e8e1373cd59d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.Recovery.cs",
+    "gitBlob": "28f238a992c5dcda8dac5569edea7c72e090b884",
+    "bytes": 20254,
+    "sha256": "df448a7172b37e1786a5884a990f5c60fde13ead0588649238e4b24b6f927dba"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.cs",
+    "gitBlob": "dbf6375985fedc28034e346dd9b01df11e4a3a43",
+    "bytes": 20685,
+    "sha256": "dfd7c06bafecbe30d301511d4afa76d8b67c3dc0459e7644cc5d4524219b9303"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Browser/BrowserAutomationRegistry.cs",
+    "gitBlob": "2076f375d7aa18b7072ac9b0b94009dd4e3f90f5",
+    "bytes": 2561,
+    "sha256": "3cd2678c93f0e8577687ca38162beee794b9873f8d9edf9cd1cca5e5731fd022"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Browser/BrowserCompletionService.cs",
+    "gitBlob": "01c57998d0cac3a07f3ec860387c5843abd1e9d9",
+    "bytes": 3830,
+    "sha256": "985884781cd6e7f7c86ccbee60221f89e1fb0676afd861c4c7bcefc96bc2a16a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/BrowserAutomationAbstractions.cs",
+    "gitBlob": "32f4907224aa5a7d686d74d550e1ae68bfcb94a4",
+    "bytes": 3387,
+    "sha256": "b4ddadb5d9ddaed3124c55a41a1fe024ab8d5fdd9a56bfbe497dcffcbba71446"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/BrowserNativeDownloadAbstractions.cs",
+    "gitBlob": "862a2178d640bd9707a7702030e77fad7a90311a",
+    "bytes": 1032,
+    "sha256": "18d1d5a8f4cb0d148d98f01406b3defc25f11ebcb6e44e17fb23f98d40075c8f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/CallCoordinator.OriginalNarration.cs",
+    "gitBlob": "a606d35c54088d7c631f3cafa95147dae9a7e677",
+    "bytes": 6662,
+    "sha256": "b63e2f4d537ac6666879781fc59fe40b010f5b082d9727e7a56809064e8bb2d2"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/CallCoordinator.cs",
+    "gitBlob": "a955e620b8d10cf2eff3b75fefeb9042b1bbfc0c",
+    "bytes": 49724,
+    "sha256": "45767ba95913378f87dbb27ab58568621f21fc2574af7df46efc1dd4d9ae350e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/CallOptimizedOllamaClient.cs",
+    "gitBlob": "11562b4f0124d4d9b2d777fd0585575d7bbab9b0",
+    "bytes": 5288,
+    "sha256": "86e6dc3b30716c49b7dda276bb82ecdddaf90269cfb30613f63b9e66b3fb333f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/ICallDeviceSelection.cs",
+    "gitBlob": "1cb297dc4bd9f54ccf429da6cd6c885b47b5d9d1",
+    "bytes": 335,
+    "sha256": "5a41aa2044887ff00fc78c1347dbe6b4428203976c1b19148c2b3af8898c57f7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/IVoiceReactionSource.cs",
+    "gitBlob": "4fba89b03287b9dfceddcc5a8f98b85e12015318",
+    "bytes": 255,
+    "sha256": "5dd41a4540807a8a67634e12eff75f010180939dfd8b277fa33d26e45d13a254"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/MonologueContinuation.cs",
+    "gitBlob": "f0033d1779ab34c0951994dcb0cae01bf38eb764",
+    "bytes": 551,
+    "sha256": "59c389d37c35decb4db3eac9fdaaf9eab6fc04ae13e69097aa1f198e3d513855"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/MonologueOriginalPlayback.cs",
+    "gitBlob": "c4936b942856ab8d6510b235994f3801f3c73750",
+    "bytes": 13684,
+    "sha256": "ac2d97079791f3994ccc949f67f897717fdfb6986bd55e23eccaa9e093ab87bf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/MonologuePlaybackReceipt.cs",
+    "gitBlob": "f97b33008afd7b7afb93614d3d873c86b9fa2ca6",
+    "bytes": 393,
+    "sha256": "a5a0ef80b48042bc25974c576f15c8fc38b1230c630589ed381d1784683176eb"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/MultimodalSessionLifecycle.cs",
+    "gitBlob": "88f45b9eb756b4c168ebbe5467d06c0c31c31db9",
+    "bytes": 7198,
+    "sha256": "8d33557548b05b872c446d42dc30110fa299f421f6348e0e9e699cc726513753"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/MultimodalSessionStore.cs",
+    "gitBlob": "9c8bab4f7b24b2e117c4c0c05ce106270b16f6b4",
+    "bytes": 9614,
+    "sha256": "2fd6e88a9a55e02062ef92f816b5ac60b04ee40871b8613af4433a4949640e70"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/ResponsiveCallCoordinator.cs",
+    "gitBlob": "f8633a662a04aa3deff2741b88b824e364b21d79",
+    "bytes": 12026,
+    "sha256": "b4ab239685255d7bbc83fd6dccf8d96561430d9eedbe7ea0e554701f9b627f47"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/SentenceChunker.cs",
+    "gitBlob": "2fc4be7d6e316489dc7f0c1a55630bbc5c6bb88c",
+    "bytes": 4193,
+    "sha256": "7ebbba580666f517b1df047aa1d763996c3aaf5298d62ca60ae152b78ada75d2"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/SpeechOutputWarmup.cs",
+    "gitBlob": "1c3b140b869ebaa5f073868782a151a08a13b764",
+    "bytes": 561,
+    "sha256": "56f02d7af71574b096bc541e45a91aa7de1936988edf230ae674c269baaa614e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/SpeechPlaybackContinuation.cs",
+    "gitBlob": "8794a9bc9eaf5842b789d5119347467805bec761",
+    "bytes": 2464,
+    "sha256": "153a8e32d917c1ebd669a6ae87d4b28a215c8b9412a2f5dcd690809c5a221479"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/VisionVoiceActionCatalog.cs",
+    "gitBlob": "111d8abcb54795f3f4f99c37af3ace70c123bcf9",
+    "bytes": 19798,
+    "sha256": "cefd4905c4fe3040053872afc92408084009d691a644b2dcd53a18ea28767a81"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/VisionVoiceModels.cs",
+    "gitBlob": "3a803584948cb6abcc1cd9ae8e6ada6c166043d8",
+    "bytes": 14030,
+    "sha256": "f183fcda495b5152a7e586fab5cebacf5d8ec3bda90afb6ea790010f5a6a7865"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/VisionVoiceSessionService.Playback.cs",
+    "gitBlob": "00fe4eac9856b3379aed55a9db96981e3c8e5cf3",
+    "bytes": 2614,
+    "sha256": "6d23066edd4694fa6ecf4eb616b4605e922b51a595727c2eadefdf43a530c48d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/VisionVoiceSessionService.cs",
+    "gitBlob": "81e2a8d6d214ed342ecc55bb980253d3edef347b",
+    "bytes": 15062,
+    "sha256": "ba21317a54d825314005727b0b3786de109672b7a8eea1d7389bf0e5305a497f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/VoiceDeliveryStyle.cs",
+    "gitBlob": "e1cd8674efdea6e499bed4d8c3bd913b5dccb6ed",
+    "bytes": 2406,
+    "sha256": "1fedc1d6e5158fccbbf5c58d0da189ef031455c634f2b25ac0f483a6bc901aee"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/VoiceProfileCatalog.cs",
+    "gitBlob": "035faaf41396eb331e429c158e19d5a6cd06ce32",
+    "bytes": 4314,
+    "sha256": "21b6cfb2720884b7f92356eae4cdbfc07caca4dc5e4714f7139a8a4face8be1b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Call/VoiceReactionRuntime.cs",
+    "gitBlob": "804e044b6a1151980311e9749e0cbf0310c31b78",
+    "bytes": 13888,
+    "sha256": "500e955e1fc3be146a22d06ab19ff531bf4db9562929648d591bea4ebd11e508"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/CallAbstractions.cs",
+    "gitBlob": "a923b27cfc14ff0e99c23a7490fa765cab35b685",
+    "bytes": 12328,
+    "sha256": "502cb1633e25f20aaaa3d4ab6902044c49cc1e9a4c96ae98c929a7a501f148f5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifact.cs",
+    "gitBlob": "4e8399ff1cb6eb6549668f38cf8b9c8fd1eb11fd",
+    "bytes": 8964,
+    "sha256": "03f567134cd373bae6a8439ae83cbb5f2cc6ee1142db25e6d668576a9be21c87"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactCodec.cs",
+    "gitBlob": "49d552824a889f833b0af912203809ccddbb0153",
+    "bytes": 21249,
+    "sha256": "a429c2c918f1b9daeea9125cf73b4355282a20218b8e0b265d85735f28081b5d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.Schema2.cs",
+    "gitBlob": "b9534851afb9efae1de961d79f0a3460a696e372",
+    "bytes": 13240,
+    "sha256": "6686e5e6440ad4e57f51a58754c70ce913d35030e68259c0926e3f1826d35a4c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs",
+    "gitBlob": "880dccdcb50e9fc031df3fe5132161abe9698920",
+    "bytes": 49451,
+    "sha256": "f289fac57b80ce4caabf8f7bab2bb0979bb88f62edc53f1acff01c63ac34b517"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasDocumentModel.Boards.cs",
+    "gitBlob": "515e0cdba326c01d104e7e8213b8186fdf9b6eb1",
+    "bytes": 5484,
+    "sha256": "5fbe4ffe9fe9bb94e2d3aa6686ab22b0a5e588f7ac8112f6c3ea406bb03bba29"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasDocumentModel.cs",
+    "gitBlob": "f7f850eabddf6eb1790c7f36a110d9a6e8b95306",
+    "bytes": 23095,
+    "sha256": "7088269900e90776a7d1d26b0a79379a1ff2e90c91346c7af91eb9522221b205"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasGhostVisibility.cs",
+    "gitBlob": "de910ba8d88ae43025a3451bbe0a44588e665021",
+    "bytes": 1081,
+    "sha256": "3e67bc390d0e0d53fe28dcb6f61ed010c70cf67b9cd83470bad108ead631ccf0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasInteractionController.DirectManipulation.cs",
+    "gitBlob": "3c68034775c6f950ad22e0e0b7eb266c7eb6a166",
+    "bytes": 14990,
+    "sha256": "2200cf0c822c49fd3cd53b686798d7d83f13f824aa83614a3f8a7665fdeb0d34"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasInteractionController.Release.cs",
+    "gitBlob": "9932d34b9ac1c23c2e138bfd42162c44a747c4ed",
+    "bytes": 12271,
+    "sha256": "8cf8b16c909781dd1b3b9ddb8f21a4936c797c0acb7a4c56a1d2b070fbe2489d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasLineGeometry.cs",
+    "gitBlob": "3d4510eaeb1183ebc6286681bbf189291173e21d",
+    "bytes": 1235,
+    "sha256": "b4e9fb5b6ae94566350f9fc24a396f7ffdc1e4ac70442b510e4182da6375bc4d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasStrokePathCapture.cs",
+    "gitBlob": "ed055bf69ac959065377e9e3fab02c231ef3f010",
+    "bytes": 2259,
+    "sha256": "4e909430b4b0aec55c6927902fd7649d7850d6f997dac76daa54580294c16c9b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasStrokePathGeometry.cs",
+    "gitBlob": "ef861e5d4f137e1748f408987d935f030ef3f708",
+    "bytes": 1411,
+    "sha256": "acb113857f584fc9219e2906beaff4a1a5fe5abd6ee83182c032a1ba8ed716f6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasStructuredStrokeTransactionLimits.cs",
+    "gitBlob": "1ade996cddc968d2984663641618a8af6cbe20d0",
+    "bytes": 1015,
+    "sha256": "aed9844ae072865a1e8c040ff628bc8151bbcba89775d82e09b59386b8350fdf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Capabilities/CapabilityRegistryService.cs",
+    "gitBlob": "98699e325646e0d78bfc76da907f6cf7a3b77f04",
+    "bytes": 1593,
+    "sha256": "6b99935e16eaf1efc7550d5f4843f22a33cbfe2f55f4be083e96b265458fd5f6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatCapabilitySelector.cs",
+    "gitBlob": "82ce7f255169b51e16a5e7c0cabe32b0f0b4066d",
+    "bytes": 4762,
+    "sha256": "ac1059895b983b742c2308eb0b9dbe4323160e3572040ba241de3775b4a67d0b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatContextWindow.cs",
+    "gitBlob": "3a2dd4a95461c85b6c1919fcd1773263a9339e2f",
+    "bytes": 1202,
+    "sha256": "e946fd7332b016caf0f31c4d4db56065921ff964f4606adc8756edd5eaff0078"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatExecutionTracker.cs",
+    "gitBlob": "f57fd88d7273963edf4914339c5297285beddf38",
+    "bytes": 8686,
+    "sha256": "bd9cadfde3548ad926ec9b250f444f5e2b2fae2491e657024258fed1e33f6fc1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatModelInventoryCache.cs",
+    "gitBlob": "6e48ea99a34a4ffa384ef6d00f8447e878c9ae69",
+    "bytes": 1357,
+    "sha256": "36d8bffe1eca468f96b30cad7a64312ff7013c03111b2b9f892fd70da74f6a08"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatPerformanceTrace.cs",
+    "gitBlob": "7ecf5f56f0bd0a726e4428a1712e7556a8043f9b",
+    "bytes": 4865,
+    "sha256": "0b11d3a19aa7ee4e9f9ca1f653658562f116db459bc2c882959f652ffe8ae771"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatSessionService.cs",
+    "gitBlob": "d1ff75fe497c6dad7221e250f14297098fa035f5",
+    "bytes": 74270,
+    "sha256": "c55ebcb294bd948f76aac98a70440b47028cb92eb099214998c4df6b68b3c041"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ResponseProgress.cs",
+    "gitBlob": "5f8a5280639060c2cf9aff2b9fe86dea40938769",
+    "bytes": 4936,
+    "sha256": "6297cefd8a944504c8f4b306e884f8c169c2ea459242a89203b9fe56e0176a4f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/CodeIntelligenceAbstractions.cs",
+    "gitBlob": "3579352338656b01952acecae0e7f5a8ffc351fd",
+    "bytes": 4117,
+    "sha256": "3c52cc66b1cf7caf89bafd6efa976b6d34b26f6e626df752a3b6af74d549c75f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Compatibility/CompatibilityContracts.cs",
+    "gitBlob": "945c076c3c221d998d2ba024d0bb120bc15cb932",
+    "bytes": 1632,
+    "sha256": "e4cb169a9a47ede7ade2af03313eece412612e08b61315bc57ceaf01f9d96c93"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Compatibility/CompatibilityPackageContracts.cs",
+    "gitBlob": "78efc0c79d37f9724a29408cb3c5784622fc5a34",
+    "bytes": 1855,
+    "sha256": "605a518d0286974e4d93cb023be45e03e9376492dc8193b75951eb9446898598"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Compatibility/CompatibilityPackageOpenContracts.cs",
+    "gitBlob": "29d896f8425ae9dc73150acc9c8cd1567499a2a1",
+    "bytes": 590,
+    "sha256": "6f9131746c7545ca7a7aeba4b26046203930317457ae1a40cb0b4edac2b4708f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Compatibility/CompatibilityRoutingService.cs",
+    "gitBlob": "2bb26b4cfa47c7b2e4723f744417e46382c0d3ed",
+    "bytes": 7929,
+    "sha256": "3db0937134a81c2d251d0234e393826aee62f062a1896d07bf7fbb3c99b6dede"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ComputerUse/ComputerUseApplicationPolicy.cs",
+    "gitBlob": "842f65140fbf57dfcff998048c57f06d2b53cc2d",
+    "bytes": 4335,
+    "sha256": "f7ec198be5525f0a14654c4cc76a98292401e164cfbe96896083ab5a3ef817e3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Conversation/ConversationPlacementService.cs",
+    "gitBlob": "dd43f221bcdf14508a91b412b18393e868fac8f5",
+    "bytes": 2085,
+    "sha256": "876d58f286e1a002dfafff2245203f603d69d67fd462c6320eab8d1a1b8b4f10"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Conversation/ConversationPlacementServiceImpl.cs",
+    "gitBlob": "68cde8983e8565a061e60a1aff2ec5dd022c821f",
+    "bytes": 8619,
+    "sha256": "a7a8cff3efd455c7ea41e0f510bf7b660b9cb3d69c6a55b5c8fd702deb478633"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Conversation/ConversationProductionServices.cs",
+    "gitBlob": "bddea8034e6892f97d4b0c40d5b738a1b35c3d36",
+    "bytes": 10499,
+    "sha256": "63330cf262898c2890cf99cbbd9d5d8eff0aca25ad10bcc1cac0aaa43db45f1d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ConversationProductionAbstractions.cs",
+    "gitBlob": "00bf9d8240caf4ab9477694aaee5099f924e7d13",
+    "bytes": 5941,
+    "sha256": "14c59b59bd5ea213438436f915736b5a396746f73885f79fef7647ef55a56c43"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/DashboardAbstractions.cs",
+    "gitBlob": "4791c3c99c281b1b44619b47b3dd0685e6d2ac1a",
+    "bytes": 6025,
+    "sha256": "02fcaf9c7ffa1c736c5291719eb47cd311cf18ed902a336751e21939d2389474"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataFormulaEngine.cs",
+    "gitBlob": "cf0c598f711ad32f18162df30b9150bfc180aa5d",
+    "bytes": 22837,
+    "sha256": "44afa2ce9610db4a962c68f443c1f1818b1bbe1dabb248583dd70c322c56b86e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataFormulaParser.cs",
+    "gitBlob": "2f7939b8935fc86008ed5cc5a0b09ccbeb4aca84",
+    "bytes": 11709,
+    "sha256": "42a491833fd96a0a2378c73faa136d9007aba23023cc9ec45443819f6bca12f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataFormulaReferences.cs",
+    "gitBlob": "6a509900afea1d700783686e4412fbfded03366b",
+    "bytes": 7584,
+    "sha256": "138755082e0cd4643fcc58456555bf757157ac6ec568f688f92103160443c018"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataFormulaRuntime.cs",
+    "gitBlob": "57309761a9912e236ac39c568bf31a5b25048b66",
+    "bytes": 19701,
+    "sha256": "a0c282e30a69aa9ba6934df0f930ff74eab64b2963be3c85d7fa26e8a26cfa90"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataJunctionTableUpdateIntent.cs",
+    "gitBlob": "50b084579d40a300219857cd9c39efb1ba694727",
+    "bytes": 4017,
+    "sha256": "22d8d1fba97e81256551277f5482d6ffb4f4eae2e2ee194c6cda79976bd4d56b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreateIntent.cs",
+    "gitBlob": "dffdea135aefca0ae55f42b2ef785ace92890b61",
+    "bytes": 7178,
+    "sha256": "b9983f77367fc8686a0ffab8ecb81f09a711941cb834a9d74d328c0228d175dd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreationDraft.cs",
+    "gitBlob": "9e71d0452aee271e56161faff4f5671a2b205f23",
+    "bytes": 3608,
+    "sha256": "77a832a3d7df77e0d3d6227944ec066980950d8e94c9097b0e51d7718051046d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreationProjection.cs",
+    "gitBlob": "25c91e7c8e85c61d8b04baac2f5990badd9586a7",
+    "bytes": 5735,
+    "sha256": "58110222dba2c4089bb80d19fe0f21560d3607839d4176e6ec2b5f0daa43f336"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordUpdateIntent.cs",
+    "gitBlob": "d9d47732e4ddc055ea8adc4e8dd147889ea839b9",
+    "bytes": 3583,
+    "sha256": "bf1c1d2f6deef00369ff3ffcca67681f259d29594f158e8ac8b97c54e770d85a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordUpdateSnapshot.cs",
+    "gitBlob": "84a3ea580c546636572f5ab7f2107e909f7ed172",
+    "bytes": 1387,
+    "sha256": "d010a450e48d48b9864790d19fc86e90c2f2deea3758e4cf256a22a1eed12da3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRelationshipGraphProjection.cs",
+    "gitBlob": "12b373a4abd1e7a87202db2a597b75f78589194c",
+    "bytes": 3802,
+    "sha256": "264524507baf334194c41e007c18a7cf78f4d7d7f9fb6aed92624f8c20b7734e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRelationshipUpdateIntent.cs",
+    "gitBlob": "1c6f80d6cada29833264fe8577579df01a31c3f5",
+    "bytes": 4640,
+    "sha256": "6bd45d30b2e1053ae41e353e8fc897e158fb32415aa6273fd72f99383d011b06"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataSheetDrawingEditor.cs",
+    "gitBlob": "bf57c4602b137475c5ff9af49428ca560c768c11",
+    "bytes": 3629,
+    "sha256": "eb8d3310e0c2c419872c5fca0ae1f4930ab0818137ad4cab898a9095753b1671"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataTableSchemaUpdateIntent.cs",
+    "gitBlob": "14c69d7e0a04798f7fa502923d7a4b5ade6610f7",
+    "bytes": 3791,
+    "sha256": "e1c95d2b65ae9da0ec325c2c6ae8645fff05d09f0ef15a1bab927f1e9b7b97a0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataWorkbookCommitAdmission.cs",
+    "gitBlob": "bb750d710350a3c9b9fe88c508c0c774c982effc",
+    "bytes": 1919,
+    "sha256": "59a11f263aa5a847f5bf01a7a7d9fb999bbe1302bccbc948551e47df9666a50a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataJunctionTableDesigner.cs",
+    "gitBlob": "4dca12908f3369b0c19f1e1e32dcd20a8f87b68e",
+    "bytes": 663,
+    "sha256": "8eb7ed45aa2dfd4ff9cc542658454b07df3ff2e5442dc86d5af9107f7dcd8950"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataRecordCreator.cs",
+    "gitBlob": "aab06d21a318ccb51c29c2d436863ab11cdee960",
+    "bytes": 1846,
+    "sha256": "a03f137b5aba41d29877a963885ebc905da95c3c93740747bb75b750d3b3ac79"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataRecordMutationOriginAuthority.cs",
+    "gitBlob": "3b95a40ea101bf1729840c9c7debc7fdd611d9a1",
+    "bytes": 463,
+    "sha256": "5f44ce317e249b89c14056549c48d8b6bb9bea7c914ba504e03d300882cd1c55"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataRecordMutationReceiptSource.cs",
+    "gitBlob": "ed2efbb6eee243d626a38fca4df5ae28e19b5d8b",
+    "bytes": 894,
+    "sha256": "9b013532da70eca12ee64fe0cedcc7708dc141eb7732cb0d998b091250cb18fc"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataRelationshipDesigner.cs",
+    "gitBlob": "ef9ab51244fbdbfb2393422f133c2bf70ea4c9da",
+    "bytes": 869,
+    "sha256": "cee3577d694689be091cb7469267c6b6af81dbfa046a5f38fef780fcc2ea55db"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataTableSchemaDesigner.cs",
+    "gitBlob": "84b3d0a5c65e45a0b8b103f68b669f08aa5d362f",
+    "bytes": 860,
+    "sha256": "dc281754096c70885824a64c162fe5a4e880e412ef38f2e9b0cc960cde9b4502"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/DataAbstractions.cs",
+    "gitBlob": "25969f512e7db97b9b659198ff54ea640cd0f35e",
+    "bytes": 1805,
+    "sha256": "7c8c9a69480de59e6bec206dd5c3178029ee35df0cea8d1fe4740fa254867545"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Documents/DocumentShapeGallery.cs",
+    "gitBlob": "b40eb27d46fb1841357025790b09a77b02e824fa",
+    "bytes": 1821,
+    "sha256": "72fc72b483830073cc9e2e707750fc98344665cc60d879019a0239dc914138f6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Documents/DocumentVectorShapeServices.cs",
+    "gitBlob": "8e29e8f88073d8b51e8256f225a402e7a3b1088b",
+    "bytes": 24571,
+    "sha256": "2257ebfe55a2133780f732c399408d5fe046d34d242b8f4119a52efd3173ca62"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/DualModel/DualModelService.cs",
+    "gitBlob": "2425e4d417eafac39ab62a760db8df124c80e213",
+    "bytes": 10994,
+    "sha256": "5b8f7b920df23bd976e31f989af742668be0e53f99102621d8d4cc4a3a717dab"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Evaluation/JudgeService.cs",
+    "gitBlob": "fe5a80fc3dadc9a2ab179e994ed18ea44bf4a495",
+    "bytes": 11946,
+    "sha256": "afb97dded57e03901d0c7143e6256602386b6f0eb8d8e96b1dd68b76ac1c9f16"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Execution/AutonomousRecoveryService.cs",
+    "gitBlob": "fa5ca52f7cbb8e7cb3206ec724505bb05c72101b",
+    "bytes": 2660,
+    "sha256": "14c2f7366446b2ac801aea06d2b400dc497a84b543f5bd0b691124b8500da0fb"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Execution/ExecutionAbstractions.cs",
+    "gitBlob": "9b0013ab8c030929b54a84e650bbcebc2d65bc38",
+    "bytes": 4689,
+    "sha256": "8848018fd8c1ecdaf325839d40fb51e253c437dadeb7c7f25e4e69459e4273e0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Execution/ExecutionEventHub.cs",
+    "gitBlob": "c2478eb110acfcd02d6ff20a02062c618aed527f",
+    "bytes": 7317,
+    "sha256": "54cff94f4aaa46a2531c15ba449a03d19f04607eb8e70a19c9d540ff0d52f631"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Execution/RemediationContinuationRegistry.cs",
+    "gitBlob": "94242e0195e0c1f9c5b0a7ce67803d157e806196",
+    "bytes": 2150,
+    "sha256": "3b10887028712b1efd6506533c193a0ddd708919d87adaee0fb0f82405a505fe"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Execution/RemediationCoordinator.cs",
+    "gitBlob": "9cbc193e990d0457a4ae1397899b8b276fb42256",
+    "bytes": 15861,
+    "sha256": "fcf37e439eb5f255998f93abc89270e2d5a8ed66f86ae8e225b945414cfcd522"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Execution/TaskExecutionCoordinator.cs",
+    "gitBlob": "1c19b39fb3b22e1c69b5da7b88cbee07ce82e797",
+    "bytes": 26680,
+    "sha256": "802e27c6d238a7a4bc4dbd124e0df94a502f734a4b58c280509d9f26911d86a6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionDependencyResolver.cs",
+    "gitBlob": "da7b805da9e7958affcccadb63bd10a77b216a06",
+    "bytes": 6198,
+    "sha256": "3c738302ab3e1ddcd67cc3b2c145b22c1ec939b48ad44de9a8215fe57c2e5f8d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionJsonSchemaValidator.cs",
+    "gitBlob": "e0e97b71cc3fe543ed1d826bbef38ef73ab48a6c",
+    "bytes": 508,
+    "sha256": "550d8b7d04c54ec5d9428ae2048cabda5fa9b7029d198dc9d7ef3934d392122e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionManager.cs",
+    "gitBlob": "3702178f6493b34690884a70108bf2c79e09d262",
+    "bytes": 30456,
+    "sha256": "3e2311fa45fc0a6755d7be712c50147927d2017dbdab7ebd3437a5e3270353b0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionManifestValidator.cs",
+    "gitBlob": "1c733065e7e783c1719f3fe6bad06d5d7988539f",
+    "bytes": 11781,
+    "sha256": "3102448060a13780dfbd14d3153f4fa341bb0a70a0ddbf1024d5e9ef647315da"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionPackageIntegrity.cs",
+    "gitBlob": "ad71cea56d68fbc398863c1bc84b5bdde8ab1b3d",
+    "bytes": 3075,
+    "sha256": "dd3665ace5a91a9749386067e91b32153d657909b4d7799544a9cf76056aa283"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/NativePluginRuntime.cs",
+    "gitBlob": "56e0a7f0c94cc04f9f4eb01e3b59116a8615f18b",
+    "bytes": 18676,
+    "sha256": "092eb33b9ac514df2433ad23b5018b7f2e96bcaa44e408e2073224df05ade7f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/PluginToolRuntime.cs",
+    "gitBlob": "567ab0dd0cb0bde3382e6e079f81f68dd6d81ecb",
+    "bytes": 8550,
+    "sha256": "8c0d3273dbda408d11cbb189273a7490b9d061abf48ee06eb192a7144b966653"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/CalendarConnectionToolRuntime.cs",
+    "gitBlob": "598b05565877f69375790b3cd0104b112413eddd",
+    "bytes": 13873,
+    "sha256": "135151bbfe36f84c7fbbb8fd188867dc8da48f8358e34aaaf898bd5bb18ce6a3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/ConnectionCapabilityProvider.cs",
+    "gitBlob": "b3a6596d8fcb22aea90763ce2fad4f296e8723b2",
+    "bytes": 3699,
+    "sha256": "c23ee0bb83e85cb6982da14d92a9035fa8defbf43384fd956b1bb727a4c188fa"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/ExternalConnectionAbstractions.cs",
+    "gitBlob": "ff608ca1cb4c082affc23ee741f7ba0fcf27c97b",
+    "bytes": 2592,
+    "sha256": "fc0173dff2755b746b657a776ccbbe834b4d9b7ba640e772bcb30020dcc991ab"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/ExternalConnectionRegistryService.cs",
+    "gitBlob": "372006d55b38d7585ab29cb3bd8098f13c6bc7a8",
+    "bytes": 12030,
+    "sha256": "57f9165e1a9aab6496f71938a9e1193b82afea87860c90ae925805ba31ef166b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/McpInvocationAuthorization.cs",
+    "gitBlob": "2052d99e9efa564e304f7a9c69bb0c58f7f92a9f",
+    "bytes": 403,
+    "sha256": "aceffc11fc17ac782cb46f1363fc329f493b196708db88853f787ce27662ad9a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/McpToolRuntime.cs",
+    "gitBlob": "685bb58e9b358d30b4d511142a7995fdfea2c133",
+    "bytes": 26598,
+    "sha256": "322faa1a943bc7f53a71a4008dff1fa131d35bf446e06ff0402e2f9b736efa86"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/WebMcpInvocationAuthorization.cs",
+    "gitBlob": "ef94158b6d11842b6571396beb71dfbc78e2e344",
+    "bytes": 1532,
+    "sha256": "d9f6eb2e848c0810cba15cddf7765b8b5dad0e29581858571767260fff60c316"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/WebMcpOriginalActorApproval.cs",
+    "gitBlob": "7f5ad53edea6f821cab03ae4d9adeb26f11bbf86",
+    "bytes": 5096,
+    "sha256": "69ec15c47c4baae9918a8695da06b628b644ea0d295bc85c7cf791acc0924c75"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Floating/FloatingActivityAbstractions.cs",
+    "gitBlob": "6bdaf0e557cdde1337c67bc9b1f2d1339da1dc2e",
+    "bytes": 1576,
+    "sha256": "f8e124d9fdb5607262271b8a195372279d9046a900cee287a65d0ec4c4c1bf9f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormAuthoringService.cs",
+    "gitBlob": "be776ff642f05d437547772f0987118f4c28afa0",
+    "bytes": 4562,
+    "sha256": "a5ab2ea71778cc2c1035a1ac10f8298d4e2a0c40f809e8ae62944934ca204689"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataRecordPreparationService.cs",
+    "gitBlob": "9475c34109da9795c668ca8cb938f2abd72a0978",
+    "bytes": 3540,
+    "sha256": "5feef3741fc13997c0802f718b506ff7828c5002735193aaf32c8d2bc09b603b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataRecordUpdateProjection.cs",
+    "gitBlob": "52407e5227cca81d92416ea8a2af5952f07cb527",
+    "bytes": 4294,
+    "sha256": "29d77f5ddfc49817967cfa5554204646b96783b11f4e51b2e1e060381d37c1d8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataReferenceLookupContracts.cs",
+    "gitBlob": "f6d17f44a3dc66df4750bb2d824e70ca264c06c8",
+    "bytes": 2410,
+    "sha256": "057cb3f724e29d3ec7f237737f6cda4d2e236f613aa79fdb058c2c8437bdc82f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataResponseWriteService.cs",
+    "gitBlob": "4f60f62960d8d3b44374ac483bdf51654e8e6a2a",
+    "bytes": 1494,
+    "sha256": "1d3fde765a54c54caf2b98be179301c7cddba8d8e4fed4688ced35bff0179c0f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataWriteAttempt.cs",
+    "gitBlob": "5cc778a94c533c0c8cb39c419744c942528bf63f",
+    "bytes": 3187,
+    "sha256": "6d43e4cac4a090fa060ea60c028fa8b5d94f89d736fc2f84bd312afad654d588"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormGraphReferenceService.cs",
+    "gitBlob": "7250afc796e018de8d94c14887325797542d7553",
+    "bytes": 4013,
+    "sha256": "810dafe6904c28e724d043e5593d4903d958d4badaf3c78de91209525ac1648a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormHostSession.cs",
+    "gitBlob": "08b93289cd7390037f6529f9f8b6091c5110dd62",
+    "bytes": 5271,
+    "sha256": "0865b32c1275e3f1227f42875d7ea98930b33cd03564549a33221212c31d54b6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
+    "gitBlob": "0c413b05c3692b350b41199d3ca75b090cd1f725",
+    "bytes": 13321,
+    "sha256": "4e29e1a27c922bbb96beed599f493918560043a376adaafde09544ce8b095828"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.DataWrites.cs",
+    "gitBlob": "98bef9b3bb15ef341aba825f449dd6bd36679cbb",
+    "bytes": 7900,
+    "sha256": "932ef5ada8db3b8347b98249d772575c3b499c55b9f25178e2bbf4eb51ba2b3d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.cs",
+    "gitBlob": "fb311e1352fd941345f91b3571868d797a72f045",
+    "bytes": 21034,
+    "sha256": "5aa7a922334217dc195c279432d796d27a914f05444c3f3c3eddae1af3bb7d2f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSubmissionProjection.cs",
+    "gitBlob": "192fc24cd69e20fdee9c0a1a7f6f710dac1143e2",
+    "bytes": 3572,
+    "sha256": "50e03c9896d3ba0566949e81e1d9b708bb5c69c92632f6b4d39520fa10bf3a9a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Forms/IFormsSubmissionStore.cs",
+    "gitBlob": "232502c75d1afecc05973734ed676cff359e3168",
+    "bytes": 13947,
+    "sha256": "bb5de8d9ec7eec96f318be553daa797a8a26c1f6afab72f1aa03ac9ff5b5073d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Games/GamesManagedProjectSessionService.cs",
+    "gitBlob": "b6a893530a7245b1e6adfbca0c2e4a098a75bf35",
+    "bytes": 2957,
+    "sha256": "6b68bfd3e78c049e58a77f068dffd1e72b688dc237f8d93c7ca9f784484fbeed"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Games/GamesProjectStore.cs",
+    "gitBlob": "4fdb6d280bf291244d46424e4851dab3e0f6a3f2",
+    "bytes": 3006,
+    "sha256": "dd314cf95bfc7475a37f82f3343047aa5b5a3c5dea1239df24b06f4a0755f001"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Games/GamesSceneResourceResolver.cs",
+    "gitBlob": "a9101a4439a6098e69ad92b741ad9db1e16e62cb",
+    "bytes": 2389,
+    "sha256": "79d600d56a0293e84ccdabb60d79f2fd463707931e43dd0922ddd89186b24da1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Games/GamesSceneSessionService.cs",
+    "gitBlob": "17875034bf845433fda68673a6213c3709867e63",
+    "bytes": 2701,
+    "sha256": "7440b9aa7584112735c941e66ce8f5b9e93af33fa5cb89544f7ac105c05ccd20"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/AdditionalTemplateRuntimes.cs",
+    "gitBlob": "1b882bce97710a0461248393b113512abe32eb82",
+    "bytes": 30453,
+    "sha256": "2c6d9f11670afa59e0c8244051d3512efe9882bea8042bf7b483dd3dd35c316f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/CalculatorTemplateRuntime.cs",
+    "gitBlob": "9530eaee93c13655889fa21fb37986f2a6aca7bd",
+    "bytes": 7519,
+    "sha256": "662c15eee10077a80f86f7a7559efc013a217a708bc439e4058c9dcf65d673a0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/CustomTemplateRuntime.cs",
+    "gitBlob": "d3b31b5ab55fc51a1257c62f9c30c87a06397383",
+    "bytes": 12925,
+    "sha256": "5b75525f3aacc62acc9494e0770f019b17dfc02e962f47bb6d2340b58e68dde3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiAgentFeedback.cs",
+    "gitBlob": "064c46eeed65f79fb795f5f043cff295d17888a4",
+    "bytes": 6899,
+    "sha256": "b1810c89e241fcd0835189b0b58a683a5d973b2c15b506648ff6ee28641675f6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiAppRepositoryAbstraction.cs",
+    "gitBlob": "03f21c7ac07ba1c15719a17930a3510b645a0033",
+    "bytes": 630,
+    "sha256": "f5052d45b38c29340bf83562ea97731cc0bf6075e2d37194d84c425e722ac7a7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiAppSessionService.cs",
+    "gitBlob": "73db1a32c0dd5ef11669cec84b60d01d44119875",
+    "bytes": 3836,
+    "sha256": "80b413f02a21fdd87abe1fafce14aa6d1abc652b9a0aa67f48b2b5a944f6a97b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiChatDirectiveParser.cs",
+    "gitBlob": "a2bb6bd5bda4e9cc173c0bf06295028fc63b9e63",
+    "bytes": 42728,
+    "sha256": "6a1c57b2b2aa07ef05fe2ebdf5e130adedf5400dbc58200ba8f9b230b0122c94"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiDestinationHandlers.cs",
+    "gitBlob": "469f49dcd1dbe3d98e8222a9be9d7d40eaf55031",
+    "bytes": 5153,
+    "sha256": "80f0b277b8748d036a8f3b0ec9dd26fb77792bf59562ea443aa6a6fa3a02d3e3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiDocumentQualityValidator.cs",
+    "gitBlob": "7b64623f1a435e0683dc27f2d4d0edd378865573",
+    "bytes": 1839,
+    "sha256": "850fc505b46144740ff42c6d67764d643f8921b6647f68194d0fc99cd7c5277d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiFirstTurnBenchmark.cs",
+    "gitBlob": "57bbcfb6ba9213cf678a830248b6f44f76e38350",
+    "bytes": 8625,
+    "sha256": "847ed8aa5d6c131b4079b3d2204812e9fb3f4ad5f2285436e614d0c7f33ae626"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiGenerationPipeline.cs",
+    "gitBlob": "a5f9b7e2dc74290d5de7944907589824fe838764",
+    "bytes": 7496,
+    "sha256": "68a60f7080531e9c0f95a0c29c121c8f7ec74dd1afeb8dca35f2ed85ccae37fd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiIncrementalUpdater.cs",
+    "gitBlob": "836f0bc41d2cd1ed1c76734fa4b8c3cb98fd650e",
+    "bytes": 11241,
+    "sha256": "8a894ce8ccdcdffb7f23559bd159dda3fbdb45b7aa047f112605396335814f88"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiInstanceStore.cs",
+    "gitBlob": "2fb3aa15af027a261be6bad4bdbcc0fe5a751dbd",
+    "bytes": 10090,
+    "sha256": "8ce6c85282b234d1471430966e1e2e03e8e73ccc65b6b11391928ad5c025c577"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenUiLiveActivity.cs",
+    "gitBlob": "0d7afcef3ae1fb70d4fbd788a273e841e1ae73b4",
+    "bytes": 7816,
+    "sha256": "fe5982b1dc6b460b0240dd673c23352dd545ad5e5f71c8f2d57b98c611bdc23e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/GenerativeUiEventRouter.cs",
+    "gitBlob": "3120bba777341a72c9cf4b5f0fe3fa08928c3323",
+    "bytes": 11899,
+    "sha256": "8b93eff984a8e32d7bf96e87932a3d8aabaf3bc65a63c1dbed125224f739f10b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/MoreTemplateRuntimes.cs",
+    "gitBlob": "cac887a5376238f8eebf0ebe2113a8f43a960c8a",
+    "bytes": 15240,
+    "sha256": "aef0c43f8fb0ac4dbe828b29f19bb0c4882345a4efe547b1fc1c06f5915f59fa"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/GenerativeUi/TrustedChatTemplateRuntimes.cs",
+    "gitBlob": "3ffe3d756bb0a083790db9c15093ade0aae5319d",
+    "bytes": 11344,
+    "sha256": "3b082113f5231e011aa1f166fa2c50e63c932b98e341109cf69cc3e50e3e0af1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Go/GoContracts.cs",
+    "gitBlob": "92b5e7db5e34f93c64d878db507f399b89099f9c",
+    "bytes": 1673,
+    "sha256": "1eb487aecc6e5377b0f712ba27f288299a1528fb0ed3e366a9ca854010cf89ac"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Go/GoOriginalActorDiscovery.cs",
+    "gitBlob": "65bde1507ad2dbea3683fbd72002be43dc754f74",
+    "bytes": 757,
+    "sha256": "21be45ac920580f9f5ef469db2245a53b87ac1e4a1f4641970e1505c6df4519e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Go/GoOriginalActorInvocation.cs",
+    "gitBlob": "884d2623ea5750da3dc211467ed39d9e04698804",
+    "bytes": 720,
+    "sha256": "168ccb6b4405ad911cc5d521ef7d0fccda7d9a8a5986fcf3132102d0d45d82ea"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Go/GoService.cs",
+    "gitBlob": "4a0ab6a3f1a0e09338a6f832874d69a35edb732a",
+    "bytes": 13735,
+    "sha256": "3113c0c08def629757270ea64bfcfb09e90b3f356e075da6bac08eb5e5d7276e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+    "gitBlob": "cc85c272caa8e95166986e1294cd827f7527e354",
+    "bytes": 700,
+    "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Imagine/ImagineAbstractions.cs",
+    "gitBlob": "e03a48bbc4378bfd37f34fb7a540783271de692b",
+    "bytes": 1519,
+    "sha256": "afa17824df05ed2a420cb859da47ad52234d651708974a60ca7d5ab6f4f05177"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Imagine/ImagineAssistantService.cs",
+    "gitBlob": "420402c8ca688447fff6d4bc4f5b6c1b3905323c",
+    "bytes": 5585,
+    "sha256": "f2bcbe7692a1f8183c3df63f908d91667bc389b75a99502b30836b7bec492bca"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Imagine/ImagineGenerationAbstractions.cs",
+    "gitBlob": "0e2e8856806d6908f15de134ba2700cce66c71f4",
+    "bytes": 4109,
+    "sha256": "42276cebbc6597f8bbc2578f36fa0c8aad1f2090e8cfc3a97232c61e3e3d8a50"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Imagine/ImagineProjectSession.Clipboard.cs",
+    "gitBlob": "43daae7adfd3eeee1ee4de8a7d7954753d7960be",
+    "bytes": 1373,
+    "sha256": "daf64c4201dc4d4173bafeff71fcd315108b79026ac57d3f5eb1436eb63c91a3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Imagine/ImagineProjectSession.Timeline.cs",
+    "gitBlob": "0d0feb4eafc7997decdd8e11683b03bb1d2da622",
+    "bytes": 13595,
+    "sha256": "75a1341ca131cc1001248bf05a0485493b02e0ebfe42e577e1af78ddebc8e238"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Imagine/ImagineProjectSession.cs",
+    "gitBlob": "048340f034dc9c84bda45abe8821179de4978dec",
+    "bytes": 26076,
+    "sha256": "905f97ee46b9cf0ab1b6143b8a5e8814da03a35a3a15d0ea506a6e4fd74b83a8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Imagine/ImagineSemanticService.cs",
+    "gitBlob": "f96b8fa54d41f0de10169add67ea0d8c4687154a",
+    "bytes": 6168,
+    "sha256": "94af12d2d75cd253355c6121b3554115a262a0227f2a840895cb10162b85bebf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Knowledge/KnowledgeAbstractions.cs",
+    "gitBlob": "d6b24a4f0a22d017622d194a2be864eeb75f8224",
+    "bytes": 5935,
+    "sha256": "e2d7113ec636e4c2c7f63dc82ac9344260a924c9d3a214e28a683a8993a62e55"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Knowledge/MemoryInjection.cs",
+    "gitBlob": "7ba1860f2e8ab67c9dae261365e85d33d5cecec8",
+    "bytes": 4231,
+    "sha256": "7351cec014acedbac69c42c1a6fc2402206b3b7c1415d70ec047db9f8e94b029"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Lifecycle/ApplicationLifecycleService.cs",
+    "gitBlob": "926891630bf3e7f6e0c9a706c84d7d5a1c080d74",
+    "bytes": 9520,
+    "sha256": "8dabe5855a56fea26ba4d1418be1ba7f33d4dff58ed5d8be6f962d535d4ce3d2"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Lifecycle/DiagnosticsService.cs",
+    "gitBlob": "a031d29ab23863fd1c7b6dd4b200310fedb58cf6",
+    "bytes": 8608,
+    "sha256": "36be3a9a9bb253f6b960bf79990baefc723f175e05a8d31726c74d700d0060f2"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Lifecycle/SettingsEncryptionService.cs",
+    "gitBlob": "2603dc924d177a274ec617d544999958276abd60",
+    "bytes": 2865,
+    "sha256": "ce2725a69bd0b531cc3e98c132e5a8ded0c8fcfc2b1a09bcaa0874c43c97da91"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Lifecycle/SettingsExportService.cs",
+    "gitBlob": "3594cf9a147d8beabdac9abb361efd79c6702ebc",
+    "bytes": 5441,
+    "sha256": "c23b934c819e495a0d1b0f6292a8653b172dca5da0ddd26543569841303fe840"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Lifecycle/SingleInstanceService.cs",
+    "gitBlob": "6414b946064d8f2b9c7c84acbf6a7dd57bbf9113",
+    "bytes": 5093,
+    "sha256": "324031d5951c40a2b59a1990ca6c718fcad18d017d7b6763259e4cc12a3d8417"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/LocalConversationShareAbstractions.cs",
+    "gitBlob": "c96068283e769cbdba55d56d9467ee52f7479fb4",
+    "bytes": 1580,
+    "sha256": "d527d3382a9a11cfe067af3ef1a1604797bab9cbcd734315ec6604fc955bd9c7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/LocalModelRuntimeAbstractions.cs",
+    "gitBlob": "7cf8b11ebaa8a640e9a82b34fdbd23562bf86c79",
+    "bytes": 1344,
+    "sha256": "ef9f7050d1ea53e7922e647ae6d095c94bbb3225e4cb8d8fe06cefc018b471ee"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/LocalOllamaAbstractions.cs",
+    "gitBlob": "d0506231306c7a7735549b4eca09d49b0102c16e",
+    "bytes": 1103,
+    "sha256": "7355cf0c86c64674acf59fa7cb19170b6ab69e350e1a06f3095530307d597675"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/MailAbstractions.cs",
+    "gitBlob": "104ee3092c78107907f956ea8b85652130ed2558",
+    "bytes": 10514,
+    "sha256": "4341fc1750443727f719eaed0a9e0bd8c5d55edb09bf50d0fc092b4ad2b1d84a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/IMapRoutingCapabilities.cs",
+    "gitBlob": "bcce1875654c7d249dfe0cf64cfe5341679064e2",
+    "bytes": 357,
+    "sha256": "c75e59175f5e216b3fee727db543ced492a37856502ebb6e3fe10ad5e5257047"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/IMapService.cs",
+    "gitBlob": "d795b8e7ce0c7bf1c151ee14979bd0685ef16872",
+    "bytes": 8187,
+    "sha256": "ab30fd1732ada0a9a0112a56f84fdfa2ee37577add5a89e6a3ba0fe9d7de0645"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsCapabilityActions.cs",
+    "gitBlob": "a5a43e9b2ad6f209cd22785f35fe81989942f926",
+    "bytes": 2619,
+    "sha256": "7f4c8177a6f66e53659571d63f2ed85aaa91c9a222c2dbd8ba40c1f6e72483c8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsDomainLogic.cs",
+    "gitBlob": "845207539d15333d846660ade8537aeac13d000e",
+    "bytes": 5991,
+    "sha256": "b89ea06582d6fadb6376bb06ca818262c223dfa136875d45b67615750e977274"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsJourneyCommitAuthority.cs",
+    "gitBlob": "65b0749186787b4d6826b0d37a653bbf7bff3b5b",
+    "bytes": 3804,
+    "sha256": "ad6d93ce3e9dd775c65b07e8a9dbdff0be46217926420ed11ff4197253ca98e2"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsJourneyPlannerReferences.cs",
+    "gitBlob": "61f9d067cdc4702084e3dd0f0d10d6090c39b2c2",
+    "bytes": 1796,
+    "sha256": "be54438c8cb40c702ba75e0f44d1f473ce0895b747ec4301772a0764377798ee"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsJourneyResourceResolver.cs",
+    "gitBlob": "65d483d4c0fdd32591f0f820e953bdaf2094da81",
+    "bytes": 2867,
+    "sha256": "d8491e9da8f28f5e5f2d0c9d814e4e7ea73ad66ce052a55a585d8b0116eba1de"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsJourneyService.cs",
+    "gitBlob": "3b339087612634ef4d99e314e6e8eae200c787fd",
+    "bytes": 17228,
+    "sha256": "2f48c89c0d1f3f4f1b42754082a2327db442c327c5ddb94ca4b0c52505fd6fd4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsOwnedMutationReceipt.cs",
+    "gitBlob": "4907b06101f5a6087dc2628316f1ec0909ee2412",
+    "bytes": 287,
+    "sha256": "688b482a90fe7bab4495f64bf373b72e3d2ae7065a9fbef3658d00ecae1fe847"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Maps/MapsPlannerJourneyService.cs",
+    "gitBlob": "4e8bcb189b7e509e91451fd31c21859040e6dce0",
+    "bytes": 8671,
+    "sha256": "6713358b81002e8c762a659587169438abaa2a0c99685bfa2aabf4e642269d53"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+    "gitBlob": "36b36dc1c7125e19730d6af26bc37855c7dc20d1",
+    "bytes": 2955,
+    "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+    "gitBlob": "083b6d7e7b0a286deefabf0666777db73d004c75",
+    "bytes": 6875,
+    "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+    "gitBlob": "4a5a4faf91adf7d8411cc48b154abe60c3d4891b",
+    "bytes": 985,
+    "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshAbstractions.cs",
+    "gitBlob": "8a6d26e9516a9f3bebfe35b1a1ddd31c67437397",
+    "bytes": 4472,
+    "sha256": "5ca790f704700b353a44a29e7e1486d47f302c9d335e004602e962fbf51f0ff5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.DeviceActions.cs",
+    "gitBlob": "a0868ebdbdb28cd1ef5a5ebd597181ac9963d969",
+    "bytes": 10638,
+    "sha256": "e378b637d4b9efdbfa8a26512d3545f8174ae277c4fa6bb52237f36efa574d87"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.Discovery.cs",
+    "gitBlob": "9e66bd4c465c4f9e606db6a8329f4de7b770a9a7",
+    "bytes": 9824,
+    "sha256": "178fbeab57a706bd1f6c3ecc35a02f09683cef3a60e57cd9f003c3684db6aff1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.RemoteRuntime.cs",
+    "gitBlob": "28ddad1dafabdea08c09e7270c0d32dffc2ba6f3",
+    "bytes": 15595,
+    "sha256": "9f1ae6712dba26f0cf53998ba96057d175cd516ba5959a2c77cc4119d2421c43"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.Tasks.cs",
+    "gitBlob": "442ac4eaad4b7c56098498e649e655d2113ddee2",
+    "bytes": 7710,
+    "sha256": "8054eadbff127f12149c5884503ee94cd3e041fbf338ad56c6cc47282f70a917"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.Transfers.cs",
+    "gitBlob": "7415e268e2843b8f05c63cc16e17113f812c5158",
+    "bytes": 19525,
+    "sha256": "a4e4884ffab0ca47446c912556d8be58e068a14af94ffa0dd4a2dc77d730194f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.WorkMode.Commands.cs",
+    "gitBlob": "cae4d007753d2edeb1e785549079463f6cdfc43f",
+    "bytes": 5649,
+    "sha256": "a637ade1dddd6833102a73bee8e90ba91a75553c04fc1ec76cea2c8207a609e4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.WorkMode.Configuration.cs",
+    "gitBlob": "e5cb1bf1312a0ce842fca548bb5304ce8491c3e0",
+    "bytes": 10767,
+    "sha256": "dc0b35329b21f9bdc6c38498efb2ed17809213c1a792ce62c4732016de9b12d8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.WorkMode.Coordination.cs",
+    "gitBlob": "a0847aa6053f2eec709c7264d34295a9b4cdeece",
+    "bytes": 10920,
+    "sha256": "802a1b004952d66568f604900789a125f58074593fe78f04f056b95fbbf07583"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.WorkMode.Messaging.cs",
+    "gitBlob": "829d04dd213b5ece33f39839a52c2ef1c5a1c668",
+    "bytes": 8631,
+    "sha256": "fd6e64ffe8b603b1154029e2b5048e00f801193f6de54e60b0d3eb2634c4fcad"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.cs",
+    "gitBlob": "03e63f8fb944990996057e5f7f8ae6a620134d7e",
+    "bytes": 25508,
+    "sha256": "61c90cbe4324255b6ca8fbc3177fe339c0ea933f7d5afeb129fbcd38ce3b64a8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshDeviceActionProvider.cs",
+    "gitBlob": "6530eaaf83f3e07bb5dd0e39bc005ef45529b0fa",
+    "bytes": 2701,
+    "sha256": "19bd237238fb0ffff0a642892f12cef4a933c44b6f16999e5d2a37d2e882758c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshRemoteModelProvider.cs",
+    "gitBlob": "a15900b89978c7f8db1efde9e36204f7e3d7faf7",
+    "bytes": 3513,
+    "sha256": "ba41392b08492e4a6959870d7a8b372124ab34afd90db305a7bdcb6f14e86142"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshTransferAbstractions.cs",
+    "gitBlob": "371461d1acd448459f75dbdbd46e57cb175e0c3e",
+    "bytes": 1667,
+    "sha256": "7034d593090193c6d588adb54571d69786e90692e459d176cef85843c44732bc"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Misc/AccessibilityService.cs",
+    "gitBlob": "207051884cc5a9d869e457c9dbc329e6deed46c2",
+    "bytes": 5810,
+    "sha256": "48a36467efe33e9dd344fcb7220c9cbdb621d6e4bdc6dbf7af5025f28c1db88a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Misc/FilesystemActionService.cs",
+    "gitBlob": "dfd6681d8c388ccd503756739533908502513049",
+    "bytes": 7018,
+    "sha256": "97d954b899f6466bf6527f003dfcff8a36004f4e9d4980641c6a9333e1806667"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Misc/KeybindingService.cs",
+    "gitBlob": "b824a188b7460cbe28bf0bfcbc503d41fa646732",
+    "bytes": 4959,
+    "sha256": "b659fec9bf174f5cdfca51949b507f3c20bb479c4725a1e41688f21182195efd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Misc/SurfaceOrchestrationService.cs",
+    "gitBlob": "02ac0cc6042418ce95395e0d6df4ba97652b09a8",
+    "bytes": 5855,
+    "sha256": "247602089e1f092a3f0b05bc73a9e8bcaa185e64af41f34ad0720c1e3dd958e8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Misc/VisualMotionPreferences.cs",
+    "gitBlob": "b6e8749513ddaae6d6e775b5d9601330de164122",
+    "bytes": 659,
+    "sha256": "5b95b24811cd6de91290be65c379b06a44cf1b63f218d5b2bd098643dad8237e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Misc/WorkspaceChangeSetService.cs",
+    "gitBlob": "76b1f6f61be794396f3d5156d865476ae4620287",
+    "bytes": 10997,
+    "sha256": "0e0deeb41b04636639a10bb042ae6df7770ae4c2d978d84795b55d07bf14c473"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ModePackageAbstractions.cs",
+    "gitBlob": "e111bfd480a591008b21aeb5d004939262c42595",
+    "bytes": 3156,
+    "sha256": "0b902b568074cd79ea95d2e153a0a5d284ccf8c782f981f917b3c9d254c7300d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ModelGovernance/ModelGovernance.cs",
+    "gitBlob": "c6532c3a22cea91b52bd3eb1aeab7114dc9cf91d",
+    "bytes": 12099,
+    "sha256": "64d72aa4db5cedb96a3a8398cbffb7fd4930882c301547543626e261a5538d91"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ModelProviderAbstractions.cs",
+    "gitBlob": "59d2e72a6b36d390b21252465bb64b7fb20fc5c5",
+    "bytes": 5672,
+    "sha256": "67af612926d56ff1ab2e63b959cdfd86a705623c122f7c03e35999a64f12c966"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/BuiltInModeSeed.cs",
+    "gitBlob": "118bc43c306f2e729878d73cdbe484e6acb596fe",
+    "bytes": 19053,
+    "sha256": "fb0f3013f22faf1476f0783dc7e207313057053839873278bae650ea2b206420"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/CapabilityPreflightService.cs",
+    "gitBlob": "29d86db6a6dc5a84cb4421c6c1129e0272e54b90",
+    "bytes": 3227,
+    "sha256": "2d6646e7e0b8252867274a800a8a0207f327b5db368bc74a6b196d6693a75272"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/DeclarativeModeTypes.cs",
+    "gitBlob": "424832c23f5254b13ba0badc40409629b63e3c8b",
+    "bytes": 20882,
+    "sha256": "b3ac65c18c92d2051df701f2e6216954a78dcad74b39afab45e1f67ed95927c2"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/ExecutionTypes.cs",
+    "gitBlob": "7bf746e932cf3e29b3e7fc9ed2c9577350d484c9",
+    "bytes": 3216,
+    "sha256": "f5356893dff3b1e7d2c5f37e1b01fecd183001028b72e73ff006a5f9924ce779"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/FrameSurfaceContract.cs",
+    "gitBlob": "dbef4a539430610e8ad902375c236492b36af4bc",
+    "bytes": 610,
+    "sha256": "9d52fd674fb832cfcf271ef6ca8b66a84240b51d76d9d87071030923c466a851"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/ModeCreationService.cs",
+    "gitBlob": "5a3c3759a1f1a98d47d7a283dc83f56575878efc",
+    "bytes": 8389,
+    "sha256": "775bfbdd0b258c865af1151bc94d3f2be5de022ae65e77c67ed3601561715d80"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/ModeManifestValidator.cs",
+    "gitBlob": "e8dfa09dd4a74a9bebc0c0242045dc0027b27a47",
+    "bytes": 6280,
+    "sha256": "ddfdf322fc98edde1505c487625f202859d20514d91d9d2e5a27bb6f8da71f43"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/ModePackageInstaller.cs",
+    "gitBlob": "476597875ed2386d8cb281e2440252cbcefd9a30",
+    "bytes": 10533,
+    "sha256": "97e60fdd178eaa0e735ffb2b0daa3f510c61f08e9c8153d49fa0da02a3fba488"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/ModePackageValidator.cs",
+    "gitBlob": "a542707a4100d1bd9e7f6ab4f5eef2983ad9bfe1",
+    "bytes": 5488,
+    "sha256": "960ac24ce51014ad23ace6177892c4357aa0bf9bf98cbd9345ca831d53bd59a1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Modes/ModeSeedService.cs",
+    "gitBlob": "dd0af68fddc01469705aae7d3240958446afbfe2",
+    "bytes": 2162,
+    "sha256": "9e7f5776f8dc37fa1e5b2fedbec05977917acc7a4f5eaa50803d72a363ef0d55"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/GraphConfigurationCapture.cs",
+    "gitBlob": "83d61a0263100f46a883aa3002a7f7703055fd86",
+    "bytes": 3517,
+    "sha256": "53beed861de947f2c5059f1ae32908be44a939480313e03927d5a67a6a5778c8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/GraphPublicationIntent.cs",
+    "gitBlob": "0fe038a6819b1926ac1612a39b125c67a4a34189",
+    "bytes": 5598,
+    "sha256": "4bed9e9055441639503237fec234f194e58b4c08af2aff0f2b2f13913f508fae"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/GraphPublicationOrigin.cs",
+    "gitBlob": "a95e5c78f1ff043bbdf8367454b0abb2b2b5d954",
+    "bytes": 1529,
+    "sha256": "484e183c83b47ec20b2d2db5e346132b4b30478fd32446bba49c70f7a31013f5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/GraphPublicationOutcome.cs",
+    "gitBlob": "e8b4d05130d808f6bf9ad9e2c2907a8b5dc04cb3",
+    "bytes": 382,
+    "sha256": "119c0296647c6d064f765d4e9f038adf5794c9fb42fa301c0564f48162ca4973"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/NodeGraphDraftEditor.cs",
+    "gitBlob": "14eaff1839c740839167145f2587374a0e88512e",
+    "bytes": 5571,
+    "sha256": "d6eb393c0adb13e779bec70046f7d7b6995d736809ec02ca0dbaffed4b02ff1f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/NodeGraphRepository.cs",
+    "gitBlob": "bf5a44ac914c572747bea45cda6624c7ce87f879",
+    "bytes": 1080,
+    "sha256": "df53c12516072627352d9f3eb6401cbc9189ff111ced51aff2c07e619cefd92c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/NodeGraphRuntimeRegistry.cs",
+    "gitBlob": "7a0885f90c766414997970b9eb6463e7c4507357",
+    "bytes": 6637,
+    "sha256": "275088d239612f10f2ec19446133e8fcbdabece7c1ebe831d54eb9f9dc0d881b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NodeGraph/NodeGraphSchema.cs",
+    "gitBlob": "6c30d35bc22fe6bfa8e318e9599703fb25e5e760",
+    "bytes": 6837,
+    "sha256": "cabdd1c82ce1792467f1b3a427eecdf95129356a9c0470b3160d40e9923b0af1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesAdvancedServices.cs",
+    "gitBlob": "5410a0488f906d803a6c946bb7979ac0927d4f75",
+    "bytes": 62088,
+    "sha256": "eaf6638f3183b332a2b3e6addf3b127763d935e3ab5eb9040e0e1abbac75f84e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesDocumentMigrationService.cs",
+    "gitBlob": "5d48fa21bb779d4fcc586680644df47ff8e71c8e",
+    "bytes": 22803,
+    "sha256": "b6c4eb09149ab1aaceb64104abbfbbc32cb949cfbd2eaacc5e780eb6f797643d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesDocumentValidator.cs",
+    "gitBlob": "00729740b47fa5cab39b0cccfc6feb017ff7fe02",
+    "bytes": 22785,
+    "sha256": "d00c18aa25dc513e8f0623057920b7d26d5c2ad14bdfbd0d2e07ea8539169669"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesLanguageSuggestionService.cs",
+    "gitBlob": "1b13b8fd96f336e3fe0965e018f31b8497076f89",
+    "bytes": 3641,
+    "sha256": "dc89e6fadc285403fe3af6f3dd4ea0aaad08e99dc9798111c6832bbdc4f4caf6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesMediaServices.cs",
+    "gitBlob": "702a2b1d2c54736f72d0016f7656dc9bbf4b4aab",
+    "bytes": 10522,
+    "sha256": "2cbb82d191a1c58063e965af57ac9f074a026a24b050e395e8135c551fa2452e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesProductivityServices.cs",
+    "gitBlob": "079ed2b88a2805232b18f9e3b66179a433a0deb1",
+    "bytes": 18663,
+    "sha256": "c8d43f85c9b8aee7723c37c4912830a2fefdc0f1f94d55fc797bca8f9afcc837"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesRevisionConflictException.cs",
+    "gitBlob": "627a500941a48e0a003ed9eea496afb4d3b14596",
+    "bytes": 577,
+    "sha256": "bb270c681eb82a1ad4e5ab461e3ee8fd2ab5e49e2465020fb698792d2f2ee34f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/NotesAbstractions.cs",
+    "gitBlob": "cbcd5b7a69e43f568de91db0871c7de601f4a5e4",
+    "bytes": 11449,
+    "sha256": "72d70b50c9c6a09ecd53e1faf18c0069b8a6f7c7409ad0c78980b0d64868bd0b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Notifications/HavenNotificationService.cs",
+    "gitBlob": "b0ee9f3c1067bedee11b1a7499178fa7414a361d",
+    "bytes": 10394,
+    "sha256": "4055cacb7db8ad7c2bccb941ef3fe40459d8ab0b841a0ad34c4aed723d952bff"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/OAuthPlatformAbstractions.cs",
+    "gitBlob": "71aafe87375613228bcb47911d29ea79ea1fb3b4",
+    "bytes": 489,
+    "sha256": "065f885d9f6061335489468c52d7c16316011dc6853db90956f73f2fc6fb3894"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerAvailabilityService.cs",
+    "gitBlob": "fe36b54727ed6f49f79e5bb8cd61eb1ef9cbf2d6",
+    "bytes": 1367,
+    "sha256": "08ce54d2d2070d1d8fba12a7aa053aceaae27bb9d9c226e3295dddbd41ab5da1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerCountdownService.cs",
+    "gitBlob": "011a4efefd914f8f7a77702d5462e46b824f8d64",
+    "bytes": 2341,
+    "sha256": "5a428b51d86be4d982858d76988a3c02eb10ba41d32b86c71ae8a6f1faa22c27"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerDayService.cs",
+    "gitBlob": "697e28aa5668931dd0c4c8c6835ee5e19e59ca03",
+    "bytes": 1704,
+    "sha256": "81ea709d87d4dd3e3dc3c278d6573e0f9f82663485bff89498b5530d162ccea7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerEventJourneyAccessService.cs",
+    "gitBlob": "a341053dc23643cca2da417647b57e9f593f8455",
+    "bytes": 3190,
+    "sha256": "52006c6bd70932fbbfb65e99b86a37ce3c99368c4144c2ec67b25b422d4b8de7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerEventResourceResolver.cs",
+    "gitBlob": "3235898dc1aaaef3fbf01d2b084e446c1121595e",
+    "bytes": 4101,
+    "sha256": "e3095b75dbc96f851bd918bbad147eea06c038c625d3d54b4fa30201464dd8d0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerJourneyCommitAuthority.cs",
+    "gitBlob": "962b1115c0c9d8beac3ae5062e60c4497f6315a2",
+    "bytes": 5548,
+    "sha256": "19a764e3cd20295a4f42e4412fba9cb530bcf264cbc2d8056535b1fb07b70d2a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerProposalService.cs",
+    "gitBlob": "0bb461c747ca7da396cc07fadfb6f3d1af481ade",
+    "bytes": 9391,
+    "sha256": "0f32761e0888d176f3b73dd8d70a6a2c1b4a58302ab91d06067cdd5d534bc17c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerStructuredAbstractions.cs",
+    "gitBlob": "aefb76fa12b4b22554ef461779d801e9170d0953",
+    "bytes": 3100,
+    "sha256": "28858c35fe586afc0dc0f47822ccedfddd93038a78115e8a0d1dea3ac10c6c08"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerStructuredEntityService.cs",
+    "gitBlob": "0054ca04f2f4e42e7e9093c6db84a2519dfa4e52",
+    "bytes": 16408,
+    "sha256": "a62d28ac3d5e90b2475a6e2ba584129bd1f65b49df2d1f4492c0ba10e123d203"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Planner/StudyPlannerService.cs",
+    "gitBlob": "f7b98f54ab6c6e8dad2d19e8227e29e5c45bdeb9",
+    "bytes": 11851,
+    "sha256": "8cbafe9a2560b830b7e7f4697feac937ecae0faef44ab5344f47c8cf7b33939b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/PlannerAbstractions.cs",
+    "gitBlob": "180b7a1b98bf3db9974a97633708c1c4cab0a302",
+    "bytes": 10916,
+    "sha256": "3f2c76132315161c9d40b80875f0d1a64ee57f93545490a6bc767ea6446308d1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Play/PlayMatchService.cs",
+    "gitBlob": "bf02171c0a260864b6d9a73453203fb2b136847c",
+    "bytes": 58446,
+    "sha256": "06133e3c19d6ac35d47a9f712b8fb9cb7fb71ecb9e5ae6f4f30c5525c5c26ac3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Play/PlaySessionService.cs",
+    "gitBlob": "ab410b89fd7ab2c45bfefbe040832d325eb941d2",
+    "bytes": 27506,
+    "sha256": "027d8bbcb513ae3fa93ed273ea984217ee047ce9ffbc5be54aa01909154f8611"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Present/PresentAiEdits.cs",
+    "gitBlob": "80c5674dd3e839b348498f977a7ba1c55e2d7350",
+    "bytes": 6480,
+    "sha256": "071988b7afda90558e2b08ef2ceec85049c2975db0b3f90accef4ede9f1300c3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.DesignPlayback.cs",
+    "gitBlob": "bb91796bb927e9b0fb95f418cf8ee74e5b2c8397",
+    "bytes": 9218,
+    "sha256": "b1658a9e83bcea2b7ba698dd379d6a01d2a1a3a321ecd93c4cc83a82ecb58483"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.Structured.cs",
+    "gitBlob": "354a4ec7141378b4266b966b0523b31a352183ad",
+    "bytes": 6428,
+    "sha256": "59c1533a361ef070eb5f12203e31b2b3d1d769a87473a51ab5d6add7e997d503"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.TextEditing.cs",
+    "gitBlob": "51ed72e5369a9b8b92f73260fbfdfc338855f210",
+    "bytes": 1962,
+    "sha256": "e2b386a5e55ad72de75397ef44f00eae55d815298df4937f52fb0c57165a01d5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.cs",
+    "gitBlob": "d1e7e8704d42f3d20072b9b3cc109ab6bfeb9581",
+    "bytes": 32824,
+    "sha256": "adc059303793a48e4aa2f7f7062cdd6979be7f28aec41891893c863991cfc1f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Present/PresentPlaybackSession.cs",
+    "gitBlob": "5b514792040e4f1f2ff436c3e4371c66d5055737",
+    "bytes": 2810,
+    "sha256": "c3d924298a9cb29777e9212e7b594f351363c5cc64248698bff712144385a34d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/PresentAbstractions.cs",
+    "gitBlob": "7434f20642edabddfd0d7fbb613b641727f1e9b2",
+    "bytes": 3583,
+    "sha256": "1563010284f20598c295b76c4b16061c1a57c765098fbe727ee1446100aec216"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Preview/ProjectPreviewAbstractions.cs",
+    "gitBlob": "9413698d5646d0ffe329901d0d1a557f78eeb26e",
+    "bytes": 798,
+    "sha256": "d72e07ac7c05a319e135cee019172cfcf35841af08377222ca7a09090d1c25c8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Privacy/PrivacyPreferences.cs",
+    "gitBlob": "61d2c5621ba0b9843e4fe4ff5f884cb284955ae6",
+    "bytes": 1772,
+    "sha256": "76243009a8ff8883aad46e50a1f49d4dc4360d8e32d3ddbc625a16365693c218"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/ProductionReliabilityAbstractions.cs",
+    "gitBlob": "09cca3531a491f96ef8847be071ddf5cb315fed1",
+    "bytes": 8231,
+    "sha256": "f05be933ece53cccd8bf6faf5873c4c157955c72ede2439928aa3118c6753500"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Productivity/ProductivityArtifactReferences.cs",
+    "gitBlob": "d4ecf56694a4d5dbbeeeac4b58efee119357d88f",
+    "bytes": 789,
+    "sha256": "c6bfb246a88969760b3cba8dda2b13a4af8fe30d3b7de393aa4926a56d80977a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Productivity/ProductivitySnapshotHistory.cs",
+    "gitBlob": "8effde9a7c62bcb8bd11618c92fd3e2855fdca7f",
+    "bytes": 4470,
+    "sha256": "b145b5561c12127a0188e0bb27f5192776587763fba829dbb25f287c8a96c72d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Projector/ProjectorActionPlanning.cs",
+    "gitBlob": "a9dba4e35e60d2fb496142b34ad80778218bdb23",
+    "bytes": 11196,
+    "sha256": "7cba7e8926835aa3b9af784feb363ae0b04d226a5159dd5587bfccf6aa72af73"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Projector/ProjectorCapabilitySlice.cs",
+    "gitBlob": "af43e91004ed6bdd9b391de50204157546ebe82d",
+    "bytes": 655,
+    "sha256": "b9bdce9a0151122e9a80816522bd38465f5ebe394d045e39d25cc73bdded0aa4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Projector/ProjectorExperienceCatalog.cs",
+    "gitBlob": "53562ddbe837ca7ec38334ea64528d5b97c6ede3",
+    "bytes": 5764,
+    "sha256": "a37d35063bfde40f24f85a5a2659bf2985ff885c385ebcfad54e5c97239aaf1c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Projector/ProjectorFoundation.cs",
+    "gitBlob": "36d70539a5865d1bdcdac1728e9c85d9f6b307d4",
+    "bytes": 16649,
+    "sha256": "8fb122092e5ceea17155a0b025d68944202b7c3d52f676d8f6c63eb656259d31"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Projector/ProjectorSessionRecovery.cs",
+    "gitBlob": "3721a042c84769012a0e4b376cb442038bb7a2cc",
+    "bytes": 8775,
+    "sha256": "9d5cd6747a9780b6dd5dd5f51173ebf6c5e47e1aa78ef3a19820c56813c0168d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Provider/ModelInventoryCache.cs",
+    "gitBlob": "84cbaa62fa1a9458f5914c52d37d63f0ac9e197d",
+    "bytes": 3305,
+    "sha256": "30003f48ac9ae0993c6ddd67be3bcdc6e0b394a6e6aff7d1ff4fa2b64549186f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Provider/ModelProviderRegistry.cs",
+    "gitBlob": "1330626766f079573db501e86ea40d03b49b3523",
+    "bytes": 7123,
+    "sha256": "4e00546be28ca7379859e318e3829b344c3c69a7beb6f4ec82867c0062baba86"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/QuickSettings/QuickSettingsSlice.cs",
+    "gitBlob": "7b6cd4597bffab72fd36376f71b3027015b8c846",
+    "bytes": 1263,
+    "sha256": "5964f368f354919e6dd19daeacb3bdcb28337d466020ca634144c1df229cdaa6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Research/BrowserResearchCoordinator.cs",
+    "gitBlob": "8d4d1951948973edf96622538d58512a99cd6c0d",
+    "bytes": 6852,
+    "sha256": "826e48085249ac665686b5e4ff80221f9bf0a9a65195cf2283c877a9a3b29171"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/RetrievalAbstractions.cs",
+    "gitBlob": "8232737ee1be5da8d165e2ea2715e0c3d3dbfd9c",
+    "bytes": 2076,
+    "sha256": "bc0b4a3f903cef186094373609f23fa4d696de2acac094ef9ff683e592b04cbb"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Safety/AgentInstructions.cs",
+    "gitBlob": "eb496d8b2a65b92dbcc1f2f28332491ccbd0faa8",
+    "bytes": 2691,
+    "sha256": "68e5a917eaad7162bd90ca8e676da554d204a85b3a47f9c37f95a0ded5eb14d3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Safety/CheckpointService.cs",
+    "gitBlob": "8236d2aa71185d2164470604a7fcc2c1df6f019b",
+    "bytes": 7685,
+    "sha256": "f8211f0ab5c6e0496c76b6531a2c5155467fb95147ad8f995696fdc3b3852cd4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Security/ConversationSafety.cs",
+    "gitBlob": "27f9dd7c51eac612f1933d27135a1444aeb007d6",
+    "bytes": 1322,
+    "sha256": "1a8ddd4133fbc68d3ab027e37b452bb12ffae36039faade3d6612d176c4ded1a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Security/PermissionDecisionEngine.cs",
+    "gitBlob": "6ff9531dae67e446e238b558910058901dc74d6a",
+    "bytes": 2692,
+    "sha256": "2491c83492a747e586be2f9e91ead76b888cf5ce63cb1683cf0c258cc35ae5e2"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfInstalledApplicationActivation.cs",
+    "gitBlob": "3e8382150ac994ab80bc4cf2ed419db0aabbf73b",
+    "bytes": 6830,
+    "sha256": "b411b2c7be3eaea69eda57fefb923f54df5170dee514549ed197dcb663724d36"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfItemEdit.cs",
+    "gitBlob": "30f4aff00a1da8a5754633026a7d46eb04b872bf",
+    "bytes": 557,
+    "sha256": "401cf9367d343388d1270cfc48d87eb7feb3d84c41d815bb4db4579964c47983"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfLibraryPolicy.cs",
+    "gitBlob": "cf7033538f704b0ec4b7375e1e43a6f43c2e2727",
+    "bytes": 9637,
+    "sha256": "3cc2e43e975d7405b5a06d3ab1e6a619b1b4d072e1e476df120f9124263b7677"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfLibraryService.cs",
+    "gitBlob": "fbeb6dd2fcd7656a735575710fd6ba4b2bcc0e60",
+    "bytes": 17444,
+    "sha256": "c243d9fa9a555021e5edced0157b828f612c0a3070a7cbc4bbea31a4f613f8bf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfOwnedMutationReceipt.cs",
+    "gitBlob": "2193d011de419454e1c799ebd3675ee3e1032fda",
+    "bytes": 294,
+    "sha256": "cdeff40e0b3fea6a883d3213a102d162c8f81283507f1584ab3bfce89b1f568c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/ISpaceConversationWriter.cs",
+    "gitBlob": "4c9634bc82209f4938cc19e9970f4e36de109470",
+    "bytes": 944,
+    "sha256": "c049340306cf009ac47400bae904e767676dab9fcdb8eb7d05ce8cd31ca9a9bd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceConversationService.cs",
+    "gitBlob": "a0626d0e33eadd5e8341498938e67ceb2f07c8bc",
+    "bytes": 4851,
+    "sha256": "c2e47bff9134746e6eb44fdd7f7e0164b94a59995e3c496acfded0b110aedcc6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceDefinition.cs",
+    "gitBlob": "d88c7bb81ca876af26bcfe8aaf3d211a2890ddb0",
+    "bytes": 4911,
+    "sha256": "d58bffd2592df469560948269c7b243b291e20eef52378c2ce990e0961f2a5da"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceLayoutDocument.cs",
+    "gitBlob": "7d7287d53990a1da40b35cbe9f5534d17fb27430",
+    "bytes": 1337,
+    "sha256": "948cc0fddf62322183cd9acc9a432602b01a8f266fd2bb9db9b867daa21645f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceLocalStoreAuthority.cs",
+    "gitBlob": "88a70ff4d2388569137aa94152cd600f4d6a25aa",
+    "bytes": 3283,
+    "sha256": "b507241f39dd9ebeff8b52e3d105ee2b2eba6214c569d0471bfaa5e80be134e5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpacePolicyResolver.cs",
+    "gitBlob": "9e5dc52c78391b709904575a67a480976566083b",
+    "bytes": 6586,
+    "sha256": "9160d77ed0a3dd99295a56aff84b72ce19d98af545e91edfd660d1349caf350b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceRegistry.Deletion.cs",
+    "gitBlob": "7e35b9c1c92b5b31ab1902569871fe330a3ea2cb",
+    "bytes": 9776,
+    "sha256": "fc2d3ce65a8abde5908d1113da738f7f1ed520b9b6ba44f78cdfbc4c2144a74f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceRegistry.cs",
+    "gitBlob": "708895bec70893c19bf52ca9e960ff2f385f6752",
+    "bytes": 41115,
+    "sha256": "2639aa8ef577832405a22051b86df079375949cbad79da169ef15b688e5748bf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceSourceResourceResolver.cs",
+    "gitBlob": "28dd71080f389458f5d23a0363fa9831138662ee",
+    "bytes": 4186,
+    "sha256": "ee908260d05741bfba8767ee374027413ddc98a434895e57cd0dfd0afd33ea98"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/StudyPlannerAbstractions.cs",
+    "gitBlob": "77723132b696b0f65a281828257033a0066329e9",
+    "bytes": 2363,
+    "sha256": "22d4d766b0ebe4708c224d0192859dcab2936b740c758715049cfeec1262d289"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tasks/ExternalAgentTaskService.cs",
+    "gitBlob": "40db6e49ecc39535b392f1fa08d7558aa25a70ce",
+    "bytes": 9227,
+    "sha256": "0834aaa768e359da4886e18744aaa9f15128bc2bc0f88e24ce7e57a1e6dc51b6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tasks/ScheduledTaskRuntime.cs",
+    "gitBlob": "8dc98f4a948278f4be0fd1d9e7500a55f8ef3a1c",
+    "bytes": 147,
+    "sha256": "32f8dc17008bb40a6590c60da4bb384b3a07f61c40bd8e10c3a02f2de7b201c7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Terminal/TerminalExecution.cs",
+    "gitBlob": "93e73707b6fd2ca56dafaa8320491d16635cf5db",
+    "bytes": 4915,
+    "sha256": "a2fcf97f460bbcb71f62aeb6b989141368d5558c012fb3c4639b611d7c66d8ff"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Terminal/TerminalOutputBuffer.cs",
+    "gitBlob": "f82a89007b232419ca1755d66c6770289c7f7c38",
+    "bytes": 7387,
+    "sha256": "23cc7699065dd575fb9991bb9fe96858ee8ac3b7b2fa1bf23496723095673f63"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Terminal/TerminalSessionContracts.cs",
+    "gitBlob": "725c863f36bd7101c3a6c37a594e91c3fad87397",
+    "bytes": 9011,
+    "sha256": "3c538725b6fae9537d710cc468921adab1934588e8fef61e58efa9d69b5b6431"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tools/AutomationToolRuntime.cs",
+    "gitBlob": "676c053a8b7632284fad710eb42e5cdeb5076ca9",
+    "bytes": 19391,
+    "sha256": "981a0a3e48eaa9a7287c285cf13b02a98755f753483a359c8b2d01d58f7dac2b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tools/BrowserToolRuntime.cs",
+    "gitBlob": "ca2cbfb12909f4ccc6002450e57189ed84b74904",
+    "bytes": 13412,
+    "sha256": "f360c41a893ef3cc2ebfacd8e11d6f684554073f2c528668351dcabc4aa85788"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tools/ComputerToolRuntime.cs",
+    "gitBlob": "ac63367ac8ff0e936b2e4daf5248a29c59553903",
+    "bytes": 17915,
+    "sha256": "1ee44e93a8c57de37c85e142c501d6f361c18c022d17028df740f99a2e2a41ce"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tools/ComputerUseAdmission.cs",
+    "gitBlob": "78656b373fcf97ccefcba86d82f8a2df7d9f9d98",
+    "bytes": 1687,
+    "sha256": "f157e17c459a1eea57879d6f64b14e90de35c23d2c9aa8d4ad65fc3dbc1d346f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tools/ComputerUseSessionController.cs",
+    "gitBlob": "4de8233a87b7337dda1a8ed4f22168e7f5d91bff",
+    "bytes": 5551,
+    "sha256": "30e44602dc975775cebb51ef76d9e139b8435e522960f79ffcce962feac8cb4a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tools/ToolAvailability.cs",
+    "gitBlob": "c61ef683be2f7e668ef825b5c458ea08e337f011",
+    "bytes": 21764,
+    "sha256": "bec69f015400f5421ac26ef283677f51c0473de5409f9a5ea4e5fffffddbd3d6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tools/WorkspaceToolRuntime.cs",
+    "gitBlob": "a1fd87a468b6114c861ab391557c4ef4a12b0cea",
+    "bytes": 26796,
+    "sha256": "7aa5eaacbf27c301f1f4dd57eb1e95251052c466561c22f82bc923827a08ffc7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Updates/IUpdateProvider.cs",
+    "gitBlob": "2f4e3c9980ef7dffdf40f8da0aee642d07da177e",
+    "bytes": 3292,
+    "sha256": "f267d66f2f368b0a2276a30bd36b45dea664c60f2b4b4f149c6a22e76545dc89"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Updates/IUpdateService.cs",
+    "gitBlob": "611abfdd4ca3c118617c24dc757795fe97815d31",
+    "bytes": 5662,
+    "sha256": "48c55b5d63bff1e80e18aa130d2e69b6dbda15ee493c7fc4086c2956a7f869e8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/UsageAbstractions.cs",
+    "gitBlob": "0339994aab151e2aa1e7605c035ed496adbc51d6",
+    "bytes": 2010,
+    "sha256": "9fcae62998ce231789cfae22fb7e934cad2ad53ab399952fc92c3e8c8fcc98fa"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/VersionedAtomicSettingsStore.cs",
+    "gitBlob": "bdec9a96bd93ac96f9b8a51d7636498de9deb0d1",
+    "bytes": 19956,
+    "sha256": "a784c0e5d35e7a2191745cb477d2d47703c5b4194bf4e4f89fa58a0ffb4fe149"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/WorkspaceRetrievalAbstractions.cs",
+    "gitBlob": "a9bdf9aa0f18b84a5a7ee25ad75625f65b590b22",
+    "bytes": 1549,
+    "sha256": "238b99b0bc4117f722295d04f606e8aa51c2451505b7fa9cd08974041fadcfc9"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/WorkspaceTransactionAbstractions.cs",
+    "gitBlob": "f2d52f9be46a6a8cd4d1e0e7bcce2b1afdbb54eb",
+    "bytes": 1705,
+    "sha256": "eed0e8a441c8d22920e05d8400a5451f5b0d520fbbd7d94580f5ea70279b44f7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Write/IWriteDocumentEngine.cs",
+    "gitBlob": "536f60063bba08dda078185d566b932fca772795",
+    "bytes": 3671,
+    "sha256": "0dcf4d4daa88a87da03e4239c4c052025c4d7e98632be3f0b7a1a67e5fb54637"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Write/IWriteNativeDocumentPackageStore.cs",
+    "gitBlob": "f23268b7476042850dcba9d38ab9bdc6afae314b",
+    "bytes": 2007,
+    "sha256": "59ca383eece77e688f979ce59a8913cd140bf3379871053e7c90bf88dddd7ac1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+    "gitBlob": "eb3dbd9b3f388bf41eb2489ea6c9f967a5c316b3",
+    "bytes": 14936,
+    "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+    "gitBlob": "9a10ad1efcd5e5c899a332ec410958e4642c0129",
+    "bytes": 40304,
+    "sha256": "98beb6356609b19abddfee2a5c08357b82278be26377767a176450405246ac89"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteNamedStyleOperations.cs",
+    "gitBlob": "b91e3a52f6041532eaac3e87c8c78dd37685b54e",
+    "bytes": 2128,
+    "sha256": "34e5549b08eabf422342ed67eb163986568874008c7a31f4f971ff1bef84184d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Boards/BoardsLiveComponent.cs",
+    "gitBlob": "861695c2af845e34d806c810547ed44b8f311566",
+    "bytes": 2270,
+    "sha256": "1535efc71a63ab4a7f7a08e03963d58daa53dfdb5940367c432b2674953353f4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataDrawingObject.cs",
+    "gitBlob": "149f61b9a68b76fb094150dd139e37b0d82f2d30",
+    "bytes": 1314,
+    "sha256": "a292f75afe30879a91aac93380bf374f51116d7c9229d9771427d01c612709ee"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataJunctionTableDesign.cs",
+    "gitBlob": "623fb8601cfcf7eede0801551a418b77339f1dc1",
+    "bytes": 7208,
+    "sha256": "1bdaaddd087d0a2554c5cabeb689dcb7e93eedfda1c524b6313c46d89cf0b4bd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataNamedRange.cs",
+    "gitBlob": "5a4294706809aac260f59f9e1e377a13e7afe1d0",
+    "bytes": 862,
+    "sha256": "484406b984ea024bd668074dac9373bc3ca2da3a3d5152bf95739fc9c93b11ab"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreation.cs",
+    "gitBlob": "78e44ded92fbaf46c915203cf5d2b0b49cda644c",
+    "bytes": 6039,
+    "sha256": "d59c2b930fe251a2c9080dd1109f5ac70e30b3e42b17843af59d198256820c17"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreationValues.cs",
+    "gitBlob": "35e1b8e9d7f8e2cc5af13770f864ebf2dfb2f3f6",
+    "bytes": 965,
+    "sha256": "78c5626b1937dda33d9b9281ff932b9b0e6e954b492b99b874da9d77cfc605fa"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordEdits.cs",
+    "gitBlob": "306f16f05cc5ba988d60a569e9a5aafb83a9032d",
+    "bytes": 4531,
+    "sha256": "c31962b9cc369f445d877f59144546c49310cae10cb0f494439df0f8efbb9536"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordMutationReceipts.cs",
+    "gitBlob": "049fbc00c2e096e435683a6a464f7528b258fd6b",
+    "bytes": 3647,
+    "sha256": "c8e9cee5deb1994d294f8c1b11ed08e1c5a5bafbd71ea5daf043cbed19224ae1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRelationalSchema.cs",
+    "gitBlob": "31debd06942800230b4995f1b11a5dd7d9d17cf7",
+    "bytes": 16239,
+    "sha256": "3124d686f8d3ffa47e8c2ea38491fe3ab0e89b6346b8e1bae95c0eb788d6c974"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataSpreadsheetOperations.cs",
+    "gitBlob": "e8ea873d0462f97698a3bbf8954a68db9d179694",
+    "bytes": 18761,
+    "sha256": "5bbb1ad828e61065fded7e275eecf33ef0d14a73064f4d8f8ded1837238eb9f3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataTableDesign.cs",
+    "gitBlob": "6bd40e7ae31f94cb4f8135b79e3f7789fd3960cd",
+    "bytes": 5299,
+    "sha256": "8b6e814d0788e4e9d1ebe120dda8c6fd3b3c5858315de49d0e082f7c3bd49936"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataTableIdentity.cs",
+    "gitBlob": "5e113bfc3adb63b7285f8965c0e56d8d99ac6440",
+    "bytes": 13592,
+    "sha256": "f6fe129853388c77aa068389c758b158aa02b25dc2486595b8f488c74eb5527f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataWorkbook.cs",
+    "gitBlob": "e176afe0fe50278688dd144d5d67ef1a17af83e6",
+    "bytes": 16044,
+    "sha256": "257ea91c862fb4f6503150d8d0d6202362d41cceb7ec6bfd05927c7a6f4c6803"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Documents/DocumentVectorShape.cs",
+    "gitBlob": "12115f25c0a4bc556f14a21a895a29b36a017bd5",
+    "bytes": 10800,
+    "sha256": "27d296dc8293b2f584c9486ac696abb428adc28004c540898899df8fbe548f8a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/BuiltinCatalogs.cs",
+    "gitBlob": "97bf5fb3f266d145d57f6b48558d5763260d1fdf",
+    "bytes": 5728,
+    "sha256": "11c4fa43b333b9ca8f90981b8636737801ff9e1756fd200956b4e91f28af2ff0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/CapabilityRegistryCatalog.cs",
+    "gitBlob": "61b619e03522f56eb7f1f1e4986ca61764ba2c47",
+    "bytes": 5755,
+    "sha256": "be7d25cb686c87b739128fe5447117df1fedc4cafa67bbca2611fb71ce993063"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/CapabilitySelector.cs",
+    "gitBlob": "12a239653cfe533c8c364a6d0c59d7793b37c5e9",
+    "bytes": 4939,
+    "sha256": "e5ad571e28e50556d6c1438e4dfb5ab23764a1b8f953c44b21f1aa9527f5872d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ChatExecutionTracker.cs",
+    "gitBlob": "257e4548e95da2bd7c953140ba2d7487e644cd25",
+    "bytes": 6145,
+    "sha256": "03c587a03d945f9cfa715acc715654c2a4acad7e4b25c8d89525b9a737c0b0d1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ConversationRouter.cs",
+    "gitBlob": "ec364adebea67724f9c8fbdf7c2674d0572bda5a",
+    "bytes": 5451,
+    "sha256": "71e6b3f3feb1f62772cda4c4ff39eef61984251b201f9d90afc2b71cfa4b2a26"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/GuidUtility.cs",
+    "gitBlob": "79b3679f89118ea2353478241ee16415edd27e5f",
+    "bytes": 429,
+    "sha256": "3b08d182595256e010c51f668f414c598b90956c4f1075045608fc090f993c32"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/HavenSurface.cs",
+    "gitBlob": "c9b3334f2cdbfe9061790725f1c46f2f53256fa5",
+    "bytes": 1551,
+    "sha256": "8590527acf4ef290d1ef31c0c9e00da2d9eefead81a61a4134bfcfb7bf8385f7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/InferenceProfile.cs",
+    "gitBlob": "5e15b5386e3ecff90323927c6a9e9a1d3b2a93e5",
+    "bytes": 1855,
+    "sha256": "7d9afb8007f414af7737e93fda662c80fbb3e220965a522e1eb29d7039974589"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerAvailability.cs",
+    "gitBlob": "8c8c9cf464c2748afd204f46012dd8f2bdab6b38",
+    "bytes": 3321,
+    "sha256": "eddea134d78689e9a90dbf62943227f3f7763db9f6b86310a0d18fd717540841"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerCountdown.cs",
+    "gitBlob": "28f7866b99bff09030eec16f8b61679372e99784",
+    "bytes": 2819,
+    "sha256": "4ab556815bcd96d159c513584174695cc50715777629dcb6e35b52c46729c787"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerDayTimeline.cs",
+    "gitBlob": "6832ac72a4cdf23aee926e591425c77bb4176edd",
+    "bytes": 6577,
+    "sha256": "f6482d43892bf5db684b8fcfd900a89f8ee081629d4dd229fffb826e3088e98e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerRecurrence.cs",
+    "gitBlob": "b4c8672a6d73aa56721ba6ae990b11d9da7e1339",
+    "bytes": 5602,
+    "sha256": "ae0cbfaa4933e4b492238a2880d86d532509ab84f56c6e373ff3fd7a97e5637f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerStudyAssignment.cs",
+    "gitBlob": "6bf287a6dfdb120b2a8a01c7f5a4a43d1e65e719",
+    "bytes": 4871,
+    "sha256": "2385cca42eedbec56599db10e7cb018a88f19d2f7b91ef775b8dfc81573a14d4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ProblemResolver.cs",
+    "gitBlob": "f0a18acd216326ecf35781740f4dc9a939f85266",
+    "bytes": 4529,
+    "sha256": "3d30c885f0cfd143ce47d9c5c688706930098da28de63b039ce59599130e5bd0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ReasoningScale.cs",
+    "gitBlob": "d6b9001fee211b67fe2424e4f6bd0689e99a09c7",
+    "bytes": 1984,
+    "sha256": "32f3db171ec9b2d793b480d0daf4ed522a4d50edab4131c2bcdcf99be1b84885"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ActivityEntities.cs",
+    "gitBlob": "90fe6cc95a1445b4f77e1d96830bacdba5801de2",
+    "bytes": 571,
+    "sha256": "9ffe7745ec8d07446b5442d25e95d081177f2a8ccc24545342fafb2df9a1236a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/AgentRunEntities.cs",
+    "gitBlob": "ad2084345d5a0e12eb783e3fafaa209b40737c0c",
+    "bytes": 858,
+    "sha256": "741ee8bafb6c459899759ba4b09abaa9902e2aeecfad946a2259bfc1bd1396c1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/AutomationEntities.cs",
+    "gitBlob": "7f22f13891ed0e59a305777682cf91223e96f32d",
+    "bytes": 4270,
+    "sha256": "8f4bf471df488b84373c49ebce7aa8bb0fb6a368eb27d378943fe4bca340d98e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/CapabilityEntities.cs",
+    "gitBlob": "e9cb14cc66a318e921b3e024106a998bde2187ef",
+    "bytes": 1118,
+    "sha256": "cba19b035f64a28842d4517862869b95da3f604544bf832604036ad221b49246"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/CatalogEntities.cs",
+    "gitBlob": "2ae89f5941c17f160bcf11431b88e0efb5ca44a2",
+    "bytes": 752,
+    "sha256": "0928747ba7e8cb76cfbf18cd16ce77b2f5dd0572ce904f5fd411640e681f939b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ContainerEntities.cs",
+    "gitBlob": "195a4aa57d97c6882873cb48dc7b2da58bffa540",
+    "bytes": 909,
+    "sha256": "2359496a8af47a9f79b77e8f6fab797e97a3bd4de1193ffc4355c5300e04aef5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ConversationEntities.cs",
+    "gitBlob": "92fb9f4ac5bd2a222cc80e15b6ef2f82994d75df",
+    "bytes": 6238,
+    "sha256": "fe7557884dbb62342a84c56c430607c2393825d508f18d2f3108eb3bd15f0d72"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ExternalConnectionEntities.cs",
+    "gitBlob": "c200c2e27e14196b34156d4f28d5a5b9485c5a01",
+    "bytes": 5113,
+    "sha256": "2fa3a4c20c355e8240cc0ce21144ea8264a3d4f57d46e916669f32073ed4d958"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ModeEntities.cs",
+    "gitBlob": "9a440ebf14fa258f4a2884d92f364c177aeccfd2",
+    "bytes": 2037,
+    "sha256": "ac52d63c3fde1ba8c5ae1c88d60b7db0d8ee9a562967e167acee2282d914c314"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ModelEntities.cs",
+    "gitBlob": "f520c0f94065606fe84813dccfbd1314da8bb364",
+    "bytes": 3479,
+    "sha256": "0d813d3b9cede846ed0fe6910c2e1d80e0bda107eb338d11353e219201f59e2a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/PlannerEntities.cs",
+    "gitBlob": "baf6c8526b2687b62b18635f9be878d9469ea0a4",
+    "bytes": 4659,
+    "sha256": "143d5ae8abe9c8636294ea7fee421a2b86237352fe4c2ed14d043f45a5cd13a5"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ProjectSourceControlEntities.cs",
+    "gitBlob": "d8006c4822671c1cc938f3fc33cd6a806baa6c75",
+    "bytes": 1240,
+    "sha256": "8460374694ec0db07c92e65832a5e3387cdde590937afc8c9f504482aa93c8fc"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ToolInvocationEvidence.cs",
+    "gitBlob": "a992a000407f406363b00c06f8aed7c41b26164a",
+    "bytes": 734,
+    "sha256": "b542226b551eeb7d6b07c841f006ee59eeff2a6375c1ed9e325fa1011aac9288"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/TrainingEntities.cs",
+    "gitBlob": "c77d8c1b2f78987eff4e7c3c93a58911821ba3aa",
+    "bytes": 822,
+    "sha256": "29a7539eec6ff9e1716dad1d1d11bec2c4e19f7e4e786da9a575a47573ff38df"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Entities/WorkspaceEntities.cs",
+    "gitBlob": "2b312c38778d878add3096c5d4c3410befc18270",
+    "bytes": 2382,
+    "sha256": "c08881d2c9829ef45e6907cfe8321c1543f02766c87e73b8117fe55bf71ed853"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/AutomationEnums.cs",
+    "gitBlob": "762b05322da10937c0ec6a6b86eb2f5f6f3ecf8b",
+    "bytes": 908,
+    "sha256": "2d7f3b39803b5e769ccfe4a8c786fe1117a270442fb2c260eee641824b1a26f8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/BrowserEnums.cs",
+    "gitBlob": "994b29033b57b1ca14d44f5cf8d35f8427a076b8",
+    "bytes": 136,
+    "sha256": "2148be987c1887778114ec6b13bcffc06b742486a3184c58d683faa7db127aaa"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/CalendarEnums.cs",
+    "gitBlob": "8bb65ef5c0c8f76e8d69357c6545774976681263",
+    "bytes": 632,
+    "sha256": "e054111c99f3bd7101060c61da7e5bb387fca3c545c389fa10b9d34757c2fcf6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/ConversationEnums.cs",
+    "gitBlob": "476e060b0fa204ee55d3e70e2bbfe48a2942d9a0",
+    "bytes": 1274,
+    "sha256": "abb856f55e8dfce5debf8987db20659eed57372e4a8a4eadcfdf276c4c46d2f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/ModeEnums.cs",
+    "gitBlob": "8fb78c9d7a73acbe4b4209078b480e0de792e2b7",
+    "bytes": 296,
+    "sha256": "46313627daf1f5ad01e437dc67ca110d7b604fd5c7bb7350bdeeabf75274f0d7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/PlannerEnums.cs",
+    "gitBlob": "73de95c14cc554723a32eb52dd29854bffc2cd4b",
+    "bytes": 848,
+    "sha256": "58589a1b34a831d7a60d1aed42dbd176d446fcbb05d8ceddee49995a87590083"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/SurfaceEnums.cs",
+    "gitBlob": "30d1fe865d4bdd99fb89572749d077a189b09a71",
+    "bytes": 896,
+    "sha256": "2bec721d256c25d60cef58d1a556d977c53c2e33aa2d0207efe2f40d165bb1c3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/ToolEnums.cs",
+    "gitBlob": "8a525a74c0074e0dd27354ff9fb2213d207ccb73",
+    "bytes": 1373,
+    "sha256": "35d5923f5da53bd3bfa806eab6b5fdbfcbac748e79bc0a64a888a0669060eb86"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Enums/WorkspaceEnums.cs",
+    "gitBlob": "2a94af3886b3b45ddab5c280c90498633c943ab9",
+    "bytes": 325,
+    "sha256": "458371f1168163b713cbcf75186b267358ddf47f67a62d3baa9ab95627d6d39a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Execution/ExecutionModels.cs",
+    "gitBlob": "84f98f441c029dc118bcd94a5aec88293e3eb6b1",
+    "bytes": 3409,
+    "sha256": "fb158c0d948bfd6deda8711be724d17d3172815d4080115ef882d16f7278c5c6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Execution/RecoveryModels.cs",
+    "gitBlob": "449c5270c00709eb20621261e5b516983d1e0493",
+    "bytes": 3709,
+    "sha256": "07bac4242f8ef8ea6fd2ac15b12a54646eded6afe6b440ebc316d5f48e0b0edf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Execution/TaskCoordinationModels.cs",
+    "gitBlob": "ddc455ad2a2bf0159e55b1f7c2bfbf13fc00ffc2",
+    "bytes": 3222,
+    "sha256": "6af9c8005904b3ea4647a4d86b5dd6da048b5f38a1e1556b035f5acfaf4b7e9f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Extensions/ExtensionModels.cs",
+    "gitBlob": "8f14bfe211b8801f909e8bb0b2a364f8063d4b62",
+    "bytes": 5951,
+    "sha256": "66b2ba952d74ead274d8c922f206afcb947f25c24c73aebf1cad5c5aac030c9b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Extensions/ExtensionSidebarContribution.cs",
+    "gitBlob": "27d5820a77634aed86b2a108b41fa72f6360f427",
+    "bytes": 404,
+    "sha256": "00706924a067f4e4b7b70ce978db91094073ed6af5598c2826f08cef4592372a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormMarking.cs",
+    "gitBlob": "17f8d7bab566ac759b509d62e588a384c197074f",
+    "bytes": 8737,
+    "sha256": "e757abd4ff984398b5c48fe0346bd89e3c7fdce365a7f756e5d3c9cf4cbccf6a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormProject.cs",
+    "gitBlob": "bd572d90e8e3699aac32e0edc27758ecf13e5aa8",
+    "bytes": 16248,
+    "sha256": "8fc5a2d3ceb5c36e948ce6daae7fb19e583364267509e884220848ed4973ad6e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormProjectEditor.cs",
+    "gitBlob": "e7b50827593a1cd7c139adbaf70d230f8b731432",
+    "bytes": 5607,
+    "sha256": "05c642cf8178faff553be6f57bd09ae6c1d45ee4c9ef7b3ccdadf089040fce92"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormPublication.cs",
+    "gitBlob": "53b3529a73c6f4c4fc6159978840ec02064f4a40",
+    "bytes": 2453,
+    "sha256": "a336b7d531f297900707cea47f744f54f5ddd1555cda653aea8250b5836f86bf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormResponseRuntime.cs",
+    "gitBlob": "f9dd01cc9525861c4f79a96ecbb6cbb5638183d8",
+    "bytes": 19337,
+    "sha256": "9f8870d04cec14cda93d34d80cd3c50ffdd5c7d943e69d102e5ec7b78b070885"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormTableInput.cs",
+    "gitBlob": "2415716d89de5baa4fcacf6300631e50f14a9b53",
+    "bytes": 8113,
+    "sha256": "4dc4257ce4e79b9282a5512c61ad2f1bd4e40b74e1928c6f06eb4a992fbd6e96"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Games/GamesManagedRuntime.cs",
+    "gitBlob": "fc800e36a19868bfe8778fcbf8ab4a8d2dd1ae97",
+    "bytes": 623,
+    "sha256": "a01eafac2110cb53a9eb0a3e11bffe4ce2487d5a6f2c02a89eeb185431ccb0f6"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Games/GamesProjectDocument.cs",
+    "gitBlob": "4abd668752903f5ac002eb53567f250d1df0859b",
+    "bytes": 4921,
+    "sha256": "860cfb7e32696891a423d1abb9f9ef4da5044e0af6471b4dd796fb928013eb29"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Games/GamesScene.cs",
+    "gitBlob": "34ff4eb8057473380217351fc926c658270b89da",
+    "bytes": 7778,
+    "sha256": "81a7bb8f49cb6260ac80d4eb1f07693da9d40995f9da1eb9d86256580e73d490"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/DeterministicCalculator.cs",
+    "gitBlob": "4069374ac85257980d5d7c163e0cfda652fc9ad7",
+    "bytes": 5556,
+    "sha256": "d0c1c62f238873cb289ac6f4537b13f77b5badc794fe0e7e1a3b552518aef78d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenUiRenderingLayerSelector.cs",
+    "gitBlob": "159afeb500bd719ce253b8697e2cb721be63ed07",
+    "bytes": 1854,
+    "sha256": "3de952120ed7d30569127831d81cf1f0f13ba63f166c626922e69610c0d0b919"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenUiSemanticValidator.cs",
+    "gitBlob": "76f1d9d9e75ea031067edc63cd62fa23b11473b1",
+    "bytes": 9887,
+    "sha256": "73ac61fca32d6791cfd8fc484fa18b6f8849f4baac6ef90d115afd91a7cc16a8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenerativeUiAppContracts.cs",
+    "gitBlob": "a33c36a750541a1f65cea09fb70079f4d8190f55",
+    "bytes": 2654,
+    "sha256": "83376cb3413fe3202258f2c8d3cf96fd826b76b2d90def30dea88f0b676cdafd"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenerativeUiContractValidator.cs",
+    "gitBlob": "4cb3afbb0061cae9e47b1b86c470993bb2002f46",
+    "bytes": 9267,
+    "sha256": "3fca62bfd0e01a0ad12669cb492e1c1f752c4e49ef99365218a3e4be2ac7ddd9"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenerativeUiContracts.cs",
+    "gitBlob": "de46b470ea904038df6f82480033432a5c5140a5",
+    "bytes": 4926,
+    "sha256": "ac710b4dd7007c2ff6058104dcca0dcafb92f844d871300f50dc217f01a9365b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/TemplateRegistryCatalog.cs",
+    "gitBlob": "54d222dcbf188ac6010508630d6b6347155412a0",
+    "bytes": 10731,
+    "sha256": "5f05d48bb50978f995d1767787749f10c7381de34fc375caea25dfa5df79c436"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+    "gitBlob": "a6996aa2c75031e77bf1c4d60861ff365ed1e386",
+    "bytes": 375,
+    "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Maps/MapJourney.cs",
+    "gitBlob": "64282dd0b5bb55a65cea39b11a1d4b1c656da6ab",
+    "bytes": 8705,
+    "sha256": "350098a65b206852e442ed43bca77fc2f4d0f45840e7cfcb0c2bee3f604bddb3"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Maps/MapsModels.cs",
+    "gitBlob": "cd6f33b5a69c01a2e792f83cbf34ee2699a28812",
+    "bytes": 4287,
+    "sha256": "9cd8fa5b3a6ba95df6213101451c39fab370c2696d9ae397b5e0bf52d294848c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+    "gitBlob": "feb448bd1efb310a3c1b13a6080ec1b3d682e045",
+    "bytes": 2442,
+    "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphMarking.cs",
+    "gitBlob": "fd9a98281150388e649d4efb8934921533244ed7",
+    "bytes": 4048,
+    "sha256": "a2b93dd4e16b062e3a796ac3b4363a7aba333bc14b82b84839b4dbd2b0af7097"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+    "gitBlob": "d2dc5869041bb679ec660c8779d40e37f0357f4c",
+    "bytes": 713,
+    "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+    "gitBlob": "447b4f5a3a7fa7bf6baabd25a5b9cfdee4c51385",
+    "bytes": 2387,
+    "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+    "gitBlob": "d859f7dcef2ff9d83a1025a0e497f1ae7abc83e3",
+    "bytes": 1569,
+    "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathMarking.cs",
+    "gitBlob": "87b5a049de93d4a158a829c0cf7ab5a313a9f111",
+    "bytes": 7479,
+    "sha256": "1f6eeeffd5a1b4e2b112ec960e8014b720076b641c6011266b69cd28ebcdde89"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+    "gitBlob": "87785d51f086935fe1dbdec0490347c7d2534106",
+    "bytes": 14310,
+    "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAssetReference.cs",
+    "gitBlob": "22299dbd0ae4f2f34df4e5767b0e83fc0a6c4e8f",
+    "bytes": 2295,
+    "sha256": "ac8a9619528774fda0d5f511a3468c21ac338248b7a1a19b9227ff65576fa645"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAudioDecodeContracts.cs",
+    "gitBlob": "1c86501c792b50207264b60e53f06abb34dbbcd4",
+    "bytes": 1687,
+    "sha256": "566d8a777df25ec5d63d0e411f7c6a5db5242361c05316090141a21ef44a71fa"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaContracts.cs",
+    "gitBlob": "a78c1796eb5a4954005572f77ff12eb535964401",
+    "bytes": 13255,
+    "sha256": "1cac8a4e5cdbfc016b1a7872a3dbd0a7a50efc8e8cc4e006abccf86ade0865f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaRenderContracts.cs",
+    "gitBlob": "378e598bb7605408952edda51ad10d07f330d362",
+    "bytes": 2238,
+    "sha256": "b505821851bcb499ea30aea18c77e1583f9dc8c4a5579a235b52572e4488f9bf"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaRenderLimits.cs",
+    "gitBlob": "90ade0ae65b8ffed61a474cadd562a0735478a34",
+    "bytes": 808,
+    "sha256": "d791d2e2cd2a0abfa54646b7b35bab17b89d175eb227bf0ced8aded5e2c2175d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Media/PreparedMediaAssetLease.cs",
+    "gitBlob": "e9aad3300b8bd486b8368f011a571376d9a1d6f1",
+    "bytes": 2500,
+    "sha256": "ec732b19ec3a7d3e304a2f30e941bc2bd1ceb9a69ee3607f7c122ae2f02d2327"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mesh/MeshModels.cs",
+    "gitBlob": "b92439a57b3b2a853d7629c7d1ebad7c59f14311",
+    "bytes": 5891,
+    "sha256": "6dd79fb8d37cb944f77c01e12e19d0295b56f9f563cf7546c3e03c40920474ce"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mesh/MeshSyncEngine.cs",
+    "gitBlob": "e5f83093165735bf4ac7ec5db7e6c570bc4479dd",
+    "bytes": 3370,
+    "sha256": "7c7be694760350ce859967b62f236eee8cbaa218ad0c30f092c7303517df8c89"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Mesh/MeshWorkModels.cs",
+    "gitBlob": "5914165aaae8ea63e47eabde306c296dc3212ad8",
+    "bytes": 2785,
+    "sha256": "c66b811f8d664cba6c8eedf5de0ea47477b238b151e880452b7cf0cb61cede46"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/ActionConcepts.cs",
+    "gitBlob": "6223c6326b77375133160747a81980aeb7802295",
+    "bytes": 5109,
+    "sha256": "90abdbecf20d23eb8e53c9e7bc87d124d52b591db5a422b5d0874d0879b35fe1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/BrowserModels.cs",
+    "gitBlob": "68dd0f8320298cdf98badb76917eacec27b61ea7",
+    "bytes": 2930,
+    "sha256": "f9f0f34a483e60f6124f83c0030097b7b7167ef95d3909f278a390f4d703b7a7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/CallModels.cs",
+    "gitBlob": "5bb4fe3f568bdb9a7f652e7b940520321becfba2",
+    "bytes": 2252,
+    "sha256": "3f046035939481d30332b4890e21225eb08523b0eed276abb784783a1a6a8a13"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/CodeIntelligenceModels.cs",
+    "gitBlob": "04654b1221137831f4f1a94bbebbde1a7e1e2c6f",
+    "bytes": 3124,
+    "sha256": "7acfea89f12510eb45c236b4cd4b0296a6d61bc92f7a89074878d342ace0c604"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/ConversationBranchModels.cs",
+    "gitBlob": "477c31e5dcd30a7e47d4c83ea751f9dd20bf9b6d",
+    "bytes": 5562,
+    "sha256": "c3a29209b57f3f9aa529a24683cbf2dda453e4703ef97364f1a1366933a1256e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/DashboardModels.cs",
+    "gitBlob": "34f96915c947d6ea275a6a0bd6791eb288b1b26b",
+    "bytes": 3284,
+    "sha256": "e9da07f89c67456fb9f3c79c8175da0ec1486e4a0518eef6a227c740b900c3f7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/DeliveryModels.cs",
+    "gitBlob": "48a406069e6f6c087d29311dae8464b7b2923e35",
+    "bytes": 582,
+    "sha256": "9493dec17d4af0e5998c563e4426319b1587aefa6d03fe3746478c340ec43709"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/FloatingActivityModels.cs",
+    "gitBlob": "085dbcdcd8cfb5aad57994e297cef24ec55b8b38",
+    "bytes": 766,
+    "sha256": "33f283e5dbefe01279d74de042a8ff2d76a4ed1838585a050ea3c90a41b7afd7"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/GenerativeUiModels.cs",
+    "gitBlob": "0f1901bcc1d46ce9280ea8a59cf2d30eac044303",
+    "bytes": 1979,
+    "sha256": "bccd90e70bb3226b7f04e0f28487801c2bc164fab50cadce3b1fb7430eb4b42b"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/HavenPersonalisationModels.cs",
+    "gitBlob": "23dc34d4564c64d8c31fe70e109ed62b27fc1ad0",
+    "bytes": 1063,
+    "sha256": "d9b492d973265eb9e7d0ffbecad9b5609083170c8abe9a2c64d3d6c3667ae9dc"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/ImagineModels.cs",
+    "gitBlob": "ebff6cf4615761d94a6a6aa0f73608f9609c8b08",
+    "bytes": 2955,
+    "sha256": "efc7402ccf0ac32a710aa5a2f1e82ade72360f54103456737bfad71c84eacacb"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/KnowledgeModels.cs",
+    "gitBlob": "4ad1b6f4f5e2a048ee9a30c36fcb22f3ba36771c",
+    "bytes": 4575,
+    "sha256": "d2ca61791b0feef5a9d8be13328c5ac06d5cd78b728bd20503c2a92d9c501469"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/ModelGovernanceModels.cs",
+    "gitBlob": "674e746c502c1f7a586c8060b0545fbcf4dc435b",
+    "bytes": 3140,
+    "sha256": "5c3c57dac1fa32278ec71926779b9f857d2fef492e64295882f7ca6f9e82e33f"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/ProviderModels.cs",
+    "gitBlob": "ef289d7e0fef08ba6e0d7b436946bec29387debd",
+    "bytes": 4427,
+    "sha256": "4f97b863861b440c4522a79efba5bc55a19043ef5faf3a005c3a3e5c1d9486c9"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/RetrievalModels.cs",
+    "gitBlob": "bf79897d56bae7ec6aa1af442d000bb9c1c4aed1",
+    "bytes": 2247,
+    "sha256": "444d338e2bb5e742358202c58269f7059a1968e9d16bb6a793db52051f3d566d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/UsageModels.cs",
+    "gitBlob": "66032285eac73e9268c9f809db1fbfdaa7550bda",
+    "bytes": 1451,
+    "sha256": "73f94a02b11ea3d93e1e4b40098c7eeefee61d2ea1dedd67a2effa452f18cb04"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Models/VoiceProfileModels.cs",
+    "gitBlob": "0fe54358674108a0aaccb1294a803dbe6b21eefe",
+    "bytes": 424,
+    "sha256": "07140f7f31078224dbfdb12c16cebecba76bcb3ed32b4811a14d55826e78b00a"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesBlock.cs",
+    "gitBlob": "433d6895cdd4d6b3135950b925ea1c5e3b021e76",
+    "bytes": 19407,
+    "sha256": "a38e7219429490bd10debe93960a0c14036fc939d3b109ad0ccc248f644c7916"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesCollaboration.cs",
+    "gitBlob": "9f586c9e8441843a8f6926a3ce2cc547f2f7e006",
+    "bytes": 3738,
+    "sha256": "4473e1292f029a5e84aa1b7aaab16646b6687e0a57f6822d1390e9e53e466544"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+    "gitBlob": "abed72f3be1ed2ad7e1ad3d4b647ec419f7c64ad",
+    "bytes": 8528,
+    "sha256": "6aaf49f88b08b77ae98c3efdef067f7af3741c52df51e89e3aee4815e9947bc4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesEnums.cs",
+    "gitBlob": "dfaf9371dae220e65c35fa811cbde6651e5809b3",
+    "bytes": 2392,
+    "sha256": "5a7ab9574af8ae44be8fe22c5fef65f14d179ec2fe81c5055c998a2026d83ef8"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesInkAndStudy.cs",
+    "gitBlob": "4cbcd87bfcb510f5b7b68253563282a816fa231a",
+    "bytes": 8055,
+    "sha256": "8b90aac61d2f05961c20b083deda0b8703908da510ebe98ab8ce94a00d8e4b3e"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesMetadata.cs",
+    "gitBlob": "91ab568b61136e32b760d68369a4f0114eb524cd",
+    "bytes": 10683,
+    "sha256": "3019980292b53b48727e775aa50786071f67c59e31f7cc59094a885df36417a4"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Notifications/NotificationModels.cs",
+    "gitBlob": "e74bc83b7b1e39a3a76bbabc7f6786dc934ac072",
+    "bytes": 1185,
+    "sha256": "4b60f5dcc1ffcc8069043670d72476f6a191bc15f4dc31113edbaa63eb835a89"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Planner/PlannerStructuredEntities.cs",
+    "gitBlob": "94a0c75a666ef4ccdf877b9233ca67479c9b90d0",
+    "bytes": 8420,
+    "sha256": "2196f8060cfc1c3b25de57c68cc686c0bbc41d5c706d08a31ca3dbdb211d0413"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentDesignModel.cs",
+    "gitBlob": "1601cd91b0b5f6a199b715f6d8d1007c779475af",
+    "bytes": 11386,
+    "sha256": "c01199d6c60ebcfe895bfbeffc1f4aaec56fd2f2f77f4c17991ffe7b60c252ed"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentDocument.cs",
+    "gitBlob": "ae91aa98c1d4389eeeda9a2be756752b07e51ab0",
+    "bytes": 11759,
+    "sha256": "debb6570efe7c653aa7d625ebe495350a20fa4ed62732f487a7e37341f109b75"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentStructuredObjects.cs",
+    "gitBlob": "2e09e9148d9a2a1d8d502ff4560f8718840c7051",
+    "bytes": 7415,
+    "sha256": "5c7b0047aa58d60f71de4c3cbbc49e1c5fd5657765f02e7fc64c42dda458dee1"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Safety/SafetyModels.cs",
+    "gitBlob": "edb8fc2ef4cb415f848b1850667405b6dfcdc3ee",
+    "bytes": 1161,
+    "sha256": "d824ba312d7234a472b1154fc24efa51eff5a464521a9bc6146591e56a0ad289"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Shelf/ShelfModels.cs",
+    "gitBlob": "751b448fab294d50b40b9b00cbaaf1c400db8551",
+    "bytes": 6132,
+    "sha256": "90c356c45bceb1043a38edbce4f24cd3c4084ab9d33815d99e857ba6d8f27241"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Tasks/ExternalAgentTaskModels.cs",
+    "gitBlob": "6dcdcc2bc1bde48f5876fb8c3287861cfe36a45c",
+    "bytes": 2512,
+    "sha256": "98c289a79bb7f4e1c0f473d64c40082baa288f2f477d6d9c76a1ca66c4c85664"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Updates/UpdateModels.cs",
+    "gitBlob": "e22cd74698d3ce3042b6410d821e7de209dd01f9",
+    "bytes": 5730,
+    "sha256": "66ef8b2a3dd5d1a2fa77695e5346af0eebadca182c0040a79f2e2b9cc6a27d8d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Core/Workspace/WorkspaceSessionModels.cs",
+    "gitBlob": "1d43d400d81d45defa665c25ab804a284a5d6dcf",
+    "bytes": 1541,
+    "sha256": "9c3a40a20134295cf9f401038d44d752a79708bb64238345e296ab50dbe2c040"
+  },
+  {
+    "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AssemblyInfo.cs",
+    "gitBlob": "bf6624239eb90188ebc609687eaa372e62ff29fe",
+    "bytes": 292,
+    "sha256": "8285427fb7535ccbafebfa3fb58e724495859fd711d40df82a877e0f33fb9640"
+  },
+  {
+    "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/GlobalUsings.cs",
+    "gitBlob": "80f5e3165d7a094caf3439da2496ace102084568",
+    "bytes": 778,
+    "sha256": "cb9f7ad27005a8f5b0a00bb6d21ee1842f743352a47d4b2b16537ecaf84072d5"
+  },
+  {
+    "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MapsJourneyAuthoringCaptureTests.cs",
+    "gitBlob": "ce1528c45e82c167ff02e188d3a113c74132c1de",
+    "bytes": 9314,
+    "sha256": "24047ed038376ab19155d21fb8d3d01803c6eb2d1d982d54a2956ab4dd9c4b0b"
+  },
+  {
+    "path": "NuGet.Config",
+    "gitBlob": "24489cbd21c319685f8e7d5caee66965cd4a9e57",
+    "bytes": 579,
+    "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+  },
+  {
+    "path": "apps/Web/Productivity/Maps/Tests/Maps.OriginalAuthoring.Tests.csproj",
+    "gitBlob": "c78878aa757d1a027055aa213780c72f77f9f231",
+    "bytes": 1407,
+    "sha256": "c08467474b90b270ac0ead639ce312ab81f62967dcbf372b207fb1f1b4105841"
+  },
+  {
+    "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+    "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+    "bytes": 19584,
+    "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+  },
+  {
+    "path": "framework/CUI/AI/ActionJsonSchemaValidator.cs",
+    "gitBlob": "fac154a7e02fed7e2b2c5d9cf7b15c94ecc2e5c7",
+    "bytes": 10519,
+    "sha256": "d657c78b2000dd124efd7515754e5cc23670362d4b23c47a1ac426bd1ac57106"
+  },
+  {
+    "path": "framework/CUI/AI/AppAiContracts.cs",
+    "gitBlob": "22a25d701e605d7917e673992080fce2e14b412c",
+    "bytes": 9862,
+    "sha256": "97628202c23aa42db86ed627a68810b102a575ebf8c3d385dfd72608ebdff776"
+  },
+  {
+    "path": "framework/CUI/AI/AppAiCoordinator.cs",
+    "gitBlob": "d75faadd2a4ddb3e889b97e0444b535ccf2719b2",
+    "bytes": 23197,
+    "sha256": "6f7c9cf8370921757127a6d8eb0592d81b7ca2c212d34fd3e5fcd4d1d49276ff"
+  },
+  {
+    "path": "framework/CUI/AI/AppAiCoordinatorFactory.cs",
+    "gitBlob": "acbe5902733b32578e1da3eb4b70c95bb1a40a24",
+    "bytes": 1051,
+    "sha256": "cf66d030bfa86d1b2dc5637d0d687ea178cb85ebaddbc8fab1acb35f82696b27"
+  },
+  {
+    "path": "framework/CUI/AI/FloatingAiBarScene.cs",
+    "gitBlob": "45488998c2a8f88c0407f757511fd56fe5605001",
+    "bytes": 558,
+    "sha256": "e0e4df2331a05fbaff01cb5512da4d2470b226da25b420bb4131a32750130ab7"
+  },
+  {
+    "path": "framework/CUI/AI/FloatingAiBarState.cs",
+    "gitBlob": "ac73bd2b740b7a2eb488eefd403a3a70a981024d",
+    "bytes": 16163,
+    "sha256": "af11f32b788b5e4099988bbb608b5bd59b0fa1364fb1915c07c0c317b8cc6ac2"
+  },
+  {
+    "path": "framework/CUI/AI/InvocationCompose.cs",
+    "gitBlob": "0c8d784df25a40539c06918aea3f2a7a6f0fca77",
+    "bytes": 8047,
+    "sha256": "9cf08225d8b9425a57bef2cb3f848d8c2633e148d13671bb783ec146cf98474c"
+  },
+  {
+    "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "gitBlob": "8a7bef631e2cbc38ad730fe92600492b95846e64",
+    "bytes": 453,
+    "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504"
+  },
+  {
+    "path": "framework/CUI/AI/UI/FloatingAiBar.cui",
+    "gitBlob": "2be4e9a25c3ec5b407c52ca1ecb7112b7d89980d",
+    "bytes": 1974,
+    "sha256": "e33cf268e4ca886dfdfaa0336a66b8d7b18404003da2a3ce06f853918d90630f"
+  },
+  {
+    "path": "framework/CUI/Directory.Packages.props",
+    "gitBlob": "016ac27619beda53b745721030cc89a9c71da843",
+    "bytes": 429,
+    "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+  },
+  {
+    "path": "global.json",
+    "gitBlob": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89",
+    "bytes": 111,
+    "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+  }
+]

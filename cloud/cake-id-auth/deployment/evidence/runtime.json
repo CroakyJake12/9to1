@@ -1,0 +1,12 @@
+{
+  "regressionSourceCommit": "4c29fd3b",
+  "cwd": "/workspace/team-c/c2-hosted-package/cloud/cake-id-auth",
+  "argv": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c2/xdg node tests/integration-custody.mjs > /workspace/team-c/evidence/c2/hosted-full-regression.log 2>&1",
+  "exitCode": 0,
+  "assertionsExecuted": 222,
+  "strictReaped": true,
+  "originalsDisappeared": true,
+  "kernelReaps": 5,
+  "variance": "Reviewed Linux custody launcher/cleanup adapter, unchanged original domain assertions. Local actual Workerd/D1 only; production mail and Cloudflare deployment untested.",
+  "laterChanges": "29152698 and intervening commits change deployment config/documentation only, runtime source byte-identical."
+}

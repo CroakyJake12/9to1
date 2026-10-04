@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "originalRunId": 37203799923,
+  "inspectorRunId": 37205514551,
+  "originalHead": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "review": "PASS exact7 originalbody/memberhash+metadata/readback; no executable rerun",
+  "results": [
+    {
+      "target": "home",
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "extractionVerified": false,
+      "launch": null,
+      "selectedOriginalMembersHashVerified": 4,
+      "packageHashVerification": "NO_PACKAGE",
+      "resultSha256": "80833979dff1085b76f2af88a16fd9b2bfaac6a1829411e0fc73d6357ffd1873"
+    },
+    {
+      "target": "boards",
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "extractionVerified": true,
+      "launch": {
+        "processId": 6560,
+        "sessionId": 2,
+        "windowObserved": false,
+        "windowTitle": null,
+        "closeRequested": false,
+        "exited": true,
+        "forcedCleanup": false,
+        "exitCode": -532462766
+      },
+      "selectedOriginalMembersHashVerified": 6,
+      "packageHashVerification": "INSPECTOR_VERIFIED_ORIGINAL_ZIP_NOT_DOWNLOADED_OR_INDEPENDENTLY_HASHED_BY_C6",
+      "resultSha256": "c9985f5e6b2f92cad5bcb91413c617b7be0993e739c7319418da99453febc6f2"
+    },
+    {
+      "target": "canvas",
+      "status": "PACKAGE_EXTRACTION_AND_WINDOW_PROBE_PASS_UNACCEPTED",
+      "extractionVerified": true,
+      "launch": {
+        "processId": 1316,
+        "sessionId": 2,
+        "windowObserved": true,
+        "windowTitle": "Canvas",
+        "closeRequested": true,
+        "exited": true,
+        "forcedCleanup": false,
+        "exitCode": 0
+      },
+      "selectedOriginalMembersHashVerified": 6,
+      "packageHashVerification": "INSPECTOR_VERIFIED_ORIGINAL_ZIP_NOT_DOWNLOADED_OR_INDEPENDENTLY_HASHED_BY_C6",
+      "resultSha256": "5544406d1f09ee0a7aab41237b9bbc463ef2109033d5116abfbd85c28df0182a"
+    },
+    {
+      "target": "studio",
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "extractionVerified": true,
+      "launch": {
+        "processId": 2348,
+        "sessionId": 2,
+        "windowObserved": true,
+        "windowTitle": "AI Studio",
+        "closeRequested": true,
+        "exited": true,
+        "forcedCleanup": false,
+        "exitCode": -532462766
+      },
+      "selectedOriginalMembersHashVerified": 6,
+      "packageHashVerification": "INSPECTOR_VERIFIED_ORIGINAL_ZIP_NOT_DOWNLOADED_OR_INDEPENDENTLY_HASHED_BY_C6",
+      "resultSha256": "76fbcfb54935726a2d0237dfab360628aa8aceacb994a04155444a2964b18ce3"
+    },
+    {
+      "target": "picture",
+      "status": "PACKAGE_EXTRACTION_AND_WINDOW_PROBE_PASS_UNACCEPTED",
+      "extractionVerified": true,
+      "launch": {
+        "processId": 5740,
+        "sessionId": 2,
+        "windowObserved": true,
+        "windowTitle": "Picture",
+        "closeRequested": true,
+        "exited": true,
+        "forcedCleanup": false,
+        "exitCode": 0
+      },
+      "selectedOriginalMembersHashVerified": 6,
+      "packageHashVerification": "INSPECTOR_VERIFIED_ORIGINAL_ZIP_NOT_DOWNLOADED_OR_INDEPENDENTLY_HASHED_BY_C6",
+      "resultSha256": "a2b48d32503c25d2d31f87516833c360bcc73dd170d32cfec5cb2a793a96516e"
+    },
+    {
+      "target": "present",
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "extractionVerified": true,
+      "launch": {
+        "processId": 4500,
+        "sessionId": 2,
+        "windowObserved": false,
+        "windowTitle": null,
+        "closeRequested": false,
+        "exited": true,
+        "forcedCleanup": false,
+        "exitCode": -532462766
+      },
+      "selectedOriginalMembersHashVerified": 6,
+      "packageHashVerification": "INSPECTOR_VERIFIED_ORIGINAL_ZIP_NOT_DOWNLOADED_OR_INDEPENDENTLY_HASHED_BY_C6",
+      "resultSha256": "41ecbb7085c0b8d1a2f3be1e574af25a0f48a521053cd8da2d9e08e656f0a7e5"
+    },
+    {
+      "target": "shared-desktop",
+      "status": "PACKAGE_EXTRACTION_AND_WINDOW_PROBE_PASS_UNACCEPTED",
+      "extractionVerified": true,
+      "launch": {
+        "processId": 2692,
+        "sessionId": 2,
+        "windowObserved": true,
+        "windowTitle": "Haven",
+        "closeRequested": true,
+        "exited": true,
+        "forcedCleanup": false,
+        "exitCode": 0
+      },
+      "selectedOriginalMembersHashVerified": 6,
+      "packageHashVerification": "INSPECTOR_VERIFIED_ORIGINAL_ZIP_NOT_DOWNLOADED_OR_INDEPENDENTLY_HASHED_BY_C6",
+      "resultSha256": "85bc231a4509363070d2410765ec47a5d593fab7ac7202509a01c800f0c4ec05"
+    }
+  ],
+  "genuineFailureCauses": {
+    "home": "original missing BCLimports compile failure; separately reviewed successor7e",
+    "boards": "Missing fresh default Board.9to1board; actual FileNotFoundException beforewindow",
+    "present": "Missing semantic HavenTextPrimaryBrush resource; actual InvalidOperationException beforewindow",
+    "studio": "AIStudio window opens; normalclose hits cross-thread ContentControl.Content in RetireEditorAsync228 viaRetireWorkspace/DenLifetime"
+  },
+  "fullWindowsProductAcceptance": "0/29; all7 originalscopesunaccepted",
+  "archiveDigestQualification": "Original largearchive digest declared/API/action-owned, C6 checks memberhashes/metadata only; compactarchives fetched/hashed by C1 separately",
+  "privacyReview": "No privatekey/JWT/bearer/cookie bodies found; only publicsynthetic hostedrunner paths/systeminfo/owned exception logs"
+}

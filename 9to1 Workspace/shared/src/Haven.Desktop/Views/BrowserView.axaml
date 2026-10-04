@@ -1,0 +1,346 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hui="using:Haven.Desktop.HavenUI.Components"
+             xmlns:havenUi="using:Haven.Desktop.HavenUI.Components.Buttons"
+             x:Class="Haven.Desktop.Views.BrowserView">
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+    <hui:HavenAdaptiveSurface x:Name="HorizontalTabsBorder"
+            Background="{DynamicResource HavenElevatedBrush}"
+            BorderBrush="{DynamicResource HavenLineBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="10,7">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <ItemsControl x:Name="HorizontalTabsList">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanelBrush}"
+                        BorderBrush="{DynamicResource HavenLineBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Margin="0,0,5,0"
+                        Padding="3">
+                  <Grid ColumnDefinitions="3,*,Auto" MinWidth="155" MaxWidth="240">
+                    <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
+                            CornerRadius="3"
+                            IsVisible="{Binding IsSelected}" />
+                    <hui:HavenButton Grid.Column="1"
+                            Classes="chrome"
+                            HorizontalContentAlignment="Left">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Private" Foreground="{DynamicResource HavenAccentBrush}" FontSize="9" IsVisible="{Binding IsPrivate}" />
+                        <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                      </StackPanel>
+                    </hui:HavenButton>
+                    <hui:HavenButton Grid.Column="2"
+                            Content="&#x00D7;"
+                            Classes="chrome"
+                            HorizontalAlignment="Right"
+                            ToolTip.Tip="Close tab" />
+                  </Grid>
+                </hui:HavenAdaptiveSurface>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+        <hui:HavenButton x:Name="NewTabButton" Grid.Column="1" Content="+" Classes="icon" ToolTip.Tip="New tab" />
+        <hui:HavenButton x:Name="NewPrivateTabButton" Grid.Column="2" Content="Private" Classes="ghost" ToolTip.Tip="New private tab" />
+      </Grid>
+    </hui:HavenAdaptiveSurface>
+
+    <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="6" Margin="10,8,10,6">
+      <hui:HavenButton x:Name="BackButton" Content="&#x2190;" Classes="icon" ToolTip.Tip="Back" />
+      <hui:HavenButton x:Name="ForwardButton" Grid.Column="1" Content="&#x2192;" Classes="icon" ToolTip.Tip="Forward" />
+      <hui:HavenButton x:Name="HomeButton" Grid.Column="2" Content="&#x2302;" Classes="icon" ToolTip.Tip="Home" />
+      <hui:HavenButton x:Name="ReloadButton" Grid.Column="3" Content="&#x21BB;" Classes="icon" ToolTip.Tip="Reload">
+        <hui:HavenButton.ContextMenu>
+          <hui:HavenContextMenu>
+            <hui:HavenMenuItem x:Name="ReloadMenuItem" Header="Reload" />
+            <hui:HavenMenuItem x:Name="HardReloadMenuItem" Header="Hard reload and clear site cache" />
+            <hui:HavenMenuItem x:Name="StopMenuItem" Header="Stop" />
+          </hui:HavenContextMenu>
+        </hui:HavenButton.ContextMenu>
+      </hui:HavenButton>
+      <hui:HavenTextInput x:Name="AddressBox" Grid.Column="4" PlaceholderText="Search or enter address" KeyDown="OnAddressKeyDown" />
+      <hui:HavenButton x:Name="NavigateButton" Grid.Column="5" Content="Go" Classes="accent" MinWidth="52" />
+      <hui:HavenButton x:Name="AddBookmarkButton" Grid.Column="6" Content="&#x2606;" Classes="icon" ToolTip.Tip="Save this page to bookmarks" />
+      <hui:HavenButton x:Name="MenuButton" Grid.Column="7" Content="&#x22EF;" Classes="icon" ToolTip.Tip="Browser menu">
+        <hui:HavenButton.Flyout>
+          <hui:HavenMenuFlyout>
+            <hui:HavenMenuItem x:Name="BookmarksMenuItem" Header="Bookmarks" />
+            <hui:HavenMenuItem x:Name="HistoryMenuItem" Header="History" />
+            <hui:HavenMenuItem x:Name="LoginsMenuItem" Header="Passwords and logins" />
+            <hui:HavenMenuItem x:Name="ExtensionsMenuItem" Header="Extensions" />
+            <Separator />
+            <hui:HavenMenuItem x:Name="PrintMenuItem" Header="Print" />
+            <hui:HavenMenuItem x:Name="InspectMenuItem" Header="Inspect" />
+            <Separator />
+            <hui:HavenMenuItem x:Name="AssistantMenuItem" Header="Haven side assistant" />
+            <hui:HavenMenuItem x:Name="SettingsMenuItem" Header="Browser settings" />
+          </hui:HavenMenuFlyout>
+        </hui:HavenButton.Flyout>
+      </hui:HavenButton>
+    </Grid>
+
+    <hui:HavenAdaptiveSurface x:Name="BookmarkBar" Grid.Row="2"
+            Background="{DynamicResource HavenPanelBrush}"
+            BorderBrush="{DynamicResource HavenLineBrush}"
+            BorderThickness="0,1,0,1"
+            Padding="10,5">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Text="Bookmarks" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="10" />
+        <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <Grid>
+            <TextBlock x:Name="NoBookmarksText" Text="Save the current page with the star button"
+                       Classes="muted2" FontSize="10" VerticalAlignment="Center" />
+            <ItemsControl x:Name="BookmarksBarList" IsVisible="False">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <hui:HavenButton Classes="ghost" ToolTip.Tip="{Binding Address}" MaxWidth="180">
+                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                  </hui:HavenButton>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Grid>
+        </ScrollViewer>
+        <hui:HavenButton x:Name="ManageBookmarksButton" Grid.Column="2" Content="Manage" Classes="ghost" ToolTip.Tip="Open bookmark manager" />
+      </Grid>
+    </hui:HavenAdaptiveSurface>
+
+    <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" Margin="14,4,14,7">
+      <TextBlock x:Name="PrivacyLabel" Classes="muted" FontSize="10" />
+      <TextBlock x:Name="GroupLabel" Grid.Column="1" Foreground="{DynamicResource HavenAccentSecondaryBrush}" FontSize="10" Margin="0,0,14,0" />
+      <TextBlock x:Name="StatusLabel" Grid.Column="2" Classes="muted" FontSize="10" MaxWidth="440" TextTrimming="CharacterEllipsis" />
+    </Grid>
+
+    <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto">
+      <hui:HavenAdaptiveSurface x:Name="VerticalTabsBorder" Width="232"
+              Background="{DynamicResource HavenElevatedBrush}"
+              BorderBrush="{DynamicResource HavenLineBrush}"
+              BorderThickness="0,1,1,0">
+        <Grid RowDefinitions="Auto,*,Auto">
+          <Grid ColumnDefinitions="*,Auto" Margin="12,10,9,7">
+            <StackPanel>
+              <TextBlock Text="Open tabs" FontWeight="SemiBold" />
+              <TextBlock Text="Vertical browser tabs" Classes="muted2" FontSize="9" />
+            </StackPanel>
+            <hui:HavenButton x:Name="VerticalNewTabButton" Grid.Column="1" Content="+" Classes="icon" ToolTip.Tip="New tab" />
+          </Grid>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="VerticalTabsList" Margin="7,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanelBrush}"
+                          BorderBrush="{DynamicResource HavenLineBrush}"
+                          BorderThickness="1"
+                          CornerRadius="8"
+                          Margin="0,0,0,6">
+                    <Grid ColumnDefinitions="3,*,Auto" MinHeight="47">
+                      <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
+                              CornerRadius="3"
+                              IsVisible="{Binding IsSelected}" />
+                      <hui:HavenButton Grid.Column="1"
+                              Classes="chrome"
+                              HorizontalContentAlignment="Stretch"
+                              Padding="9,6">
+                        <Grid RowDefinitions="Auto,Auto">
+                          <TextBlock Text="{Binding DisplayTitle}" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                          <TextBlock Grid.Row="1" Text="{Binding Group}" Classes="muted2" FontSize="9" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                      </hui:HavenButton>
+                      <hui:HavenButton Grid.Column="2"
+                              Content="&#x00D7;"
+                              Classes="chrome"
+                              ToolTip.Tip="Close tab" />
+                    </Grid>
+                  </hui:HavenAdaptiveSurface>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <hui:HavenButton x:Name="VerticalNewPrivateTabButton" Grid.Row="2" Content="New private tab" Classes="ghost" Margin="8" />
+        </Grid>
+      </hui:HavenAdaptiveSurface>
+
+      <hui:HavenAdaptiveSurface Grid.Column="1"
+              Background="{DynamicResource HavenPanelBrush}"
+              BorderBrush="{DynamicResource HavenLineStrongBrush}"
+              BorderThickness="1,1,0,0"
+              ClipToBounds="True">
+        <Grid>
+          <NativeWebView x:Name="NativeBrowser" />
+          <hui:HavenAdaptiveSurface x:Name="LoadingOverlay" Background="{DynamicResource HavenPanelBrush}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+              <hui:HavenProgressBar Width="190" Height="4" IsIndeterminate="True" />
+              <TextBlock Text="Loading page…" Classes="muted" HorizontalAlignment="Center" />
+            </StackPanel>
+          </hui:HavenAdaptiveSurface>
+        </Grid>
+      </hui:HavenAdaptiveSurface>
+
+      <hui:HavenAdaptiveSurface x:Name="SidePanel" Grid.Column="2"
+              Width="380"
+              IsVisible="False"
+              Classes="card"
+              Margin="12,0,0,0"
+              Padding="0">
+        <Grid>
+          <ScrollViewer x:Name="BookmarksPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16" Spacing="10">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="Bookmarks" Classes="sectionHeading" />
+                  <TextBlock x:Name="BookmarkSummary" Classes="muted" FontSize="10" />
+                </StackPanel>
+                <hui:HavenButton x:Name="CloseBookmarksButton" Grid.Column="1" Content="Close" Classes="ghost" />
+              </Grid>
+              <TextBlock Text="Choose a group, then save the page currently shown in the address bar." TextWrapping="Wrap" Classes="muted" FontSize="11" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <hui:HavenTextInput x:Name="BookmarkGroupBox" PlaceholderText="Bookmark group" />
+                <hui:HavenButton x:Name="SaveBookmarkButton" Grid.Column="1" Content="Save current page" Classes="accent" />
+              </Grid>
+              <hui:HavenAdaptiveSurface x:Name="NoBookmarksPanel" Classes="soft" Padding="12">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="No bookmarks yet" FontWeight="SemiBold" />
+                  <TextBlock Text="Saved pages appear here and in the bookmark bar." Classes="muted" FontSize="10" TextWrapping="Wrap" />
+                </StackPanel>
+              </hui:HavenAdaptiveSurface>
+              <ItemsControl x:Name="BookmarksList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <hui:HavenAdaptiveSurface Classes="card" Margin="0,3" Padding="9">
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <hui:HavenButton Classes="chrome"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                          <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Address}" Classes="muted" FontSize="10" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Group}" Foreground="{DynamicResource HavenAccentSecondaryBrush}" FontSize="9" />
+                          </StackPanel>
+                        </hui:HavenButton>
+                        <havenUi:HoldToConfirmButton Grid.Column="1" Content="Delete" ToolTip.Tip="Delete bookmark" />
+                      </Grid>
+                    </hui:HavenAdaptiveSurface>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+
+          <ScrollViewer x:Name="HistoryPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16" Spacing="9">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="History" Classes="sectionHeading" />
+                <hui:HavenButton x:Name="ClearHistoryButton" Grid.Column="1" Content="Clear" Classes="danger" />
+              </Grid>
+              <ItemsControl x:Name="HistoryList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <hui:HavenButton Classes="sidebar" HorizontalAlignment="Stretch">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Title}" />
+                        <TextBlock Text="{Binding Address}" Classes="muted" FontSize="10" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding VisitedAt}" Classes="muted2" FontSize="9" />
+                      </StackPanel>
+                    </hui:HavenButton>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+
+          <ScrollViewer x:Name="AssistantPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16" Spacing="9">
+              <TextBlock Text="Haven side assistant" Classes="sectionHeading" />
+              <TextBlock Text="Uses visible page text and your selected local model." Classes="muted" FontSize="11" />
+              <hui:HavenButton x:Name="SummariseButton" Content="Summarise page" />
+              <hui:HavenTextInput x:Name="AssistantInputBox" PlaceholderText="Ask about this page" AcceptsReturn="True" MinHeight="70" />
+              <hui:HavenButton x:Name="AskAssistantButton" Content="Ask" Classes="accent" />
+              <SelectableTextBlock x:Name="AssistantOutputText" Classes="soft" LineHeight="21" />
+            </StackPanel>
+          </ScrollViewer>
+
+          <ScrollViewer x:Name="SettingsPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16" Spacing="9">
+              <TextBlock Text="Browser settings" Classes="sectionHeading" />
+              <TextBlock Text="Tabs, history, credentials, and extensions stay in Haven's isolated profile." Classes="muted" FontSize="11" />
+              <hui:HavenTextInput x:Name="HomePageBox" PlaceholderText="Home page" />
+              <hui:HavenTextInput x:Name="SearchTemplateBox" PlaceholderText="Search URL containing {query}" />
+              <hui:HavenCheckBox x:Name="SaveHistoryCheckBox" Content="Save history" />
+              <hui:HavenCheckBox x:Name="OfferToSaveLoginsCheckBox" Content="Offer to save logins" />
+              <hui:HavenCheckBox x:Name="RestoreTabsCheckBox" Content="Restore tabs" />
+              <hui:HavenCheckBox x:Name="EnableExtensionsCheckBox" Content="Enable approved extensions" />
+              <hui:HavenCheckBox x:Name="VerticalTabsCheckBox" Content="Vertical browser tabs" />
+              <hui:HavenTextInput x:Name="NewGroupBox" PlaceholderText="Current tab group" />
+              <hui:HavenButton x:Name="CreateGroupButton" Content="Put current tab in group" />
+              <hui:HavenButton x:Name="SaveSettingsButton" Content="Save browser settings" Classes="accent" />
+            </StackPanel>
+          </ScrollViewer>
+
+          <ScrollViewer x:Name="ExtensionsPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16" Spacing="9">
+              <TextBlock Text="Extensions" Classes="sectionHeading" />
+              <TextBlock Text="Imports are disabled initially. Chrome conversion accepts only bounded content scripts and rejects privileged permissions." Classes="muted" FontSize="11" />
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                <hui:HavenButton x:Name="ImportExtensionButton" Content="Import Haven extension" />
+                <hui:HavenButton x:Name="ConvertChromeButton" Grid.Column="1" Content="Convert Chrome extension" />
+              </Grid>
+              <ItemsControl x:Name="ExtensionsList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <hui:HavenAdaptiveSurface Classes="card" Margin="0,4">
+                      <StackPanel Spacing="5">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Description}" Classes="muted" FontSize="10" />
+                        <TextBlock Text="{Binding AllowedOrigins}" Classes="muted2" FontSize="9" />
+                        <Grid ColumnDefinitions="*,Auto">
+                          <hui:HavenButton Content="Enable / disable" />
+                          <havenUi:HoldToConfirmButton Grid.Column="1" Content="Delete" />
+                        </Grid>
+                      </StackPanel>
+                    </hui:HavenAdaptiveSurface>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+
+          <ScrollViewer x:Name="LoginsPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16" Spacing="9">
+              <TextBlock Text="Passwords and logins" Classes="sectionHeading" />
+              <TextBlock Text="Passwords are encrypted by Windows Credential Manager. Autofill requires the exact saved origin and never submits." Classes="muted" FontSize="11" />
+              <hui:HavenTextInput x:Name="LoginOriginBox" PlaceholderText="https://example.com" />
+              <hui:HavenTextInput x:Name="LoginUsernameBox" PlaceholderText="Username" />
+              <hui:HavenTextInput x:Name="LoginPasswordBox" PasswordChar="&#x25CF;" PlaceholderText="Password" />
+              <hui:HavenButton x:Name="SaveLoginButton" Content="Save securely" Classes="accent" />
+              <ItemsControl x:Name="LoginsList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <hui:HavenAdaptiveSurface Classes="card" Margin="0,4">
+                      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="5">
+                        <StackPanel>
+                          <TextBlock Text="{Binding Username}" />
+                          <TextBlock Text="{Binding Origin}" Classes="muted" FontSize="10" />
+                        </StackPanel>
+                        <hui:HavenButton Grid.Column="1" Content="Autofill" />
+                        <havenUi:HoldToConfirmButton Grid.Column="2" Content="Delete" />
+                      </Grid>
+                    </hui:HavenAdaptiveSurface>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </hui:HavenAdaptiveSurface>
+    </Grid>
+  </Grid>
+</UserControl>

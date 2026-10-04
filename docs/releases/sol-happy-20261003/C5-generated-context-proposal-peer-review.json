@@ -1,0 +1,127 @@
+{
+  "reviewer": "C5",
+  "scope": "isolated tooling proposal; no global adoption or full SDK acceptance",
+  "runtimeProposal": "df81977cd6cdd2646dd11d15fd01a2d2963af5fe",
+  "reviewedCandidate": "074420b9c4e1a2d66b5081d742e191be16bf2f92",
+  "result": "bounded source ACK; no actionable regression found",
+  "sourceBindings": [
+    {
+      "path": ".github/scripts/astra-generated-context-tests.py",
+      "bytes": 3364,
+      "sha256": "8941d07eb9fb295ac91470e9735eeb6efca867332935c038a64bfaf4ceb760b4"
+    },
+    {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "bytes": 9183,
+      "sha256": "0017b45750c739cbd5fc34d72e63357ec7ce22f04eb12d6b5991ef64e4f68b0b"
+    },
+    {
+      "path": ".github/scripts/astra-organisation-full-owning.py",
+      "bytes": 30468,
+      "sha256": "97ba3ed8bbaf4a4ccd9c51e5eda6f0175f3757fc8d5f11e6a0152d045b0ef059"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "e83228fd948c07c0ed170186e0c9fe994adad18cc2d3ca44664bcc967636a2a7"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/workspace/team-c/evidence/c5/generated-context-df819-review.log",
+      "sha256": "20ffba3890b6a5d59bf90cfcaf707a17a6a3a4629e5d11339c91d096f50ce262"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/generated-context-074420-review.log",
+      "sha256": "5bf0398f6c2a0686e7e3f00be7317878e7b00fea6be9a70c319a043ee2422a31"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/generated-context-result.json",
+      "sha256": "dc690433d7ac83bf8980069375f37786b0c46507b8b8a304c2bf1652782013f9"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/generated-context-actual/commands.json",
+      "sha256": "ff930a32a8688c29494180f53ffcefd3c312fbc7f327220cc3c0392ef464b177"
+    }
+  ],
+  "independentControls": [
+    {
+      "source": "df81977",
+      "discovered": 10,
+      "passed": 10,
+      "exitCode": 0
+    },
+    {
+      "source": "074420b9c4e1a2d66b5081d742e191be16bf2f92",
+      "discovered": 10,
+      "passed": 10,
+      "exitCode": 0
+    }
+  ],
+  "independentActualProof": [
+    {
+      "project": "/workspace/team-c/c3-admin-compile-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "compileInputs": 1237,
+      "pdbDocumentsVerified": 1284,
+      "symbolIdentity": {
+        "kind": "external-portable-pdb",
+        "origin": {
+          "physicalPeSha256": "202cb65d21d3235f93bb6bbc671b8b5156c0bd631a5b34d38ac52acba5e0a008"
+        },
+        "bytes": 1055180,
+        "sha256": "b34b625ff7ecf9952593f6c17347a2432ec51ad4729b3658c162c1145e76e27f",
+        "identity": {
+          "portablePdbId": "539916c245b9c246b063c132eded91682fdef5e3",
+          "codeViewGuid": "c2169953-b945-46c2-b063-c132eded9168",
+          "codeViewStamp": 3824541231
+        }
+      },
+      "canonicalGeneratedContext": {
+        "artifactsPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build",
+        "projectOwnerRoot": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Avalonia.Base",
+        "intermediateOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Avalonia.Base/debug_net10.0_linux-x64",
+        "compilerGeneratedFilesOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Avalonia.Base/GeneratedFiles"
+      }
+    },
+    {
+      "project": "/workspace/team-c/c3-admin-compile-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "compileInputs": 219,
+      "pdbDocumentsVerified": 221,
+      "symbolIdentity": {
+        "kind": "embedded-portable-pdb",
+        "origin": {
+          "physicalPeSha256": "b20bbfa1e690944d3c5635e9bdf125748f3047ac9348f94f5aded5f01cd31bf0",
+          "debugRecordOffset": 687268,
+          "debugRecordBytes": 137280,
+          "debugRecordSha256": "76218af1fe62629fb380b30a42692f8ca43f3b13f98ddb469ce1806e0bb8271f",
+          "declaredSymbolBytes": 293888
+        },
+        "bytes": 293888,
+        "sha256": "469c21e899de940e1889bb6b25dab99ecbeb9d08702b5c2a00d3a0bee556e488",
+        "identity": {
+          "portablePdbId": "305aea6cb48aa14c942fab03ea6c6659457d6699",
+          "codeViewGuid": "6cea5a30-8ab4-4ca1-942f-ab03ea6c6659",
+          "codeViewStamp": 2573630789
+        }
+      },
+      "canonicalGeneratedContext": {
+        "artifactsPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks",
+        "projectOwnerRoot": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks",
+        "intermediateOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/debug",
+        "compilerGeneratedFilesOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/debug/generated"
+      }
+    }
+  ],
+  "sourceGateCorrection": "Prior configuration-intermediate descendant assumption was incorrect for original Avalonia.Base.csproj line 7. Exact selected SDK project owner-root binding permits that declared sibling while retaining absolute-path, raw-symlink, exact artifacts/base/extensions/project and strict descendant checks.",
+  "outputClosure": {
+    "independentlyVerifiedFiles": 2480,
+    "bothRetainedBeforeAndCurrentRehashed": true,
+    "inventory": "/workspace/team-c/evidence/c3/admin-sdk03/attempt5/retained-compiled-output-inventory.json",
+    "inventorySha256": "2b2df6852f98b79a18135a608b59b9115ef309dab112f15608a651974411cb51"
+  },
+  "held": [
+    "Original attempt5 refused after 115 commands and 2 Debug suites remains retained.",
+    "Fresh external root source cut, source adoption and full successor SDK run remain separate.",
+    "No historical PID1 zombies signalled; no production source or service activation."
+  ]
+}

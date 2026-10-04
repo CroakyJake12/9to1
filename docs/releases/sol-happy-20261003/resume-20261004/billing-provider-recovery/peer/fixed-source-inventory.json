@@ -1,0 +1,57 @@
+{
+  "commit": "f3529fd228489d10a947985b6a7bfd1187c9d3d9",
+  "basis": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+  "originalFailureCandidate": "88c4c2d25abf41db77b36f0552a201c33f121cef",
+  "sourcePins": [
+    {
+      "path": "cloud/billing/src/provider-reconciliation.mjs",
+      "bytes": 8856,
+      "sha256": "0800a9e8fa9d0570bf07de1d8373d77d47b7abd9b63cbf7fea94e1b34c38a3e1",
+      "gitBlob": "1c4e3efd06e3db6a04d1f45267fe4d215dde0c7e"
+    },
+    {
+      "path": "cloud/billing/src/stripe-webhook.mjs",
+      "bytes": 4730,
+      "sha256": "bd0e3eab1a62efefee08b578f6985a4ed817c72f9fc06dd785d9020084a3325f",
+      "gitBlob": "e2b04973e34ef168f2dc42497e3238f3a7f28ead"
+    },
+    {
+      "path": "cloud/billing/src/inbox-processing.mjs",
+      "bytes": 2765,
+      "sha256": "2b2f7fbdb33a3ead5b4fe115014bfd3e715ba7610372c0d5d50a3fc831b8f63b",
+      "gitBlob": "7fbce55f5ae5a7642ba0a3d2c4dbf86f18846564"
+    },
+    {
+      "path": "cloud/billing/schema/0001-stripe-inbox.sql",
+      "bytes": 572,
+      "sha256": "6cefdd1d93f66439d3041cd02d31eb0e3a622027149de416441bc74ad84ff95e",
+      "gitBlob": "79c4a1d025e87a2ce364588e5f53ba50e1eabed8"
+    },
+    {
+      "path": "cloud/billing/test/provider-reconciliation.test.mjs",
+      "bytes": 19042,
+      "sha256": "7a3cd36a6fff3f8c33bcfb904ccc98e63435d4ef5324648be4ce0ae6830a655d",
+      "gitBlob": "6d01c6080007726ef7ecb5c4c988539b980ecaa1"
+    },
+    {
+      "path": "cloud/billing/README.md",
+      "bytes": 5302,
+      "sha256": "e1b3f5b2958e9c03e038580136bc60ee77b31bc9ccfe179af21d9960b45497af",
+      "gitBlob": "75d26000b28dc19e3a425a839ead26759d68c592"
+    },
+    {
+      "path": "cloud/billing/PROVIDER-READ-RECOVERY.md",
+      "bytes": 3915,
+      "sha256": "0ee4453d87ae38d273e381d02626d2702e667245376dde226cb6579d598a751c",
+      "gitBlob": "1d77660229f2c700a7f903bda57f4ae0da258425"
+    }
+  ],
+  "diff": [
+    "A\tcloud/billing/PROVIDER-READ-RECOVERY.md",
+    "M\tcloud/billing/README.md",
+    "A\tcloud/billing/src/provider-reconciliation.mjs",
+    "A\tcloud/billing/test/provider-reconciliation.test.mjs"
+  ],
+  "checkedOutHead": "f3529fd228489d10a947985b6a7bfd1187c9d3d9",
+  "checkedOutStatus": ""
+}

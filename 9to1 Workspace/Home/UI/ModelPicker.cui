@@ -1,0 +1,80 @@
+<Cui id="home-model-picker" product="9-1" version="1">
+  <DefaultTheme value="Default">
+    <StackPanel id="model-picker-root" orientation="Vertical" background="{Resource CuiBackgroundBrush}" padding="24">
+      <StackPanel id="compact-model-picker" orientation="Horizontal" background="{Resource CuiPanelBrush}" padding="12" margin="0 0 0 16">
+        <TextBlock id="compact-model-picker-label" text="Model route" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 0" />
+        <TextBlock id="compact-model-picker-selection" text="{Binding State.SelectedRouteId, fallback=Choose a route}" foreground="{Resource CuiTextBrush}" />
+        <Button id="compact-model-picker-edit" action="SelectRoute" action-route-id="{Binding State.SelectedRouteId}" content="Manage" margin="12 0 0 0" accessible-name="Manage the selected model route" />
+      </StackPanel>
+      <StackPanel id="model-picker-header" orientation="Horizontal" margin="0 0 0 18">
+        <StackPanel orientation="Vertical" width="620">
+          <TextBlock id="model-picker-title" text="AI models and routes" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <TextBlock id="model-picker-description" text="Choose a model route for each kind of work. Route order applies only after eligibility and policy checks." foreground="{Resource CuiTextSoftBrush}" margin="0 5 0 14" />
+        </StackPanel>
+        <Button id="model-picker-refresh" action="Refresh" action-scope="{Binding Scope}" action-category="{Binding Category}" content="Refresh" accessible-name="Refresh model routes" />
+      </StackPanel>
+      <StackPanel id="model-picker-categories" orientation="Horizontal" margin="0 0 0 18">
+        <Button id="category-chat" action="SelectCategory" action-category="chat" content="Chat" accessible-name="Show chat routes" />
+        <Button id="category-image" action="SelectCategory" action-category="image" content="Image" margin="8 0 0 0" accessible-name="Show image routes" />
+        <Button id="category-voice" action="SelectCategory" action-category="voice" content="Voice" margin="8 0 0 0" accessible-name="Show voice routes" />
+        <Button id="category-audio" action="SelectCategory" action-category="audio" content="Advanced audio" margin="8 0 0 0" accessible-name="Show advanced audio routes" />
+        <Button id="category-video" action="SelectCategory" action-category="video" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
+      </StackPanel>
+      <TextBlock id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" />
+      <StackPanel id="model-route-list" orientation="Vertical" items="{Binding Snapshot.Routes}" item-template="model-route-template" empty-template="model-route-empty" />
+      <StackPanel id="model-route-template" definition="true" orientation="Vertical" margin="0 0 0 14">
+        <Border id="model-route-card" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="12" padding="18" margin="0 0 0 12">
+          <StackPanel orientation="Vertical">
+            <StackPanel orientation="Horizontal">
+              <TextBlock id="model-route-title" text="{Binding RouteId}" font-size="17" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+              <TextBlock id="model-route-scope" text="{Binding Scope}" foreground="{Resource CuiTextSoftBrush}" margin="12 4 0 0" />
+              <Button id="model-route-select" action="SelectRoute" action-route-id="{Binding RouteId}" content="Edit route" margin="12 0 0 0" accessible-name="Edit this model route" />
+            </StackPanel>
+            <TextBlock id="model-route-category" text="{Binding Category}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 8" />
+            <StackPanel id="model-route-candidates" orientation="Vertical" items="{Binding Candidates}" item-template="model-candidate-template" empty-template="model-candidate-empty" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+      <StackPanel id="model-route-empty" definition="true" orientation="Vertical" padding="20">
+        <TextBlock text="No routes are configured for this category." foreground="{Resource CuiTextSoftBrush}" />
+      </StackPanel>
+      <StackPanel id="model-candidate-template" definition="true" orientation="Horizontal" margin="0 8 0 0">
+        <TextBlock id="candidate-order" text="{Binding Order}" width="28" foreground="{Resource CuiTextSoftBrush}" />
+        <StackPanel orientation="Vertical" width="360">
+          <TextBlock id="candidate-model-id" text="{Binding ModelId}" foreground="{Resource CuiTextBrush}" />
+          <TextBlock id="candidate-provider" text="{Binding ProviderId}" foreground="{Resource CuiTextSoftBrush}" />
+        </StackPanel>
+        <TextBlock id="candidate-enabled" text="{Binding Enabled}" width="72" foreground="{Resource CuiTextSoftBrush}" />
+        <Button id="candidate-move-up" action="MoveCandidateUp" action-provider-id="{Binding ProviderId}" action-model-id="{Binding ModelId}" action-artifact-revision="{Binding ArtifactRevision}" content="Up" accessible-name="Move model earlier in route" />
+        <Button id="candidate-move-down" action="MoveCandidateDown" action-provider-id="{Binding ProviderId}" action-model-id="{Binding ModelId}" action-artifact-revision="{Binding ArtifactRevision}" content="Down" margin="6 0 0 0" accessible-name="Move model later in route" />
+        <If condition="{Binding Enabled}">
+          <Button action="SetCandidateEnabled" action-enabled="false" action-provider-id="{Binding ProviderId}" action-model-id="{Binding ModelId}" action-artifact-revision="{Binding ArtifactRevision}" content="Disable" margin="6 0 0 0" accessible-name="Disable this route candidate" />
+          <Else>
+            <Button action="SetCandidateEnabled" action-enabled="true" action-provider-id="{Binding ProviderId}" action-model-id="{Binding ModelId}" action-artifact-revision="{Binding ArtifactRevision}" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
+          </Else>
+        </If>
+      </StackPanel>
+      <StackPanel id="model-candidate-empty" definition="true" orientation="Vertical" padding="12">
+        <TextBlock text="This route has no candidates." foreground="{Resource CuiTextSoftBrush}" />
+      </StackPanel>
+      <StackPanel id="model-route-actions" orientation="Horizontal" margin="0 12 0 8">
+        <Button id="save-model-route" action="SaveRoute" content="Save route" accessible-name="Save model route changes" />
+        <Button id="preview-text-route" action="PreviewResolution" action-capability="text" content="Preview text" margin="8 0 0 0" accessible-name="Preview text model routing" />
+        <Button id="preview-image-route" action="PreviewResolution" action-capability="image-generation" content="Preview image" margin="8 0 0 0" accessible-name="Preview image model routing" />
+        <Button id="preview-voice-route" action="PreviewResolution" action-capability="voice" content="Preview voice" margin="8 0 0 0" accessible-name="Preview voice model routing" />
+        <Button id="preview-audio-route" action="PreviewResolution" action-capability="audio-understanding" content="Preview audio" margin="8 0 0 0" accessible-name="Preview audio model routing" />
+        <Button id="preview-video-route" action="PreviewResolution" action-capability="video-generation" content="Preview video" margin="8 0 0 0" accessible-name="Preview video model routing" />
+      </StackPanel>
+      <StackPanel id="model-route-preview" orientation="Vertical" condition="{Binding Preview}" margin="0 0 0 14">
+        <TextBlock id="model-route-preview-state" text="{Binding Preview.ResolutionState}" foreground="{Resource CuiTextBrush}" />
+        <StackPanel id="model-route-preview-trace" orientation="Vertical" items="{Binding Preview.Trace}" item-template="model-route-trace-template" empty-template="model-route-trace-empty" />
+      </StackPanel>
+      <StackPanel id="model-route-trace-template" definition="true" orientation="Vertical">
+        <TextBlock id="model-route-trace-entry" text="{Binding item}" foreground="{Resource CuiTextSoftBrush}" margin="0 2 0 0" />
+      </StackPanel>
+      <StackPanel id="model-route-trace-empty" definition="true" orientation="Vertical">
+        <TextBlock text="No candidates were skipped." foreground="{Resource CuiTextSoftBrush}" />
+      </StackPanel>
+    </StackPanel>
+  </DefaultTheme>
+</Cui>

@@ -1,0 +1,7 @@
+Actual durable upload metadata failure/recovery tests
+
+Four actual e0c provider/store tests pass exit0: original revision commit/reopen/identical replay with exactly one event and retained content reference; altered replay refuses and preserves whole bytes; final authority retirement after candidate fsync refuses update, preserves existing file revision/event count/whole bytes, cleans temp and safe reopen retry commits exactly once; wrong original UUID denies prior replay and preserves bytes. No mirror state or static assertion replaces actual transactions. Initial harness dependency and test Path-shadow compiler failures preserved.
+
+Negative control changes only final authority validator call in isolated store copy. Unchanged retirement test fails (1failed0passed exit1), because required second check was omitted. Original sources/tests intact. Actual production byte pins and missing exact protectedDrive ports are recorded in index. This local durable metadata proof does not validate transfer-supplied bytes, network resume, quota reservation, remote download authorization or all12 full HTTP journeys. No provider writes or contract changes.
+
+Original command: DOTNET_CLI_HOME=/workspace/team-c/evidence/c4/dotnet-home NUGET_PACKAGES=/workspace/.tools/nuget /workspace/.tools/dotnet/dotnet test /workspace/team-c/evidence/c4/upload-recovery/ActualUpload.Tests.csproj --logger 'trx;LogFileName=upload-final.trx'. Reproduction script materializes only pinned actual Files source into an isolated output directory and verifies every hash before running.

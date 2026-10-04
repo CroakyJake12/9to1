@@ -1,0 +1,65 @@
+{
+  "runId": 37211762149,
+  "jobId": 111464204495,
+  "head": "9c3aa3d17006f7818fabc5e049a77e39ddfdc209",
+  "artifactId": 11306199466,
+  "artifactBytes": 3049,
+  "artifactSha256": "d06bae7f8b612bce16f9b6350c4892ae58b001517aef3e1a208fce5744afdad7",
+  "source": "Official connector download + authorized file_id",
+  "originalFailure": {
+    "type": "System.Management.Automation.RuntimeException",
+    "message": "Timed out observing: Actual named native button: Bold"
+  },
+  "checksPassed": 35,
+  "checksFailed": 0,
+  "launches": [
+    {
+      "label": "first-launch",
+      "processId": 7868,
+      "windowObserved": true,
+      "closeRequested": false,
+      "exited": false,
+      "exitCode": null,
+      "windowTitle": "Packaged UI board \u2014 Boards"
+    }
+  ],
+  "forcedCleanup": false,
+  "historyStates": [],
+  "files": [
+    {
+      "path": "decoded-original-job.log",
+      "bytes": 59705,
+      "sha256": "51ada38f213e07e50d282172562631a0894cd01e0ce6edf654b428430aa9f19f"
+    },
+    {
+      "path": "first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "first-launch.stdout.log",
+      "bytes": 427,
+      "sha256": "1dd5b5f894eb7b24938db897bd7f891a7007b629c3c02d0aff774c533c8c43eb"
+    },
+    {
+      "path": "official-artifact-metadata.json",
+      "bytes": 912,
+      "sha256": "3e96024875832e6bb5099835a29e96e24521b40c3ed18536f290aff6e6126d6d"
+    },
+    {
+      "path": "official-job-metadata.json",
+      "bytes": 1954,
+      "sha256": "38530e6c3f5d5c673710e84a9b7e80d1562bcf62986f4d025aa25441b5267ddf"
+    },
+    {
+      "path": "original-artifact-11306199466.zip",
+      "bytes": 3049,
+      "sha256": "d06bae7f8b612bce16f9b6350c4892ae58b001517aef3e1a208fce5744afdad7"
+    },
+    {
+      "path": "result.json",
+      "bytes": 14096,
+      "sha256": "fbb2b75d453b7abbd09025f2d410638ff61f3820d1575c45ac6610e4d8936f24"
+    }
+  ]
+}

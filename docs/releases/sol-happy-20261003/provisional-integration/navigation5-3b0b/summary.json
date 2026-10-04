@@ -1,0 +1,208 @@
+{
+  "recordedAtUTC": "2026-10-04T14:02:15.746921+00:00",
+  "testedCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "worktree": "/workspace/team-c-c4-browser-receiving-3b0b",
+  "testedTree": "ef556415d4097a27c6bc2d6b0df3468808b5bb71",
+  "sourceClean": true,
+  "driver": "Unchanged maintained run-ordinary-native.py normal Release/linux-x64/SDK10.0.401 restore/build/native",
+  "sourcePins": [
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "bytes": 19584
+    },
+    {
+      "path": "apps/Web/Tests/BrowserNavigationCancellation.Tests.csproj",
+      "gitBlob": "569f1aa852ff3b42fd2d5b74e4e896874c91dbc5",
+      "sha256": "b33443c2fac0b035a46c7872bbe23f4ab44c3f0586f6ab50dcac747a5863e75c",
+      "bytes": 1418
+    },
+    {
+      "path": "apps/Web/Tests/BrowserNavigationCancellationRegression.cs",
+      "gitBlob": "073f4cab5ec5ffc3aefc8b51729b6c9ed70ac760",
+      "sha256": "f01842d4f9676957ec993491d640d35b4e72750b03ced078f294c971f3a4a12f",
+      "bytes": 7896
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "gitBlob": "5f4fdfc067396c5882c854e9240acaefc88ce1d6",
+      "sha256": "86650af50a937fe36e89ad74f17f348f861da1cd79e22966373601f2b9e3d8fc",
+      "bytes": 6779
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ChatComposerController.cs",
+      "gitBlob": "85a53e4d93a64c1388222a6a8fab37e38248385a",
+      "sha256": "b4bf7954d1a7a16fd0add1dd6811a5b1d1b806da8120920cb78d5dd204f63612",
+      "bytes": 8129
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ComposerEmojiCatalogue.cs",
+      "gitBlob": "0f9c9a428058fa45df66b99ae0f5e84d2d41a5b5",
+      "sha256": "5b749c15a76da1d5fa7f871362962dcf4b6927b954f832a562188a9cb6beb436",
+      "bytes": 1967
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Preferences/LocalMotionPreferencesService.cs",
+      "gitBlob": "37c9aee3ae6a2a4410862d8ddfa3ac1f9124bb74",
+      "sha256": "80eb1fad1628e0ecd7e13fb2a9133bb51e1146d893e5eda4aeef4075294abb28",
+      "bytes": 6820
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/emoji-test-17.0.txt",
+      "gitBlob": "e42fdef494399d2a05b9b75930a3231fe81b2436",
+      "sha256": "1d8a944f88d7952f7ef7c5167fef3c67995bcae24543949710231b03a201acda",
+      "bytes": 669326
+    }
+  ],
+  "results": {
+    "attempt01": {
+      "status": "FAIL",
+      "phase": "restore",
+      "cause": "No space left on device",
+      "executed": 0,
+      "nativeNotRun": 5,
+      "normalFamilyClosed": true,
+      "signalsSent": 0
+    },
+    "attempt02": {
+      "suite": "navigation5",
+      "project": "apps/Web/Tests/BrowserNavigationCancellation.Tests.csproj",
+      "expected": 5,
+      "status": "PASS",
+      "sourceCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+      "scope": "Native application regression only; browser/provider/deployment/full parity NOT_RUN",
+      "preservedHistory": "Original03 RESOURCE_HOLD and17 RESOURCE_HOLD are not replaced by CI",
+      "nativeStarted": true,
+      "executed": 5,
+      "passed": 5,
+      "failed": 0
+    }
+  },
+  "exactAll11CommandsNormalZeroExit": true,
+  "ownerSourceModifiedByC4": false,
+  "cacheReuse": false,
+  "original19039AndC878FailuresRetained": true,
+  "scope": "Five actual native cancellation regressions on exact3b; does not exercise emoji Entries. Real browser/provider/GUI/Windows/full parity NOT_RUN.",
+  "safeEvidenceFiles": [
+    {
+      "path": "navigation5-3b0b/commands.json",
+      "bytes": 4484,
+      "sha256": "107ae24d6c3e78a2dc695e4e625842619de6bd3b0badea903b116e55e972fd70"
+    },
+    {
+      "path": "navigation5-3b0b/dotnet-info.log",
+      "bytes": 1450,
+      "sha256": "1ac85e96188c13bd680d129182b9810f8f1bd65a041d9ffc089946dabc789678"
+    },
+    {
+      "path": "navigation5-3b0b/dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "navigation5-3b0b/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "navigation5-3b0b/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "navigation5-3b0b/git-head.log",
+      "bytes": 41,
+      "sha256": "1b94b676ec1e2e50bc39059363866be08502a3af12f8e143ab3b9e4d399c63b4"
+    },
+    {
+      "path": "navigation5-3b0b/native-submodule-pins.log",
+      "bytes": 319,
+      "sha256": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382"
+    },
+    {
+      "path": "navigation5-3b0b/restore.log",
+      "bytes": 368,
+      "sha256": "1c059e5d70fed14659ea00dc67ef0c07858cdfdda97bcd8a8af36b1f7b4a1863"
+    },
+    {
+      "path": "navigation5-3b0b/result.json",
+      "bytes": 438,
+      "sha256": "21487c6f5f48090bb897a4e1edde39719356d2d4bbd97705e9e2358d455985a4"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/build.log",
+      "bytes": 8303,
+      "sha256": "0c9eaf7b65c4ca04f6383e52de23a1e2516cfc400399134c92789756d7c80818"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/commands.json",
+      "bytes": 11744,
+      "sha256": "1e66a398a3b4f1709e1ef82a50120c54919ab97bbe438aa2bc55b80cefe5841e"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/dotnet-info.log",
+      "bytes": 1460,
+      "sha256": "3f4606bb380dcd5730646ad7852109afa20f3d512fb69a7ccd89d2edc286e339"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/git-head.log",
+      "bytes": 41,
+      "sha256": "1b94b676ec1e2e50bc39059363866be08502a3af12f8e143ab3b9e4d399c63b4"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/native-submodule-pins.log",
+      "bytes": 319,
+      "sha256": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/native.log",
+      "bytes": 433,
+      "sha256": "055773512c37dc11e9f862074f0fbb6df656b20233106b1d3fdc7bb097662cd0"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/pe-pdb-counts.json",
+      "bytes": 621,
+      "sha256": "5da5e13652c61e2d23ca913717f1d06579bfbad527fa9e351c6d2215222cf89c"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/restore.log",
+      "bytes": 6375,
+      "sha256": "7c7a870a06b1ddf3604a19bfc714928f976270b77fd4012d1149caf887e20995"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/result.json",
+      "bytes": 465,
+      "sha256": "f50552eefe40d14ed5719ca67f4084609b5c45aecab86b7ab20d763c7ffb29f6"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/target-properties.json",
+      "bytes": 658,
+      "sha256": "fbfc1af01e14c6c78bd80de5cdf49006383f4d20b9fcd42bf889cdf213e4c854"
+    },
+    {
+      "path": "navigation5-3b0b-attempt02/target-properties.log",
+      "bytes": 692,
+      "sha256": "789086aa710dd296dfd0c40e65b8580b6e8f30c7672bc3216f740aa2b9845d91"
+    }
+  ],
+  "sourceTreeReceipt": {
+    "bytes": 2459544,
+    "sha256": "de0c87862ff0ae061b95ab537ca8f56b1654c420f12269cd8a3fd1801b25826d"
+  }
+}

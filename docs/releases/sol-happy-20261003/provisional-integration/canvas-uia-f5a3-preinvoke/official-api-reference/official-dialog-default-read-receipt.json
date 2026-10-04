@@ -1,0 +1,23 @@
+[
+  {
+    "file": "DM_GETDEFID-doc.html",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/dlgbox/dm-getdefid",
+    "status": 200,
+    "bytes": 48133,
+    "sha256": "34a7fbc5d04831fe29230466269d64ec4cf2ed5af3e772e02bfa4ee69116d5b8"
+  },
+  {
+    "file": "GetDlgItem-doc.html",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdlgitem",
+    "status": 200,
+    "bytes": 52473,
+    "sha256": "e901731ac139dd08ba70b4c02400617b81224e15f47cb514e6e9428b2f6db46e"
+  },
+  {
+    "file": "SendMessageTimeout-doc.html",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagetimeoutw",
+    "status": 200,
+    "bytes": 57958,
+    "sha256": "762d51bba1ed17560b6356b003f6149d824ff06360ecb94c09459999b8463ef5"
+  }
+]

@@ -1,0 +1,104 @@
+{
+  "productId": "haven.plan",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "haven-plan-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Plan",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-plan",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/haven-plan",
+    "arguments": "",
+    "workingDirectory": "/usr/share/haven-plan",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/plan",
+      "handler": "HavenPlanApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.plan.launch",
+      "displayName": "Launch Plan App",
+      "description": "Ability to launch the Haven Plan application",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.plan.boards",
+      "displayName": "Board Management",
+      "description": "Create and manage planning boards",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    },
+    {
+      "dependencyId": "dotnet-sdk",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=8.0"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": true,
+    "requiresState": true,
+    "requiresData": true,
+    "customPaths": ["/home/haven/.config/haven-plan", "/home/haven/.local/share/haven-plan"]
+  },
+  "permissions": {
+    "requiredGrants": ["files.read", "files.write"],
+    "optionalGrants": ["network.access"]
+  },
+  "providers": [],
+  "offlineRequirement": "Preferred",
+  "smokeTest": {
+    "command": "haven-plan --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T15:30:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-plan-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}

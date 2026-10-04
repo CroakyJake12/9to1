@@ -1,0 +1,7 @@
+# Selected from the locked Ubuntu 26.04.1 upstream base.
+gnome-shell
+mutter
+gdm3
+network-manager
+pipewire
+wireplumber

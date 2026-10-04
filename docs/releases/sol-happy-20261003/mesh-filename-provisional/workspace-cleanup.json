@@ -1,0 +1,12 @@
+{
+  "trigger": "Git isolated worktree creation initially failed with No space left on device; Git removed its own failed partial checkout.",
+  "cleanup": "Removed only completed C5 task-generated build artifacts; all frozen source/log/TRX receipts and private synthetic DB fixtures retained.",
+  "removedPaths": [
+    "/workspace/team-c-resume-evidence/c5-normal-test-contracts-provisional/artifacts",
+    "/workspace/team-c-resume-evidence/c5-sqlite-legacy-fixture-provisional/artifacts",
+    "/workspace/team-c-resume-evidence/c5-canvas-cursor-provisional/artifacts",
+    "/workspace/team-c-c5-provisional-runtime/artifacts",
+    "/workspace/team-c-c5-runtime/artifacts"
+  ],
+  "result": "Exact requested3b0 isolated checkout then succeeded; no shared active root/A source mutated, no other agent/user archive removed. Capacity recovered while other independent work continued; no attribution of all reclaimed space to C5."
+}

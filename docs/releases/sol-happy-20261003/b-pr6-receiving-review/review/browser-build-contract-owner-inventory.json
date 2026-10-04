@@ -1,0 +1,120 @@
+{
+  "revisions": {
+    "receiving": "43c5b0ebf7d26f46ee9a29ad009e9dd0e68b835a",
+    "eec": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "a63": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "prBase": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+    "prHead": "22d2e2dd35c934f190d28efdef0190cbd8c4c957"
+  },
+  "paths": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+      "versions": {
+        "receiving": null,
+        "eec": {
+          "tree": "100644 blob d8e74f437ff73468d35889e457b25dae8e04b027\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+          "bytes": 1246,
+          "sha256": "a18d78225cf8bbf1e8cba24dd20c22b3f2bde38c797ad87a959dae60e86edbdb"
+        },
+        "a63": {
+          "tree": "100644 blob d8e74f437ff73468d35889e457b25dae8e04b027\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+          "bytes": 1246,
+          "sha256": "a18d78225cf8bbf1e8cba24dd20c22b3f2bde38c797ad87a959dae60e86edbdb"
+        },
+        "prBase": {
+          "tree": "100644 blob d8e74f437ff73468d35889e457b25dae8e04b027\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+          "bytes": 1246,
+          "sha256": "a18d78225cf8bbf1e8cba24dd20c22b3f2bde38c797ad87a959dae60e86edbdb"
+        },
+        "prHead": {
+          "tree": "100644 blob d8e74f437ff73468d35889e457b25dae8e04b027\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+          "bytes": 1246,
+          "sha256": "a18d78225cf8bbf1e8cba24dd20c22b3f2bde38c797ad87a959dae60e86edbdb"
+        }
+      }
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+      "versions": {
+        "receiving": null,
+        "eec": {
+          "tree": "100644 blob 88097cd16c671dee5cef67f87ccd1d5873011bc6\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+          "bytes": 3416,
+          "sha256": "a289961a247e92d4668afe5b0b14e8a4e4f398c14f82e110420443d0cdbc22ff"
+        },
+        "a63": {
+          "tree": "100644 blob 88097cd16c671dee5cef67f87ccd1d5873011bc6\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+          "bytes": 3416,
+          "sha256": "a289961a247e92d4668afe5b0b14e8a4e4f398c14f82e110420443d0cdbc22ff"
+        },
+        "prBase": {
+          "tree": "100644 blob 88097cd16c671dee5cef67f87ccd1d5873011bc6\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+          "bytes": 3416,
+          "sha256": "a289961a247e92d4668afe5b0b14e8a4e4f398c14f82e110420443d0cdbc22ff"
+        },
+        "prHead": {
+          "tree": "100644 blob 88097cd16c671dee5cef67f87ccd1d5873011bc6\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+          "bytes": 3416,
+          "sha256": "a289961a247e92d4668afe5b0b14e8a4e4f398c14f82e110420443d0cdbc22ff"
+        }
+      }
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+      "versions": {
+        "receiving": null,
+        "eec": {
+          "tree": "100644 blob 55d33fd46c71d880d304aefe8244d9c1d805bf81\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+          "bytes": 1170,
+          "sha256": "2d428ddf7536447be38d4f47f44e7a53e1a0e2900eb6fd60602377d82251699c"
+        },
+        "a63": {
+          "tree": "100644 blob 55d33fd46c71d880d304aefe8244d9c1d805bf81\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+          "bytes": 1170,
+          "sha256": "2d428ddf7536447be38d4f47f44e7a53e1a0e2900eb6fd60602377d82251699c"
+        },
+        "prBase": {
+          "tree": "100644 blob 55d33fd46c71d880d304aefe8244d9c1d805bf81\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+          "bytes": 1170,
+          "sha256": "2d428ddf7536447be38d4f47f44e7a53e1a0e2900eb6fd60602377d82251699c"
+        },
+        "prHead": {
+          "tree": "100644 blob 55d33fd46c71d880d304aefe8244d9c1d805bf81\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+          "bytes": 1170,
+          "sha256": "2d428ddf7536447be38d4f47f44e7a53e1a0e2900eb6fd60602377d82251699c"
+        }
+      }
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "versions": {
+        "receiving": {
+          "tree": "100644 blob 86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3\tframework/CUI/Runtime/CuiControlLoader.cs",
+          "bytes": 90322,
+          "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
+        },
+        "eec": {
+          "tree": "100644 blob 86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3\tframework/CUI/Runtime/CuiControlLoader.cs",
+          "bytes": 90322,
+          "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
+        },
+        "a63": {
+          "tree": "100644 blob 86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3\tframework/CUI/Runtime/CuiControlLoader.cs",
+          "bytes": 90322,
+          "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
+        },
+        "prBase": {
+          "tree": "100644 blob 0af4ee1802cc4ba10dafacacc4ed9c92bb9027a4\tframework/CUI/Runtime/CuiControlLoader.cs",
+          "bytes": 90323,
+          "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+        },
+        "prHead": {
+          "tree": "100644 blob 0af4ee1802cc4ba10dafacacc4ed9c92bb9027a4\tframework/CUI/Runtime/CuiControlLoader.cs",
+          "bytes": 90323,
+          "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+        }
+      }
+    }
+  ],
+  "scope": "Exact3 missing canonical browser build contracts available in EEC/A63/actualPRbase; CuiControlLoader retained receiving=EEC/A63, differsBbase and is not selected"
+}

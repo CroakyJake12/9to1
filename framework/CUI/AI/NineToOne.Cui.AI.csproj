@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NineToOne.Cui.AI</RootNamespace>
+    <AssemblyName>NineToOne.Cui.AI</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Cui Include="UI\**\*.cui" />
+    <EmbeddedResource Include="UI\**\*.cui" />
+  </ItemGroup>
+</Project>

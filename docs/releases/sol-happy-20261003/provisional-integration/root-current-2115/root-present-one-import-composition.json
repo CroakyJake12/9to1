@@ -1,0 +1,12 @@
+{
+  "base": "2e48d31da2e9c13a54d4a6dc3d12561d41debf87",
+  "proposal": "7432f8326246b2a7603b2d8effa1509216b527b2",
+  "composed": "9414576d1eca6ef363c0c4f0c155f1e972f7c3ce",
+  "wholeFile": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Freeform.cs",
+  "bytes": 7622,
+  "sha256": "66643478f6d414a4428f032801c833efe7fe10ab15f7b189d3e19c9496cf452b",
+  "outsideTrackedEntriesUnchanged": 16811,
+  "C4": "340e9614f9755c5d7b67d538b05ed44f2736d42f8c9ab75b42106e34121f91c6",
+  "C6": "51ba52f49fa9ed1070174e67bd5d84479297b0f321e6038aacc4c8796515aa61",
+  "qualification": "Only existing namespace import; original runtime/compiler failures retained. Current Windows producer7432 pending."
+}

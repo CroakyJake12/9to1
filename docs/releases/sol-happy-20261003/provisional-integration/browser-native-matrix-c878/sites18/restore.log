@@ -1,0 +1,49 @@
+  Determining projects to restore...
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Models/Dulche Alpha/Den.csproj (in 3.93 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj (in 7.14 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj (in 7.12 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj (in 12 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj (in 17 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj (in 25 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj (in 418 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj (in 10 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj (in 7 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj (in 780 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj (in 8 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj (in 20 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj (in 1.82 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.DesignerSupport/Avalonia.DesignerSupport.csproj (in 50 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj (in 38 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj (in 12.3 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj (in 8.35 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj (in 6 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/Themes/CakeOS.Cui.Themes.csproj (in 10 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj (in 3.37 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj (in 3.04 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 20 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 3 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 9 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj (in 2 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 3 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 8 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj (in 75 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj (in 75 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/Home/HavenOS.Home.csproj (in 61 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/Sites/HavenOS.Sites.csproj (in 424 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj (in 3 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 36 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj (in 2.66 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/9to1 Workspace/Mail/HavenOS.Mail.csproj (in 2.88 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/apps/Web/Sites/Tests/SitesBrowser.Tests.csproj (in 2.99 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj (in 304 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj (in 173 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj (in 2.68 sec).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj (in 320 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj (in 27 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj (in 35 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj (in 41 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj (in 12 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj (in 63 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj (in 850 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj (in 973 ms).
+  Restored /workspace/team-c-c4-browser-receiving-c878/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj (in 2.34 sec).

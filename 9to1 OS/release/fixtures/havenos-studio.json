@@ -1,0 +1,104 @@
+{
+  "productId": "havenos.studio",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "cb15dcd1b57c39bc1ac9aaf73891ca4369cd9684",
+    "branch": "main",
+    "tag": "havenos-studio-0.1.0"
+  },
+  "donor": {
+    "name": "HavenOS Studio",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "havenos-studio",
+    "version": "0.1.0",
+    "hashSha256": "7313362c3a783c31dec227c9181a5d4e345d0fa81648b0e59ce84cb794449310",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/havenos-studio",
+    "arguments": "",
+    "workingDirectory": "/usr/share/havenos-studio",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/studio",
+      "handler": "HavenOSStudioApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "havenos.studio.launch",
+      "displayName": "Launch Studio App",
+      "description": "Ability to launch the HavenOS Studio application",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "havenos.studio.projects",
+      "displayName": "Project Management",
+      "description": "Create and manage HavenOS projects",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    },
+    {
+      "dependencyId": "dotnet-sdk",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=8.0"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": true,
+    "requiresState": true,
+    "requiresData": true,
+    "customPaths": ["/home/haven/.config/havenos-studio", "/home/haven/.local/share/havenos-studio"]
+  },
+  "permissions": {
+    "requiredGrants": ["files.read", "files.write"],
+    "optionalGrants": ["network.access"]
+  },
+  "providers": [],
+  "offlineRequirement": "Preferred",
+  "smokeTest": {
+    "command": "havenos-studio --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-12T12:10:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/havenos-studio-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}

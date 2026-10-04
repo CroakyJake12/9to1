@@ -1,0 +1,18 @@
+{
+  "issuer": "Team C root sole global integrator",
+  "issuedUTC": "2026-10-03T21:31:48.064564+00:00",
+  "validationHead": "8189d31aa86a4fa200d938345a07d976e5ea1030",
+  "cutPath": ".github/validation/astra-organisation-full-owning-cut.json",
+  "cutBytes": 2841454,
+  "cutSha256": "84c421bff2fbc3f0a61a2964bd99b475e63a8cab4cc148a2033f466a9e8638b6",
+  "ownerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "sourceProposal": "6b3679bbe89c3b50b9ee00d7e96e63a19a4a3a6a",
+  "sourceProposalScope": "Prior reviewed launcher, strict Linux custody, embedded/generated symbols and bounded retention, plus actual SDK generation target queries in SDK BeforeCompile order. No CoreCompile, fabricated compiler inputs, empty-input exemption or product key fix.",
+  "rootIndependentVerification": "9456 physical blobs/modes/Git objects/bytes/SHA;22 Gitlinks;3 exact clean materialized dependencies;28 original delivery rows,17 products and original suite inventory unchanged; all tooling/control bytes exact6b367.",
+  "independentC1CutReview": "22ae50e148fd67f37f40a6a7891e54da23424e33: whole9456 map,28originalrows,23provenance mappings and3control pins verified.",
+  "independentC5ToolingReview": "095da56bea19a29f4aecc127cbfa959b50dde97d: entire2-file diff and actual SDK targets ACK; independent5controls PASS;9actual queries/strictdrains pass; all2480outputfiles unchanged; original source/PE/PDB verified; wrong-order negative retained.",
+  "authorization": "Run complete original owning Accounts/OrgPools/Web Debug/Release SDK driver with these exact fresh external head/cut pins in isolated receiving worktree. Retain full actual source/PDB/embedded-symbol/generated-file/compiler/graph/session/creator/drain evidence and every failure. Original256MiB evidence budget, log/deadline limits/resource floors unchanged. Do not apply product key fix or waive assertions.",
+  "qualification": "Controlled local baseline only. SDK10.0.401 differs from workflow10.0.301. No shared product adoption or provider/release acceptance; attempts1-4 and key-defect baseline retained.",
+  "workspaceFreeBytesAtReview": 13701230592,
+  "tmpFreeBytesAtReview": 8468647936
+}

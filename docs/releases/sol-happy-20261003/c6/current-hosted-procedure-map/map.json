@@ -1,0 +1,835 @@
+{
+  "snapshotPath": "/workspace/team-c/integration/docs/releases/sol-happy-20261003/specification-update-2104/native-text.txt",
+  "snapshotBytes": 1383780,
+  "snapshotSHA256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c",
+  "paragraphs": 8534,
+  "reviewScope": "Full SolHappy source8180–8336 retained with procedure group connections; General/Operating/donor/platform anchors explicit. Group rows not atomic requirements.",
+  "normativeLevels": {
+    "MUST": "mandatory",
+    "SHOULD": "required by default; concrete scoped exception with reason/fallback/validation required",
+    "lowercase": "same meaning",
+    "MAY": "optional only absent another mandatory context"
+  },
+  "fullGlobalRequirementPlatformDenominator": "UNRESOLVED; neither8534paragraphs nor228scoped records nor old10011line/8344nonblank source inventory proves decomposition",
+  "historicalMaps": {
+    "records": 228,
+    "scope": "Historical scoped maps retain original revisions; not freshly relabelled acceptance."
+  },
+  "requirements": [
+    {
+      "id": "H01",
+      "section": "SH-01",
+      "owners": "A/B/C",
+      "title": "Fresh-device connected service",
+      "steps": "Fresh browser without Home/dev tools visits public site, registers/signs in, opens eligible app, creates+saves work; desktop reopens same artifact; subscription resources then enforced. Disconnect development host and retry.",
+      "expected": "Same canonical account/artifact/history and persistent work; no local dependency.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Browser concrete Home layout failure retained; anonymous auth driver only offline; billing test foundation not whole consumer.",
+      "remainingGate": "App inventory/current owner source + permitted HTTPS + approved fictional accounts/mail + native artifacts",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Browser concrete Home layout failure retained; anonymous auth driver only offline; billing test foundation not whole consumer.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H02",
+      "section": "SH-02",
+      "owners": "C/root",
+      "title": "Authority, environmental separation and evidence",
+      "steps": "Bind accepted/provisional source, deployment environment, account, active owners and exact tests; verify changed source invalidates affected prior evidence; inspect UI/config labels distinguishing test and production.",
+      "expected": "No test/preview represented as live; exact revision/platform and failed/skipped/NOT_RUN retained.",
+      "execution": "PARTIAL_READ_VERIFIED",
+      "existingEvidenceScope": "Authenticated account/D1/settings and isolated deployments independently read; accepted global release and full denominator unresolved.",
+      "remainingGate": "Global accepted baseline and owner integration decisions",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Authenticated account/D1/settings and isolated deployments independently read; accepted global release and full denominator unresolved.",
+        "deployedJourney": "PARTIAL_READ_VERIFIED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H03",
+      "section": "SH-03",
+      "owners": "C1/C2/C3/C4",
+      "title": "Transactional and workload boundaries",
+      "steps": "On isolated authorized services interleave conflicting quota/funding mutations and crash/retry acknowledgement; exhaust a customer allocation while main public site remains healthy; challenge tenant bindings.",
+      "expected": "Immediate transactional enforcement; no KV sole authority; separate first-party deployment remains operational.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "SQLite/D1 local billing and isolated schema evidence bounded; account read is not service consistency/capacity proof.",
+      "remainingGate": "Hosted canonical consumer/transaction architecture + workload budget",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "SQLite/D1 local billing and isolated schema evidence bounded; account read is not service consistency/capacity proof.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H04",
+      "section": "SH-03",
+      "owners": "C1/C2",
+      "title": "Environment identity/secrets/rollback",
+      "steps": "Read exact module/config/schema/binding hashes and provider version, inspect published bundle for secrets, roll back closed staging Worker then restore exact reviewed version.",
+      "expected": "Private values absent from public outputs; exact configured DB/issuer; provider history confirms closed rollback and restoration.",
+      "execution": "PARTIAL_READ_VERIFIED",
+      "existingEvidenceScope": "Actual closed rollback/restoration 5fafd→2f2e/713c independently read; HTTPS identity binding NOT_RUN.",
+      "remainingGate": "Same-time provider readback required beside HTTPS",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Actual closed rollback/restoration 5fafd→2f2e/713c independently read; HTTPS identity binding NOT_RUN.",
+        "deployedJourney": "PARTIAL_READ_VERIFIED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H05",
+      "section": "SH-04",
+      "owners": "C1/C4/B",
+      "title": "Website replacement and donor migration",
+      "steps": "Inventory every actual WordPress route/asset/form/account/download/backend; author editable Sites/Files project, build staged replacement, exercise retained behavior without WordPress; compare useful donor authoring behavior.",
+      "expected": "No flattened-only surviving source or runtime WordPress dependency; all retained destinations functional.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Seven captured HTML input hashes/optimized tamper guard verified; canonical composition ports owner hold, not parity.",
+      "remainingGate": "Actual authoring/import consumer/source+domain inventory owner ACK",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Seven captured HTML input hashes/optimized tamper guard verified; canonical composition ports owner hold, not parity.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H06",
+      "section": "SH-04",
+      "owners": "C1/root",
+      "title": "Migration and cutover safety",
+      "steps": "Capture unrelated DNS/mail/verification records and recoverable backup; stage destination and write-during-migration plan; rehearse restore before authorized cutover.",
+      "expected": "No registrar transfer or unrelated record loss; restore real discovered records; WordPress preserved until explicit retirement.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "No production cutover/DNS write authorized by this map.",
+      "remainingGate": "Destination/runtime and actual migration/backup scope",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "No production cutover/DNS write authorized by this map.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H07",
+      "section": "SH-05",
+      "owners": "C2/C1",
+      "title": "Anonymous HTTPS and public-client transport",
+      "steps": "Run exact e3bd anonymous driver over allowed hostname: discovery/JWKS/public CORS/security headers/unauthenticated denial/invalid-client and malformed reset; bind same-time provider settings/version.",
+      "expected": "Expected issuer/endpoints/S256/code; public keys only; redirects denied; foreign token origin denied; no token issued to invalid client.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "44e offline controls pass; e3bd operator-pinned label corrected; actual CONNECT403/HTTP000 remains failure, not backend result.",
+      "remainingGate": "Network policy allows exact hostname and root enables isolated endpoint",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "44e offline controls pass; e3bd operator-pinned label corrected; actual CONNECT403/HTTP000 remains failure, not backend result.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H08",
+      "section": "SH-05",
+      "owners": "C2/C5",
+      "title": "Full account and delivery journeys",
+      "steps": "Two approved fictional accounts, real recipient+delivery provider, public client/callback; register/verify/sign-in/profile/session inspect/revoke-other/sign-out/recovery once/refresh rotation; restart; capture failures honestly.",
+      "expected": "Current canonical account/session/nonce/resource identity; old password/replayed reset/revoked refresh rejected; actual delivery received.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Local Workerd222 and transport-double18 historical evidence; no production EMAIL binding, real delivery/client fixtures absent.",
+      "remainingGate": "Approved mail/recipient and operator-created fixtures/client",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Local Workerd222 and transport-double18 historical evidence; no production EMAIL binding, real delivery/client fixtures absent.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H09",
+      "section": "SH-05",
+      "owners": "C2/A",
+      "title": "Identity migration/grant/native compatibility",
+      "steps": "Exercise verified account mapping rather than mutable username; reserved handle ownership and account-bound grant; browser+native validate same issuer/audience/algorithms/revision/current-session identity.",
+      "expected": "Wrong username/principal never transfers ownership; grant never bypasses accounting/security; both native and web use same authority.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "Local synthetic reservation control only; no real CroakyJake binding. RSA/EdDSA and auth_revision/native bridge unresolved.",
+      "remainingGate": "Owner-supported producer/consumer protocol and verified real binding",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Local synthetic reservation control only; no real CroakyJake binding. RSA/EdDSA and auth_revision/native bridge unresolved.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H10",
+      "section": "SH-05",
+      "owners": "A/B/C2",
+      "title": "Context and permission equivalence",
+      "steps": "Switch accounts/orgs with loaded search/artifact/AI/cache; revoke grant before next dispatch; compare native/browser approvals, scoped risk and audit; headless prompt unavailable denies.",
+      "expected": "Previous private context removed; durable caller identity and current scope enforced; no local Home required in browser.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Accounts library/identity subset local tests do not instantiate hosted Home permission bridge.",
+      "remainingGate": "Canonical browser/Home service integration",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Accounts library/identity subset local tests do not instantiate hosted Home permission bridge.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H11",
+      "section": "SH-06",
+      "owners": "A/B",
+      "title": "Every in-scope app parity/navigation",
+      "steps": "Per app supported create/open/edit/save/reopen/history/import-export/share/recover plus AI owning APIs; compare equivalent viewport/commands/menus/settings, deep links/reload/back-forward/account restoration and meaningful unsupported-browser state.",
+      "expected": "Canonical semantic objects and actions; app matrix lists exact adaptation/restriction; no reduced dashboard.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "B bounded pointer observations and Home layout failure retained; exact compiled runtime does not prove whole app parity.",
+      "remainingGate": "Complete app/platform inventory including active Link/Prototype/Paths/Replay/Files types/Variants",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "B bounded pointer observations and Home layout failure retained; exact compiled runtime does not prove whole app parity.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H12",
+      "section": "SH-07",
+      "owners": "C4/A/B",
+      "title": "Canonical hosted Files/Drive continuity",
+      "steps": "Browser upload durable FileID, desktop materialize managed replica, edit/sync push incremental cursor/replay, conflict/reconnect; share/search/preview/AI/version restore/Trash operate same object.",
+      "expected": "Same identity/history; old revision restoration appends history; ordinary delete recoverable; purge protected.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "R2 artifact reader integrity checks are not Drive storage authority; proposed12FilesHTTP cases NOT_RUN.",
+      "remainingGate": "Hosted FileID/metadata/quota/sync owning service and endpoint",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "R2 artifact reader integrity checks are not Drive storage authority; proposed12FilesHTTP cases NOT_RUN.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H13",
+      "section": "SH-07",
+      "owners": "C4/C2",
+      "title": "Protected storage and transfer admission",
+      "steps": "Attempt object-key-only/cross-account/revoked-share access; interrupt resume/cancel at byte and metadata commits; parallel uploads over allocation; reconcile orphan/ack loss.",
+      "expected": "No corrupt complete/overspend/duplicate quota; access current object/org policy; production never r2.dev.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Local reader19 integrity tests bounded; HEAD metadata not content integrity; private provider adapter/Drive transfers missing composition.",
+      "remainingGate": "Protected routes/session/quota/integrity and durable transaction contract",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Local reader19 integrity tests bounded; HEAD metadata not content integrity; private provider adapter/Drive transfers missing composition.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H14",
+      "section": "SH-08",
+      "owners": "C1/C4",
+      "title": "Real Sites publish and rollback",
+      "steps": "Real editable canonical project builds authorized isolated preview; verify SiteID/source/config/provider/domain identity, assets/routes and required forms/CMS/auth/server functions; failed build/deploy preserves previous; rollback retains newer source.",
+      "expected": "Live behavior per required route, exact source preserved; static success cannot stand for dynamic behavior.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Sites39 local controlled providers pass; real deployment and dynamic consumer absent.",
+      "remainingGate": "Canonical composition + staging build/environment + provider adapter",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Sites39 local controlled providers pass; real deployment and dynamic consumer absent.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H15",
+      "section": "SH-08",
+      "owners": "C1/C4/root",
+      "title": "Sites namespace/isolation/inactivity",
+      "steps": "Challenge reserved/slugs/name review/custom domain ownership rotation/DNS/TLS; execute malicious customer active content only in approved isolated environment; server quota/inactivity disables site preserving source.",
+      "expected": "sites.9to1.uk/<slug> preserved unless canonical amendment; customerJS cannot cross sites/account admin origin.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "Local domain race controls and failure safeguards pass; path same-host origin isolation decision OPEN.",
+      "remainingGate": "Approved active-content isolation/current domain namespace and staging fixture",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Local domain race controls and failure safeguards pass; path same-host origin isolation decision OPEN.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H16",
+      "section": "SH-09",
+      "owners": "C3/C2",
+      "title": "Quote checkout activation/pending",
+      "steps": "Approved Stripe test merchant plus canonical server quote account/org/resources/currency/cadence/timing; wrong principal/amount/config rejected; success page no activation; verified state+entitlement update; lost provisioning resumes without charge.",
+      "expected": "Canonical allocations/presets/threshold/grants distinct; no invented null quantities; recoverable pending state.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "Node14/Workerd43 durable receipt foundation; Accounts quote/purchase library standalone only; no integrated business consumer.",
+      "remainingGate": "Commercial currency/lifecycle catalogue + Stripe test merchant and consumer",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Node14/Workerd43 durable receipt foundation; Accounts quote/purchase library standalone only; no integrated business consumer.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H17",
+      "section": "SH-09",
+      "owners": "C3",
+      "title": "Webhook business replay/reconciliation",
+      "steps": "Raw signed duplicate/out-of-order invoice events through real handler; crash after accepted receipt and after effect; reconcile actual current Stripe objects; stale event cannot rewrite newer config.",
+      "expected": "Exactly one allocation/entitlement effect; charge/entitlement/provisioning separately diagnosable.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Durable receipt, strict collision/lost-ack local controls pass; receipts are not actual business effects or provider reconciliation.",
+      "remainingGate": "Canonical consumer/scheduler/current-object reconciliation",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Durable receipt, strict collision/lost-ack local controls pass; receipts are not actual business effects or provider reconciliation.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H18",
+      "section": "SH-09",
+      "owners": "C3/A",
+      "title": "Billing management and safe lifecycle",
+      "steps": "Payment methods/invoices/custom resources/cancel; price/change effective date/immediate charge preview; renewal failure/2FA/refund/dispute transitions; downgrade keeps Files/site/org data/export/recovery; org seats not unlimited resources.",
+      "expected": "Approved policy transitions and retained data; portal alone cannot custom multi-resource changes.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "Undefined policy and management routes not waived; no live charges.",
+      "remainingGate": "Approved commercial lifecycle/currency/retention/grace + merchant readiness",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Undefined policy and management routes not waived; no live charges.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H19",
+      "section": "SH-10",
+      "owners": "C5/C3/C2",
+      "title": "Real cloud AI reserve-run-settle",
+      "steps": "Actual authorized provider request only within approved budget; identity/org/model entitlement/Dust reserve before run; stream/cancel/fail/unknown outcome/reconcile, concurrent requests; local models no cloud charge; desktop/web/PersonalAPI shared allocation.",
+      "expected": "No overspend or arbitrary credit creation; privacy-authorized route, uncertain usage pending reconciliation.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "MetadataGET adapter32 mock+actualDI pass is not inference; billing allocation bridge/quotes/commercial limits unresolved.",
+      "remainingGate": "Trusted gateway/funding policy/provider budget and current owner source adoption",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "MetadataGET adapter32 mock+actualDI pass is not inference; billing allocation bridge/quotes/commercial limits unresolved.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H20",
+      "section": "SH-10",
+      "owners": "C5/A/B",
+      "title": "Every online dependency and durable jobs",
+      "steps": "Inventory collaboration/org/provider/notifications/Forms/published integrations/Agents/Automations; real task starts cloud, close tab/reconnect/retry; enrolled device offline shown unavailable; scope/funding survives restart.",
+      "expected": "No consequential replay; explicit location and durable job/progress/cancel/result.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Forms adapter source delivered, runtime/owner API holds; source absence closed only.",
+      "remainingGate": "Actual online dependency registry and owning operation endpoint integration",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Forms adapter source delivered, runtime/owner API holds; source absence closed only.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H21",
+      "section": "SH-11",
+      "owners": "C1/C3/C5",
+      "title": "Operations/admission/budget",
+      "steps": "In staging exercise outage/billing/job failure/resource approach; observe actionable sanitized diagnostics/alerts; cross-tenant load and admission; enforced cap refuses instead of spend-alert-only.",
+      "expected": "Bounded shared service consumption, no secrets/content leakage; actual alert delivered.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "CPU1000/loggingoff config and read access not operational alert/admission proof.",
+      "remainingGate": "Approved capacity/performance budget + alert mechanism",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "CPU1000/loggingoff config and read access not operational alert/admission proof.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H22",
+      "section": "SH-11",
+      "owners": "C1/C4/C2/C3",
+      "title": "Complete backup restore and compatible upgrades",
+      "steps": "Restore isolated preserved canonical metadata/file revisions/account mappings/entitlements/site source/config; redeploy; open older browser/native sessions across schema/update; exact release install/upgrade/repair/rollback from package authority.",
+      "expected": "Documented objectives met, source/revisions/mappings preserved; shared Home/Launcher integrity/staging reused.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Closed provider rollback restores version only; it does not test data restore or whole package delivery.",
+      "remainingGate": "Approved recovery objectives + full state backup + supported older client/artifact matrix",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Closed provider rollback restores version only; it does not test data restore or whole package delivery.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H23",
+      "section": "SH-11",
+      "owners": "C2/C4/C5/A",
+      "title": "Privacy ceiling hosted lifecycle",
+      "steps": "Inventory purpose/processors/data flows; test deny remoteAI despite fallback/embed; secret redaction; scoped export/correction/delete propagates replicas/caches/indexes; retention enforced; E2EE promised only declared endpoint keyholders.",
+      "expected": "No silent broadening, plaintext logs or fake metadata-hidden claim; rights/consent withdrawal honored.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Sanitized public receipts verified narrowly; completeLegalPrivacyProfile/data-flow/deletion propagation not accepted.",
+      "remainingGate": "Versioned privacy/retention contract and canonical replica lifecycle",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Sanitized public receipts verified narrowly; completeLegalPrivacyProfile/data-flow/deletion propagation not accepted.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H24",
+      "section": "SH-12",
+      "owners": "A/B/C",
+      "title": "Accessibility/populated workload acceptance",
+      "steps": "Per-app populated narrow layouts, keyboard/screen reader,200% scale,themes/reduced-motion,error+recovery; preserve actual screenshot/AX/interaction traces and same artifact/source/browser pins.",
+      "expected": "All listed states usable with no clipping/deadcontrols; declared platform matrix evidenced.",
+      "execution": "NOT_RUN",
+      "existingEvidenceScope": "Home cold layout failure retained; 14/5 owner and bounded32validator observations not whole visual acceptance.",
+      "remainingGate": "Actual complete compiled apps + representative fixtures/platform access",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "Home cold layout failure retained; 14/5 owner and bounded32validator observations not whole visual acceptance.",
+        "deployedJourney": "NOT_RUN",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H25",
+      "section": "SH-13",
+      "owners": "C/root/A",
+      "title": "Launch decisions without invented defaults",
+      "steps": "Record explicit commercial allocations/periods/rollover/prices/downgrade/grace/retention/currency/tax; auth/mail/DB/runtime ownership; active-content isolation; browser/capacity/recovery/budgets/merchant/cutover approval.",
+      "expected": "Undefined offer not purchasable; affected path blocked only, independent work continues.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "US$1 isolated budget/accountPaid authorization not canonical commercial catalogue or global launch approval.",
+      "remainingGate": "Exact approved decision records",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "hosted service",
+        "web"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "US$1 isolated budget/accountPaid authorization not canonical commercial catalogue or global launch approval.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    },
+    {
+      "id": "H26",
+      "section": "SH-12",
+      "owners": "A/B/C",
+      "title": "Release acceptance closure",
+      "steps": "Execute all ten named deployed journeys with actual immutable source/build/provider/platform IDs and complete failures/NOT_RUN; test payment failures before any separately authorized live charge; source/test/deployed/commercial separately stated.",
+      "expected": "Whole required online service ecosystem operates without developer PC; full normative/platform/donor evidence, no subset denominator substitution.",
+      "execution": "BLOCKED",
+      "existingEvidenceScope": "8534paragraphs/228scoped maps/fullsource oldindex are different inventories; complete normative denominator unresolved.",
+      "remainingGate": "All affected journey/owner/platform/provider/commercial gates",
+      "requirementState": "BLOCKED",
+      "stateQualification": "Whole deployed acceptance blocked by listed gate; does not imply source absence or stop independent implementation.",
+      "platforms": [
+        "web",
+        "Windows desktop",
+        "9to1-OS desktop"
+      ],
+      "donor": "Inherited applicable donor parity; no donor exclusion inferred",
+      "layerStates": {
+        "source": "PARTIAL_OR_UNKNOWN; exact existingEvidenceScope only",
+        "localRuntime": "8534paragraphs/228scoped maps/fullsource oldindex are different inventories; complete normative denominator unresolved.",
+        "deployedJourney": "BLOCKED",
+        "commercial": "OPEN where applicable; otherwise NOT_APPLICABLE to procedure, not product exemption"
+      }
+    }
+  ],
+  "inheritedAnchors": [
+    {
+      "sourceParagraph": 8,
+      "sourceQuote": "SHOULD / SHOULD NOT — required by default. A deviation is permitted only when a concrete technical constraint makes the requirement unsuitable for that exact case; the implementation MUST record the exception, reason, affected scope, fallback behaviour and validation evidence.",
+      "procedureGroups": [
+        "H25",
+        "H26"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 10,
+      "sourceQuote": "Lowercase uses of “must”, “should” and “may” have the same normative meaning. Product prose MUST NOT use “should” merely to mean “it would be nice if”.",
+      "procedureGroups": [
+        "H26"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 40,
+      "sourceQuote": "A specification exception MUST identify: requirement ID or quoted requirement, affected product/version/platform, technical reason, exact substitute behaviour, user-visible impact, security/data impact, tests/evidence and whether the exception is temporary or permanent. “Too difficult”, “not enough time”, “donor source unavailable” or “not implemented yet” are not valid permanent exceptions.",
+      "procedureGroups": [
+        "H26"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 43,
+      "sourceQuote": "Completion evidence MUST cover representative end-to-end journeys, persistence/restart behaviour, API/UI parity, permissions, accessibility, failure/recovery paths, donor parity where applicable and platform/package validation for every declared supported platform.",
+      "procedureGroups": [
+        "H26",
+        "H24"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 44,
+      "sourceQuote": "Known failing requirements MUST remain explicitly recorded as open blockers or scoped exceptions. They MUST NOT be omitted from release/completion reporting.",
+      "procedureGroups": [
+        "H26"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 181,
+      "sourceQuote": "All work must be accessible. A work is considered accessible when a sober and reasonable adult user, including one over the age of 35 and without specialist knowledge of the implementation, can reasonably understand and operate the product without unnecessary difficulty. Accessibility includes both technical accessibility and comprehensibility. Where applicable, the agent should account for:",
+      "procedureGroups": [
+        "H24"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 300,
+      "sourceQuote": "Tests must exercise the actual implementation rather than only proving that a mock or isolated substitute works. Where a full test suite cannot run because of an environmental limitation, the agent must run the strongest relevant subset available and clearly identify the remaining unverified gate. A pre-existing unrelated failure must not automatically invalidate otherwise valid work, but it must be distinguished from failures caused by the current changes.",
+      "procedureGroups": [
+        "H26"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 425,
+      "sourceQuote": "Where a project supports multiple operating systems, architectures, browsers, devices, or runtime environments, changes must account for the supported matrix. The agent must not unknowingly introduce a dependency on the environment it personally used for development. Platform-specific behaviour should be isolated where appropriate. Where comprehensive multi-platform testing is unavailable, affected platforms must be identified as unverified rather than implicitly claimed as validated.",
+      "procedureGroups": [
+        "H24",
+        "H26"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 553,
+      "sourceQuote": "Donor parity is mandatory. If a 9to1 app is based on a donor application/project, all donor features, user-visible behaviours and quality-of-life improvements must be ported unless technically impossible and explicitly documented. Proprietary donor AI features are the exception: replace them with equivalent 9to1 AI capabilities rather than porting the proprietary AI.",
+      "procedureGroups": [
+        "H05",
+        "H11"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 560,
+      "sourceQuote": "Where an app declares a donor/upstream project, the implementation MUST contain the actual donor source (forked, vendored or otherwise included according to the repository architecture) in the app’s source tree/build graph. Runtime installation MUST NOT require the user to separately download the donor application merely to obtain donor functionality. The selected donor revision/version and local modifications MUST be traceable.",
+      "procedureGroups": [
+        "H05",
+        "H11"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 557,
+      "sourceQuote": "Cross-app examples are acceptance criteria, not optional demos. Examples include live Canvas pages inside Boards, Files-hosted documents edited from Spaces, Maps routes attached to Planner events, and app-to-app Automation workflows.",
+      "procedureGroups": [
+        "H01",
+        "H11",
+        "H12"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 558,
+      "sourceQuote": "Verification means real behaviour. Source presence or a successful build alone is never enough; parity, interaction, accessibility, platform/package and representative end-to-end journeys must be evidenced.",
+      "procedureGroups": [
+        "H26"
+      ],
+      "applicability": "Mandatory/default-required inherited contract"
+    },
+    {
+      "sourceParagraph": 8243,
+      "sourceQuote": "A desktop-only feature is not sufficient reason to omit an otherwise useful web app. Mini Computer retains its existing web exemption unless the required hosted-compute capability is explicitly provided. Other missing native capabilities MUST NOT be represented as available merely because a browser interface exists.",
+      "procedureGroups": [
+        "H11"
+      ],
+      "applicability": "Exact explicit exclusion only"
+    },
+    {
+      "sourceParagraph": 8534,
+      "sourceQuote": "Release-candidate AI Studio implementations MUST NOT expose Training Lab as an in-scope project type, navigation/sidebar entry, New Project option or partially functional placeholder. Future implementation requires a separate canonical specification before Training Lab becomes in scope.",
+      "procedureGroups": [
+        "H11"
+      ],
+      "applicability": "Exact explicit exclusion only"
+    }
+  ],
+  "sourceLinkedRows": 157,
+  "statesNote": "No full criterion VERIFIED. Partial_READ_VERIFIED is a test/evidence scope, never a complete requirement state. BLOCKED/NOT_RUN retained; source absence is not inferred from absent test.",
+  "mappingGaps": [
+    "All general/privacy/API inherited clauses need atomic criterion/platform decomposition and owning-app/donor matrices; this supplement is not global completeness.",
+    "SH12 prescribed acceptance rows without MUST keyword are retained explicitly in source links.",
+    "Existing approved exceptions must carry exactcanonical clause/platform/reason/substitute/evidence; no implicitAndroidfallback or donor-unavailable waiver."
+  ],
+  "unblockedCWork": [
+    "C2 offline anonymousHTTPS driver is prepared and independently checked; actual request blockedCONNECT403 is environmental, not service outcome.",
+    "C3 canonical quote/business event consumer/reconciliation integration still unproved beyond durable receipts and standaloneAccounts; implement only with existing owning interfaces/policy, retain commercialOPEN.",
+    "C4 protectedDrive transfer metadata/quota/resume/cursor composition and Sites dynamic provider contract need owning endpoint integration; reader HEAD is metadata-only.",
+    "C1 full-state backup/restore fixture and operational failure/admission procedures can be implemented locally without production faults or invented objectives.",
+    "C5 online-dependency registry and durable job reconnect/cancel procedures remain available independent of paidinference; model catalogue is observational only."
+  ],
+  "inheritedSourceInventory": "All paragraphs1–560 losslessly retained; source inventory, not assertion that every inherited criterion has a procedure or semantic applicability analysis.",
+  "knownConnections": {
+    "SH12tenJourneys": {
+      "Fresh-device onboarding": [
+        "H01",
+        "H07",
+        "H08"
+      ],
+      "Web/desktop continuity": [
+        "H01",
+        "H09",
+        "H12"
+      ],
+      "Application parity": [
+        "H11",
+        "H24"
+      ],
+      "Storage integrity": [
+        "H12",
+        "H13"
+      ],
+      "Subscription lifecycle": [
+        "H16",
+        "H18"
+      ],
+      "Billing replay": [
+        "H17"
+      ],
+      "Publishing": [
+        "H14",
+        "H15"
+      ],
+      "Isolation": [
+        "H10",
+        "H13",
+        "H15"
+      ],
+      "Recovery": [
+        "H22"
+      ],
+      "Independent operation": [
+        "H01",
+        "H03",
+        "H21"
+      ]
+    }
+  }
+}

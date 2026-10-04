@@ -1,0 +1,115 @@
+{
+  "productId": "haven.wine",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "haven-wine-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Wine",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-wine",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/haven-wine",
+    "arguments": "",
+    "workingDirectory": "/usr/share/haven-wine",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/wine",
+      "handler": "HavenWineApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.wine.launch",
+      "displayName": "Launch Wine App",
+      "description": "Ability to launch the Haven Wine application",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.wine.compat",
+      "displayName": "Windows Compatibility",
+      "description": "Run Windows applications via Wine compatibility layer",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    },
+    {
+      "dependencyId": "dotnet-sdk",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=8.0"
+    },
+    {
+      "dependencyId": "wine",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=9.0"
+    },
+    {
+      "dependencyId": "wine64",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=9.0"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": true,
+    "requiresState": true,
+    "requiresData": true,
+    "customPaths": ["/home/haven/.config/haven-wine", "/home/haven/.local/share/haven-wine", "/home/haven/.wine"]
+  },
+  "permissions": {
+    "requiredGrants": ["files.read", "files.write", "process.exec", "wine.access"],
+    "optionalGrants": ["network.access", "hardware.gpu"]
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "haven-wine --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T15:50:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-wine-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

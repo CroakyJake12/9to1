@@ -1,0 +1,68 @@
+{
+  "sourceCommit": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
+  "files": [
+    {
+      "path": "C2/peer-review.json",
+      "bytes": 9075,
+      "sha256": "410dcb71bfd60620f5dc80b34df0fe9ce4f621b5a11fce52c7c0146a8246cb86"
+    },
+    {
+      "path": "Debug/command.json",
+      "bytes": 1970,
+      "sha256": "a17c61d2bf5b1977b9362f013b1c96cc920315dc9eb98687ebbf7fff1ca093f8"
+    },
+    {
+      "path": "Debug/results/normal-infrastructure.trx",
+      "bytes": 730821,
+      "sha256": "9ab3b17a9fcf18b1abd1fdb4d57b3bce1220192c017b6d20f8dcd1de9ebd6945"
+    },
+    {
+      "path": "Debug/run.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "Debug/run.log",
+      "bytes": 47960,
+      "sha256": "32d4deb3f84321dc1f4fd8c6b6e134b6267e998ecc0baa2db2e9cf5f4503330a"
+    },
+    {
+      "path": "Release/command.json",
+      "bytes": 3592,
+      "sha256": "3c0aa0111bc5fbc7e1438c2a48990283731487b52121cf77ee1ee290555e51b4"
+    },
+    {
+      "path": "Release/results/normal-infrastructure.trx",
+      "bytes": 659133,
+      "sha256": "2c3590bf9affb8b811e116f330a6ff54105aae67902de1690dbcb447a77de40c"
+    },
+    {
+      "path": "Release/run.log",
+      "bytes": 14022,
+      "sha256": "663d280c63ff86d4773c4550906254c9a2283e4226b734bc85ce3ebb41008b8b"
+    },
+    {
+      "path": "failure-review.json",
+      "bytes": 15229,
+      "sha256": "6709418317bea730269981e1703147f9eef82c6fc34e447890e6415420eb8614"
+    },
+    {
+      "path": "proposal.json",
+      "bytes": 7019,
+      "sha256": "7e1c63c75da9c2d435eb359b5f3acbd2e1e1127dac026bab019f4fa659dd9d87"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 8385,
+      "sha256": "48f63ccaed80227ae54cef53cdbf37b6c9f2a047a1fa6f94253805043d859382"
+    },
+    {
+      "path": "source.diff",
+      "bytes": 3115,
+      "sha256": "0610c99dea2c70e4ca8d601394fa335e15d9e29542237062658491644c4eeed7"
+    }
+  ],
+  "rawOriginalDebugAndIndependentReleaseLogsAndTRXUnchanged": true,
+  "syntheticSQLiteFixtures": "Private runtime evidence outside Git; no credentials or raw provider data included.",
+  "sourcePDBAcceptance": "Not claimed"
+}

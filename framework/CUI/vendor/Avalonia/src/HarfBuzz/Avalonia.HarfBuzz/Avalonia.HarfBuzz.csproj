@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>$(AvsCurrentTargetFramework);$(AvsLegacyTargetFrameworks)</TargetFrameworks>
+        <IncludeLinuxSkia>true</IncludeLinuxSkia>
+        <IncludeWasmSkia>true</IncludeWasmSkia>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <!-- CUI fork: bypass meta-package -->
+    <ItemGroup>
+        <ProjectReference Include="..\..\Avalonia.Base\Avalonia.Base.csproj" />
+        <ProjectReference Include="..\..\Avalonia.Controls\Avalonia.Controls.csproj" />
+        <ProjectReference Include="..\..\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj" />
+    </ItemGroup>
+
+    <Import Project="..\..\..\build\HarfBuzzSharp.props" />
+    <Import Project="..\..\..\build\DevAnalyzers.props" />
+    <Import Project="..\..\..\build\TrimmingEnable.props" />
+    <Import Project="..\..\..\build\NullableEnable.props" />
+
+    <ItemGroup Label="InternalsVisibleTo">
+        <InternalsVisibleTo Include="Avalonia.Benchmarks, PublicKey=$(AvaloniaPublicKey)" />
+    </ItemGroup>
+</Project>

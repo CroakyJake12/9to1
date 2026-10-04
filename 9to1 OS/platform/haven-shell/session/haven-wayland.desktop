@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Haven (Wayland)
+Comment=HavenOS treatment on Ubuntu's validated Wayland session
+# Keep GNOME's session identity as `ubuntu`: Ubuntu 26.04 starts its Shell
+# through that session's systemd target.  The entry remains the Haven choice
+# in GDM; Haven's extension, theme, wallpaper and defaults are packaged
+# independently.
+Exec=/usr/bin/gnome-session --session=ubuntu
+TryExec=/usr/bin/gnome-session
+Type=Application
+DesktopNames=ubuntu;GNOME
+X-GDM-SessionRegisters=true

@@ -1,0 +1,6 @@
+{"candidate": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70", "tree": "c1e9df46618f14985aff5f222706b448a34c65da", "cwd": "/workspace/team-c/integration/cloud/cake-id-auth", "command": ["npm", "run", "schema:validate"], "startUTC": "2026-10-03T17:41:54.934107+00:00"}
+
+> @cake/cake-id-worker@0.1.0 schema:validate
+> node scripts/validate-schema.mjs
+
+Both versioned SQL migrations execute in Node's in-memory SQLite and create the required auth, OAuth, and guardrail tables.

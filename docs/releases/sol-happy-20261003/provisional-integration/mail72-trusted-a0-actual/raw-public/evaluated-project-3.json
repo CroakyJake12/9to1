@@ -1,0 +1,98 @@
+{
+  "Properties": {
+    "TargetPath": "/home/runner/work/_temp/team-c-mail72-37229860186-1/artifacts/bin/CakeOS.Cui.Core/release_linux-x64/CakeOS.Cui.Core.dll",
+    "TargetFramework": "net10.0"
+  },
+  "Items": {
+    "Compile": [
+      {
+        "Identity": "CuiDocument.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiDocument.cs",
+        "RootDir": "/",
+        "Filename": "CuiDocument",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Core/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiRichParser.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiRichParser.cs",
+        "RootDir": "/",
+        "Filename": "CuiRichParser",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Core/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiRuntimeContracts.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiRuntimeContracts.cs",
+        "RootDir": "/",
+        "Filename": "CuiRuntimeContracts",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Core/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiSyntaxNormalizer.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiSyntaxNormalizer.cs",
+        "RootDir": "/",
+        "Filename": "CuiSyntaxNormalizer",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Core/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiValues.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiValues.cs",
+        "RootDir": "/",
+        "Filename": "CuiValues",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Core/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      }
+    ],
+    "EmbeddedResource": [],
+    "Content": [],
+    "AdditionalFiles": []
+  }
+}

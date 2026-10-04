@@ -1,0 +1,124 @@
+{
+  "proposal": "03f64aa6feaff7203de251f9d919fe3220119e38",
+  "parent": "1ad480c2fe89bf55bd1c77403fc9df2490a5a524",
+  "globalBase": "da5466c5a4b37268d841a50120e4838170416dbd",
+  "scope": "Preinvocation source review only; no invocation/provider/browser acceptance",
+  "changedPaths": [
+    "A\t.github/workflows/team-c-ordinary-web-picture.yml"
+  ],
+  "workflowDiff": [
+    "--- maintained-B\n",
+    "+++ proposal-C\n",
+    "@@ -1,8 +1,8 @@\n",
+    "-name: Team B genuine Picture browser nine",
+    "+name: Team C ordinary Web and genuine Picture browser gate",
+    " ",
+    " on:",
+    "   push:",
+    "-    branches: [\"team-b/**\"]",
+    "+    branches: [\"team-c/**\"]",
+    "   workflow_dispatch:",
+    " ",
+    " permissions:",
+    "@@ -10,7 +10,7 @@\n",
+    " ",
+    " jobs:",
+    "   actual-local-picture:",
+    "-    if: startsWith(github.ref, 'refs/heads/team-b/')",
+    "+    if: startsWith(github.ref, 'refs/heads/team-c/')",
+    "     runs-on: ubuntu-24.04",
+    "     timeout-minutes: 45",
+    "     env:",
+    "@@ -62,7 +62,7 @@\n",
+    "         if: always()",
+    "         uses: actions/upload-artifact@v4",
+    "         with:",
+    "-          name: team-b-picture-browser-nine-${{ github.sha }}",
+    "+          name: team-c-picture-browser-nine-${{ github.sha }}",
+    "           path: |",
+    "             ${{ runner.temp }}/pb-run/diagnostics",
+    "             ${{ runner.temp }}/pb-run/raw/results.json",
+    "@@ -76,7 +76,7 @@\n",
+    "         if: always()",
+    "         uses: actions/upload-artifact@v4",
+    "         with:",
+    "-          name: team-b-picture-browser-publisher-${{ github.sha }}",
+    "+          name: team-c-picture-browser-publisher-${{ github.sha }}",
+    "           path: ${{ runner.temp }}/pb-publish/diagnostics",
+    "           if-no-files-found: warn",
+    "           retention-days: 7"
+  ],
+  "dependencyPins": [
+    {
+      "path": ".github/workflows/team-c-ordinary-web-picture.yml",
+      "bytes": 3179,
+      "sha256": "b88443f01c3842ad5652922deee32558323ee9707821e94077bb50064affd632",
+      "gitBlob": "3fde414133d713bab67f59db8fc5a6bda902c741",
+      "matches": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-web-publish.py",
+      "bytes": 17775,
+      "sha256": "ced8679e0c587a3e0077d84db084ec171af12fc40b63ffd1ff5fa7303241dabb",
+      "gitBlob": "f3564bbebb71c99bec1578274d251437743a3fb4",
+      "matches": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-picture-browser.py",
+      "bytes": 10119,
+      "sha256": "bbba1f206c4441fce0660192277e196b8903a32cbac29a8a65ddb1147618c0c3",
+      "gitBlob": "54ecb9f586c9c4154d558f0ff94506c1fafffd1c",
+      "matches": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+      "matches": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/run-picture-browser.cjs",
+      "bytes": 34251,
+      "sha256": "9d9547e8df62b78dfb0646c50a1c8bde986fa79743c73f4269b65b3ad2f535f3",
+      "gitBlob": "02dbaf6aca9e034d3346ae141f56e2470f2f1965",
+      "matches": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/png-oracle.cjs",
+      "bytes": 3573,
+      "sha256": "9c78229fc21b55e68c32a0f77fd9b8431866e5895a258906ac895d0059552909",
+      "gitBlob": "228471812c4ba9dca4a016edd6b5bb9348058f28",
+      "matches": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs",
+      "bytes": 29093,
+      "sha256": "f8a58d8d464beb57fa6fa044cd8cc2bb3e47d06f1ae91d2a9760ad8e6dac3159",
+      "gitBlob": "60d14171de69d9a504b1947856f55b8a8947ac50",
+      "matches": true
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
+      "gitBlob": "0af4ee1802cc4ba10dafacacc4ed9c92bb9027a4",
+      "matches": true
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserFeature.cs",
+      "bytes": 13171,
+      "sha256": "86cc1c751e0217daa204c05fa57a1b7f7865a9b412e23c217b67373ec1726eec",
+      "gitBlob": "63e4bc91078a0b3d680d414a8d67b2217b6d4763",
+      "matches": true
+    }
+  ],
+  "protectedSourceChecks": [
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "blob": "5f4fdfc067396c5882c854e9240acaefc88ce1d6",
+      "unchangedGlobalBase": true
+    }
+  ],
+  "conclusion": "ACK isolated CI-only proposal: exact maintained B recipe, only Team C names/branch filters/artifact names differ; original Picture15/browser9 and publisher unchanged. Requires real hosted execution, no acceptance inferred."
+}

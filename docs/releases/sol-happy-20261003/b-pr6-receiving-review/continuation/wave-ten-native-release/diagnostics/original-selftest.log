@@ -1,0 +1,1 @@
+Wave self-test passed: PCM waveform load, exact trim/export, overwrite protection, short-file bounds, fail-closed invalid input, versioned project save/reopen, timeline mix export, source integrity, and missing-source rejection.

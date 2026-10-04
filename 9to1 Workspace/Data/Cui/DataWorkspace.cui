@@ -1,0 +1,37 @@
+<Cui app="haven.data" version="1" theme="HavenUI" fontFamily="Montserrat">
+  <Workspace id="data-workspace" layout="rows" responsive="desktop,compact" accessibilityLabel="Data workbook workspace">
+    <Header id="workbook-header">
+      <Text id="app-title" level="h1">Data</Text>
+      <Text id="workbook-status" role="status" bind="status">No workbook open</Text>
+      <Button id="save-as" action="data.workbook.save-as.v1" capability="files.write" accessibilityLabel="Save workbook as" />
+    </Header>
+    <FormulaBar id="formula-bar" bind="formulaBarText" commitAction="data.workbook.edit-cell.v1" formulaAction="data.workbook.set-formula.v1" accessibilityLabel="Selected cell value or formula">
+      <Text id="cell-address" bind="selection.address" />
+      <TextField id="formula-input" bind="formulaBarText" accessibilityLabel="Formula bar" />
+    </FormulaBar>
+    <SheetTabs id="sheet-tabs" items="sheets" selected="activeSheet" action="data.workbook.select-sheet.v1" accessibilityLabel="Workbook sheets" />
+    <MainContent id="workbook-content" layout="adaptive-columns" compactLayout="rows">
+      <Grid id="spreadsheet-grid" rows="10" columns="8" items="grid.values" rowVisibility="grid.rowVisibility" selectAction="data.workbook.select-cell.v1" keyboardNavigation="cell" accessibilityLabel="Workbook cells" />
+      <Inspector id="data-inspector">
+        <SortPanel id="sort-panel" accessibilityLabel="Sort visible rows">
+          <Select id="sort-column" bind="sort.keyColumn" accessibilityLabel="Sort column" />
+          <Toggle id="sort-direction" bind="sort.ascending" accessibilityLabel="Sort ascending" />
+          <Button id="apply-sort" action="data.workbook.sort-visible.v1" capability="workbook.write" accessibilityLabel="Apply sort" />
+        </SortPanel>
+        <FilterPanel id="filter-panel" accessibilityLabel="Filter visible rows">
+          <Select id="filter-column" bind="filter.keyColumn" accessibilityLabel="Filter column" />
+          <TextField id="filter-value" bind="filter.value" accessibilityLabel="Filter value" />
+          <Button id="apply-filter" action="data.workbook.filter-visible.v1" capability="workbook.write" accessibilityLabel="Apply filter" />
+          <Button id="clear-filter" action="data.workbook.clear-filter.v1" capability="workbook.write" accessibilityLabel="Clear filter" />
+        </FilterPanel>
+        <QueryPanel id="query-panel" accessibilityLabel="DuckDB query">
+          <TextField id="database-path" bind="query.databaseName" accessibilityLabel="DuckDB database" />
+          <Button id="publish-range" action="data.workbook.publish-visible.v1" capability="database.publish" accessibilityLabel="Publish visible cells to DuckDB" />
+          <CodeEditor id="query-editor" language="sql" bind="query.sql" accessibilityLabel="Read-only SQL query" />
+          <Button id="run-query" action="data.workbook.run-read-only-query.v1" capability="database.query.read" accessibilityLabel="Run read-only query" />
+          <Table id="query-results" columns="query.resultColumns" items="query.resultRows" accessibilityLabel="Query results" />
+        </QueryPanel>
+      </Inspector>
+    </MainContent>
+  </Workspace>
+</Cui>

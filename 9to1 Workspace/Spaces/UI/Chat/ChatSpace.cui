@@ -1,0 +1,50 @@
+<Cui id="spaces.chat" version="1">
+  <Page id="chat-space" role="main" accessible-name="Chat Space" font-family="Montserrat" layout="vertical" scalable-text="true" high-contrast="semantic" reduced-motion="respect">
+    <AdaptiveSplit id="chat-layout" compact-breakpoint="720" primary-min-width="0">
+      <Aside id="recent-chats" role="navigation" accessible-name="Recent chats" compact-mode="drawer">
+        <Heading level="2">Recent chats</Heading>
+        <Button id="new-chat" action="chat.new" accessible-name="Start a new chat" shortcut="Ctrl+N" touch-target="44">New chat</Button>
+        <SearchField id="recent-search" binding="recentQuery" accessible-name="Search recent chats" placeholder="Search chats" clear-action="chat.clear-recent-search" />
+        <List id="recent-list" binding="recentChats" role="list" accessible-name="Recent conversations" empty-text="No recent chats">
+          <Button id="recent-row" repeat="recentChats" action="chat.open" action-argument="{id}" accessible-name="Open {title}" selected="{isCurrent}" shortcut-scope="list">
+            <Text binding="title" />
+            <Text binding="updatedLabel" tone="muted" />
+          </Button>
+        </List>
+      </Aside>
+      <Main id="conversation" accessible-name="Conversation">
+        <Toolbar id="conversation-toolbar" accessible-name="Conversation controls" wrap="true">
+          <Heading id="conversation-title" level="1" binding="conversation.title">New chat</Heading>
+          <Select id="model-choice" binding="models" selected-binding="composer.selectedModelName" action="chat.select-model" accessible-name="Choose model" description="Selects the model for the next message" />
+          <Select id="branch-choice" binding="conversation.branches" selected-binding="conversation.currentBranchId" action="chat.switch-branch" accessible-name="Choose conversation branch" description="Switches the visible message history" />
+        </Toolbar>
+        <ScrollView id="transcript-scroll" follow="when-at-end" restore-position="true">
+          <List id="transcript" binding="conversation.messages" role="log" accessible-name="Conversation messages" live="polite" relevant="additions text" empty-text="Ask anything to begin">
+            <Article id="message" repeat="conversation.messages" role="listitem" accessible-name="{speakerLabel}, {createdLabel}">
+              <Text binding="speakerLabel" weight="semibold" />
+              <Markdown binding="content" selectable="true" />
+              <List binding="attachments" role="list" accessible-name="Message attachments" compact="true" />
+              <List binding="citations" role="list" accessible-name="Sources and citations" compact="true" />
+              <List binding="toolActivities" role="list" accessible-name="Tool activity" live="polite" compact="true" />
+              <Row id="message-actions" accessible-name="Message actions" wrap="true">
+                <Button action="chat.branch" action-argument="{id}" accessible-name="Branch from this message" shortcut="Ctrl+Shift+B" touch-target="44">Branch</Button>
+                <Button action="chat.regenerate" action-argument="{id}" visible="{canRegenerate}" accessible-name="Regenerate this response" shortcut="Ctrl+Shift+R" touch-target="44">Regenerate</Button>
+              </Row>
+            </Article>
+          </List>
+        </ScrollView>
+        <Composer id="composer" accessible-name="Message composer" sticky="bottom">
+          <List id="attachment-tray" binding="composer.attachments" role="list" accessible-name="Attachments for the next message">
+            <Button action="chat.remove-attachment" action-argument="{id}" accessible-name="Remove {name}" touch-target="44">Remove</Button>
+          </List>
+          <TextArea id="composer-input" binding="composer.draft" action="chat.update-draft" accessible-name="Message" description="Enter sends. Shift Enter starts a new line." multiline="true" submit-shortcut="Enter" newline-shortcut="Shift+Enter" />
+          <Row id="composer-actions" wrap="true">
+            <Button id="attach" action="chat.attach" accessible-name="Attach a file" description="Adds a file to this chat without navigating away" shortcut="Ctrl+O" touch-target="44">Attach</Button>
+            <Button id="send" action="chat.send" enabled="{composer.canSend}" accessible-name="Send message" shortcut="Enter" touch-target="44" variant="primary">Send</Button>
+          </Row>
+        </Composer>
+        <Text id="chat-status" binding="status.message" role="status" live="polite" accessible-name="Chat status" />
+      </Main>
+    </AdaptiveSplit>
+  </Page>
+</Cui>

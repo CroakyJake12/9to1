@@ -1,0 +1,45 @@
+{
+  "status": "COMPLETED_C4_ONLY_CLOSED_DISPOSABLE_PACKAGE_HTTP_CACHE_RETIREMENT",
+  "deletedOnly": [
+    "/workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/nuget",
+    "/workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/http",
+    "/workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites-attempt02/nuget",
+    "/workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites-attempt02/http"
+  ],
+  "deletedFiles": 1666,
+  "deletedLogicalBytes": 707536450,
+  "deletedAllocatedBytes": 711258112,
+  "preservedFiles": 644,
+  "preservedLogicalBytes": 93710508,
+  "allPreservedPhysicalBodiesSameSHA": true,
+  "closedOriginalCommandFamilies": [
+    {
+      "suite": "/workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites",
+      "status": "FAIL",
+      "commandFamilies": 9,
+      "allOriginalBirthsGone": true
+    },
+    {
+      "suite": "/workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites-attempt02",
+      "status": "PASS",
+      "commandFamilies": 10,
+      "allOriginalBirthsGone": true
+    }
+  ],
+  "noOwnedCacheActiveCwdOrOpenHandles": true,
+  "workspaceAvailableBefore": 272650240,
+  "workspaceAvailableAfter": 985751552,
+  "inventories": [
+    {
+      "path": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/capacity/preserved-evidence-and-compiled-before.json.gz",
+      "bytes": 21695,
+      "sha256": "f59d7899fe6b567c902ae71f0c5bab11d6da7698323448a1cc9b17b0fa4a9dfb"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/capacity/retired-cache-exact-inventory.json.gz",
+      "bytes": 87160,
+      "sha256": "b514735c2a95a64bc25bf9dfeef461d8422132a01583d430934735cb629f580f"
+    }
+  ],
+  "qualification": "Only C4 historical own NuGet/http caches removed. Both original failure and76/76pass logs/results/TRX/source/runtime pins, actual compiledbin/obj/fixtures/safe evidence preserved. No shared cache/source/otherworker/executable/evidence deletion."
+}

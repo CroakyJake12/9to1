@@ -1,0 +1,14 @@
+{
+  "artifactURL": "https://repo.maven.apache.org/maven2/com/icegreen/greenmail-standalone/2.1.14/greenmail-standalone-2.1.14.jar",
+  "jarSHA256": "0381392f3a44e4d8ae78051778440f58820d01acaf5757c3f43649deda8c1d23",
+  "jarBytes": 10976828,
+  "sourceRepository": "https://github.com/greenmail-mail-test/greenmail",
+  "releaseTag": "release-2.1.14",
+  "annotatedTagObject": "fddd2b1e45c01008cf737268a3f44a426642e442",
+  "peeledCommit": "cdde8bb9488f11763df0737d69a892cf131b9445",
+  "javaPath": "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64/bin/java",
+  "javaSHA256": "1c7e3313ab05bef3da61d7659a12cc50622ddc41b6db2b3a88d480445bf9619f",
+  "opensslPath": "/usr/bin/openssl",
+  "opensslSHA256": "30cc7c491903d6d8bca54406889c0334a167777397458214b5bd498c51b6fd97",
+  "qualification": "Real isolated maintained test server; no cloud account/Home Send/native production deployment claim"
+}

@@ -1,0 +1,342 @@
+[
+  {
+    "name": "head-before",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 102923,
+        "birth": 1443939,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.032,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 102924,
+        "birth": 1443942,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.034,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "native-restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+      "--configfile",
+      "/workspace/team-c-c5-wave-canonical5-provisional/NuGet.Config",
+      "-p:Configuration=Release",
+      "--disable-parallel",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 102945,
+        "birth": 1443946,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.487,
+    "bytes": 675,
+    "familyClosed": true
+  },
+  {
+    "name": "native-build",
+    "argv": [
+      "dotnet",
+      "build",
+      "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 102965,
+        "birth": 1444094,
+        "gone": true
+      },
+      {
+        "pid": 102987,
+        "birth": 1444197,
+        "gone": true
+      },
+      {
+        "pid": 103014,
+        "birth": 1444577,
+        "gone": true
+      },
+      {
+        "pid": 103032,
+        "birth": 1444776,
+        "gone": true
+      },
+      {
+        "pid": 103079,
+        "birth": 1445589,
+        "gone": true
+      },
+      {
+        "pid": 103115,
+        "birth": 1446230,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 23.417,
+    "bytes": 866,
+    "familyClosed": true
+  },
+  {
+    "name": "native-target",
+    "argv": [
+      "dotnet",
+      "msbuild",
+      "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetFramework,RuntimeIdentifier,UseAppHost",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103133,
+        "birth": 1446436,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.477,
+    "bytes": 283,
+    "familyClosed": true
+  },
+  {
+    "name": "original-selftest",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "--self-test"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103144,
+        "birth": 1446484,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.353,
+    "bytes": 229,
+    "familyClosed": true
+  },
+  {
+    "name": "markers-regions",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "--markers-regions-test"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103152,
+        "birth": 1446519,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.316,
+    "bytes": 174,
+    "familyClosed": true
+  },
+  {
+    "name": "pcm-formats",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "--pcm-formats-test"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103160,
+        "birth": 1446551,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.336,
+    "bytes": 179,
+    "familyClosed": true
+  },
+  {
+    "name": "files-workflow",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "--files-workflow-test"
+    ],
+    "exit": -6,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103168,
+        "birth": 1446585,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": -6,
+    "seconds": 0.073,
+    "bytes": 447,
+    "familyClosed": true
+  },
+  {
+    "name": "head-after",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103175,
+        "birth": 1446592,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.029,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103176,
+        "birth": 1446595,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.03,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]

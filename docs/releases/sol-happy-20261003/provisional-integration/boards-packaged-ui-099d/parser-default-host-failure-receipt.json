@@ -1,0 +1,9 @@
+{
+  "operation": "Local PowerShell7 parse of actual proposed harness",
+  "status": "NOT_PARSED_HOST_ABORT",
+  "observedToolOutputChunk": "f5be3f",
+  "observedExceptionType": "System.TypeInitializationException",
+  "cause": "System.IO.IOException: Read-only file system /home/agent/.cache/powershell before parser invocation",
+  "exitQualification": "Process abort observed; no separate numeric process exit captured in the compound shell response. No native or parser success inferred.",
+  "correction": "Configure this isolated syntax-validation host XDG cache/config/data locations, preserving actual HOME and USERPROFILE."
+}

@@ -1,0 +1,77 @@
+// Copyright (c) Files Community
+// Licensed under the MIT License.
+
+using Files.App.ViewModels.Properties;
+using Microsoft.UI.Xaml.Media.Imaging;
+using System.IO;
+
+namespace Files.App.ViewModels.Previews
+{
+	public sealed class FolderPreviewViewModel
+	{
+		private readonly InfoPaneViewModel infoPaneViewModel = Ioc.Default.GetRequiredService<InfoPaneViewModel>();
+		public ListedItem Item { get; }
+
+		public BitmapImage? Thumbnail { get; set; } = new();
+
+		private BaseStorageFolder? Folder { get; set; }
+
+		public FolderPreviewViewModel(ListedItem item)
+			=> Item = item;
+
+		public Task LoadAsync()
+			=> LoadPreviewAndDetailsAsync();
+
+		private async Task LoadPreviewAndDetailsAsync()
+		{
+			var itemPath = Item.ItemPath!;
+			var rootItem = await FilesystemTasks.WrapNullable(() => DriveHelpers.GetRootFromPathAsync(itemPath));
+			var folder = await StorageFileExtensions.DangerousGetFolderFromPathAsync(itemPath, rootItem.Result)
+				?? throw new InvalidOperationException("The preview folder could not be opened.");
+
+			Folder = folder;
+
+			var result = await FileThumbnailHelper.GetIconAsync(
+				Item.ItemPath,
+				Constants.ShellIconSizes.Jumbo,
+				true,
+				IconOptions.None);
+
+			if (result is not null)
+				Thumbnail = await result.ToBitmapAsync();
+
+			// If the selected item is the root of a drive (e.g. "C:\") or a cloud drive,
+			// we do not need to load the properties below, since they will not be shown.
+			// Drive properties will be obtained through the DrivesViewModel service.
+			if (Item.IsDriveRoot || infoPaneViewModel?.SelectedDriveItem is not null)
+				return;
+
+			var info = await folder.GetBasicPropertiesAsync();
+
+			Item.FileDetails =
+			[
+				GetFileProperty("PropertyItemCount", infoPaneViewModel?.DirectoryItemCount),
+				GetFileProperty("PropertyDateModified", info.DateModified),
+				GetFileProperty("PropertyDateCreated", info.DateCreated),
+				GetFileProperty("PropertyParsingPath", folder.Path),
+			];
+
+			if (GitHelpers.IsRepositoryEx(Item.ItemPath, out var repoPath) &&
+				!string.IsNullOrEmpty(repoPath))
+			{
+				var gitDirectory = GitHelpers.GetGitRepositoryPath(folder.Path, Path.GetPathRoot(folder.Path));
+				var headName = (await GitHelpers.GetRepositoryHead(gitDirectory))?.Name ?? string.Empty;
+				var repositoryName = GitHelpers.GetOriginRepositoryName(gitDirectory);
+
+				if (!string.IsNullOrEmpty(gitDirectory))
+					Item.FileDetails.Add(GetFileProperty("GitOriginRepositoryName", repositoryName));
+
+				if (!string.IsNullOrWhiteSpace(headName))
+					Item.FileDetails.Add(GetFileProperty("GitCurrentBranch", headName));
+			}
+		}
+
+		private static FileProperty GetFileProperty(string nameResource, object? value)
+			=> new() { NameResource = nameResource, Value = value };
+	}
+}

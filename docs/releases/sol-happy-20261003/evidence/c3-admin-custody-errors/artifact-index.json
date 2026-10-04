@@ -1,0 +1,1530 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 798,
+      "sha256": "f729b8e78f97686cdf6544788bd57384cda4618f480fd0128acbc8e44bc1b2ad"
+    },
+    {
+      "path": "custody-error-before-final-send/send-close-final/88028-pending.json",
+      "bytes": 528,
+      "sha256": "ce66e14ab365919fd20f463ed2891a1360b4c4a75dc26efe1d0c1a2fffae1477"
+    },
+    {
+      "path": "custody-error-before-final-send/send-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "aa72f5af161ec68de57198463a7a38a01262c049d79d448b0bb564bde1981753"
+    },
+    {
+      "path": "custody-error-before-final-send/send-close-final/negative-observation.json",
+      "bytes": 260,
+      "sha256": "225b37296d44011ca8535885b6b3eed1772fbf54d49916507593f1a4894eaa70"
+    },
+    {
+      "path": "custody-error-before-final-send.log",
+      "bytes": 1487,
+      "sha256": "0741d1c3e17bdcd524300609df49aa50d65a0c6da06e7cb026f86045437e698e"
+    },
+    {
+      "path": "custody-error-before-final-wait/wait-close-final/88008-pending.json",
+      "bytes": 528,
+      "sha256": "484fb073d6cacf73d3661772902409bab86533ca0ac95ddd36d52c7476a89490"
+    },
+    {
+      "path": "custody-error-before-final-wait/wait-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "45d8bc9f7398a2ab68ccde5a108576a94792240c5b7f4e68738d4b17b3a5aa53"
+    },
+    {
+      "path": "custody-error-before-final-wait/wait-close-final/negative-observation.json",
+      "bytes": 262,
+      "sha256": "20a8b94dd428b9e1a6e0199e9e2f9caecc322b4135512079756cd03324034ffa"
+    },
+    {
+      "path": "custody-error-before-final-wait.log",
+      "bytes": 1491,
+      "sha256": "63fb1b28a24ca72fb3b453a6e94c19b3625fe5042fd6f35ee000d4e457c2fcec"
+    },
+    {
+      "path": "custody-error-before-final-write/write-close-final/88018-pending.json",
+      "bytes": 528,
+      "sha256": "3ff9c7f7a2d4f619e0a87551d7904260f73c931a472eca2222dd08fc67fbfbf0"
+    },
+    {
+      "path": "custody-error-before-final-write/write-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "556aaee927c816e6f864b3b03d6a643ecdb4d3eaf5ada12a6ca6d9f9377fd70c"
+    },
+    {
+      "path": "custody-error-before-final-write/write-close-final/negative-observation.json",
+      "bytes": 263,
+      "sha256": "68508d8b5b4310e8c9f8df90777f88b7be8bcc2861ce4d7512bbb0003f2e643b"
+    },
+    {
+      "path": "custody-error-before-final-write.log",
+      "bytes": 1491,
+      "sha256": "63fb1b28a24ca72fb3b453a6e94c19b3625fe5042fd6f35ee000d4e457c2fcec"
+    },
+    {
+      "path": "custody-error-before-send/send-close-final/87688-pending.json",
+      "bytes": 528,
+      "sha256": "02eedae35f2e355d88b1b271050fdfcef329e04cad73e437acea0d6e3dfbd71b"
+    },
+    {
+      "path": "custody-error-before-send/send-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "7a7509331b16cecc9fc40b6de0ff5a6f8cdb26510c5db7c3898ad545a042ed76"
+    },
+    {
+      "path": "custody-error-before-send/send-close-final/negative-observation.json",
+      "bytes": 260,
+      "sha256": "d66276ba67951420d039437f4c998bb65cb7675fca2121505136ec16d8c2b24b"
+    },
+    {
+      "path": "custody-error-before-send.log",
+      "bytes": 1471,
+      "sha256": "e9f71b03bcb6d28bf01f3eead5688a16a9d2e5061666d4632465427361d72ec3"
+    },
+    {
+      "path": "custody-error-before-wait/wait-close-final/87344-pending.json",
+      "bytes": 528,
+      "sha256": "980084ef86a62f0619ac87e5a66000710fa09eb11147ff64ee6d81a08ae94b53"
+    },
+    {
+      "path": "custody-error-before-wait/wait-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "261ec0459a7bd1323e1b019a668e92cf07ac4d1c145ed04ec5fa77e548356916"
+    },
+    {
+      "path": "custody-error-before-wait/wait-close-final/negative-observation.json",
+      "bytes": 262,
+      "sha256": "dafc92472a8285bbc2b26348ab962a7198d4f99ab98bc1cafd563b05ba0a7c54"
+    },
+    {
+      "path": "custody-error-before-wait.log",
+      "bytes": 1475,
+      "sha256": "75a58869a60b851daaf5eb2a08e45ee8c98d0ebd422f2ccd8bff46cc820d2792"
+    },
+    {
+      "path": "custody-error-before-write/write-close-final/87431-pending.json",
+      "bytes": 528,
+      "sha256": "27a9b7ad05a2fe11332cd5f378014b8e6385b4ab37344fd26eb20d11ac2642ce"
+    },
+    {
+      "path": "custody-error-before-write/write-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "aa03296f63c7e08ce5ea39660c9dff50da43fd4400ee682535af4286aab85a0f"
+    },
+    {
+      "path": "custody-error-before-write/write-close-final/negative-observation.json",
+      "bytes": 263,
+      "sha256": "a12252cab23ea9f85c07b4216e25ecaf9a522e8b52225b0524af559a804dc30f"
+    },
+    {
+      "path": "custody-error-before-write.log",
+      "bytes": 1475,
+      "sha256": "75a58869a60b851daaf5eb2a08e45ee8c98d0ebd422f2ccd8bff46cc820d2792"
+    },
+    {
+      "path": "custody-error-controls-attempt1/birth-mismatch/86965-pending.json",
+      "bytes": 528,
+      "sha256": "d92fa46058f83cdadc79c28b5e09760361d74b52af574b011f69c70886733db9"
+    },
+    {
+      "path": "custody-error-controls-attempt1/birth-mismatch/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "85be23ec48dbe881b8c3621328582501fe2de7863cc9659b1f9d86b96051d480"
+    },
+    {
+      "path": "custody-error-controls-attempt1/birth-mismatch-final/86965-pending.json",
+      "bytes": 528,
+      "sha256": "d92fa46058f83cdadc79c28b5e09760361d74b52af574b011f69c70886733db9"
+    },
+    {
+      "path": "custody-error-controls-attempt1/birth-mismatch-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "85be23ec48dbe881b8c3621328582501fe2de7863cc9659b1f9d86b96051d480"
+    },
+    {
+      "path": "custody-error-controls-attempt1/birth-mismatch-final/negative-observation.json",
+      "bytes": 212,
+      "sha256": "31196196e59cb957b6ff8cf5094031f520854955f45282b920176a81f8ebb61a"
+    },
+    {
+      "path": "custody-error-controls-attempt1/creator/86968-pending.json",
+      "bytes": 528,
+      "sha256": "5effd255d4c6d1ee60e1765ca8787d4b9fc5b00ab30df784411fda6eef3021b2"
+    },
+    {
+      "path": "custody-error-controls-attempt1/creator/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "a6c3804f5f16248ffb0bfdd756c0df51f1f7cf32693d200fd625775a43318b9b"
+    },
+    {
+      "path": "custody-error-controls-attempt1/creator-final/86968-pending.json",
+      "bytes": 528,
+      "sha256": "5effd255d4c6d1ee60e1765ca8787d4b9fc5b00ab30df784411fda6eef3021b2"
+    },
+    {
+      "path": "custody-error-controls-attempt1/creator-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "a6c3804f5f16248ffb0bfdd756c0df51f1f7cf32693d200fd625775a43318b9b"
+    },
+    {
+      "path": "custody-error-controls-attempt1/creator-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "dc913a902133c19ed7ef16cb94b918a561a5686c49d7d2edc6d0de5191d56c38"
+    },
+    {
+      "path": "custody-error-controls-attempt1/escape/86996-pending.json",
+      "bytes": 260,
+      "sha256": "2b94f37608927dc868ef08f2bb957df57307b2f5eb3612ef14fc2829c2078fa8"
+    },
+    {
+      "path": "custody-error-controls-attempt1/escape/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt1/escape/negative-observation.json",
+      "bytes": 121,
+      "sha256": "a227f659150ca9fb9b87f78e93b85a8f08941de2c8678c2951b08f6cd75f353d"
+    },
+    {
+      "path": "custody-error-controls-attempt1/escape-final/86996-pending.json",
+      "bytes": 260,
+      "sha256": "2b94f37608927dc868ef08f2bb957df57307b2f5eb3612ef14fc2829c2078fa8"
+    },
+    {
+      "path": "custody-error-controls-attempt1/escape-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt1/escape-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "9bde222c85d1b910fe7f23cce39c3210a5f73013cd2f2190443dcd12cda38e34"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign/86971-pending.json",
+      "bytes": 528,
+      "sha256": "d14b0103af5c96b5a6e43b9357ace5bdd9c578ab5ebc648e6550a38886bea815"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "68f1d2ac6e7556f20cce1fa5e18fd7da7cbad3800992c835f2a58fb7736293a0"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign-final/86971-pending.json",
+      "bytes": 528,
+      "sha256": "d14b0103af5c96b5a6e43b9357ace5bdd9c578ab5ebc648e6550a38886bea815"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "68f1d2ac6e7556f20cce1fa5e18fd7da7cbad3800992c835f2a58fb7736293a0"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "ac1129fae07ad8d99af3d4603fd08ca554987d9ba45f1bb1d4f98f66ca1d8ac4"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign-refusal/86971-pending.json",
+      "bytes": 308,
+      "sha256": "e1722ac9b4e7b59f41bc16443386a4e91674ea9b1d64ef46b39fb341446b875a"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign-refusal/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt1/foreign-refusal/negative-observation.json",
+      "bytes": 116,
+      "sha256": "d2715be2ca7121e09b111c68aa99886e37b93bacf561b1a318fba263037d39d6"
+    },
+    {
+      "path": "custody-error-controls-attempt1/live/86983-pending.json",
+      "bytes": 528,
+      "sha256": "2c8301aa27bed53318b3a6a834223b917e16ad80330d7af90008deeaa8ee9f08"
+    },
+    {
+      "path": "custody-error-controls-attempt1/live/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "7aea5b4402b391fe7ad8de6cd59c9aa8021e6ee4801f96ee936144c352a35861"
+    },
+    {
+      "path": "custody-error-controls-attempt1/live-final/86983-pending.json",
+      "bytes": 528,
+      "sha256": "2c8301aa27bed53318b3a6a834223b917e16ad80330d7af90008deeaa8ee9f08"
+    },
+    {
+      "path": "custody-error-controls-attempt1/live-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "7aea5b4402b391fe7ad8de6cd59c9aa8021e6ee4801f96ee936144c352a35861"
+    },
+    {
+      "path": "custody-error-controls-attempt1/live-final/negative-observation.json",
+      "bytes": 202,
+      "sha256": "d7b71f438c2e2b20e1246ceb403e2042a595603259e6f5640d43c6e40b3dec03"
+    },
+    {
+      "path": "custody-error-controls-attempt1/not-owned/86989-pending.json",
+      "bytes": 528,
+      "sha256": "4442c84b7f290440bb6d370934b8fafb4ebbab886cb2c9230e28db3cda21c12e"
+    },
+    {
+      "path": "custody-error-controls-attempt1/not-owned/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "da35cb67c2dd0040cf8c002bee965f1bd27cfbe57d87e30097affc2eeec1dc52"
+    },
+    {
+      "path": "custody-error-controls-attempt1/not-owned-final/86989-pending.json",
+      "bytes": 528,
+      "sha256": "4442c84b7f290440bb6d370934b8fafb4ebbab886cb2c9230e28db3cda21c12e"
+    },
+    {
+      "path": "custody-error-controls-attempt1/not-owned-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "da35cb67c2dd0040cf8c002bee965f1bd27cfbe57d87e30097affc2eeec1dc52"
+    },
+    {
+      "path": "custody-error-controls-attempt1/not-owned-final/negative-observation.json",
+      "bytes": 207,
+      "sha256": "bbc175270bcebf8f712fd54d432d7b65d645980562486bfcce038ab2964666b6"
+    },
+    {
+      "path": "custody-error-controls-attempt1/orphan/86977-pending.json",
+      "bytes": 528,
+      "sha256": "aeae0b335880c317a70fc1e595d8c589c2ff4bbf53e41324e311e0bb5e715fd7"
+    },
+    {
+      "path": "custody-error-controls-attempt1/orphan/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "b04d7cab54e0bf0c7f3f1d17a88fd4f53db16913296b541b778f9e315a3b4d45"
+    },
+    {
+      "path": "custody-error-controls-attempt1/orphan-final/86977-pending.json",
+      "bytes": 528,
+      "sha256": "aeae0b335880c317a70fc1e595d8c589c2ff4bbf53e41324e311e0bb5e715fd7"
+    },
+    {
+      "path": "custody-error-controls-attempt1/orphan-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "b04d7cab54e0bf0c7f3f1d17a88fd4f53db16913296b541b778f9e315a3b4d45"
+    },
+    {
+      "path": "custody-error-controls-attempt1/orphan-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "263f3c739dcacaa6e16c79dae4bcb9c4b361e70b5e649e550ac6aab604bfd947"
+    },
+    {
+      "path": "custody-error-controls-attempt1/setup-acquire-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt1/setup-acquire-final/negative-observation.json",
+      "bytes": 287,
+      "sha256": "f0062b6b8d4ddf4f4321d9eeb305cb30ebe6518df8b26ba961c33ed04a54f426"
+    },
+    {
+      "path": "custody-error-controls-attempt1/setup-close-final/86960-pending.json",
+      "bytes": 259,
+      "sha256": "652cc17a19c3c57a4394a3c97b2ee6f71f2a5d9a05aa3be3bf02d5d96b6361a6"
+    },
+    {
+      "path": "custody-error-controls-attempt1/setup-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "d57ab8c7ee419c0585f756fef5c2d76de55154712842b1c8fd8be3710763afc8"
+    },
+    {
+      "path": "custody-error-controls-attempt1/setup-close-final/negative-observation.json",
+      "bytes": 282,
+      "sha256": "8a2c5e8386777e928fdd806b244c48866a21da36a093f38d0fac16c062fba5f8"
+    },
+    {
+      "path": "custody-error-controls-attempt1/unenrolled/negative-observation.json",
+      "bytes": 38,
+      "sha256": "470f001781cb5b388dbf97f531c8e777fa712e727184ea142a84496fc7153e9a"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close/86962-pending.json",
+      "bytes": 528,
+      "sha256": "c7cf4ff06cdfda3b1fb2138ab0a43bb18e29f7c0c4a1395a7e1307c2b9fac3f4"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "b6ef12580d4a2e5a388a063597fcc8545f048c379b245250c8e86ee542712868"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close-final/86962-pending.json",
+      "bytes": 528,
+      "sha256": "c7cf4ff06cdfda3b1fb2138ab0a43bb18e29f7c0c4a1395a7e1307c2b9fac3f4"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "b6ef12580d4a2e5a388a063597fcc8545f048c379b245250c8e86ee542712868"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "0fe576f6db240a4aba43921d86a4f85ef2b0204ec6aa6f715735e7a5139a0e6c"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close-negative/86962-pending.json",
+      "bytes": 308,
+      "sha256": "c5ca0c98c05e8a07bbf5c5281fdd1c36fee553b7d8845c60843d77eb06783d1e"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt1/wait-close-negative/negative-observation.json",
+      "bytes": 151,
+      "sha256": "fe86ccb4a4670b02159b87b00b7d926c6f2605f56e3eeee12298b3449cfaebaf"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close/86957-pending.json",
+      "bytes": 528,
+      "sha256": "d7cbce95f4a6e4fc5d86b9fee1391b9e20a802ea44f800e4ed83b94e97eac3b6"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "8f8ca349958a0821f63ca7e7f49036b15b85185c5ea8bc805ae52e72ebcaee20"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close-final/86957-pending.json",
+      "bytes": 528,
+      "sha256": "d7cbce95f4a6e4fc5d86b9fee1391b9e20a802ea44f800e4ed83b94e97eac3b6"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "8f8ca349958a0821f63ca7e7f49036b15b85185c5ea8bc805ae52e72ebcaee20"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close-final/negative-observation.json",
+      "bytes": 209,
+      "sha256": "a2d3a35a4481206761f9a177dc32cfe6a40ecc8046469045f8136364b176b603"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close-negative/86957-pending.json",
+      "bytes": 308,
+      "sha256": "75d417bb2b19fd855aafac5d790efe32ecf5d179ee0bddd288e15e511ff1daf1"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt1/write-close-negative/negative-observation.json",
+      "bytes": 154,
+      "sha256": "0a1616fec1e7b541cd28b542e066d876256635c8232a1060a60e36371af49cf1"
+    },
+    {
+      "path": "custody-error-controls-attempt1.log",
+      "bytes": 1487,
+      "sha256": "8340fa2616deb041ab98a27b43621de4dfffceb254ab041ec4534d8fb5118422"
+    },
+    {
+      "path": "custody-error-controls-attempt2/birth-mismatch/87590-pending.json",
+      "bytes": 528,
+      "sha256": "4c34b7c7999bdd9d7c6c47cce6dac76a478404887f7c38e795acd939b19ce4d5"
+    },
+    {
+      "path": "custody-error-controls-attempt2/birth-mismatch/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "3af7156b7fa9200b6f0152597d7f82778b2909f01e4041eff62d58346cf720bb"
+    },
+    {
+      "path": "custody-error-controls-attempt2/birth-mismatch-final/87590-pending.json",
+      "bytes": 528,
+      "sha256": "4c34b7c7999bdd9d7c6c47cce6dac76a478404887f7c38e795acd939b19ce4d5"
+    },
+    {
+      "path": "custody-error-controls-attempt2/birth-mismatch-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "3af7156b7fa9200b6f0152597d7f82778b2909f01e4041eff62d58346cf720bb"
+    },
+    {
+      "path": "custody-error-controls-attempt2/birth-mismatch-final/negative-observation.json",
+      "bytes": 212,
+      "sha256": "b262786c7245eb7337fc885de71fe800ecadb3e881fd9e375da605b255d7440d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/creator/87636-pending.json",
+      "bytes": 528,
+      "sha256": "e040d85db82bc67792b0416131a03595c0dd12d1aada45d5a4eda91f3ea5dec2"
+    },
+    {
+      "path": "custody-error-controls-attempt2/creator/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5454d1b3e01c3bea0da5d7440c95aeb2e78417f71acfc9a2de2c03324e9a73fa"
+    },
+    {
+      "path": "custody-error-controls-attempt2/creator-final/87636-pending.json",
+      "bytes": 528,
+      "sha256": "e040d85db82bc67792b0416131a03595c0dd12d1aada45d5a4eda91f3ea5dec2"
+    },
+    {
+      "path": "custody-error-controls-attempt2/creator-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5454d1b3e01c3bea0da5d7440c95aeb2e78417f71acfc9a2de2c03324e9a73fa"
+    },
+    {
+      "path": "custody-error-controls-attempt2/creator-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "d9a1f64fed696378e3b58f1868ff3d8fdd32fedd72357ac2c36210963e86cf2c"
+    },
+    {
+      "path": "custody-error-controls-attempt2/escape/87653-pending.json",
+      "bytes": 260,
+      "sha256": "1db55c4f5a6f980587ef95e90807d9bef2155e70735e1a14b418e71f9e94576d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/escape/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/escape/negative-observation.json",
+      "bytes": 121,
+      "sha256": "558764ca43e4cb34d1cf3c28edcdb14ed19838b08beccf50bc582fed4bf48142"
+    },
+    {
+      "path": "custody-error-controls-attempt2/escape-final/87653-pending.json",
+      "bytes": 260,
+      "sha256": "1db55c4f5a6f980587ef95e90807d9bef2155e70735e1a14b418e71f9e94576d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/escape-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/escape-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "5c59c902b0f7d6a8715413be18e40868cfa0b458b1a174ac744f1a97d350ab91"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign/87639-pending.json",
+      "bytes": 528,
+      "sha256": "a07e4c5f2d563bcecced65f6c2d8623690ae0221b87babd75e75a3676e8f3504"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "06ec6e0bed709e4f15dc7884cc8497b47882afecd01b279ff5f50f6f8ed56ea6"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign-final/87639-pending.json",
+      "bytes": 528,
+      "sha256": "a07e4c5f2d563bcecced65f6c2d8623690ae0221b87babd75e75a3676e8f3504"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "06ec6e0bed709e4f15dc7884cc8497b47882afecd01b279ff5f50f6f8ed56ea6"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "ce58e17f5f02644d44c3732ba7f7cd26872611066743f2c0be6c783e6cfedaeb"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign-refusal/87639-pending.json",
+      "bytes": 308,
+      "sha256": "b067995a0a7800a5402d9446b934a8081cabb8c092c2e6bea0c50c5c18eacd22"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign-refusal/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/foreign-refusal/negative-observation.json",
+      "bytes": 116,
+      "sha256": "e550f411f8b4717cfa18200520081f4fba7f853e34235f627886b21a354b62ca"
+    },
+    {
+      "path": "custody-error-controls-attempt2/live/87646-pending.json",
+      "bytes": 528,
+      "sha256": "05018e3edcc8dbf0e709d0e83433981dd4067bd32b8df04cfd0ac8b03027dec8"
+    },
+    {
+      "path": "custody-error-controls-attempt2/live/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5d06e102d645b4a52b4234eb1239a92b39bf1cb5079a2f1886250d88de9a8085"
+    },
+    {
+      "path": "custody-error-controls-attempt2/live-final/87646-pending.json",
+      "bytes": 528,
+      "sha256": "05018e3edcc8dbf0e709d0e83433981dd4067bd32b8df04cfd0ac8b03027dec8"
+    },
+    {
+      "path": "custody-error-controls-attempt2/live-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5d06e102d645b4a52b4234eb1239a92b39bf1cb5079a2f1886250d88de9a8085"
+    },
+    {
+      "path": "custody-error-controls-attempt2/live-final/negative-observation.json",
+      "bytes": 202,
+      "sha256": "d50179591753aba2eb66fac65a07748f8d0ee972b299a5c739268f30bfece30e"
+    },
+    {
+      "path": "custody-error-controls-attempt2/not-owned/87649-pending.json",
+      "bytes": 528,
+      "sha256": "e2408c76e2708526d17412a8188fe78765a6dfb052e1a56d1de653cc938bf792"
+    },
+    {
+      "path": "custody-error-controls-attempt2/not-owned/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5c50578a58b66c974828b1594e4a90bdf8a107998f84a16d551ed2f9e97b88de"
+    },
+    {
+      "path": "custody-error-controls-attempt2/not-owned-final/87649-pending.json",
+      "bytes": 528,
+      "sha256": "e2408c76e2708526d17412a8188fe78765a6dfb052e1a56d1de653cc938bf792"
+    },
+    {
+      "path": "custody-error-controls-attempt2/not-owned-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "5c50578a58b66c974828b1594e4a90bdf8a107998f84a16d551ed2f9e97b88de"
+    },
+    {
+      "path": "custody-error-controls-attempt2/not-owned-final/negative-observation.json",
+      "bytes": 207,
+      "sha256": "010a6ac15e53e8ba7a5a46f0ba10821a797f93e19ef95958fdc38c43b9016c55"
+    },
+    {
+      "path": "custody-error-controls-attempt2/orphan/87643-pending.json",
+      "bytes": 528,
+      "sha256": "57815cc1b7da3e4c8a21e0382ddc3ac5836cc1571bb6e2a7ce6fc4a0533b364f"
+    },
+    {
+      "path": "custody-error-controls-attempt2/orphan/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "e846ec851d4b34f4f5d677e5910fa1563b63fdcd527996e6dda0fce6b131aa1f"
+    },
+    {
+      "path": "custody-error-controls-attempt2/orphan-final/87643-pending.json",
+      "bytes": 528,
+      "sha256": "57815cc1b7da3e4c8a21e0382ddc3ac5836cc1571bb6e2a7ce6fc4a0533b364f"
+    },
+    {
+      "path": "custody-error-controls-attempt2/orphan-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "e846ec851d4b34f4f5d677e5910fa1563b63fdcd527996e6dda0fce6b131aa1f"
+    },
+    {
+      "path": "custody-error-controls-attempt2/orphan-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "a7e5c9324dd809eebd6c36ea1562850e18ffc2b08bbaa850dbff758480944ad3"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close/87584-pending.json",
+      "bytes": 528,
+      "sha256": "1407f295ba1dc24402dfcd3ca0298bd0dcc0063f51e81c3c1159813df88f4b5b"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "446f606598240cfe6c5d50cf88e44de556a13140dbe7e75af8b99b9049d71336"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close-final/87584-pending.json",
+      "bytes": 528,
+      "sha256": "1407f295ba1dc24402dfcd3ca0298bd0dcc0063f51e81c3c1159813df88f4b5b"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "446f606598240cfe6c5d50cf88e44de556a13140dbe7e75af8b99b9049d71336"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "359339f03cfdb93991e9b92886fa1a1723d6146765379934cc06c52d8104a4a2"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close-negative/87584-pending.json",
+      "bytes": 308,
+      "sha256": "0ab483e664fbd77de12fb5f596f8c1df66a442eac659e3663ba01c303f81b4d2"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/send-close-negative/negative-observation.json",
+      "bytes": 153,
+      "sha256": "f2c07d1214c490a67856068e070a8d83a94d97cbe943e6553db2f07e6304b7f2"
+    },
+    {
+      "path": "custody-error-controls-attempt2/setup-acquire-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/setup-acquire-final/negative-observation.json",
+      "bytes": 287,
+      "sha256": "2cd254aca6057e711445a0b9c40a3b0ca3c18cea82d681512af701de3d956c0c"
+    },
+    {
+      "path": "custody-error-controls-attempt2/setup-close-final/87582-pending.json",
+      "bytes": 259,
+      "sha256": "1b2678238759f0ab10c9229ccce21036c789dbd7b01adecef7e7a7ecc777931b"
+    },
+    {
+      "path": "custody-error-controls-attempt2/setup-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "bb4a3261c7bcc2ef52badadbf3258f9d2ba6a62cd609f59ad916fb93a8794a94"
+    },
+    {
+      "path": "custody-error-controls-attempt2/setup-close-final/negative-observation.json",
+      "bytes": 282,
+      "sha256": "a879fb3a457b5a1b661dbb45901c0cc492a8f754dfb47dbb1764f0bbb6aed16c"
+    },
+    {
+      "path": "custody-error-controls-attempt2/unenrolled/negative-observation.json",
+      "bytes": 38,
+      "sha256": "470f001781cb5b388dbf97f531c8e777fa712e727184ea142a84496fc7153e9a"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close/87587-pending.json",
+      "bytes": 528,
+      "sha256": "a7aa2b1b655dfac77d409c22c62cf912a90279481f4cd31a49155c810abd77fb"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "0df7afe4000e07b20662b295eb11d0d81cad453373fc1d7d810ec8e7d6df21c8"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close-final/87587-pending.json",
+      "bytes": 528,
+      "sha256": "a7aa2b1b655dfac77d409c22c62cf912a90279481f4cd31a49155c810abd77fb"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "0df7afe4000e07b20662b295eb11d0d81cad453373fc1d7d810ec8e7d6df21c8"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "9e8397b896fb58dd331c283031662d5986870b1d62e80a65eda96faf08b59f12"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close-negative/87587-pending.json",
+      "bytes": 308,
+      "sha256": "b1c344c09e60747a5da35b31983ad88f379b136d91662a580acffd875faae046"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/wait-close-negative/negative-observation.json",
+      "bytes": 151,
+      "sha256": "fe86ccb4a4670b02159b87b00b7d926c6f2605f56e3eeee12298b3449cfaebaf"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close/87579-pending.json",
+      "bytes": 528,
+      "sha256": "3e47dcbff1bc2c1992e3f4f1ce557324071922e3de71b6ac91c89b2fa7804d82"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "2c7105db25f3c84d5906cd607c9f23178184559c43b8044421be8cd7bd305ebf"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close-final/87579-pending.json",
+      "bytes": 528,
+      "sha256": "3e47dcbff1bc2c1992e3f4f1ce557324071922e3de71b6ac91c89b2fa7804d82"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "2c7105db25f3c84d5906cd607c9f23178184559c43b8044421be8cd7bd305ebf"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close-final/negative-observation.json",
+      "bytes": 209,
+      "sha256": "3faa96aa8826867d70d95e5b85a14f0ebeaf6e3122d9d77d7fa6870f9a83057e"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close-negative/87579-pending.json",
+      "bytes": 308,
+      "sha256": "73f380a36a4f7dbe29a354e9a0354f9dd9e880b51b6e683a8ac60c3341f995e5"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt2/write-close-negative/negative-observation.json",
+      "bytes": 154,
+      "sha256": "0a1616fec1e7b541cd28b542e066d876256635c8232a1060a60e36371af49cf1"
+    },
+    {
+      "path": "custody-error-controls-attempt2.log",
+      "bytes": 1618,
+      "sha256": "32655474c3d7685d8a1dee90b9caac34651c02af0a62ff3a1bdaba26e3f49f85"
+    },
+    {
+      "path": "custody-error-controls-attempt3/birth-mismatch/87874-pending.json",
+      "bytes": 528,
+      "sha256": "e48850ae18558e02a829ebe847e54ffcc73ca85dcbd48cd93fe96f3f539fcdaf"
+    },
+    {
+      "path": "custody-error-controls-attempt3/birth-mismatch/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "0c4c22343c0a41a090286dcdc35ed292ecc1185328b5d79e9937445557952926"
+    },
+    {
+      "path": "custody-error-controls-attempt3/birth-mismatch-final/87874-pending.json",
+      "bytes": 528,
+      "sha256": "e48850ae18558e02a829ebe847e54ffcc73ca85dcbd48cd93fe96f3f539fcdaf"
+    },
+    {
+      "path": "custody-error-controls-attempt3/birth-mismatch-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "0c4c22343c0a41a090286dcdc35ed292ecc1185328b5d79e9937445557952926"
+    },
+    {
+      "path": "custody-error-controls-attempt3/birth-mismatch-final/negative-observation.json",
+      "bytes": 212,
+      "sha256": "9615f737a5d2ccaa6283995f60dadfc0c4b5228224c1be8c6dcecce7d3632e93"
+    },
+    {
+      "path": "custody-error-controls-attempt3/creator/87877-pending.json",
+      "bytes": 528,
+      "sha256": "2fdd0302484821d86a418c64a9a4ead335ee3816037093193163a984edf080c7"
+    },
+    {
+      "path": "custody-error-controls-attempt3/creator/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "59fd236d5c0783051023995812dbd7ca101b363cde197cdd8d8f1ba47246d1b7"
+    },
+    {
+      "path": "custody-error-controls-attempt3/creator-final/87877-pending.json",
+      "bytes": 528,
+      "sha256": "2fdd0302484821d86a418c64a9a4ead335ee3816037093193163a984edf080c7"
+    },
+    {
+      "path": "custody-error-controls-attempt3/creator-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "59fd236d5c0783051023995812dbd7ca101b363cde197cdd8d8f1ba47246d1b7"
+    },
+    {
+      "path": "custody-error-controls-attempt3/creator-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "aea24d02e7deacc17e5f194b84d9d3612487873e14ec1b5d26154506708420fb"
+    },
+    {
+      "path": "custody-error-controls-attempt3/escape/87894-pending.json",
+      "bytes": 260,
+      "sha256": "ba3f1879a636e192cb95dc2d3ed8fe9886311f2b70268bc1fe8f3b525bb2ec0f"
+    },
+    {
+      "path": "custody-error-controls-attempt3/escape/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt3/escape/negative-observation.json",
+      "bytes": 121,
+      "sha256": "471d96d061bbebac8fc8d01455c0a14f40f3cd31f240f7b0e1eec75a7ecf9e99"
+    },
+    {
+      "path": "custody-error-controls-attempt3/escape-final/87894-pending.json",
+      "bytes": 260,
+      "sha256": "ba3f1879a636e192cb95dc2d3ed8fe9886311f2b70268bc1fe8f3b525bb2ec0f"
+    },
+    {
+      "path": "custody-error-controls-attempt3/escape-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt3/escape-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "ade302a640a0cb289f7c274e1c53322b76bbfed082ba1e0ad9d1e533d7891c83"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign/87880-pending.json",
+      "bytes": 528,
+      "sha256": "8e3f0bea448b54bde405c2bdeb454d657053363e83c97074b406dd66dd94b6bc"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "90af91aa9490c54486da785c57fcb03f82f3554e31557031d75cff96457a5dde"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign-final/87880-pending.json",
+      "bytes": 528,
+      "sha256": "8e3f0bea448b54bde405c2bdeb454d657053363e83c97074b406dd66dd94b6bc"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "90af91aa9490c54486da785c57fcb03f82f3554e31557031d75cff96457a5dde"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "fa29b3042336fa6d751159831dde368c2f9fffa237d59419137416b1aedd2365"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign-refusal/87880-pending.json",
+      "bytes": 308,
+      "sha256": "cce4c71264b4d1c4a96d046d9a11cdb6953583b6096854183285e1a35e5b16de"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign-refusal/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt3/foreign-refusal/negative-observation.json",
+      "bytes": 116,
+      "sha256": "858b7a9ca442c8b11d1c359d2272d288d990d4deadeb5fa0c4cf022f73222d10"
+    },
+    {
+      "path": "custody-error-controls-attempt3/live/87887-pending.json",
+      "bytes": 528,
+      "sha256": "e4a1729ccdc01e51641ec1563f0882bd653051faa809d6460720acf4dc0e5e91"
+    },
+    {
+      "path": "custody-error-controls-attempt3/live/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "9046506c19f132a74b631c07f8974ca094e3fecc9860891ca523b418253e393f"
+    },
+    {
+      "path": "custody-error-controls-attempt3/live-final/87887-pending.json",
+      "bytes": 528,
+      "sha256": "e4a1729ccdc01e51641ec1563f0882bd653051faa809d6460720acf4dc0e5e91"
+    },
+    {
+      "path": "custody-error-controls-attempt3/live-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "9046506c19f132a74b631c07f8974ca094e3fecc9860891ca523b418253e393f"
+    },
+    {
+      "path": "custody-error-controls-attempt3/live-final/negative-observation.json",
+      "bytes": 202,
+      "sha256": "6246ead4da963dcad06a53f6f214fcc1fd31a7b7037e0c9883b3831d00953475"
+    },
+    {
+      "path": "custody-error-controls-attempt3/not-owned/87890-pending.json",
+      "bytes": 528,
+      "sha256": "a8ee5635b53197629015af9d0a32b2405830e987231ea13fc7aae6ac71adc2e6"
+    },
+    {
+      "path": "custody-error-controls-attempt3/not-owned/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "b09484f98ddb52e52e0fb0e9ac49194a619350c4e2c583c8ad36225c69f65db9"
+    },
+    {
+      "path": "custody-error-controls-attempt3/not-owned-final/87890-pending.json",
+      "bytes": 528,
+      "sha256": "a8ee5635b53197629015af9d0a32b2405830e987231ea13fc7aae6ac71adc2e6"
+    },
+    {
+      "path": "custody-error-controls-attempt3/not-owned-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "b09484f98ddb52e52e0fb0e9ac49194a619350c4e2c583c8ad36225c69f65db9"
+    },
+    {
+      "path": "custody-error-controls-attempt3/not-owned-final/negative-observation.json",
+      "bytes": 207,
+      "sha256": "6638d4408c154053bf9dcb0aaba206662bd313ef4c69d2356c721dd30e4126f4"
+    },
+    {
+      "path": "custody-error-controls-attempt3/orphan/87884-pending.json",
+      "bytes": 528,
+      "sha256": "44ba23ab2f33c4eaebdaeca9abb034c31baa8493297bfbfb3bec25c2fb2465da"
+    },
+    {
+      "path": "custody-error-controls-attempt3/orphan/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "22626e8756b7ff6f1cc7177b54501516e4c1c3d3e6ee8a6d998e43db46360ff9"
+    },
+    {
+      "path": "custody-error-controls-attempt3/orphan-final/87884-pending.json",
+      "bytes": 528,
+      "sha256": "44ba23ab2f33c4eaebdaeca9abb034c31baa8493297bfbfb3bec25c2fb2465da"
+    },
+    {
+      "path": "custody-error-controls-attempt3/orphan-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "22626e8756b7ff6f1cc7177b54501516e4c1c3d3e6ee8a6d998e43db46360ff9"
+    },
+    {
+      "path": "custody-error-controls-attempt3/orphan-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "bf404aa92f1eb22470a110505abe8c986681c9ec7e004a5f0a31ed9a49363ca9"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close/87868-pending.json",
+      "bytes": 528,
+      "sha256": "c87fec296d24e61a2431a36ee0959ede6035d2772e01c02bd5b0cee2aff9b681"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "910b4ecadf9e93ea4a40c357e2ff7c0614a480be1e3be8bcab581d0b1c7792e5"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close-final/87868-pending.json",
+      "bytes": 528,
+      "sha256": "c87fec296d24e61a2431a36ee0959ede6035d2772e01c02bd5b0cee2aff9b681"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "910b4ecadf9e93ea4a40c357e2ff7c0614a480be1e3be8bcab581d0b1c7792e5"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "98489c7b3b0c89a486f665fe7bb61ce9f343bafaaf9d704eab1d6e36db2abaea"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close-negative/87868-pending.json",
+      "bytes": 308,
+      "sha256": "d483ac248c05ac463ea27e12fbb7002a552a3743dd832ef33bc30507346b2580"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt3/send-close-negative/negative-observation.json",
+      "bytes": 153,
+      "sha256": "f2c07d1214c490a67856068e070a8d83a94d97cbe943e6553db2f07e6304b7f2"
+    },
+    {
+      "path": "custody-error-controls-attempt3/setup-acquire-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt3/setup-acquire-final/negative-observation.json",
+      "bytes": 287,
+      "sha256": "724e9edd3921ee605648de8ce73151ca79a2f71d3a8056e9e4f7244040c2e5a1"
+    },
+    {
+      "path": "custody-error-controls-attempt3/setup-close-final/87866-pending.json",
+      "bytes": 259,
+      "sha256": "deec02ca77d61bb91d1cb9d6615ecdb53bbfbc61d7d62f0ce7be0ab6f94f7b16"
+    },
+    {
+      "path": "custody-error-controls-attempt3/setup-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "da8a7c0019748c6720c8bb7f18453105607109388ee92219e4aa4a5e94dbd6ad"
+    },
+    {
+      "path": "custody-error-controls-attempt3/setup-close-final/negative-observation.json",
+      "bytes": 282,
+      "sha256": "19ab709fd2810e80f02aa794897d92f956adc3be3e65a4f22e3729af74d087d3"
+    },
+    {
+      "path": "custody-error-controls-attempt3/unenrolled/negative-observation.json",
+      "bytes": 38,
+      "sha256": "470f001781cb5b388dbf97f531c8e777fa712e727184ea142a84496fc7153e9a"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close/87871-pending.json",
+      "bytes": 528,
+      "sha256": "160ec0b14378bcdaf5595f930b6a9f6739b3b3bab6c2272d58e484d084b05cbb"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "7ba2a3d530581cc22091a3793903bc5880a677f0ab1b3e5653986169f772dc4f"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close-final/87871-pending.json",
+      "bytes": 528,
+      "sha256": "160ec0b14378bcdaf5595f930b6a9f6739b3b3bab6c2272d58e484d084b05cbb"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "7ba2a3d530581cc22091a3793903bc5880a677f0ab1b3e5653986169f772dc4f"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "dce411966489177720185b1d4063d98988f0a37cfc6af221e397fede12b2ac53"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close-negative/87871-pending.json",
+      "bytes": 308,
+      "sha256": "0b0e71772b81fb12fa6a544fea5cf50ed70ba98d80b9813d94519f0345dea040"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt3/wait-close-negative/negative-observation.json",
+      "bytes": 151,
+      "sha256": "fe86ccb4a4670b02159b87b00b7d926c6f2605f56e3eeee12298b3449cfaebaf"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close/87863-pending.json",
+      "bytes": 528,
+      "sha256": "9dbce86922fd9262ea475ea25b753c029e7d84922ef9a4b3954cfd72e585a6be"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "afc44ffd06bfaec67c5c4ba7f20d9f95edc8956c39bdbe51fa28ec2404598d1b"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close-final/87863-pending.json",
+      "bytes": 528,
+      "sha256": "9dbce86922fd9262ea475ea25b753c029e7d84922ef9a4b3954cfd72e585a6be"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "afc44ffd06bfaec67c5c4ba7f20d9f95edc8956c39bdbe51fa28ec2404598d1b"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close-final/negative-observation.json",
+      "bytes": 209,
+      "sha256": "39686aff4820dc21fc343c4a94cead539880677852ffb4c28a789cca45060e66"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close-negative/87863-pending.json",
+      "bytes": 308,
+      "sha256": "f711337ff2eca9385aefbcac46407c6d38de6adc892b2016aca2b8fdf0832733"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt3/write-close-negative/negative-observation.json",
+      "bytes": 154,
+      "sha256": "0a1616fec1e7b541cd28b542e066d876256635c8232a1060a60e36371af49cf1"
+    },
+    {
+      "path": "custody-error-controls-attempt3.log",
+      "bytes": 1618,
+      "sha256": "2e09f1c6e6c41e756824e3d141d2dcfd4fdf6a255d419d8bb5d6d27c83fb0ed3"
+    },
+    {
+      "path": "custody-error-controls-attempt4/birth-mismatch/88700-pending.json",
+      "bytes": 528,
+      "sha256": "d27ae09defec1be0e5a0ef61070f72b80b6dd8ab7861a054346ed3c069b6e0ad"
+    },
+    {
+      "path": "custody-error-controls-attempt4/birth-mismatch/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "e4eb8f1af804781ead814f8b5e68825be4afe4db40533673bc190c9508c1d9e8"
+    },
+    {
+      "path": "custody-error-controls-attempt4/birth-mismatch-final/88700-pending.json",
+      "bytes": 528,
+      "sha256": "d27ae09defec1be0e5a0ef61070f72b80b6dd8ab7861a054346ed3c069b6e0ad"
+    },
+    {
+      "path": "custody-error-controls-attempt4/birth-mismatch-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "e4eb8f1af804781ead814f8b5e68825be4afe4db40533673bc190c9508c1d9e8"
+    },
+    {
+      "path": "custody-error-controls-attempt4/birth-mismatch-final/negative-observation.json",
+      "bytes": 212,
+      "sha256": "1dff4ab85b86052e76a6fae98b945321051869bc852937aa7b404b0e013eb05b"
+    },
+    {
+      "path": "custody-error-controls-attempt4/creator/88739-pending.json",
+      "bytes": 528,
+      "sha256": "1bb4216824388b47b48f0670ef7ad17c028e2db7f24630677327cb2f19e91bed"
+    },
+    {
+      "path": "custody-error-controls-attempt4/creator/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "c9cbe1a219e834793ed6b4502c31f7d46c9e1027ca3da293153e13d0de7ec1a0"
+    },
+    {
+      "path": "custody-error-controls-attempt4/creator-final/88739-pending.json",
+      "bytes": 528,
+      "sha256": "1bb4216824388b47b48f0670ef7ad17c028e2db7f24630677327cb2f19e91bed"
+    },
+    {
+      "path": "custody-error-controls-attempt4/creator-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "c9cbe1a219e834793ed6b4502c31f7d46c9e1027ca3da293153e13d0de7ec1a0"
+    },
+    {
+      "path": "custody-error-controls-attempt4/creator-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "27b1f9af57f994a8f458f84a9b546aa67b140fb442e59463a5a05042c553858e"
+    },
+    {
+      "path": "custody-error-controls-attempt4/escape/88756-pending.json",
+      "bytes": 260,
+      "sha256": "0eb734dcb85ea99a2f1e5a4c5ed3df15e0258ddeabf3a1f887a9b89090de4596"
+    },
+    {
+      "path": "custody-error-controls-attempt4/escape/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/escape/negative-observation.json",
+      "bytes": 121,
+      "sha256": "c18fb3262c6c61be4fe873bcfe5c826ab4b11bb6c02d8f30deb5207ad4c2ba00"
+    },
+    {
+      "path": "custody-error-controls-attempt4/escape-final/88756-pending.json",
+      "bytes": 260,
+      "sha256": "0eb734dcb85ea99a2f1e5a4c5ed3df15e0258ddeabf3a1f887a9b89090de4596"
+    },
+    {
+      "path": "custody-error-controls-attempt4/escape-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/escape-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "dea8f1d95c046cb7b7e0f7c116ad933ce989fce1e16730742ceef87b6f5024e2"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign/88742-pending.json",
+      "bytes": 528,
+      "sha256": "722e163a09dec8083435bc4ee674b64c2c66d35771b481d39e477d2271f92451"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "1ec279bb1a64021f65d58a63ad27a17a6949a6bd36d95868b9788f8d69710f00"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign-final/88742-pending.json",
+      "bytes": 528,
+      "sha256": "722e163a09dec8083435bc4ee674b64c2c66d35771b481d39e477d2271f92451"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "1ec279bb1a64021f65d58a63ad27a17a6949a6bd36d95868b9788f8d69710f00"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign-final/negative-observation.json",
+      "bytes": 205,
+      "sha256": "064d0e4502bc8ab97ebfc3e90bf1315bd31ae5371b915742eba8a274eccaafb0"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign-refusal/88742-pending.json",
+      "bytes": 308,
+      "sha256": "23c884a5b847769f4ef6f846efcd79a6e129ec6ebc9ae32fd8895cbf7003f053"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign-refusal/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/foreign-refusal/negative-observation.json",
+      "bytes": 116,
+      "sha256": "2c980af170f6cc4c3b534fd82eec5a8769e49ffbae886f9ec47213cf330241bf"
+    },
+    {
+      "path": "custody-error-controls-attempt4/live/88749-pending.json",
+      "bytes": 528,
+      "sha256": "62e90d04db5b2da1c9712292ee4e69696de524a3d510863ae671b57bc8ec9030"
+    },
+    {
+      "path": "custody-error-controls-attempt4/live/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "67bf4cd35f0aec131a0882300c717d50e7818d6ed5e4716f166a0f237e1dec50"
+    },
+    {
+      "path": "custody-error-controls-attempt4/live-final/88749-pending.json",
+      "bytes": 528,
+      "sha256": "62e90d04db5b2da1c9712292ee4e69696de524a3d510863ae671b57bc8ec9030"
+    },
+    {
+      "path": "custody-error-controls-attempt4/live-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "67bf4cd35f0aec131a0882300c717d50e7818d6ed5e4716f166a0f237e1dec50"
+    },
+    {
+      "path": "custody-error-controls-attempt4/live-final/negative-observation.json",
+      "bytes": 202,
+      "sha256": "605caaadaca089d6790d8bb0ea699ab2022e961c1c89f295fc6dbcb035918c6f"
+    },
+    {
+      "path": "custody-error-controls-attempt4/not-owned/88752-pending.json",
+      "bytes": 528,
+      "sha256": "460adf7d7ee0f68806a9ebc0e695c879ec08945f5906ceff35b1c35a33fcf4ce"
+    },
+    {
+      "path": "custody-error-controls-attempt4/not-owned/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "83ac1de37d08f03ee300a5af504d540b83b1c9c44a9780fd4bfa66b31b17c6a3"
+    },
+    {
+      "path": "custody-error-controls-attempt4/not-owned-final/88752-pending.json",
+      "bytes": 528,
+      "sha256": "460adf7d7ee0f68806a9ebc0e695c879ec08945f5906ceff35b1c35a33fcf4ce"
+    },
+    {
+      "path": "custody-error-controls-attempt4/not-owned-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "83ac1de37d08f03ee300a5af504d540b83b1c9c44a9780fd4bfa66b31b17c6a3"
+    },
+    {
+      "path": "custody-error-controls-attempt4/not-owned-final/negative-observation.json",
+      "bytes": 207,
+      "sha256": "f722d0c67d024b2c508c3f59d8df7b111e3fc13e8505853b537924ade558b226"
+    },
+    {
+      "path": "custody-error-controls-attempt4/orphan/88746-pending.json",
+      "bytes": 528,
+      "sha256": "c3f95e4c25acfbd32280477662633d754e97a49681ad51004e874ad9b84c7e60"
+    },
+    {
+      "path": "custody-error-controls-attempt4/orphan/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "06ea94f927001fadf4a4101cc0aaae8cb6046bca33507be4086c9e05263dc385"
+    },
+    {
+      "path": "custody-error-controls-attempt4/orphan-final/88746-pending.json",
+      "bytes": 528,
+      "sha256": "c3f95e4c25acfbd32280477662633d754e97a49681ad51004e874ad9b84c7e60"
+    },
+    {
+      "path": "custody-error-controls-attempt4/orphan-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "06ea94f927001fadf4a4101cc0aaae8cb6046bca33507be4086c9e05263dc385"
+    },
+    {
+      "path": "custody-error-controls-attempt4/orphan-final/negative-observation.json",
+      "bytes": 204,
+      "sha256": "21c1f822bbdc23f0b5e391d01419e7a031007e3f41a206d9bcd21943bbfa1016"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close/88694-pending.json",
+      "bytes": 528,
+      "sha256": "a21a7ada7860fd7163c235cd2a7c6124327ecbb0771c580ac4f4a5e2f8e0bded"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "c705d0b7ea51609925f8d0e065f4b9abbfe5c202c32b32798c7b70377cbf61d6"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close-final/88694-pending.json",
+      "bytes": 528,
+      "sha256": "a21a7ada7860fd7163c235cd2a7c6124327ecbb0771c580ac4f4a5e2f8e0bded"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "c705d0b7ea51609925f8d0e065f4b9abbfe5c202c32b32798c7b70377cbf61d6"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "b4e7ec915d7f3c4b338bc0c18515bf4149bc6b23b226498736360c4f994b319c"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close-negative/88694-pending.json",
+      "bytes": 308,
+      "sha256": "d90a53c4b9b8126f7ceb2ee091f5f83abd021211d3b78bcc2a59578b43f4eae2"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/send-close-negative/negative-observation.json",
+      "bytes": 153,
+      "sha256": "f2c07d1214c490a67856068e070a8d83a94d97cbe943e6553db2f07e6304b7f2"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-acquire-final/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-acquire-final/negative-observation.json",
+      "bytes": 287,
+      "sha256": "a38d25c7e70ad8a1f63abc57350b02970e3e39a1806c1592b2d7bccd37b5c434"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-close-final/88692-pending.json",
+      "bytes": 259,
+      "sha256": "77717b0b653765165638f6f7f4610de7b333cd211f9c660ebe9a79cf97aa7ec9"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "34f1c17c20230ab8ed6f17ddf7dc2c69f291ef6ff6f335707d22314c32db1746"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-close-final/negative-observation.json",
+      "bytes": 282,
+      "sha256": "8c1413875b456686b01b34029eb6bad6545ff552d10c00d53c69ad199af92a5f"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-close-proof-final/88687-pending.json",
+      "bytes": 259,
+      "sha256": "1b2f53701e204c94758b779e6316c2a7eed193b57a2c41d47dfc4e7470560c1c"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-close-proof-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "98125240b944a2f004b95b995e09b5e6bf1cae05dd32c6f10f277d231145d6e5"
+    },
+    {
+      "path": "custody-error-controls-attempt4/setup-close-proof-final/negative-observation.json",
+      "bytes": 358,
+      "sha256": "a0b64930d5e07737bb5ff482d4440fe20dc5cb9605989266034bad337c815d50"
+    },
+    {
+      "path": "custody-error-controls-attempt4/unenrolled/negative-observation.json",
+      "bytes": 38,
+      "sha256": "470f001781cb5b388dbf97f531c8e777fa712e727184ea142a84496fc7153e9a"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close/88697-pending.json",
+      "bytes": 528,
+      "sha256": "33ec7a20729f64fe4080db39e9f9c0ff0a20ea73b31134d2a0888d10587a462d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "88cf5a394dd602051553518fd12f12304dc732f058ff9f0f81ac28872690d839"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close-final/88697-pending.json",
+      "bytes": 528,
+      "sha256": "33ec7a20729f64fe4080db39e9f9c0ff0a20ea73b31134d2a0888d10587a462d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "88cf5a394dd602051553518fd12f12304dc732f058ff9f0f81ac28872690d839"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close-final/negative-observation.json",
+      "bytes": 208,
+      "sha256": "556109fa549bac1f02696b8d997d80e13cbef0c76f3d5eedbd9af129cd8093af"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close-negative/88697-pending.json",
+      "bytes": 308,
+      "sha256": "fa267b9ae44a356e7853f2e995cf1a7ff6a89e42a405770255c67297d735fe38"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/wait-close-negative/negative-observation.json",
+      "bytes": 151,
+      "sha256": "fe86ccb4a4670b02159b87b00b7d926c6f2605f56e3eeee12298b3449cfaebaf"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close/88689-pending.json",
+      "bytes": 528,
+      "sha256": "15fbd316f58ac532bad3871dc79e2a655b5c0b5a4ade3f63e0d15a84dff7593f"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "8e33702e7d015e8cd066fa89a31d3b88b3d6ef68b43248fdec06e316d15a5db9"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close-final/88689-pending.json",
+      "bytes": 528,
+      "sha256": "15fbd316f58ac532bad3871dc79e2a655b5c0b5a4ade3f63e0d15a84dff7593f"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close-final/expected-managed-launch.json",
+      "bytes": 104,
+      "sha256": "8e33702e7d015e8cd066fa89a31d3b88b3d6ef68b43248fdec06e316d15a5db9"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close-final/negative-observation.json",
+      "bytes": 209,
+      "sha256": "a8aa08835442ed85be8d3a36bede674717c811a17d358a5be553087a8c201d20"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close-negative/88689-pending.json",
+      "bytes": 308,
+      "sha256": "0e7b9d09bebe59bce82025a10e0db12215d432f91cd02690a234a629abd078cc"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close-negative/expected-managed-launch.json",
+      "bytes": 50,
+      "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+    },
+    {
+      "path": "custody-error-controls-attempt4/write-close-negative/negative-observation.json",
+      "bytes": 154,
+      "sha256": "0a1616fec1e7b541cd28b542e066d876256635c8232a1060a60e36371af49cf1"
+    },
+    {
+      "path": "custody-error-controls-attempt4.log",
+      "bytes": 1771,
+      "sha256": "23dedce4a8860c994cf5fc0ef28fdd6c80c61c6d25a80b37bc5181f2f0ca7e8a"
+    },
+    {
+      "path": "custody-error-original-a56-fixture.py",
+      "bytes": 13961,
+      "sha256": "052b86bed577165e70bf12a5fdeb12c635da89c98332dc93c8dc58de8b1aeb0c"
+    },
+    {
+      "path": "custody-error-proposal-result.json",
+      "bytes": 2173,
+      "sha256": "8aaa41ebee397e646c1268b0f2ae1cd95d3762b6897db5cf396e8e310340d420"
+    },
+    {
+      "path": "final-result.json",
+      "bytes": 1325,
+      "sha256": "2e4e16939dd1e3bdf1ac57a7a964669b834fa953aea4d271b0f1dceaa9f40a0e"
+    },
+    {
+      "path": "team-a-ef1a11f7.json",
+      "bytes": 90592,
+      "sha256": "e68b65e368d7b7ef1614d48aa7bd9b90fe675bab22165dc69b589570c5ddf1a3"
+    },
+    {
+      "path": "team-a-fe96-owner-held-peer.json",
+      "bytes": 5093,
+      "sha256": "a29e4c208a888c52a448b74a6962a4e73fd42a0b5f7b599896811beb38b3da64"
+    }
+  ],
+  "binaryScan": "all recursive files suffix and PE/PDB/ELF/ZIP magic; none found"
+}

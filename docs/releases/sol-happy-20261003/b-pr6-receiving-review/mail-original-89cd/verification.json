@@ -1,0 +1,54 @@
+{
+  "state": "ACK_FIRST_ACTUAL_MAINTAINED_MAIL_LOCAL_DURABLE_CONTROLS_VERIFIED",
+  "sourceCommit": "89cd4e4641e482658a0e24be9b90e0a8324fd4a7",
+  "driverExitCode": 0,
+  "sourceInputs": 489,
+  "allSourceBodiesEqualActualGit": true,
+  "sourceBeforeAfterExact": true,
+  "sourceSnapshotSha256": "4c9cf1d703fcd6e439ff8e32c0f56d94ea6f9d1dcce3579fa80739cd81070f41",
+  "originalFact": {
+    "actualName": "Haven.Desktop.Tests.FileMailDraftStoreTests.UpsertAndGet_RoundTripsRichSemanticDraft",
+    "discovered": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "trxBytes": 3008,
+    "trxSha256": "c5bc69c0c53928587d66a36629ccb4242ac1a6d80fc3e4a76eae1dada7b41d5f"
+  },
+  "distinctNativeScenarios": 3,
+  "nativePhaseExecutions": 6,
+  "phases": {
+    "seed": {
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 16,
+      "processId": 118275
+    },
+    "verify": {
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 18,
+      "processId": 118288
+    }
+  },
+  "nativeRuntimeFiles": 11,
+  "nativeRuntimeBeforeAfterAndActualBodiesEqual": true,
+  "runtimeSnapshotSha256": "40f03d1ecf17e4d92264f8c1aef3521389bd21ad3999d25c51a567dac9cf228f",
+  "actualSourceBuilds": 2,
+  "buildWarnings": 0,
+  "buildErrors": 0,
+  "commandFamilies": 16,
+  "allNormalEOF_ECHILD_FamilyClosed_NoSignals": true,
+  "qualifications": [
+    "Actual unchanged FileMailDraftStore and original Fact are source linked against whole current Haven.Application/Core/CUI.AI projects; no source/backend/validator substitution.",
+    "Three distinct local storage scenarios execute in seed then separate fresh verify process. The six phase executions are not six distinct scenarios.",
+    "No provider/send/browser/Windows/Mail full parity/revision-CAS/backend authority acceptance is established.",
+    "Controlled draft and attachment bytes, fixture identity receipt, native binaries/packages/caches remain private task outputs and are not published.",
+    "Original Space-key failure and held renderer/owner-factory gates remain preserved separately."
+  ]
+}

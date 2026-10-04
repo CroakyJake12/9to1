@@ -1,0 +1,24 @@
+
+Welcome to .NET 10.0!
+---------------------
+SDK Version: 10.0.401
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+  Determining projects to restore...
+  Restored /workspace/team-c-c5-canvas-cursor-provisional/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 126 ms).
+  Restored /workspace/team-c-c5-canvas-cursor-provisional/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 127 ms).
+  Restored /workspace/team-c-c6-durable-validation-20261004/canvas-receiving/C6.Canvas.Tests.csproj (in 193 ms).
+  Haven.Core -> /workspace/team-c-c6-durable-validation-20261004/canvas-receiving/artifacts/bin/Haven.Core/debug/Haven.Core.dll
+  Haven.Application -> /workspace/team-c-c6-durable-validation-20261004/canvas-receiving/artifacts/bin/Haven.Application/debug/Haven.Application.dll
+  C6.Canvas.Tests -> /workspace/team-c-c6-durable-validation-20261004/canvas-receiving/artifacts/bin/C6.Canvas.Tests/debug/C6.Canvas.Tests.dll
+Test run for /workspace/team-c-c6-durable-validation-20261004/canvas-receiving/artifacts/bin/C6.Canvas.Tests/debug/C6.Canvas.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c-c6-durable-validation-20261004/canvas-receiving/results/tests.trx
+
+Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 461 ms - C6.Canvas.Tests.dll (net10.0)

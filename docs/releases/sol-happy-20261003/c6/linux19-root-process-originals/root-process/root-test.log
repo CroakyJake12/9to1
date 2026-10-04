@@ -1,0 +1,189 @@
+Test run for /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/NineToOne.Os.Supervisor.Root.Tests/release_linux-x64/NineToOne.Os.Supervisor.Root.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:31.67]     NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualSignedOwnerHelperDeathDrainsOriginalUidDroppedOwnerWithoutHomeWrite [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualSignedOwnerHelperDeathDrainsOriginalUidDroppedOwnerWithoutHomeWrite [31 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 252
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 321
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 128
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 163
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 148
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualSignedOwnerHelperDeathDrainsOriginalUidDroppedOwnerWithoutHomeWrite() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 109
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:02.90]     NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualSameInstalledPairCapturesAfterSixtyFiveSecondsWithoutControlTraffic [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualSameInstalledPairCapturesAfterSixtyFiveSecondsWithoutControlTraffic [31 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 252
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 321
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 128
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 163
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 148
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualSameInstalledPairCapturesAfterSixtyFiveSecondsWithoutControlTraffic() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 64
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:34.03]     NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualOriginalOwnerExitCannotAdoptPreviouslyObservedWidgetReference [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualOriginalOwnerExitCannotAdoptPreviouslyObservedWidgetReference [31 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 252
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 321
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 128
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 163
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 148
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualOriginalOwnerExitCannotAdoptPreviouslyObservedWidgetReference() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 47
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:05.10]     NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualIndependentInstalledOwnerRegistersAndCapturesCanonicalCardWithoutHomeWrite [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualIndependentInstalledOwnerRegistersAndCapturesCanonicalCardWithoutHomeWrite [31 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 252
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 321
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 128
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 163
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 148
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualIndependentInstalledOwnerRegistersAndCapturesCanonicalCardWithoutHomeWrite() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 19
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:36.17]     NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualNativePairShutdownObservesOriginalHomeExitAndRetiresBothContexts [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualNativePairShutdownObservesOriginalHomeExitAndRetiresBothContexts [31 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 252
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartNativeWithOriginalObservationChannelsPreparedAsync(LinuxRootAtomicSpawnHelperPreparation actualPreparedHelper, String privateNativeControlPath, LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 321
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 128
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartNativeAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 163
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 148
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxNativePairedInstalledWidgetCaptureTests.ActualNativePairShutdownObservesOriginalHomeExitAndRetiresBothContexts() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxNativePairedInstalledWidgetCaptureTests.cs:line 92
+--- End of stack trace from previous location ---
+[xUnit.net 00:06:21.93]     NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualIndependentInstalledOwnerRegistersAndCapturesCanonicalCardWithoutHomeWrite [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualIndependentInstalledOwnerRegistersAndCapturesCanonicalCardWithoutHomeWrite [30 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 152
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 196
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 59
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 92
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxPairedInstalledWidgetCaptureTests.cs:line 108
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualIndependentInstalledOwnerRegistersAndCapturesCanonicalCardWithoutHomeWrite() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxPairedInstalledWidgetCaptureTests.cs:line 18
+--- End of stack trace from previous location ---
+[xUnit.net 00:06:52.45]     NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualOriginalOwnerExitCannotAdoptPreviouslyObservedWidgetReference [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualOriginalOwnerExitCannotAdoptPreviouslyObservedWidgetReference [30 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 152
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 196
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 59
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 92
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxPairedInstalledWidgetCaptureTests.cs:line 108
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualOriginalOwnerExitCannotAdoptPreviouslyObservedWidgetReference() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxPairedInstalledWidgetCaptureTests.cs:line 46
+--- End of stack trace from previous location ---
+[xUnit.net 00:07:22.98]     NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualSameInstalledPairCapturesAfterSixtyFiveSecondsWithoutControlTraffic [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualSameInstalledPairCapturesAfterSixtyFiveSecondsWithoutControlTraffic [30 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 152
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 196
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 59
+   at NineToOne.Os.Shell.Authority.LinuxRootPairedInstalledRuntime.StartAsync(UInt32 uid, UInt32 gid, String actualUserHome, String protectedRuntimeDirectory, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootPairedInstalledRuntime.cs:line 92
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.Run(Func`3 action) in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxPairedInstalledWidgetCaptureTests.cs:line 108
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxPairedInstalledWidgetCaptureTests.ActualSameInstalledPairCapturesAfterSixtyFiveSecondsWithoutControlTraffic() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxPairedInstalledWidgetCaptureTests.cs:line 63
+--- End of stack trace from previous location ---
+[xUnit.net 00:07:58.43]     NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualOriginalPidfdTerminationIrrevocablyRetiresOriginalLeaseContext [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualOriginalPidfdTerminationIrrevocablyRetiresOriginalLeaseContext [30 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 152
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 196
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.Fixture.StartAsync() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 117
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualOriginalPidfdTerminationIrrevocablyRetiresOriginalLeaseContext() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 55
+--- End of stack trace from previous location ---
+[xUnit.net 00:08:28.79]     NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualSignedChildIssuesOneOriginalContextAndPublicCopiesCannotAdoptIt [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualSignedChildIssuesOneOriginalContextAndPublicCopiesCannotAdoptIt [30 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 152
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 196
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.Fixture.StartAsync() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 117
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualSignedChildIssuesOneOriginalContextAndPublicCopiesCannotAdoptIt() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 21
+--- End of stack trace from previous location ---
+[xUnit.net 00:08:59.15]     NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualAdmittedShutdownDrainsOriginalChildBeforeItsRouteCanBeRemoved [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualAdmittedShutdownDrainsOriginalChildBeforeItsRouteCanBeRemoved [30 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 152
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 196
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.Fixture.StartAsync() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 117
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualAdmittedShutdownDrainsOriginalChildBeforeItsRouteCanBeRemoved() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 46
+--- End of stack trace from previous location ---
+[xUnit.net 00:09:29.51]     NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualPersistedProfileReplacementRetiresTheSameChildAndNeverRebindsItsContext [FAIL]
+  Failed NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualPersistedProfileReplacementRetiresTheSameChildAndNeverRebindsItsContext [30 s]
+  Error Message:
+   System.OperationCanceledException : The operation was canceled.
+  Stack Trace:
+     at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 152
+   at NineToOne.Os.Shell.Authority.LinuxRootSupervisedHome.StartCoreAsync(LinuxRootHomeStartPreparation prepared, Socket actualListeningSocket, String actualSocketPath, UInt32 userId, UInt32 groupId, String actualUserHome, String actualCanonicalSocketPath, String actualWidgetObservationSocketPath, CancellationToken ct) in /home/runner/work/9to1/9to1/9to1 OS/apps/9to1-shell/Authority/LinuxRootSupervisedHome.cs:line 196
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.Fixture.StartAsync() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 117
+   at NineToOne.Os.Supervisor.Root.Tests.LinuxSupervisedInstalledHomeTests.ActualPersistedProfileReplacementRetiresTheSameChildAndNeverRebindsItsContext() in /home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/LinuxSupervisedInstalledHomeTests.cs:line 65
+--- End of stack trace from previous location ---
+Results File: /home/runner/work/9to1/9to1/artifacts/desktop-visible-owning/root-process/trx/root.trx
+
+Failed!  - Failed:    12, Passed:    20, Skipped:     0, Total:    32, Duration: 9 m 29 s - NineToOne.Os.Supervisor.Root.Tests.dll (net10.0)

@@ -1,0 +1,469 @@
+{
+  "identity": {
+    "portablePdbId": "eddbc4d9d8ce1b41a3c8f0c5d6b49a6151a68da5",
+    "codeViewGuid": "d9c4dbed-ced8-411b-a3c8-f0c5d6b49a61",
+    "codeViewStamp": 2777523793
+  },
+  "dllSha256": "6c8cc98d844d6da9fe36004d50eaed11a06fd1a9a8a1258e5aa446190b3531bc",
+  "pdbSha256": "705d87b68278929233dce0b792d962fffe1323f6cc9e94b0fb40069cddccc321",
+  "trackedDocuments": {
+    "9to1 Workspace/Home/Tests/AgentPresentationTests.cs": {
+      "digest": "a9acba0ef14e7bb2f1ce4ff94c8b09216b2c96e38e9b480edec997bbae839794",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "a9acba0ef14e7bb2f1ce4ff94c8b09216b2c96e38e9b480edec997bbae839794"
+    },
+    "9to1 Workspace/Home/Tests/DenAttachmentCommitAuthorityTests.cs": {
+      "digest": "d93b65278cd5f9eabb39b7c63c3882f259aedde82cad7ffb8e33e5df57ec467d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "d93b65278cd5f9eabb39b7c63c3882f259aedde82cad7ffb8e33e5df57ec467d"
+    },
+    "9to1 Workspace/Home/Tests/DenCommitAuthorityTests.cs": {
+      "digest": "63809eb238e9fbbb51a0252fd7c9c33b39526eb0e3911206a6bc2bf61f5e4641",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "63809eb238e9fbbb51a0252fd7c9c33b39526eb0e3911206a6bc2bf61f5e4641"
+    },
+    "9to1 Workspace/Home/Tests/DenModelInstallationAuthorityTests.cs": {
+      "digest": "8c9ea0ecef02316f0472060619ee629ae0958bf18b80d25b604668195fafda27",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8c9ea0ecef02316f0472060619ee629ae0958bf18b80d25b604668195fafda27"
+    },
+    "9to1 Workspace/Home/Tests/DenNamespaceAuthorityTests.cs": {
+      "digest": "8d3060c46cfec2b49b6a24bde384d42ec47e3a1f09ec8338bef8f2342c393ac4",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8d3060c46cfec2b49b6a24bde384d42ec47e3a1f09ec8338bef8f2342c393ac4"
+    },
+    "9to1 Workspace/Home/Tests/DenReadLifetimeTests.cs": {
+      "digest": "79c90568eed41f1cc6fa66357e8ca9beb930ec29669694e8d1ace09a84b52e0f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "79c90568eed41f1cc6fa66357e8ca9beb930ec29669694e8d1ace09a84b52e0f"
+    },
+    "9to1 Workspace/Home/Tests/DenSyncAuthorityTests.cs": {
+      "digest": "092eb5e700f92bf95eb1412c5572adffcac65271341d5ea29ce09c67b26d726d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "092eb5e700f92bf95eb1412c5572adffcac65271341d5ea29ce09c67b26d726d"
+    },
+    "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs": {
+      "digest": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f"
+    },
+    "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs": {
+      "digest": "9a3c72d47d9e5c1cbb2eb20ea361a08380d1d9fba7f9a88dea379eefa422a732",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "9a3c72d47d9e5c1cbb2eb20ea361a08380d1d9fba7f9a88dea379eefa422a732"
+    },
+    "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs": {
+      "digest": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b"
+    },
+    "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs": {
+      "digest": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678"
+    },
+    "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs": {
+      "digest": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f"
+    },
+    "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs": {
+      "digest": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2"
+    },
+    "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs": {
+      "digest": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62"
+    },
+    "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs": {
+      "digest": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399"
+    },
+    "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs": {
+      "digest": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711"
+    },
+    "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs": {
+      "digest": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd"
+    },
+    "9to1 Workspace/Home/Tests/HomeDashboardTests.cs": {
+      "digest": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851"
+    },
+    "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs": {
+      "digest": "92df8c2bce6f21c649a54e6c3c0410a7694224b18a67c209607e02478bed3538",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "92df8c2bce6f21c649a54e6c3c0410a7694224b18a67c209607e02478bed3538"
+    },
+    "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs": {
+      "digest": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168"
+    },
+    "9to1 Workspace/Home/Tests/HomeEquationObjectTests.cs": {
+      "digest": "e1409d8c3ab5d4b6fc8c5929c0dc9ae98b22a5f24116447a62914e367477fe96",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "e1409d8c3ab5d4b6fc8c5929c0dc9ae98b22a5f24116447a62914e367477fe96"
+    },
+    "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs": {
+      "digest": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3"
+    },
+    "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs": {
+      "digest": "6db11baf2b6f8f35df9286580af2662a54a5d78a86d770bc3d7ca712de6f5847",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "6db11baf2b6f8f35df9286580af2662a54a5d78a86d770bc3d7ca712de6f5847"
+    },
+    "9to1 Workspace/Home/Tests/HomeInvocationCatalogueTests.cs": {
+      "digest": "251884877db0b43ca2c930d4fc8e6634d0588456106b294cf83297c723c8f48e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "251884877db0b43ca2c930d4fc8e6634d0588456106b294cf83297c723c8f48e"
+    },
+    "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs": {
+      "digest": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c"
+    },
+    "9to1 Workspace/Home/Tests/HomeLocalProfileIdentityTests.cs": {
+      "digest": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be"
+    },
+    "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs": {
+      "digest": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a"
+    },
+    "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs": {
+      "digest": "709959ba007efc61463e614e76809e9e295ae94a39db6871ea72957ef1cf328e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "709959ba007efc61463e614e76809e9e295ae94a39db6871ea72957ef1cf328e"
+    },
+    "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs": {
+      "digest": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15"
+    },
+    "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs": {
+      "digest": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df"
+    },
+    "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs": {
+      "digest": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567"
+    },
+    "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs": {
+      "digest": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12"
+    },
+    "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs": {
+      "digest": "9f31eb55a44f51a8a9ab2579daac621237dc5dbb0dc7f4ddbb9492e057657939",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "9f31eb55a44f51a8a9ab2579daac621237dc5dbb0dc7f4ddbb9492e057657939"
+    },
+    "9to1 Workspace/Home/Tests/HomeNativePeerObservationTests.cs": {
+      "digest": "0ef3f4160e43d4f2f56f14a490261fa7ddcff275500eea412e3c722d89fbcc80",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "0ef3f4160e43d4f2f56f14a490261fa7ddcff275500eea412e3c722d89fbcc80"
+    },
+    "9to1 Workspace/Home/Tests/HomeNativeServiceHostTests.cs": {
+      "digest": "59dc16cedcfee5eaff81096305babce87e9754104a5fd5c98d6b6bef4b77b959",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "59dc16cedcfee5eaff81096305babce87e9754104a5fd5c98d6b6bef4b77b959"
+    },
+    "9to1 Workspace/Home/Tests/HomeNativeSessionLeaseTests.cs": {
+      "digest": "3d70dc1c706d5fed878ba0379cfa4f625edf61b8019297238becf4d05fb94d95",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "3d70dc1c706d5fed878ba0379cfa4f625edf61b8019297238becf4d05fb94d95"
+    },
+    "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs": {
+      "digest": "95369d868c2c6b2c2dad754d54b13a31d4c0dff51dcf5f9a3b390a660809e593",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "95369d868c2c6b2c2dad754d54b13a31d4c0dff51dcf5f9a3b390a660809e593"
+    },
+    "9to1 Workspace/Home/Tests/HomeNotesSharedObjectsTests.cs": {
+      "digest": "d00cb9c718e2f349446f1ef6c885a58549dd8a2480731e9f564502379f6756a8",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "d00cb9c718e2f349446f1ef6c885a58549dd8a2480731e9f564502379f6756a8"
+    },
+    "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs": {
+      "digest": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b"
+    },
+    "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs": {
+      "digest": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a"
+    },
+    "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs": {
+      "digest": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced"
+    },
+    "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs": {
+      "digest": "7d8b9e5e5db1b9e4987c5e283a9cbe6813960f22c0d20a1745e6a62866bb42aa",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "7d8b9e5e5db1b9e4987c5e283a9cbe6813960f22c0d20a1745e6a62866bb42aa"
+    },
+    "9to1 Workspace/Home/Tests/HomePersonalDenFactoryTests.cs": {
+      "digest": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb"
+    },
+    "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs": {
+      "digest": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e"
+    },
+    "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs": {
+      "digest": "77f007be4e841daacb097f733d15104e685cfc428a4a5a78fe91c7db6894554f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "77f007be4e841daacb097f733d15104e685cfc428a4a5a78fe91c7db6894554f"
+    },
+    "9to1 Workspace/Home/Tests/HomeProductivityEnvelopeTests.cs": {
+      "digest": "8d2b4ba935a34fe104ad4783827ed13258e433c3b38fb806076b618413d30cf4",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8d2b4ba935a34fe104ad4783827ed13258e433c3b38fb806076b618413d30cf4"
+    },
+    "9to1 Workspace/Home/Tests/HomeProductivityGeometryTests.cs": {
+      "digest": "1c47a86ee2036f0f17db517c1ee4eb187a5b8dfe221ea806b86c8de019507d6c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "1c47a86ee2036f0f17db517c1ee4eb187a5b8dfe221ea806b86c8de019507d6c"
+    },
+    "9to1 Workspace/Home/Tests/HomeProductivityInsertionTests.cs": {
+      "digest": "b7a07b981753f8b79a00976645cdac2a1455d3de899cf7a3650c9709a21c106e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "b7a07b981753f8b79a00976645cdac2a1455d3de899cf7a3650c9709a21c106e"
+    },
+    "9to1 Workspace/Home/Tests/HomeProductivityRasterTests.cs": {
+      "digest": "0e9875a5cde5b4b40c932585d8e907429053a0fa6d70b0cda1de45a7588da2c6",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "0e9875a5cde5b4b40c932585d8e907429053a0fa6d70b0cda1de45a7588da2c6"
+    },
+    "9to1 Workspace/Home/Tests/HomeProductivityStyleTransferTests.cs": {
+      "digest": "5c0debb5acd891076aad4321be12b2ef4d2e5ebfd3187b84f9d41fe68a6e3007",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "5c0debb5acd891076aad4321be12b2ef4d2e5ebfd3187b84f9d41fe68a6e3007"
+    },
+    "9to1 Workspace/Home/Tests/HomeRejectedBeginAuditTests.cs": {
+      "digest": "41a1fcd6c4b737b141d882e0d8bc6a12df9e0496271fe4b38176f01b6dbee2ff",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "41a1fcd6c4b737b141d882e0d8bc6a12df9e0496271fe4b38176f01b6dbee2ff"
+    },
+    "9to1 Workspace/Home/Tests/HomeRejectedClaimAuditTests.cs": {
+      "digest": "09ef37406c726e512651e8f9d1ee2a637fe5b468920087c7573ad5bf41a6f525",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "09ef37406c726e512651e8f9d1ee2a637fe5b468920087c7573ad5bf41a6f525"
+    },
+    "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs": {
+      "digest": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7"
+    },
+    "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs": {
+      "digest": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41"
+    },
+    "9to1 Workspace/Home/Tests/HomeStoreImportAuditTests.cs": {
+      "digest": "ac549b92f504917d9183cf28abaa54a317b098e01a0afb5ca40ea700427ded31",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "ac549b92f504917d9183cf28abaa54a317b098e01a0afb5ca40ea700427ded31"
+    },
+    "9to1 Workspace/Home/Tests/HomeTerminalAdviceTests.cs": {
+      "digest": "9f8aa7f07244e52f8b4e14ac4e6187eb919f1ea2593f76b70bbbdf074114f7af",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "9f8aa7f07244e52f8b4e14ac4e6187eb919f1ea2593f76b70bbbdf074114f7af"
+    },
+    "9to1 Workspace/Home/Tests/HomeUnclaimedExecutionAbortTests.cs": {
+      "digest": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0"
+    },
+    "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs": {
+      "digest": "eb7ac43e027b462ecbd9c82846b56774c005539175e45dbbc5d4738766e63bd0",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "eb7ac43e027b462ecbd9c82846b56774c005539175e45dbbc5d4738766e63bd0"
+    },
+    "9to1 Workspace/Home/Tests/HomeVersionedNodeGraphRepositoryTests.cs": {
+      "digest": "dfb20fca453c42eb41bf01351f5feaf6711e26f4fc2123d36996ddf2d85fc742",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "dfb20fca453c42eb41bf01351f5feaf6711e26f4fc2123d36996ddf2d85fc742"
+    },
+    "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs": {
+      "digest": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca"
+    },
+    "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs": {
+      "digest": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6"
+    },
+    "9to1 Workspace/Home/Tests/WebMcpInvocationTests.cs": {
+      "digest": "242adfc44883887f116f4f86e1dabc9e4ef1a70f934ddaf693c7054a94261b60",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "242adfc44883887f116f4f86e1dabc9e4ef1a70f934ddaf693c7054a94261b60"
+    }
+  },
+  "untrackedDocumentIdentitiesOnly": {
+    "/_1/microsoft.net.test.sdk/17.14.1/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs": {
+      "digest": "d66f12f9433816a8c7dc1b2acb9e1010f5418f5eeb51e80f1df57aa1dcab8d8a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    "/_/artifacts/root14-managed-build/obj/HavenOS.Home.Tests/release_linux-x64/HavenOS.Home.Tests.GlobalUsings.g.cs": {
+      "digest": "8f86a2cbf00ff3eee0bda2bc0eb5e1fc19c8544d5dc650c53d0132325956b592",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    "/_/artifacts/root14-managed-build/obj/HavenOS.Home.Tests/release_linux-x64/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs": {
+      "digest": "f79c1ad9a9fc76110b3655f5bfb5ff4e3168e9addceff05b937c0796f0ec34eb",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    "/_/artifacts/root14-managed-build/obj/HavenOS.Home.Tests/release_linux-x64/HavenOS.Home.Tests.AssemblyInfo.cs": {
+      "digest": "13b7f578e8f6c0308f8c32685dcba1f0c5469827c7a495964d5e86cf3ee0fbdd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    }
+  },
+  "requiredWholeSources": [
+    "9to1 Workspace/Home/Tests/AgentPresentationTests.cs",
+    "9to1 Workspace/Home/Tests/DenAttachmentCommitAuthorityTests.cs",
+    "9to1 Workspace/Home/Tests/DenCommitAuthorityTests.cs",
+    "9to1 Workspace/Home/Tests/DenModelInstallationAuthorityTests.cs",
+    "9to1 Workspace/Home/Tests/DenNamespaceAuthorityTests.cs",
+    "9to1 Workspace/Home/Tests/DenReadLifetimeTests.cs",
+    "9to1 Workspace/Home/Tests/DenSyncAuthorityTests.cs",
+    "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+    "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs",
+    "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs",
+    "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs",
+    "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+    "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+    "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+    "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+    "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+    "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+    "9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+    "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+    "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+    "9to1 Workspace/Home/Tests/HomeEquationObjectTests.cs",
+    "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+    "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+    "9to1 Workspace/Home/Tests/HomeInvocationCatalogueTests.cs",
+    "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs",
+    "9to1 Workspace/Home/Tests/HomeLocalProfileIdentityTests.cs",
+    "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+    "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
+    "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+    "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNativePeerObservationTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNativeServiceHostTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNativeSessionLeaseTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNotesSharedObjectsTests.cs",
+    "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+    "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs",
+    "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+    "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+    "9to1 Workspace/Home/Tests/HomePersonalDenFactoryTests.cs",
+    "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
+    "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+    "9to1 Workspace/Home/Tests/HomeProductivityEnvelopeTests.cs",
+    "9to1 Workspace/Home/Tests/HomeProductivityGeometryTests.cs",
+    "9to1 Workspace/Home/Tests/HomeProductivityInsertionTests.cs",
+    "9to1 Workspace/Home/Tests/HomeProductivityRasterTests.cs",
+    "9to1 Workspace/Home/Tests/HomeProductivityStyleTransferTests.cs",
+    "9to1 Workspace/Home/Tests/HomeRejectedBeginAuditTests.cs",
+    "9to1 Workspace/Home/Tests/HomeRejectedClaimAuditTests.cs",
+    "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs",
+    "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs",
+    "9to1 Workspace/Home/Tests/HomeStoreImportAuditTests.cs",
+    "9to1 Workspace/Home/Tests/HomeTerminalAdviceTests.cs",
+    "9to1 Workspace/Home/Tests/HomeUnclaimedExecutionAbortTests.cs",
+    "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
+    "9to1 Workspace/Home/Tests/HomeVersionedNodeGraphRepositoryTests.cs",
+    "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
+    "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
+    "9to1 Workspace/Home/Tests/WebMcpInvocationTests.cs"
+  ]
+}

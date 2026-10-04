@@ -1,0 +1,57 @@
+<Cui id="spaces.home" version="1">
+  <Page id="spaces-page" role="main" accessible-name="Spaces" font-family="Montserrat" layout="vertical" scalable-text="true" high-contrast="semantic" reduced-motion="respect">
+    <AdaptiveSplit id="spaces-layout" compact-breakpoint="760" primary-min-width="0">
+      <Aside id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" compact-mode="drawer">
+        <Heading level="1">Spaces</Heading>
+        <SearchField id="spaces-search" binding="spaces.query" accessible-name="Search Spaces" placeholder="Find a Space" clear-action="spaces.clear-search" />
+        <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" touch-target="44" variant="primary">New Space</Button>
+        <Heading level="2">First-party</Heading>
+        <List id="first-party-spaces" binding="spaces.builtIns" role="list" accessible-name="First-party Spaces">
+          <Button id="first-party-space" repeat="spaces.builtIns" action="spaces.open" action-argument="{id}" selected="{isCurrent}" accessible-name="Open {name}" touch-target="44">
+            <Text binding="name" />
+            <Text binding="summary" tone="muted" />
+          </Button>
+        </List>
+        <Heading level="2">Your Spaces</Heading>
+        <List id="custom-spaces" binding="spaces.customSpaces" role="list" accessible-name="Your custom Spaces" empty-text="Create a Space to keep related conversations and work together">
+          <Article id="custom-space-row" repeat="spaces.customSpaces" role="listitem" accessible-name="{name}, custom Space">
+            <Button id="open-custom-space" action="spaces.open" action-argument="{id}" selected="{isCurrent}" accessible-name="Open {name}" touch-target="44">
+              <Text binding="name" />
+              <Text binding="summary" tone="muted" />
+            </Button>
+            <Row id="custom-space-actions" accessible-name="Actions for {name}" wrap="true">
+              <Button action="spaces.rename" action-argument="{id}" accessible-name="Rename {name}" touch-target="44">Rename</Button>
+              <Button action="spaces.move" action-argument="{id}" accessible-name="Move {name}" touch-target="44">Move</Button>
+              <Button action="spaces.fork" action-argument="{id}" accessible-name="Make a copy of {name}" touch-target="44">Copy</Button>
+              <Button action="spaces.archive" action-argument="{id}" accessible-name="Archive {name}" touch-target="44">Archive</Button>
+            </Row>
+          </Article>
+        </List>
+        <Text id="spaces-status" binding="status.message" role="status" live="polite" accessible-name="Spaces status" />
+      </Aside>
+      <Main id="space-details" accessible-name="Selected Space">
+        <Heading id="selected-space-name" level="1" binding="selection.name">Choose a Space</Heading>
+        <Text id="selected-space-description" binding="selection.description" />
+        <Panel id="space-context" accessible-name="Space context and policy">
+          <Heading level="2">Context</Heading>
+          <List id="space-context-items" binding="selection.contextReferences" role="list" accessible-name="Space context sources" empty-text="No sources added">
+            <Article repeat="selection.contextReferences" role="listitem" accessible-name="{label}, {permissionLabel}">
+              <Text binding="label" />
+              <Text binding="permissionLabel" tone="muted" />
+              <Text binding="indexStateLabel" tone="muted" />
+            </Article>
+          </List>
+          <Button id="add-context" action="spaces.add-context" enabled="{selection.canEdit}" accessible-name="Add a source to this Space" touch-target="44">Add source</Button>
+          <Heading level="2">Model and access</Heading>
+          <Text binding="selection.effectiveModelLabel" accessible-name="Effective model" />
+          <Text binding="selection.webAccessLabel" accessible-name="Web access policy" />
+          <Text binding="selection.memoryScopeLabel" accessible-name="Memory scope" />
+          <Heading level="2">Capabilities</Heading>
+          <List id="space-capabilities" binding="selection.capabilities" role="list" accessible-name="Space capabilities" empty-text="No extra capabilities enabled">
+            <Text repeat="selection.capabilities" binding="label" />
+          </List>
+        </Panel>
+      </Main>
+    </AdaptiveSplit>
+  </Page>
+</Cui>

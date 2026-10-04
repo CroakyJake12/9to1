@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent validation",
+  "scope": "Actual isolated original137fd Studio GIF/native owning14 and unchanged three-target Windows package/window matrix only",
+  "sourceCommit": "137fd22e4cf0379d04adcd6da4c82a1443f5c911",
+  "runId": 37226116568,
+  "independentOfficialJobsAllSuccess": true,
+  "officialCompactArtifactReadback": {
+    "studio": {
+      "id": 11311409688,
+      "bytes": 34491,
+      "sha256": "b3fba8f5ea2d7e4773cc202824dd753bddd4e6607a3e51c453ad98f5bf8942cf"
+    },
+    "boards": {
+      "id": 11311379424,
+      "bytes": 35868,
+      "sha256": "838833a083369990851bb2994a64de287968a0fa511762f6b21efa7ba5d4af13"
+    },
+    "present": {
+      "id": 11311654764,
+      "bytes": 38629,
+      "sha256": "8fae9a9d7cab188e9f99f4857682d0d938201447d2ba46f8bf42361e3c53360c"
+    }
+  },
+  "targets": [
+    {
+      "target": "studio",
+      "owningTests": 14,
+      "allPassedZeroSkip": true,
+      "originalTRXSha256": "aa473dbd3c91c94f21283d91d77b8a6cdfdc79dfcdd4f4212bd686ce36b055c6",
+      "actualWindow": "AI Studio",
+      "normalCloseExit0NoForced": true,
+      "producerReportedPackage": {
+        "file": "studio-win-x64-unaccepted.zip",
+        "bytes": 96383076,
+        "sha256": "0265e4a732d8e88373c9be9870776f7adae6ffa80346d46b9df014b8f000b294"
+      },
+      "extractionVerifiedByOriginalProducer": true,
+      "observedWarningDiagnostics": [],
+      "sourceQualified": "Isolated137fd reviewed public owner graph, not latest global runtime"
+    },
+    {
+      "target": "boards",
+      "owningTests": 54,
+      "allPassedZeroSkip": true,
+      "originalTRXSha256": "973dfef95815a2975df3954c05177d620da4b52c59449e50d1d21b3813d4f733",
+      "actualWindow": "Board \u2014 Boards",
+      "normalCloseExit0NoForced": true,
+      "producerReportedPackage": {
+        "file": "boards-win-x64-unaccepted.zip",
+        "bytes": 78324934,
+        "sha256": "1b617c9ea28cb04ba1b9ba62755a26bd8c5d0cc730c5610091da0cbbe00bab23"
+      },
+      "extractionVerifiedByOriginalProducer": true,
+      "observedWarningDiagnostics": [],
+      "sourceQualified": "Isolated137fd reviewed public owner graph, not latest global runtime"
+    },
+    {
+      "target": "present",
+      "owningTests": 13,
+      "allPassedZeroSkip": true,
+      "originalTRXSha256": "10e5d7f1c97284ac2bd47ae042a3ea382ac3ecc61c79e389fe8f4162dc117f95",
+      "actualWindow": "Present",
+      "normalCloseExit0NoForced": true,
+      "producerReportedPackage": {
+        "file": "present-win-x64-unaccepted.zip",
+        "bytes": 117353225,
+        "sha256": "a67e49a9d9f1e825272c7adabe09eb6584406a85b2b87a60abdb534b23047212"
+      },
+      "extractionVerifiedByOriginalProducer": true,
+      "observedWarningDiagnostics": [],
+      "sourceQualified": "Isolated137fd reviewed public owner graph, not latest global runtime"
+    }
+  ],
+  "largeWholePackageContainerQualification": "96/78/116MB containers were not acquired; inner ZIP/extraction/fullfile evidence is original producer metadata and actual observed window result, not C6 binary readback. Official metadata expiry preserved.",
+  "originalCSUndeclaredImagesCoreAndAvatarNegativesPreserved": true,
+  "status": "ISOLATED_14_54_13_AND_THREE_WINDOW_SCOPED_PASS",
+  "latestGlobalInstalledHomeSigningNoSdkFullDeliveryAcceptance": false
+}

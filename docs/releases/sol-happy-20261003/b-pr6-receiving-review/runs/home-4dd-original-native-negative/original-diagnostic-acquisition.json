@@ -1,0 +1,119 @@
+{
+  "artifactId": 11313138361,
+  "container": "/workspace/attachments/624976ec-74ad-4540-a87a-e8cad4336713/home-4dd-original-diagnostics.zip",
+  "bytes": 2564391,
+  "sha256": "288bc00c523d73a52eab0ba52ca54deafb49f4056eaf58d0d3dd58b9a42d3966",
+  "members": [
+    {
+      "path": "avalonia-task-target-property.log",
+      "bytes": 108,
+      "sha256": "f3cadd7241b3c305198b935277786061c08d60905f68f5216e4553a25340e0dc"
+    },
+    {
+      "path": "discovery.json",
+      "bytes": 877,
+      "sha256": "3392880d512bafbfe4736c6cf3b246c3c1c32415ee2ea429de8f254f62da7fd7"
+    },
+    {
+      "path": "cui-tasks-release.log",
+      "bytes": 378,
+      "sha256": "08c724a23cd165735b19ddb20eea666a8d17fb5eedc3b2ab0c231dd7f48f3f0e"
+    },
+    {
+      "path": "native-first-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "native-first-stdout.log",
+      "bytes": 312,
+      "sha256": "d22f591672b95af2cbe304121a120fed002f3022f0c85520b83cd7af00c8e03c"
+    },
+    {
+      "path": "native-home-release.log",
+      "bytes": 5953,
+      "sha256": "5305b77ed1ce3b53cc2283230d76bcce8c28fcf35c5045adb3c2f5644236c8e9"
+    },
+    {
+      "path": "owning-build-release.log",
+      "bytes": 6517,
+      "sha256": "b34d2c9e16c6eb85dfb2fae189b1a0a36bde979acb0df6092082baf8008b8a7e"
+    },
+    {
+      "path": "owning-discovery.log",
+      "bytes": 982,
+      "sha256": "03b0ff75252628a88b062ce125200e59bf1994ed22f4b62f2bf9dfd2e04b7916"
+    },
+    {
+      "path": "owning-restore.log",
+      "bytes": 5171,
+      "sha256": "67e9affa059461e49dbaafd5af4613874c315d31ff7eec4425e3810a75d9b76f"
+    },
+    {
+      "path": "owning-runtime-after.json",
+      "bytes": 39023,
+      "sha256": "8d14830f4478b60d2b19d9a1fb4765ea41bab53ed515d060de3a7986da4f3ec7"
+    },
+    {
+      "path": "owning-runtime-before.json",
+      "bytes": 39023,
+      "sha256": "8d14830f4478b60d2b19d9a1fb4765ea41bab53ed515d060de3a7986da4f3ec7"
+    },
+    {
+      "path": "owning-test-release.log",
+      "bytes": 425,
+      "sha256": "242bf55d5b1540ed8c4389ad383935c44d516cffb339c4f849ecf96f82fdc2c4"
+    },
+    {
+      "path": "profile-initial-hashes.json",
+      "bytes": 157,
+      "sha256": "92136e072c53343e84757eb07daca0f06307e036f4aeccdb9c4766ec58cb551b"
+    },
+    {
+      "path": "publish-release-win-x64.log",
+      "bytes": 11045,
+      "sha256": "66eee594ba57f1fc61252b478175408264c816b2c83bd559b8439c5fdb2354cc"
+    },
+    {
+      "path": "result.json",
+      "bytes": 13026,
+      "sha256": "fa466741042756c8ebc97477f95bdbf7c9ced5faf935c6009773df4dd8909e86"
+    },
+    {
+      "path": "runtime-before.json",
+      "bytes": 46767,
+      "sha256": "c9d887a83d6a43e6d5ff60bf4daff1b0a00432259ea79354d030f9a95268b280"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 6038570,
+      "sha256": "6b67a00c70736d320d719bad369b3a28426cd6e8f6c0d48bfc37f49b9143345f"
+    },
+    {
+      "path": "sdk-version.log",
+      "bytes": 10,
+      "sha256": "3db6bca4b50618b2e0d2d55d23b3d0541fe039ab6f731df0e9c47317b400ce52"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 6038570,
+      "sha256": "6b67a00c70736d320d719bad369b3a28426cd6e8f6c0d48bfc37f49b9143345f"
+    },
+    {
+      "path": "task-target-properties.log",
+      "bytes": 212,
+      "sha256": "3082c7bdcb26889a8571481c166d7314cf35e84d50a7d861150ea083294161a4"
+    },
+    {
+      "path": "test-results/home-original-six.trx",
+      "bytes": 10906,
+      "sha256": "a6becc2ba31ea1251a09bf0cd397077902e81d0a89ca5e7910124d3e6148c035"
+    },
+    {
+      "path": "test-target-properties.log",
+      "bytes": 104,
+      "sha256": "7635abb6e98d25fd08ce0485876d0da8c2e8a4662f26ea9cffacaa136d3bb35e"
+    }
+  ],
+  "allUniqueSafePathCRC": "PASS"
+}

@@ -1,0 +1,651 @@
+[
+  {
+    "name": "git-head",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60357,
+        "birth": 916373,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.02,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60358,
+        "birth": 916375,
+        "gone": true
+      },
+      {
+        "pid": 60380,
+        "birth": 916383,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.131,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "source-tree-pins",
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60381,
+        "birth": 916388,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.115,
+    "bytes": 2459544,
+    "familyClosed": true
+  },
+  {
+    "name": "native-submodule-pins",
+    "argv": [
+      "git",
+      "submodule",
+      "status",
+      "--recursive",
+      "--",
+      "framework/CUI/vendor/Avalonia/external/XamlX",
+      "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60382,
+        "birth": 916400,
+        "gone": true
+      },
+      {
+        "pid": 60383,
+        "birth": 916400,
+        "gone": true
+      },
+      {
+        "pid": 60392,
+        "birth": 916400,
+        "gone": true
+      },
+      {
+        "pid": 60408,
+        "birth": 916402,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.09,
+    "bytes": 319,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-version",
+    "argv": [
+      "dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60429,
+        "birth": 916409,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.143,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-info",
+    "argv": [
+      "dotnet",
+      "--info"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60472,
+        "birth": 916423,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.306,
+    "bytes": 1444,
+    "familyClosed": true
+  },
+  {
+    "name": "restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts",
+      "-r",
+      "linux-x64",
+      "--configfile",
+      "/workspace/team-c-c4-write-scene-3b0b/NuGet.Config",
+      "--disable-build-servers",
+      "-p:Configuration=Release",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60502,
+        "birth": 916454,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 24.503,
+    "bytes": 5793,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "dotnet",
+      "build",
+      "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 60919,
+        "birth": 918904,
+        "gone": true
+      },
+      {
+        "pid": 60942,
+        "birth": 919231,
+        "gone": true
+      },
+      {
+        "pid": 61047,
+        "birth": 919865,
+        "gone": true
+      },
+      {
+        "pid": 61078,
+        "birth": 920268,
+        "gone": true
+      },
+      {
+        "pid": 61311,
+        "birth": 921684,
+        "gone": true
+      },
+      {
+        "pid": 61404,
+        "birth": 922096,
+        "gone": true
+      },
+      {
+        "pid": 61448,
+        "birth": 922304,
+        "gone": true
+      },
+      {
+        "pid": 61487,
+        "birth": 922439,
+        "gone": true
+      },
+      {
+        "pid": 61506,
+        "birth": 922546,
+        "gone": true
+      },
+      {
+        "pid": 61544,
+        "birth": 922667,
+        "gone": true
+      },
+      {
+        "pid": 61618,
+        "birth": 922817,
+        "gone": true
+      },
+      {
+        "pid": 61893,
+        "birth": 925506,
+        "gone": true
+      },
+      {
+        "pid": 61916,
+        "birth": 926138,
+        "gone": true
+      },
+      {
+        "pid": 62008,
+        "birth": 927869,
+        "gone": true
+      },
+      {
+        "pid": 62151,
+        "birth": 928170,
+        "gone": true
+      },
+      {
+        "pid": 62173,
+        "birth": 928327,
+        "gone": true
+      },
+      {
+        "pid": 62267,
+        "birth": 928606,
+        "gone": true
+      },
+      {
+        "pid": 62300,
+        "birth": 928909,
+        "gone": true
+      },
+      {
+        "pid": 62318,
+        "birth": 929060,
+        "gone": true
+      },
+      {
+        "pid": 62340,
+        "birth": 929337,
+        "gone": true
+      },
+      {
+        "pid": 62360,
+        "birth": 930011,
+        "gone": true
+      },
+      {
+        "pid": 62401,
+        "birth": 930835,
+        "gone": true
+      },
+      {
+        "pid": 62419,
+        "birth": 931074,
+        "gone": true
+      },
+      {
+        "pid": 62441,
+        "birth": 931276,
+        "gone": true
+      },
+      {
+        "pid": 62470,
+        "birth": 931430,
+        "gone": true
+      },
+      {
+        "pid": 62485,
+        "birth": 931444,
+        "gone": true
+      },
+      {
+        "pid": 62513,
+        "birth": 931719,
+        "gone": true
+      },
+      {
+        "pid": 62533,
+        "birth": 931900,
+        "gone": true
+      },
+      {
+        "pid": 62570,
+        "birth": 932207,
+        "gone": true
+      },
+      {
+        "pid": 62598,
+        "birth": 932569,
+        "gone": true
+      },
+      {
+        "pid": 62617,
+        "birth": 932809,
+        "gone": true
+      },
+      {
+        "pid": 62658,
+        "birth": 932951,
+        "gone": true
+      },
+      {
+        "pid": 62837,
+        "birth": 933612,
+        "gone": true
+      },
+      {
+        "pid": 63015,
+        "birth": 934554,
+        "gone": true
+      },
+      {
+        "pid": 63059,
+        "birth": 934895,
+        "gone": true
+      },
+      {
+        "pid": 63158,
+        "birth": 935119,
+        "gone": true
+      },
+      {
+        "pid": 63288,
+        "birth": 935705,
+        "gone": true
+      },
+      {
+        "pid": 63307,
+        "birth": 935842,
+        "gone": true
+      },
+      {
+        "pid": 63325,
+        "birth": 936042,
+        "gone": true
+      },
+      {
+        "pid": 63343,
+        "birth": 936180,
+        "gone": true
+      },
+      {
+        "pid": 63361,
+        "birth": 936349,
+        "gone": true
+      },
+      {
+        "pid": 63429,
+        "birth": 936503,
+        "gone": true
+      },
+      {
+        "pid": 63447,
+        "birth": 936690,
+        "gone": true
+      },
+      {
+        "pid": 63477,
+        "birth": 936750,
+        "gone": true
+      },
+      {
+        "pid": 63496,
+        "birth": 936961,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 183.369,
+    "bytes": 7415,
+    "familyClosed": true
+  },
+  {
+    "name": "target-properties",
+    "argv": [
+      "dotnet",
+      "msbuild",
+      "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,UseAppHost,AvaloniaBuildTasksLocation",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 63515,
+        "birth": 937241,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.531,
+    "bytes": 629,
+    "familyClosed": true
+  },
+  {
+    "name": "native-native-input",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/WriteBrowser.Scene.Tests/release_linux-x64/WriteBrowser.Scene.Tests",
+      "native-input"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 63526,
+        "birth": 937295,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.735,
+    "bytes": 1667,
+    "familyClosed": true
+  },
+  {
+    "name": "native-navigation",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/WriteBrowser.Scene.Tests/release_linux-x64/WriteBrowser.Scene.Tests",
+      "navigation"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 63580,
+        "birth": 937468,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.435,
+    "bytes": 2223,
+    "familyClosed": true
+  },
+  {
+    "name": "native-picker",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/WriteBrowser.Scene.Tests/release_linux-x64/WriteBrowser.Scene.Tests",
+      "picker"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 63595,
+        "birth": 937612,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 2.623,
+    "bytes": 2279,
+    "familyClosed": true
+  },
+  {
+    "name": "native-toolbar",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/WriteBrowser.Scene.Tests/release_linux-x64/WriteBrowser.Scene.Tests",
+      "toolbar"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 63611,
+        "birth": 937874,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 2.39,
+    "bytes": 2394,
+    "familyClosed": true
+  },
+  {
+    "name": "native-layout",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/write-scene-3b0b/artifacts/bin/WriteBrowser.Scene.Tests/release_linux-x64/WriteBrowser.Scene.Tests",
+      "layout"
+    ],
+    "exit": -6,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 63627,
+        "birth": 938113,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": -6,
+    "seconds": 1.446,
+    "bytes": 2087,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 63762,
+        "birth": 938258,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.034,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]

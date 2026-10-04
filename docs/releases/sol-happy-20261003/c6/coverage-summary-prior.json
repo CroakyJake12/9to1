@@ -1,0 +1,20 @@
+{
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "source_sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23",
+  "total_source_lines": 10011,
+  "nonblank_source_clauses": 8344,
+  "normative_keyword_clauses": 3016,
+  "nonkeyword_clauses": 5328,
+  "acceptance_tagged_clauses": 578,
+  "states": {
+    "VERIFIED": 0,
+    "IMPLEMENTED-UNVERIFIED": 0,
+    "MISSING": 0,
+    "BLOCKED": 0
+  },
+  "classified_requirement_gates": 0,
+  "unresolved_source_clauses": 8344,
+  "unmapped_clauses": 8344,
+  "semantic_review_complete": false,
+  "warning": "Source-clause superset, not a fully decomposed requirement/platform denominator. All list items, examples and table cells retained; no exclusions inferred."
+}

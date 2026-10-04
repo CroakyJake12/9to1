@@ -1,0 +1,1 @@
+Wave PCM/float formats passed: six representations plus extensible variants, exact declared PCM16 conversion, source hash, save/reopen, frame boundaries and non-finite rejection.

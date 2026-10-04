@@ -1,0 +1,30 @@
+{
+  "schema": "c6-independent-home-original-windows-harness-preinvocation/v1",
+  "candidate": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "basis": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+  "status": "SCOPED_PREINVOCATION_ACK_WINDOWS_NOT_RUN",
+  "sourceConservation": {
+    "newCownedHarnessPaths": 3,
+    "outsideTrackedModeKindBlobExact": 16504,
+    "sourcePinsWholeEqualParent": 79,
+    "twoSourceGitlinksPinned": true,
+    "productNativeTestsProjectsPolicyHomeCoreAuthorityUnchanged": true
+  },
+  "review": {
+    "actualSourceBuild": "Repository SDK10.0.401, actual current CUI Tasks build before normal owning test project. Unfiltered discovery/TRX demands exact original6 including render1/lifetime5, actual physical runtime before/after and complete source+two maintained gitlink before/after. No copied DLL or fake contract.",
+    "native": "Ordinary Release self-contained win-x64 multifile package verified by full publish/extract/runtime catalogs. Two distinct actual own visible HWND processes, exact kernelPID/foreground/modifier guard and original declared CtrlShiftQ; require all6 input events/all3 releases, bounded45s naturalexit0 and5s exclusive stdout/stderr drain. No forced close or timeout pass.",
+    "storage": "Original CreateDefault actualOS LocalApplicationData/9to1/Home unchanged, no ineffective HAVEN_DATA_DIR or profile/actor/fixture seed. Hash-only cold-open equality/exclusive lock release; native consequential mutation and default window close remain NOT_RUN.",
+    "retention": "Complete original ZIP/manifest/seal package_ready set immediately after seal independently of transport publication_ready. Declared >8part refusal preserves whole original package. <=19MiB original rawparts ordered wholeSHA,8max, metadata/no recompress; runtime publication size is genuine gate.",
+    "privacyAndFailure": "Public result retains controlled stage/phase/type, no arbitrary Exception.Message. External IO/error boundary privacy corrected; final source custody/result write failure cannot yield successful process exit. Full diagnostic logs remain original build/native observations on disposable runner; private profile bodies excluded.",
+    "resources": "8GiB initial free guard, serial compilation,60minutejob and postcompletion8MiB/log checks. No automatic aggregate disk-growth or RSS cap claimed; Windows process/output scope does not claim Linux subreaper ECHILD semantics."
+  },
+  "independentLocalControls": {
+    "passed": 5,
+    "parserErrors": 0,
+    "nativeDeclarationsCompilation": "PASS",
+    "receipt": "/workspace/team-c-c6-durable-validation-20261004/boards-packaged-ui-review/home-final-local-boundaries-result.json",
+    "sha256": "9a962f6485e85dccec3355f25e8973d5c81e8ad42b64440add748a62dc9c6751",
+    "qualification": "Actual extracted privacy/input-release/finalization controls and C# declaration compilation only; no Win32/native process/package/profile/build/test execution. Initial C6 probe selected whole brace block instead of its body and failed before any guard; corrected only extraction, original probe/log retained."
+  },
+  "remaining": "Actual Windows normal6/build/package/native two explicitquit outcomes pending. Installed signing/ABI/authentication/Home crossapp state mutation/default-window-close/noSDK-cleanPC/donor/fullHome/full29 acceptance remain unverified. Original7e forced-1 and original0a findings preserved."
+}

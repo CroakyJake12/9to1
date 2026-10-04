@@ -1,0 +1,94 @@
+{
+  "productId": "haven.calculator",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "a1b2c3d4e5f6789012345678901234567890abcd",
+    "branch": "main",
+    "tag": "haven-calculator-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Calculator",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "a1b2c3d4e5f6789012345678901234567890abcd",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-calculator",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/haven-calculator",
+    "arguments": "",
+    "workingDirectory": "/usr/share/haven-calculator",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/calculator",
+      "handler": "HavenCalculatorApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.calculator.launch",
+      "displayName": "Launch Calculator App",
+      "description": "Ability to launch the Haven Calculator application",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": false,
+    "requiresCache": false,
+    "requiresState": false,
+    "requiresData": false,
+    "customPaths": []
+  },
+  "permissions": {
+    "requiredGrants": [],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "NotRequired",
+  "smokeTest": {
+    "command": "haven-calculator --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T14:15:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-calculator-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

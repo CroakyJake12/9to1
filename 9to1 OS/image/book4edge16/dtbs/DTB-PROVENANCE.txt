@@ -1,0 +1,4 @@
+kernel_repo=https://github.com/zensanp/linux-book4-edge.git
+kernel_branch=moolwalk/work
+kernel_sha=42f8ddc1d41c39c63770bb78cf698775315adb62
+dts=arch/arm64/boot/dts/qcom/x1e80100-samsung-galaxy-book4-edge.dts

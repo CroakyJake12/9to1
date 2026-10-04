@@ -1,0 +1,5 @@
+<Project>
+  <!-- 9to1: the Android tree lives outside 9to1 Workspace/, so import the shared
+       Workspace build configuration explicitly (same settings CakeAI applied by traversal). -->
+  <Import Project="../9to1 Workspace/Directory.Build.props" />
+</Project>

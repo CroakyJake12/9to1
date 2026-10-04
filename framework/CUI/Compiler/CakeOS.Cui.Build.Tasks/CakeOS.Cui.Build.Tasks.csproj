@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
+    <AssemblyName>CakeOS.Cui.Build.Tasks</AssemblyName>
+    <RootNamespace>CakeOS.Cui.Build.Tasks</RootNamespace>
+    <NoWarn>$(NoWarn);CS8632</NoWarn>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" VersionOverride="15.1.548" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" VersionOverride="15.1.548" PrivateAssets="All" />
+  </ItemGroup>
+</Project>

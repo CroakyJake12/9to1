@@ -1,0 +1,109 @@
+{
+  "productId": "haven.notifications",
+  "productType": "BackgroundComponent",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "cb15dcd1b57c39bc1ac9aaf73891ca4369cd9684",
+    "branch": "main",
+    "tag": "haven-notifications-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Notifications",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-notifications",
+    "version": "0.1.0",
+    "hashSha256": "b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456789",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/lib/haven-notifications/haven-notification-daemon",
+    "arguments": "--daemon",
+    "workingDirectory": "/var/lib/haven/notifications",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "haven-notifications",
+    "socketName": "haven-notifications.socket",
+    "dbusName": "org.haven.Notifications",
+    "socketActivation": true,
+    "requiredServices": ["dbus", "systemd-journald"]
+  },
+  "routes": [
+    {
+      "route": "/notifications",
+      "handler": "NotificationListHandler",
+      "methods": ["GET"]
+    },
+    {
+      "route": "/notifications/{id}",
+      "handler": "NotificationActionHandler",
+      "methods": ["POST", "DELETE"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.notifications.deliver",
+      "displayName": "Notification Delivery",
+      "description": "Deliver notifications to the user via Haven Shell",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.notifications.history",
+      "displayName": "Notification History",
+      "description": "Maintain and query notification history",
+      "isRequired": false
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "haven.shell",
+      "kind": "RequiredProduct",
+      "versionConstraint": ">=0.1.0"
+    },
+    {
+      "dependencyId": "libglib2.0-0",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=2.78"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": false,
+    "requiresState": true,
+    "requiresData": true,
+    "customPaths": ["/home/haven/.local/share/haven/notifications", "/home/haven/.config/haven/notifications"]
+  },
+  "permissions": {
+    "requiredGrants": ["notifications.send", "notifications.read"],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "systemctl --user is-active haven-notifications",
+    "expectedOutputPattern": "active",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "active\n",
+    "stderr": "",
+    "executedAt": "2026-09-12T12:20:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-notifications-smoke.log"
+  },
+  "provenanceState": "Partial",
+  "imageInclusionState": "Excluded",
+  "approvedVmState": "NotTested"
+}

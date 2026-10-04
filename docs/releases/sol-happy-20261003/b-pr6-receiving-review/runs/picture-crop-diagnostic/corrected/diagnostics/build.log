@@ -1,0 +1,55 @@
+  DevAnalyzers -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/DevAnalyzers/release/DevAnalyzers.dll
+  Avalonia.Analyzers.CSharp -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Analyzers.CSharp/release/Avalonia.Analyzers.CSharp.dll
+  Avalonia.Analyzers.CodeFixes.CSharp -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Analyzers.CodeFixes.CSharp/release/Avalonia.Analyzers.CodeFixes.CSharp.dll
+  Avalonia.Analyzers.VisualBasic -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Analyzers.VisualBasic/release/Avalonia.Analyzers.VisualBasic.dll
+  DevGenerators -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/DevGenerators/release/DevGenerators.dll
+  Avalonia.Base -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Base/release_net10.0/Avalonia.Base.dll
+  Avalonia.Remote.Protocol -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Remote.Protocol/release_net10.0/Avalonia.Remote.Protocol.dll
+  Avalonia.Controls -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Controls/release_net10.0/Avalonia.Controls.dll
+  Avalonia.OpenGL -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.OpenGL/release_net10.0/Avalonia.OpenGL.dll
+  Avalonia.Vulkan -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Vulkan/release_net10.0/Avalonia.Vulkan.dll
+  Avalonia.Metal -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Metal/release_net10.0/Avalonia.Metal.dll
+  Avalonia.Skia -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Skia/release_net10.0/Avalonia.Skia.dll
+  NineToOne.Picture.BrowserEngine -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/NineToOne.Picture.BrowserEngine/release/NineToOne.Picture.BrowserEngine.dll
+  Avalonia.Build.Tasks -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll
+  Avalonia.MicroCom -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.MicroCom/release_net10.0/Avalonia.MicroCom.dll
+  Avalonia.Win32.Automation -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Win32.Automation/release_net10.0/Avalonia.Win32.Automation.dll
+  Avalonia.Win32 -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Win32/release_net10.0/Avalonia.Win32.dll
+  Avalonia.Markup -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Markup/release_net10.0/Avalonia.Markup.dll
+  Avalonia.Markup.Xaml -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Markup.Xaml/release_net10.0/Avalonia.Markup.Xaml.dll
+  Avalonia.DesignerSupport -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.DesignerSupport/release_net10.0/Avalonia.DesignerSupport.dll
+  Avalonia.Dialogs -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Dialogs/release_net10.0/Avalonia.Dialogs.dll
+  Avalonia.Generators -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Generators/release/Avalonia.Generators.dll
+  Avalonia -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia/release_net10.0/Avalonia.dll
+  Avalonia.Native -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Native/release_net10.0/Avalonia.Native.dll
+  Avalonia.FreeDesktop -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.FreeDesktop/release_net10.0/Avalonia.FreeDesktop.dll
+  Avalonia.DBus.Generators -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.DBus.Generators/release/Avalonia.DBus.Generators.dll
+  Avalonia.FreeDesktop.AtSpi -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.FreeDesktop.AtSpi/release_net10.0/Avalonia.FreeDesktop.AtSpi.dll
+  Avalonia.X11 -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.X11/release_net10.0/Avalonia.X11.dll
+  Avalonia.HarfBuzz -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.HarfBuzz/release_net10.0/Avalonia.HarfBuzz.dll
+  Avalonia.Desktop -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Desktop/release_net10.0/Avalonia.Desktop.dll
+  Avalonia.Themes.Fluent -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Themes.Fluent/release_net10.0/Avalonia.Themes.Fluent.dll
+  Avalonia.Fonts.Inter -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Fonts.Inter/release_net10.0/Avalonia.Fonts.Inter.dll
+  Avalonia.Headless -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Avalonia.Headless/release_net10.0/Avalonia.Headless.dll
+  CakeOS.Cui.Language -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/CakeOS.Cui.Language/release/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/CakeOS.Cui.Core/release/CakeOS.Cui.Core.dll
+  CakeOS.Cui.Themes -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/CakeOS.Cui.Themes/release/CakeOS.Cui.Themes.dll
+  CakeOS.Cui.Runtime -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/CakeOS.Cui.Runtime/release/CakeOS.Cui.Runtime.dll
+  Haven.Core -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Haven.Core/release/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/NineToOne.Cui.AI/release/NineToOne.Cui.AI.dll
+  Haven.Application -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Haven.Application/release/Haven.Application.dll
+  Dulche.Runtime -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Dulche.Runtime/release/Dulche.Runtime.dll
+  Den -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/Den/release/Den.dll
+  HavenOS.Home -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/HavenOS.Home/release/HavenOS.Home.dll
+/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/DiagnosticAdmission.cs(222,52): warning CS8602: Dereference of a possibly null reference. [/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/PictureAdmission.Diagnostics.csproj]
+/workspace/team-c-c5-b-picture-eec-closure-provisional/apps/Web/Picture/PictureBrowserFeature.cs(43,49): warning CA1416: This call site is reachable on all platforms. 'BrowserPictureMedia' is only supported on: 'browser'. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/PictureAdmission.Diagnostics.csproj]
+  PictureAdmission.Diagnostics -> /workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/PictureAdmission.Diagnostics/release_linux-x64/NineToOne.Picture.Admission.Tests.dll
+
+Build succeeded.
+
+/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/DiagnosticAdmission.cs(222,52): warning CS8602: Dereference of a possibly null reference. [/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/PictureAdmission.Diagnostics.csproj]
+/workspace/team-c-c5-b-picture-eec-closure-provisional/apps/Web/Picture/PictureBrowserFeature.cs(43,49): warning CA1416: This call site is reachable on all platforms. 'BrowserPictureMedia' is only supported on: 'browser'. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-crop-diagnostic/PictureAdmission.Diagnostics.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:02:19.44

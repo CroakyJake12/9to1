@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_ACTUAL_ORIGINAL_HOME_COMPILER_PREREQUISITE_FAILURE",
+  "sourceCommit": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "runId": 37224785297,
+  "jobId": 111502090256,
+  "artifactId": 11311284432,
+  "artifactBytes": 2492125,
+  "artifactSHA256": "0d6fd7890f984fa66ea89d26cba1d9238766b3cbe08634842bd7e444b2ad6e3d",
+  "officialJobsArtifactIdentityAndAllEightZipOriginalBodiesVerified": true,
+  "actualBuild": {
+    "warnings": 0,
+    "errors": 2,
+    "exitCode": 1
+  },
+  "source17109RowsBeforeAfterExact": true,
+  "owningSix": "NOT_RUN: compilation stops before discovery",
+  "nativePackageAndProcesses": "NOT_RUN",
+  "cause": "Original normal graph builds source Avalonia.Build.Tasks into owned artifacts/bin/Avalonia.Build.Tasks/release but unchanged resource consumers default to repository bin/Release/netstandard2.0. GenerateAvaloniaResourcesTask MSB4062 is an invocation recipe omission of existing maintained public AvaloniaBuildTasksLocation override. Native product defect is not established.",
+  "reviewedRecipeSuccessor": "0d1d64a5ed59e54a915ba3672fd734c0cff0ff40 source-only ACK preserved; no Task copying or source replacement",
+  "separateNextKnownOwnerTestCompilerBlocker": "Original Func<Task> Assert.Throws overload CS0619/xUnit2014 is being corrected exclusively by the delegated owner; not repaired or rerun here.",
+  "acceptance": "No original Home six,window quit,package,native mutation,default close,installed identity,signing or global release success. Original7e forced-1 retained."
+}

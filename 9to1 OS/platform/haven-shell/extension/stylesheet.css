@@ -1,0 +1,36 @@
+/* Haven Shell stylesheet source (Worker A).
+ *
+ * Haven branding is carried by the panel/indicator treatment itself, not
+ * by wallpaper. Palette matches branding/haven-wallpaper.svg:
+ * bg #0F1A1E, surface #16262C, accent #3ED598, text #EAF4F1.
+ */
+
+#panel.haven-panel {
+    background-color: #0F1A1E;
+    color: #EAF4F1;
+    border-bottom: 2px solid #3ED598;
+}
+
+#panel.haven-panel .haven-indicator-box {
+    spacing: 8px;
+    padding: 0 8px;
+}
+
+#panel.haven-panel .haven-indicator-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #3ED598;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+#panel.haven-panel .haven-indicator-label {
+    color: #EAF4F1;
+    font-weight: bold;
+}
+
+#panel.haven-panel .panel-button.haven-indicator:hover,
+#panel.haven-panel .panel-button.haven-indicator:focus {
+    background-color: #16262C;
+}

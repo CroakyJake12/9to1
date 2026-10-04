@@ -1,0 +1,23 @@
+{
+  "artifacts": [
+    {
+      "id": 11311649142,
+      "name": "canvas-uia-provider-diagnostic-unaccepted-257596c3dee1dff1d99410de373eb30b8c5dc4ed-1",
+      "size_in_bytes": 1794,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11311649142",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11311649142/zip",
+      "expired": false,
+      "created_at": "2026-10-04T18:54:34Z",
+      "expires_at": "2026-10-11T18:54:33Z",
+      "updated_at": "2026-10-04T18:54:34Z",
+      "digest": "sha256:e52d72fb0244c07fcf54d62fcc7f6cf79b7e431b91f016535df03e6182bb9542",
+      "workflow_run": {
+        "id": 37226194641,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c3-canvas-uia-typed-client-20261004",
+        "head_sha": "257596c3dee1dff1d99410de373eb30b8c5dc4ed"
+      }
+    }
+  ]
+}

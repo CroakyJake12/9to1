@@ -1,0 +1,78 @@
+{
+  "configuration": "release",
+  "counters": {
+    "total": "415",
+    "executed": "415",
+    "passed": "406",
+    "failed": "9",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "failedCases": [
+    {
+      "name": "Haven.Infrastructure.Tests.DataProductionTests.Infrastructure_registers_data_repository_format_and_query_services",
+      "outcome": "Failed",
+      "message": "System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks",
+      "outcome": "Failed",
+      "message": "Assert.Contains() Failure: Filter not matched in collection\nCollection: [PresentCompatibilityIssue { IssueId = 337f342b-8d8b-498e-8c64-0bb736b09997, Severity = Warning, Direction = Export, FeatureType = slide-layout, SourceTargetId = 8f8da684-b227-4561-864e-7a130332408c, Description = The source slide layout relationship is replaced by a blank PPTX layout., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = 639d92fc-6748-4ce7-b8da-5e9012bf912c, Severity = Warning, Direction = Export, FeatureType = object-type, SourceTargetId = f0c88fca-9267-4035-bceb-11e440710c72, Description = The GenUi object is represented by explanatory text; its interactive or visual behavior is not preserved., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = b8480547-8039-4cc2-9c27-44753f3874bd, Severity = Warning, Direction = Export, FeatureType = object-type, SourceTargetId = 54fd9620-8318-4886-abaf-185039d43acf, Description = The Image object is represented by explanatory text; its interactive or visual behavior is not preserved., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = dc47f9a0-3b3b-46bd-82a0-3bc49384698f, Severity = Warning, Direction = Export, FeatureType = slide-layout, SourceTargetId = 1dba0e7d-5d66-42d6-ad13-7a89a3366e71, Description = The source slide layout relationship is replaced by a blank PPTX layout., Resolution = Degraded }, PresentCompatibilityIssue { IssueId = fbdb2d07-7fdd-4e4d-8185-4a88351cf304, Severity = Warning, Direction = Export, FeatureType = presentation-structure, SourceTargetId = b75747d9-bb2b-458b-9c04-242195f0729d, Description = Source themes, masters, layouts, and sections are not preserved by the PPTX writer., Resolution = Degraded }]"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.PlannerServiceRegistrationTests.Desktop_startup_composition_resolves_the_study_planner_service",
+      "outcome": "Failed",
+      "message": "System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.MeshRegistrationTests.MeshServicesResolveWithoutCircularDependencyAndJoinProviderCollections",
+      "outcome": "Failed",
+      "message": "System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.ProviderRoutingRegistrationTests.RoutedAndLocalClientsResolveWithoutCircularDependency",
+      "outcome": "Failed",
+      "message": "System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_ConfinesSenderFileNameToMeshInboxAndVerifiesHash",
+      "outcome": "Failed",
+      "message": "Assert.False() Failure\nExpected: False\nActual:   True"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.DocumentShapeGalleryTests.Infrastructure_registers_one_shared_shape_gallery",
+      "outcome": "Failed",
+      "message": "System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run",
+      "outcome": "Failed",
+      "message": "System.UnauthorizedAccessException : All requested package permissions must be reviewed and granted explicitly."
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.PresentProductionTests.Infrastructure_registers_present_repository_and_exporter",
+      "outcome": "Failed",
+      "message": "System.IO.IOException : Read-only file system : '/home/agent/.config/Haven'"
+    }
+  ],
+  "previewCases": [
+    {
+      "name": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_detects_real_supported_web_entry_points_without_starting_them",
+      "outcome": "Passed"
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_starts_serves_and_stops_a_real_loopback_site",
+      "outcome": "Passed"
+    }
+  ]
+}

@@ -1,0 +1,767 @@
+[
+  {
+    "bytes": 1013760,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/AngleSharp.dll",
+    "sha256": "a1aecfe938c3746c40b6f0e69c10d0537a6990ec540f5e224b7d888d292bce5e"
+  },
+  {
+    "bytes": 2258944,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Base.dll",
+    "sha256": "63b2b84ced57729a27e87e6436126ece1deb30a400c0ce0afde12cd758f48190"
+  },
+  {
+    "bytes": 827012,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Base.pdb",
+    "sha256": "f8c292b919b6a1783f3c64fc7d861bc29470c32d91978098323588a2431e93ce"
+  },
+  {
+    "bytes": 2021500,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Base.xml",
+    "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4"
+  },
+  {
+    "bytes": 1298944,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Controls.dll",
+    "sha256": "f5d1ab78bb46d5eea72d96792bc41cc53a500840dbcc556d3dc4adbbbfb7fb53"
+  },
+  {
+    "bytes": 489896,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Controls.pdb",
+    "sha256": "cbc5c6fe577343eaf010004e877309ee3e4486264d81d91506709e795b775476"
+  },
+  {
+    "bytes": 1335488,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Controls.xml",
+    "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a"
+  },
+  {
+    "bytes": 70656,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.DesignerSupport.dll",
+    "sha256": "7d8031bd09478f57ef33c15310e30c38a910e4973f1fe1e99107cb5f732a5155"
+  },
+  {
+    "bytes": 29084,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.DesignerSupport.pdb",
+    "sha256": "87cf1aee8d0a79f046bf6fc84fc1f958b337ff24f37fae746b4054db02092636"
+  },
+  {
+    "bytes": 141,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.DesignerSupport.xml",
+    "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0"
+  },
+  {
+    "bytes": 14848,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Desktop.dll",
+    "sha256": "8baa8809b03b4cdfc775e23f381e169af9e872515e2c830b735446d79106db02"
+  },
+  {
+    "bytes": 14616,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Desktop.pdb",
+    "sha256": "cf5d7c1743bb940c8b352a3c790581abcd6a95d938a84ff397a91f736d659049"
+  },
+  {
+    "bytes": 133,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Desktop.xml",
+    "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793"
+  },
+  {
+    "bytes": 242688,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Dialogs.dll",
+    "sha256": "ea41c7e672ddeca38268ef4d093a51007202988e28780c60b546d99f5ed4eb46"
+  },
+  {
+    "bytes": 24348,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Dialogs.pdb",
+    "sha256": "060887a6229d8ab170e75dfaedf3f88dc267a2be7617ed1d43edc0493303cdb5"
+  },
+  {
+    "bytes": 638,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Dialogs.xml",
+    "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f"
+  },
+  {
+    "bytes": 1896960,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Fonts.Inter.dll",
+    "sha256": "2d7c5da1b354d09c5979fa73269fa38fdb179ee3677d6722abae556256a0f17e"
+  },
+  {
+    "bytes": 13624,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Fonts.Inter.pdb",
+    "sha256": "cf1d4cf2813584eba7b6041b3f1da50f193fdb497149aec56b97522b11d83cbf"
+  },
+  {
+    "bytes": 137,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Fonts.Inter.xml",
+    "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa"
+  },
+  {
+    "bytes": 559616,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.FreeDesktop.AtSpi.dll",
+    "sha256": "bb26104d1b8a8d5ef338121ac19d05af5fa2470e0416f289efda9395b043a9e1"
+  },
+  {
+    "bytes": 189496,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.FreeDesktop.AtSpi.pdb",
+    "sha256": "405260232b3a4e41ed6acc344a2c3dde775a4fa5df4332ca4103ba7534221918"
+  },
+  {
+    "bytes": 52965,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.FreeDesktop.AtSpi.xml",
+    "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3"
+  },
+  {
+    "bytes": 200704,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.FreeDesktop.dll",
+    "sha256": "86be6f0fc66dd1a2ead2cd3491960abd442ff112e89b6c3e784d15a4c871a000"
+  },
+  {
+    "bytes": 83448,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.FreeDesktop.pdb",
+    "sha256": "b6447229a0c306db030ba92b05683dbda41df019bea357f6011845f4e5ced007"
+  },
+  {
+    "bytes": 1857,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.FreeDesktop.xml",
+    "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3"
+  },
+  {
+    "bytes": 21504,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.HarfBuzz.dll",
+    "sha256": "5ea7ce5bca98f63fcd48c6e386158fd335dd9d9b5f53720b72eb4a39828e366a"
+  },
+  {
+    "bytes": 15820,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.HarfBuzz.pdb",
+    "sha256": "6227761e1ae8cae2fa78d9b4313832eb504f17a1a776d1a64180d77617cd07b7"
+  },
+  {
+    "bytes": 1114,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.HarfBuzz.xml",
+    "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c"
+  },
+  {
+    "bytes": 70656,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Headless.dll",
+    "sha256": "8d642afefdfcfb05675b14e5e292defb0e0f88543c71d4fbe5c44cb6ab52719b"
+  },
+  {
+    "bytes": 29356,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Headless.pdb",
+    "sha256": "2177e43e6e768ffae9029e1a7aba7767ae5a941ead06fb3bedfd37016852b872"
+  },
+  {
+    "bytes": 13264,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Headless.xml",
+    "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10"
+  },
+  {
+    "bytes": 74240,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Markup.Xaml.dll",
+    "sha256": "f14c61375b219c383c06b2134c2a620a77f948ed1673114facd729531fdff3b4"
+  },
+  {
+    "bytes": 35348,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Markup.Xaml.pdb",
+    "sha256": "d220ae3f6e8e4603fd76cf04025b24d2728080fe1a16cae4369fde95aa19440b"
+  },
+  {
+    "bytes": 25476,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Markup.Xaml.xml",
+    "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87"
+  },
+  {
+    "bytes": 45056,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Markup.dll",
+    "sha256": "5760fa4d8334028a893cddb5c0eeeaccb850b3c1a2ccbab786147d765cdbd84c"
+  },
+  {
+    "bytes": 23116,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Markup.pdb",
+    "sha256": "656802f97ac7d555060e06d046b40894da5ff1fa01ede4f442db9c1d03f0c731"
+  },
+  {
+    "bytes": 4336,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Markup.xml",
+    "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562"
+  },
+  {
+    "bytes": 14848,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Metal.dll",
+    "sha256": "381df6e4db1ad89915104697e3c35d6ed64e8a665044996760ed60b093bd84bd"
+  },
+  {
+    "bytes": 13596,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Metal.pdb",
+    "sha256": "2bd282c4c80dd2373a04c1ee69d219f9e6f08b90a6b22411ff27379f4e9892f4"
+  },
+  {
+    "bytes": 131,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Metal.xml",
+    "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd"
+  },
+  {
+    "bytes": 14848,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.MicroCom.dll",
+    "sha256": "277385412036d4d557ed028b1d67f647c6e27e9b23486e8ddf8e31f3523d4bd9"
+  },
+  {
+    "bytes": 13664,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.MicroCom.pdb",
+    "sha256": "ac0a84457f43ac5ed970a6d8ae86ee32f9fe6c017b78f1f22af202d35ed7a0d3"
+  },
+  {
+    "bytes": 134,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.MicroCom.xml",
+    "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105"
+  },
+  {
+    "bytes": 342528,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Native.dll",
+    "sha256": "dc7fdfaf0c4f6cfc7f8d4edc7d52a194ad7221f2d48cf008aef98c8b5c608333"
+  },
+  {
+    "bytes": 175304,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Native.pdb",
+    "sha256": "eff4c9fb3682372ddbd576a703dc7046e585159da5f25ba76fb50e9ca9115fbc"
+  },
+  {
+    "bytes": 9476,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Native.xml",
+    "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c"
+  },
+  {
+    "bytes": 116224,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.OpenGL.dll",
+    "sha256": "635e42c4c62d4bec76f2e2410c3a73581771c39b3b35516ca94c1ab31ad6c47b"
+  },
+  {
+    "bytes": 48244,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.OpenGL.pdb",
+    "sha256": "d0d41e7a17b392954a891d878d4d6834e55ae3e88cb8c746dc50e046daab05d6"
+  },
+  {
+    "bytes": 5602,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.OpenGL.xml",
+    "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be"
+  },
+  {
+    "bytes": 75264,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Remote.Protocol.dll",
+    "sha256": "09d345d1601bc3ee6f05bd7c0ed49848a9745889271d220339482d9efe1ab80a"
+  },
+  {
+    "bytes": 30008,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Remote.Protocol.pdb",
+    "sha256": "8563b983009ca9038fffdaf67992e7feecc30e302549b2f4ec40610455a4aeb0"
+  },
+  {
+    "bytes": 70801,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Remote.Protocol.xml",
+    "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2"
+  },
+  {
+    "bytes": 122880,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Skia.dll",
+    "sha256": "43b22119976b48be9d921c8fc60f6f6ba59ffafd0519b9daff71c6671b7d1b5f"
+  },
+  {
+    "bytes": 53948,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Skia.pdb",
+    "sha256": "a39a473969379b567f137788c57c5fadba40b41d6fff4b46b93ac7ec73ea573e"
+  },
+  {
+    "bytes": 47094,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Skia.xml",
+    "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584"
+  },
+  {
+    "bytes": 712192,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Themes.Fluent.dll",
+    "sha256": "151e4efae622f4f55ba1a3a3dccc79a6f857b94d3b0dd9f1c1ba9f33e88040eb"
+  },
+  {
+    "bytes": 160612,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Themes.Fluent.pdb",
+    "sha256": "207bf25cc21273fefdcfe613d7919346658b1ee896d3a742a5a509dcfb539881"
+  },
+  {
+    "bytes": 6894,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Themes.Fluent.xml",
+    "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111"
+  },
+  {
+    "bytes": 190464,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Vulkan.dll",
+    "sha256": "2f649c79ae1f73216517476c4ad0ee94dc31f623f4311976df63b40c2a453411"
+  },
+  {
+    "bytes": 44208,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Vulkan.pdb",
+    "sha256": "6f87c5382690769a2a7aaa94aa8dacaf8954879bdf36e1bd5d071485b99da000"
+  },
+  {
+    "bytes": 1620,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Vulkan.xml",
+    "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd"
+  },
+  {
+    "bytes": 123392,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Win32.Automation.dll",
+    "sha256": "06d3faf414512699d9f090ba1b2f12c8e2749d255b836dae4aeceb53067caa2d"
+  },
+  {
+    "bytes": 88200,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Win32.Automation.pdb",
+    "sha256": "0da22675e312bfb2029adb641a3b259650b497678b0c1b99103158a80e877590"
+  },
+  {
+    "bytes": 3812,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Win32.Automation.xml",
+    "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9"
+  },
+  {
+    "bytes": 932352,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Win32.dll",
+    "sha256": "0ad0cff14c60a60703f339224c1a200b1d51b5da580e1dc69231bdaa90035f33"
+  },
+  {
+    "bytes": 412812,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Win32.pdb",
+    "sha256": "2f916beb2d8de5cc2a372b4f3bd21bef52cd92775d794dcbd4341925a156e0e7"
+  },
+  {
+    "bytes": 143346,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.Win32.xml",
+    "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba"
+  },
+  {
+    "bytes": 371712,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.X11.dll",
+    "sha256": "b6e26fb984c1c0193fe6083c9fafd071e83dda1f71f18f74459676da97720bc4"
+  },
+  {
+    "bytes": 88768,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.X11.pdb",
+    "sha256": "3d7c7226a420399c96df586d733489a8056c8fa880d300cf08c628433db0a8d5"
+  },
+  {
+    "bytes": 11685,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.X11.xml",
+    "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b"
+  },
+  {
+    "bytes": 3584,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.dll",
+    "sha256": "12be72de9b0d74a08a91dc4d04e17e80654f8685c7c4690e6cb652baf9f7bd29"
+  },
+  {
+    "bytes": 12500,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.pdb",
+    "sha256": "94e449ed4a23a821e1f39811529df568f22877ac770fad74f226f1a77a18e77b"
+  },
+  {
+    "bytes": 125,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Avalonia.xml",
+    "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8"
+  },
+  {
+    "bytes": 1797632,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CSharpMath.Rendering.dll",
+    "sha256": "57d7386b02f3ae577b0f73adb511f10a19328282cf42c7fd3bf430c641bcdc0c"
+  },
+  {
+    "bytes": 11264,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CSharpMath.SkiaSharp.dll",
+    "sha256": "14e36a4b3274f7595e3116e07b9edc7f7882885f237d84f9daddc0ac310a3e60"
+  },
+  {
+    "bytes": 227328,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CSharpMath.dll",
+    "sha256": "955db545f7cdd2164b146f746b4eb79b0f2623fc125a8984be3a1dfa35441d4d"
+  },
+  {
+    "bytes": 76288,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Core.dll",
+    "sha256": "378c7f2cf402397f27e54ee3306307dcc412fb11021243f5275bde6e6b6d547a"
+  },
+  {
+    "bytes": 28704,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Core.pdb",
+    "sha256": "706131212456a6346697aa81ea7d47e635e6e999545ab367df5e990cd857c7db"
+  },
+  {
+    "bytes": 11264,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Language.dll",
+    "sha256": "bf110987afa42bdc31aa6ad02db76d5577b4f8d8187ed9c4dd131ec537e3a3e3"
+  },
+  {
+    "bytes": 13688,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Language.pdb",
+    "sha256": "265621e4afa1c1940faa168ff71d8e66366122e9eaf3d5758ad90d9d2757f32b"
+  },
+  {
+    "bytes": 150528,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Runtime.dll",
+    "sha256": "063501c88a5e61fd6acab08623860f30ffcb988a88cd5bdbe1cb142c826eba78"
+  },
+  {
+    "bytes": 45164,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Runtime.pdb",
+    "sha256": "3f5b50c005e4712e67166c2b38df094cfcee0245a7dd1a7c5ad976383211a067"
+  },
+  {
+    "bytes": 89600,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Themes.dll",
+    "sha256": "2123b04b067d777c5fdde1ad9b2e8cf42c5680b76882e420202dc3fd92a72ed6"
+  },
+  {
+    "bytes": 27324,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/CakeOS.Cui.Themes.pdb",
+    "sha256": "87c54a4883874923762d1902b7fb18bfe4ec1e7b3b8c8079858118d374b65234"
+  },
+  {
+    "bytes": 310272,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Den.dll",
+    "sha256": "bc721280db9462230b76249f16c5fbd1726027bce762c2c6844453b82be84210"
+  },
+  {
+    "bytes": 63088,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Den.pdb",
+    "sha256": "57228b5844cca06e38f256f63bfe43df76a47be7915ec4ffb0a4fc8727a16092"
+  },
+  {
+    "bytes": 708096,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Dulche.Runtime.dll",
+    "sha256": "d7c2508471aebfff4a949687c92db53f71057315ab19cc8d0b8971ff489ea6aa"
+  },
+  {
+    "bytes": 118988,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Dulche.Runtime.pdb",
+    "sha256": "013733a823cb7cb928338a46febbb87fe21a1153c8263740201ddc1ac4e9fc20"
+  },
+  {
+    "bytes": 122400,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HarfBuzzSharp.dll",
+    "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+  },
+  {
+    "bytes": 4078080,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Haven.Application.dll",
+    "sha256": "6d9570c9d3b1c9fef26a5044a82ee69c6e9b6ad36bdcb6cf65d02e0fd778f8d7"
+  },
+  {
+    "bytes": 718664,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Haven.Application.pdb",
+    "sha256": "8db3a2c969816bf50ece96b7d4d11a4090bc3e297ec55e52ea3ca425829891a5"
+  },
+  {
+    "bytes": 1825280,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Haven.Core.dll",
+    "sha256": "ec755b9da49c3b21af263c87d87c2df821ad03ea966fad377d14ba9c67beef58"
+  },
+  {
+    "bytes": 325780,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Haven.Core.pdb",
+    "sha256": "4ae5aa33832e3d9ea7cf3b08aa3c90c4dbfbcc0a2dd5691d444f675aaf9fe91d"
+  },
+  {
+    "bytes": 416256,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Haven.UI.dll",
+    "sha256": "e17b54b493dae88d05abb78bc09cac8e1187b9196b7e31e678712cdeb8073d22"
+  },
+  {
+    "bytes": 112632,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Haven.UI.pdb",
+    "sha256": "2d5df421dcfde00f4a0e3112953cc3c7b4345d1fe6e50c207b934e550355a3e1"
+  },
+  {
+    "bytes": 315392,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Files.CUI.dll",
+    "sha256": "162e255becae7ba924c87a1a829465b829cb23dc3a8a13afc086bb536f375183"
+  },
+  {
+    "bytes": 57480,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Files.CUI.pdb",
+    "sha256": "d6c048073cd99eb5738cce92b123acc24157ad344c9e8693720c40e0e37e4471"
+  },
+  {
+    "bytes": 222208,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Home.NativeUI.dll",
+    "sha256": "781ec858d90576a01463aa972b9e05d1a9fcae4fe333f223fcc66667bc23f719"
+  },
+  {
+    "bytes": 29440,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Home.NativeUI.pdb",
+    "sha256": "8b696abe92a17df903be3c51c6d794fc3c92c9b243e04307c1c07c4aa0065470"
+  },
+  {
+    "bytes": 1296384,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Home.dll",
+    "sha256": "5239ecbcc608a42b5883651ed01c99eda8d13e59de86a878952bb371785e0211"
+  },
+  {
+    "bytes": 222212,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Home.pdb",
+    "sha256": "121a8770faa68cb998b51dbe8720f9c87016cc582145ef34f4cf634374e8488f"
+  },
+  {
+    "bytes": 362496,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Sites.dll",
+    "sha256": "750e3f81b3e3a57cdd3a9e0dda8db371332433a971e9fef1b814628185f4cdea"
+  },
+  {
+    "bytes": 69976,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/HavenOS.Sites.pdb",
+    "sha256": "67120a235eaff5ac26faedcc7a77ca58808fe9252cbe5a03e51bc1e7fae863fc"
+  },
+  {
+    "bytes": 16384,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/MicroCom.Runtime.dll",
+    "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+  },
+  {
+    "bytes": 19504,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Microsoft.IdentityModel.Abstractions.dll",
+    "sha256": "24e97b54b6b5c234a124a336757e3116617ac6c30b655cdae74517dc2ecb5746"
+  },
+  {
+    "bytes": 172064,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Microsoft.IdentityModel.JsonWebTokens.dll",
+    "sha256": "7761c80de8e9cb0f01d74ffcddd3fc620e1cc92bddc6f7fcacc342acfb0077d2"
+  },
+  {
+    "bytes": 36896,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Microsoft.IdentityModel.Logging.dll",
+    "sha256": "3fe5d858fe4a698281cad38a9535b535ed626a874d060a6763c085544b1089ee"
+  },
+  {
+    "bytes": 384544,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Microsoft.IdentityModel.Tokens.dll",
+    "sha256": "da667d128077d2ae0141a562e73871db157639747fbfa30d0ebdb693adce718a"
+  },
+  {
+    "bytes": 55296,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Accounts.Remote.dll",
+    "sha256": "ff98df946f9620d13a992fe93eca7fba1f3b3e4ffb1480ee915061dde519b0b4"
+  },
+  {
+    "bytes": 20852,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Accounts.Remote.pdb",
+    "sha256": "8165149941287b773593be3e75d654cc4b0907362b8af3dee30631daf89c76db"
+  },
+  {
+    "bytes": 398336,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Accounts.dll",
+    "sha256": "c6d6cc1851520f3991e6ef0557da17009f498d3db6b1f1395c711c7a871274d0"
+  },
+  {
+    "bytes": 77592,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Accounts.pdb",
+    "sha256": "3964f3f77870e596a737faa9f50592b7e4d21fde4d941168bff52dd8de4a9d5e"
+  },
+  {
+    "bytes": 78256,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Admin",
+    "sha256": "0275375c9921fbb71f289eced5c69adaa6278213758abf56e344912d4460db50"
+  },
+  {
+    "bytes": 22730,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Admin.deps.json",
+    "sha256": "1eabdca3e9c6e6f985b9474ca7ab3e2786ffc6e76a0eeba89210a8b6ba226921"
+  },
+  {
+    "bytes": 40448,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Admin.dll",
+    "sha256": "f4461edcb26ec1097b2e2224ec16616d970f176ac80abca570f217b003af810b"
+  },
+  {
+    "bytes": 19200,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Admin.pdb",
+    "sha256": "04048ddea2297b0c18392688a6d0ec16af97e5bce90608287ced5715c68f1fec"
+  },
+  {
+    "bytes": 330,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Admin.runtimeconfig.json",
+    "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  },
+  {
+    "bytes": 121856,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Cui.AI.dll",
+    "sha256": "3f19d93175a5eb8ad80a79f0d791bab4789393c1d6a41c5f03a402075f89afb5"
+  },
+  {
+    "bytes": 34012,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Cui.AI.pdb",
+    "sha256": "501f659d080e87602f1926be086191f2a47e1256517ecddf9bacbcffe45d1773"
+  },
+  {
+    "bytes": 78256,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Web",
+    "sha256": "06deb1999cd196752b9430bda25efffa6dc38a0f1d21cc4e47513e14f7f594fc"
+  },
+  {
+    "bytes": 8760,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Web.deps.json",
+    "sha256": "5fb2e6e7c742f2c602c7e8138bf5191d477111433a2559d7fa0447980704860b"
+  },
+  {
+    "bytes": 117760,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Web.dll",
+    "sha256": "484ccc4daec3337460a8d41b850651f2198becfa0ba28255c964384ed4a9dda2"
+  },
+  {
+    "bytes": 39424,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Web.pdb",
+    "sha256": "a81f5dbc0b9121fc7aa0c7945e6c5eef1db3715fa8a4dda75015034b1a7275c1"
+  },
+  {
+    "bytes": 472,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Web.runtimeconfig.json",
+    "sha256": "f71b4c67b5233a19be9131b5fe4b45fe7829997cf2b42e762d6baa037da93863"
+  },
+  {
+    "bytes": 51,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/NineToOne.Web.staticwebassets.endpoints.json",
+    "sha256": "eb6525c892afda953a2560f151f9c5e5bc6e79ef6741d886488ac450262c91e3"
+  },
+  {
+    "bytes": 490528,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/SkiaSharp.dll",
+    "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+  },
+  {
+    "bytes": 8505,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/SubscriptionBuilder.html",
+    "sha256": "5666b40f1282944bc8ec0baccf2582a22972515d9e561b7d0d10b4d607ea4dcf"
+  },
+  {
+    "bytes": 1087,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/CSharpMath-MIT.txt",
+    "sha256": "7c8f476bf7e35d9eaeb986eef4e77e9a71c31ca4f8b98a3b7378e26321ce23e3"
+  },
+  {
+    "bytes": 4593,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/CSharpMath-upstream-license-declarations.md",
+    "sha256": "7965122970372c7b294c2341a940c9ecba18515ffdafabdf5abb8f149d2d34f4"
+  },
+  {
+    "bytes": 996,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/Font-copyright-notices.txt",
+    "sha256": "f378cfbd5178c319c12f30ac5c2aa070ab6b51655b00e212f4dd2c46c3075f7d"
+  },
+  {
+    "bytes": 6620,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/FreeType-FTL.txt",
+    "sha256": "e4b7fdb18fc04b1e0197c41e1ce072cf49b2f5f4a8f5ed26768440d1c957156f"
+  },
+  {
+    "bytes": 1456,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/GUST-FONT-LICENSE.txt",
+    "sha256": "2bd69affc3da00715116f713f57eab9707e96daf3562ad0215987b15b9c16f73"
+  },
+  {
+    "bytes": 19442,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/ICU60-LICENSE.txt",
+    "sha256": "24c771ce37201a3ab604852e47d10d21595d0493269dd6c8a5e567e998e18c00"
+  },
+  {
+    "bytes": 23386,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/LPPL-1.3c.tex",
+    "sha256": "c3c7c49085d4c8d722ca98937b2378619b45dd0b5bd1456bcd61be95d8b954f1"
+  },
+  {
+    "bytes": 2186,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/LatinModern-Math-MANIFEST.txt",
+    "sha256": "1daa729f7922c42ba5ce8da7dfe4ecdc9e5c878ad86217fd6f32c4671505b007"
+  },
+  {
+    "bytes": 4588,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/LatinModern-Math-README.txt",
+    "sha256": "e6fdd5fb44b656146fa988d191f58901c09a347d3f4fbaa3b45b24a6ad7ec30b"
+  },
+  {
+    "bytes": 1657,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/NOTICE.txt",
+    "sha256": "e71767fe62fdad5c3fcb0b9df2bfcf577279f2f2198c7bee80c6cdbb979531fd"
+  },
+  {
+    "bytes": 4566,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/SIL-Open-Font-License-1.1.md",
+    "sha256": "d4274903cbedb0566531e9856e5353991818e84ff17b747d7d41cbdd4e736ff5"
+  },
+  {
+    "bytes": 11361,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/Typography-Apache-2.0.txt",
+    "sha256": "a22a0c495566ce9b09b25aa3feab8d54a5b12c6a26eb3dcb5324ead9a586da66"
+  },
+  {
+    "bytes": 1185,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/Typography-MIT.txt",
+    "sha256": "c72384e3fe4818ff9ee516f9e5d2ba579c6299856fde53d9fa37384df4343d4a"
+  },
+  {
+    "bytes": 2323,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/Typography-attributions.md",
+    "sha256": "e2449e386e85f43cd5ad20869d23653315d656ac0ffb8630143308a83bd79522"
+  },
+  {
+    "bytes": 23603,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/Typography-source-headers.txt",
+    "sha256": "f90dee3e11f6b139874f09f792eba0c389107a6d40db9ef6876cdeadeda55faf"
+  },
+  {
+    "bytes": 3794,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/ThirdParty/CSharpMath/provenance.json",
+    "sha256": "7231dcead098b1bdc4e57c3e39ac4d8b11ec34d0251e9ac62dccc4f9e86d00eb"
+  },
+  {
+    "bytes": 219136,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Tmds.DBus.Protocol.dll",
+    "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+  },
+  {
+    "bytes": 11861,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/UI/Home.cui",
+    "sha256": "13c80c592b71831a21cfe9bec065f901c6d7d3df35575ff77def6c079e0a59fc"
+  },
+  {
+    "bytes": 8848,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/UI/ModelPicker.cui",
+    "sha256": "55c01dc842023473626a53ab2386d086fa6666e02a0ddf4507f86dbc1f590231"
+  },
+  {
+    "bytes": 78256,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Web.Specs",
+    "sha256": "4a9650e0f09f41566e638c42f4b3cb07cd5d60f9ce436edf0a34db5f3f8e2289"
+  },
+  {
+    "bytes": 28434,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Web.Specs.deps.json",
+    "sha256": "4bd004a2080c2d615b3b59b2aceedf90f9161bddf672007c85213ea10894b31f"
+  },
+  {
+    "bytes": 57344,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Web.Specs.dll",
+    "sha256": "16429bbff81af3953bd609d9acc9a04c1da8fdb31d28797c9278b5cdbd6fb75a"
+  },
+  {
+    "bytes": 29296,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Web.Specs.pdb",
+    "sha256": "1e25a23fc087f7ecb657ec960d59f52804ca131007056eaa05e7343083168f89"
+  },
+  {
+    "bytes": 440,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/Web.Specs.runtimeconfig.json",
+    "sha256": "f8bd1713a3691d58eb332a71675f129385b91e852b66e7b6761cae1f34d4efd2"
+  },
+  {
+    "bytes": 2808040,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/libHarfBuzzSharp.so",
+    "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018"
+  },
+  {
+    "bytes": 11170240,
+    "path": "artifacts/root14-managed-build/bin/Web.Specs/release_linux-x64/libSkiaSharp.so",
+    "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e"
+  }
+]

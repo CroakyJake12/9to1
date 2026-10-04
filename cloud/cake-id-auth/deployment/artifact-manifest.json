@@ -1,0 +1,85 @@
+{
+  "kind": "local dry-run compiled artifacts; no deployment",
+  "runtimeSourceCommit": "4c29fd3b",
+  "compileConfigCommit": "29152698",
+  "artifacts": {
+    "/workspace/team-c/evidence/c2/hosted-artifact/README.md": {
+      "bytes": 124,
+      "sha256": "eec1e2320f17ea36645a4e0f19019a30e6c3230ba032cac1d85f0cfe7e1323a5"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/c38a9b6078aaf2c8cdfc1a4fbef6c1503335e663-auth-ui.txt": {
+      "bytes": 39127,
+      "sha256": "b1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/esbuild-meta.json": {
+      "bytes": 771852,
+      "sha256": "65d7d758d847a735b122d3ea31990657c9c0f31a5b16eb7b747667ae7b7f9506"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/index.js": {
+      "bytes": 3109063,
+      "sha256": "9d859012015fd20b67500d07646fd5e09dea3d08e8b89229494907adf37e54a2"
+    },
+    "/workspace/team-c/evidence/c2/hosted-artifact/index.js.map": {
+      "bytes": 5534189,
+      "sha256": "68217940553358e44f3c94c5018026e96a3ebc9b58a57aa6356b300f64493d11"
+    },
+    "/workspace/team-c/evidence/c2/hosted-rollback-artifact/README.md": {
+      "bytes": 127,
+      "sha256": "0d6f923634fc074c489a9226422e1d1f01514b4231caa70946f1b5cb95491673"
+    },
+    "/workspace/team-c/evidence/c2/hosted-rollback-artifact/rollback.js": {
+      "bytes": 334,
+      "sha256": "6ed1bdd972925bee5e60de5c8024e977db5129dfb355ca44381444c67a7f49a7"
+    },
+    "/workspace/team-c/evidence/c2/hosted-rollback-artifact/rollback.js.map": {
+      "bytes": 819,
+      "sha256": "63d163dfc2ebf762176ba9663617735a843c6b1bd2255410d9417f0c9ca78c74"
+    }
+  },
+  "sources": {
+    "src/index.ts": {
+      "bytes": 8961,
+      "sha256": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b"
+    },
+    "src/auth.ts": {
+      "bytes": 6164,
+      "sha256": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113"
+    },
+    "src/email.ts": {
+      "bytes": 1509,
+      "sha256": "ed288123118c4a65ecb6037cfa4d66b5c875a24268906e575354ce14ab940cec"
+    },
+    "src/env.ts": {
+      "bytes": 431,
+      "sha256": "ae38af78db91b0da3d1a98e516f0409ec81588ab37ccb49d50d7a59c508d03ad"
+    },
+    "package.json": {
+      "bytes": 829,
+      "sha256": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228"
+    },
+    "package-lock.json": {
+      "bytes": 64877,
+      "sha256": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098"
+    },
+    "migrations/0000_cake_guardrails.sql": {
+      "bytes": 984,
+      "sha256": "8cd4b84109d4deab88d531b125d59a8a3cf1d87c0cb1abd766bc7ff4cdf5245b"
+    },
+    "migrations/0001_better_auth.sql": {
+      "bytes": 6244,
+      "sha256": "7145e80b0d4887c785b7e9897ebe36f8b505777ff06df811781faead6f89631c"
+    },
+    "tests/integration-custody.mjs": {
+      "bytes": 43674,
+      "sha256": "5c5d92a3cb531e9d32ea48f8f5d320ca2bc75401236ee9fa3e639fe6a96169ac"
+    },
+    "tests/integration.mjs": {
+      "bytes": 42653,
+      "sha256": "0ce6579e115e1879e8dc8d7595f4e0aa6a3146e8329517012c744b7c21077363"
+    },
+    "tests/linux-fixture-custodian.py": {
+      "bytes": 10880,
+      "sha256": "02aba2723be8405a3af1272d5f9f77ccfd86ac7558201a719a2f950d5f3a19ca"
+    }
+  }
+}

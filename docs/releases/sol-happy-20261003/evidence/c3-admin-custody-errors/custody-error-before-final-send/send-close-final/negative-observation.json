@@ -1,0 +1,9 @@
+{
+  "scenario": "send-close",
+  "launcherReleased": true,
+  "creatorWaitProven": true,
+  "primary": "AssertionError('Original signal/close failure replaced')",
+  "cleanup": [],
+  "retainedData": "/tmp/original-custody-d6qdef6j",
+  "sessionInitialized": true
+}

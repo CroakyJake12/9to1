@@ -1,0 +1,41 @@
+﻿// Copyright (c) Files Community
+// SPDX-License-Identifier: MPL-2.0
+
+using Windows.ApplicationModel.DataTransfer;
+
+namespace Files.App.Actions
+{
+	[GeneratedRichCommand]
+	internal sealed partial class CopyItemAction : BaseTransferItemAction, IAction
+	{
+		public string Label
+			=> Strings.Copy.GetLocalizedResource();
+
+		public string Description
+			=> Strings.CopyItemDescription.GetLocalizedFormatResource(ContentPageContext.SelectedItems.Count);
+
+		public ActionCategory Category
+			=> ActionCategory.FileSystem;
+
+		public RichGlyph Glyph
+			=> new(themedIconStyle: "App.ThemedIcons.Copy");
+
+		public string AutomationId
+			=> "InnerNavigationToolbarCopyButton";
+
+		public string AccessKey
+			=> "C";
+
+		public HotKey HotKey
+			=> new(Keys.C, KeyModifiers.Ctrl);
+
+		public CopyItemAction() : base()
+		{
+		}
+
+		public Task ExecuteAsync(object? parameter = null)
+		{
+			return ExecuteTransferAsync(DataPackageOperation.Copy);
+		}
+	}
+}

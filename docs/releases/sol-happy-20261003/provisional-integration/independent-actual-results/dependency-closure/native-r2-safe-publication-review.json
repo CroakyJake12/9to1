@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "ce7f7ce15cc75b5fac40bae2bce20f232a3d6f38",
+  "summarySha256": "e99e1d364e30f5c43b1012bed0bb5cddbccb14bb1069e0e389e5b0cef739f02f",
+  "selectedPublicPayloads": 28,
+  "publicPayloadBytes": 158278,
+  "review": "ACK all28 indexed payload body sizes/hashes and exact unmodified raw copy comparisons; JSON parse and secret payload scan clear. No source/backup/private fixture/binary/cache copied. Normal owning76case actual TRX and prior helper NOT_RUN retain original outcomes; source2/protected/type pins already verified independently.",
+  "qualification": "Normal whole owning Sites 76/76 including unchanged local fakeHTTP NativeR2 21/21; no real R2, authenticated mapping/currentSession/scanner/build namespace/import/publication/Files12HTTP/browser/Windows/full parity acceptance.",
+  "payloadRerun": false
+}

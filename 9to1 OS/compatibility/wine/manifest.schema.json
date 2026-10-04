@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cakeos.local/schemas/windows-compat-manifest-v1.json",
+  "title": "CakeOS Windows compatibility application manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "runtime", "entrypoint"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9._-]+$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[^\\u0000-\\u001F]*$"
+    },
+    "backend": {
+      "type": "string",
+      "enum": ["wine", "winboat"],
+      "default": "wine"
+    },
+    "runtime": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9._-]+$"
+    },
+    "entrypoint": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\u0000]*$"
+    },
+    "network": {
+      "type": "string",
+      "enum": ["none", "internet", "lan"],
+      "default": "none"
+    },
+    "clipboard": {
+      "type": "boolean",
+      "default": false
+    },
+    "audioOutput": {
+      "type": "boolean",
+      "default": false
+    },
+    "microphone": {
+      "type": "boolean",
+      "default": false
+    },
+    "gpu": {
+      "type": "string",
+      "enum": ["none", "render"],
+      "default": "none"
+    },
+    "mounts": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/mountGrant"
+      }
+    }
+  },
+  "$defs": {
+    "mountGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^/[^\\u0000]*$"
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^/mnt/haven-share/[^\\u0000]+$"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["ro", "rw"],
+          "default": "ro"
+        }
+      }
+    }
+  }
+}

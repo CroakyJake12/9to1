@@ -1,0 +1,32 @@
+
+Welcome to .NET 10.0!
+---------------------
+SDK Version: 10.0.401
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+  Determining projects to restore...
+  Restored /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.PluginFixture/Haven.PluginFixture.csproj (in 110 ms).
+  Restored /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 110 ms).
+  Restored /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj (in 127 ms).
+  Restored /workspace/team-c-c5-mesh-filename-provisional/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 1 ms).
+  Restored /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 2 ms).
+  Restored /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj (in 206 ms).
+  Restored /workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj (in 72 ms).
+  Haven.PluginFixture -> /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/Haven.PluginFixture/release/Haven.PluginFixture.dll
+  NineToOne.Cui.AI -> /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/NineToOne.Cui.AI/release/NineToOne.Cui.AI.dll
+  Haven.Core -> /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/Haven.Core/release/Haven.Core.dll
+  Haven.Application -> /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/Haven.Application/release/Haven.Application.dll
+  Haven.Browser -> /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/Haven.Browser/release/Haven.Browser.dll
+  Haven.Infrastructure -> /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/Haven.Infrastructure/release/Haven.Infrastructure.dll
+  Haven.Infrastructure.Tests -> /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll
+Test run for /workspace/team-c-c6-durable-validation-20261004/mesh-filename/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c-c6-durable-validation-20261004/mesh-filename/results/mesh-tests.trx
+
+Passed!  - Failed:     0, Passed:    16, Skipped:     0, Total:    16, Duration: 275 ms - Haven.Infrastructure.Tests.dll (net10.0)

@@ -1,0 +1,207 @@
+{
+  "candidateCommit": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc",
+  "branch": "team-c/sol-happy-c3-boards-rich-history-20261004",
+  "priorActual67Run": 37210601635,
+  "priorActual67PublicIndexSha256": "3443297bd208a7f8b7df49e888476574711ed2b0996bbc988e2c51b00cf347c5",
+  "status": "BOUNDED_PACKAGED_NATIVE_RICH_HISTORY_85_PASS_UNACCEPTED_C6_ACK",
+  "qualification": "85 bounded actual packaged native rich-history controls PASS on SDK-present Windows2022/PS5.1 at7bd9a4b4: five native Bold/canonical snapshots, two normal zero-exit launches, no forced cleanup. Independent C6 corrected-source and actual-runtime readback ACK; complete compact ZIP bytes/members/CRC and result/screenshot hashes verified by peer, full package/extraction attributed to actual Windows harness. Original9c failure and exact scope correction retained; original67 finalindex untouched. Whole-paragraph formatting/selection only, no installedHome/fullApp/clean-PC/owner adoption claim. Frozen source and parser/pre-invocation receipts retain their historical NOT_RUN status.",
+  "excluded": "All package binaries/runtime .9to1board, cache/private host configuration and compiled fixtures.",
+  "files": [
+    {
+      "path": "actual-lookup-scope-receipt.json",
+      "bytes": 835,
+      "sha256": "aac4fe15d39f531a5ac90e2845fa5fdc26b761aaf11c6414fca5f3457901923b"
+    },
+    {
+      "path": "actual-lookup-scope.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-rich-history-summary.json",
+      "bytes": 2753,
+      "sha256": "0c841d20a469395be0b5099328fdd840b81ede3fdac867085a45cbaec5d1fd6d"
+    },
+    {
+      "path": "frozen-source-conservation.json",
+      "bytes": 2614,
+      "sha256": "3ebb0e85d6739fa8efdf87a2d32806ff636f710e108a9371269240a633f39f30"
+    },
+    {
+      "path": "linux-platform-refusal/result.json",
+      "bytes": 1769,
+      "sha256": "4fecd8f60e8cc0254fcb3b2fb2b81cb772a153ae2497a2ca1c64258fa7c7cc69"
+    },
+    {
+      "path": "linux-platform-refusal.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "local-conservation-controls.json",
+      "bytes": 985,
+      "sha256": "b63315be207e83591c5a9eb061516c5d9044d4c29248c8f6917a862ece9ee669"
+    },
+    {
+      "path": "local-negative-admission-receipt.json",
+      "bytes": 329,
+      "sha256": "2bbe14dd21295ebe68a1c8c97a4b225ed12045e643cc94e1258eef7ac479eac2"
+    },
+    {
+      "path": "original-9c3aa3d-frozen-source-conservation.json",
+      "bytes": 2356,
+      "sha256": "08963c724d62fb565c7e3ba371f681bd376a69e0db53f1d4ac217913944b4135"
+    },
+    {
+      "path": "original-9c3aa3d-harness.ps1",
+      "bytes": 27741,
+      "sha256": "fc32bf8cea68396ce94fca0d6d89f60aec565cd7a7beee3792779c6e169e7e7c"
+    },
+    {
+      "path": "original-failure-9c3aa3d/decoded-original-job.log",
+      "bytes": 59705,
+      "sha256": "51ada38f213e07e50d282172562631a0894cd01e0ce6edf654b428430aa9f19f"
+    },
+    {
+      "path": "original-failure-9c3aa3d/first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "original-failure-9c3aa3d/first-launch.stdout.log",
+      "bytes": 427,
+      "sha256": "1dd5b5f894eb7b24938db897bd7f891a7007b629c3c02d0aff774c533c8c43eb"
+    },
+    {
+      "path": "original-failure-9c3aa3d/local-original-custody-receipt.json",
+      "bytes": 1946,
+      "sha256": "e9dbed8924b93929e2e2b54df1c60b3beda606c1b5b0e64b9475052cc6d3252e"
+    },
+    {
+      "path": "original-failure-9c3aa3d/official-artifact-metadata.json",
+      "bytes": 912,
+      "sha256": "3e96024875832e6bb5099835a29e96e24521b40c3ed18536f290aff6e6126d6d"
+    },
+    {
+      "path": "original-failure-9c3aa3d/official-job-metadata.json",
+      "bytes": 1954,
+      "sha256": "38530e6c3f5d5c673710e84a9b7e80d1562bcf62986f4d025aa25441b5267ddf"
+    },
+    {
+      "path": "original-failure-9c3aa3d/original-artifact-11306199466.zip",
+      "bytes": 3049,
+      "sha256": "d06bae7f8b612bce16f9b6350c4892ae58b001517aef3e1a208fce5744afdad7"
+    },
+    {
+      "path": "original-failure-9c3aa3d/result.json",
+      "bytes": 14096,
+      "sha256": "fbb2b75d453b7abbd09025f2d410638ff61f3820d1575c45ac6610e4d8936f24"
+    },
+    {
+      "path": "original-pre-invocation-public-copyset-index.json",
+      "bytes": 2130,
+      "sha256": "ccad7df83cc43e06f21d9b8d06e13650a38fda3e5283344a64b36caaaa979fe5"
+    },
+    {
+      "path": "peer/rich-history-actual-windows-independent-readback.json",
+      "bytes": 8937,
+      "sha256": "a794d143c828c2d0102a78a6f0fa8c5d69ca86f1a8b287866062e8a765b52c74"
+    },
+    {
+      "path": "peer/rich-history-pre-invocation-source-review.json",
+      "bytes": 7455,
+      "sha256": "77151bc4b9c113d06a04cf0a38acb0ee95e1ad0e390cb3afbb4d9c8f93469e3e"
+    },
+    {
+      "path": "peer/rich-history-scope-correction-source-review.json",
+      "bytes": 1486,
+      "sha256": "6521a3b04d9b3f7fc511027a8e08f7be8b5d54ac8b6ed1e227a83e01837eca6a"
+    },
+    {
+      "path": "powershell-parser-receipt.json",
+      "bytes": 230,
+      "sha256": "7f682fe2fa22b55e5d139318709fb6b5f0d01e33e25eded1f343881a25f00123"
+    },
+    {
+      "path": "powershell-parser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "probe-actual-lookup-scope.ps1",
+      "bytes": 2148,
+      "sha256": "b6806da6ff0c9f5920feaf4de7f0ece22af54d1b3d214b24d757a4b3acfc58d7"
+    },
+    {
+      "path": "read-only-scope-assessment.json",
+      "bytes": 4964,
+      "sha256": "baacdae94b123ed19a5c902cf679c1b652cd1909db5bacd14d6fc2a6308c2c9c"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/decoded-original-job.log",
+      "bytes": 59656,
+      "sha256": "8e1db6e9b6d564ec5e688f352d3e172fda06212972b3aee2918810e26ab31f67"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/first-launch.stdout.log",
+      "bytes": 427,
+      "sha256": "37e7b721aa0e7ccd2b5f5c11fb01688227cd0eb21d15bb57b87cb864933abbaf"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/local-original-custody-receipt.json",
+      "bytes": 4294,
+      "sha256": "1f25c198ab79cf04559e07baaeb5eef2272dff9b0937788e230bf337f8c2fa1b"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/official-artifact-metadata.json",
+      "bytes": 913,
+      "sha256": "1a80b4e165191526e1a2bac4030f0d725834402280f0cf597d3753bc6523ab8e"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/official-job-metadata.json",
+      "bytes": 1954,
+      "sha256": "0b83a953208b97e42665f68dc416957f340f08810a561f336c247265d7f25cca"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/original-artifact-11307255959.zip",
+      "bytes": 75444,
+      "sha256": "29f265842b99044faabb4a78149a9f7d4b76a98614fed387a1819e4b0d8cce7e"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/reopen.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/reopen.stdout.log",
+      "bytes": 427,
+      "sha256": "37e7b721aa0e7ccd2b5f5c11fb01688227cd0eb21d15bb57b87cb864933abbaf"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/result.json",
+      "bytes": 31464,
+      "sha256": "9ad45961e19150617e0478a8e9a35b80ca125b6183c01a3fd2912d56a16228da"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/rich-history-edited-window.png",
+      "bytes": 42021,
+      "sha256": "5333c897f92b1a6c6e675638e63d6097ba49c87c59051e88027ad069393aec7b"
+    },
+    {
+      "path": "windows-original-7bd9a4b4/rich-history-reopened-window.png",
+      "bytes": 37299,
+      "sha256": "e49d07603c5dc7a97386b24539386d764682db8a57f99b7d7d48f8356917d446"
+    }
+  ],
+  "totalBytes": 402735,
+  "originalFailedRun": 37211762149,
+  "originalFailedCommit": "9c3aa3d17006f7818fabc5e049a77e39ddfdc209",
+  "originalFailure": "Actual named native Bold lookup timed out; exact actual-function scope control reproduces diagnostic Name shadow and verifies ButtonName correction.",
+  "actualCorrectedRun": 37212180165,
+  "actualCorrectedScenario": "rich-history"
+}

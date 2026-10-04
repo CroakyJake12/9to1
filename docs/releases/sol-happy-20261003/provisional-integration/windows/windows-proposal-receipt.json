@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-04T12:54:40.385707+00:00",
+  "candidateCommit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+  "sourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "nativeNormalBasis": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "files": [
+    {
+      "path": ".github/workflows/team-c-windows-package-probe.yml",
+      "bytes": 2076,
+      "sha256": "b4e12466382fe1e405b5fe2cdffcb771297563ac39a4810eb58b624272fb99b8"
+    },
+    {
+      "path": ".github/scripts/windows-package-probe.ps1",
+      "bytes": 10101,
+      "sha256": "6e70899776e2c9da253e7341d526cd4dc717b2f715c9de7561080476fea80872"
+    },
+    {
+      "path": ".github/validation/windows-package-probe.json",
+      "bytes": 9047,
+      "sha256": "4b47f31dc05b2567ab0db4172ec8c0e9c4bed8d36f7e422a438de678d396761a"
+    },
+    {
+      "path": ".github/validation/windows-package-owner-request.json",
+      "bytes": 34609,
+      "sha256": "7303104188d41ef11d1e43c2eb9faa3a9ae69143f3ac2f47eefaaf8c93dc527b"
+    }
+  ],
+  "worktree": "/workspace/c1-windows-build-proposal",
+  "windowsExecution": false,
+  "windowsPackageDelivered": false,
+  "acceptanceVerified": false,
+  "verifiedWindowsProductGroups": 0,
+  "requiredWindowsProductGroups": 29,
+  "syntax": "PowerShell AST parser PASS; YAML syntax and private branch/matrix catalogue agreement PASS; git diff check PASS",
+  "metadata": "All seven actual selected-TFM MSBuild entrypoint identities match declared executable/framework/output-type. Local source metadata only; no compilation or Windows execution.",
+  "retainedObservations": [
+    {
+      "path": "/workspace/team-c-resume-evidence/windows/windows-proposal-local-checks-initial.json",
+      "description": "Initial default-target metadata checks six entries pass; multi-TFM legacy host defaults net10.0. Original assertion failure retained; explicit Windows target subsequently verified."
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/windows/windows-proposal-local-checks.json",
+      "description": "Seven selected-TFM identities pass; fourteen whole-file source pins pass; per-target original logs retained."
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/windows/windows-driver-linux-refusal.json",
+      "description": "Actual driver invocation on this Linux host exited1: Actual Windows execution is required; no Windows/package/acceptance claim."
+    }
+  ],
+  "runner": "windows-2022 hosted matrix7 independent jobs, fail-fast false, max-parallel2; newly declared branch push triggers without default-main modification.",
+  "unmet": [
+    "Owner Windows source/package baseline ACK",
+    "Canonical installed entrypoints/shared-host routes for29 product groups",
+    "Approved actual Home bootstrap/service tuple, AppID/version, publisher and native/donor dependencies",
+    "Existing authorized clean no-SDK Windows machine or VM and exact college-PC delivery route",
+    "Installed app GUI, provider, compatibility and full criteria acceptance"
+  ],
+  "authority": "Root is sole remote pusher/dispatcher/provider writer; task-private four-file proposal changes no native bodies and grants no approval.",
+  "toolLimitations": "No exposed callable remote Windows shell/VM or GitHub workflow-dispatch/runner-management tool; hosted workflow push route proposed instead. Unreturned runtime/thread discovery reads do not prove resources absent."
+}

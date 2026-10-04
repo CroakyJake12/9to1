@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="ValidateCuiProjectItems" BeforeTargets="PrepareForBuild" Condition="'@(Cui)' != ''">
+    <Error
+      Condition="'%(Cui.Extension)' != '.cui' and '%(Cui.Extension)' != '.CUI'"
+      Code="CUI0001"
+      File="%(Cui.Identity)"
+      Text="CUI project items must use .cui. Legacy .axaml and .hui inputs are not accepted." />
+  </Target>
+</Project>

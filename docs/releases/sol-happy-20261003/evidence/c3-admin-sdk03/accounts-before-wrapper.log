@@ -1,0 +1,2 @@
+build 0 {'expectedManagedLaunch': True, 'drained': True, 'launcherPid': 48278, 'launcherStartTicks': '1162070'}
+run -6 {'expectedManagedLaunch': True, 'drained': True, 'launcherPid': 48508, 'launcherStartTicks': '1162840'}

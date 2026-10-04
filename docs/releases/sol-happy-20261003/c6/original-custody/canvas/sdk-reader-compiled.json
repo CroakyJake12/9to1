@@ -1,0 +1,61 @@
+{
+  "target": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/bin/ProviderMetadata/release_linux-x64/ProviderMetadata.dll",
+  "targetSha256": "c81690b1f7967146f75d02677314ed6ce763da74274177d53e9ed543f0e9f22f",
+  "sourceInputs": [
+    {
+      "path": "/home/runner/work/9to1/9to1/.github/validation/canvas-sdk-reader/Program.cs",
+      "sha256": "02e4299e0bd652a6b6a92afb0d4cb53c5f48fc02fe07780965ca34f3e8ca013c"
+    }
+  ],
+  "analyzers": [
+    {
+      "path": "/astra-canvas-sdk-10.0.301-37138212542-1/sdk/10.0.301/Sdks/Microsoft.NET.Sdk/analyzers/Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll",
+      "sha256": "89222f9575a2288f36dd31d850820835beaf69caa00a5c7977977dc18afc6b74"
+    },
+    {
+      "path": "/astra-canvas-sdk-10.0.301-37138212542-1/sdk/10.0.301/Sdks/Microsoft.NET.Sdk/analyzers/Microsoft.CodeAnalysis.NetAnalyzers.dll",
+      "sha256": "74c4d388ed350b0e7b01306feaa8a2f73dac0d783daf7bdc89fabc3242f60f30"
+    }
+  ],
+  "closure": [
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/bin/ProviderMetadata/release_linux-x64/ProviderMetadata",
+      "sha256": "4da331a4364a97e38a9f407f7bcbbac81beb96e5df584cf0b8d1687310b84fc6",
+      "bytes": 78256
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/bin/ProviderMetadata/release_linux-x64/ProviderMetadata.deps.json",
+      "sha256": "e6671f1414bf39c168fd68e00f619464094a2657f65eaf8572be2e723c155192",
+      "bytes": 477
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/bin/ProviderMetadata/release_linux-x64/ProviderMetadata.dll",
+      "sha256": "c81690b1f7967146f75d02677314ed6ce763da74274177d53e9ed543f0e9f22f",
+      "bytes": 8704
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/bin/ProviderMetadata/release_linux-x64/ProviderMetadata.pdb",
+      "sha256": "9f9a7fcdfaee15dfede1a2bcea181ddb1f2e75bf665c8990cb6d8590a3e8ebc2",
+      "bytes": 12808
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/bin/ProviderMetadata/release_linux-x64/ProviderMetadata.runtimeconfig.json",
+      "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "bytes": 330
+    }
+  ],
+  "providerMetadata": {
+    "providerPath": "/astra-canvas-sdk-10.0.301-37138212542-1/sdk/10.0.301/Extensions/Microsoft.TestPlatform.TestHostRuntimeProvider.dll",
+    "sha256": "beaf44dff6a1ebd9479ed84149d912485b6d7356405eaea5f5dde0df447fa7ed",
+    "productVersion": "18.6.0-release-26270-133",
+    "fileVersion": "18.600.26.27133",
+    "assemblyExecuted": false,
+    "sourceLineageAccepted": false
+  },
+  "sdkExecutable": {
+    "path": "/astra-canvas-sdk-10.0.301-37138212542-1/dotnet",
+    "sha256": "763bfd4dbb1bb3a3b5257c6800eef77bb4abe2127e6ff9c33e2a56e2e814aedf",
+    "sdkVersion": "10.0.301",
+    "officialArchiveSha512": "cfbeec3a3a1d3ad3e168e37a77c4cc26c23125acd84a86d014047da3ecffce4c368a9acac4d7c950a047fa3d98989ce8aea69f8e5842cb6d330e8911e1c335a7"
+  }
+}

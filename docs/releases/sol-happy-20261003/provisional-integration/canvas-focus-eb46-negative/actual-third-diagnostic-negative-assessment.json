@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "status": "ORIGINAL_THIRD_ACTUAL_WINDOWS_NEGATIVE_RETAINED",
+  "sourceCommit": "eb46585ab53a1379d7965517b4213dcd24f6876e",
+  "runId": 37222459785,
+  "jobId": 111495399291,
+  "recordedChecks": 58,
+  "recordedPassed": 58,
+  "observationTimeout": {
+    "name": "Actual focused OS folder-address Edit",
+    "seconds": 20
+  },
+  "actualFocusedNativeWitness": {
+    "processId": 4348,
+    "windowHandle": 66274,
+    "class": "Edit",
+    "isOwnedPickerChild": true,
+    "globalUiaAndFromHandleSameNativeHandle": true,
+    "uiaRole": "ControlType.Pane",
+    "valuePattern": false,
+    "invokePattern": false
+  },
+  "actualButtonWitnesses": [
+    {
+      "windowHandle": 66162,
+      "semanticName": "Select Folder",
+      "processId": 4348,
+      "class": "Button",
+      "isOwnedPickerChild": true,
+      "uiaRole": "ControlType.Pane",
+      "invokePattern": false
+    },
+    {
+      "windowHandle": 66164,
+      "semanticName": "Cancel",
+      "processId": 4348,
+      "class": "Button",
+      "isOwnedPickerChild": true,
+      "uiaRole": "ControlType.Pane",
+      "invokePattern": false
+    }
+  ],
+  "diagnosticCounts": {
+    "uiaDescendants": 52,
+    "nativeChildHandles": 44,
+    "selectedOutputBound": 128,
+    "boundQualification": "UIA FindAll materializes the subtree; 128 is a retained output bound, not a measured RSS or traversal limit."
+  },
+  "diagnosticReadQualification": "Value and Invoke reads completed before the later managed LegacyIAccessiblePattern type/read RuntimeException. Legacy/default flags initialized false remain UNOBSERVED, not capability refusals.",
+  "stderrQualification": "Original stdout and stderr are each five bytes: UTF8 BOM plus CRLF/whitespace, no diagnostic text.",
+  "cleanupQualification": "Actual controlled UIA Cancel refusal; main close false; forced cleanup true; final cleanup exit -1; both bounded streams drained. First launch normal-close fields remain false/null as original.",
+  "workflowOutcome": "No fixture choice, Home request, Canvas state, stroke or reopen occurred. No product failure, full-app acceptance or standard proxy registration success inferred.",
+  "nextGroundedProposal": "Investigate genuine installed Microsoft UIAutomationClientsideProviders through public ClientSettings registration; retain original Edit/Value and Button/Invoke/ownership gates.",
+  "decodedLogQualification": "Authorized connector decoded job log is retained with CRLF normalized to LF; original ZIP/member bytes untouched."
+}

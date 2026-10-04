@@ -1,0 +1,22 @@
+{
+  "testedProductionSourceCommit": "88c4c2d25abf41db77b36f0552a201c33f121cef",
+  "command": "node --test cloud/billing/test/provider-reconciliation.test.mjs",
+  "originalControls": "Uncommitted added PR16\u2013PR19 controls against unchanged original source; those controls are now retained without weakening in fixed commit f3529fd2, with later PR20/21 additions.",
+  "typedErrorResult": {
+    "exit": 1,
+    "tests": 19,
+    "pass": 15,
+    "fail": 4,
+    "skipped": 0,
+    "log": "original-typed-errors-failure.log"
+  },
+  "getterResult": {
+    "command": "node --test --test-name-pattern=C3-PR-20 cloud/billing/test/provider-reconciliation.test.mjs",
+    "exit": 1,
+    "tests": 1,
+    "pass": 0,
+    "fail": 1,
+    "log": "original-configuration-error-failure.log"
+  },
+  "sentinel": "CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL is fictional test data; no credentials/provider queries."
+}

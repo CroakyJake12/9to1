@@ -1,0 +1,46 @@
+{
+  "scope": "Native owner adoption request annotation; no owner test rewrite or test result waiver",
+  "twoBodyProposal": "add2e2181b69d2e48ce0caab1fda83db0cd73829",
+  "testPath": "9to1 Workspace/Picture/Tests/ImageJourneyTests.cs",
+  "preservedReceiving": {
+    "revision": "1a0a824ad06905467c280730a85429f37feabce1",
+    "gitBlob": "d6f216ee0e474859ac9bab14cea847596c83d530",
+    "bytes": 20843,
+    "sha256": "f4177097b852af101adf2ea9a8f6728f53c53591b5aad39b444ee599b47b3555",
+    "assertionLine": 333,
+    "assertion": "Assert.Equal(TagLib.TagTypes.None, privateFile.TagTypesOnDisk);",
+    "semantics": "RemoveLocation required all tags absent, matching older crop-only implementation that treated RemoveLocation as RemoveAll."
+  },
+  "actualCanonicalEEC": {
+    "revision": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "gitBlob": "93d8374ff02d5e566fc471149a053f997ddf2bbe",
+    "bytes": 23099,
+    "sha256": "069ae9403080e8550c361d6fbe30488625e8e7071c21743e6fcbb349dca799e7",
+    "assertionLines": [
+      383,
+      384,
+      385,
+      386,
+      387,
+      388,
+      389
+    ],
+    "semantics": "RemoveLocation preserves title/comment and removes latitude/longitude/altitude, distinct from RemoveAll."
+  },
+  "liveSpecification": {
+    "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "readArtifactSHA256": "b378001b1b2e503771f8bef94c4f1cc4d3b91bc60c71f8583460065c4ccff9c9",
+    "paragraphLines": [
+      4163,
+      4164
+    ],
+    "shortRequiredExcerpt": [
+      "Picture's Info/Metadata view exposes available dimensions, format, file size, colour profile, capture date, camera/lens/exposure details, orientation, location and other supported EXIF/IPTC/XMP metadata. Unknown metadata should be preserved through non-destructive round trips where possible.",
+      "Export/privacy controls MUST support preserving metadata, removing location metadata and removing all removable metadata where the target format supports it."
+    ],
+    "interpretation": "Preserve, remove-location, and remove-all are separate controls. Treating remove-location as remove-all erases non-location metadata and is not canonical semantic parity."
+  },
+  "existingFailurePreserved": "Original native Picture GPS Preserve failure remains open; the RemoveLocation semantic mismatch does not waive or explain away that original failed preserve control.",
+  "ownerActionRequested": "Native Picture owner must supply/acknowledge the coherent native project/source/test revision and actual metadata export acceptance for Preserve/RemoveLocation/RemoveAll, including GPS/EXIF/XMP removal and preserved non-location metadata. Team C retains prior native test bytes and requests owner delivery, without editing active native ownership or relabeling browser carrier tests as full native adoption.",
+  "runtimeQualification": "C5 separate Picture15 carrier uses exact3-source BrowserEngine; any actual failure must retain its precise mechanism. Full native Picture project is not composed by the two-body dependency proposal."
+}

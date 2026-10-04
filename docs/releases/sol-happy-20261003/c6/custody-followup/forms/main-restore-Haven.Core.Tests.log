@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored /home/runner/work/9to1/9to1/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 2.57 sec).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 2.57 sec).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Home/HavenOS.Home.csproj (in 2.57 sec).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 5 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 4 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 3 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Models/Dulche Alpha/Den.csproj (in 3 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 5 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj (in 297 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj (in 2.9 sec).

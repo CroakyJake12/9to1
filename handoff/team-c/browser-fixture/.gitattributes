@@ -1,0 +1,3 @@
+# Preserve exact historical failure stdout; hashes bind the original bytes.
+historical-c2-invalid-web-loopback.log -text whitespace=-blank-at-eof
+historical-c2-unwritable-home.log -text whitespace=-blank-at-eof,-blank-at-eol

@@ -1,0 +1,12 @@
+{
+  "state": "ROOT_ALL_549_INDEXED_FILES_ACTUAL_GIT_AND_FILESYSTEM_READBACK_PASS",
+  "recordedUTC": "2026-10-04T17:36:51.725948+00:00",
+  "receivedCommit": "5e1b480e2dd875480fceb44ef2ad256cfb3f5336",
+  "sourceProductIdentity": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2",
+  "publicPayloads": 549,
+  "publicBytes": 84054416,
+  "indexSha256": "1413f28f2299428cbe6ccfe6925d6a6052b853c2aa17228a4e9cde422aa3a27c",
+  "allOriginal354EntriesImmutable": true,
+  "outsideReceivingEvidenceAllModeBlobsConserved": true,
+  "C6PublicationSha256": "3a58929d8d78f6b6f3e39812b8570a9dd1febbb40299434607591d2896035206"
+}

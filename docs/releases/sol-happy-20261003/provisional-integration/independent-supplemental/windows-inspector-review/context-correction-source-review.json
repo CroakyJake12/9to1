@@ -1,0 +1,13 @@
+{
+  "frozenCommit": "f661e909e080d68a9b5505016386c6406c6c87f6",
+  "parent": "7392028644ad0b26c9a1d8fa6b874404657fc105",
+  "review": "ACK exact10line runner.temp contextcorrection only",
+  "workflowSha256": "ec0de8ced9d66a36d948af9b77418320e4d452353de110fcca83f3f405cbd8b8",
+  "originalFirstInspectorRun": {
+    "runId": 37205153822,
+    "jobsExecuted": 0,
+    "status": "INVALID_WORKFLOW_RUNNER_CONTEXT"
+  },
+  "collectorOriginal7ArtifactPinsPermissionsUnchanged": true,
+  "qualification": "Source correction only; actual successorCI execution and originalreceipt retrieval stillrequired; prior source/YAML review missed Actions-specific context restriction"
+}

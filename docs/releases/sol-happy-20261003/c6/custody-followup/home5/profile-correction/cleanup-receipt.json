@@ -1,0 +1,9 @@
+{
+  "introducedNames": [
+    "bwrap",
+    "unpriv_bwrap"
+  ],
+  "loadedProfilesRestored": true,
+  "restrictionPreserved": true,
+  "fullSuiteExit": 1
+}

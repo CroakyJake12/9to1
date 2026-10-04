@@ -1,0 +1,3 @@
+# Write LibreOffice source
+
+Canonical repository https://git.libreoffice.org/core and its GitHub mirror https://github.com/LibreOffice/core (`master`) matched at the selected revision; controlled fork https://github.com/CroakyJake12/libreoffice is pinned to `d3fca73f81dfb19a72a0da41598b7390eaf5845b` (selected 2026-09-24 UTC). Actual unmodified source is in `Source/LibreOffice/`, with `COPYING`, `COPYING.MPL` and `COPYING.LGPL` retained (MPL-2.0 / LGPL-3.0-or-later source terms). No patches. The existing LibreOfficeKit Writer prototype has not been built against this revision; installed system soffice is not a substitute for source.

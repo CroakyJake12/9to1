@@ -1,0 +1,99 @@
+{
+  "productId": "cakeos.go-router",
+  "productType": "BackgroundComponent",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "cakeos-go-router-0.1.0"
+  },
+  "donor": {
+    "name": "CakeOS Go Router",
+    "repositoryUrl": "https://github.com/CroakyJake12/CakeOS",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/CakeOS/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "cakeos-go-router",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/lib/cakeos/go/cakeos-go-router",
+    "arguments": "--daemon",
+    "workingDirectory": "/var/lib/cakeos/go",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "cakeos-go-router",
+    "socketName": "cakeos-go-router.socket",
+    "dbusName": "org.cakeos.GoRouter",
+    "socketActivation": true,
+    "requiredServices": ["dbus", "systemd-journald"]
+  },
+  "routes": [
+    {
+      "route": "/go/route",
+      "handler": "RouteHandler",
+      "methods": ["POST"]
+    },
+    {
+      "route": "/go/routes",
+      "handler": "ListRoutesHandler",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "cakeos.go.route",
+      "displayName": "Go Routing",
+      "description": "Route management and execution for Go-based workflows",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "libglib2.0-0",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=2.78"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": false,
+    "requiresState": true,
+    "requiresData": false,
+    "customPaths": ["/etc/cakeos/go", "/var/lib/cakeos/go"]
+  },
+  "permissions": {
+    "requiredGrants": ["go.route", "go.execute"],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "systemctl --user is-active cakeos-go-router",
+    "expectedOutputPattern": "active",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "active\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T16:10:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/cakeos-go-router-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

@@ -1,0 +1,19 @@
+  Determining projects to restore...
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj (in 2.64 sec).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj (in 2.64 sec).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj (in 3.07 sec).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj (in 3.07 sec).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj (in 413 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj (in 5 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj (in 4 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj (in 208 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj (in 5 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj (in 7 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj (in 1.41 sec).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Avalonia.DesignerSupport/Avalonia.DesignerSupport.csproj (in 9 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj (in 12 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj (in 1.84 sec).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj (in 4 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj (in 4 ms).
+  Restored /workspace/team-c-c3-boards-startup/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj (in 2 ms).
+/workspace/.tools/dotnet/sdk/10.0.401/NuGet.targets(198,5): error : No space left on device : '/workspace/team-c-resume-evidence/c3-boards-startup-20261004/dotnet-home/.nuget/packages/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/lib/net462' [/workspace/team-c-c3-boards-startup/9to1 Workspace/Boards/app.tests/CakeOS.Apps.Boards.App.Tests.csproj]

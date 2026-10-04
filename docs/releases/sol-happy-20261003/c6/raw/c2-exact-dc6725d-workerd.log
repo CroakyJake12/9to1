@@ -1,0 +1,25 @@
+{"id": "c2-exact-dc6725d-workerd", "tested_commit": "dc6725dd91ee83566efd9cbba33fbded436c0d2e", "worktree_status": "", "command": ["npm", "--prefix", "cloud/cake-id-auth", "test"], "cwd": "/workspace/team-c/c2-auth", "expected": "Local native Workerd+D1 synthetic identity/recovery/PKCE/scopes/revocation journey must pass nonzero assertions; no deployment/mail or org acceptance", "started": "2026-10-03T17:18:37.162762+00:00"}
+
+> @cake/cake-id-worker@0.1.0 test
+> node tests/integration.mjs
+
+{
+  "result": "passed",
+  "assertionsExecuted": 157,
+  "environment": "local Wrangler Workerd + local D1 only",
+  "issuer": "http://127.0.0.1:8798/api/auth",
+  "authorizationEndpoint": "http://127.0.0.1:8798/api/auth/oauth2/authorize",
+  "tokenEndpoint": "http://127.0.0.1:8798/api/auth/oauth2/token",
+  "jwksUri": "http://127.0.0.1:8798/api/auth/jwks",
+  "publicClientRegistration": "synthetic and local only; client id intentionally not printed",
+  "redirectUri": "https://client.example.test/callback (synthetic test only)",
+  "passwordResetAndLoginMs": 234,
+  "passwordLoginAndTokenExchangeMs": 96,
+  "externalEmailDelivery": "not tested; messages captured in local D1 outbox",
+  "cloudflareDeployment": "none"
+}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

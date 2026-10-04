@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent validation",
+  "scope": "Cheapest controlled Windows PowerShell5.1 CLR argument-signature witness only, not actual UIAutomation identity",
+  "candidate": "8c379a7e1e12267955936c1d1223969a1d9b95ab",
+  "parent": "c4346596fa9afd2ba9dddf074959bb37b5ffb1b1",
+  "exactChangedPaths": [
+    ".github/workflows/team-c-canvas-packaged-ui-controls.yml",
+    "eng/release-validation/canvas-packaged-ui/README.md"
+  ],
+  "outside9478SourceModeBlobEntriesConserved": true,
+  "nativeScriptCatalog25PinsAndCriteriaUnchanged": true,
+  "executionBounds": "Windows2022/PowerShell5 Desktop,3min,contents read only, no checkout/package/app/provider registration/profile/input/state/issuer operation. One tiny selected result retained7days.",
+  "controlledSignatures": "Distinct controlled class copies documented Equals(object) cast/null and static typed comparison shapes with same controlled equality. Seven argument shapes, actual received type/wrapper booleans and one-call deltas; original-shape count separate from explicit wrapper.",
+  "acceptanceBoundary": "Actual installed AutomationElement methods explicitly NOT_RUN; actual Canvas cause UNESTABLISHED. Controlled results must not be treated as UI identity, native/provider/input/value success or substitute acceptance.",
+  "privacy": "Only controlled fixed labels/booleans/counts/platform versions; catch exports exception type and withholds text. No actual private values or OS profile reads.",
+  "previousNegativeConservation": "Original c434 same-field identity refusal/20s timeout/value unread remain; no native criterion relaxation/API repair assumption.",
+  "status": "SOURCE_PREINVOKE_ACK",
+  "authorization": "Root may invoke this separate setup-only Windows workflow once. Actual native continuation still requires grounded source peer.",
+  "fullReleaseAcceptance": false
+}

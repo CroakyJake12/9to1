@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>NineToOne.Cui.Markup.Retired</AssemblyName>
+  </PropertyGroup>
+  <!--
+    The former minimal parser is deliberately excluded from compilation.  Its source
+    remains in this repository as migration donor material, while all active
+    consumers reference the authoritative Core/Language parser directly.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
+  </ItemGroup>
+</Project>

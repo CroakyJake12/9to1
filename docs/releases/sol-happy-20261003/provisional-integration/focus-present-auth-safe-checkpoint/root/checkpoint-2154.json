@@ -1,0 +1,561 @@
+{
+  "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+  "revisionId": "ANLCKQnbBpD2TipJobhI3XTHNZNtaMPzSMcD2Fd5vAUt96pWSzqmM0H21XlIauSqEjPf5QN5h9upZzHav31arPZCHAWdUj64qZipZyNhUbw",
+  "heading": "Checkpoint 21:54",
+  "recordedUTC": "2026-10-04 20:54:12 UTC",
+  "checks": [
+    {
+      "pass": 1,
+      "match": true,
+      "paras": [
+        {
+          "start": 18508,
+          "text": "Checkpoint 21:54\n",
+          "paragraphStyle": {
+            "headingId": "h.25hv5lhx9jic",
+            "namedStyleType": "HEADING_1",
+            "direction": "LEFT_TO_RIGHT"
+          },
+          "textStyle": [
+            {
+              "bold": false,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 18525,
+          "text": "% Progress:\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 18537,
+          "text": "    Implementation - Expanded 30-app Pass1 estimate unmeasured; historical 65% Windows preparation remains scoped ;\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentStart": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 18653,
+          "text": "    Acceptance Verified - Windows 0/30 fully verified and 0/30 verified deliveries; private unverified-candidate transport works ;\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentStart": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 18784,
+          "text": "Change Summary: Home's original six tests and both genuine GUI quit/reopen processes pass independently reviewed native checks, with actual299-file package retained. Same-profile testing observed only an empty lock, so durable state retention remains untested. Exact PR12 shared Home source is composed; receiving reports its original12 pipe cases pass after three narrow legacy test compile fixes, while whole66 retains four failures. Files PR13 supplies concrete17-source handoff under independent review. The revised target is22:30 London tonight.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 19335,
+          "text": "Evidence: Homee530/run37231041584=6PASS/two natural0 GUI exits/drains/noForce; C6833025, actual ZIP81553694B SHA3f0580ab. PR12 exact26 composedada76235/outside16917 unchanged; receiving original build12errors retained, corrected12PASS and66=62PASS4FAIL reported. Private original Home/Space exports SHA/CRC/case/source verified by C4; PR11A sourceACK, B ownershipACK pending.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 19711,
+          "text": "Next Action: BLOCKED — fetchable A1 native Program/composition and A5 installer union, protected installed AppID/ABI/publisher/signing/current Windows authority and clean SDK-free route remain missing. Route technical decisions to receiving engineering root; complete reviewed original journeys toward22:30, preserve all failures and acceptedHeadnull.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pass": 2,
+      "match": true,
+      "paras": [
+        {
+          "start": 35720,
+          "text": "Checkpoint 21:54\n",
+          "paragraphStyle": {
+            "headingId": "h.apvoo4b43046",
+            "namedStyleType": "HEADING_1",
+            "direction": "LEFT_TO_RIGHT"
+          },
+          "textStyle": [
+            {
+              "bold": false,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 35737,
+          "text": "% Progress:\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 35749,
+          "text": "    Implementation - About 60% of inspected Terra-Form editor/runtime groups; low confidence for full Pass2 ;\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentStart": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 35859,
+          "text": "    Acceptance Verified - Full Pass2 open; original component evidence does not establish full application acceptance ;\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentStart": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 35979,
+          "text": "Change Summary: Trusted Mail72 remains fully independently verified, with original trust/CRL/process cleanup conserved. Present's current package builds but owning15 stops on four new-test analyzer errors, shared7 retains two hidden-control layout failures, and native launch refuses a profile touched by earlier tests. Reviewed4750 restores one maintained navigator/toolbar in the active path, preserves native controls and moves managed cohorts after native. Canvas's actual focus witness identifies an editor acquired before Ctrl+L completes;9534 waits for the genuine focus transition.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 36569,
+          "text": "Evidence: Maila0/run37229860186=72PASS/0skip C6ebb563; ordinary Infrastructure444 remains scoped. Present7432 owning0/shared5PASS2FAIL/native207PASS then freshness refusal, actual379-file unsigned package retained. Studio137fd14/54/13 separate scopedPASS. Canvas3cf/run37232138231=71PASS then20s refusal, retained lowerFolder vs real upperaddress; C6e9cdc and cleanup0/drains preserved. Receiving measured Write original26layout checks now reportedPASS; broader regressions pending.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 37052,
+          "text": "Next Action: BLOCKED — full Write/Wave/Motion/provider journeys and installed acceptance remain open. Finish4750/9534 source peers and original affected runs; review receiving test-only Home corrections and four retained failures by authoritative contracts. Preserve original fonts, source, assertions and ownership; no waiver at the deadline.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "match": true,
+      "paras": [
+        {
+          "start": 53446,
+          "text": "Checkpoint 21:54\n",
+          "paragraphStyle": {
+            "headingId": "h.hzy0mtlss0ak",
+            "namedStyleType": "HEADING_1",
+            "direction": "LEFT_TO_RIGHT"
+          },
+          "textStyle": [
+            {
+              "bold": false,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 53463,
+          "text": "% Progress:\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 53475,
+          "text": "    Implementation - About 70% of inspected Sol Happy service foundations; low confidence for full Pass3 ;\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentStart": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 53582,
+          "text": "    Acceptance Verified - Full service acceptance open; physical account successor diagnostics preparing ;\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentStart": {
+              "magnitude": 18,
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 53689,
+          "text": "Change Summary: Fifth local account run passes physical sign-in, consent, PKCE/token exchange and same-subject self-verification with one callback. Original profile/session accessibility wait fails despite successful APIs; separate console error remains. Source traces identify TextBlock peers ignoring authored labels and a JSON-quoted consent client ID; offline controls reproduce the latter, but exact runtime attribution awaits139's fixed-label/route witness. All five failed runs and strict original issuer/browser closures remain retained.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 54235,
+          "text": "Evidence: R5=2PASS2FAIL3NOTRUN; callback1/token1/current2/profile1/sessions1 all200/protocolValid/sameSubject; console1 ISSUER_OTHER404/requestFailed0. C6 0ccb verifies5387source/285assets unchanged,12browserbirths gone/0signals, issuer5reaps6signals/final0. R6test13939Node+11PythonPASS/C6source7c7; all7criteria unchanged. Fresh root issuer71539 ready and original9af/test139/fixtureff generated preparationPASS; critical plan peer pending.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        },
+        {
+          "start": 54678,
+          "text": "Next Action: BLOCKED — canonical authority/domain/provider/settlement and approved commercial policy remain open. Run the reviewed R6 once, then adopt only source-reviewed corrections and republish changed consumer assets when required. Existing unrelated dev certificates cannot supply the missing approved publisher; configured clean Windows route remains absent/runner metadata403. Technical questions go to engineering root.\n",
+          "paragraphStyle": {
+            "namedStyleType": "NORMAL_TEXT",
+            "direction": "LEFT_TO_RIGHT",
+            "indentFirstLine": {
+              "unit": "PT"
+            },
+            "indentStart": {
+              "unit": "PT"
+            },
+            "indentEnd": {
+              "unit": "PT"
+            }
+          },
+          "textStyle": [
+            {
+              "bold": true,
+              "weightedFontFamily": {
+                "fontFamily": "Montserrat",
+                "weight": 400
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "all21TextAndFormatVerified": true
+}

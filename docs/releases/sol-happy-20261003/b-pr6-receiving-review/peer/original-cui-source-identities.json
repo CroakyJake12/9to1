@@ -1,0 +1,9 @@
+{
+  "status": "OWNER_PROPOSAL_NOT_SHIPPED",
+  "ownerPath": "/workspace/team-b-astra-browser-validation/framework/CUI/Runtime/CuiControlLoader.cs",
+  "ownerSha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3",
+  "proposedSha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
+  "assertionSourceSha256": "bbf16b48e1e63c5758277606c63a95489a62cec83051dbf4e5b4c2a8410a5ec5",
+  "onlyOwnerSourceDifference": "TextChanged -> TextChanging in existing guarded TextBox two-way writeback",
+  "nativeEvidence": "Pinned TextBox.RaiseTextChangeEvents synchronously raises TextChanging after Text property assignment, posts TextChanged at Normal priority. Actual IValueProvider sets Owner.Text; actual IInvokeProvider synchronously PerformClick."
+}

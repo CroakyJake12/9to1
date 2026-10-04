@@ -1,0 +1,67 @@
+{
+  "schema": "combined-worker-logs-exact-checkpoint-readback/v1",
+  "londonTime": "2026-10-04 19:56",
+  "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+  "revision": "AHj4eMQUMy9mWfHzSN6Yyf0UwAE4cVqOijWKF_LnoOKPpKWW_krUO0rkyjwkLWeEqAMFzqDrAHF6I4t2no8BtWMPttLa-ypBMnE5mTTaVRo",
+  "entries": [
+    [
+      "Checkpoint 19:56",
+      "% Progress:",
+      "    Implementation - Expanded30-app Pass1/LE estimate unmeasured; historical65% Windows preparation estimate retains its original limited scope ;",
+      "    Acceptance Verified - Expanded Windows0/30 fully verified and0/30 verified deliveries; one accessible unverified Boards candidate ;",
+      "Change Summary: Team C,04 October. Canonical full LE incorporation and Monday05 October07:00 Windows/19:00 full-release targets are read back. Private Drive transport is byte-roundtrip verified. Home's first Windows build failed at task assembly lookup; a supported recipe correction is reviewed. Separate receiving Windows work has5/6 Home tests after the overload correction and is fixing the real route-model binding. Present and Canvas reviewed corrections continue.",
+      "Evidence: Canonical revisionAHj4eMRsWvn0v matches blocker-resolution record. Homee1 run37224785297 retainsMSB4062/no tests or package; review0d1 uses actual source-built task path. Present's source and new package producer are reviewed with exact current UI Names. Canvas986 registrationNRE/table40 retained; typed same-public-API setup retry started.",
+      "Next Action: BLOCKED — Team A must provide remaining canonical entrypoints, installed Home/runtime ABI/AppID/publisher and clean SDK-free acceptance. Continue active Home binding, Present rebuilt package, Canvas provider setup and exact versioned private candidate delivery."
+    ],
+    [
+      "Checkpoint 19:56",
+      "% Progress:",
+      "    Implementation - About60% of inspected Terra-Form editor/runtime groups; low confidence for full Pass2 ;",
+      "    Acceptance Verified - Full Pass2 remains open; regression totals are component evidence ;",
+      "Change Summary: The updated complete ordinary infrastructure suite is independently green. Public Mail restores its whole72-case denominator:69 pass and three genuine TLS prerequisites fail. All tests and original setup/readback failures are retained. The existing Windows recovery lane can help provision the trusted fixture after the approved recipe is located. Native Studio source declarations are reviewed and the original affected workflow is dispatched.",
+      "Evidence: Frozen1c78 normal444/444, all old434 plus ten Graph cases; whole Mail72=69PASS/3FAIL/0skip. Both builds0warnings/errors;793 source bodies and284 runtime files conserved;30 natural closures. C6c67a confirms runtime and91 safe files. Studio catalog137fd declares all12 owner bodies/14 cases; unchanged matrix queues three targets.",
+      "Next Action: BLOCKED — Write needs measured layout/input/focus repairs, Wave retains eight viewport failures, and Motion needs render/decode/Files integration. Locate genuine GreenMail TLS fixtures and continue reviewed Windows execution; preserve every unchanged failure."
+    ],
+    [
+      "Checkpoint 19:56",
+      "% Progress:",
+      "    Implementation - About70% of inspected Sol Happy service foundations; low confidence for full Pass3 ;",
+      "    Acceptance Verified - Full service/pass acceptance open; no successful local native PKCE journey yet ;",
+      "Change Summary: The short-path account diagnostic starts Chromium successfully and retains2PASS/1FAIL/4NOT_RUN. Its blank popup closes before any actual discovery request. A real native fetch probe rejects a plain-object receiver with ILLEGAL_INVOCATION; current constructors invoke that receiver. The minimal default-native binding correction preserves injected transport behavior and passes55 owning tests plus11 meaningful receiver controls. A new source-pinned Web publication is required.",
+      "Evidence: Producerdf/test177/fixturedf,66-byte socket path; C6 actual189ae confirms all11 browser births and original issuer24402 closed strictly. Product455/C6b60f and explicit contract0d151/C6 successor peer preserve103 other critical bodies. Original three negatives remain immutable. Existing hosted0f6 identity138/165 and closed endpoints remain unchanged.",
+      "Next Action: BLOCKED — hosted effects still need canonical actor/session/Files/import/scanner/settlement ports and approved commercial policy. Compose the reviewed fetch correction, build a new sealed Web tuple and run the unchanged physical account criteria with fresh owned custody."
+    ]
+  ],
+  "checks": [
+    {
+      "pass": 1,
+      "text": true,
+      "heading": true,
+      "bold": true,
+      "fonts": true,
+      "indents": true,
+      "semicolons": true,
+      "blocked": true
+    },
+    {
+      "pass": 2,
+      "text": true,
+      "heading": true,
+      "bold": true,
+      "fonts": true,
+      "indents": true,
+      "semicolons": true,
+      "blocked": true
+    },
+    {
+      "pass": 3,
+      "text": true,
+      "heading": true,
+      "bold": true,
+      "fonts": true,
+      "indents": true,
+      "semicolons": true,
+      "blocked": true
+    }
+  ]
+}

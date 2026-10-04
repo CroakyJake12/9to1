@@ -1,0 +1,32 @@
+/* Haven theme — Haven-native, non-boot-critical, fail-closed.
+ * Source of truth: HUI/theme/tokens.json.
+ * Prior HavenAI/Avalonia UI is ADAPT reference only; nothing copied here.
+ * Optional: if this file is absent or unparseable, consumers use GNOME defaults.
+ */
+
+/* GTK3/4 named colors. */
+@define-color haven_background #0F1A1E;
+@define-color haven_surface #16262C;
+@define-color haven_foreground #EAF4F1;
+@define-color haven_muted #8AA5A0;
+@define-color haven_border #274049;
+@define-color haven_accent #3ED598;
+@define-color haven_accent_strong #25A874;
+@define-color haven_accent_contrast #06281C;
+@define-color haven_warning #E5A63B;
+@define-color haven_danger #E5605E;
+
+/* GNOME Shell / extension custom properties. Scoped, no core overrides. */
+.haven-theme {
+  --haven-background: #0F1A1E;
+  --haven-surface: #16262C;
+  --haven-foreground: #EAF4F1;
+  --haven-muted: #8AA5A0;
+  --haven-border: #274049;
+  --haven-accent: #3ED598;
+  --haven-accent-strong: #25A874;
+  --haven-accent-contrast: #06281C;
+}
+
+.haven-accent-bg { background-color: #3ED598; }
+.haven-accent-fg { color: #3ED598; }

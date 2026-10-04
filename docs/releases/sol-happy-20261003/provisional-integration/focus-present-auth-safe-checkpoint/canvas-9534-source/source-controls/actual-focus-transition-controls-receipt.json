@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "sourceSha256": "750744981312c02a9396c5ebd155724c1f93d28c7b5577e9fbd175d8afec5681",
+  "parserErrors": 0,
+  "controlCount": 46,
+  "controls": [
+    {
+      "case": "owned-changed-edit-complete-tuple",
+      "passed": true
+    },
+    {
+      "case": "owned-baseline-any-genuine-role-is-not-address-acceptance",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-focusProcessId",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-nativeWindowHandle",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-nativeProcessId",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-nativeIsPickerChild",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-kernelFocusHandle",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-kernelFocusProcessId",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-kernelFocusMatchesNative",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-focusInDialog",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-enabled",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-offscreen",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-width",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-height",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-pickerWindowHandle",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-pickerForeground",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-pickerKernelProcessId",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-processLive",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-focusRole",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-nativeClassIsEdit",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-baselinePresent",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-identityChanged",
+      "passed": true
+    },
+    {
+      "case": "address-transition-refuses-nativeHandleChanged",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-owned-baseline-snapshot-only",
+      "passed": true
+    },
+    {
+      "case": "same-focused-editor-refused-as-transition",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-retains-only-changed-owned-edit",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-foreign-uia-pid",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-foreign-native-pid",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-zero-native",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-zero-kernel",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-kernel-mismatch",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-outside-modal",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-foreign-picker-pid",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-foreign-foreground",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-wrong-role",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-wrong-native-class",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-same-native-handle",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-same-uia-identity",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-zero-baseline-handle",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-disabled",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-offscreen",
+      "passed": true
+    },
+    {
+      "case": "actual-helper-refuses-exited-process",
+      "passed": true
+    },
+    {
+      "case": "actual-acquisition-order-proper-transition",
+      "passed": true
+    },
+    {
+      "case": "actual-acquisition-order-baseline-zero-kernel",
+      "passed": true
+    },
+    {
+      "case": "actual-acquisition-order-baseline-unavailable",
+      "passed": true
+    },
+    {
+      "case": "actual-acquisition-order-transition-unchanged",
+      "passed": true
+    }
+  ],
+  "qualification": "Actual new source predicate/reader/acquisition try with controlled Linux CLR/kernel/input signatures only. No installed UIA/native app/provider/package/profile/model/input/authority acceptance. Actual control counts verify source keyboard order only, not OS actuation; existing Wait20s unchanged; unchanged31/47/65 not repeated."
+}

@@ -1,0 +1,67 @@
+name: Emergency Book4Edge DTB
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernel_repo:
+        description: 'Kernel tree with Book4Edge DTS'
+        required: false
+        default: 'https://github.com/zensanp/linux-book4-edge.git'
+      kernel_branch:
+        description: 'Branch carrying the Book4Edge DTS'
+        required: false
+        default: 'moolwalk/work'
+      dts_path:
+        description: 'DTS path inside the kernel tree'
+        required: false
+        default: 'arch/arm64/boot/dts/qcom/x1e80100-samsung-galaxy-book4-edge.dts'
+
+jobs:
+  dtb:
+    name: Compile Book4Edge DTB
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential flex bison libssl-dev bc device-tree-compiler git
+
+      - name: Fetch kernel DTS tree
+        env:
+          KERNEL_REPO: ${{ github.event.inputs.kernel_repo }}
+          KERNEL_BRANCH: ${{ github.event.inputs.kernel_branch }}
+        run: |
+          git clone --depth 1 --branch "$KERNEL_BRANCH" "$KERNEL_REPO" work-kernel
+          git -C work-kernel rev-parse HEAD | tee work-kernel/DTB-TREE-SHA.txt
+          test -f "work-kernel/${{ github.event.inputs.dts_path }}"
+
+      - name: Compile DTB
+        run: |
+          cd work-kernel
+          make ARCH=arm64 defconfig
+          dtb_base="$(basename "${{ github.event.inputs.dts_path }}" .dts)"
+          make ARCH=arm64 -j"$(nproc)" "qcom/$dtb_base.dtb"
+          find arch/arm64/boot/dts -name "$dtb_base.dtb" -exec ls -l {} \;
+          mkdir -p ../dtb-out
+          find arch/arm64/boot/dts -name "$dtb_base.dtb" -exec cp {} ../dtb-out/ \;
+          cp "${{ github.event.inputs.dts_path }}" ../dtb-out/"$dtb_base.dts"
+          cd ..
+          {
+            echo "kernel_repo=${{ github.event.inputs.kernel_repo }}"
+            echo "kernel_branch=${{ github.event.inputs.kernel_branch }}"
+            echo "kernel_sha=$(cat work-kernel/DTB-TREE-SHA.txt)"
+            echo "dts=${{ github.event.inputs.dts_path }}"
+          } | tee dtb-out/DTB-PROVENANCE.txt
+          fdtdump dtb-out/"$dtb_base.dtb" | grep -E "model|compatible" | head -8 || true
+
+      - name: Upload DTB
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakeos-book4edge16-dtb
+          path: dtb-out/
+          if-no-files-found: error

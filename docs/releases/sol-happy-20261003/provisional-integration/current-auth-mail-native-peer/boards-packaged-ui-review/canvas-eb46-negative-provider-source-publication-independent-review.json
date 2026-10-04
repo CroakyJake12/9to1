@@ -1,0 +1,27 @@
+{
+  "schema": "c6-independent-canvas-eb46-negative-and-installed-provider-selected-publication/v1",
+  "status": "SELECTED_PUBLICATION_FIDELITY_SCOPE_PRIVACY_ACK",
+  "packets": [
+    {
+      "index": "/workspace/team-c-resume-evidence/c3-canvas-focus-diagnostic-20261004/public-original-eb46-negative-copyset/index.json",
+      "indexSHA256": "74e13d4e2ea33ab785b47f63519c4c2aa76601c77f421dfc73272d6322318f65",
+      "payloads": 10,
+      "bytes": 754944,
+      "zipCRCVerified": 1
+    },
+    {
+      "index": "/workspace/team-c-resume-evidence/c3-canvas-uia-providers-20261004/public-reviewed-pre-invocation-copyset/index.json",
+      "indexSHA256": "f0de82c0f0d82146b839c8660cacb8da43d282cd94968ae99daf90fe69a929c4",
+      "payloads": 16,
+      "bytes": 166043,
+      "zipCRCVerified": 0
+    }
+  ],
+  "originalCompactZIPAndCopiedMembersExact": true,
+  "allIndexedPathsRegularUniqueNoAdditionalPayloads": true,
+  "JSONParsedAndSelectedTextPrivacyChecked": true,
+  "runtimeQualification": "eb46 original58PASS/20s focusedEdit timeout/forcedexit-1/nochoice/request/state retained. f5a3 source57 guards and installed-provider readiness only; no Windows runtime success inferred. Earlier old negative/success public indexes left unchanged.",
+  "excluded": "No private profile/model/state/fixture/issuer manifest/key/runtime/cache/package bodies or signedURLs in selected packets; original native screenshot remains qualified visible known runner UI only.",
+  "functionalRerun": false,
+  "fourSelectedSourceCopiesWholeGitExact": true
+}

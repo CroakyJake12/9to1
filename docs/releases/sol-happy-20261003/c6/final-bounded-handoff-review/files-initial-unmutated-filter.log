@@ -1,0 +1,8 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ActualUpload.Tests -> /workspace/team-c/evidence/c6/files-22c/harness/bin/Debug/net10.0/ActualUpload.Tests.dll
+Test run for /workspace/team-c/evidence/c6/files-22c/harness/bin/Debug/net10.0/ActualUpload.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c/evidence/c6/files-22c/harness/TestResults/negative.trx
+
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 208 ms - ActualUpload.Tests.dll (net10.0)

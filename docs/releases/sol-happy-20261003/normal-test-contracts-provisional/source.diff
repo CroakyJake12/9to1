@@ -1,0 +1,39 @@
+diff --git a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs
+index d887ed21..5e00cb15 100644
+--- a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs	
++++ b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs	
+@@ -147,7 +147,7 @@ public sealed class ExtensionPluginEndToEndTests
+         Assert.False(File.Exists(deniedMarker));
+         var deniedEvents = await WaitForEventsAsync(executionRepository, deniedExecution, 2);
+         Assert.Equal(new[] { ExecutionActionStatus.Running, ExecutionActionStatus.Failed }, deniedEvents.Select(item => item.Status).ToArray());
+-        Assert.DoesNotContain(deniedEvents, item => item.Output?.Contains("must-not-run", StringComparison.Ordinal) == true);
++        Assert.False(JsonSerializer.Serialize(deniedEvents).Contains("must-not-run", StringComparison.Ordinal));
+ 
+         const string rawSecret = "worker28-input-secret-123";
+         var successMarker = NewMarker();
+diff --git a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs
+index 80797daf..b6e25721 100644
+--- a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs	
++++ b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs	
+@@ -253,7 +253,7 @@ public sealed class FormsSubmissionStoreTests : IDisposable
+         });
+         await repository.SaveAsync(workbook, "paged Forms fixture", CancellationToken.None);
+ 
+-        var store = new DataWorkbookFormsSubmissionStore(repository);
++        IFormsSubmissionStore store = new DataWorkbookFormsSubmissionStore(repository);
+         var all = await store.GetLatestAsync(CancellationToken.None);
+         var paged = new List<FormsSubmission>();
+         FormsSubmissionCursor? cursor = null;
+diff --git a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs
+index be6654b1..11bcd973 100644
+--- a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs	
++++ b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs	
+@@ -317,7 +317,7 @@ public sealed class PresentProductionTests : IDisposable
+         using var archive = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: false);
+         Assert.NotNull(archive.GetEntry("manifest.json"));
+         Assert.NotNull(archive.GetEntry("presentation.json"));
+-        Assert.Single(archive.Entries.Where(entry => entry.FullName.StartsWith("assets/", StringComparison.Ordinal)));
++        Assert.Single(archive.Entries, entry => entry.FullName.StartsWith("assets/", StringComparison.Ordinal));
+ 
+         var imported = await new PresentPptxImportService(_paths).ImportAsync(destination, CancellationToken.None);
+         Assert.NotEqual(document.Id, imported.Id);

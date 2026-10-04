@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Haven Welcome
+GenericName=Welcome
+Comment=Start here: open Spaces home and learn HavenOS basics
+Exec=/usr/bin/haven-welcome
+Icon=haven-welcome
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=Haven;Welcome;Start;Spaces;
+StartupNotify=true
+NoDisplay=false

@@ -1,0 +1,58 @@
+﻿// Copyright (c) Files Community
+// Licensed under the MIT License.
+
+using Windows.ApplicationModel.DataTransfer;
+
+namespace Files.App.Actions
+{
+	[GeneratedRichCommand]
+	internal sealed class CopyPathWithQuotesAction : IAction
+	{
+		private readonly IContentPageContext context;
+
+		public string Label
+			=> Strings.CopyPathWithQuotes.GetLocalizedResource();
+
+		public string Description
+			=> Strings.CopyPathWithQuotesDescription.GetLocalizedResource();
+
+		public ActionCategory Category
+			=> ActionCategory.FileSystem;
+
+		public RichGlyph Glyph
+			=> new RichGlyph(themedIconStyle: "App.ThemedIcons.CopyAsPath");
+
+		public bool IsExecutable =>
+			context.PageType != ContentPageTypes.Home &&
+			context.PageType != ContentPageTypes.RecycleBin &&
+			context.PageType != ContentPageTypes.ReleaseNotes &&
+			context.PageType != ContentPageTypes.Settings;
+
+		public CopyPathWithQuotesAction()
+		{
+			context = Ioc.Default.GetRequiredService<IContentPageContext>();
+		}
+
+		public Task ExecuteAsync(object? parameter = null)
+		{
+			if (context.ShellPage is { SlimContentPage: not null } shellPage)
+			{
+				var path = "\"" + shellPage.GetRequiredShellViewModel().WorkingDirectory + "\"";
+
+				if (FtpHelpers.IsFtpPath(path))
+					path = path.Replace('\\', '/');
+
+				SafetyExtensions.IgnoreExceptions(() =>
+				{
+					DataPackage data = new();
+					data.SetText(path);
+
+					Clipboard.SetContent(data);
+					Clipboard.Flush();
+				});
+			}
+
+			return Task.CompletedTask;
+		}
+	}
+}

@@ -1,0 +1,46 @@
+{
+  "commit": "54766d2aa0716e6140293b3b4287a548fba9514b",
+  "base": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "normal30_equivalence": "UNVERIFIED: owning current RAM/source not delivered",
+  "actual_provider": "NOT_RUN; local transport fixtures",
+  "artifacts": [
+    {
+      "path": "/workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+      "sha256": "fd162747b5b95cb02bb5ca2e47cf7c596353d92a30551080622f265e24cbebd0"
+    },
+    {
+      "path": "/workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.cs",
+      "sha256": "89c673378bae8f3b43000db93414a3a869a3bfcd25de50ffe6e585a252ed0caf"
+    },
+    {
+      "path": "/workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ModelUsageRepository.cs",
+      "sha256": "3bf306530e1cb848336dc08856cd39ffc44ea0efd7d6c3cdf1247def02dcbc1a"
+    },
+    {
+      "path": "/workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Infrastructure/bin/x64/Release/net10.0/Haven.Infrastructure.dll",
+      "sha256": "9f4dc68291fecabd2e980495ea0e1d047d4e09db55cbd030983677406c19fbe9"
+    },
+    {
+      "path": "/workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Infrastructure/bin/x64/Release/net10.0/Haven.Infrastructure.pdb",
+      "sha256": "4c985ed1a1bab6439e41528dfd0888065ad835aa148674e25c8c24d236b30ae8"
+    },
+    {
+      "path": "/workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Application/bin/Release/net10.0/Haven.Application.dll",
+      "sha256": "672aa140bfc3d3719146e55a31087a3e7c94b33ddb4d0999213ac03995ece0f8"
+    },
+    {
+      "path": "/workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Application/bin/Release/net10.0/Haven.Application.pdb",
+      "sha256": "0500892e592a5810a9183ad02fb240f73d455d3a4634953fd5d8acb31f717109"
+    }
+  ],
+  "exact_release_tests": {
+    "total": 35,
+    "executed": 35,
+    "passed": 35,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "trx": "/workspace/team-c/evidence/c5/reconciled/exact-head/c5-exact-54766d2a.trx",
+    "trx_sha256": "41a6e5191564d313abdf3071d97b68f6db7f3f432431bced75fd2ad2c7869f08"
+  }
+}

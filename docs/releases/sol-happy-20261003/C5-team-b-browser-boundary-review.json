@@ -1,0 +1,583 @@
+{
+  "reviewer": "C5",
+  "scope": "Bounded B browser delivered source review for online/privacy/storage/usage boundaries; not acceptance of full browser specification",
+  "commits": {
+    "first": "43669e20a267a2447458aaa5f081987f97d29b05",
+    "followup": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
+    "comparison_parent": "83c24b2f0033fb2828169921fc905a327120143b"
+  },
+  "remote_readback": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff\trefs/heads/team-b/astra-browser-validation-20261003",
+  "source_diff_sha256": "74cb8691de063be23fdc484119843dd94a100c2eb73baea2160b84b38c668962",
+  "conclusion": "No actionable newly introduced C5-scope online authority/quota bypass or off-device Wave upload identified; source proposal only, integration holds remain",
+  "source_boundary_findings": [
+    "Device-local Wave persists canonical owner serializer output and actual source hashes in browser IDB; source identities/revisions and before-state CAS checked; no hosted Files/cloud/account quota grant implemented",
+    "Wave explicitly records per-source16MiB/render16MiB/package32MiB/history32limits, downloadedBlob initiation not completedexport claim; saved source remains after failedquota/conflict",
+    "Account client bridge defaults unconfigured and whitelists existing methods; no issuer/client/API-origin/token/paid/storage policy synthesized; wire records remain owner JSON",
+    "UI account revisions are originalCAS; private-denial/accountswitch/disposal clear records/drafts/sessions; session mutation preserves caller token binding through own private cleanup using unchanged ownerAccountApiClient",
+    "Private route reset invalidates pendingnavigation and removes private adapters before ownerteardown; device-local Wave is retained as local, not anotheraccountgrant",
+    "Native peer bridge excludes password values, rechecks current nativepeer visible/enabled/tree membership at action; snapshot cleared on privatecontext invalidation",
+    "Serializer followup supplies sourcegenerated accessibility metadata and preserves actual canonicalreflection model assemblies; no altered canonicalmodel"
+  ],
+  "ownership_and_acceptance_holds": [
+    "Require owner acknowledgement for exactWave browser envelope/storage/native-engine extraction+route and Home/Account presentation composition; source bytes alone do not grant ownerACK",
+    "Configure exactacknowledgedCAKEWorker client/issuer and prove currentwirecompatibility, profileCAS, account switch, signout/revoke/privatecleanup againstactualowner service beforeaccountacceptance",
+    "Canonical hostedFiles/openwith/crossclientcontinuity, fullWavefeatures not connected; localapp work remains independentlyrunnable",
+    "LE06 source-labelledusage/limits/window/reset/freshness and LE07chatplacement/paidstrictthreshold/separatequota/revocation are not implemented here; publishedLE12ownercatalogue stillrequired beforethese consumers",
+    "C1 separately reviews sharedCUIinput/availability ownerrequests; C5doesnot substitute forC1ownerACK",
+    "Reported40Tabtrap remains unresolved; AX5structuralpass notkeyboardjourneycompletion",
+    "ReportedWave2PASS1FAIL11NOT_RUN remains incomplete; nofulljourney/parityclaim"
+  ],
+  "runtime_evidence_qualification": {
+    "tests_rerun": false,
+    "raw_TeamB_evidence": "/workspace/team-b-evidence unavailable in this receivingworkspace; reportedresults not independentlyreproduced",
+    "reported_accessibility": "AX5 structuralPASS but40Tabtrap",
+    "reported_wave": "2PASS1FAIL11NOT_RUN",
+    "new_runtime_acceptance": false
+  },
+  "exact_source_bindings": {
+    "apps/Web/Services/account-service.js": [
+      {
+        "line": 3,
+        "text": "export function createAccountModule(client = null) {"
+      },
+      {
+        "line": 16,
+        "text": "        GetCurrent: () => client.getCurrent(options),"
+      },
+      {
+        "line": 20,
+        "text": "        SignOut: () => client.signOut(options),"
+      },
+      {
+        "line": 25,
+        "text": "      pending.set(requestId, controller);"
+      },
+      {
+        "line": 34,
+        "text": "    dispose() { disposed = true; for (const controller of pending.values()) controller.abort(); pending.clear(); },"
+      }
+    ],
+    "apps/Web/Accounts/AccountBrowserBindings.cs": [
+      {
+        "line": 148,
+        "text": "        { await Present(() => { ClearPrivate(); _status = \"Account services are unavailable or returned an incompatible record. No success has been confirmed.\"; }); }"
+      },
+      {
+        "line": 160,
+        "text": "        if (!Succeeded(current)) { await Present(() => { ClearPrivate(); Fail(current); }); return; }"
+      },
+      {
+        "line": 163,
+        "text": "        if (id is null) { await Present(() => { ClearPrivate(); _status = \"Account services returned an incompatible record.\"; }); return; }"
+      },
+      {
+        "line": 171,
+        "text": "            if (Text(record, \"accountId\") != id) { await Present(() => { ClearPrivate(); _status = \"The account context changed. Reopen account settings.\"; }); return; }"
+      },
+      {
+        "line": 179,
+        "text": "        else { await Present(() => Fail(profile)); if (PrivateFailure(profile)) return; }"
+      },
+      {
+        "line": 185,
+        "text": "            { await Present(() => { ClearPrivate(); _status = \"The account context changed. Reopen account settings.\"; }); return; }"
+      },
+      {
+        "line": 199,
+        "text": "        var result = await _transport.InvokeAsync(\"UpdateProfile\", JsonSerializer.SerializeToElement(new { expectedRevision = _revision, fields = patch }), ct);"
+      },
+      {
+        "line": 204,
+        "text": "            if (Text(record, \"accountId\") != Text(_current, \"accountId\")) { ClearPrivate(); _status = \"The account context changed. Reopen account settings.\"; return; }"
+      },
+      {
+        "line": 209,
+        "text": "    private async Task MutateSessionAsync(CancellationToken ct)"
+      },
+      {
+        "line": 215,
+        "text": "        await Present(() => { ClearPrivate(); _status = \"Private views cleared. Waiting for the account service to acknowledge the session change\u2026\"; });"
+      },
+      {
+        "line": 229,
+        "text": "        if (PrivateFailure(result)) ClearPrivate();"
+      },
+      {
+        "line": 252,
+        "text": "    private static bool PrivateFailure(JsonElement result) => HttpStatus(result) is 401 or 403 || Error(result) is \"unauthorized\" or \"session_revoked_or_expired\" or \"AuthenticationRequired\""
+      },
+      {
+        "line": 257,
+        "text": "    private Task Present(Action action) => _present(() => { if (!_disposed) { action(); Changed(); } });"
+      },
+      {
+        "line": 259,
+        "text": "    private void ClearPrivate() { _current = null; _profile = null; _sessions = []; _sessionsChecked = false; _draft.Clear(); _changed.Clear(); _conflict = false; _conflictRevision = null; _revision = 0; _selectedSession = null; _confirmation = null; _pendingMutation = null; }"
+      },
+      {
+        "line": 263,
+        "text": "        _disposed = true; _lifetime.Cancel(); ClearPrivate(); _status = \"Account view closed.\"; Changed();"
+      }
+    ],
+    "apps/Web/wwwroot/main.js": [
+      {
+        "line": 10,
+        "text": "const accounts = createAccountModule();"
+      },
+      {
+        "line": 28,
+        "text": "        () => { accessibility.clear(); owner.PrivateContextInvalidated(); });"
+      }
+    ],
+    "apps/Web/Media/wave-browser.js": [
+      {
+        "line": 2,
+        "text": "const databaseName = '9to1-wave-local-v1';"
+      },
+      {
+        "line": 8,
+        "text": "const maximumBytes = 32 * 1024 * 1024;"
+      },
+      {
+        "line": 18,
+        "text": "        const request = indexedDB.open(databaseName, 1);"
+      },
+      {
+        "line": 54,
+        "text": "async function commitProject({ bundle, expectedRevision }) {"
+      },
+      {
+        "line": 56,
+        "text": "        || bundle.revision < 0 || !Number.isSafeInteger(expectedRevision) || expectedRevision < -1"
+      },
+      {
+        "line": 60,
+        "text": "    if (new TextEncoder().encode(JSON.stringify(bundle)).length > maximumBytes)"
+      },
+      {
+        "line": 66,
+        "text": "        const transaction = db.transaction(['projects', 'summaries'], 'readwrite');"
+      },
+      {
+        "line": 71,
+        "text": "            if ((previous ? previous.revision : -1) !== expectedRevision"
+      },
+      {
+        "line": 80,
+        "text": "        transaction.oncomplete = () => resolve({ revision: bundle.revision });"
+      },
+      {
+        "line": 115,
+        "text": "                if (file.size > maximumBytes / 2) throw fault('CapacityExceeded', 'Choose a WAV file smaller than 16 MiB for this local adapter.');"
+      },
+      {
+        "line": 128,
+        "text": "function download({ name, base64, mime }) {"
+      },
+      {
+        "line": 152,
+        "text": "            case 'play':"
+      }
+    ],
+    "apps/Web/Wave/WaveBrowserSession.cs": [
+      {
+        "line": 62,
+        "text": "        ThrowIfDisposed(); _projects = projects;"
+      },
+      {
+        "line": 71,
+        "text": "        ThrowIfDisposed();"
+      },
+      {
+        "line": 74,
+        "text": "        return await SaveCoreAsync(token);"
+      },
+      {
+        "line": 83,
+        "text": "        ThrowIfDisposed();"
+      },
+      {
+        "line": 99,
+        "text": "        ValidateSources(project, restoredSources);"
+      },
+      {
+        "line": 101,
+        "text": "        foreach (var history in bundle.Undo.Concat(bundle.Redo)) ValidateSources(ReadProject(id, history), restoredSources);"
+      },
+      {
+        "line": 108,
+        "text": "        ThrowIfDisposed();"
+      },
+      {
+        "line": 122,
+        "text": "        ThrowIfDisposed();"
+      },
+      {
+        "line": 131,
+        "text": "            return await SaveCoreAsync(token);"
+      },
+      {
+        "line": 141,
+        "text": "    public Task<bool> SaveAsync(CancellationToken token = default) => OperateAsync(() => SaveCoreAsync(token), token);"
+      },
+      {
+        "line": 148,
+        "text": "        ThrowIfDisposed();"
+      },
+      {
+        "line": 157,
+        "text": "        return await SaveCoreAsync(token);"
+      },
+      {
+        "line": 177,
+        "text": "        WaveProjectStore.Validate(restored); ValidateSources(restored, _sources);"
+      },
+      {
+        "line": 181,
+        "text": "        return await SaveCoreAsync(token);"
+      },
+      {
+        "line": 184,
+        "text": "    private async Task<bool> SaveBeforeLeavingAsync(CancellationToken token) => !IsDirty || await SaveCoreAsync(token);"
+      },
+      {
+        "line": 186,
+        "text": "    private async Task<bool> SaveCoreAsync(CancellationToken token)"
+      },
+      {
+        "line": 191,
+        "text": "        ValidateSources(project, _sources);"
+      },
+      {
+        "line": 414,
+        "text": "    private static void ValidateSources(WaveProject project, IReadOnlyDictionary<string, WaveLocalSource> sources)"
+      },
+      {
+        "line": 460,
+        "text": "    private void ThrowIfDisposed() { if (_disposed) throw new OperationCanceledException(\"The local Wave view was disposed.\"); }"
+      },
+      {
+        "line": 487,
+        "text": "    public void Dispose()"
+      },
+      {
+        "line": 498,
+        "text": "// These are browser storage envelopes around opaque canonical serializer output, not alternate Wave entities."
+      }
+    ],
+    "apps/Web/BrowserSurfaceRegistry.cs": [
+      {
+        "line": 11,
+        "text": "public enum BrowserSurfaceScope { PrivateContext, DeviceLocal }"
+      },
+      {
+        "line": 17,
+        "text": "    private readonly Dictionary<string, (IHomeFeatureRouteHandler Handler, BrowserSurfaceScope Scope)> _handlers = new(StringComparer.Ordinal);"
+      },
+      {
+        "line": 24,
+        "text": "        RemoveHandlers(privateOnly: false);"
+      },
+      {
+        "line": 28,
+        "text": "    public void ClearPrivateContext() => RemoveHandlers(privateOnly: true);"
+      },
+      {
+        "line": 30,
+        "text": "    private void RemoveHandlers(bool privateOnly)"
+      },
+      {
+        "line": 32,
+        "text": "        var removed = _handlers.Where(pair => !privateOnly || pair.Value.Scope == BrowserSurfaceScope.PrivateContext).ToArray();"
+      },
+      {
+        "line": 49,
+        "text": "        Func<HomeFeatureViewState, BrowserCuiSurface> render, BrowserSurfaceScope scope = BrowserSurfaceScope.PrivateContext)"
+      },
+      {
+        "line": 73,
+        "text": "        if (!ReferenceEquals(navigation, _navigation))"
+      }
+    ],
+    "apps/Web/BrowserAccessibilityBridge.cs": [
+      {
+        "line": 58,
+        "text": "            if (!controlPeer.Owner.IsEffectivelyVisible) return;"
+      },
+      {
+        "line": 62,
+        "text": "                AutomationControlType.Edit when peer is IValueProvider && controlPeer.Owner is not TextBox { PasswordChar: not '\\0' } => \"textbox\","
+      },
+      {
+        "line": 98,
+        "text": "        ReadSnapshot();"
+      },
+      {
+        "line": 100,
+        "text": "            || !peer.Owner.IsEffectivelyVisible || !peer.IsEnabled()"
+      }
+    ],
+    "apps/Web/Wave/Engine/generate-owner-decoder.py": [
+      {
+        "line": 12,
+        "text": "SOURCE_SHA256 = '4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f'"
+      },
+      {
+        "line": 13,
+        "text": "PREFIX_SHA256 = '5426f61c5568b4728d3409d3dd3722dd4a70b23867b86168f0967da4b6a7125a'"
+      },
+      {
+        "line": 26,
+        "text": "    if actual != SOURCE_SHA256 or raw.count(MARKER) != 1:"
+      },
+      {
+        "line": 29,
+        "text": "    if hashlib.sha256(prefix).hexdigest() != PREFIX_SHA256:"
+      },
+      {
+        "line": 43,
+        "text": "        'prefixSha256': PREFIX_SHA256, 'generated': str(output.resolve()),"
+      },
+      {
+        "line": 45,
+        "text": "        'transformation': 'Exact bytes before unique marker; only generated notice, nullable context and #line provenance added.',"
+      }
+    ]
+  },
+  "changed_file_hashes": [
+    {
+      "path": "apps/Web/Accounts/AccountBrowserBindings.cs",
+      "bytes": 17755,
+      "git_blob": "9020d4a3f6cd3dc938ab7f142e4907346783e225",
+      "sha256": "5a1d706663b365816354274eb17c10013b52e91020d56c79ab8929d15125f3fa"
+    },
+    {
+      "path": "apps/Web/Accounts/AccountSettingsFeature.cs",
+      "bytes": 6141,
+      "git_blob": "a25fd9f2472d291551d56a64a1e05f09e7e9f55f",
+      "sha256": "88544b25138f211a73e5f6b3fe7741ac25f7b4ca98246bd47e2fe89e8ab03a31"
+    },
+    {
+      "path": "apps/Web/Accounts/Accounts.cui",
+      "bytes": 6365,
+      "git_blob": "7b6ed3255c0e990862d08384363986844fee8fb6",
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c"
+    },
+    {
+      "path": "apps/Web/Accounts/README.md",
+      "bytes": 4523,
+      "git_blob": "82ad59543e6843c41f0de3a6f70a2362e20d90a0",
+      "sha256": "713ea5342c419f17838a81523641a26132faeb955b60df5f560b5af9b1dc17ec"
+    },
+    {
+      "path": "apps/Web/Accounts/Tests/AccountSettings.Factory.Tests.csproj",
+      "bytes": 1472,
+      "git_blob": "9e8636a9a2b368f5f4c48df8e1445914b3a1270d",
+      "sha256": "b075cc49b4fd33f8b18e43e43cf58f6e9f2b815b41a68d7fce5d461555dc8ea1"
+    },
+    {
+      "path": "apps/Web/Accounts/Tests/BrowserAccounts.Tests.csproj",
+      "bytes": 1096,
+      "git_blob": "75ba1cb1b12f4499dc802b9de1c16394da3f8a30",
+      "sha256": "f30b0622a5d65e7a389e4ffb83c19498c19c7defa53d99b5262877726c073f92"
+    },
+    {
+      "path": "apps/Web/Accounts/Tests/FactoryProgram.cs",
+      "bytes": 4785,
+      "git_blob": "2a5539fce414cc09db641075222924249ffb43a6",
+      "sha256": "0a14d842669d20fdc1e672cbe982f954bbceb5bf98c336e2ce1b71f41ef83c69"
+    },
+    {
+      "path": "apps/Web/Accounts/Tests/Program.cs",
+      "bytes": 12844,
+      "git_blob": "278c0f8c13b35bc5cd878c849e57677eea526df0",
+      "sha256": "2980ab712abc655f47a9751a7e27b714dafd96fd52da7a5fcb432671a6b7d0af"
+    },
+    {
+      "path": "apps/Web/BrowserAccessibilityBridge.cs",
+      "bytes": 5058,
+      "git_blob": "21265bffa0c1499f1ac73949032ebf0f1bf96754",
+      "sha256": "31ea4c79949e519111c7a55dba2a46eac69218061d981de697c708c39df89ed1"
+    },
+    {
+      "path": "apps/Web/BrowserAccessibilityJsonContext.cs",
+      "bytes": 389,
+      "git_blob": "f18602d32d91c280925f694659dc0569d42fe555",
+      "sha256": "86b6b7b9aa6d39f4b0f51157322fd93ed599a9655c02d8d73ac7f662ab97d851"
+    },
+    {
+      "path": "apps/Web/BrowserActionAvailability.cs",
+      "bytes": 7180,
+      "git_blob": "60e5d0a6fecf62a4383dee01bcf2ab701ef0b1eb",
+      "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369"
+    },
+    {
+      "path": "apps/Web/BrowserApplication.cs",
+      "bytes": 10451,
+      "git_blob": "127d0f1752eb0ccd46efee33c6bbeb83fa53bb9a",
+      "sha256": "481996e79ddba96f63443040a2164d27a77eb52e1f3b43b38888b35ca21571b5"
+    },
+    {
+      "path": "apps/Web/BrowserFeatureComposition.cs",
+      "bytes": 860,
+      "git_blob": "bcdde1d5f688e71aaab461a19c33d23941cef3be",
+      "sha256": "e22fa5bdd436f7e258a1cdd4e420a129aa9271ce8f0ae9b28b6d793adc67ae95"
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 3978,
+      "git_blob": "1a063f594a951f54789976af5c83c89990e940ec",
+      "sha256": "6761dc990cc2e4ddd37eefefd49a0f3d896447db2da7c3dc761e16ec8db74b18"
+    },
+    {
+      "path": "apps/Web/Media/BrowserWaveMedia.cs",
+      "bytes": 920,
+      "git_blob": "755004a586947de335f03e3b8b42ff7bc7296682",
+      "sha256": "2a0d4b2a0f2d7604b25b49edd5fb5ecc865b794a4e2b1c8e3f9fff65689fddb6"
+    },
+    {
+      "path": "apps/Web/Media/IWaveBrowserMedia.cs",
+      "bytes": 476,
+      "git_blob": "910d68061f09f70c0b876fe61c4f5127e3ca2487",
+      "sha256": "79cadfb49142b7435085fcf03ab9ffea832c5199583afa859863c044b7d8c08a"
+    },
+    {
+      "path": "apps/Web/Media/wave-browser.js",
+      "bytes": 9684,
+      "git_blob": "3e0d63e1c6ad9d5142b9109ccf562752b7bfccaa",
+      "sha256": "b3f0794eec86d4917a6d617f20b2f87c7660ef234b13c431659c39f4e1afc7ba"
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "bytes": 3690,
+      "git_blob": "7d119097328c504c9b59905ad59c66a5d3353f18",
+      "sha256": "8d64a536c886743c1ccd83f9e0074acc5444a1530049badc7330f6c4272b18f9"
+    },
+    {
+      "path": "apps/Web/Program.cs",
+      "bytes": 2288,
+      "git_blob": "9b069bdd29c5a103730a2f4e161a75d04549fafc",
+      "sha256": "2b9576ae2f7ccbb77e9b7d6bb44063acba95d1071cb668faacfcf6fb819daf67"
+    },
+    {
+      "path": "apps/Web/README.md",
+      "bytes": 10012,
+      "git_blob": "b5d51422bbd10d71c7c73fd085fbef252c26a9bb",
+      "sha256": "6be5fbfc9bf0bd45f2d20f2fed0295633b134bceaba55c0fbf118d629715efd3"
+    },
+    {
+      "path": "apps/Web/Services/BrowserAccountTransport.cs",
+      "bytes": 1196,
+      "git_blob": "c82d99115727d4843ae52e26f4185a2821befcc6",
+      "sha256": "d8bca95c7000819c42284949a8cc92f145427fb648c222c969bf0590b50656f4"
+    },
+    {
+      "path": "apps/Web/Services/IAccountBrowserTransport.cs",
+      "bytes": 353,
+      "git_blob": "04b329c9027993eaaaf73e647d10667596ea3ca5",
+      "sha256": "e1c872e4f64996a9d366cd2aae7fd1399f5301b347eb892cbfee7d96cd12bfce"
+    },
+    {
+      "path": "apps/Web/Services/account-service.js",
+      "bytes": 2012,
+      "git_blob": "9a80225a2edf0666c648c0dc95f1d8732ed164d2",
+      "sha256": "3cae40d5cc72ee7a3efea090e44f575fd5aacc406f7cd973e811bc1522afe360"
+    },
+    {
+      "path": "apps/Web/Services/account-service.test.js",
+      "bytes": 3769,
+      "git_blob": "87dd25a1f94a3c2a6efa93b9ac91bf037d683f32",
+      "sha256": "597294730babb72cc0a919c41496bf7601f5167b53cdc7bd7e5c7acc168f3e70"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserAccessibility.Tests.csproj",
+      "bytes": 968,
+      "git_blob": "5fd556943e170e0a20dd6ba1de2f1dd21f7690a9",
+      "sha256": "3f6662e187d5cc95a571328a325d6941c7795839e1100c7be8ec0e1484a6a8bb"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserAccessibilityRegression.cs",
+      "bytes": 6456,
+      "git_blob": "29fb4f3712a0626f23736d4d8bc1c1e37673d907",
+      "sha256": "d03b07a1974af14d0000aae824ec3ea096d67fbdf96f96d404377f17a3dafea4"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserActionAvailability.Tests.csproj",
+      "bytes": 650,
+      "git_blob": "f9c64826b3f7ae184b2e10b0be243dcf13440bcb",
+      "sha256": "3a18d12da9c5c2b48d2509b1215dad9a759fec9927022979eb85f8592314e8ab"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserActionAvailabilityRegression.cs",
+      "bytes": 6573,
+      "git_blob": "a7df9124127d1fc8483964e594c3a430e03ee0c9",
+      "sha256": "8e863b3227b6ef97890b57946ca6e9fa1acba1d41c9bb40b6599fb4e8b65abe0"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+      "bytes": 1689,
+      "git_blob": "a2ad4b9c73f24a1af8fde9d43a14f8e4fd185d9d",
+      "sha256": "e87b27fcb3888bbff3569e8ba565947c03584757730136a3457ffd4e2a7d021e"
+    },
+    {
+      "path": "apps/Web/Tests/Program.cs",
+      "bytes": 16460,
+      "git_blob": "fab3d1ca2156e44f1df3261031cd9d3d3d54a037",
+      "sha256": "cdc9efca0df9e963ff9a59b87bf2e8c23e3d1595ecf50f1553eddc1858344421"
+    },
+    {
+      "path": "apps/Web/Tests/browser-accessibility.test.mjs",
+      "bytes": 6750,
+      "git_blob": "2317e33630afc5b6cb2a78aba96b73868beb5d78",
+      "sha256": "bdecf65e67a6a84df6618e657eadf613acd32496a3e8fff8419d6e12a46c1f12"
+    },
+    {
+      "path": "apps/Web/Wave/Engine/NineToOne.Wave.BrowserEngine.csproj",
+      "bytes": 1622,
+      "git_blob": "ccf5a0c74de8fca55333b2d8f762af8e99b20e0d",
+      "sha256": "eb54fd843c7403aadf7423e75cb99a561cd5f2f4b6ac148ef73ee407539c9380"
+    },
+    {
+      "path": "apps/Web/Wave/Engine/generate-owner-decoder.py",
+      "bytes": 2629,
+      "git_blob": "c8b6d9a1e862b6e5ae5b2d259c7aaa77d3e0cd65",
+      "sha256": "e0500416975d2adfa31122e978e2c76e45a45871f06ca2befca6ef1420f0e372"
+    },
+    {
+      "path": "apps/Web/Wave/Wave.cui",
+      "bytes": 10736,
+      "git_blob": "6243b796be7c5789cad379e40d6dc76e1f33d6ff",
+      "sha256": "be7dd65a38f2507e6ce309b99118e76ca1f2792bb33764be9d87793cf0694729"
+    },
+    {
+      "path": "apps/Web/Wave/WaveBrowserFeature.cs",
+      "bytes": 3983,
+      "git_blob": "63aa38e31d43385d409ba37ef87470c34ee171da",
+      "sha256": "225d40938b17937767925fd76bb3f2a5cdf0fbc980e2c3b68a341c8fba0b45c2"
+    },
+    {
+      "path": "apps/Web/Wave/WaveBrowserSession.cs",
+      "bytes": 33145,
+      "git_blob": "af1b738bcc5af199288f5e8b5fd59399a1412517",
+      "sha256": "06b9a274c614053c9312fc96087687fa885541068cc953d5375e520b9c663808"
+    },
+    {
+      "path": "apps/Web/wwwroot/browser-accessibility.js",
+      "bytes": 4676,
+      "git_blob": "b05bbcb0b6b9194ebf166f9682b65faa142fa744",
+      "sha256": "39788401f79590113c5d25fccda97791080f1444216a05c9530456b38050c2cf"
+    },
+    {
+      "path": "apps/Web/wwwroot/index.html",
+      "bytes": 848,
+      "git_blob": "d6d6c7f62da61693f6b21b20ff4b8f28326cb5dd",
+      "sha256": "bd45a95ede10706cb7d632affd5fccf6ca5931de08761139f19006149c76cead"
+    },
+    {
+      "path": "apps/Web/wwwroot/main.js",
+      "bytes": 2070,
+      "git_blob": "275a61f807e70a9cf5870daf476c419082283bb4",
+      "sha256": "4d9feec71302adf55638c66387fd3d9ce6a312800be8e6e47e09eecde5684680"
+    }
+  ]
+}

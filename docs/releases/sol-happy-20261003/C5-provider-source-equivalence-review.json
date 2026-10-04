@@ -1,0 +1,57 @@
+{
+  "review_scope": "bounded per-file source equivalence and existing exact owner ACK only",
+  "delivery_commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "manifest_path": "handoff/team-a/reviewed-source-delivery-manifest.json",
+  "manifest_sha256": "c9cf6441874a8f6f38de5623954d7fb835cbf03533bdf6e540550eb81c6705cd",
+  "manifest_status": "EXACT_REVIEWED_SOURCE_AND_ORIGINAL_SDK_DRIVER_DELIVERY_UNRUN_NOT_ACCEPTED",
+  "coordination_commit": "14dd1e123b3631755b036f55781940087598afc0",
+  "source_selection": {
+    "target": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+    "selection": "No CloudModelProviders override in joint04; actual A63 remains selected unchanged by A1.",
+    "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "gitBlob": "4a7801e0996821dadf458cd0bf649d6cc2672f4e",
+    "bytes": 29923,
+    "sha256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+    "fetchableUrl": "https://github.com/CroakyJake12/9to1/blob/a63d77fe5a9dfea56c938eaa85678a9e170368ec/9to1%20Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+    "C5Qualification": "Per-file current source map only; not a new C5 body/runtime acceptance."
+  },
+  "independently_observed": {
+    "base_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "delivery_blob": "4a7801e0996821dadf458cd0bf649d6cc2672f4e",
+    "body_bytes": 29923,
+    "body_sha256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+    "delivered_body_equals_base": true,
+    "proposal_commit": "54766d2aa0716e6140293b3b4287a548fba9514b",
+    "proposal_provider_sha256": "fd162747b5b95cb02bb5ca2e47cf7c596353d92a30551080622f265e24cbebd0",
+    "proposal_provider_equals_original_acknowledged_patch_body": true,
+    "production_diff_equals_original_acknowledged_patch": true,
+    "added_lines": 7,
+    "removed_lines": 0
+  },
+  "fresh_existing_owner_ack": {
+    "commit": "4f6040271094748f9065b3b53f1239b0d7f2190d",
+    "exactInputManifestSha256": "17bcee5655bcddf855ad8b4dac223501849d375cbe84c344d99a015c91c92e02",
+    "ack": "A3 ownership/source ACK for exact seven EOF/error/buffered-cancellation lines applied to current normal30. No overlapping A3 provider draft or canonical model/signature change. IOException does not trigger automatic fallback; partial output/confirmed usage retained; error payload excluded.",
+    "qualified": "16 reported harness cases and7negative controls only; full project commands previously failed before discovery. Real provider/protocol/timeout/retirement/privacy/billing/current integrated/source/PDB acceptance still required.",
+    "currentA63ProposalCommit": "54766d2aa0716e6140293b3b4287a548fba9514b",
+    "currentA63UnchangedBody": {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+      "bytes": 29923,
+      "sha256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+      "gitBlob": "4a7801e0996821dadf458cd0bf649d6cc2672f4e",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec"
+    }
+  },
+  "conclusion": {
+    "provider_body_equivalence_gate": "CLEARED: delivered owner selection explicitly retains actual a63 provider body and independent bytes/blob/hash verification matches",
+    "exact_seven_line_source_qualification": "CLEARED for proposed54766d2 on selected provider file under existing A3 precise ownership/source ACK",
+    "runtime_acceptance": "UNCHANGED; no new runtime or provider claim; prior exact54766d2 local35Release evidence remains partial",
+    "unresolved": [
+      "real provider/completion protocol/timeout/privacy/billing/deployed runtime acceptance",
+      "full overall test project XamlX dependency blocker",
+      "all other owning/current source and integrated candidate gates outside per-file scope"
+    ],
+    "tests_rerun": false,
+    "reason_no_rerun": "No new provider/source/runtime changes; this pass adds immutable source review evidence only"
+  }
+}

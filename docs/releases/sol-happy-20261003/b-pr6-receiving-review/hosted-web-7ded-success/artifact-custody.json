@@ -1,0 +1,241 @@
+{
+  "sourceCommit": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+  "runId": 37214417698,
+  "acquisition": "GitHub official workflow artifact connector followed by authorized file download; temporary download URLs omitted",
+  "checks": {
+    "uniqueArchiveMembers": true,
+    "crc": true,
+    "pathContainment": true,
+    "symlinks": false,
+    "encryptedMembers": false,
+    "maxUncompressedBytes": 134217728
+  },
+  "artifacts": [
+    {
+      "artifactId": 11308306040,
+      "artifactArchive": "browser-diagnostics.zip",
+      "bytes": 28761622,
+      "sha256": "9b5d1d37869637f615b694c2741c794df212988140a9eba6761f031a0153ebf1",
+      "members": [
+        {
+          "path": "diagnostics/chromium-path.log",
+          "bytes": 78,
+          "sha256": "94dc7d669e3d3966bf82ee64f3ae62d074e8d1302c5c4686e5bff330c7879cb2"
+        },
+        {
+          "path": "diagnostics/commands.json",
+          "bytes": 5220,
+          "sha256": "9372f0e00fff80f23157cb9589a26722fb5b5dbe7e601ffe02d1fc3e3bb5dee8"
+        },
+        {
+          "path": "diagnostics/git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "diagnostics/git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "diagnostics/git-head-after.log",
+          "bytes": 41,
+          "sha256": "b4416856383641af46c7d407e4ee8c479851ec79588c7bb620c200f65c7c3306"
+        },
+        {
+          "path": "diagnostics/git-head.log",
+          "bytes": 41,
+          "sha256": "b4416856383641af46c7d407e4ee8c479851ec79588c7bb620c200f65c7c3306"
+        },
+        {
+          "path": "diagnostics/output-custody-before-final-receipt.json",
+          "bytes": 38486,
+          "sha256": "ec0af056a7a25425f0a9dee45c248420b258894a38074a2431d8f06177a3463b"
+        },
+        {
+          "path": "diagnostics/picture-browser-nine.log",
+          "bytes": 115,
+          "sha256": "4cb08067aba5464fd0494a80dd517de8ba89fafaadc8ae5d5e8502e82a4cac81"
+        },
+        {
+          "path": "diagnostics/playwright-version.log",
+          "bytes": 7,
+          "sha256": "bc43ef34a131fd2f99047a8aca491f24fa0a36010dcb90166e73c49f58a1928d"
+        },
+        {
+          "path": "diagnostics/result.json",
+          "bytes": 497,
+          "sha256": "69a42d234188d275ba3c8dfecfcbdae3e44bd986a5f25ad3792e1605c0c0bc39"
+        },
+        {
+          "path": "raw/results.json",
+          "bytes": 126092,
+          "sha256": "a29f13ff6c942e904539447f0d65e9882dcaa9d9168db14cf2507a4080fef034"
+        },
+        {
+          "path": "raw/picture-original.png",
+          "bytes": 76383,
+          "sha256": "37886c6119fdfea9749b72189da7a7db777443154ffbcb53b637f03d3be8e3ee"
+        },
+        {
+          "path": "raw/actual-crop-remove-all.png",
+          "bytes": 102,
+          "sha256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13"
+        },
+        {
+          "path": "raw/picture-first-process.zip",
+          "bytes": 14352533,
+          "sha256": "ed574982c3aa06774f01d39f38f03a927eabe2e06806bbee0c9738a492e22391"
+        },
+        {
+          "path": "raw/picture-final-process.zip",
+          "bytes": 14409683,
+          "sha256": "8821358948a0392304535f4aaf6734cc03795a57f5ba57a740cfa468f8ffe0d2"
+        }
+      ]
+    },
+    {
+      "artifactId": 11307853142,
+      "artifactArchive": "publisher-diagnostics.zip",
+      "bytes": 1614419,
+      "sha256": "1101a048150b99174c317e2e3f17b9b8a16db1882357d5d2cd302bdcf23ec4f9",
+      "members": [
+        {
+          "path": "actual-runtime-and-native-inputs.json",
+          "bytes": 1041,
+          "sha256": "863db6010889712441617a86f3cdb1074b664b053cdb3b3cb17ff1318ea238d2"
+        },
+        {
+          "path": "build.log",
+          "bytes": 20993,
+          "sha256": "ddb478418c38dfde4b2c3d303139177bf22787749642cbb2ee8bd03f250b6f2b"
+        },
+        {
+          "path": "bun-tool-install.log",
+          "bytes": 130,
+          "sha256": "76ffff4195a1a79bed46576508389beebb64bb57b3dbcf66c6af8fc5fe18f5ba"
+        },
+        {
+          "path": "bun-version.log",
+          "bytes": 6,
+          "sha256": "e0a72941ba72e471c37b0bce5e8c292659befc51dbf1c7ceea354b26642c39c3"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 18751,
+          "sha256": "9f6c556fa9d0d41c34454d7c1fc3eace487f97bdbb66b0e9ab5d1432b6801e33"
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2962,
+          "sha256": "8cf22d13c329c0bf3bc3e2e5659b093ff306a050a0ebe3be66a0783953f178a5"
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-clean-final.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-head-after.log",
+          "bytes": 41,
+          "sha256": "b4416856383641af46c7d407e4ee8c479851ec79588c7bb620c200f65c7c3306"
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "b4416856383641af46c7d407e4ee8c479851ec79588c7bb620c200f65c7c3306"
+        },
+        {
+          "path": "locked-assets-install.log",
+          "bytes": 501,
+          "sha256": "d99611615ff4b1d0342b731033ff4f622b284b495d075c3ae10a0b21aca372a3"
+        },
+        {
+          "path": "native-submodule-pins.log",
+          "bytes": 202,
+          "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999"
+        },
+        {
+          "path": "owner-assets-build.log",
+          "bytes": 9,
+          "sha256": "b33e48dc0ef555a56f86e0477dd74ee7eca926a57266cb64b6dde060b0b7a63b"
+        },
+        {
+          "path": "owner-built-assets.json",
+          "bytes": 1272,
+          "sha256": "3cba4f74f796c7f0637d64ca1313e36928caa6fa2625d1902d7f8e379e20b1a2"
+        },
+        {
+          "path": "publish.log",
+          "bytes": 328409,
+          "sha256": "e3945922a3326d0d9a364e42d857d2718cb6c6ef099bca7c5aca4f24ce7071f3"
+        },
+        {
+          "path": "receipt-verify.log",
+          "bytes": 700,
+          "sha256": "458adc4479918364237e7494c3efb2448ce95a52a39218f9db70ca4a4de318c6"
+        },
+        {
+          "path": "restore.log",
+          "bytes": 6083,
+          "sha256": "76cfe7f235394d40494ba06b4d5224e31d6d853b02dfb81154b4ca14f7ea8126"
+        },
+        {
+          "path": "result.json",
+          "bytes": 638,
+          "sha256": "663ff33b79955e2d1147e56f4037690a98cfc90f8527d78008c798097068e3c2"
+        },
+        {
+          "path": "runtime-pack-properties.json",
+          "bytes": 4877,
+          "sha256": "fc72ad0244a670ea76d12520485b1ded8928afd1d7be7c10674cb41a4017173b"
+        },
+        {
+          "path": "source-after-final.json",
+          "bytes": 1191892,
+          "sha256": "1b314cc9b9ac023ac2442c7f2a47f51ab95c4fbad97f4d5c6c1c5ebc148eb2f0"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 1191892,
+          "sha256": "1b314cc9b9ac023ac2442c7f2a47f51ab95c4fbad97f4d5c6c1c5ebc148eb2f0"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 1191892,
+          "sha256": "1b314cc9b9ac023ac2442c7f2a47f51ab95c4fbad97f4d5c6c1c5ebc148eb2f0"
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 2593658,
+          "sha256": "14b50d26d7e46d8e67b16619bd09a1ba3bb77ec8e33b11eeb27d2732c9dc226c"
+        },
+        {
+          "path": "wasm-tools-install.log",
+          "bytes": 1995,
+          "sha256": "aa676a00ac389a701404bfe7978b81cd7898d9a4599088aa64725491f5408aec"
+        },
+        {
+          "path": "wasm-tools-list.log",
+          "bytes": 330,
+          "sha256": "9f8024f2d8e0470e23b3d57b7f233bcfa9d5f062de1d843a87fe09d29453aa5d"
+        }
+      ]
+    }
+  ]
+}

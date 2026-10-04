@@ -1,0 +1,391 @@
+{
+  "observedAt": "2026-10-04T08:37:51.474Z",
+  "accountId": "8aea00ca3c4635410861efcc6a5f593b",
+  "worker": "cake-id-release-validation",
+  "databaseId": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+  "method": "Independent OpenAPI search then GET settings/subdomain/deployments and SELECT-only D1 query endpoint (POST transport; no SQL writes). Responses filtered to omit authors/credentials.",
+  "configuration": {
+    "settings": {
+      "success": true,
+      "status": 200,
+      "result": {
+        "compatibility_date": "2026-10-01",
+        "compatibility_flags": [
+          "nodejs_compat"
+        ],
+        "limits": {
+          "cpu_ms": 1000
+        },
+        "bindings": []
+      },
+      "errors": []
+    },
+    "subdomain": {
+      "success": true,
+      "status": 200,
+      "result": {
+        "enabled": false,
+        "previews_enabled": false
+      },
+      "errors": []
+    },
+    "deployments": {
+      "success": true,
+      "status": 200,
+      "result": {
+        "deployments": [
+          {
+            "id": "80ee7781-9fb0-4d76-b71f-ac87be55a07c",
+            "created_on": "2026-10-04T08:29:57.048128Z",
+            "versions": [
+              {
+                "version_id": "5f1e7db8-f098-429d-adb0-0bac1566a86a",
+                "percentage": 100
+              }
+            ]
+          }
+        ]
+      },
+      "errors": []
+    },
+    "schema": {
+      "success": true,
+      "status": 200,
+      "result": [
+        {
+          "results": [
+            {
+              "name": "_cf_KV",
+              "type": "table"
+            },
+            {
+              "name": "account",
+              "type": "table"
+            },
+            {
+              "name": "account_userId_idx",
+              "type": "index"
+            },
+            {
+              "name": "cake_email_outbox",
+              "type": "table"
+            },
+            {
+              "name": "cake_email_outbox_recipient_created",
+              "type": "index"
+            },
+            {
+              "name": "cake_login_attempts",
+              "type": "table"
+            },
+            {
+              "name": "cake_reserved_usernames",
+              "type": "table"
+            },
+            {
+              "name": "jwks",
+              "type": "table"
+            },
+            {
+              "name": "oauthAccessToken",
+              "type": "table"
+            },
+            {
+              "name": "oauthAccessToken_authorizationCodeId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthAccessToken_clientId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthAccessToken_refreshId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthAccessToken_sessionId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthAccessToken_userId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthClient",
+              "type": "table"
+            },
+            {
+              "name": "oauthClientAssertion",
+              "type": "table"
+            },
+            {
+              "name": "oauthClientResource",
+              "type": "table"
+            },
+            {
+              "name": "oauthClientResource_clientId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthClientResource_clientId_resourceId_uidx",
+              "type": "index"
+            },
+            {
+              "name": "oauthClientResource_resourceId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthClient_userId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthConsent",
+              "type": "table"
+            },
+            {
+              "name": "oauthConsent_clientId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthConsent_userId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthRefreshToken",
+              "type": "table"
+            },
+            {
+              "name": "oauthRefreshToken_authorizationCodeId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthRefreshToken_clientId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthRefreshToken_sessionId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthRefreshToken_userId_idx",
+              "type": "index"
+            },
+            {
+              "name": "oauthResource",
+              "type": "table"
+            },
+            {
+              "name": "session",
+              "type": "table"
+            },
+            {
+              "name": "session_userId_idx",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_account_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_cake_login_attempts_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_cake_reserved_usernames_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_jwks_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthAccessToken_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthAccessToken_2",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthClientAssertion_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthClientResource_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthClient_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthClient_2",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthConsent_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthRefreshToken_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthRefreshToken_2",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthResource_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_oauthResource_2",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_session_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_session_2",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_user_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_user_2",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_user_3",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_autoindex_verification_1",
+              "type": "index"
+            },
+            {
+              "name": "sqlite_sequence",
+              "type": "table"
+            },
+            {
+              "name": "user",
+              "type": "table"
+            },
+            {
+              "name": "verification",
+              "type": "table"
+            },
+            {
+              "name": "verification_identifier_idx",
+              "type": "index"
+            }
+          ],
+          "success": true,
+          "meta": {
+            "served_by": "v3-prod",
+            "served_by_region": "WEUR",
+            "served_by_colo": "CDG",
+            "served_by_primary": true,
+            "timings": {
+              "sql_duration_ms": 0.3072
+            },
+            "duration": 0.3072,
+            "changes": 0,
+            "last_row_id": 0,
+            "changed_db": false,
+            "size_after": 253952,
+            "rows_read": 114,
+            "rows_written": 0,
+            "total_attempts": 1
+          }
+        }
+      ],
+      "errors": []
+    }
+  },
+  "identityCensus": {
+    "success": true,
+    "status": 200,
+    "result": [
+      {
+        "results": [
+          {
+            "object": "user",
+            "count": 0
+          },
+          {
+            "object": "account",
+            "count": 0
+          },
+          {
+            "object": "session",
+            "count": 0
+          },
+          {
+            "object": "oauthClient",
+            "count": 0
+          },
+          {
+            "object": "jwks",
+            "count": 0
+          }
+        ],
+        "success": true,
+        "meta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.2789
+          },
+          "duration": 0.2789,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": false,
+          "size_after": 253952,
+          "rows_read": 5,
+          "rows_written": 0,
+          "total_attempts": 1
+        }
+      },
+      {
+        "results": [
+          {
+            "username": "croakyjake",
+            "ownerIsNull": 1
+          }
+        ],
+        "success": true,
+        "meta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.2991
+          },
+          "duration": 0.2991,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": false,
+          "size_after": 253952,
+          "rows_read": 1,
+          "rows_written": 0,
+          "total_attempts": 1
+        }
+      }
+    ],
+    "errors": []
+  },
+  "conclusion": "Closed rollback deployment/version exactly matches root issuance; CPU1000/date/flags verified. Exposure and previews false. User/account/session/client/JWKS empty, reserved owner NULL. All SQL metadata changes0/rows_written0.",
+  "limits": [
+    "Settings projection did not include observability; its absence alone does not verify logging off.",
+    "Schema names/census only; not column/constraint equivalence or original migration execution receipts.",
+    "No HTTPS identity/client/mail/service journey or full acceptance established.",
+    "Root identity upload may follow; this is the closed rollback observation, not a later version."
+  ]
+}

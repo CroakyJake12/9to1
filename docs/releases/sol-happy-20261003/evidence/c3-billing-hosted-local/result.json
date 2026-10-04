@@ -1,0 +1,83 @@
+{
+  "state": "BOUNDED_LOCAL_NATIVE_D1_WORKER_PROTOCOL_VERIFIED",
+  "unitTests": {
+    "command": "node --test test/*.test.mjs",
+    "cwd": "/workspace/team-c/c3-billing-hosted/cloud/billing",
+    "count": 14,
+    "pass": 14,
+    "fail": 0,
+    "skip": 0,
+    "exit": 0,
+    "log": "raw/billing-hosted-node-exact-01c18.log"
+  },
+  "workerd": {
+    "outerArgv": [
+      "node",
+      "test/run-workerd.mjs",
+      "/workspace/team-c/evidence/c3"
+    ],
+    "environment": {
+      "BILLING_TOOLCHAIN_ROOT": "/workspace/team-c/c2-auth/cloud/cake-id-auth"
+    },
+    "candidate": "01c18d82908232669d3258aa1e2d568451451376",
+    "assertions": 43,
+    "exit": 0,
+    "log": "raw/billing-workerd-exact-01c18-positive.log",
+    "strictReceipt": "raw/billing-workerd-Dym0Z5/custody.json",
+    "coverage": [
+      "real production fetch with native D1",
+      "concurrent durable duplicate acceptance",
+      "changed-payload conflict",
+      "bad signature/live-mode/body-size refusal without receipts",
+      "schema reapplication",
+      "persistent restart",
+      "newer/older delivery both pending",
+      "atomic concurrent claims",
+      "expired lease and stale-token refusal",
+      "failure release and retry",
+      "processed receipt cannot reclaim"
+    ]
+  },
+  "negativeControls": {
+    "intentionalWorkerRefusal": {
+      "exit": 1,
+      "candidate": "2ecd9d80",
+      "strictReceipt": "raw/billing-workerd-eR2X7W/custody.json",
+      "log": "raw/billing-workerd-exact-2ecd-negative.log"
+    },
+    "exclusiveRecordingCollision": {
+      "baseline": "2ecd9d80 printed PASS before exit1",
+      "baselineLog": "raw/billing-recording-before-2ecd.log",
+      "fixed": "01c18d82 control exit0 proves expected refusal/noPASS/sentinel unchanged/strictreaping",
+      "fixedLog": "raw/billing-recording-fixed-attempt1.log"
+    }
+  },
+  "failures": "Every captured development attempt is retained; earlier successful cohorts do not replace later refusals. Wrong-cwd unit launch and invalid Miniflare telemetry shape are preserved, not counted as tests.",
+  "packaging": "Synthetic-only configuration/bundle control exited0; supplied IDs are fixtures, not verified provider resources or a deployable authorized billing package. Invalid empty input refused.",
+  "limitations": [
+    "No Cloudflare remote resources or Stripe calls",
+    "No deployment authorization for separate billing resources",
+    "No invoice/payment/checkout/entitlement effects",
+    "Canonical consumer/reconciliation absent",
+    "D1 architecture/commercial ownership decisions remain OPEN",
+    "No account balance or strict spending cap inferred",
+    "43 assertions are local protocol assertions, not 43 semantic requirements or global acceptance"
+  ],
+  "peer": {
+    "state": "BOUNDED_SOURCE_ACK",
+    "reviewer": "C5",
+    "receiptCommit": "507912d395c5d103e98dacb261bdc83b91ea633b",
+    "candidate": "01c18d82908232669d3258aa1e2d568451451376",
+    "independentUnitTests": {
+      "passed": 14,
+      "failed": 0,
+      "exit": 0
+    },
+    "nativeEvidence": "Exact43-positive strictrootnormal0/no signals and before/fixed collision originals reviewed; no independent native rerun claimed.",
+    "qualification": "Recording-control own sequential finally logwrites can mask its prior assertion on an additional logging failure. This does not emit wrapper PASS or undermine the retained actual collision evidence; not general failure aggregation proof.",
+    "originalHold": "C5 original445b preserved"
+  },
+  "peerHistory": [
+    "Independent C5 review in progress; premature PASS finding corrected separately"
+  ]
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "argv": [
+      "dotnet",
+      "--info"
+    ],
+    "exitCode": 0,
+    "primary": null,
+    "cleanup": [],
+    "seal": {
+      "expectedManagedLaunch": true,
+      "drained": true,
+      "launcherPid": 49559,
+      "launcherStartTicks": "1183399"
+    }
+  }
+]

@@ -1,0 +1,75 @@
+{
+  "status": "BLOCKED_PARTIAL_SOURCE_HANDOFF",
+  "serviceTestedCommit": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+  "serviceTestedTree": "c1e9df46618f14985aff5f222706b448a34c65da",
+  "evidencePackagingParent": "136631c2dbfc6d56a39f5f20530cb4202cc23977",
+  "serviceCounts": {
+    "sites": {
+      "discovered": 39,
+      "executed": 39,
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0
+    },
+    "billing": {
+      "discovered": 12,
+      "executed": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "auth": {
+      "programsExecuted": 1,
+      "assertionsExecuted": 222,
+      "exitCode": 0,
+      "environment": "native Linux Workerd + local D1; local email capture"
+    }
+  },
+  "browserValidator": {
+    "testedCommit": "136631c2dbfc6d56a39f5f20530cb4202cc23977",
+    "discovered": 32,
+    "executed": 32,
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "record integrity only; no semantic/product verification"
+  },
+  "firstAuthAttempt": {
+    "exitCode": 1,
+    "phase": "before readiness",
+    "cause": "protected default Wrangler logging path",
+    "preserved": "auth-workerd.log"
+  },
+  "affectedSourceComparison": {
+    "unchangedTrackedFiles": 51,
+    "changedFiles": [
+      "cloud/cake-id-auth/README.md"
+    ],
+    "meaning": "README compatibility prose only; all recorded runtime/test/package/schema bytes unchanged"
+  },
+  "acceptedHead": null,
+  "productionDeployment": "NOT_DEPLOYED",
+  "commercialActivation": "NOT_ENABLED",
+  "localPCDelivery": "NOT_VERIFIED",
+  "hashes": {
+    "auth-ui.log": "dab20cc5e615d33a51bb2c51c02a30ca0c7ee787b152eb059f74e8d7608e6bf8",
+    "browser-validator.log": "e0ab1d43ae61db99be751d1ed7b691f988be17750de15097b42c5c4912097e47",
+    "browser-validator-semantic-probes.json": "9db9bc67cfe37139addf5378ff98758db89db6ab36a6a2b14064cf91a1f70c1f",
+    "browser-bootstrap-review.md": "2a806d18aac91c7ae7aad3723b4ac39fb51f828cbf0f7403d63c1897b1482336",
+    "browser-account-probe.log": "cd9cfd383c457b65bdf2770fdf17a0c8d55b39bc6bdc0cf04d8c535435ad4a53",
+    "sites-final.trx": "2618921fc6bed143f2d8269b5760ff8c83edfbf9452a56c337e4d790cc556ca0",
+    "browser-validator-independent-unit.log": "149243b6680a7306681f0b81217fa67f0abd609cf260c299cb7b5506c9aa932b",
+    "auth-workerd-retry.log": "24fcb1a629fb22fd94672966a4baf6376ce9c9b2683e2c9524154a9e981e43e2",
+    "auth-workerd.log": "1ec18444bbf61662bb8e50618330eeebd01a240734d643fe3ebb8f5f969a3ae7",
+    "browser-validator-independent-review.md": "100435705607096af22d6cdcb5b923b0807925e0e6047624cb6981324012d613",
+    "browser-account-review.json": "5560d8e876f84010f99455ddacc2c2a7dc3a7bdda0c430b52edcee295ffff78a",
+    "auth-install.log": "33d228bfe6ec9c8179511fd096a8748f61a2f20f2b5af22ae0d51366018faba5",
+    "billing.log": "ced501ada860c24698ddd946dbb931b3a636858a7ba4dd3c37e5560837986a6b",
+    "sites.log": "aa32df08a21d45a8eeea3e62611b7b09bd5850bdd7ce7bb8d4eba05776510d11",
+    "manifest.json": "4d2b9ae67f9257506adb0cfbbb384cce2c78fa180cdcbef0f66ba3b9d8cb279f",
+    "browser-bootstrap-unit.log": "b635540cb6f56c79e4520dcbe4e5df49ba1d7a376e92dd00a77cd9e1d3019403",
+    "auth-typecheck.log": "626d520fa1bc395811b71b0b5c5580d3b7932af799932d31f318f2a79c327c14",
+    "browser-account-tests.log": "1cb5c56966329a0ec9c91816dcb73bcf27597df64d7af65ddb33a11bebabfdf2",
+    "auth-schema.log": "f690bef4447b74b7c1e80af0bf74073e6620c417aec14e8465dc5450358159dc"
+  }
+}

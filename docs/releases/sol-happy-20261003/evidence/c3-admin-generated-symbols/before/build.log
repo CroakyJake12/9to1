@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj (in 230 ms).
+  Restored /workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj (in 230 ms).
+  DevGenerators -> /workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/bin/DevGenerators/debug/DevGenerators.dll
+  Avalonia.Build.Tasks -> /workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.96
