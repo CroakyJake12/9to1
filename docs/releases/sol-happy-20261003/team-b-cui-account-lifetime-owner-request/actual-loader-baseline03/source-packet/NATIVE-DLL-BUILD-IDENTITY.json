@@ -1,0 +1,259 @@
+{
+  "classification": "RECORDED_NATIVE12_BUILD_PROVENANCE_NO_BUNDLE_OR_CACHE_INCLUDED",
+  "compiledProducerCommand": {
+    "env": {
+      "DOTNET_CLI_HOME": "/tmp/b5-native08-retry-cli",
+      "NUGET_PACKAGES": "/workspace/team-b-tooling/nuget",
+      "NUGET_HTTP_CACHE_PATH": "/tmp/b5-native08-retry-http",
+      "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+      "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1"
+    },
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-lifetime-proposal/native-root08/AccountLifetime.Tests.csproj",
+      "--artifacts-path",
+      "/tmp/b5-native08-retry-artifacts",
+      "-p:UseSharedCompilation=false",
+      "--no-launch-profile"
+    ]
+  },
+  "producerOwn10ManifestSha256": "511bb3e7e18c3468599096c24ad0ead0355b3210b834dbf9acf4ed77cc1f9287",
+  "producerPreflightSha256": "5423cbe9180e5d12ada3bfba2d71d64095380ce09d150d893fda4cd434b3b824",
+  "producerExecutedManifestSha256": "01fe49ae394472739da87428c524a8302fddb1f179fe894da55cafdd15f9e61c",
+  "producerLog": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-lifetime-proposal/native-root08/actual-source-lifecycle12-retry.log",
+    "bytes": 3851,
+    "sha256": "5848db4320960114b91f681763dfcd28709629e18948da8fb302dbade40df864"
+  },
+  "producerGeneratedInventory": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-lifetime-proposal/native-root08/retry12-generated-all-files-inventory.json",
+    "sha256": "30fe317ccd3ba809d8f8119343c1335536b9c3f4c0d3a3767a532cc9f74ba0d5",
+    "files": 1563
+  },
+  "actualCompiledCoreLoaderSourcePins": [
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Core/CakeOS.Cui.Core.csproj",
+      "bytes": 495,
+      "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Core/CuiRuntimeContracts.cs",
+      "bytes": 1441,
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    }
+  ],
+  "actualCompiledAccounts": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-lifetime-proposal/AccountBrowserBindings.cs",
+      "sha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-lifetime-proposal/AccountSettingsFeature.cs",
+      "sha256": "400a5537dff6b56d438e6dbbafa5f7b3f06f74caae4e0b8439e49b9454552d24"
+    }
+  ],
+  "producerSourceClosureQualification": "Source closure superset, notclaimall4039inputscompiled; actual MSBuild graph/deps mustbe retained onrun. App08architectureinput NOTcompiledbyAccountfixture.",
+  "producerBudgetFailureRetained": {
+    "authorizedCumulativeBytes": 300000000,
+    "observedGeneratedApparentBytes": 873023179,
+    "observedAllocatedFileBytes": 876683264,
+    "budgetGate": "FAIL_OVER_BUDGET",
+    "completeDirectoriesDuAllocatedBytes": 654286848,
+    "noDeletion": true,
+    "runtimeResultNotRelabeled": true,
+    "cause": "Actualvendor build copies native cross-platformruntimes acrossprojectoutputs; original300MB sourceestimate didnotcapture whole nativeclosure.",
+    "currentFreeWorkspaceBytes": 1212891136,
+    "currentFreeTmpBytes": 1421443072
+  },
+  "baseline33Managed2NativeIdentities": [
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/AccountLifetime.Tests.dll",
+      "bytes": 314880,
+      "sha256": "5dc412805ca92e3b89d79c397f48f440e3140003b935c6c777b8fb14406ad1be"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Base.dll",
+      "bytes": 2435072,
+      "sha256": "328d064edf33dfcf6a1cea9c2da8aabc25759e5fbdadf31d934d42bdf402de6a"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Controls.dll",
+      "bytes": 1405440,
+      "sha256": "d118262a218d7b74e46e36ab63d6acc0f07cf88ea48e4e0ce5a26cc8330b3c9d"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.DesignerSupport.dll",
+      "bytes": 75776,
+      "sha256": "c29ed4872e1055315fffa347cf05690904145f04b23bb992d5241c8451fee4ab"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Desktop.dll",
+      "bytes": 15360,
+      "sha256": "557bbd9d96d5029c9bfc90fde5d948ca432e99e6729812d387776846fd11ce8d"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Dialogs.dll",
+      "bytes": 246784,
+      "sha256": "4eacf642b9b90b47f4d1b769161786c035e52dd98c882d623565998d8a7dabd9"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Fonts.Inter.dll",
+      "bytes": 1897472,
+      "sha256": "8282bbf606225289050f62cf6660cbca53a87b4d9fe2a98a2ca2883124e1bb2c"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.FreeDesktop.AtSpi.dll",
+      "bytes": 660480,
+      "sha256": "057faf272a711160fbb45b6671b1e00cba154420423278353b1591fdc774f6b2"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.FreeDesktop.dll",
+      "bytes": 220160,
+      "sha256": "673aeff1ed93066f8a57b5c1b2636ad992648730bcecb716125c863daa06699b"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.HarfBuzz.dll",
+      "bytes": 22528,
+      "sha256": "b00b18badedb00db8da464186e00fce65b3d0dba4da7ca834d1e0eede8dcf8b8"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Headless.dll",
+      "bytes": 73728,
+      "sha256": "d2ade497c614ba36163642abd6c593ae0d31f2e1704886fde18cc7f02f2b20e9"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Markup.Xaml.dll",
+      "bytes": 78848,
+      "sha256": "d984fbacb5c3a7df14052015f18a7aef0d6610728a0a9f22f7c8f496a9196ee4"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Markup.dll",
+      "bytes": 47616,
+      "sha256": "d9b8cd5bdb51304f63f9836c6ca8a7f7d5044fa8a0722e67c9ae4f2854838921"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Metal.dll",
+      "bytes": 15360,
+      "sha256": "82a94e91d029c436f9e3b8df3027296a7ffbca67f3b04999412201ea69ad166a"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.MicroCom.dll",
+      "bytes": 15360,
+      "sha256": "05f132f728beb9fdeda799afc8477f6aea7ddc484dc8b0c473c3bc46b3bc0f18"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Native.dll",
+      "bytes": 359936,
+      "sha256": "0279796c90428edcd9bb1f39334945d4d322fe2c0fdac51e1f7741a89e03d430"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.OpenGL.dll",
+      "bytes": 120832,
+      "sha256": "a9af32f8deefe30bf687806e5ab3700d781abc92740871a817c3e3443826e656"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Remote.Protocol.dll",
+      "bytes": 80384,
+      "sha256": "324a12e1db0271750b78a48c0fbb27f31da3d07d1bf6a30ff10fe1628466e35e"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Skia.dll",
+      "bytes": 130560,
+      "sha256": "35683e9733283236468fc6e032fb31a2ab0967cd94c7baebcd85a6da8eec27f3"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Themes.Fluent.dll",
+      "bytes": 963072,
+      "sha256": "adf37b1696b66b91a42f46b028d3469d439aca8a17fd46ddeee78f9c6012268d"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Vulkan.dll",
+      "bytes": 194048,
+      "sha256": "56665d72f012577fd4b35dc776cbad38c57676343bde60a79372b03253e88a94"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Win32.Automation.dll",
+      "bytes": 130048,
+      "sha256": "10960b541bc58b0699e1d2c74c5199ddad24043f16eaf24a2b71cb345106c750"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Win32.dll",
+      "bytes": 967168,
+      "sha256": "a181604f75ede8490464686c81d02e02a3e96feeb6fdf473d52eacc62c06629c"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.X11.dll",
+      "bytes": 390144,
+      "sha256": "2f0f53ccca1d8e9260f5573d3c368d616eff11f55906668473b55f00814a6d17"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.dll",
+      "bytes": 4096,
+      "sha256": "72373dcd39ff155e11c4889169e84ed38a5529c42bf79d78fe51c7d6099e871b"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Core.dll",
+      "bytes": 80896,
+      "sha256": "2a038cd23b13dbe2e17db3bfab7ad2c9751109a388bb0e0f32a1997476213ec2"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Language.dll",
+      "bytes": 12288,
+      "sha256": "bd5fb81b775586e67167db16b4365f6d3dc043b777ca752aa67464850410ecdf"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Runtime.dll",
+      "bytes": 160256,
+      "sha256": "ce07f36f32e2ac766aa871e3656e65efdeaa863492ff2142cbeca0dc3bb8370c"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Themes.dll",
+      "bytes": 92672,
+      "sha256": "2151d3bd387fb06fe6d059215ebb59b5558fc9cef7cdb66570c760babe9706ff"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/HarfBuzzSharp.dll",
+      "bytes": 122400,
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/MicroCom.Runtime.dll",
+      "bytes": 16384,
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/SkiaSharp.dll",
+      "bytes": 490528,
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Tmds.DBus.Protocol.dll",
+      "bytes": 219136,
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/runtimes/linux-x64/native/libHarfBuzzSharp.so",
+      "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018",
+      "bytes": 2808040
+    },
+    {
+      "path": "/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/runtimes/linux-x64/native/libSkiaSharp.so",
+      "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e",
+      "bytes": 11170240
+    }
+  ],
+  "noPrivateCoreLoaderFork": true,
+  "baselineExecutableEntryPoint": "ActualCallerProbe only; referenced AccountLifetime.Tests.dll entry point not invoked"
+}

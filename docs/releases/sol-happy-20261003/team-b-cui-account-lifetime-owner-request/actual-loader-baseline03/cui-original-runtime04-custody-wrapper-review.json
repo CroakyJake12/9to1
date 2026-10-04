@@ -1,0 +1,19 @@
+{
+  "verdict": "VERSIONED_WRAPPER04_SOURCE_AND_CUSTODY_CLEAR_EXECUTION_PENDING",
+  "archiveSHA256": "2b5557da11375d8574618b432e5f2feccdab981a1fcacf6b071235a6ae7160f0",
+  "packetManifestSHA256": "98710cf623eaf55de56dd2ddbfe88053f4ea4dd7842350a8ca3db0d40e009ccc",
+  "wrapperSHA256": "a73c51ed38f163859ec989e3ec2d6ad0f8c6764070294b52d3e98dde449f7511",
+  "membersVerified": 44,
+  "unchangedOriginalRuntimeFiles": 40,
+  "repairsReviewed": [
+    "Exact expectedoriginal3executed/2PASS1FAIL/0skip+nativeResetreceipt+exit1 required; unexpected outcome =>exit2 never0",
+    "Finally postverify executes after normal runtime, ownchilddeadline and setup failure; explicit integrity flag retained",
+    "Original runtime03 immutable retained; no candidate shared API compiled"
+  ],
+  "executionStatus": "NOT_RUN_PENDING_ROOT_NATIVE_SLOT",
+  "limits": [
+    "120s subprocess timeout kills/waits only own directchild; no descendant process guarantee is claimed.",
+    "Local original native headless lifecycle controls only; no provider/browser/ownercandidate acceptance.",
+    "First failedsignin secondclick assertion not reached remains qualified."
+  ]
+}

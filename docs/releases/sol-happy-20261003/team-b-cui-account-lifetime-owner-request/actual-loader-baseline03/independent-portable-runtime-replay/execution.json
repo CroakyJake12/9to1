@@ -1,0 +1,227 @@
+{
+  "command": [
+    "python3",
+    "/workspace/team-b-b6-cui-original-runtime04/portable-original-runtime04/run-original.py",
+    "--dotnet",
+    "/workspace/.tools/dotnet/dotnet",
+    "--log",
+    "/workspace/team-b-b6-cui-original-runtime04/actual-original-native.log"
+  ],
+  "scope": "Independent pinned original DLL only; no build/restore/provider/GUI",
+  "startedUTC": "2026-10-04T03:36:16Z",
+  "archiveSHA256": "2b5557da11375d8574618b432e5f2feccdab981a1fcacf6b071235a6ae7160f0",
+  "wrapperSHA256": "a73c51ed38f163859ec989e3ec2d6ad0f8c6764070294b52d3e98dde449f7511",
+  "explicitEnvironment": {
+    "DOTNET_ROOT": "/workspace/.tools/dotnet",
+    "DOTNET_CLI_HOME": "/workspace/team-b-b6-cui-original-runtime04/cli-home",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_NOLOGO": "1"
+  },
+  "ownedWrapperPID": 122519,
+  "wrapperExit": 1,
+  "runtimeAfter": [
+    {
+      "relativePath": "runtime/AccountLifetime.Tests.dll",
+      "bytes": 314880,
+      "sha256": "5dc412805ca92e3b89d79c397f48f440e3140003b935c6c777b8fb14406ad1be"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Base.dll",
+      "bytes": 2435072,
+      "sha256": "328d064edf33dfcf6a1cea9c2da8aabc25759e5fbdadf31d934d42bdf402de6a"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Controls.dll",
+      "bytes": 1405440,
+      "sha256": "d118262a218d7b74e46e36ab63d6acc0f07cf88ea48e4e0ce5a26cc8330b3c9d"
+    },
+    {
+      "relativePath": "runtime/Avalonia.DesignerSupport.dll",
+      "bytes": 75776,
+      "sha256": "c29ed4872e1055315fffa347cf05690904145f04b23bb992d5241c8451fee4ab"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Desktop.dll",
+      "bytes": 15360,
+      "sha256": "557bbd9d96d5029c9bfc90fde5d948ca432e99e6729812d387776846fd11ce8d"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Dialogs.dll",
+      "bytes": 246784,
+      "sha256": "4eacf642b9b90b47f4d1b769161786c035e52dd98c882d623565998d8a7dabd9"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Fonts.Inter.dll",
+      "bytes": 1897472,
+      "sha256": "8282bbf606225289050f62cf6660cbca53a87b4d9fe2a98a2ca2883124e1bb2c"
+    },
+    {
+      "relativePath": "runtime/Avalonia.FreeDesktop.AtSpi.dll",
+      "bytes": 660480,
+      "sha256": "057faf272a711160fbb45b6671b1e00cba154420423278353b1591fdc774f6b2"
+    },
+    {
+      "relativePath": "runtime/Avalonia.FreeDesktop.dll",
+      "bytes": 220160,
+      "sha256": "673aeff1ed93066f8a57b5c1b2636ad992648730bcecb716125c863daa06699b"
+    },
+    {
+      "relativePath": "runtime/Avalonia.HarfBuzz.dll",
+      "bytes": 22528,
+      "sha256": "b00b18badedb00db8da464186e00fce65b3d0dba4da7ca834d1e0eede8dcf8b8"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Headless.dll",
+      "bytes": 73728,
+      "sha256": "d2ade497c614ba36163642abd6c593ae0d31f2e1704886fde18cc7f02f2b20e9"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Markup.Xaml.dll",
+      "bytes": 78848,
+      "sha256": "d984fbacb5c3a7df14052015f18a7aef0d6610728a0a9f22f7c8f496a9196ee4"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Markup.dll",
+      "bytes": 47616,
+      "sha256": "d9b8cd5bdb51304f63f9836c6ca8a7f7d5044fa8a0722e67c9ae4f2854838921"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Metal.dll",
+      "bytes": 15360,
+      "sha256": "82a94e91d029c436f9e3b8df3027296a7ffbca67f3b04999412201ea69ad166a"
+    },
+    {
+      "relativePath": "runtime/Avalonia.MicroCom.dll",
+      "bytes": 15360,
+      "sha256": "05f132f728beb9fdeda799afc8477f6aea7ddc484dc8b0c473c3bc46b3bc0f18"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Native.dll",
+      "bytes": 359936,
+      "sha256": "0279796c90428edcd9bb1f39334945d4d322fe2c0fdac51e1f7741a89e03d430"
+    },
+    {
+      "relativePath": "runtime/Avalonia.OpenGL.dll",
+      "bytes": 120832,
+      "sha256": "a9af32f8deefe30bf687806e5ab3700d781abc92740871a817c3e3443826e656"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Remote.Protocol.dll",
+      "bytes": 80384,
+      "sha256": "324a12e1db0271750b78a48c0fbb27f31da3d07d1bf6a30ff10fe1628466e35e"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Skia.dll",
+      "bytes": 130560,
+      "sha256": "35683e9733283236468fc6e032fb31a2ab0967cd94c7baebcd85a6da8eec27f3"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Themes.Fluent.dll",
+      "bytes": 963072,
+      "sha256": "adf37b1696b66b91a42f46b028d3469d439aca8a17fd46ddeee78f9c6012268d"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Vulkan.dll",
+      "bytes": 194048,
+      "sha256": "56665d72f012577fd4b35dc776cbad38c57676343bde60a79372b03253e88a94"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Win32.Automation.dll",
+      "bytes": 130048,
+      "sha256": "10960b541bc58b0699e1d2c74c5199ddad24043f16eaf24a2b71cb345106c750"
+    },
+    {
+      "relativePath": "runtime/Avalonia.Win32.dll",
+      "bytes": 967168,
+      "sha256": "a181604f75ede8490464686c81d02e02a3e96feeb6fdf473d52eacc62c06629c"
+    },
+    {
+      "relativePath": "runtime/Avalonia.X11.dll",
+      "bytes": 390144,
+      "sha256": "2f0f53ccca1d8e9260f5573d3c368d616eff11f55906668473b55f00814a6d17"
+    },
+    {
+      "relativePath": "runtime/Avalonia.dll",
+      "bytes": 4096,
+      "sha256": "72373dcd39ff155e11c4889169e84ed38a5529c42bf79d78fe51c7d6099e871b"
+    },
+    {
+      "relativePath": "runtime/CakeOS.Cui.Core.dll",
+      "bytes": 80896,
+      "sha256": "2a038cd23b13dbe2e17db3bfab7ad2c9751109a388bb0e0f32a1997476213ec2"
+    },
+    {
+      "relativePath": "runtime/CakeOS.Cui.Language.dll",
+      "bytes": 12288,
+      "sha256": "bd5fb81b775586e67167db16b4365f6d3dc043b777ca752aa67464850410ecdf"
+    },
+    {
+      "relativePath": "runtime/CakeOS.Cui.Runtime.dll",
+      "bytes": 160256,
+      "sha256": "ce07f36f32e2ac766aa871e3656e65efdeaa863492ff2142cbeca0dc3bb8370c"
+    },
+    {
+      "relativePath": "runtime/CakeOS.Cui.Themes.dll",
+      "bytes": 92672,
+      "sha256": "2151d3bd387fb06fe6d059215ebb59b5558fc9cef7cdb66570c760babe9706ff"
+    },
+    {
+      "relativePath": "runtime/HarfBuzzSharp.dll",
+      "bytes": 122400,
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "relativePath": "runtime/MicroCom.Runtime.dll",
+      "bytes": 16384,
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "relativePath": "runtime/SkiaSharp.dll",
+      "bytes": 490528,
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "relativePath": "runtime/Tmds.DBus.Protocol.dll",
+      "bytes": 219136,
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "relativePath": "runtime/libHarfBuzzSharp.so",
+      "bytes": 2808040,
+      "sha256": "1d5c3afef13545bf34bf8f068b14e25ee619c3b6dee235c44e260fe61cb24018"
+    },
+    {
+      "relativePath": "runtime/libSkiaSharp.so",
+      "bytes": 11170240,
+      "sha256": "1c2b91ea812aab2bbaa14499c9c9a2d1ac5a694a6868a96705d6ec3bd6484c6e"
+    },
+    {
+      "relativePath": "runtime/ActualCallerProbe",
+      "bytes": 78256,
+      "sha256": "11475851f7b336a542406d41d38bd879779621adb277d908f0de7f3027cf8f02"
+    },
+    {
+      "relativePath": "runtime/ActualCallerProbe.dll",
+      "bytes": 26112,
+      "sha256": "ca8467ad1bfc0500aef1f779b67c8f6976e823845f23b567c59be84d7446e867"
+    },
+    {
+      "relativePath": "runtime/ActualCallerProbe.deps.json",
+      "bytes": 12573,
+      "sha256": "386f35c5b85e49e8cf0159e2e40b31748d593d98a4a65510c923576dc82e168d"
+    },
+    {
+      "relativePath": "runtime/ActualCallerProbe.runtimeconfig.json",
+      "bytes": 259,
+      "sha256": "f9bc8e9f0c46247078ed47309f19a7576b4b94e4300e9de0003917d6bd2d667a"
+    },
+    {
+      "relativePath": "runtime/Accounts.cui",
+      "bytes": 6365,
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c"
+    }
+  ],
+  "runtimeBeforeAfterIdentical": true,
+  "completedUTC": "2026-10-04T03:36:16Z"
+}

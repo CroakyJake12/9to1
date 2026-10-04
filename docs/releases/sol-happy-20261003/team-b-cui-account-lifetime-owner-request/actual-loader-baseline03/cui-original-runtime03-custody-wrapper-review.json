@@ -1,0 +1,20 @@
+{
+  "verdict": "ORIGINAL_RUNTIME_BYTE_CUSTODY_CLEAR_WRAPPER_REPAIRS_REQUIRED",
+  "archiveSHA256": "aad4cd24a2da74e8f8503cd8fca3555f657673347251a5ba2bf08c9b2ba08255",
+  "packetManifestSHA256": "8eb719d4badcd9f54dcd35042a779e053c541560c011a63c8d17624137b1c159",
+  "zipMembers": 44,
+  "runtimeFiles": 40,
+  "originalRuntimeSourcePointersVerified": 35,
+  "allMemberPathsUniqueSafeRegular": true,
+  "noExtractionOrExecution": true,
+  "wrapperSHA256": "30f04ee1f236694d071f83ea9a6cc5d7cc02fb575f69150aec64c22eb50d327b",
+  "repairsRequired": [
+    "Unexpected runtime exit0 or missing/wrong3/2/1 counts must not give wrapperexit0; gate expectedOriginalMeaningfulRed explicitly while preserving expectedoriginal1.",
+    "Timeout path exits before postverify; move posthashverification into finalization and record timeout+integrity outcomes."
+  ],
+  "limits": [
+    "Exact original compiled native03 baseline only; no canonical candidate API or provider/browser authority.",
+    "Recorded expectedoriginal2PASS1FAIL retains first case second-click NOTREACHED.",
+    "Archive entire byte verification; no SDK/runtime rerun, original source packet separate immutable."
+  ]
+}

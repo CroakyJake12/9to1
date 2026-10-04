@@ -1,0 +1,92 @@
+{
+  "recordedUTC": "2026-10-04T03:21:56.038396+00:00",
+  "classification": "PORTABLE_SOURCE_AND_RECORDED_NATIVE_FAILURE_A1_AUGMENT",
+  "files": [
+    {
+      "relativePath": "ACTUAL-LOADER-PROBE-AUTHORED-MANIFEST-03.json",
+      "bytes": 10573,
+      "sha256": "7d2c39355fa317fecad7eadfcef9dfc130d5f70d656af94f15a8c1bc79970d4f"
+    },
+    {
+      "relativePath": "ActualCallerProbe.cs",
+      "bytes": 7422,
+      "sha256": "14dfe0c768bd63a2c11eb47bdd0e0446b78d71546c10d0e40e02630d705a3bfc"
+    },
+    {
+      "relativePath": "ActualCallerProbe.csproj",
+      "bytes": 6932,
+      "sha256": "a6d22ef476891bda57fc79184b171ee703794513df81daccf6525b3166a83593"
+    },
+    {
+      "relativePath": "NATIVE-DLL-BUILD-IDENTITY.json",
+      "bytes": 11891,
+      "sha256": "c9070b0cbb3a7c9912b3f46fbff50c75042b3299d93b960449447f296f0fd8cf"
+    },
+    {
+      "relativePath": "README.md",
+      "bytes": 1694,
+      "sha256": "ede2062a67239ed957ed42cec5a84492bd6cfa0ffb93e1ff1f7f78c70ca90251"
+    },
+    {
+      "relativePath": "actual-loader-baseline03-executed-manifest.json",
+      "bytes": 13040,
+      "sha256": "d81515c8685dea882f59603477a0e792ebaf3102109c71ff745076aa7f31dab2"
+    },
+    {
+      "relativePath": "actual-loader-baseline03-exit.json",
+      "bytes": 73,
+      "sha256": "293900468937964f0d863db6799c5487514bbf46b930331e227ea96a06690c4b"
+    },
+    {
+      "relativePath": "actual-loader-baseline03-first.log",
+      "bytes": 3086,
+      "sha256": "b930f3e23cfe29cc4182592ce39d4bd04f6e947b74ca81ee6441956f4470cf39"
+    },
+    {
+      "relativePath": "actual-loader-baseline03-sdk-release.json",
+      "bytes": 255,
+      "sha256": "427e6f81b351bf8b6022167530e960450f615e0252f95ad47daeca1693c6a685"
+    },
+    {
+      "relativePath": "actual-loader-baseline03-start.json",
+      "bytes": 1042,
+      "sha256": "147e15c9e8b976fe61a16bb94998c06857b138a0ec39fa9738d3c06ba47f1a46"
+    },
+    {
+      "relativePath": "actual-native12-compiled-account-source/AccountBrowserBindings.cs",
+      "bytes": 23962,
+      "sha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d"
+    },
+    {
+      "relativePath": "actual-native12-compiled-account-source/AccountSettingsFeature.cs",
+      "bytes": 10474,
+      "sha256": "400a5537dff6b56d438e6dbbafa5f7b3f06f74caae4e0b8439e49b9454552d24"
+    },
+    {
+      "relativePath": "actual-owner-source/apps/Web/Accounts/Accounts.cui",
+      "bytes": 6365,
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c"
+    },
+    {
+      "relativePath": "actual-owner-source/framework/CUI/Core/CuiRuntimeContracts.cs",
+      "bytes": 1441,
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+    },
+    {
+      "relativePath": "actual-owner-source/framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    }
+  ],
+  "count": 15,
+  "totalBytes": 188573,
+  "noBinaryCacheOrPrivateFixtureIncluded": true,
+  "expectedOriginal": {
+    "discovered": 3,
+    "executed": 3,
+    "passed": 2,
+    "failed": 1,
+    "skipped": 0
+  },
+  "canonicalRequestPrerequisite": "A1 exact maintained delivery before candidate consumer compile"
+}

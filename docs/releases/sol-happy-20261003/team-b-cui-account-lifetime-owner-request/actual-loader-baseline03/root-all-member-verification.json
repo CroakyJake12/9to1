@@ -1,0 +1,26 @@
+{
+  "recordedUTC": "2026-10-04T03:28:37.876309+00:00",
+  "runtimeArchives": [
+    {
+      "version": "03",
+      "archiveSha256": "aad4cd24a2da74e8f8503cd8fca3555f657673347251a5ba2bf08c9b2ba08255",
+      "archiveBytes": 10194470,
+      "members": 44,
+      "allMemberHashesSizesCRCVerified": true,
+      "manifestSha256": "8eb719d4badcd9f54dcd35042a779e053c541560c011a63c8d17624137b1c159",
+      "packagingWrapper": "AUTHORED_NOT_RUN;03flaws preserved;04peer274e56 clear; actualindependent runtime replay queuedafterSDKrelease."
+    },
+    {
+      "version": "04",
+      "archiveSha256": "2b5557da11375d8574618b432e5f2feccdab981a1fcacf6b071235a6ae7160f0",
+      "archiveBytes": 10194992,
+      "members": 44,
+      "allMemberHashesSizesCRCVerified": true,
+      "manifestSha256": "98710cf623eaf55de56dd2ddbfe88053f4ea4dd7842350a8ca3db0d40e009ccc",
+      "packagingWrapper": "AUTHORED_NOT_RUN;03flaws preserved;04peer274e56 clear; actualindependent runtime replay queuedafterSDKrelease."
+    }
+  ],
+  "sourcePacketManifestSha256": "98665271267274f2de9ea38b035f6593e5c6613a1925cddb92373eb2bcb5a18f",
+  "sourcePacketMembers": 16,
+  "originalNative": "Executed3 cases2PASS1meaningfulFAIL; recordedB6peer462221c; proposedCore/Loaderunchanged/uncompiled."
+}

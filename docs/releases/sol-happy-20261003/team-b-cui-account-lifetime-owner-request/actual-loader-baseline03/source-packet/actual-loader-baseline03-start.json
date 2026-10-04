@@ -1,0 +1,27 @@
+{
+  "recordedUTC": "2026-10-04T03:15:18.165872+00:00",
+  "manifestSha256": "7d2c39355fa317fecad7eadfcef9dfc130d5f70d656af94f15a8c1bc79970d4f",
+  "all37PinnedInputsMatched": true,
+  "freeTmpBytes": 922263552,
+  "freeWorkspaceBytes": 1168588800,
+  "expectedInputBytes": 26037992,
+  "expectedBaselineMeaningfulOutcome": "Discovered3, expectedselectedself-reset1FAIL/readcancel+explicitcaller2PASS, notacceptance.",
+  "command": {
+    "env": {
+      "DOTNET_CLI_HOME": "/tmp/b5-cui-caller-cli",
+      "NUGET_PACKAGES": "/workspace/team-b-tooling/nuget",
+      "NUGET_HTTP_CACHE_PATH": "/tmp/b5-cui-caller-http",
+      "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+    },
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/account-lifetime-proposal/cui-caller-lifetime-owner-request/ActualCallerProbe.csproj",
+      "--artifacts-path",
+      "/tmp/b5-cui-caller-artifacts",
+      "-p:UseSharedCompilation=false",
+      "--no-launch-profile"
+    ]
+  }
+}

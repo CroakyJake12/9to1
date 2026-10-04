@@ -1,0 +1,36 @@
+{
+  "verdict": "MEANINGFUL_ACTUAL_NATIVE_LOADER_BASELINE_RED_RECORDED_VERIFIED",
+  "executedManifestSHA256": "d81515c8685dea882f59603477a0e792ebaf3102109c71ff745076aa7f31dab2",
+  "inputsVerified": 37,
+  "runtimeClosure": "33 direct managed DLL inputs, 2 Linux native inputs, authored project+probe2; exact prior native12 runtime reused. No proposed shared Core/Loader compiled.",
+  "generatedOutputHashesVerified": 125,
+  "logicalGeneratedBytes": 33957662,
+  "counts": {
+    "discovered": 3,
+    "executed": 3,
+    "passed": 2,
+    "failed": 1,
+    "skipped": 0
+  },
+  "exitCode": 1,
+  "causalWitness": {
+    "case": "actual canonical signin Button keeps selected broker caller alive across its own view reset",
+    "callbackCalls": 1,
+    "callerCancelled": true,
+    "afterResetContinuation": 0,
+    "privateEmpty": true
+  },
+  "realPath": [
+    "Actual canonical Accounts.cui parsed/loaded and real enabled Avalonia Button identified by account-signin",
+    "Actual native Button.Click routed through maintained CuiControlLoader action task ledger and WhenActionsIdle",
+    "Native loader lifetime used as caller token; callback fence+dispose cancels that token before selected broker continuation",
+    "Actual Refresh stays view-cancellable and drain waits held ignored response; direct explicit caller cancellation preserved"
+  ],
+  "qualifications": [
+    "Shared optional lifetime-aware contract and consumer proposal have no candidate SDK proof yet; owner A1 delivery required.",
+    "Scripted account transport/callback used only for controlled native lifecycle boundary; no genuine issuer or browser/OAuth/JSImport authority acceptance.",
+    "Source provenance inherited from reviewed pinned native12 build; this probe does not independently rebuild the original owners or prove whole runtime transitive closure.",
+    "First failed oracle is expected original defect, never counted PASS; retained second click assertion in that case is not reached."
+  ],
+  "sdkOrBrowserRerun": false
+}

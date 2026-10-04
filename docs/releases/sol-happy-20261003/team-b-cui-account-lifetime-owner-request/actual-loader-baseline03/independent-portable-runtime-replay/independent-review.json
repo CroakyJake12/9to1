@@ -1,0 +1,41 @@
+{
+  "verdict": "INDEPENDENT_ORIGINAL_NATIVE_CUI_LIFETIME_FAILURE_REPRODUCED",
+  "runtimeExit": 1,
+  "wrapperExit": 1,
+  "counts": {
+    "discovered": 3,
+    "executed": 3,
+    "passed": 2,
+    "failed": 1,
+    "skipped": 0
+  },
+  "expectedOriginalMeaningfulRedObtained": true,
+  "nativeResetWitness": {
+    "callbackCalls": 1,
+    "callerCancelled": true,
+    "afterResetContinuation": 0,
+    "privateEmpty": true
+  },
+  "otherMeaningfulControls": [
+    "Actual Refresh ignored-response remains view-cancellable; true native drain waits actual held completion.",
+    "Direct explicit caller cancellation still cancels transferred selected sign-in."
+  ],
+  "rawLogSHA256": "54433718838dcdc57d2b10b9430df53c1919ba7156440174d518f18567fb3f2c",
+  "wrapperOutputSHA256": "b25ccdcddf481f4ad76bdf7e7846b7e9d96ed094b568dc27f131e98499b04a8d",
+  "archiveSHA256": "2b5557da11375d8574618b432e5f2feccdab981a1fcacf6b071235a6ae7160f0",
+  "wrapperSHA256": "a73c51ed38f163859ec989e3ec2d6ad0f8c6764070294b52d3e98dde449f7511",
+  "all40RuntimePinsBeforeAfterEqual": true,
+  "all43PacketArtifactsAfterExact": true,
+  "ownedWrapperPID": 122519,
+  "ownedProcessGroupAfter": [],
+  "ownedWrapperPIDAbsent": true,
+  "timedOut": false,
+  "setupFailure": false,
+  "runtimeIntegrityFailure": false,
+  "limits": [
+    "Original compiled native headless loader and scripted account callbacks/transport only; no provider/issuer/browser/JSImport authority.",
+    "Shared optional lifetime-aware owner contract/candidate not compiled or accepted.",
+    "First failing sign-in case second-click assertion not reached; not relabelled PASS.",
+    "Fresh extracted40 files only, no build/restore/install."
+  ]
+}

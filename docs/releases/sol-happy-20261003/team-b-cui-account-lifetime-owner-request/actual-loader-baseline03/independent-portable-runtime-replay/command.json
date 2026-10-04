@@ -1,0 +1,22 @@
+{
+  "command": [
+    "python3",
+    "/workspace/team-b-b6-cui-original-runtime04/portable-original-runtime04/run-original.py",
+    "--dotnet",
+    "/workspace/.tools/dotnet/dotnet",
+    "--log",
+    "/workspace/team-b-b6-cui-original-runtime04/actual-original-native.log"
+  ],
+  "scope": "Independent pinned original DLL only; no build/restore/provider/GUI",
+  "startedUTC": "2026-10-04T03:36:16Z",
+  "archiveSHA256": "2b5557da11375d8574618b432e5f2feccdab981a1fcacf6b071235a6ae7160f0",
+  "wrapperSHA256": "a73c51ed38f163859ec989e3ec2d6ad0f8c6764070294b52d3e98dde449f7511",
+  "explicitEnvironment": {
+    "DOTNET_ROOT": "/workspace/.tools/dotnet",
+    "DOTNET_CLI_HOME": "/workspace/team-b-b6-cui-original-runtime04/cli-home",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_NOLOGO": "1"
+  },
+  "ownedWrapperPID": 122519
+}

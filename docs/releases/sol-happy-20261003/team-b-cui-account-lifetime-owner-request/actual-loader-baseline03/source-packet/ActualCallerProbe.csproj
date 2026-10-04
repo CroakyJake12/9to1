@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+<ItemGroup><Compile Include="ActualCallerProbe.cs" />
+<Reference Include="AccountLifetime.Tests"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/AccountLifetime.Tests.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Base"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Base.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Controls"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Controls.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.DesignerSupport"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.DesignerSupport.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Desktop"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Desktop.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Dialogs"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Dialogs.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Fonts.Inter"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Fonts.Inter.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.FreeDesktop.AtSpi"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.FreeDesktop.AtSpi.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.FreeDesktop"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.FreeDesktop.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.HarfBuzz"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.HarfBuzz.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Headless"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Headless.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Markup.Xaml"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Markup.Xaml.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Markup"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Markup.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Metal"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Metal.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.MicroCom"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.MicroCom.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Native"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Native.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.OpenGL"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.OpenGL.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Remote.Protocol"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Remote.Protocol.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Skia"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Skia.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Themes.Fluent"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Themes.Fluent.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Vulkan"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Vulkan.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Win32.Automation"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Win32.Automation.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.Win32"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.Win32.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia.X11"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.X11.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Avalonia"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Avalonia.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="CakeOS.Cui.Core"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Core.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="CakeOS.Cui.Language"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Language.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="CakeOS.Cui.Runtime"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Runtime.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="CakeOS.Cui.Themes"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/CakeOS.Cui.Themes.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="HarfBuzzSharp"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/HarfBuzzSharp.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="MicroCom.Runtime"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/MicroCom.Runtime.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="SkiaSharp"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/SkiaSharp.dll</HintPath><Private>true</Private></Reference>
+<Reference Include="Tmds.DBus.Protocol"><HintPath>/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/Tmds.DBus.Protocol.dll</HintPath><Private>true</Private></Reference>
+<None Include="/workspace/team-b-astra-browser-validation/apps/Web/Accounts/Accounts.cui" Link="Accounts.cui" CopyToOutputDirectory="PreserveNewest" />
+<None Include="/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/runtimes/linux-x64/native/libHarfBuzzSharp.so" Link="libHarfBuzzSharp.so" CopyToOutputDirectory="PreserveNewest" />
+<None Include="/tmp/b5-native08-retry-artifacts/bin/AccountLifetime.Tests/debug/runtimes/linux-x64/native/libSkiaSharp.so" Link="libSkiaSharp.so" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup></Project>

@@ -1,0 +1,156 @@
+{
+  "createdUTC": "2026-10-04T03:42:28.557505+00:00",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1700,
+      "sha256": "6b8e174baa6af8eb23bbb21fcf909ffde56a58b7cb89593c3eac5f5efcff4a86"
+    },
+    {
+      "path": "RUNTIME-PACKET-MANIFEST-03.json",
+      "bytes": 7746,
+      "sha256": "8eb719d4badcd9f54dcd35042a779e053c541560c011a63c8d17624137b1c159"
+    },
+    {
+      "path": "RUNTIME-PACKET-MANIFEST-04.json",
+      "bytes": 7915,
+      "sha256": "98710cf623eaf55de56dd2ddbfe88053f4ea4dd7842350a8ca3db0d40e009ccc"
+    },
+    {
+      "path": "actual-cui-loader-baseline03-recorded-review.json",
+      "bytes": 1999,
+      "sha256": "462221c77c70db2e2f2d396286c3f0739c7b5251ea5ca099ff51cd00cd78e563"
+    },
+    {
+      "path": "cui-original-runtime03-custody-wrapper-review.json",
+      "bytes": 1165,
+      "sha256": "26f6dd2f9b98eeec2989146aceca689dcee48944e2083c9de72b11f62a6326a9"
+    },
+    {
+      "path": "cui-original-runtime04-custody-wrapper-review.json",
+      "bytes": 1144,
+      "sha256": "274e56fa8b2a76469e0faae400c14eaf5d1b6251d54657d4086b6556b5b90fd1"
+    },
+    {
+      "path": "independent-portable-runtime-replay/actual-original-native.log",
+      "bytes": 522,
+      "sha256": "54433718838dcdc57d2b10b9430df53c1919ba7156440174d518f18567fb3f2c"
+    },
+    {
+      "path": "independent-portable-runtime-replay/command.json",
+      "bytes": 872,
+      "sha256": "1d9284f5b0918a575dfba00c68a468f8bcef1848b537018115ad188b55d5e37d"
+    },
+    {
+      "path": "independent-portable-runtime-replay/execution.json",
+      "bytes": 7940,
+      "sha256": "767454f9e66219c5a6301aa16793301e581b87b45f1a488ac42d3fef4fe50c73"
+    },
+    {
+      "path": "independent-portable-runtime-replay/independent-review.json",
+      "bytes": 1673,
+      "sha256": "d61e8c4a4fae19631bde67530bc33b21dc6991b884cd64edaad8ca1a5bb8cef8"
+    },
+    {
+      "path": "independent-portable-runtime-replay/runtime-before.json",
+      "bytes": 6546,
+      "sha256": "88332abb0add41b340a88b424ab660799d656d85eaeaf19a668156528aaa516a"
+    },
+    {
+      "path": "portable-original-runtime03.zip",
+      "bytes": 10194470,
+      "sha256": "aad4cd24a2da74e8f8503cd8fca3555f657673347251a5ba2bf08c9b2ba08255"
+    },
+    {
+      "path": "portable-original-runtime04.zip",
+      "bytes": 10194992,
+      "sha256": "2b5557da11375d8574618b432e5f2feccdab981a1fcacf6b071235a6ae7160f0"
+    },
+    {
+      "path": "root-all-member-verification.json",
+      "bytes": 1252,
+      "sha256": "bcb3876e19a540912048dbb38246f5b4158d41d0064942235c46337217c13dc1"
+    },
+    {
+      "path": "source-packet/ACTUAL-LOADER-PROBE-AUTHORED-MANIFEST-03.json",
+      "bytes": 10573,
+      "sha256": "7d2c39355fa317fecad7eadfcef9dfc130d5f70d656af94f15a8c1bc79970d4f"
+    },
+    {
+      "path": "source-packet/ActualCallerProbe.cs",
+      "bytes": 7422,
+      "sha256": "14dfe0c768bd63a2c11eb47bdd0e0446b78d71546c10d0e40e02630d705a3bfc"
+    },
+    {
+      "path": "source-packet/ActualCallerProbe.csproj",
+      "bytes": 6932,
+      "sha256": "a6d22ef476891bda57fc79184b171ee703794513df81daccf6525b3166a83593"
+    },
+    {
+      "path": "source-packet/NATIVE-DLL-BUILD-IDENTITY.json",
+      "bytes": 11891,
+      "sha256": "c9070b0cbb3a7c9912b3f46fbff50c75042b3299d93b960449447f296f0fd8cf"
+    },
+    {
+      "path": "source-packet/PORTABLE-PACKET-MANIFEST.json",
+      "bytes": 3228,
+      "sha256": "98665271267274f2de9ea38b035f6593e5c6613a1925cddb92373eb2bcb5a18f"
+    },
+    {
+      "path": "source-packet/README.md",
+      "bytes": 1694,
+      "sha256": "ede2062a67239ed957ed42cec5a84492bd6cfa0ffb93e1ff1f7f78c70ca90251"
+    },
+    {
+      "path": "source-packet/actual-loader-baseline03-executed-manifest.json",
+      "bytes": 13040,
+      "sha256": "d81515c8685dea882f59603477a0e792ebaf3102109c71ff745076aa7f31dab2"
+    },
+    {
+      "path": "source-packet/actual-loader-baseline03-exit.json",
+      "bytes": 73,
+      "sha256": "293900468937964f0d863db6799c5487514bbf46b930331e227ea96a06690c4b"
+    },
+    {
+      "path": "source-packet/actual-loader-baseline03-first.log",
+      "bytes": 3086,
+      "sha256": "b930f3e23cfe29cc4182592ce39d4bd04f6e947b74ca81ee6441956f4470cf39"
+    },
+    {
+      "path": "source-packet/actual-loader-baseline03-sdk-release.json",
+      "bytes": 255,
+      "sha256": "427e6f81b351bf8b6022167530e960450f615e0252f95ad47daeca1693c6a685"
+    },
+    {
+      "path": "source-packet/actual-loader-baseline03-start.json",
+      "bytes": 1042,
+      "sha256": "147e15c9e8b976fe61a16bb94998c06857b138a0ec39fa9738d3c06ba47f1a46"
+    },
+    {
+      "path": "source-packet/actual-native12-compiled-account-source/AccountBrowserBindings.cs",
+      "bytes": 23962,
+      "sha256": "15dd12775c258854dd38998ef5848550815072b801cbe6ac8c2252872bcb1c6d"
+    },
+    {
+      "path": "source-packet/actual-native12-compiled-account-source/AccountSettingsFeature.cs",
+      "bytes": 10474,
+      "sha256": "400a5537dff6b56d438e6dbbafa5f7b3f06f74caae4e0b8439e49b9454552d24"
+    },
+    {
+      "path": "source-packet/actual-owner-source/apps/Web/Accounts/Accounts.cui",
+      "bytes": 6365,
+      "sha256": "12650c142bafb6b674e6e607af9a87f81eacf3d208d359e15614d9558f0c4d0c"
+    },
+    {
+      "path": "source-packet/actual-owner-source/framework/CUI/Core/CuiRuntimeContracts.cs",
+      "bytes": 1441,
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+    },
+    {
+      "path": "source-packet/actual-owner-source/framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    }
+  ],
+  "scope": "Original3nativeCUImeaningfulredindependentlyreproduced; no canonicalproposal/provider/browseracceptance."
+}
