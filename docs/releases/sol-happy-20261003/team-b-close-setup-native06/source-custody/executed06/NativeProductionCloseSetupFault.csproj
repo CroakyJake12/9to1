@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><EvidenceApplicationSource Condition="'$(EvidenceApplicationSource)' == ''">$(MSBuildThisFileDirectory)source-custody/BrowserApplication.cs</EvidenceApplicationSource><EvidenceRegistrySource Condition="'$(EvidenceRegistrySource)' == ''">$(MSBuildThisFileDirectory)source-custody/revision03-registry.cs</EvidenceRegistrySource><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors><EnableDefaultCompileItems>false</EnableDefaultCompileItems><JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault><BaseIntermediateOutputPath>obj/NativeProductionCloseSetup/</BaseIntermediateOutputPath><OutputPath>/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/</OutputPath></PropertyGroup>
+<ItemGroup>
+<Compile Include="NativeProductionCloseSetupFault.cs" />
+<Compile Include="$(EvidenceApplicationSource);$(EvidenceRegistrySource)" Link="Proposal/%(Filename)%(Extension)" />
+<Compile Include="NativeOverlapPlatformShims.cs" />
+<Compile Include="/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteCodec.cs;/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs;/workspace/team-b-astra-browser-validation/apps/Web/BrowserHomeContext.cs;/workspace/team-b-astra-browser-validation/apps/Web/BrowserActionAvailability.cs;/workspace/team-b-astra-browser-validation/apps/Web/BrowserAccessibilityBridge.cs;/workspace/team-b-astra-browser-validation/apps/Web/BrowserAccessibilityJsonContext.cs" Link="Production/%(Filename)%(Extension)" />
+<ProjectReference Include="/workspace/team-b-astra-browser-validation/apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj" />
+<ProjectReference Include="/workspace/team-b-astra-browser-validation/9to1 Workspace/Home/HavenOS.Home.csproj" />
+</ItemGroup></Project>

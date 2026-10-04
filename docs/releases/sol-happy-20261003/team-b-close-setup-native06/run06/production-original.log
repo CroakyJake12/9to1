@@ -1,0 +1,12 @@
+["/workspace/.tools/dotnet/dotnet", "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.dll"]
+EXPECTED=1; actualApp=true; actualNativeControl=true; browser=NOT_RUN; ownerAuthority=NOT_RUN
+PASS actual initial native-disable failure preserved
+WITNESS ownerRetained=True ownerRevokes=0 ownerDisposes=0 priorContentRetained=True callbacks=1 closing=True enabled=False
+Unhandled exception. System.InvalidOperationException: Close must settle closing after initial native disable failure
+   at Program.<>c.<<<Main>$>b__0_0>d.MoveNext() in /workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.cs:line 28
+--- End of stack trace from previous location ---
+   at Avalonia.Headless.HeadlessUnitTestSession.<>c__DisplayClass12_0`1.<DispatchCore>b__0() in /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/HeadlessUnitTestSession.cs:line 122
+--- End of stack trace from previous location ---
+   at Program.<Main>$(String[] args) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.cs:line 13
+   at Program.<Main>$(String[] args) in /workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.cs:line 13
+   at Program.<Main>(String[] args)

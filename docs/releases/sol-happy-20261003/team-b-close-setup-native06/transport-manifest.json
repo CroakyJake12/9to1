@@ -1,0 +1,179 @@
+{
+  "recordedUTC": "2026-10-04T00:33:20.723691+00:00",
+  "classification": "ACTUAL_NATIVE_BOUNDED_CLOSE_SETUP_RED_GREEN",
+  "reportSHA256": "303dc0395a57c7aba377a14b7b24be1ea46cf99297a08f76ce0035c95b8f016d",
+  "files": [
+    {
+      "path": "executed-close06-review.json",
+      "bytes": 91231,
+      "sha256": "303dc0395a57c7aba377a14b7b24be1ea46cf99297a08f76ce0035c95b8f016d"
+    },
+    {
+      "path": "run06/binary-custody/production-original-1c2ab9e18868e8fe64f5feab2e35b77dff85a5206aaf9bfe073489e32ca35444.deps.json",
+      "bytes": 30505,
+      "sha256": "5534f55956655758f99ae8956260714cbeccb0c0e9b47af8c9e496557ea5dfcb"
+    },
+    {
+      "path": "run06/binary-custody/production-original-1c2ab9e18868e8fe64f5feab2e35b77dff85a5206aaf9bfe073489e32ca35444.dll",
+      "bytes": 116224,
+      "sha256": "1c2ab9e18868e8fe64f5feab2e35b77dff85a5206aaf9bfe073489e32ca35444"
+    },
+    {
+      "path": "run06/binary-custody/production-original-1c2ab9e18868e8fe64f5feab2e35b77dff85a5206aaf9bfe073489e32ca35444.pdb",
+      "bytes": 56468,
+      "sha256": "def6be45cb8288043cd8363e3f974adb0c35bf8c65cbc66962dcd26a8741820d"
+    },
+    {
+      "path": "run06/binary-custody/production-original-1c2ab9e18868e8fe64f5feab2e35b77dff85a5206aaf9bfe073489e32ca35444.runtimeconfig.json",
+      "bytes": 336,
+      "sha256": "efe3a8d53b17a3992b9318485b5cf60bf7a2764f72df1f7cdb93e6ad134f7c92"
+    },
+    {
+      "path": "run06/binary-custody/production-repaired-9a61e344737c89eacd5f1a0474955465eebc95bb389d589dadd33d9c90de313b.deps.json",
+      "bytes": 30505,
+      "sha256": "5534f55956655758f99ae8956260714cbeccb0c0e9b47af8c9e496557ea5dfcb"
+    },
+    {
+      "path": "run06/binary-custody/production-repaired-9a61e344737c89eacd5f1a0474955465eebc95bb389d589dadd33d9c90de313b.dll",
+      "bytes": 116224,
+      "sha256": "9a61e344737c89eacd5f1a0474955465eebc95bb389d589dadd33d9c90de313b"
+    },
+    {
+      "path": "run06/binary-custody/production-repaired-9a61e344737c89eacd5f1a0474955465eebc95bb389d589dadd33d9c90de313b.pdb",
+      "bytes": 56436,
+      "sha256": "2bdb58cb4b067228fdebdf7515d2b28d9b780eb5c7223db195a1e8bd0128c338"
+    },
+    {
+      "path": "run06/binary-custody/production-repaired-9a61e344737c89eacd5f1a0474955465eebc95bb389d589dadd33d9c90de313b.runtimeconfig.json",
+      "bytes": 336,
+      "sha256": "efe3a8d53b17a3992b9318485b5cf60bf7a2764f72df1f7cdb93e6ad134f7c92"
+    },
+    {
+      "path": "run06/binary-custody/proposal06-d33489206a7f65d27c971fae016cbbf64940e9fbd423191019a5b14245dacb80.deps.json",
+      "bytes": 30475,
+      "sha256": "a75701f6068c4818cf56bcd7720ff955829bea23996264609369dbb274833ae8"
+    },
+    {
+      "path": "run06/binary-custody/proposal06-d33489206a7f65d27c971fae016cbbf64940e9fbd423191019a5b14245dacb80.dll",
+      "bytes": 129024,
+      "sha256": "d33489206a7f65d27c971fae016cbbf64940e9fbd423191019a5b14245dacb80"
+    },
+    {
+      "path": "run06/binary-custody/proposal06-d33489206a7f65d27c971fae016cbbf64940e9fbd423191019a5b14245dacb80.pdb",
+      "bytes": 59940,
+      "sha256": "924e40536560ebf95859419582269ccd5f096a0855e05da92ce317b641bd10e7"
+    },
+    {
+      "path": "run06/binary-custody/proposal06-d33489206a7f65d27c971fae016cbbf64940e9fbd423191019a5b14245dacb80.runtimeconfig.json",
+      "bytes": 336,
+      "sha256": "efe3a8d53b17a3992b9318485b5cf60bf7a2764f72df1f7cdb93e6ad134f7c92"
+    },
+    {
+      "path": "run06/commands.json",
+      "bytes": 74903,
+      "sha256": "9d4749e1fa0dd4d84ee613a2415302dc5a1126db6b9e45fe77fe53a93baf94aa"
+    },
+    {
+      "path": "run06/production-original-build.log",
+      "bytes": 7395,
+      "sha256": "fbc597cf306d78643c58ff4fe9cf7413558d5929d3a68ff9d687051faa01623c"
+    },
+    {
+      "path": "run06/production-original.log",
+      "bytes": 1418,
+      "sha256": "850d12a11c886424511fbb71a213b138ba4f3910912cd0d3a5c520d58aef5200"
+    },
+    {
+      "path": "run06/production-repaired-build.log",
+      "bytes": 7202,
+      "sha256": "123d2afa9c1a9bd14350f0bcd384b81f35012ea184e6074568f2cb084e17e744"
+    },
+    {
+      "path": "run06/production-repaired.log",
+      "bytes": 484,
+      "sha256": "17e57bf8408f3102d7e149b3de0bd467480e2321a6442256e810e2abb403fc94"
+    },
+    {
+      "path": "run06/proposal06-build.log",
+      "bytes": 7230,
+      "sha256": "8b681dfdfd93e7d65d8d5a74b0c35db481765c1e6812149d2347ac68f86a8de4"
+    },
+    {
+      "path": "run06/proposal06.log",
+      "bytes": 488,
+      "sha256": "f533af695f823d163737ad2e5cabfb0fd030a8c5434e7f06f2640b2c64efdbf0"
+    },
+    {
+      "path": "run06/source-inputs-after.json",
+      "bytes": 2075121,
+      "sha256": "ab878b0230d28f0dbc349e65c6432c28dcdfef080a52729601ca23d64173632d"
+    },
+    {
+      "path": "run06/source-inputs-before.json",
+      "bytes": 2068856,
+      "sha256": "96eaf760a56551b60856966c96fec82ff61d279526da94a32e461309d57a44b0"
+    },
+    {
+      "path": "source-custody/executed06/NativeCloseSetupFault.cs",
+      "bytes": 4199,
+      "sha256": "780a4c99f4ed0f75ecb0c42d59f4b93bc8e3eb2b5dc1313708e94012eef019f9"
+    },
+    {
+      "path": "source-custody/executed06/NativeCloseSetupFault.csproj",
+      "bytes": 1919,
+      "sha256": "ad7c5f8ac74ea9772808a0f20d626bb4adfeea9d58fe9c5cf4d5271769e68798"
+    },
+    {
+      "path": "source-custody/executed06/NativeProductionCloseSetupFault.cs",
+      "bytes": 3800,
+      "sha256": "c6978fbea26bcf6b7ad54e89fe1a08ea3cd7576bb8cc2c9935e9e327e4a4d464"
+    },
+    {
+      "path": "source-custody/executed06/NativeProductionCloseSetupFault.csproj",
+      "bytes": 1949,
+      "sha256": "d7c7dbba294edf8126cd878921f9fe2a1263dec302ad3b96fd738282082ed63c"
+    },
+    {
+      "path": "source-custody/executed06/change-manifest.json",
+      "bytes": 1292,
+      "sha256": "cbedf5cc8962d5644746342f8af9aaeb36a1c81284d4485683b113177c5591c6"
+    },
+    {
+      "path": "source-custody/executed06/production-original.cs",
+      "bytes": 14517,
+      "sha256": "f0c02b06ca6c129cd315360fab918edb9a047d2ab3f15bbeb73e5656a977d29e"
+    },
+    {
+      "path": "source-custody/executed06/production-registry.cs",
+      "bytes": 8412,
+      "sha256": "e329dd3847875a596eb46e9aaa108aad3d6821ee24cace034d1082f0b76d3ece"
+    },
+    {
+      "path": "source-custody/executed06/production-repaired.cs",
+      "bytes": 14521,
+      "sha256": "80826b95eecbfcb047654cf5dd3aa3033e9aaef7bc89080f93a4db90d7d3971e"
+    },
+    {
+      "path": "source-custody/executed06/proposal-registry.cs",
+      "bytes": 13601,
+      "sha256": "8e54641f5ed9b5490fc802407828bf00d5522e363db10ce81519ead4997e4bce"
+    },
+    {
+      "path": "source-custody/executed06/proposal06.cs",
+      "bytes": 17982,
+      "sha256": "bb75a8ed37c98ee2b1a30e31bb006c8265439ba88504d8010daef04d08ddc77d"
+    },
+    {
+      "path": "NativeOverlapPlatformShims.cs",
+      "bytes": 851,
+      "sha256": "66f7d931c1cc33e757c58e250304221f691716452ea59a23c196fc21a4d26f4b"
+    }
+  ],
+  "originalReportRetained": true,
+  "productionPatch": "only move IsEnabled=false inside existing try; source original94bbf443",
+  "notAcceptance": [
+    "browser close GUI",
+    "async Account/Forms lifecycle",
+    "provider/full parity"
+  ]
+}

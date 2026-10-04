@@ -1,0 +1,5 @@
+["/workspace/.tools/dotnet/dotnet", "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.dll"]
+EXPECTED=1; actualApp=true; actualNativeControl=true; browser=NOT_RUN; ownerAuthority=NOT_RUN
+PASS actual initial native-disable failure preserved
+WITNESS ownerRetained=True ownerRevokes=0 ownerDisposes=0 priorContentRetained=True callbacks=1 closing=False enabled=True
+RESULT expected=1 executed=1 passed=1 failed=0 assertions=2; browser=NOT_RUN

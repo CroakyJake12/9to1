@@ -1,0 +1,3 @@
+A native IsEnabled listener throwing during CloseAsync left production closing=true and the retained view disabled. Moving that assignment into the existing try reaches the existing finally. The exact same production fixture reproduces old RED and repaired GREEN; the private-context06 variant also passes its unchanged05 oracle.
+
+The original report, commands, source snapshots, logs, compiled binaries and platform fixture shim are preserved byte for byte. The manifest qualifies two concurrent unrelated Mathematics test additions outside the affected compile closure. Existing broader controls remain bound to their prior executions. Browser close, private authority and full parity remain outstanding.

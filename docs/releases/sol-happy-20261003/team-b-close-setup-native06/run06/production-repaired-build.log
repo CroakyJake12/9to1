@@ -1,0 +1,57 @@
+["/workspace/.tools/dotnet/dotnet", "build", "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.csproj", "--nologo", "-m:1", "--artifacts-path", "/tmp/b6-private-proposal05-artifacts", "-p:EvidenceRegistrySource=/workspace/team-b-astra-browser-validation/apps/Web/BrowserSurfaceRegistry.cs", "-p:EvidenceApplicationSource=/workspace/team-b-astra-browser-validation/apps/Web/BrowserApplication.cs"]
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+/workspace/.tools/dotnet/sdk/10.0.401/Microsoft.Common.CurrentVersion.targets(887,5): warning MSB3539: The value of the property "BaseIntermediateOutputPath" was modified after it was used by MSBuild which can lead to unexpected build results. Tools such as NuGet will write outputs to the path specified by the "MSBuildProjectExtensionsPath" instead. To set this property, you must do so before Microsoft.Common.props is imported, for example by using Directory.Build.props.  For more information, please visit https://go.microsoft.com/fwlink/?linkid=869650" [/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.csproj]
+  Haven.Core -> /tmp/b6-private-proposal05-artifacts/bin/Haven.Core/debug/Haven.Core.dll
+  NineToOne.Cui.AI -> /tmp/b6-private-proposal05-artifacts/bin/NineToOne.Cui.AI/debug/NineToOne.Cui.AI.dll
+  Haven.Application -> /tmp/b6-private-proposal05-artifacts/bin/Haven.Application/debug/Haven.Application.dll
+  Haven.UI -> /tmp/b6-private-proposal05-artifacts/bin/Haven.UI/debug/Haven.UI.dll
+  DevAnalyzers -> /tmp/b6-private-proposal05-artifacts/bin/DevAnalyzers/debug/DevAnalyzers.dll
+  Avalonia.Analyzers.CSharp -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Analyzers.CSharp/debug/Avalonia.Analyzers.CSharp.dll
+  Avalonia.Analyzers.CodeFixes.CSharp -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Analyzers.CodeFixes.CSharp/debug/Avalonia.Analyzers.CodeFixes.CSharp.dll
+  Avalonia.Analyzers.VisualBasic -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Analyzers.VisualBasic/debug/Avalonia.Analyzers.VisualBasic.dll
+  DevGenerators -> /tmp/b6-private-proposal05-artifacts/bin/DevGenerators/debug/DevGenerators.dll
+  Avalonia.Base -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Base/debug_net10.0/Avalonia.Base.dll
+  Avalonia.Remote.Protocol -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Remote.Protocol/debug_net10.0/Avalonia.Remote.Protocol.dll
+  Avalonia.Controls -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Controls/debug_net10.0/Avalonia.Controls.dll
+  Avalonia.Build.Tasks -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll
+  Avalonia.MicroCom -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.MicroCom/debug_net10.0/Avalonia.MicroCom.dll
+  Avalonia.OpenGL -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.OpenGL/debug_net10.0/Avalonia.OpenGL.dll
+  Avalonia.Vulkan -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Vulkan/debug_net10.0/Avalonia.Vulkan.dll
+  Avalonia.Metal -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Metal/debug_net10.0/Avalonia.Metal.dll
+  Avalonia.Skia -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Skia/debug_net10.0/Avalonia.Skia.dll
+  Avalonia.Win32.Automation -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Win32.Automation/debug_net10.0/Avalonia.Win32.Automation.dll
+  Avalonia.Win32 -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Win32/debug_net10.0/Avalonia.Win32.dll
+  Avalonia.Markup -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Markup/debug_net10.0/Avalonia.Markup.dll
+  Avalonia.Markup.Xaml -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Markup.Xaml/debug_net10.0/Avalonia.Markup.Xaml.dll
+  Avalonia.DesignerSupport -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.DesignerSupport/debug_net10.0/Avalonia.DesignerSupport.dll
+  Avalonia.Dialogs -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Dialogs/debug_net10.0/Avalonia.Dialogs.dll
+  Avalonia.Generators -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Generators/debug/Avalonia.Generators.dll
+  Avalonia -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia/debug_net10.0/Avalonia.dll
+  Avalonia.Native -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Native/debug_net10.0/Avalonia.Native.dll
+  Avalonia.FreeDesktop -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.FreeDesktop/debug_net10.0/Avalonia.FreeDesktop.dll
+  Avalonia.DBus.Generators -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.DBus.Generators/debug/Avalonia.DBus.Generators.dll
+  Avalonia.FreeDesktop.AtSpi -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.FreeDesktop.AtSpi/debug_net10.0/Avalonia.FreeDesktop.AtSpi.dll
+  Avalonia.X11 -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.X11/debug_net10.0/Avalonia.X11.dll
+  Avalonia.HarfBuzz -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.HarfBuzz/debug_net10.0/Avalonia.HarfBuzz.dll
+  Avalonia.Desktop -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Desktop/debug_net10.0/Avalonia.Desktop.dll
+  Avalonia.Themes.Fluent -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Themes.Fluent/debug_net10.0/Avalonia.Themes.Fluent.dll
+  Avalonia.Fonts.Inter -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Fonts.Inter/debug_net10.0/Avalonia.Fonts.Inter.dll
+  Avalonia.Headless -> /tmp/b6-private-proposal05-artifacts/bin/Avalonia.Headless/debug_net10.0/Avalonia.Headless.dll
+  CakeOS.Cui.Language -> /tmp/b6-private-proposal05-artifacts/bin/CakeOS.Cui.Language/debug/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /tmp/b6-private-proposal05-artifacts/bin/CakeOS.Cui.Core/debug/CakeOS.Cui.Core.dll
+  CakeOS.Cui.Themes -> /tmp/b6-private-proposal05-artifacts/bin/CakeOS.Cui.Themes/debug/CakeOS.Cui.Themes.dll
+  CakeOS.Cui.Runtime -> /tmp/b6-private-proposal05-artifacts/bin/CakeOS.Cui.Runtime/debug/CakeOS.Cui.Runtime.dll
+  Haven.WriteBrowser.Scene -> /tmp/b6-private-proposal05-artifacts/bin/Haven.WriteBrowser.Scene/debug/Haven.dll
+  Dulche.Runtime -> /tmp/b6-private-proposal05-artifacts/bin/Dulche.Runtime/debug/Dulche.Runtime.dll
+  Den -> /tmp/b6-private-proposal05-artifacts/bin/Den/debug/Den.dll
+  HavenOS.Home -> /tmp/b6-private-proposal05-artifacts/bin/HavenOS.Home/debug/HavenOS.Home.dll
+  NativeProductionCloseSetupFault -> /tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.dll
+
+Build succeeded.
+
+/workspace/.tools/dotnet/sdk/10.0.401/Microsoft.Common.CurrentVersion.targets(887,5): warning MSB3539: The value of the property "BaseIntermediateOutputPath" was modified after it was used by MSBuild which can lead to unexpected build results. Tools such as NuGet will write outputs to the path specified by the "MSBuildProjectExtensionsPath" instead. To set this property, you must do so before Microsoft.Common.props is imported, for example by using Directory.Build.props.  For more information, please visit https://go.microsoft.com/fwlink/?linkid=869650" [/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.12

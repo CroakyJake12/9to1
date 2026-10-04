@@ -1,0 +1,29 @@
+{
+  "recordedUTC": "2026-10-04T00:27:08.946743+00:00",
+  "sourceHead": "94bbf443",
+  "changes": [
+    {
+      "classification": "production",
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserApplication.cs",
+      "originalBytes": 14517,
+      "originalSha256": "f0c02b06ca6c129cd315360fab918edb9a047d2ab3f15bbeb73e5656a977d29e",
+      "repairedBytes": 14521,
+      "repairedSha256": "80826b95eecbfcb047654cf5dd3aa3033e9aaef7bc89080f93a4db90d7d3971e",
+      "change": "Move IsEnabled=false inside existing CloseAsync try so its native listener exception reaches existing finally"
+    },
+    {
+      "classification": "proposal05",
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/private-context-proposal/BrowserApplication.cs",
+      "originalBytes": 17978,
+      "originalSha256": "93a1b64168c08ca9cac952a42e414f67a2868d0caa3b823712c44c8fd66702cb",
+      "repairedBytes": 17982,
+      "repairedSha256": "bb75a8ed37c98ee2b1a30e31bb006c8265439ba88504d8010daef04d08ddc77d",
+      "change": "Move IsEnabled=false inside existing CloseAsync try so its native listener exception reaches existing finally"
+    }
+  ],
+  "notRun": [
+    "original production fault",
+    "repaired production fault",
+    "repaired proposal06 fault"
+  ]
+}

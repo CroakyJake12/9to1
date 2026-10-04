@@ -1,0 +1,1667 @@
+[
+  {
+    "compiledRuntimeWitness": [],
+    "name": "proposal06-build",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "build",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeCloseSetupFault.csproj",
+      "--nologo",
+      "-m:1",
+      "--artifacts-path",
+      "/tmp/b6-private-proposal05-artifacts",
+      "-p:EvidenceRegistrySource=/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/private-context-proposal/BrowserSurfaceRegistry.cs",
+      "-p:EvidenceApplicationSource=/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/private-context-proposal/BrowserApplication.cs"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 10.072,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/run06/proposal06-build.log"
+  },
+  {
+    "compiledRuntimeWitness": [
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NativeCloseSetupFault.pdb",
+        "sha256": "924e40536560ebf95859419582269ccd5f096a0855e05da92ce317b641bd10e7",
+        "bytes": 59940
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NativeCloseSetupFault.dll",
+        "sha256": "d33489206a7f65d27c971fae016cbbf64940e9fbd423191019a5b14245dacb80",
+        "bytes": 129024
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NativeCloseSetupFault",
+        "sha256": "2bfb413bd85eef418beb6a40fd49c57606e6ceee82d8d88937cc8c02a604942e",
+        "bytes": 78256
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NativeCloseSetupFault.runtimeconfig.json",
+        "sha256": "efe3a8d53b17a3992b9318485b5cf60bf7a2764f72df1f7cdb93e6ad134f7c92",
+        "bytes": 336
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NativeCloseSetupFault.deps.json",
+        "sha256": "a75701f6068c4818cf56bcd7720ff955829bea23996264609369dbb274833ae8",
+        "bytes": 30475
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.X11.xml",
+        "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b",
+        "bytes": 11685
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.X11.pdb",
+        "sha256": "f65bc3c86f2e277440360945b01f68b1b575af8948b6c02f61652a8e6fd13107",
+        "bytes": 112952
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Win32.Automation.xml",
+        "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9",
+        "bytes": 3812
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Win32.Automation.pdb",
+        "sha256": "51fbd5a992b04329dbbbc78cbc81c35b8c1b02bd23a7cb38134bb8b3c48567c2",
+        "bytes": 101808
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Win32.xml",
+        "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba",
+        "bytes": 143346
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Win32.pdb",
+        "sha256": "2689e5c0d1ef70c807e6767ebf4871ca3184a51a6578d03f1df79eee673b07c0",
+        "bytes": 500584
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Vulkan.xml",
+        "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd",
+        "bytes": 1620
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Vulkan.pdb",
+        "sha256": "2ff628285e79fab92260632047001e8a4a1ff9072e2a9998e06049d266ebd4dc",
+        "bytes": 48456
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Themes.Fluent.xml",
+        "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111",
+        "bytes": 6894
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Themes.Fluent.pdb",
+        "sha256": "6210259a29542ef01a5d9fb3ed41507fbfcfa7d7b58ec3c42d1f442b4a7eb81b",
+        "bytes": 182368
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Skia.xml",
+        "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584",
+        "bytes": 47094
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Skia.pdb",
+        "sha256": "ff0dc28f41d87313fdd0f909caa0544f870cb3acf57d8a3b06b8b24242ea23dd",
+        "bytes": 64364
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Remote.Protocol.xml",
+        "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2",
+        "bytes": 70801
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.OpenGL.xml",
+        "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be",
+        "bytes": 5602
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Remote.Protocol.pdb",
+        "sha256": "4afbaacea12cda8386330a0194e3a121ce8ead8d6efe0c535174cca40604eff6",
+        "bytes": 34620
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.OpenGL.pdb",
+        "sha256": "5f29e17e5a51039c402a809e90f0600879d9d86f981c6a305ce134192e7265e7",
+        "bytes": 53372
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Native.xml",
+        "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c",
+        "bytes": 9476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Native.pdb",
+        "sha256": "ff99762a56c48293861afb863b5576434085cecc498c045dac7e45edeb615ac9",
+        "bytes": 217000
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.MicroCom.xml",
+        "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105",
+        "bytes": 134
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.MicroCom.pdb",
+        "sha256": "0eaba5af712b43bcbced7060f63b54bfda7a9e00217e85b0c956c17d9a846f46",
+        "bytes": 13528
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Metal.xml",
+        "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd",
+        "bytes": 131
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Metal.pdb",
+        "sha256": "3fe28af632b260c6cc800d8a80faeb525506958ac4dae7ed9d48c5a6c7766d0c",
+        "bytes": 13352
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Markup.Xaml.xml",
+        "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87",
+        "bytes": 25476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Markup.Xaml.pdb",
+        "sha256": "547d9fb41418aab95e6039de1f649e70ca7e15529f81f92c5ed5f9408e9cc7ca",
+        "bytes": 39636
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Markup.xml",
+        "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562",
+        "bytes": 4336
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Markup.pdb",
+        "sha256": "14a7e132596af8f30bc35435fc344770d083c7f97591c085ff25f33a58e99fd2",
+        "bytes": 26248
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Headless.xml",
+        "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10",
+        "bytes": 13264
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Headless.pdb",
+        "sha256": "1b6d435de66029bfc8e18b6c7e0326a3d1fd4b5910803ac5d8e71881e6df2adc",
+        "bytes": 32332
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.HarfBuzz.xml",
+        "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c",
+        "bytes": 1114
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.HarfBuzz.pdb",
+        "sha256": "8558633fe3af39bcfa2dcd78513bd38b651fd7ab0fe66c33d8945571de3d4475",
+        "bytes": 16404
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.FreeDesktop.AtSpi.xml",
+        "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3",
+        "bytes": 52965
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.FreeDesktop.AtSpi.pdb",
+        "sha256": "5645aa693804726c2e8e639c74c6b51ce4cfa985769541ea378cdc61822cb735",
+        "bytes": 225664
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.FreeDesktop.xml",
+        "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3",
+        "bytes": 1857
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.FreeDesktop.pdb",
+        "sha256": "7489527bedf21067d5bcee38bc326e1877b917976439423b85637ce6375ca278",
+        "bytes": 101544
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Fonts.Inter.xml",
+        "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa",
+        "bytes": 137
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Fonts.Inter.pdb",
+        "sha256": "e2fec745d4b845412a91c3de38fc20ca362b95137f5d34decdaecca37b937b32",
+        "bytes": 13456
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Dialogs.xml",
+        "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f",
+        "bytes": 638
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Dialogs.pdb",
+        "sha256": "84ed6f2a7106ccebbeb62d6785c232025e27447fc70521608486691d2ac5179d",
+        "bytes": 26688
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Desktop.xml",
+        "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793",
+        "bytes": 133
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Desktop.pdb",
+        "sha256": "a35a7b8f744b778a11940776cbcb850916d2c9c52117cb610809fe33259da1f5",
+        "bytes": 14476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.DesignerSupport.xml",
+        "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0",
+        "bytes": 141
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.DesignerSupport.pdb",
+        "sha256": "897f86a3722d2756b599c82b0336976006ca02a96c02c31e8158a3c5fe7a52a0",
+        "bytes": 32280
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Controls.xml",
+        "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a",
+        "bytes": 1335488
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Controls.pdb",
+        "sha256": "2b32aa629610f2dd601870142ce761be1b4083849ac917b3e64744a9f3bdaec7",
+        "bytes": 638452
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Base.xml",
+        "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4",
+        "bytes": 2021500
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Base.pdb",
+        "sha256": "ee095c8b5ff40ff7640451a46933e40c08aeafcb7e421da7a7f2c3218f48b16e",
+        "bytes": 1053592
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.xml",
+        "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8",
+        "bytes": 125
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.pdb",
+        "sha256": "6e8ef8c4abedc8e3662dc7474427549adc15d29ba8f4663353343ad84d873fe5",
+        "bytes": 12220
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NineToOne.Cui.AI.pdb",
+        "sha256": "3a51599ade8b862960d87fdb20bb37689440cf66a2210ff265d7e477b3feccb5",
+        "bytes": 37504
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.UI.pdb",
+        "sha256": "51360ae939a5ffabf0e429d4526b3b1ef947868eed652d4bfa5945811461d132",
+        "bytes": 140044
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.Core.pdb",
+        "sha256": "ec2a33daca8ae4acf3bde4cb3543511e700f35b348452e3bde579ba66486ba80",
+        "bytes": 346340
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.Application.pdb",
+        "sha256": "51f72f32682fda2ee6ca4bc768931ff5f9c91fec34ee8b02ca4f9334581f8f66",
+        "bytes": 865272
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Dulche.Runtime.pdb",
+        "sha256": "f74278dcf0ed0ff959a42392a14e5e876e17e9a9f07cd9375c8cee27b211e9c4",
+        "bytes": 131984
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Den.pdb",
+        "sha256": "9ee711e06c82e78f84b897409ca6c1d345baeafd7fbd62f4bb222d90977647be",
+        "bytes": 72616
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Themes.pdb",
+        "sha256": "910dd4e9d2b7a0af2bc6603046c3cf813eea532218da7792211958585b378a77",
+        "bytes": 29224
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Runtime.pdb",
+        "sha256": "8fc25060fe40d8835b5a788178c2cf7bc5edb43064b74aac643f4bc01606f063",
+        "bytes": 53312
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Language.pdb",
+        "sha256": "fb3acf8dc328e99c92a1e23721d85b8230deac6a1da23c89c9a3a3bc03814dad",
+        "bytes": 13524
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Core.pdb",
+        "sha256": "c5942ebb856aef267fc9197eaffd97e7ae62edb896c8e69c23092d2ec22b389b",
+        "bytes": 32716
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/HavenOS.Home.pdb",
+        "sha256": "e5ecff7a9d34f27b7ad945c71a00da58f056130e98a84eac160bc3ab7081f038",
+        "bytes": 263564
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.pdb",
+        "sha256": "757c2acfbdbf74ff2385ffe79fb431eb73c8ad0d6c4dce75abd4eb01b1b09028",
+        "bytes": 61764
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NineToOne.Cui.AI.dll",
+        "sha256": "5980c96398dc9813baa2b2305ada1339c2d70cffe29f8f5f9bbc8b8c1ef3f7f7",
+        "bytes": 130560
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/HavenOS.Home.dll",
+        "sha256": "11d39a321da89bf3d358cab5438c280ec4d0f333ccb9bf20a60362542b64e7ab",
+        "bytes": 1399808
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.UI.dll",
+        "sha256": "6fc1b2ab00afb51348d354cd902514bb89d4cee59e0cab4d43fe5a8035401461",
+        "bytes": 434688
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.dll",
+        "sha256": "2e77472f68714fb1a71c2203d44f9ae1b288fc5679744b6a6a648854c1a32fc5",
+        "bytes": 5181952
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.Core.dll",
+        "sha256": "b7ac0759f6da57f15c1ab9606caaf6c0b110e05bb05258743753daf8d6c5bd06",
+        "bytes": 1885696
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Haven.Application.dll",
+        "sha256": "2b4d3b0b8c843fe3475009e4a5b42b8e93d910a542ce1c2d13333bdc283c813d",
+        "bytes": 4350976
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Dulche.Runtime.dll",
+        "sha256": "b964de78efa6399d21418e4b82a16a3f612cc8c1f5ac17e0157fe864a0d53bb2",
+        "bytes": 748032
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Den.dll",
+        "sha256": "87c65c49db4c877cd8787c15dff27342de0454f1506c09e7b1f6f901e9be568b",
+        "bytes": 337408
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Themes.dll",
+        "sha256": "a8692ee79f2cd8f7352f3d2403cc8606c039e62dcc7276cbf050bfed4dbc3f6a",
+        "bytes": 92672
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Runtime.dll",
+        "sha256": "4e8fe3152757276f162afe9e022ccba0ea5400d086238bf2a7fa22273d7aa4cf",
+        "bytes": 160256
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Language.dll",
+        "sha256": "f9b54651e01185f5ada5d1f4e8328c267c323c7da5213152982e0f9248f03a6a",
+        "bytes": 12288
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/CakeOS.Cui.Core.dll",
+        "sha256": "52d887590b9ae5d15003e79444ee87247299246193825f644915e875adf55032",
+        "bytes": 80896
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.X11.dll",
+        "sha256": "73958b462c4692c979c42b6c937481d2a0373621a646c587607ec24931941265",
+        "bytes": 390144
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Win32.dll",
+        "sha256": "c5aa4e77a0f3198eb4a8d32010d0fe5fdf71f7c96dc4bf795746698d9abe815c",
+        "bytes": 967168
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Win32.Automation.dll",
+        "sha256": "740dd72afa1fa8b010a73ac44e38e841db60433289a14c1206e1e64106cbc185",
+        "bytes": 130048
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Vulkan.dll",
+        "sha256": "aa7263acbb4d96494ff935af4549a1d729951cb5fd228f820e7568be409c31a8",
+        "bytes": 194048
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Themes.Fluent.dll",
+        "sha256": "63f22e2dde5658520232fb1d9dd0956c0cd672032f09c10906790cf98927b5c7",
+        "bytes": 963072
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Skia.dll",
+        "sha256": "f0532f9a4c0b0bb1d2bc8e159c19568135e5bde433110a5a6aace0d57fc39e47",
+        "bytes": 130560
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Remote.Protocol.dll",
+        "sha256": "c3d4f4cb11bd70f18e6a0b268c53a6ab42b18bd772f3d0af03c5181e93fbee77",
+        "bytes": 80384
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.OpenGL.dll",
+        "sha256": "c068735e58ff0206752c76a032f57c36c0e777211c8fb4b1f6116e7408b1feac",
+        "bytes": 120832
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Native.dll",
+        "sha256": "c052c3d65e8212e9d654f7a5ce29321fe2b8b624a41e30fd9f8e1a5a22def5b4",
+        "bytes": 359936
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.MicroCom.dll",
+        "sha256": "949ceb15a791d277ca08397a82ac10be3af249682845fc04377e37bd1970c86b",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Metal.dll",
+        "sha256": "72a0ce859849a9438274026c9e875e6b707a648f91301325e38b154d9eb77d05",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Markup.Xaml.dll",
+        "sha256": "070cb4edd260d3b06449c57225fcba6df974797d32c2fb76aee30d7cba55c41d",
+        "bytes": 78848
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Markup.dll",
+        "sha256": "f68dca22c210a47ffe1d8d50417a2528722e5ce67890662bb4191f41bbe8ea4e",
+        "bytes": 47616
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Headless.dll",
+        "sha256": "c52d41f852d15dbf157dd7a82c04e4019e4a9dee6cbaee54a3e22f10644845ac",
+        "bytes": 73728
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.HarfBuzz.dll",
+        "sha256": "7144cd3025ce2eff8532a5cf6b204a5d32cfc2e6ced6f94697572f17d9e46ef1",
+        "bytes": 22528
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.FreeDesktop.dll",
+        "sha256": "19c659d71dfa945d78ded8b572552b1de428eaed349e4ca1be2df73afe9dd66b",
+        "bytes": 220160
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.FreeDesktop.AtSpi.dll",
+        "sha256": "56880ee258c96a657c69e8f6da548c067d86b1dff27ef935d907efcd53a3b4d5",
+        "bytes": 660480
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Fonts.Inter.dll",
+        "sha256": "0146132d43fc3b9040297f9824ae88041b2188f4eb9e0fe9341f45d09b9788bb",
+        "bytes": 1897472
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.dll",
+        "sha256": "8e76641e0ed4f3e4a3f40f104fac145c5010345225cdac71ad00fb58a5ee8db9",
+        "bytes": 4096
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Dialogs.dll",
+        "sha256": "12d6c6e83a288ac8c3c24262524696f059e5bc7708a1f9b47c51b7023b463224",
+        "bytes": 246784
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Desktop.dll",
+        "sha256": "864a7f608d8484aa0cfb50b3be4243dba7526003f5f855a95afeb399bfeb2e1e",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.DesignerSupport.dll",
+        "sha256": "c6ff6727e17ccc3c5396616d268dd8738ee345767a5c3c4118120a258b698ea6",
+        "bytes": 76288
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Controls.dll",
+        "sha256": "55946f3442cedeb6697cbfa056b6df646cebebfc24d0f98a715e65d479c2d66a",
+        "bytes": 1405440
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Avalonia.Base.dll",
+        "sha256": "9ec17bcdba5a0904b7cf928b339175e20e617e10c345f75e595ce37ed2f91502",
+        "bytes": 2435072
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/Tmds.DBus.Protocol.dll",
+        "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b",
+        "bytes": 219136
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/SkiaSharp.dll",
+        "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3",
+        "bytes": 490528
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/MicroCom.Runtime.dll",
+        "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318",
+        "bytes": 16384
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/HarfBuzzSharp.dll",
+        "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29",
+        "bytes": 122400
+      }
+    ],
+    "name": "proposal06",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "/tmp/b6-private-proposal05-outputs/NativeCloseSetup/NativeCloseSetupFault.dll"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.446,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/run06/proposal06.log"
+  },
+  {
+    "compiledRuntimeWitness": [],
+    "name": "production-original-build",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "build",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.csproj",
+      "--nologo",
+      "-m:1",
+      "--artifacts-path",
+      "/tmp/b6-private-proposal05-artifacts",
+      "-p:EvidenceRegistrySource=/workspace/team-b-astra-browser-validation/apps/Web/BrowserSurfaceRegistry.cs",
+      "-p:EvidenceApplicationSource=/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/close-setup-fix06/production-original.cs"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 11.382,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/run06/production-original-build.log"
+  },
+  {
+    "compiledRuntimeWitness": [
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.pdb",
+        "sha256": "def6be45cb8288043cd8363e3f974adb0c35bf8c65cbc66962dcd26a8741820d",
+        "bytes": 56468
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.dll",
+        "sha256": "1c2ab9e18868e8fe64f5feab2e35b77dff85a5206aaf9bfe073489e32ca35444",
+        "bytes": 116224
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.runtimeconfig.json",
+        "sha256": "efe3a8d53b17a3992b9318485b5cf60bf7a2764f72df1f7cdb93e6ad134f7c92",
+        "bytes": 336
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.deps.json",
+        "sha256": "5534f55956655758f99ae8956260714cbeccb0c0e9b47af8c9e496557ea5dfcb",
+        "bytes": 30505
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault",
+        "sha256": "39420d11d7a96b5e3649d96a465c4e6682abdf778aba8e8dcab78d8e250bb7c4",
+        "bytes": 78256
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.X11.xml",
+        "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b",
+        "bytes": 11685
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.X11.pdb",
+        "sha256": "f65bc3c86f2e277440360945b01f68b1b575af8948b6c02f61652a8e6fd13107",
+        "bytes": 112952
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.Automation.xml",
+        "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9",
+        "bytes": 3812
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.Automation.pdb",
+        "sha256": "51fbd5a992b04329dbbbc78cbc81c35b8c1b02bd23a7cb38134bb8b3c48567c2",
+        "bytes": 101808
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.xml",
+        "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba",
+        "bytes": 143346
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.pdb",
+        "sha256": "2689e5c0d1ef70c807e6767ebf4871ca3184a51a6578d03f1df79eee673b07c0",
+        "bytes": 500584
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Vulkan.xml",
+        "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd",
+        "bytes": 1620
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Vulkan.pdb",
+        "sha256": "2ff628285e79fab92260632047001e8a4a1ff9072e2a9998e06049d266ebd4dc",
+        "bytes": 48456
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Themes.Fluent.xml",
+        "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111",
+        "bytes": 6894
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Themes.Fluent.pdb",
+        "sha256": "6210259a29542ef01a5d9fb3ed41507fbfcfa7d7b58ec3c42d1f442b4a7eb81b",
+        "bytes": 182368
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Skia.xml",
+        "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584",
+        "bytes": 47094
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Skia.pdb",
+        "sha256": "ff0dc28f41d87313fdd0f909caa0544f870cb3acf57d8a3b06b8b24242ea23dd",
+        "bytes": 64364
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Remote.Protocol.xml",
+        "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2",
+        "bytes": 70801
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Remote.Protocol.pdb",
+        "sha256": "4afbaacea12cda8386330a0194e3a121ce8ead8d6efe0c535174cca40604eff6",
+        "bytes": 34620
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.OpenGL.xml",
+        "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be",
+        "bytes": 5602
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.OpenGL.pdb",
+        "sha256": "5f29e17e5a51039c402a809e90f0600879d9d86f981c6a305ce134192e7265e7",
+        "bytes": 53372
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Native.xml",
+        "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c",
+        "bytes": 9476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Native.pdb",
+        "sha256": "ff99762a56c48293861afb863b5576434085cecc498c045dac7e45edeb615ac9",
+        "bytes": 217000
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.MicroCom.xml",
+        "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105",
+        "bytes": 134
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.MicroCom.pdb",
+        "sha256": "0eaba5af712b43bcbced7060f63b54bfda7a9e00217e85b0c956c17d9a846f46",
+        "bytes": 13528
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Metal.xml",
+        "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd",
+        "bytes": 131
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Metal.pdb",
+        "sha256": "3fe28af632b260c6cc800d8a80faeb525506958ac4dae7ed9d48c5a6c7766d0c",
+        "bytes": 13352
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.Xaml.xml",
+        "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87",
+        "bytes": 25476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.Xaml.pdb",
+        "sha256": "547d9fb41418aab95e6039de1f649e70ca7e15529f81f92c5ed5f9408e9cc7ca",
+        "bytes": 39636
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.xml",
+        "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562",
+        "bytes": 4336
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.pdb",
+        "sha256": "14a7e132596af8f30bc35435fc344770d083c7f97591c085ff25f33a58e99fd2",
+        "bytes": 26248
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Headless.xml",
+        "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10",
+        "bytes": 13264
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Headless.pdb",
+        "sha256": "1b6d435de66029bfc8e18b6c7e0326a3d1fd4b5910803ac5d8e71881e6df2adc",
+        "bytes": 32332
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.HarfBuzz.xml",
+        "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c",
+        "bytes": 1114
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.HarfBuzz.pdb",
+        "sha256": "8558633fe3af39bcfa2dcd78513bd38b651fd7ab0fe66c33d8945571de3d4475",
+        "bytes": 16404
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.AtSpi.xml",
+        "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3",
+        "bytes": 52965
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.AtSpi.pdb",
+        "sha256": "5645aa693804726c2e8e639c74c6b51ce4cfa985769541ea378cdc61822cb735",
+        "bytes": 225664
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.xml",
+        "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3",
+        "bytes": 1857
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.pdb",
+        "sha256": "7489527bedf21067d5bcee38bc326e1877b917976439423b85637ce6375ca278",
+        "bytes": 101544
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Fonts.Inter.xml",
+        "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa",
+        "bytes": 137
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Fonts.Inter.pdb",
+        "sha256": "e2fec745d4b845412a91c3de38fc20ca362b95137f5d34decdaecca37b937b32",
+        "bytes": 13456
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Dialogs.xml",
+        "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f",
+        "bytes": 638
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Dialogs.pdb",
+        "sha256": "84ed6f2a7106ccebbeb62d6785c232025e27447fc70521608486691d2ac5179d",
+        "bytes": 26688
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Desktop.xml",
+        "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793",
+        "bytes": 133
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Desktop.pdb",
+        "sha256": "a35a7b8f744b778a11940776cbcb850916d2c9c52117cb610809fe33259da1f5",
+        "bytes": 14476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.DesignerSupport.xml",
+        "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0",
+        "bytes": 141
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.DesignerSupport.pdb",
+        "sha256": "897f86a3722d2756b599c82b0336976006ca02a96c02c31e8158a3c5fe7a52a0",
+        "bytes": 32280
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Controls.xml",
+        "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a",
+        "bytes": 1335488
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Controls.pdb",
+        "sha256": "2b32aa629610f2dd601870142ce761be1b4083849ac917b3e64744a9f3bdaec7",
+        "bytes": 638452
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Base.xml",
+        "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4",
+        "bytes": 2021500
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Base.pdb",
+        "sha256": "ee095c8b5ff40ff7640451a46933e40c08aeafcb7e421da7a7f2c3218f48b16e",
+        "bytes": 1053592
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.xml",
+        "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8",
+        "bytes": 125
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.pdb",
+        "sha256": "6e8ef8c4abedc8e3662dc7474427549adc15d29ba8f4663353343ad84d873fe5",
+        "bytes": 12220
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NineToOne.Cui.AI.pdb",
+        "sha256": "3a51599ade8b862960d87fdb20bb37689440cf66a2210ff265d7e477b3feccb5",
+        "bytes": 37504
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.UI.pdb",
+        "sha256": "51360ae939a5ffabf0e429d4526b3b1ef947868eed652d4bfa5945811461d132",
+        "bytes": 140044
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Core.pdb",
+        "sha256": "ec2a33daca8ae4acf3bde4cb3543511e700f35b348452e3bde579ba66486ba80",
+        "bytes": 346340
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Application.pdb",
+        "sha256": "51f72f32682fda2ee6ca4bc768931ff5f9c91fec34ee8b02ca4f9334581f8f66",
+        "bytes": 865272
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Dulche.Runtime.pdb",
+        "sha256": "f74278dcf0ed0ff959a42392a14e5e876e17e9a9f07cd9375c8cee27b211e9c4",
+        "bytes": 131984
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Den.pdb",
+        "sha256": "9ee711e06c82e78f84b897409ca6c1d345baeafd7fbd62f4bb222d90977647be",
+        "bytes": 72616
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Themes.pdb",
+        "sha256": "910dd4e9d2b7a0af2bc6603046c3cf813eea532218da7792211958585b378a77",
+        "bytes": 29224
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Runtime.pdb",
+        "sha256": "8fc25060fe40d8835b5a788178c2cf7bc5edb43064b74aac643f4bc01606f063",
+        "bytes": 53312
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Language.pdb",
+        "sha256": "fb3acf8dc328e99c92a1e23721d85b8230deac6a1da23c89c9a3a3bc03814dad",
+        "bytes": 13524
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Core.pdb",
+        "sha256": "c5942ebb856aef267fc9197eaffd97e7ae62edb896c8e69c23092d2ec22b389b",
+        "bytes": 32716
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/HavenOS.Home.pdb",
+        "sha256": "e5ecff7a9d34f27b7ad945c71a00da58f056130e98a84eac160bc3ab7081f038",
+        "bytes": 263564
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.pdb",
+        "sha256": "757c2acfbdbf74ff2385ffe79fb431eb73c8ad0d6c4dce75abd4eb01b1b09028",
+        "bytes": 61764
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NineToOne.Cui.AI.dll",
+        "sha256": "5980c96398dc9813baa2b2305ada1339c2d70cffe29f8f5f9bbc8b8c1ef3f7f7",
+        "bytes": 130560
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/HavenOS.Home.dll",
+        "sha256": "11d39a321da89bf3d358cab5438c280ec4d0f333ccb9bf20a60362542b64e7ab",
+        "bytes": 1399808
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.UI.dll",
+        "sha256": "6fc1b2ab00afb51348d354cd902514bb89d4cee59e0cab4d43fe5a8035401461",
+        "bytes": 434688
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.dll",
+        "sha256": "2e77472f68714fb1a71c2203d44f9ae1b288fc5679744b6a6a648854c1a32fc5",
+        "bytes": 5181952
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Core.dll",
+        "sha256": "b7ac0759f6da57f15c1ab9606caaf6c0b110e05bb05258743753daf8d6c5bd06",
+        "bytes": 1885696
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Application.dll",
+        "sha256": "2b4d3b0b8c843fe3475009e4a5b42b8e93d910a542ce1c2d13333bdc283c813d",
+        "bytes": 4350976
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Dulche.Runtime.dll",
+        "sha256": "b964de78efa6399d21418e4b82a16a3f612cc8c1f5ac17e0157fe864a0d53bb2",
+        "bytes": 748032
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Den.dll",
+        "sha256": "87c65c49db4c877cd8787c15dff27342de0454f1506c09e7b1f6f901e9be568b",
+        "bytes": 337408
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Themes.dll",
+        "sha256": "a8692ee79f2cd8f7352f3d2403cc8606c039e62dcc7276cbf050bfed4dbc3f6a",
+        "bytes": 92672
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Runtime.dll",
+        "sha256": "4e8fe3152757276f162afe9e022ccba0ea5400d086238bf2a7fa22273d7aa4cf",
+        "bytes": 160256
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Language.dll",
+        "sha256": "f9b54651e01185f5ada5d1f4e8328c267c323c7da5213152982e0f9248f03a6a",
+        "bytes": 12288
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Core.dll",
+        "sha256": "52d887590b9ae5d15003e79444ee87247299246193825f644915e875adf55032",
+        "bytes": 80896
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.X11.dll",
+        "sha256": "73958b462c4692c979c42b6c937481d2a0373621a646c587607ec24931941265",
+        "bytes": 390144
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.dll",
+        "sha256": "c5aa4e77a0f3198eb4a8d32010d0fe5fdf71f7c96dc4bf795746698d9abe815c",
+        "bytes": 967168
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.Automation.dll",
+        "sha256": "740dd72afa1fa8b010a73ac44e38e841db60433289a14c1206e1e64106cbc185",
+        "bytes": 130048
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Vulkan.dll",
+        "sha256": "aa7263acbb4d96494ff935af4549a1d729951cb5fd228f820e7568be409c31a8",
+        "bytes": 194048
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Themes.Fluent.dll",
+        "sha256": "63f22e2dde5658520232fb1d9dd0956c0cd672032f09c10906790cf98927b5c7",
+        "bytes": 963072
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Skia.dll",
+        "sha256": "f0532f9a4c0b0bb1d2bc8e159c19568135e5bde433110a5a6aace0d57fc39e47",
+        "bytes": 130560
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Remote.Protocol.dll",
+        "sha256": "c3d4f4cb11bd70f18e6a0b268c53a6ab42b18bd772f3d0af03c5181e93fbee77",
+        "bytes": 80384
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.OpenGL.dll",
+        "sha256": "c068735e58ff0206752c76a032f57c36c0e777211c8fb4b1f6116e7408b1feac",
+        "bytes": 120832
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Native.dll",
+        "sha256": "c052c3d65e8212e9d654f7a5ce29321fe2b8b624a41e30fd9f8e1a5a22def5b4",
+        "bytes": 359936
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.MicroCom.dll",
+        "sha256": "949ceb15a791d277ca08397a82ac10be3af249682845fc04377e37bd1970c86b",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Metal.dll",
+        "sha256": "72a0ce859849a9438274026c9e875e6b707a648f91301325e38b154d9eb77d05",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.Xaml.dll",
+        "sha256": "070cb4edd260d3b06449c57225fcba6df974797d32c2fb76aee30d7cba55c41d",
+        "bytes": 78848
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.dll",
+        "sha256": "f68dca22c210a47ffe1d8d50417a2528722e5ce67890662bb4191f41bbe8ea4e",
+        "bytes": 47616
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Headless.dll",
+        "sha256": "c52d41f852d15dbf157dd7a82c04e4019e4a9dee6cbaee54a3e22f10644845ac",
+        "bytes": 73728
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.HarfBuzz.dll",
+        "sha256": "7144cd3025ce2eff8532a5cf6b204a5d32cfc2e6ced6f94697572f17d9e46ef1",
+        "bytes": 22528
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.dll",
+        "sha256": "19c659d71dfa945d78ded8b572552b1de428eaed349e4ca1be2df73afe9dd66b",
+        "bytes": 220160
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.AtSpi.dll",
+        "sha256": "56880ee258c96a657c69e8f6da548c067d86b1dff27ef935d907efcd53a3b4d5",
+        "bytes": 660480
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Fonts.Inter.dll",
+        "sha256": "0146132d43fc3b9040297f9824ae88041b2188f4eb9e0fe9341f45d09b9788bb",
+        "bytes": 1897472
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.dll",
+        "sha256": "8e76641e0ed4f3e4a3f40f104fac145c5010345225cdac71ad00fb58a5ee8db9",
+        "bytes": 4096
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Dialogs.dll",
+        "sha256": "12d6c6e83a288ac8c3c24262524696f059e5bc7708a1f9b47c51b7023b463224",
+        "bytes": 246784
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Desktop.dll",
+        "sha256": "864a7f608d8484aa0cfb50b3be4243dba7526003f5f855a95afeb399bfeb2e1e",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.DesignerSupport.dll",
+        "sha256": "c6ff6727e17ccc3c5396616d268dd8738ee345767a5c3c4118120a258b698ea6",
+        "bytes": 76288
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Controls.dll",
+        "sha256": "55946f3442cedeb6697cbfa056b6df646cebebfc24d0f98a715e65d479c2d66a",
+        "bytes": 1405440
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Base.dll",
+        "sha256": "9ec17bcdba5a0904b7cf928b339175e20e617e10c345f75e595ce37ed2f91502",
+        "bytes": 2435072
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/HarfBuzzSharp.dll",
+        "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29",
+        "bytes": 122400
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Tmds.DBus.Protocol.dll",
+        "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b",
+        "bytes": 219136
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/MicroCom.Runtime.dll",
+        "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318",
+        "bytes": 16384
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/SkiaSharp.dll",
+        "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3",
+        "bytes": 490528
+      }
+    ],
+    "name": "production-original",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.dll"
+    ],
+    "exitCode": -6,
+    "elapsedSeconds": 0.445,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/run06/production-original.log"
+  },
+  {
+    "compiledRuntimeWitness": [],
+    "name": "production-repaired-build",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "build",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/NativeProductionCloseSetupFault.csproj",
+      "--nologo",
+      "-m:1",
+      "--artifacts-path",
+      "/tmp/b6-private-proposal05-artifacts",
+      "-p:EvidenceRegistrySource=/workspace/team-b-astra-browser-validation/apps/Web/BrowserSurfaceRegistry.cs",
+      "-p:EvidenceApplicationSource=/workspace/team-b-astra-browser-validation/apps/Web/BrowserApplication.cs"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 10.338,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/run06/production-repaired-build.log"
+  },
+  {
+    "compiledRuntimeWitness": [
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.pdb",
+        "sha256": "2bdb58cb4b067228fdebdf7515d2b28d9b780eb5c7223db195a1e8bd0128c338",
+        "bytes": 56436
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.dll",
+        "sha256": "9a61e344737c89eacd5f1a0474955465eebc95bb389d589dadd33d9c90de313b",
+        "bytes": 116224
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault",
+        "sha256": "39420d11d7a96b5e3649d96a465c4e6682abdf778aba8e8dcab78d8e250bb7c4",
+        "bytes": 78256
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.runtimeconfig.json",
+        "sha256": "efe3a8d53b17a3992b9318485b5cf60bf7a2764f72df1f7cdb93e6ad134f7c92",
+        "bytes": 336
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.deps.json",
+        "sha256": "5534f55956655758f99ae8956260714cbeccb0c0e9b47af8c9e496557ea5dfcb",
+        "bytes": 30505
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.X11.xml",
+        "sha256": "78e07d881a388ff99cfa5e8c711a7903de7f63ea6e2551a8758b6902e516229b",
+        "bytes": 11685
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.X11.pdb",
+        "sha256": "f65bc3c86f2e277440360945b01f68b1b575af8948b6c02f61652a8e6fd13107",
+        "bytes": 112952
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.Automation.xml",
+        "sha256": "0bf38860d21fe220509b52062513fc581056c6aca2f63c622bed74bd7d8aebc9",
+        "bytes": 3812
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.Automation.pdb",
+        "sha256": "51fbd5a992b04329dbbbc78cbc81c35b8c1b02bd23a7cb38134bb8b3c48567c2",
+        "bytes": 101808
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.xml",
+        "sha256": "140c3eb852b4126bb44cfc46ebf0f1f1369b4da32e56a3ab0010175852c8b5ba",
+        "bytes": 143346
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.pdb",
+        "sha256": "2689e5c0d1ef70c807e6767ebf4871ca3184a51a6578d03f1df79eee673b07c0",
+        "bytes": 500584
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Vulkan.xml",
+        "sha256": "62be43821cc83b0e7a1dc60a9f6add5eb45f71972a341cab208955b67bfdefcd",
+        "bytes": 1620
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Vulkan.pdb",
+        "sha256": "2ff628285e79fab92260632047001e8a4a1ff9072e2a9998e06049d266ebd4dc",
+        "bytes": 48456
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Themes.Fluent.xml",
+        "sha256": "fdb9f81da4e638c93d9c2f41b23b42e46afd6fc10a98dc1ca0912dfb8ac04111",
+        "bytes": 6894
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Themes.Fluent.pdb",
+        "sha256": "6210259a29542ef01a5d9fb3ed41507fbfcfa7d7b58ec3c42d1f442b4a7eb81b",
+        "bytes": 182368
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Skia.xml",
+        "sha256": "dd6df2c181b3bfda745a6f59e63f58d5edafa841f3a25e7c0215a61e810a1584",
+        "bytes": 47094
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Skia.pdb",
+        "sha256": "ff0dc28f41d87313fdd0f909caa0544f870cb3acf57d8a3b06b8b24242ea23dd",
+        "bytes": 64364
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Remote.Protocol.xml",
+        "sha256": "50c668db7cfdf393c6ccad1f61a57a2429b5c4f6700e1f83df753927c1ca5bb2",
+        "bytes": 70801
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Remote.Protocol.pdb",
+        "sha256": "4afbaacea12cda8386330a0194e3a121ce8ead8d6efe0c535174cca40604eff6",
+        "bytes": 34620
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.OpenGL.xml",
+        "sha256": "78c09638bc93db81e199d40813fd0dc5324771000a22c56ad48dd375f0d8b6be",
+        "bytes": 5602
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.OpenGL.pdb",
+        "sha256": "5f29e17e5a51039c402a809e90f0600879d9d86f981c6a305ce134192e7265e7",
+        "bytes": 53372
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Native.xml",
+        "sha256": "8b3efccd6e89715fd0ef7c73fe5fb3be67b9b1e5a72f6b68cefdb22683cee84c",
+        "bytes": 9476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Native.pdb",
+        "sha256": "ff99762a56c48293861afb863b5576434085cecc498c045dac7e45edeb615ac9",
+        "bytes": 217000
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.MicroCom.xml",
+        "sha256": "7262674af333d2cbb95d17f9144768dcc7096e2cc909ba45c16b34cc03a11105",
+        "bytes": 134
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.MicroCom.pdb",
+        "sha256": "0eaba5af712b43bcbced7060f63b54bfda7a9e00217e85b0c956c17d9a846f46",
+        "bytes": 13528
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Metal.xml",
+        "sha256": "8483dba0a9991a59270c3344decaa0963e2a9f783fbd2f75d719b6e496b19bfd",
+        "bytes": 131
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Metal.pdb",
+        "sha256": "3fe28af632b260c6cc800d8a80faeb525506958ac4dae7ed9d48c5a6c7766d0c",
+        "bytes": 13352
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.Xaml.xml",
+        "sha256": "0d4f4c891392a4797dd9289d8afdefb3739631682da423c5e24e90665aeefe87",
+        "bytes": 25476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.Xaml.pdb",
+        "sha256": "547d9fb41418aab95e6039de1f649e70ca7e15529f81f92c5ed5f9408e9cc7ca",
+        "bytes": 39636
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.xml",
+        "sha256": "ca6dbf8040dff78bcc7c9604a32e05d6d1f3d1cef6cb04d56c66dcc537422562",
+        "bytes": 4336
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.pdb",
+        "sha256": "14a7e132596af8f30bc35435fc344770d083c7f97591c085ff25f33a58e99fd2",
+        "bytes": 26248
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Headless.xml",
+        "sha256": "9239a2bd8f0869d40f6160e83bf30091fcf781adbf603a6ecf9e1f52a02c8d10",
+        "bytes": 13264
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Headless.pdb",
+        "sha256": "1b6d435de66029bfc8e18b6c7e0326a3d1fd4b5910803ac5d8e71881e6df2adc",
+        "bytes": 32332
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.HarfBuzz.xml",
+        "sha256": "a0af2750b7353ab295555c81447d1df0c08790c0a7145242a1a21e3d10f4700c",
+        "bytes": 1114
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.HarfBuzz.pdb",
+        "sha256": "8558633fe3af39bcfa2dcd78513bd38b651fd7ab0fe66c33d8945571de3d4475",
+        "bytes": 16404
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.AtSpi.xml",
+        "sha256": "00d946dea2a5a8f0d044055e101b8a3b8d5552d66dcf54908c1ca97c26988ba3",
+        "bytes": 52965
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.AtSpi.pdb",
+        "sha256": "5645aa693804726c2e8e639c74c6b51ce4cfa985769541ea378cdc61822cb735",
+        "bytes": 225664
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.xml",
+        "sha256": "743b46476e6ca14986cd2515ad28475b277715d2b99235dcbab614746da7c6a3",
+        "bytes": 1857
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.pdb",
+        "sha256": "7489527bedf21067d5bcee38bc326e1877b917976439423b85637ce6375ca278",
+        "bytes": 101544
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Fonts.Inter.xml",
+        "sha256": "7e5078dc2c8200e6fe942978762dfc9dd5ca7a6026055a84d014f571d7477caa",
+        "bytes": 137
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Fonts.Inter.pdb",
+        "sha256": "e2fec745d4b845412a91c3de38fc20ca362b95137f5d34decdaecca37b937b32",
+        "bytes": 13456
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Dialogs.xml",
+        "sha256": "4d50a9ff2e184cd1dbb097931a35fe3ec01aeb325017864999a59eabd170e39f",
+        "bytes": 638
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Dialogs.pdb",
+        "sha256": "84ed6f2a7106ccebbeb62d6785c232025e27447fc70521608486691d2ac5179d",
+        "bytes": 26688
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Desktop.xml",
+        "sha256": "a21f13a23650dc5845be0753a8a59b3eef9e6067b5256d5420b8a16a491e5793",
+        "bytes": 133
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Desktop.pdb",
+        "sha256": "a35a7b8f744b778a11940776cbcb850916d2c9c52117cb610809fe33259da1f5",
+        "bytes": 14476
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.DesignerSupport.xml",
+        "sha256": "812f99e101dde5d88d0cd258cdcd1ce034eb4c73c55ee150878da97e34d310e0",
+        "bytes": 141
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.DesignerSupport.pdb",
+        "sha256": "897f86a3722d2756b599c82b0336976006ca02a96c02c31e8158a3c5fe7a52a0",
+        "bytes": 32280
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Controls.xml",
+        "sha256": "5ce6ea74c8d6ba541187571d58d515c3727387d6120cafb2de69cf47849d783a",
+        "bytes": 1335488
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Controls.pdb",
+        "sha256": "2b32aa629610f2dd601870142ce761be1b4083849ac917b3e64744a9f3bdaec7",
+        "bytes": 638452
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Base.xml",
+        "sha256": "4fe8e877225e7edcc95d3e704a26935ccece279f236bfc50c2b03fc34bdbd0e4",
+        "bytes": 2021500
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Base.pdb",
+        "sha256": "ee095c8b5ff40ff7640451a46933e40c08aeafcb7e421da7a7f2c3218f48b16e",
+        "bytes": 1053592
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.xml",
+        "sha256": "e2bf3fc4ca30226b0dc47807c503bc96958cc1c278d9ff4d0386efa2dba5ceb8",
+        "bytes": 125
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.pdb",
+        "sha256": "6e8ef8c4abedc8e3662dc7474427549adc15d29ba8f4663353343ad84d873fe5",
+        "bytes": 12220
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NineToOne.Cui.AI.pdb",
+        "sha256": "3a51599ade8b862960d87fdb20bb37689440cf66a2210ff265d7e477b3feccb5",
+        "bytes": 37504
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.UI.pdb",
+        "sha256": "51360ae939a5ffabf0e429d4526b3b1ef947868eed652d4bfa5945811461d132",
+        "bytes": 140044
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Core.pdb",
+        "sha256": "ec2a33daca8ae4acf3bde4cb3543511e700f35b348452e3bde579ba66486ba80",
+        "bytes": 346340
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Application.pdb",
+        "sha256": "51f72f32682fda2ee6ca4bc768931ff5f9c91fec34ee8b02ca4f9334581f8f66",
+        "bytes": 865272
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Dulche.Runtime.pdb",
+        "sha256": "f74278dcf0ed0ff959a42392a14e5e876e17e9a9f07cd9375c8cee27b211e9c4",
+        "bytes": 131984
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Den.pdb",
+        "sha256": "9ee711e06c82e78f84b897409ca6c1d345baeafd7fbd62f4bb222d90977647be",
+        "bytes": 72616
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Themes.pdb",
+        "sha256": "910dd4e9d2b7a0af2bc6603046c3cf813eea532218da7792211958585b378a77",
+        "bytes": 29224
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Runtime.pdb",
+        "sha256": "8fc25060fe40d8835b5a788178c2cf7bc5edb43064b74aac643f4bc01606f063",
+        "bytes": 53312
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Language.pdb",
+        "sha256": "fb3acf8dc328e99c92a1e23721d85b8230deac6a1da23c89c9a3a3bc03814dad",
+        "bytes": 13524
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Core.pdb",
+        "sha256": "c5942ebb856aef267fc9197eaffd97e7ae62edb896c8e69c23092d2ec22b389b",
+        "bytes": 32716
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/HavenOS.Home.pdb",
+        "sha256": "e5ecff7a9d34f27b7ad945c71a00da58f056130e98a84eac160bc3ab7081f038",
+        "bytes": 263564
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.pdb",
+        "sha256": "757c2acfbdbf74ff2385ffe79fb431eb73c8ad0d6c4dce75abd4eb01b1b09028",
+        "bytes": 61764
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NineToOne.Cui.AI.dll",
+        "sha256": "5980c96398dc9813baa2b2305ada1339c2d70cffe29f8f5f9bbc8b8c1ef3f7f7",
+        "bytes": 130560
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/HavenOS.Home.dll",
+        "sha256": "11d39a321da89bf3d358cab5438c280ec4d0f333ccb9bf20a60362542b64e7ab",
+        "bytes": 1399808
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.UI.dll",
+        "sha256": "6fc1b2ab00afb51348d354cd902514bb89d4cee59e0cab4d43fe5a8035401461",
+        "bytes": 434688
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.dll",
+        "sha256": "2e77472f68714fb1a71c2203d44f9ae1b288fc5679744b6a6a648854c1a32fc5",
+        "bytes": 5181952
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Core.dll",
+        "sha256": "b7ac0759f6da57f15c1ab9606caaf6c0b110e05bb05258743753daf8d6c5bd06",
+        "bytes": 1885696
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Haven.Application.dll",
+        "sha256": "2b4d3b0b8c843fe3475009e4a5b42b8e93d910a542ce1c2d13333bdc283c813d",
+        "bytes": 4350976
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Dulche.Runtime.dll",
+        "sha256": "b964de78efa6399d21418e4b82a16a3f612cc8c1f5ac17e0157fe864a0d53bb2",
+        "bytes": 748032
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Den.dll",
+        "sha256": "87c65c49db4c877cd8787c15dff27342de0454f1506c09e7b1f6f901e9be568b",
+        "bytes": 337408
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Themes.dll",
+        "sha256": "a8692ee79f2cd8f7352f3d2403cc8606c039e62dcc7276cbf050bfed4dbc3f6a",
+        "bytes": 92672
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Runtime.dll",
+        "sha256": "4e8fe3152757276f162afe9e022ccba0ea5400d086238bf2a7fa22273d7aa4cf",
+        "bytes": 160256
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Language.dll",
+        "sha256": "f9b54651e01185f5ada5d1f4e8328c267c323c7da5213152982e0f9248f03a6a",
+        "bytes": 12288
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/CakeOS.Cui.Core.dll",
+        "sha256": "52d887590b9ae5d15003e79444ee87247299246193825f644915e875adf55032",
+        "bytes": 80896
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.X11.dll",
+        "sha256": "73958b462c4692c979c42b6c937481d2a0373621a646c587607ec24931941265",
+        "bytes": 390144
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.dll",
+        "sha256": "c5aa4e77a0f3198eb4a8d32010d0fe5fdf71f7c96dc4bf795746698d9abe815c",
+        "bytes": 967168
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Win32.Automation.dll",
+        "sha256": "740dd72afa1fa8b010a73ac44e38e841db60433289a14c1206e1e64106cbc185",
+        "bytes": 130048
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Vulkan.dll",
+        "sha256": "aa7263acbb4d96494ff935af4549a1d729951cb5fd228f820e7568be409c31a8",
+        "bytes": 194048
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Themes.Fluent.dll",
+        "sha256": "63f22e2dde5658520232fb1d9dd0956c0cd672032f09c10906790cf98927b5c7",
+        "bytes": 963072
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Skia.dll",
+        "sha256": "f0532f9a4c0b0bb1d2bc8e159c19568135e5bde433110a5a6aace0d57fc39e47",
+        "bytes": 130560
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Remote.Protocol.dll",
+        "sha256": "c3d4f4cb11bd70f18e6a0b268c53a6ab42b18bd772f3d0af03c5181e93fbee77",
+        "bytes": 80384
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.OpenGL.dll",
+        "sha256": "c068735e58ff0206752c76a032f57c36c0e777211c8fb4b1f6116e7408b1feac",
+        "bytes": 120832
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Native.dll",
+        "sha256": "c052c3d65e8212e9d654f7a5ce29321fe2b8b624a41e30fd9f8e1a5a22def5b4",
+        "bytes": 359936
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.MicroCom.dll",
+        "sha256": "949ceb15a791d277ca08397a82ac10be3af249682845fc04377e37bd1970c86b",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Metal.dll",
+        "sha256": "72a0ce859849a9438274026c9e875e6b707a648f91301325e38b154d9eb77d05",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.Xaml.dll",
+        "sha256": "070cb4edd260d3b06449c57225fcba6df974797d32c2fb76aee30d7cba55c41d",
+        "bytes": 78848
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Markup.dll",
+        "sha256": "f68dca22c210a47ffe1d8d50417a2528722e5ce67890662bb4191f41bbe8ea4e",
+        "bytes": 47616
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Headless.dll",
+        "sha256": "c52d41f852d15dbf157dd7a82c04e4019e4a9dee6cbaee54a3e22f10644845ac",
+        "bytes": 73728
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.HarfBuzz.dll",
+        "sha256": "7144cd3025ce2eff8532a5cf6b204a5d32cfc2e6ced6f94697572f17d9e46ef1",
+        "bytes": 22528
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.dll",
+        "sha256": "19c659d71dfa945d78ded8b572552b1de428eaed349e4ca1be2df73afe9dd66b",
+        "bytes": 220160
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.FreeDesktop.AtSpi.dll",
+        "sha256": "56880ee258c96a657c69e8f6da548c067d86b1dff27ef935d907efcd53a3b4d5",
+        "bytes": 660480
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Fonts.Inter.dll",
+        "sha256": "0146132d43fc3b9040297f9824ae88041b2188f4eb9e0fe9341f45d09b9788bb",
+        "bytes": 1897472
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.dll",
+        "sha256": "8e76641e0ed4f3e4a3f40f104fac145c5010345225cdac71ad00fb58a5ee8db9",
+        "bytes": 4096
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Dialogs.dll",
+        "sha256": "12d6c6e83a288ac8c3c24262524696f059e5bc7708a1f9b47c51b7023b463224",
+        "bytes": 246784
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Desktop.dll",
+        "sha256": "864a7f608d8484aa0cfb50b3be4243dba7526003f5f855a95afeb399bfeb2e1e",
+        "bytes": 15360
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.DesignerSupport.dll",
+        "sha256": "c6ff6727e17ccc3c5396616d268dd8738ee345767a5c3c4118120a258b698ea6",
+        "bytes": 76288
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Controls.dll",
+        "sha256": "55946f3442cedeb6697cbfa056b6df646cebebfc24d0f98a715e65d479c2d66a",
+        "bytes": 1405440
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Avalonia.Base.dll",
+        "sha256": "9ec17bcdba5a0904b7cf928b339175e20e617e10c345f75e595ce37ed2f91502",
+        "bytes": 2435072
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/HarfBuzzSharp.dll",
+        "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29",
+        "bytes": 122400
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/Tmds.DBus.Protocol.dll",
+        "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b",
+        "bytes": 219136
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/MicroCom.Runtime.dll",
+        "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318",
+        "bytes": 16384
+      },
+      {
+        "path": "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/SkiaSharp.dll",
+        "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3",
+        "bytes": 490528
+      }
+    ],
+    "name": "production-repaired",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "/tmp/b6-private-proposal05-outputs/NativeProductionCloseSetup/NativeProductionCloseSetupFault.dll"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.445,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b6/private-context-proposal/run06/production-repaired.log"
+  }
+]
