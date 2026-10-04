@@ -1,0 +1,133 @@
+{
+  "recordedUTC": "2026-10-04T03:56:21.084585+00:00",
+  "status": "EXECUTED_NATIVE_PUBLICFLAG20X2_ADDENDUM_NO_SHARED_ACK_OR_ADOPTION",
+  "sourceCohort": "adbb61e5e40d2ac13a58bdabf62031a30d51d03d6be9cd28e19a4cc71b2c16bf",
+  "originalJointPackageSHA256": "e27025c269a160dc3f36eaf79506275e60f7176f53309d496511e0ac9ba126d8",
+  "files": [
+    {
+      "path": "BrowserApplication.cs.proposed",
+      "bytes": 18319,
+      "sha256": "2faa6d6c30bca3fabccd6189b01b45bbd6a19c281cdbed891a0945d5e07e1959"
+    },
+    {
+      "path": "BrowserSurfaceRegistry.cs.proposed",
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    {
+      "path": "HomeResponsiveJoint.Dll.Tests.csproj",
+      "bytes": 10113,
+      "sha256": "1673cc64627b3c48c104a3554cb53d448d7a20e82f7ce7064bdb230370c85f9f"
+    },
+    {
+      "path": "HomeResponsiveLayoutRegression.with-host-policy.proposed.cs",
+      "bytes": 11100,
+      "sha256": "319eaa42bb0db399a9efcb9875c632f7eefdf87fd6f605696e8c4da16b464f4e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1158,
+      "sha256": "1e1b7e61ef9f7ae3ff41ba76dd4ff92c8df5e370cae2af48bb2c4dddf844e962"
+    },
+    {
+      "path": "actual2/build-process.json",
+      "bytes": 806,
+      "sha256": "872703c1cc65e2011ff5d27fd5e21c94acb6f94c2c91c19e46fd3c56f899f2f1"
+    },
+    {
+      "path": "actual2/build.log",
+      "bytes": 480,
+      "sha256": "3e32eb65ff2da8101cfcbf714c780a1cf7bcda74869db3909f3a413c53469eb7"
+    },
+    {
+      "path": "actual2/commands-results.json",
+      "bytes": 3538,
+      "sha256": "2b7fc0a922901a9439ee542dcdbd81861f07feb507988c5006337288b7422ca6"
+    },
+    {
+      "path": "actual2/final.json",
+      "bytes": 4300,
+      "sha256": "57933a01b5f80624f018ec977172511193dfa5dcb724fa520ae308de4ff3d7f4"
+    },
+    {
+      "path": "actual2/inputs-after.json",
+      "bytes": 49357,
+      "sha256": "66450f92f4408e5234a0aa8ebfca57ae6de4abd2823fa00a02a6c577abd164a0"
+    },
+    {
+      "path": "actual2/inputs-before.json",
+      "bytes": 49357,
+      "sha256": "66450f92f4408e5234a0aa8ebfca57ae6de4abd2823fa00a02a6c577abd164a0"
+    },
+    {
+      "path": "actual2/public-flag-1440-process.json",
+      "bytes": 1071,
+      "sha256": "2eab0f9c32a2ac7d5738e1ce9cf491be704198745e98a64ed778191fd820a8b4"
+    },
+    {
+      "path": "actual2/public-flag-1440.json",
+      "bytes": 158002,
+      "sha256": "bba1acc70098518850fa3cb404d93f47a1da66ba4ece44f6c41a5cc7608a6425"
+    },
+    {
+      "path": "actual2/public-flag-1440.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "actual2/public-flag-360-process.json",
+      "bytes": 1067,
+      "sha256": "37dcbd94d379f5fd1e2d56c4107334e06b1bdf4ef533c242984f2c558b27c84c"
+    },
+    {
+      "path": "actual2/public-flag-360.json",
+      "bytes": 163302,
+      "sha256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86"
+    },
+    {
+      "path": "actual2/public-flag-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "allocation-run01/allocation.json",
+      "bytes": 1201,
+      "sha256": "ac0e0bf50fdcb2b9f33188cca696c129fb4bf9dce086f3f30218af04fe7a5c20"
+    },
+    {
+      "path": "bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.deps.json",
+      "bytes": 14930,
+      "sha256": "f9a4bcef02bbf948a2f9fdc068bff3975d25e600cc817575bd2ef381183e1dd3"
+    },
+    {
+      "path": "bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.dll",
+      "bytes": 151552,
+      "sha256": "444372f3b1e2cd728be809f6ffa003b66466ea12f5126a3a56eec86eca2a9d29"
+    },
+    {
+      "path": "bin/Release/net10.0/HomeResponsiveJoint.Dll.Tests.runtimeconfig.json",
+      "bytes": 330,
+      "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+    },
+    {
+      "path": "executed-public-flag-results.json",
+      "bytes": 16366,
+      "sha256": "b55676d9fda621d86d3a21135fd5a23b0220260d2ca4b7bdc2c32b6032222ed4"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 37761,
+      "sha256": "adbb61e5e40d2ac13a58bdabf62031a30d51d03d6be9cd28e19a4cc71b2c16bf"
+    },
+    {
+      "path": "run-pinned-public-flag.py",
+      "bytes": 4556,
+      "sha256": "cfa7afc898b4454e8cad9a30770e799d4fd08049fe19a3b09b9e8ead6055ffef"
+    },
+    {
+      "path": "run-with-allocation-guard.py",
+      "bytes": 3633,
+      "sha256": "b469e808a5fda7e0e2c909e3e88a4f4748ebde971bfbe634faa6b88188127665"
+    }
+  ]
+}

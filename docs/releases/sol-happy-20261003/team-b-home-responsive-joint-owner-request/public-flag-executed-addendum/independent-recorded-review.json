@@ -1,0 +1,159 @@
+{
+  "recordedUTC": "2026-10-04T03:56:16.386045+00:00",
+  "verdict": "RECORDED_NATIVE_PUBLIC_FLAG_PATH_20X2_EVIDENCE_CONSISTENT; NO_OWNER_ADOPTION_OR_BROWSER_ACCEPTANCE",
+  "executedManifestSha256": "b55676d9fda621d86d3a21135fd5a23b0220260d2ca4b7bdc2c32b6032222ed4",
+  "verifiedBeforeAfterInputRows": 142,
+  "beforeAfterSame": true,
+  "hashFailures": [],
+  "actualManagedNativeCopiedOutputRows": 42,
+  "actualCompiledFixtureSha256": "444372f3b1e2cd728be809f6ffa003b66466ea12f5126a3a56eec86eca2a9d29",
+  "cohorts": [
+    {
+      "name": "public-flag-360",
+      "rawSHA256": "19ad6e33be928c0d977399a48b4ab589d1d9f4c0e79f125524b620a7b7925f86",
+      "checks": 20,
+      "passed": 20,
+      "extent": {
+        "AspectRatio": 0.259927797833935,
+        "Width": 360,
+        "Height": 1385
+      },
+      "viewport": {
+        "AspectRatio": 0.45,
+        "Width": 360,
+        "Height": 800
+      },
+      "root": {
+        "X": 0,
+        "Y": 0,
+        "Width": 360,
+        "Height": 1385,
+        "Position": {
+          "X": 0,
+          "Y": 0
+        },
+        "Size": {
+          "AspectRatio": 0.259927797833935,
+          "Width": 360,
+          "Height": 1385
+        },
+        "Right": 360,
+        "Bottom": 1385,
+        "Left": 0,
+        "Top": 0,
+        "TopLeft": {
+          "X": 0,
+          "Y": 0
+        },
+        "TopRight": {
+          "X": 360,
+          "Y": 0
+        },
+        "BottomLeft": {
+          "X": 0,
+          "Y": 1385
+        },
+        "BottomRight": {
+          "X": 360,
+          "Y": 1385
+        },
+        "Center": {
+          "X": 180,
+          "Y": 692.5
+        }
+      },
+      "textRangeCount": 55,
+      "declaredSurfaceConstraint": true,
+      "diagnosticPropertyMutation": false
+    },
+    {
+      "name": "public-flag-1440",
+      "rawSHA256": "bba1acc70098518850fa3cb404d93f47a1da66ba4ece44f6c41a5cc7608a6425",
+      "checks": 20,
+      "passed": 20,
+      "extent": {
+        "AspectRatio": 1.509433962264151,
+        "Width": 1440,
+        "Height": 954
+      },
+      "viewport": {
+        "AspectRatio": 1.509433962264151,
+        "Width": 1440,
+        "Height": 954
+      },
+      "root": {
+        "X": 0,
+        "Y": 0,
+        "Width": 1440,
+        "Height": 954,
+        "Position": {
+          "X": 0,
+          "Y": 0
+        },
+        "Size": {
+          "AspectRatio": 1.509433962264151,
+          "Width": 1440,
+          "Height": 954
+        },
+        "Right": 1440,
+        "Bottom": 954,
+        "Left": 0,
+        "Top": 0,
+        "TopLeft": {
+          "X": 0,
+          "Y": 0
+        },
+        "TopRight": {
+          "X": 1440,
+          "Y": 0
+        },
+        "BottomLeft": {
+          "X": 0,
+          "Y": 954
+        },
+        "BottomRight": {
+          "X": 1440,
+          "Y": 954
+        },
+        "Center": {
+          "X": 720,
+          "Y": 477
+        }
+      },
+      "textRangeCount": 55,
+      "declaredSurfaceConstraint": true,
+      "diagnosticPropertyMutation": false
+    }
+  ],
+  "build": {
+    "exit": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "resource": {
+    "recordedUTC": "2026-10-04T03:53:53.842040+00:00",
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/run-pinned-public-flag.py",
+      "--output",
+      "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/allocation-run01/cohort"
+    ],
+    "TMPDIR": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/native-joint-dll-cohort/allocation-run01/workspace-tmp",
+    "capBytes": 67108864,
+    "workspaceHeadroomFloorBytes": 268435456,
+    "initialAllocatedBytes": 135168,
+    "peakAllocatedBytes": 48939008,
+    "finalAllocatedBytes": 48939008,
+    "initialWorkspaceFreeBytes": 801144832,
+    "minimumWorkspaceFreeBytes": 752406528,
+    "finalWorkspaceFreeBytes": 752406528,
+    "breach": null,
+    "supervisorCleanup": [],
+    "runnerExit": 0,
+    "scope": "Own new fixture dir allocated st_blocks bytes, including actual copiedDLL/native/PDB/XML/bin/obj/log/tmp. Existing referenced productioninput directories untouched. No SDK/browser/AT result inferred from budget proof."
+  },
+  "cleanupReportedLiveGroups": [],
+  "scope": "Actual native maintained DLLs, same20 assertion block and public optional per-surface constraint true before real Render, no diagnostic scroll mutation. Shared intrinsic owner CUI proposal not adopted; source-level A1 ACK and fresh browser/platform/AT/input acceptance still required. Historical7 cohorts retained.",
+  "executedByReviewer": false,
+  "reviewerInspectionCorrection": "Initial read-only helper used nonexistent actual key and raised KeyError; corrected to actualSHA256. No fixture/source/runtime/oracle changed."
+}
