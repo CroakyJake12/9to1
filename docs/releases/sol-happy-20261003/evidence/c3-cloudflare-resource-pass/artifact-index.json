@@ -22,8 +22,8 @@
     },
     {
       "path": "result.json",
-      "bytes": 3259,
-      "sha256": "5451bf4086736eec061308259b79829f1e6998a76406c4b997eaf9e9aefb7702"
+      "bytes": 3357,
+      "sha256": "d8ec9a5f0f5985b0eec79e4dc6339d2fc624c4c0f1452eb772915d231c5a135c"
     },
     {
       "path": "source-pins.json",

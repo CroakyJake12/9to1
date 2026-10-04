@@ -10,7 +10,7 @@
     "d1": "WorkersFree5Mrowreads/day+100000rowwrites/day+5GBtotalstorage; since2026-09-01 exceedingdailyreads/writes errorsuntilmidnightUTC; account subscription cannot be inferred",
     "r2": "Public Standard free tier10GB-month/1MClassA/10MClassB monthly; existingbucket does not establish unused allowance or no bills; auth/receipt source has noR2binding"
   },
-  "newBillableActivationConclusion": "NOT_ESTABLISHED from available metadata. Minimal auth resources are Worker+D1; no source requirement to upgrade Workers or enable R2/AI/email. Isolated DB/Worker create would be a provider write and remains root-only after plan/limits/CPU/config evidence; no free-resource guarantee issued.",
+  "newBillableActivationConclusion": "NOT_ESTABLISHED from available metadata. Minimal auth resources are Worker+D1; no source requirement to upgrade Workers or enable R2/AI or specifically Cloudflare Email Sending (actual verification/recovery delivery is separately required). Isolated DB/Worker create would be a provider write and remains root-only after plan/limits/CPU/config evidence; no free-resource guarantee issued.",
   "requiredDecisions": [
     {
       "item": "Authoritative current WorkersFree/Paid subscription and included-usage/overage status",
