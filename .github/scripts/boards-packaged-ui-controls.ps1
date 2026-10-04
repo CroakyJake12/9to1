@@ -16,7 +16,7 @@ if (Test-Path -LiteralPath $output) { throw 'Evidence directory must be new.' }
 if ($output.StartsWith($repo + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Keep runtime evidence outside the source checkout.' }
 [void][IO.Directory]::CreateDirectory($output)
 $result = [ordered]@{
-    schemaVersion = 1; status = 'NOT_RUN'; stage = 'preflight'; checks = @(); launches = @(); screenshots = @()
+    schemaVersion = 1; status = 'NOT_RUN'; stage = 'preflight'; checks = @(); launches = @(); screenshots = @(); streamDrains = @()
     producerRunId = $catalog.producerRunId; producerCommit = $catalog.sourceBasis
     originalArtifacts = $catalog.artifacts; package = $catalog.package
     packageHashVerified = $false; manifestHashVerified = $false; extractedFilesVerified = $false
@@ -111,15 +111,32 @@ function Start-Board([string]$Label) {
     $launchRecord.windowObserved = $true; $launchRecord.windowTitle = $window.Current.Name; Write-Result
     return $window
 }
+function Drain-OwnedLogs {
+    $allDrained = $true
+    foreach ($stream in @(@{ name = 'stdout'; task = $stdout }, @{ name = 'stderr'; task = $stderr })) {
+        $drain = [ordered]@{ launch = $launchLabel; stream = $stream.name; timeoutMilliseconds = 5000; completed = $false; failureType = $null }
+        try {
+            if ($stream.task.Wait(5000)) {
+                # Result is read only after the bounded wait observes completion.
+                $text = $stream.task.Result
+                $text | Set-Content -LiteralPath (Join-Path $output ($launchLabel + '.' + $stream.name + '.log')) -Encoding UTF8
+                if ($stream.name -ceq 'stderr') { $script:stderrText = $text }
+                $drain.completed = $true
+            } else { $allDrained = $false; $drain.failureType = 'BoundedStreamDrainTimeout' }
+        } catch { $allDrained = $false; $drain.failureType = $_.Exception.GetType().FullName }
+        $result.streamDrains += $drain
+    }
+    Write-Result
+    return $allDrained
+}
 function Close-Board {
     $launchRecord.closeRequested = $process.CloseMainWindow()
     Check $launchRecord.closeRequested 'Actual native window accepted graceful close'
     Check ($process.WaitForExit(20000)) 'Actual packaged process exited after graceful close'
     $launchRecord.exited = $true; $launchRecord.exitCode = $process.ExitCode
-    $stdout.Result | Set-Content -LiteralPath (Join-Path $output ($launchLabel + '.stdout.log')) -Encoding UTF8
-    $stderr.Result | Set-Content -LiteralPath (Join-Path $output ($launchLabel + '.stderr.log')) -Encoding UTF8
+    Check (Drain-OwnedLogs) 'Actual process stdout/stderr drain completed within each five-second bound'
     Check ($process.ExitCode -eq 0) 'Actual packaged native close exit code is zero'
-    Check ([string]::IsNullOrWhiteSpace($stderr.Result)) 'Actual packaged app stderr is empty'
+    Check ([string]::IsNullOrWhiteSpace($stderrText)) 'Actual packaged app stderr is empty'
     $process.Dispose(); $script:process = $null; Write-Result
 }
 function Capture-Window([string]$Name) {
@@ -255,8 +272,7 @@ public static class BoardsPackageInput {
                 if (-not $process.WaitForExit(5000)) { $process.Kill(); $result.forcedCleanup = $true; [void]$process.WaitForExit(5000) }
             }
             if ($process.HasExited) {
-                $stdout.Result | Set-Content -LiteralPath (Join-Path $output ($launchLabel + '.stdout.log')) -Encoding UTF8
-                $stderr.Result | Set-Content -LiteralPath (Join-Path $output ($launchLabel + '.stderr.log')) -Encoding UTF8
+                if (-not (Drain-OwnedLogs)) { $result.cleanupDrainFailure = 'Own-process stream drain incomplete or failed within bounded wait.' }
             }
         } catch { $result.cleanupFailure = $_.Exception.GetType().FullName } finally { $process.Dispose() }
     }

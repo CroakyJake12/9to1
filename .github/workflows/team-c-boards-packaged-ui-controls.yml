@@ -19,7 +19,6 @@ jobs:
     timeout-minutes: 10
     env:
       GIT_OPTIONAL_LOCKS: '0'
-      PROBE_OUTPUT: ${{ runner.temp }}/boards-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Preserve exact reviewed source bytes
         shell: powershell
@@ -60,6 +59,8 @@ jobs:
           path: ${{ runner.temp }}/boards-observation-input
       - name: Observe actual packaged native editing, save, close and reopen
         shell: powershell
+        env:
+          PROBE_OUTPUT: ${{ runner.temp }}/boards-packaged-ui-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           & .github/scripts/boards-packaged-ui-controls.ps1 -PackageInput '${{ runner.temp }}/boards-package-input' -ObservationInput '${{ runner.temp }}/boards-observation-input' -OutputDirectory $env:PROBE_OUTPUT
           exit $LASTEXITCODE
