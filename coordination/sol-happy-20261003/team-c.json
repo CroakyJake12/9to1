@@ -115,7 +115,7 @@
   "evidenceLocation": "Remote release 7fc259f1b3aaa02952e2d32a8316fd9d0650a814: exact adopted public OAuth and raw identity failures, SDK6 original refusal, source-owned Sites/persistence controls, SDK7 external issuance, new source-only CUI owner receipt and original native custody.",
   "deploymentStatus": "Isolated identity Worker+D1 actually created/migrated/uploaded and closed rollback/restoration verified; HTTPS journeys NOT_RUN; no production routing/cutover",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "0fe9953d6ae9f15c5daa8f2703ab576290bdae47",
+  "candidateCommit": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -205,7 +205,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-04T09:07:35.835070+00:00",
+  "updatedUTC": "2026-10-04T09:16:47.592485+00:00",
   "candidateStatus": "REVIEWABLE_SOURCE_PLUS_ACTUAL_ISOLATED_CLOSED_IDENTITY_DEPLOYMENT_NOT_FULL_ACCEPTANCE",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -521,7 +521,7 @@
     "currentDelivery": "C6acd9acb7/root1b9e105a; actual7829/9964B adapter bodies read and independently pinned; prior0dce/f8de missingbody history preserved"
   },
   "finalEvidenceHandoff": {
-    "releaseHead": "0fe9953d6ae9f15c5daa8f2703ab576290bdae47",
+    "releaseHead": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
     "state": "OPEN_DRAFT_ACTIVE_PROVIDER_PASS_FULL_ACCEPTANCE_PENDING",
     "acceptedHead": null,
@@ -623,9 +623,19 @@
     }
   },
   "currentCanonicalImportAudit": {
-    "audit": "85d0efa0/root23fcdcb3",
-    "state": "ACTUAL7_CAPTURE_AND14_OWNERPINS_VERIFIED_ORDINARY_PACKAGER_POSITIVE_TAMPER_NEGATIVE",
-    "qualification": "No canonicalIDs/session/parity/activation. Assertion optimization/duplicateID utility limits recorded; boundedcorrection inprogress."
+    "audit": "30b2c81e/root687ae09d:c6/import-guard-96c95-audit/audit.json",
+    "source": "96c95bafb10de706fdaeb6797ec78a8059629243/root81f7bdd2",
+    "sourceSHA256": "232e07d75975ceb29ef479d4b7e34fced32da30a801d6ba3ac9fa9d6fbf1ecb3",
+    "state": "ACTUAL7_CAPTURE_AND14_OWNERPINS_VERIFIED_OPTIMIZED_PACKAGER_GUARDS_CORRECTED",
+    "historicalAudit": "85d0efa0/root23fcdcb3; ordinary-Python evidence only; original optimized tamper/duplicate-ID failures retained as negative controls",
+    "qualification": "Seven exact public HTML bodies unchanged; independent optimized tamper and duplicate-ID refusals before output; root optimized positive7/7. No canonicalIDs/session/source authority/parity/activation."
   },
-  "currentProviderEvidenceIndex": "13payloads includingrootchecks/existingservicefinalread; C6earlier11payloadaudit remainshistorical; existingcake/previewversions match prepass exactly"
+  "currentProviderEvidenceIndex": "13 indexed payloads independently checked by C6 at root687ae09d: exact sizes/SHA and JSON valid. Earlier immutable11-payload audit remains historical. Existing cake/preview versions match pre-pass exactly.",
+  "currentOwnerResponseRead": {
+    "coordinationHead": "9b37814cc31716c8b7e6b59a82327eed8da695ed",
+    "teamARecord": "currentExecution989/latestTeamCCoordinationRead989",
+    "workersAi": "Owner09067/current35k drift review queued after installer peer; no current selected body/narrow integration ACK delivered.",
+    "canonicalSitesFiles": "Original authority/import/manifest/currentCAS/full theme parity request acknowledged; owner review pending; no new executable session/project binding or composition contract.",
+    "qualification": "Root and C1/C5 actual remote readback; existing scoped FilesCommitAuthorityGuard is not a complete current binding. A/B records preserved."
+  }
 }
