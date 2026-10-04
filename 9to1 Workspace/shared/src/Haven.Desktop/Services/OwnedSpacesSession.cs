@@ -37,7 +37,7 @@ public sealed class OwnedSpacesSession
         var actors = originalProvider.GetService(typeof(IAuthenticatedResourceActorSource)) as IAuthenticatedResourceActorSource;
         var ownership = originalProvider.GetService(typeof(IResourceStoreOwnershipAuthority)) as IResourceStoreOwnershipAuthority;
         var authority = originalProvider.GetService(typeof(SpaceLocalStoreAuthority)) as SpaceLocalStoreAuthority;
-        if (originalSettings is not IVersionedSettingsGuardedCompareExchange ||
+        if (originalSettings is not IVersionedSettingsGuardedCompareExchange || identities is null ||
             !ReferenceEquals(originalProvider.GetService(typeof(IVersionedSettingsStore)), originalSettings) ||
             !ReferenceEquals(identities, originalSettings) || actors is null ||
             ownership is not IResourceStoreOwnershipReceiptAuthority || authority is null ||
