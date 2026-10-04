@@ -1,0 +1,58 @@
+name: Team B ordinary native regressions
+
+on:
+  push:
+    branches: ["team-b/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    if: startsWith(github.ref, 'refs/heads/team-b/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [navigation5, navigation37, bindings15, factory6, files17, sites18]
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+    steps:
+      - name: Check out exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Initialize only the pinned native build submodules
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+
+      - name: Set up exact SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+
+      - name: Restore, build and execute maintained project
+        run: >-
+          python3 apps/Web/Tests/ci/run-ordinary-native.py
+          --suite '${{ matrix.suite }}'
+          --expected-commit '${{ github.sha }}'
+          --output "$RUNNER_TEMP/team-b-native-${{ matrix.suite }}"
+
+      - name: Upload bounded diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-native-${{ matrix.suite }}-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-native-${{ matrix.suite }}/diagnostics
+          if-no-files-found: warn
+          retention-days: 7

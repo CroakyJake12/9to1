@@ -31,6 +31,11 @@ var tests = new (string Name, Func<string, Task> Run)[]
     ("duplicate-page-route-preserves-index-and-draft", DuplicatePage),
     ("lost-native-reply-does-not-repeat-mutation", LostReply),
     ("foreign-owner-receipt-does-not-acknowledge-edit", ForeignReceipt),
+    ("actual-text-commit-rejects-text-receipt", root => TextReceipt(root, "text")),
+    ("actual-text-commit-rejects-missing-receipt", root => TextReceipt(root, "missing")),
+    ("actual-text-commit-rejects-revision-receipt", root => TextReceipt(root, "revision")),
+    ("actual-text-commit-rejects-type-receipt", root => TextReceipt(root, "type")),
+    ("actual-text-commit-rejects-duplicate-receipt", root => TextReceipt(root, "duplicate")),
     ("actual-files-binding-revocation-clears-private-draft", Revocation),
     ("canonical-html-import-json-roundtrip-render-build", FormatRoundtrip),
     ("unknown-owner-schema-preserves-source-bytes", UnsupportedSchema),
@@ -131,6 +136,57 @@ static async Task ForeignReceipt(string root)
     await view.DispatchAsync("AddParagraph", null); view.TrySetValue("Text", "Real owner text"); fixture.ForeignNextMutationReceipt = true; await view.DispatchAsync("Save", null);
     Check(view.CurrentProject is { } retained && retained.SiteId == project.SiteId && retained.Revision == 2 && Value(view, "Status") is string status && status.Contains("outcome is unknown"), "Foreign receipt acknowledged another project.");
     await view.DispatchAsync("Reload", null); Check(view.CurrentProject is { } recovered && recovered.SiteId == project.SiteId && recovered.Revision == 3, "Foreign receipt reload did not restore original canonical project.");
+}
+static async Task TextReceipt(string root, string variant)
+{
+    var fixture = await NativeSitesFixture.CreateAsync(root); var actual = fixture.Operations; var mutationCalls = 0;
+    var replies = actual with { SetText = async (site, revision, component, text, ct) =>
+    {
+        mutationCalls++;
+        var committed = await actual.SetText(site, revision, component, text, ct);
+        if (!committed.IsSuccess) return committed;
+        var receiptProject = committed.Value!; var target = receiptProject.Components.Single(node => node.ComponentId == component);
+        // Only the reply changes AFTER the actual canonical/Home-authorized commit. Storage is genuine.
+        var changed = variant switch
+        {
+            "text" => receiptProject.Components.Select(node => node.ComponentId == component ? node with
+            {
+                Properties = node.Properties.ToDictionary(property => property.Key,
+                    property => property.Key == "text" ? JsonSerializer.SerializeToElement("Reply-only altered text") : property.Value.Clone())
+            } : node).ToArray(),
+            "missing" => receiptProject.Components.Where(node => node.ComponentId != component).ToArray(),
+            "revision" => receiptProject.Components.Select(node => node.ComponentId == component ? node with { Revision = checked(node.Revision + 1) } : node).ToArray(),
+            "type" => receiptProject.Components.Select(node => node.ComponentId == component ? node with { ComponentType = "heading" } : node).ToArray(),
+            "duplicate" => receiptProject.Components.Append(target).ToArray(),
+            _ => throw new ArgumentOutOfRangeException(nameof(variant))
+        };
+        return SiteApiResult<SiteProject>.Success(receiptProject with { Components = changed });
+    } };
+    using var view = new SitesBrowserController(replies); await view.InitializeAsync(null, default);
+    await CreateWebsite(view); await AddPage(view); var before = await AddText(view, "Original canonical text");
+    var originalTarget = before.Components.Single(); const string intendedText = "Actual durable typed edit <content> & source";
+    await SelectText(view); await view.DispatchAsync("EditText", null); Check(view.TrySetValue("Text", intendedText), "Typed edit was unavailable.");
+    await view.DispatchAsync("Save", null);
+    Check(view.CurrentProject is { } retained && retained.SiteId == before.SiteId && retained.Revision == before.Revision
+        && Value(view, "Text") as string == intendedText && Value(view, "Editing") is true
+        && Value(view, "Status") is string status && status.Contains("outcome is unknown"), "Contradictory text receipt acknowledged an incompatible edit: " + variant);
+    Check(view.IsActionAvailable("Save") == false && !view.TrySetValue("Text", "Changed intent") && mutationCalls == 1,
+        "Contradictory text receipt admitted another mutation: " + variant);
+    var binding = await fixture.BindingAsync(); var index = Path.Combine(binding.RootDirectory, ".9to1-sites-index.json");
+    var committedBytes = await File.ReadAllBytesAsync(index);
+    var saved = await actual.Open(before.SiteId, default);
+    Check(saved.IsSuccess && saved.Value is { } project && project.Source == before.Source && project.ProjectId == before.ProjectId
+        && project.Revision == before.Revision + 1 && project.Components.Single().ComponentId == originalTarget.ComponentId
+        && project.Components.Single().Revision == originalTarget.Revision + 1 && project.Components.Single().ComponentType == originalTarget.ComponentType
+        && project.Components.Single().Properties["text"].GetString() == intendedText, "Reply mutation changed actual canonical commit: " + variant);
+    await view.DispatchAsync("Save", null);
+    var afterRepeatedSaveBytes = await File.ReadAllBytesAsync(index);
+    Check(mutationCalls == 1 && committedBytes.SequenceEqual(afterRepeatedSaveBytes), "Unknown text receipt repeated actual native commit: " + variant);
+    await view.DispatchAsync("Reload", null);
+    Check(view.CurrentProject is { } reopened && JsonSerializer.Serialize(reopened) == JsonSerializer.Serialize(saved.Value)
+        && Value(view, "Editing") is false && mutationCalls == 1, "Explicit original-source reload did not recover exact canonical graph: " + variant);
+    var afterExplicitReloadBytes = await File.ReadAllBytesAsync(index);
+    Check(committedBytes.SequenceEqual(afterExplicitReloadBytes), "Read-only recovery changed canonical index bytes: " + variant);
 }
 static async Task Revocation(string root)
 {

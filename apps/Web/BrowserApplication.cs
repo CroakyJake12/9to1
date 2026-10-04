@@ -82,11 +82,16 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     public async Task OpenFragmentAsync(string fragment)
     {
         if (_disposed || _closing || _privateContextResets != 0) return;
-        _navigationCancellation?.Cancel();
-        _navigationCancellation?.Dispose();
+        var previousCancellation = _navigationCancellation;
         _navigationCancellation = new();
         var cancellation = _navigationCancellation.Token;
         var version = ++_navigationVersion;
+        try { previousCancellation?.Cancel(); }
+        finally { previousCancellation?.Dispose(); }
+        // Cancellation invokes owner callbacks synchronously. A callback may
+        // have started a newer request or revoked/closed this context.
+        if (_disposed || _closing || _privateContextResets != 0
+            || version != _navigationVersion || cancellation.IsCancellationRequested) return;
         if (!BrowserRouteCodec.TryDecode(fragment, out var request, out var code))
         {
             Program.ShowStatus(code!, "This link is invalid. Open a valid application link to continue.");

@@ -3,6 +3,8 @@ const databaseName = '9to1-wave-local-v1';
 let database;
 let audio;
 let audioUrl;
+// Local device request validity only; never a project, asset or hosted Files revision.
+let audioGeneration = 0;
 let dirty = false;
 let pendingPicker;
 const maximumBytes = 32 * 1024 * 1024;
@@ -140,6 +142,7 @@ function pickWav() {
 }
 
 function stopAudio() {
+    ++audioGeneration;
     if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); audio = null; }
     if (audioUrl) { URL.revokeObjectURL(audioUrl); audioUrl = null; }
 }
@@ -168,16 +171,36 @@ export async function invoke(action, argumentsJson) {
             case 'commit': value = await commitProject(args); break;
             case 'pick': value = await pickWav(); break;
             case 'download': value = download(args); break;
-            case 'play':
+            case 'play': {
                 stopAudio();
                 audioUrl = URL.createObjectURL(new Blob([bytesFromBase64(args.base64)], { type: 'audio/wav' }));
-                audio = new Audio(audioUrl); audio.loop = args.loop === true;
-                await audio.play(); value = { playing: true }; break;
-            case 'resume':
+                const target = new Audio(audioUrl); audio = target; target.loop = args.loop === true;
+                const generation = audioGeneration;
+                try { await target.play(); }
+                catch (error) {
+                    if (audio !== target || audioGeneration !== generation)
+                        throw fault('OperationCancelled', 'This playback was superseded or released. The current device media is unchanged.');
+                    throw error;
+                }
+                if (audio !== target || audioGeneration !== generation)
+                    throw fault('OperationCancelled', 'This playback was superseded or released. The current device media is unchanged.');
+                value = { playing: true }; break;
+            }
+            case 'resume': {
                 if (!audio) throw fault('CapabilityUnavailable', 'No playback is loaded.');
-                await audio.play(); value = { playing: true }; break;
-            case 'pause': audio?.pause(); value = {}; break;
-            case 'stop': if (audio) { audio.pause(); audio.currentTime = 0; } value = {}; break;
+                const target = audio; const generation = ++audioGeneration;
+                try { await target.play(); }
+                catch (error) {
+                    if (audio !== target || audioGeneration !== generation)
+                        throw fault('OperationCancelled', 'This resume was superseded or released. The current device media is unchanged.');
+                    throw error;
+                }
+                if (audio !== target || audioGeneration !== generation)
+                    throw fault('OperationCancelled', 'This resume was superseded or released. The current device media is unchanged.');
+                value = { playing: true }; break;
+            }
+            case 'pause': ++audioGeneration; audio?.pause(); value = {}; break;
+            case 'stop': ++audioGeneration; if (audio) { audio.pause(); audio.currentTime = 0; } value = {}; break;
             case 'seek':
                 if (!audio) throw fault('CapabilityUnavailable', 'Play this project before seeking.');
                 if (!Number.isFinite(args.seconds) || args.seconds < 0 || args.seconds > audio.duration)
