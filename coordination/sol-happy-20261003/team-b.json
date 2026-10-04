@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T14:46:04.764840+00:00",
+  "updatedUTC": "2026-10-04T15:10:42.087644+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -1288,8 +1288,8 @@
     "owners": "LatestA03:40 record815a13bf preserves historicalACKfields byimmutable5e153eb; no newexact193c/742/35c/Glyph/PictureACK. C23:48 no newhostedports. NewA CardsStudy32/sourcecontracts remainunrun/unpublished; no fabricatedfrontendBank/Burrows. RootsoleBwriter Csoleglobalrelease unchanged."
   },
   "currentExecutableCheckpoint": {
-    "UTC": "2026-10-04T14:46:04.764840+00:00",
-    "sourceHead": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+    "UTC": "2026-10-04T15:10:42.087644+00:00",
+    "sourceHead": "d53c8ffbcb049dcac8b1a020e5bf103d951f186b",
     "state": "CONTINUING_REAL_WORKFLOWS_AND_INDEPENDENT_REPRODUCTION",
     "PictureBrowser9": {
       "firstRun": 37206507446,
@@ -1312,7 +1312,23 @@
         "traceReferencesWithNoRecordedBody": 52
       },
       "fixedSourceBrowserRun": 37209306466,
-      "fixedSourceBrowserStatus": "METADATA_SUCCESS_FULL_RAW_BEING_ACQUIRED"
+      "fixedSourceBrowserStatus": "ACTUAL9_OF9_PRIMARY_INDEPENDENT_RECORDED_AND_INDEPENDENT_EXECUTION_PASS",
+      "fixedSourcePrimaryReview": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-7f-recorded-review01/review.json",
+        "bytes": 21110,
+        "sha256": "59f3039e731f4d2a546df21b57e01d7069c8fc8b562ffe88d97c8caffb6c8ff2"
+      },
+      "fixedSourceRecordedIndependent": {
+        "path": "/tmp/team-b-b6-picture-browser7f-recorded-review01/review.json",
+        "bytes": 8844,
+        "sha256": "d38ad539485fe653ce584d44371b61fe49eee0b636c36780d0ce6a5170eaf3d8"
+      },
+      "fixedSourceCriticalIndependentRun": 37210726410,
+      "fixedSourceCriticalIndependent": {
+        "path": "/tmp/team-b-b6-picture7f-independent-ci-dispatch01/actual-independent-critical-review.json",
+        "bytes": 4605,
+        "sha256": "ead927694eae7abc1d58455756f4bb530f3cdb92d1547f7e87e0923b315568b5"
+      }
     },
     "PictureNative": {
       "causalRedRun": 37208074600,
@@ -1346,8 +1362,29 @@
         "bytes": 57204,
         "sha256": "a6c8931a8cb6cca551f5d3e7ee4caf7c6f68a5a604d35d1635dfee62ff12a3d2"
       },
-      "independentReplay": "B6 fixed ref team-b/picture-fixed-7f-independent-20261004; pending dispatch/review",
-      "historicalControls": "Old parser/CUI029 and older repairedAdmission12PASS3FAIL retained. Additive oldSession/Feature-only-noopfix control authored with strict13PASS2sameObserverFAIL; not yet run."
+      "independentReplay": {
+        "run": 37210724375,
+        "current15": {
+          "passed": 15,
+          "failed": 0,
+          "assertionCheckpoints": 138
+        },
+        "review": {
+          "path": "/tmp/team-b-b6-picture7f-independent-ci-dispatch01/actual-independent-critical-review.json",
+          "bytes": 4605,
+          "sha256": "ead927694eae7abc1d58455756f4bb530f3cdb92d1547f7e87e0923b315568b5"
+        },
+        "wholeWorkflow": "FAILED_PRESERVED_HISTORICAL_CONTROLS_REMAIN_RED",
+        "buildWarnings": {
+          "count": 2,
+          "kinds": [
+            "CS8602",
+            "CA1416"
+          ],
+          "detail": "Test nullablehelper dereference and browser-only Register unused by native controlled tests; original warnings retained, not suppressed."
+        }
+      },
+      "historicalControls": "Old parser/CUI029 failures and older repairedAdmission12PASS3FAIL retained. Additive oldSession/Feature-only-noopfix control adopted2e/0424, actualrun37210629377 strict13PASS2sameObserverFAIL/nativeexit1/normalfamily; B3 fullprimary receipt completing, not currentnativeacceptance."
     },
     "Boards": {
       "run": 37207970188,
@@ -1379,7 +1416,11 @@
         "bytes": 46805,
         "sha256": "afb86fd24599d1a294cbfac65c561a7e7f4dd61ad4d1122ad917b9cf430fc030"
       },
-      "independent": "B6 queued",
+      "independent": {
+        "path": "/tmp/team-b-b6-math-native4-23eb-recorded-review01/review.json",
+        "bytes": 6971,
+        "sha256": "a5f49bd6883b71003c5cc9e3cf9677e75911b72b22098128968f2090aa6019d4"
+      },
       "scope": "Actual original Math/Graph controls, native keyboard/pointer, invalid input preserves displayed bitmap/canonical model, real renderframe/datarect, dense precision pixel refusal. Browser/Forms embedding/realhoststore/ACL open."
     },
     "WriteFormats": {
@@ -1425,31 +1466,85 @@
       "artifact": 11305985932,
       "metadataBytes": 44609461,
       "metadataSha256": "06f052a445f157e8d7e1eb11664b0b5d28d4db2dfaf379dde26963331141d99a",
-      "counts": "Actual complete driverstdout14PASS/jobSUCCESS; detailed44MB raw pending official bounded existingartifact custody export",
-      "exportSource": {
-        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave-existing-diagnostics-export-proposal01/SOURCE-FREEZE01.json",
-        "bytes": 3589,
-        "sha256": "68dde785c359fc7e6dc6ff30b8554c48dcd5d58e0e1e53225de2c640ca4aa8e6"
+      "counts": {
+        "discovered": 14,
+        "executed": 14,
+        "passed": 14,
+        "failed": 0,
+        "notRun": 0
       },
+      "exportSource": "d53c8ffbcb049dcac8b1a020e5bf103d951f186b",
       "exportIndependentSourcePeer": {
         "path": "/tmp/team-b-b6-wave-existing-export-source01-review/review.json",
         "bytes": 3842,
         "sha256": "2a0c8300321d83fe70d0f8468d24b68e2debbfaa5a298c27919a29350b3bcc5c"
       },
-      "qualification": "No full14/rawfamily/body acceptance until read; original outerZIP byteidentity unverified in recontainer export. Runtime remains normal22d bundle, distinct Picture publication."
+      "qualification": "Full21causalZIPmembers =20originalJSON/logs+exportreceipt; original26beforeafterequal. Actual14PASS covers import/trim/history/coldprocess/twotabdirtyclose/real1byteChromiumquota two-store abort+recoveronce and advancingaudio. Hardwareaudibility false; originalWAV bytes omittedbyuploader, actualrunner PCM comparisons only.3PNG/3tracesfullbody review pending; originalActions44MBouter metadataonly.",
+      "fullCausalRawPrimary": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-recorded-raw-review01/recorded-wave14-full-causal-review.json",
+        "bytes": 33054,
+        "sha256": "a0de11e8bf4cff789c8357d0aea3697402b008d956c757689bcf87559efce2f1"
+      },
+      "exportRun": 37210874181,
+      "smallFullCausalArtifact": {
+        "id": 11306776840,
+        "bytes": 74917,
+        "sha256": "2b10739b84aef36b098331ccfee699ffd3d3ba296e47726824412585589e4453"
+      }
     },
     "FilesSitesLifecycle": "04ae actual current14/14 plus existingFiles17/Sites18=49 positive native local cases; original01 same14 has6PASS8 intendedFAIL, original02 same14 has12PASS2 intendedFAIL. B4+B6 full5ZIP81member review complete; actual issuer ports remain absent/registration off.",
     "Chat": "Actual current10/10; same original9/10 exact denied-refresh privacy failure; B2+B6 whole recorded review complete. Narrow scripted backend unit scope, no provider/browser/ACL acceptance.",
     "WriteAuthoring": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
     "Planner": "Actual selected original SQLite1/1 PASS; B2+B6 full recorded review complete.",
     "nextExecutables": [
-      "Study4 originalpersisted realSQLite scheduling/tasklink selectedoriginal4 of24; source02 peerCLEAR pendingrootadoption",
-      "Chat3 realSQLite ownerdurable/version/export seed/freshverify, no inference/catalog/authority; sourcepeers pending",
-      "Additive oldAdmission-only same-session retirement control strict13/2 negative",
-      "Independent fixedPicture native15/browser9",
-      "ExistingWave detailedraw custody export/fullnormal285bodycustody"
+      "Mail original1 plus3realfileowner seed/freshverify scenarios rootadopted8da92 local commit; sourcepeerCLEAR, push queued with CanvasMaps",
+      "Canvas8/Maps6 unchanged originalclasses actual889owner graph/source03 B2peerCLEAR B5peerpending; all14NOT_RUN",
+      "Wave3trace/3PNG originalmemberbody custody+independent21 replay/recorded review",
+      "Actualnew13/2 Picture negative independentrecordedreview",
+      "Currentreceiving Bproduct/owner-CUI replay with C, exact sharedguardedports/Space/Home/GPS/Forms requests remainopen"
     ],
-    "completion": "Full active31 requirement scope still outstanding. No accepted integrated head/fullparity claim."
+    "completion": "Full active31 requirement scope still outstanding. No accepted integrated head/fullparity claim.",
+    "Study": {
+      "run": 37210629435,
+      "source": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+      "discovered": 24,
+      "selected": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "other20": "NOT_RUN",
+      "primary": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/study-original-ci-recorded-review01/REVIEW.json",
+        "bytes": 45036,
+        "sha256": "bce2ffd2d1eac314e1a2b034f91125b6760de5180c653ba08424636c9aefc2ab"
+      },
+      "independent": {
+        "path": "/tmp/team-b-b6-study4-0424-recorded-review01/review.json",
+        "bytes": 4065,
+        "sha256": "f6ce88f748a211fec9d5bd216f174a3b3591fd3b343ce95a462e8633d8751c1f"
+      },
+      "scope": "Original realSQLite subject/lesson scheduling/freewindow/same canonicaltask relink/deadline/complete/unrelatedtags/foreignsubjectdenial; sameprocess, no coldOS/CAS/UI/Bank/Burrow/authority/provider acceptance."
+    },
+    "ChatLocalOwner": {
+      "run": 37210629488,
+      "source": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+      "criteria": 3,
+      "seedPassed": 3,
+      "freshProcessVerifyPassed": 3,
+      "phaseExecutions": 6,
+      "assertionCheckpoints": 38,
+      "primary": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/chat-local-durable-0424-actual-review01/REVIEW.json",
+        "bytes": 15317,
+        "sha256": "edb381c7eef07b65c8487fcd23ea351db7f000a72f7348f18ac63bd970891770"
+      },
+      "independent": {
+        "path": "/tmp/team-b-b6-chat-local3-0424-recorded-review01/review.json",
+        "bytes": 4349,
+        "sha256": "ed55adc456543d24aca4f9b7dea4a1f77a44b7a9032a8f6e29b2118b49e2af16"
+      },
+      "scope": "Real originalSQLite Safe owner/versioning/export; exact canonicalhistory/branches/messageIDs/provenance/recovery/draft timestamps/export JSON Markdown plain; actor/catalog/executor/controller/Den/CAS/provider/browser/ACL stillheld."
+    }
   },
   "executableCheckpointHistory": [
     {
@@ -2189,6 +2284,170 @@
       "Boards": "Real owner notebook editor/repository source proposal03+thinCI01 seven targets peer-clear; root review/adoption then seed24/freshverify23 assertion checkpoints. Browser seamless renderer/guarded close/Space held for A.",
       "Mathematics": "Four genuine native input/precision/pixel cases source02 correct displayed bitmap and render-frame fixture gaps; B5 peer-clear, relative portable project/CI being prepared. All4 NOT_RUN.",
       "completion": "Full active31 requirement scope outstanding. No full-parity or accepted integrated-head claim."
+    },
+    {
+      "UTC": "2026-10-04T14:46:04.764840+00:00",
+      "sourceHead": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+      "state": "CONTINUING_REAL_WORKFLOWS_AND_INDEPENDENT_REPRODUCTION",
+      "PictureBrowser9": {
+        "firstRun": 37206507446,
+        "firstSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+        "counts": {
+          "executed": 9,
+          "passed": 9,
+          "failed": 0
+        },
+        "criticalIndependentRun": 37207768958,
+        "criticalIndependentReview": {
+          "path": "/tmp/team-b-b6-picture-browser22d-independent-ci-review01/review.json",
+          "bytes": 11216,
+          "sha256": "eb07e9c8ccb8c0b990e2ca8f7e085b4e871b95454b83c93200286410b03c0d55"
+        },
+        "scope": "Actual native CUI/local IndexedDB import/crop/history/save/close/reopen/exact15RGBA export/new-process restart/two-tab canonical CAS/dirty-close/beforeunload consent. Full Picture156/FilesID/providers/ACL/AT/quota open.",
+        "recordedResponseCustody": {
+          "localGET200Rows": 348,
+          "recordedBodiesRehashed": 296,
+          "traceReferencesWithNoRecordedBody": 52
+        },
+        "fixedSourceBrowserRun": 37209306466,
+        "fixedSourceBrowserStatus": "METADATA_SUCCESS_FULL_RAW_BEING_ACQUIRED"
+      },
+      "PictureNative": {
+        "causalRedRun": 37208074600,
+        "countsBefore": {
+          "executed": 15,
+          "passed": 14,
+          "failed": 1
+        },
+        "cause": "Same-session offer scheduled deferred retirement although no previous session existed to retire; only Feature.HasUnsavedChanges true after canonical crop/save completed.",
+        "causalReview": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-b8-remote-review01/current-review.json",
+          "bytes": 14902,
+          "sha256": "539d6e21f2699c0255541cedd3742b60237036427e10921f87dcb1373be2751e"
+        },
+        "productRepairSource": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+        "productChange": "Exactly one early return when Previous and Candidate are the same instance, before Task.Yield; original15 test assertions and historical controls unchanged.",
+        "actualFixedRun": 37209306469,
+        "countsAfter": {
+          "executed": 15,
+          "passed": 15,
+          "failed": 0,
+          "assertionCheckpoints": 138
+        },
+        "fixedReview": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-7f-remote-review01/current-review.json",
+          "bytes": 16169,
+          "sha256": "d724af1b2602aab1dc8320269f2f6c663b5b431ed6472c47b044860055c2877b"
+        },
+        "canonicalReceipts": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-7f-remote-review01/current-canonical-receipts.json",
+          "bytes": 57204,
+          "sha256": "a6c8931a8cb6cca551f5d3e7ee4caf7c6f68a5a604d35d1635dfee62ff12a3d2"
+        },
+        "independentReplay": "B6 fixed ref team-b/picture-fixed-7f-independent-20261004; pending dispatch/review",
+        "historicalControls": "Old parser/CUI029 and older repairedAdmission12PASS3FAIL retained. Additive oldSession/Feature-only-noopfix control authored with strict13PASS2sameObserverFAIL; not yet run."
+      },
+      "Boards": {
+        "run": 37207970188,
+        "source": "1b05262b6adb025ba56850f566c91d0de4cf1772",
+        "counts": "47 assertion checkpoints =seed24+fresh real apphost verify23, not47 testcases",
+        "primary": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/boards-notebook-ci-recorded-review01/REVIEW.json",
+          "bytes": 31575,
+          "sha256": "471465c62c7f260ef689caa2cf65997a6165ed353ef5f61eaff555f82dba4e71"
+        },
+        "independent": {
+          "path": "/tmp/team-b-b6-boards-notebook1b05-recorded-review01/review.json",
+          "bytes": 12521,
+          "sha256": "b42b622e0f95f52f331dfcecc165bee8d4672c3fe24230db9e26f90d8dc7fdcf"
+        },
+        "scope": "Same original WriteDocumentEditor coupled to real BoardsWorkspaceService/NotesRepository; rich selection bold/undo/redo/revisions/history/coldprocess/CAS/dirty-close/readOnly. Browser seamless renderer/guarded ownerfactory/rawSpace held."
+      },
+      "Mathematics": {
+        "run": 37208598089,
+        "source": "23eb00d488de2b519b722f8817dc3849bb2c8a93",
+        "counts": {
+          "executed": 4,
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "primary": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/mathematics-native4-ci23eb-primary-review01/review.json",
+          "bytes": 46805,
+          "sha256": "afb86fd24599d1a294cbfac65c561a7e7f4dd61ad4d1122ad917b9cf430fc030"
+        },
+        "independent": "B6 queued",
+        "scope": "Actual original Math/Graph controls, native keyboard/pointer, invalid input preserves displayed bitmap/canonical model, real renderframe/datarect, dense precision pixel refusal. Browser/Forms embedding/realhoststore/ACL open."
+      },
+      "WriteFormats": {
+        "run": 37209563662,
+        "source": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+        "counts": {
+          "discovered": 7,
+          "executed": 7,
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "primary": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-original-formats-ci-recorded-review01/REVIEW.json",
+          "bytes": 36956,
+          "sha256": "4fee69ae3b3ddb25053eef919fb6c7ba6e8085cc496e16cadcb435f469d36a60"
+        },
+        "independent": {
+          "path": "/tmp/team-b-b6-write-formats7-f7c-recorded-review01/review.json",
+          "bytes": 6744,
+          "sha256": "30fb9e51ad43cb3e0250368575b122d11da3d6a781119b24c22bb312fe5c6bea"
+        },
+        "scope": "Original2DOCX ZIP/XML/supportedroundtrip/externalWordML and5nativepackage identity/tampered digest/unsupportedversion/failedsavepreservesbytes/traversal; fullLO/ODT/PDF/render/browser/rawSpace open."
+      },
+      "Accounts7": {
+        "run": 37208724474,
+        "driverSource": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+        "runtimeSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+        "counts": {
+          "executed": 7,
+          "passed": 7,
+          "failed": 0
+        },
+        "independent": {
+          "path": "/tmp/team-b-b6-sealed-accounts7-22d-recorded-review01/review.json",
+          "bytes": 9454,
+          "sha256": "90eeec0ce0db7961f452cbd835a069b83b39ea7bcbe4687bed4145f818ee9aae"
+        },
+        "scope": "Actual Check caption awaited truthfully/unavailable, revoke/privatefield empty/staleID refusal/explicitownerreplacement/terminal close. No issuer/provider/privatebroker/AT/authority grant."
+      },
+      "Wave14": {
+        "run": 37208724474,
+        "artifact": 11305985932,
+        "metadataBytes": 44609461,
+        "metadataSha256": "06f052a445f157e8d7e1eb11664b0b5d28d4db2dfaf379dde26963331141d99a",
+        "counts": "Actual complete driverstdout14PASS/jobSUCCESS; detailed44MB raw pending official bounded existingartifact custody export",
+        "exportSource": {
+          "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave-existing-diagnostics-export-proposal01/SOURCE-FREEZE01.json",
+          "bytes": 3589,
+          "sha256": "68dde785c359fc7e6dc6ff30b8554c48dcd5d58e0e1e53225de2c640ca4aa8e6"
+        },
+        "exportIndependentSourcePeer": {
+          "path": "/tmp/team-b-b6-wave-existing-export-source01-review/review.json",
+          "bytes": 3842,
+          "sha256": "2a0c8300321d83fe70d0f8468d24b68e2debbfaa5a298c27919a29350b3bcc5c"
+        },
+        "qualification": "No full14/rawfamily/body acceptance until read; original outerZIP byteidentity unverified in recontainer export. Runtime remains normal22d bundle, distinct Picture publication."
+      },
+      "FilesSitesLifecycle": "04ae actual current14/14 plus existingFiles17/Sites18=49 positive native local cases; original01 same14 has6PASS8 intendedFAIL, original02 same14 has12PASS2 intendedFAIL. B4+B6 full5ZIP81member review complete; actual issuer ports remain absent/registration off.",
+      "Chat": "Actual current10/10; same original9/10 exact denied-refresh privacy failure; B2+B6 whole recorded review complete. Narrow scripted backend unit scope, no provider/browser/ACL acceptance.",
+      "WriteAuthoring": "65 durable assertion checkpoints PASS; originalSpace15 actual10PASS1FAIL4NOT_RUN naturalSIGABRT. Exact A shared-input request remains open.",
+      "Planner": "Actual selected original SQLite1/1 PASS; B2+B6 full recorded review complete.",
+      "nextExecutables": [
+        "Study4 originalpersisted realSQLite scheduling/tasklink selectedoriginal4 of24; source02 peerCLEAR pendingrootadoption",
+        "Chat3 realSQLite ownerdurable/version/export seed/freshverify, no inference/catalog/authority; sourcepeers pending",
+        "Additive oldAdmission-only same-session retirement control strict13/2 negative",
+        "Independent fixedPicture native15/browser9",
+        "ExistingWave detailedraw custody export/fullnormal285bodycustody"
+      ],
+      "completion": "Full active31 requirement scope still outstanding. No accepted integrated head/fullparity claim."
     }
   ],
   "previousSpecificationMetadataRecheck": {
@@ -2699,7 +2958,7 @@
     "url": "https://github.com/CroakyJake12/9to1/pull/6",
     "draft": true,
     "base": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
-    "head": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+    "head": "d53c8ffbcb049dcac8b1a020e5bf103d951f186b",
     "scope": "B-owned Picture/Chat/private-view lifecycle repairs, canonical Boards editor coupling and original scoped CI; C sole release/main writer, no merge approval implied."
   },
   "latestTeamCIntegrationReceived1405": {
@@ -2793,5 +3052,84 @@
       "bytes": 2106,
       "sha256": "11ca0414e2957744556f994c742222ce552749cc1f6d02600d1641a6fbe5f61e"
     }
+  },
+  "currentFixedPictureAndRealOwnerEvidenceDelivery": {
+    "UTC": "2026-10-04T15:10:42.087644+00:00",
+    "branch": "artifact/team-b-browser-83c24b2",
+    "head": "f404351e6895854905d6dd3f3c096b42cfc3ca1f",
+    "index": {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-fixed-picture-and-owner-actual-review02/index.json",
+      "bytes": 9978,
+      "sha256": "605e4b9fb0bc12621c040b5d08c980f7e5de39e79fc879aabba408057d867f57"
+    },
+    "files": 25,
+    "bytes": 1893632,
+    "url": "https://github.com/CroakyJake12/9to1/tree/f404351e6895854905d6dd3f3c096b42cfc3ca1f/docs/releases/sol-happy-20261003/team-b-fixed-picture-and-owner-actual-review02",
+    "scope": "Whole5rawZIP plus primary/independent receipts. Criticalfixed7f actualnative15/browser9 reproduced; previouspacketpendingstatuses remainas-ofhistorical. Chat independented55 nowcomplete, separate tinyfollowup delivery pending."
+  },
+  "currentPermanentNormal22dTransportDelivery": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/normal22d-original-transport-durable-git-delivery.json",
+    "bytes": 2191,
+    "sha256": "3eeb38a4863a73cadeb762b9088a8bbed5ce664bf526ec793e6025388dc2995d",
+    "branch": "artifact/team-b-normal22d-original-transport-20261004",
+    "head": "a3c954dfd5b1f6f0dfb863b41558f6c4543c51e7",
+    "url": "https://github.com/CroakyJake12/9to1/tree/a3c954dfd5b1f6f0dfb863b41558f6c4543c51e7/docs/releases/sol-happy-20261003/team-b-normal22d-original-transport",
+    "scope": "Both complete original transportZIPs+manifest fullremotebody/GitblobSHA independentlyread; all285originalinner bodies root/B1/B6 CRC/SHA PASS. Exacttemporarycopies retiredonlyafterprotectedremoteproof/readersclosed; originalActionsouterb788metadataonly."
+  },
+  "latestTeamCIntegrationReceived1509": {
+    "UTC": "2026-10-04T15:10:42.087644+00:00",
+    "wholeRecord": {
+      "path": "/workspace/team-b-coordination/coordination/sol-happy-20261003/team-c.json",
+      "bytes": 130362,
+      "sha256": "f66bf6b8d0edf3e5e8659aeab41677379581e43494e821f0dea26a755e08da96"
+    },
+    "coordCommit": "09d838f01f51d82bbeb27fa9d8bcfb66d8985a42",
+    "provisionalCandidate": {
+      "branch": "integration/team-c-unaccepted-20261004",
+      "head": "c9df45b0ebbe3b37f7fa8e2858567b95cfa3b895",
+      "base": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+      "state": "PUSHED_REVIEWED_UNACCEPTED_PR5_EXACT_PR6_AND_PICTURE_DEPENDENCY_COMPOSED",
+      "contents": [
+        "31 exact reviewed Accounts core/spec bodies from f7b65b8c",
+        "Durable cancellation CAS source/test a4be0cd0 plus retained 67636bb0 evidence",
+        "161 exact Team B apps/Web additions from aef50b9b, including baseline8041",
+        "Reviewed local recovery source67a46825 and evidence5a5b8cee",
+        "Bounded read-only billing recovery88c4c2d2 + external diagnostic redactionf3529fd2",
+        "373 exact reviewed EEC/native dependency closure paths with four current Sites bodies preserved at c8783e04",
+        "Three maintained test API contract corrections8f0b3ad0 and real SQLite migration fixture10eff17d; all original assertions retained",
+        "Four exact EEC Write scene dependencies/Unicode resource + single logical EmbeddedResource line3b0bdf4d",
+        "Exact public93/5 receiving matrix and25 supplemental independent reviews; indexed logs/TRX explicitly retained",
+        "Mesh c996 path normalization + explicit permission/migration fixture71 + preview child-profile propagation40; normal whole Release428/428 independently reviewed",
+        "Exact historical native Sites R2 reader/tests ce7 composed d511; whole normal Release76/76 independently reviewed",
+        "66 exact B PR6 product/CI paths composedba974 +2 actualEEC Picture dependencies0ca; allotherroot bodies/modes unchanged; publicreview c9df",
+        "Actual all29 Windows manifest SHA480368d with C6 independentACK4b13509c published e4f; all29 visible0verified0delivered"
+      ],
+      "qualification": "No active Team A/B files edited; no main promotion; no acceptance inferred from composition.",
+      "pullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
+      "remoteVerifiedHead": "c9df45b0ebbe3b37f7fa8e2858567b95cfa3b895"
+    },
+    "currentBrowserSuccessorReview": {
+      "pullRequest": "https://github.com/CroakyJake12/9to1/pull/6",
+      "source": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "base": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+      "reviewer": "C4 independent product/CI ACK48926d68; C5 actual normal runtime; C6 conservation/source/runtime review",
+      "state": "PROVISIONALLY_COMPOSED_ROOT_UNACCEPTED_RUNTIME_FAILURES_PRESERVED",
+      "receivingProposal": "1a0a824ad06905467c280730a85429f37feabce1",
+      "actualSourceDeltaPaths": 66,
+      "receiving": "Actual Lifecycle14/Chat10/Files17/Sites18 PASS; Picture15 14PASS1FAIL canonicalcrop input/history acknowledgement; negative historical lifecycle controls remain red. No fullbrowser/provider acceptance.",
+      "nativePictureClosure": "Exact2availableEEC=A63=Bbase=B22d Document/CropService composedadd2=>root0ca, C4/C6sourceACK; alloldnative tests unchanged. Older native23 21PASS2FAIL metadata-policy and LinuxInter; canonical PreserveGPS remains separately open. Exact coherentnativeowner request c4c76cf0 published e4f; no oracle waiver.",
+      "sourceComposition": "ba974447+0ca6b276 on e4f; all68expected paths only changed, allotherroot bodies/modes conserved; rootc9df pushed/readback PR5draft",
+      "buildContinuation": "Ordinary Webrestore actually exits0. NextMSB4019 missingavailableexactEEC Browser build3contracts; C5 isolatedclosure authorized. Currentloader receiving863 baseline has existingA one-line TextChanging source-onlyACK; C2 pins current-source provenance before separate composition."
+    },
+    "concreteDeltaForC": "CurrentCreceivingsource22d14PASS1FAILcrop is now preciselycaused/fixed by one BFeature earlyreturn beforeTask.Yield in7f. CurrentPR6@d53 includesfix/newnative15+originalobservercontrols plusactualBoards47/Math4/WriteFormats7/Study4/Chat3 source. Please consume exactBbody+currentledger viaPR6; no sharedowner/oracle substitutions. Root criticalfixednative15/browser9 replaycomplete/retrievablef404. All other receivingdeps/portedCUI/projectreadbacks and fullbrowserprovider journeys remain actual Cgates."
+  },
+  "currentAdditionalNativeOwnerRequests1509": {
+    "AWriteGeometry": "PreservedCactualbetaBold layoutheight34.132 vsavailable23.625 at31.36width from originalsurface approx0.56char vsweightedMontserrat realmeasure. Need exactcanonicalmeasure/layout/caret/hitport AACK; no MaxWidth/fontfallback/oraclechange.",
+    "AMailDraftRevision": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/mail-original-durable-ci-proposal01/A-MAIL-DRAFT-REVISION-OWNER-REQUEST01.json",
+      "bytes": 2840,
+      "sha256": "ad34235302832d1cda8a80daca0c78ac80e78aea4906f57cd18b715d5c5df08a"
+    },
+    "qualification": "No mail canonicalrevision/CAS/autosave authority invented. Mailpendingrealtests cover actualexistingfileowner only. OriginalSpaceActualD2F/Home742/port193/Boardsguardedseamless/GPSPreserve/Formsprivateclear requests remainopen."
   }
 }
