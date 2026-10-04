@@ -28,5 +28,10 @@
       "path": "offline.log",
       "sha256": "552ce492c1ed199f76b8a74bce2f5b3f5c14f1e010af698bb43f9cd3b8613d9f"
     }
-  ]
+  ],
+  "findingResolution": {
+    "commit": "e3bd57644c1f4330a2c91fa5fbaa0888c3941db2",
+    "review": "Exact result label/operator qualification and README correction read; HTTP assertions unchanged, no rerun or provenance relabel.",
+    "status": "RESOLVED_SOURCE_METADATA_ONLY"
+  }
 }
