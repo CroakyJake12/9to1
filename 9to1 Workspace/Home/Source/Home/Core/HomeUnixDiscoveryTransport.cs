@@ -14,10 +14,18 @@ public static class HomeUnixDiscoveryTransport
     private static readonly JsonSerializerOptions Json = new() { MaxDepth = 24 };
 
     /// <summary>The designated leased host supplies the actual accepted socket; peer identity never comes from request fields.</summary>
-    public static async Task ServeAcceptedAsync(Socket accepted, HomeNativeDiscoverySession discovery,
-        CancellationToken cancellationToken = default)
+    public static Task ServeAcceptedAsync(Socket accepted, HomeNativeDiscoverySession discovery,
+        CancellationToken cancellationToken = default) =>
+        ServeAcceptedFirstFrameAsync(accepted, discovery, null, cancellationToken);
+
+    // Internal accepting-host seam: one bounded frame already read by the SAME original socket reader.
+    // No caller/actor/installed authority is supplied by these bytes; legacy discovery still verifies it.
+    internal static async Task ServeAcceptedFirstFrameAsync(Socket accepted, HomeNativeDiscoverySession discovery,
+        byte[]? retainedFirstFrame, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(accepted); ArgumentNullException.ThrowIfNull(discovery);
+        if (retainedFirstFrame is { Length: <= 0 or > MaximumMessageBytes })
+            throw new InvalidDataException("Retained discovery frame exceeds the original bound.");
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(5));
         var peer = HomeNativePeerObservation.FromAcceptedUnixSocket(accepted);
@@ -26,7 +34,7 @@ public static class HomeUnixDiscoveryTransport
         HomeNativeDiscoveryResponse response;
         try
         {
-            var request = JsonSerializer.Deserialize<HomeNativeDiscoveryRequest>(await ReadFrameAsync(stream, deadline.Token).ConfigureAwait(false), Json);
+            var request = JsonSerializer.Deserialize<HomeNativeDiscoveryRequest>(retainedFirstFrame ?? await ReadFrameAsync(stream, deadline.Token).ConfigureAwait(false), Json);
             var snapshot = request is null ? null : await discovery.DiscoverAsync(peer, request.Requirements, deadline.Token).ConfigureAwait(false);
             response = new(snapshot is null ? "HomePeerOrServiceUnavailable" : "HomeDiscoveryReady", snapshot);
         }
