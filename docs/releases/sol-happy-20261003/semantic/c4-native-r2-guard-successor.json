@@ -1,0 +1,77 @@
+{
+  "status": "CORRECTED_LOCAL_READER_RECEIVING_ADOPTION_DEPENDENCY_OPEN",
+  "positive": {
+    "passed": 21,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0
+  },
+  "originalPeerFailuresPreserved": "C5 /workspace/team-c/evidence/c5/native-r2-peer/blank-provenance.log and original blank-provenance.trx unchanged",
+  "sourceClosure": [
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteAuthoringService.cs",
+      "bytes": 9125,
+      "sha256": "27d3807af5e20c75310f72fcd39a6ac116982c823485a8b91f56b41e36a4c40a",
+      "a63ByteEquivalent": false
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteProjectService.cs",
+      "bytes": 9018,
+      "sha256": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9",
+      "a63ByteEquivalent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Domain/SiteModels.cs",
+      "bytes": 8654,
+      "sha256": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+      "a63ByteEquivalent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Domain/SiteSlug.cs",
+      "bytes": 5341,
+      "sha256": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641",
+      "a63ByteEquivalent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "bytes": 7715,
+      "sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+      "a63ByteEquivalent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs",
+      "bytes": 4280,
+      "sha256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+      "a63ByteEquivalent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Infrastructure/FileSiteWorkspaceStore.cs",
+      "bytes": 10005,
+      "sha256": "e3ec22beb78ca0240c317b9e30db2fceeb2a3cd928ff27a051a2a666a1dc876c",
+      "a63ByteEquivalent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Runtime/SiteDocumentRenderer.cs",
+      "bytes": 13403,
+      "sha256": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8",
+      "a63ByteEquivalent": true
+    }
+  ],
+  "soleA63Difference": "SiteAuthoringService.Reachable internal -> public in e0c",
+  "declaringSource": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+  "reviewedEecDeliveryManifestSitesEntries": 0,
+  "deliveryQualification": "Actual e0c remotely fetchable and A SDK07 coordinated source delivered, but retrieved Admin SDK03 explicit handover has no Sites entries; specific native closure adoption ACK not established. C1 review requested. Do not conflate delivery with adopted source.",
+  "currentSafeKeyBasis": "Actual NativeSiteBuildPipeline output paths derive SiteAddressRules.NormalizeRoutePath lowercase ASCII letters/hyphens plus index.html; generic asset names outside current producer not claimed.",
+  "evidence": [
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/corrected.log",
+      "bytes": 632,
+      "sha256": "67bb7a502f76d375c4a8b47aade759dbfe0d73ec2b9a3d6196525b455af338e2"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c4/native-r2/TestResults/corrected-native-r2.trx",
+      "bytes": 31604,
+      "sha256": "1e5d578aabf4caec3e1326db5408ff4d809191e5f51692db2e7916c38d9613a4"
+    }
+  ]
+}

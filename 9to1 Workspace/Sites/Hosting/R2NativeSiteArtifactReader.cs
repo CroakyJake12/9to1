@@ -33,7 +33,9 @@ public sealed class R2NativeSiteArtifactReader : IDisposable
     public async Task<SiteArtifactManifest> VerifyAsync(SiteBuildArtifact artifact, Guid siteId, Guid projectId,
         long projectRevision, CancellationToken cancellationToken = default)
     {
-        if (siteId==Guid.Empty || projectId==Guid.Empty || projectRevision<1 || artifact.ArtifactId==Guid.Empty ||
+        ArgumentNullException.ThrowIfNull(artifact);
+        if (string.IsNullOrWhiteSpace(artifact.SourceRevision) || string.IsNullOrWhiteSpace(artifact.ConfigurationRevision) ||
+            siteId==Guid.Empty || projectId==Guid.Empty || projectRevision<1 || artifact.ArtifactId==Guid.Empty ||
             !artifact.SecretScanPassed || artifact.FrameworkId!="9to1-native" || artifact.SizeBytes<0 || artifact.SizeBytes>outputLimit ||
             !Hash(artifact.ContentHash) || !prefixes.TryGetValue(artifact.ArtifactReference,out var prefix))
             throw new InvalidDataException("Retained native artifact and explicit mapping are required.");
