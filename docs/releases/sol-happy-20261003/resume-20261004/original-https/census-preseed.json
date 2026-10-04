@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"recordedUTC\": \"2026-10-04T11:37:08.642Z\",\n  \"response\": {\n    \"result\": [\n      {\n        \"results\": [\n          {\n            \"users\": 0,\n            \"accounts\": 0,\n            \"sessions\": 0,\n            \"clients\": 0,\n            \"jwks\": 1,\n            \"verifications\": 0,\n            \"resources\": 1,\n            \"reservedOwner\": null\n          }\n        ],\n        \"success\": true,\n        \"meta\": {\n          \"served_by\": \"v3-prod\",\n          \"served_by_region\": \"WEUR\",\n          \"served_by_colo\": \"CDG\",\n          \"served_by_primary\": true,\n          \"timings\": {\n            \"sql_duration_ms\": 0.254\n          },\n          \"duration\": 0.254,\n          \"changes\": 0,\n          \"last_row_id\": 0,\n          \"changed_db\": false,\n          \"size_after\": 253952,\n          \"rows_read\": 3,\n          \"rows_written\": 0,\n          \"total_attempts\": 1\n        }\n      }\n    ],\n    \"errors\": [],\n    \"messages\": [],\n    \"success\": true,\n    \"status\": 200\n  }\n}"
+    }
+  ],
+  "isError": false
+}

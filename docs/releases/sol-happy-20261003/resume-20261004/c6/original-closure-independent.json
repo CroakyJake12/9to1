@@ -1,0 +1,109 @@
+{
+  "observedAt": "2026-10-04T11:44:59.567Z",
+  "qualification": "C6 independent original failed-run closure; readonly no credential selection",
+  "exposure": {
+    "result": {
+      "enabled": false,
+      "previews_enabled": false
+    },
+    "success": true,
+    "errors": [],
+    "messages": [],
+    "status": 200
+  },
+  "activeDeployment": {
+    "status": 200,
+    "success": true,
+    "result": [
+      {
+        "id": "2f2e8251-d404-4fe4-8e5e-43dd179fd1a6",
+        "versions": [
+          {
+            "version_id": "713c1695-7e21-489b-bc97-906450972cfa",
+            "percentage": 100
+          }
+        ]
+      }
+    ]
+  },
+  "settings": {
+    "status": 200,
+    "success": true,
+    "result": {
+      "compatibility_date": "2026-10-01",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "limits": {
+        "cpu_ms": 1000
+      }
+    }
+  },
+  "databaseId": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+  "census": {
+    "result": [
+      {
+        "results": [
+          {
+            "users": 0,
+            "accounts": 0,
+            "sessions": 0,
+            "clients": 0,
+            "client_resource_links": 0,
+            "resources": 1,
+            "jwks": 1,
+            "access_tokens": 0,
+            "refresh_tokens": 0,
+            "consents": 0,
+            "verifications": 0,
+            "limiter_rows": 1,
+            "reserved_owner": null
+          }
+        ],
+        "success": true,
+        "meta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.3472
+          },
+          "duration": 0.3472,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": false,
+          "size_after": 253952,
+          "rows_read": 4,
+          "rows_written": 0,
+          "total_attempts": 1
+        }
+      },
+      {
+        "results": [],
+        "success": true,
+        "meta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.1127
+          },
+          "duration": 0.1127,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": false,
+          "size_after": 253952,
+          "rows_read": 7,
+          "rows_written": 0,
+          "total_attempts": 1
+        }
+      }
+    ],
+    "errors": [],
+    "messages": [],
+    "success": true,
+    "status": 200
+  }
+}
