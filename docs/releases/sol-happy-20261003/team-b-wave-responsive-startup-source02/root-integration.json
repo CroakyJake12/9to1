@@ -54,7 +54,83 @@
     "scope": "Only these five newly generated source02 duplicate files and then-empty new directory; exclude production checkout and all previous source/control/archive files",
     "ownerCustodianB3": "EXPLICIT_RELEASE_AFTER_FULL_PERMANENT_ROOT_B6_PROOF_ALL_READERS_CLOSED",
     "localDirectory": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-responsive-startup-source02",
-    "state": "HELD_PENDING_REMOTE_FULL_B6_ACK_AND_DURABLE_RECORD"
+    "state": "ELIGIBLE_EXACT_FIVE_NEW_DUPLICATES_ALL_ACTUAL_READERS_CLOSED"
   },
-  "coordinatorCorrection": "First marker search and advertised case-slice boundary check stopped before any source mutations; exact marker boundaries resolved4841B. Read-only custody comparison interrupted SIGINTexit130 before ref mutation and replaced with one cached tree; no cloud job signalled."
+  "coordinatorCorrection": "First marker search and advertised case-slice boundary check stopped before any source mutations; exact marker boundaries resolved4841B. Read-only custody comparison interrupted SIGINTexit130 before ref mutation and replaced with one cached tree; no cloud job signalled.",
+  "independentPermanentFullACK": {
+    "state": "B6_FULL_STARTUP_SOURCE02_PERMANENT_REMOTE_ACK_READERS_CLOSED",
+    "UTC": "2026-10-04T22:07:53.611735+00:00",
+    "branch": "artifact/team-b-wave-responsive-startup-source02-20261004",
+    "head": "0ed5303c3beb6df599a6b445b6b3ff32aff9da43",
+    "parentProduct": "ab1217e2e61a35bcb67648dcf1e1bf4982c28a33",
+    "productBase": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "productRefs": {
+      "team-b/astra-browser-validation-20261003": "ab1217e2e61a35bcb67648dcf1e1bf4982c28a33",
+      "review/team-b-local-apps-20261004": "ab1217e2e61a35bcb67648dcf1e1bf4982c28a33"
+    },
+    "allSixFullBodiesGitSHA1SHA256Tree100644": true,
+    "artifactTreeSixOnlyAdditionsAll9749ProductLeavesConserved": true,
+    "productExactlyThreeDeltaAll9749LeavesConserved": [
+      "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs",
+      "apps/Web/Tests/WaveResponsiveBrowser/source-pins.json",
+      "apps/Web/Tests/ci/run-wave-responsive-browser.py"
+    ],
+    "caseBytes": 4841,
+    "allThreeCaseBlocksByteExact": "093530240e556fbe7d4eb858dc6a1c8ecb552966b846a71f0a8b9d89147545f2",
+    "all18SourceBindingsPriorIndependentFullCheckAndExactBodiesRetained": true,
+    "native49Original14OraclesHostLaunchCleanupUntouched": true,
+    "originalSetupCause": "UNESTABLISHED",
+    "changedSourceRuntimeAcceptance": false,
+    "retirementScopeOnlyFiveNewReleasedDuplicates": {
+      "directory": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-responsive-startup-source02",
+      "files": [
+        "manifest.json",
+        "proposal.patch",
+        "run-wave-responsive-browser.cjs",
+        "run-wave-responsive-browser.py",
+        "source-pins.json"
+      ],
+      "excludeProductionOtherSourcesControlsArchivesAndRootIntegration": true
+    },
+    "allReadersClosed": true,
+    "noLocalReadsFilesDownloadsImportsRuntimeSignalsWatchRestartOrUnlink": true,
+    "bodies": [
+      [
+        "manifest.json",
+        "883a7273f688a15f8b345381928446c2141af345",
+        3588,
+        "6e94500c39f05c4ca62d27f51c2500108d45b95f22f50a1c0d35cb5629239b9e"
+      ],
+      [
+        "proposal.patch",
+        "dae0400b9a845d2b3d48eec29f782d0b1774c60d",
+        6692,
+        "fc4d2c225781ef207a446cc673d69b34738927f4796d03495551133ab1525c62"
+      ],
+      [
+        "root-integration.json",
+        "71596df2ac252bc92570dfa1d9be5ee8870a1551",
+        2837,
+        "28eba7c383e3160c5faaeee81b051222321ba784d6cf746ab1a887d399f64db6"
+      ],
+      [
+        "run-wave-responsive-browser.cjs",
+        "0232b6fefc9120d30e3943022e96447f72207797",
+        21923,
+        "3b051a4a997f9b54d295df26818110cad212d7b6d65501c8f81823edc89b3c07"
+      ],
+      [
+        "run-wave-responsive-browser.py",
+        "325f04f16353388491d381f4542ef43b7ec36221",
+        14913,
+        "d84657b17d67215a594f28744e1c920823c14bd97fbbd3311e4beaf2f58947fa"
+      ],
+      [
+        "source-pins.json",
+        "2ae5d31f01e368c51a4bc2f463e4a180a8869091",
+        3235,
+        "fdca8e5a1bdf10b08f89b772b030478620036ac91be472cbdf269404bba874d8"
+      ]
+    ]
+  }
 }
