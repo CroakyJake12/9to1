@@ -416,7 +416,8 @@
     "historicalOrdinaryAudit": "c6/canonical-import-d7cf-audit.json",
     "sourceSHA256": "232e07d75975ceb29ef479d4b7e34fced32da30a801d6ba3ac9fa9d6fbf1ecb3",
     "state": "SOURCE_CAPTURE_AND_OPTIMIZED_GUARDS_VERIFIED_CANONICAL_AUTHORITY_PARITY_UNBOUND",
-    "qualification": "Seven exact public page bodies preserved. Independent optimized tamper and duplicate-ID refusals occur before output; original utility failures retained as negative controls. No canonical identities/editable theme/full asset/runtime build/activation inferred."
+    "qualification": "Seven exact public page bodies preserved. Independent optimized tamper and duplicate-ID refusals occur before output; original utility failures retained as negative controls. No canonical identities/editable theme/full asset/runtime build/activation inferred. Existing BuildAsync snapshot seam now owner-semantic ACK; trusted registration/root/scanner and native import coordinator action still missing. No source adoption/activation grant.",
+    "semanticOwnerAck": "semantic/c4-canonical-sites-semantic-ack-receipt.json"
   },
   "currentSourceOwnerIntegrationRequests": "current-source-owner-integration-requests.json",
   "currentBoundedEvidenceCustody": "current-bounded-evidence-custody.json",
@@ -440,9 +441,11 @@
   },
   "currentWorkersAiMetadataOwnerAck": {
     "coordinationHead": "64be595e99a0683ba53f713016176115edc7847b",
-    "state": "CONDITIONAL_EXACT_TWO_SPAN_METADATA_REBASE_TEST_PROJECT_CUSTODY_OPEN",
+    "state": "EXACT_METADATA_REBASE_INDEPENDENT32CASE_VERIFIED_NORMAL_PROJECT_CUSTODY_OPEN",
     "ownerAck": "workers-ai-current-owner-ack.json",
-    "proposalEvidence": "workers-ai-historical-evidence-custody.json",
-    "qualification": "Historical24 tests separate from newer eight endpoint cases; no wholecurrent project/runtime, inference/funding/paidactivation or provider adoption."
+    "proposalEvidence": "workers-ai-owner-rebase/proposal.json",
+    "qualification": "Actual real Infrastructure-reference32Debug/32Release0 inclDIredirect, oldowner31negative11fail20pass; source/inverse exact. PreservedA63 dependencies separate from current normal ownerproject/sourcecut/fullcohort/native; exact1665/c04 projectbody missing. Metadata only, no inference/price/funding/paid activation.",
+    "sourceHead": "65f23458328ab38458ffbfbd4743ea197e49d50f",
+    "independentPeer": "c6/ai-65f-review/audit.json"
   }
 }

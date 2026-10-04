@@ -26,8 +26,11 @@ the retained bytes. The corrected packaging utility also rejects tampered HTML
 and duplicate page IDs with Python optimization enabled, before writing output;
 [independent receipts](c6/import-guard-96c95-audit/audit.json) preserve the earlier
 utility's failing controls. These inputs still need the actual Files/session binding,
-editable theme/editor mapping, source snapshot export and manifest/per-file hosted
-composition. Minimal wrappers must not overwrite the existing preview.
+editable theme/editor mapping, trusted registration of the existing snapshot/build
+seam and manifest/per-file hosted composition. Minimal wrappers must not overwrite
+the existing preview. The [current semantic ACK](semantic/c4-canonical-sites-semantic-ack-receipt.md)
+identifies the existing `SiteArtifactAuthoringService.BuildAsync`; native import
+still requires an authorized intent/coordinator/session action.
 
 ## Changes available for review
 
