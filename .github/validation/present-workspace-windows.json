@@ -8,7 +8,8 @@
     ".github/validation/present-workspace-windows.json",
     ".github/workflows/team-c-present-workspace-windows.yml",
     "eng/release-validation/present-workspace-windows/README.md",
-    "9to1 Workspace/Present/Tests/PresentWorkspaceCompositionTests.cs"
+    "9to1 Workspace/Present/Tests/PresentWorkspaceCompositionTests.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj"
   ],
   "sourcePins": [
     {
@@ -52,6 +53,265 @@
       "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
       "gitMode": "100644",
       "gitBlob": "10c3be91da5507a7e1d945561ec11f2264c12c8b"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Contracts/FileSystemContracts.cs",
+      "bytes": 4410,
+      "sha256": "76f89b00fae9e86c892dcd20757dd72112d8409b449f5bfdd14f5ad8c047ba58",
+      "gitMode": "100644",
+      "gitBlob": "23c2c4f1684860b2f56255f3629480134afef8fc"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+      "bytes": 18979,
+      "sha256": "782a90fd485a8126aef986ad964ee938535ce1791466320882ebce4fd360d149",
+      "gitMode": "100644",
+      "gitBlob": "badcbb61b72d4941df55441d223d6355715e03d0"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj",
+      "bytes": 1664,
+      "sha256": "2631aa150cf1d2a71bbe7b1473604f7b975fcc03447f83fcbe1f8824a7a65762",
+      "gitMode": "100644",
+      "gitBlob": "dc43156ef5d88a103c7b065f0c23ff195630f2ae"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.ArtifactContent.cs",
+      "bytes": 7144,
+      "sha256": "0c6824e9240c04c78fb98c6b22a8ad5a3e88e88b2269650038682972a750b0dc",
+      "gitMode": "100644",
+      "gitBlob": "233ac9eca5c0fc36378ebe48db66a3c969a30860"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.ArtifactIdentity.cs",
+      "bytes": 1833,
+      "sha256": "5c125b3d7da9af9aa5772a748c33dd9ca43b9fde9d6ec6602d8a9d3cba809a6f",
+      "gitMode": "100644",
+      "gitBlob": "4a3fd887383fcb8d1c1c8d91b02b7ede6bab74db"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Artifacts.cs",
+      "bytes": 13883,
+      "sha256": "d3b38688c1195b9f70be8450d3128203805c51215f282a6f9dad19d4a2ed58ae",
+      "gitMode": "100644",
+      "gitBlob": "a1d2a845d93787a25057e809986003eb6b486cba"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Content.cs",
+      "bytes": 10812,
+      "sha256": "aa639c09aff402bc2c0c339c6abbdee5be29c32db2e662affd4318eb8b72941d",
+      "gitMode": "100644",
+      "gitBlob": "295e9e3effc01162a4b64c7297d5763ea0adb5b0"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.CreateArtifact.cs",
+      "bytes": 7768,
+      "sha256": "9fd2f60a9f7c5545d09c06194065726695793bef0ecfef6ed7008bd06bd55287",
+      "gitMode": "100644",
+      "gitBlob": "cf793f9ecf9ac2a9bf8326b754d9dd9801193cb6"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.HistoricalContent.cs",
+      "bytes": 1438,
+      "sha256": "141138e1dd90ade31b821c34db29176c80207587aa1f30dd1cd05c3112e1594b",
+      "gitMode": "100644",
+      "gitBlob": "877ea9d29cd630243eb3f59acf2701afbf429399"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Identity.cs",
+      "bytes": 4790,
+      "sha256": "450f098e7ef07380a584b0d6aed09391afdf89a682f8cd85af62c489adc1bcf3",
+      "gitMode": "100644",
+      "gitBlob": "92f9244ef3d98ff47fab54e22c0057476a84cb6b"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Import.cs",
+      "bytes": 11239,
+      "sha256": "9515d0623ddd14d7326ecd3c29d6048f61eabcb7bff528551d7bfdf2d6862b0b",
+      "gitMode": "100644",
+      "gitBlob": "40d478579ab4333a4b378c2dc6cad9d51736b011"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.cs",
+      "bytes": 13061,
+      "sha256": "174f3dff88be82b616e3d284d83c1a507eeb412f951fe29ee70d1bd2387d6756",
+      "gitMode": "100644",
+      "gitBlob": "43469d0861f212b57cd1fbfabffd6e1b77455f4a"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesCommitAuthorityGuard.cs",
+      "bytes": 1313,
+      "sha256": "961066152c206761a34e5721a78e85fff3298377551427326f86c756833fa832",
+      "gitMode": "100644",
+      "gitBlob": "217b241bc68d9fb6cb4eceea0db51b8b51a5ac65"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesFolderPresentationStore.cs",
+      "bytes": 2216,
+      "sha256": "a17a5fab3171cef06be0e8587024031ed465d6f226683e91720da782c49468ee",
+      "gitMode": "100644",
+      "gitBlob": "5fcaf5fc8bbb980c02ab768c0e713cf0dc25d492"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesMaterializationRegistry.cs",
+      "bytes": 14405,
+      "sha256": "5c753769946fba700bbc4897cd5563b851fc15c86a512d5e990617f03ae715e8",
+      "gitMode": "100644",
+      "gitBlob": "1aad0f575df27360cd8760919f05eca2e66d4814"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesOperationJournal.cs",
+      "bytes": 5180,
+      "sha256": "42847657aae39fbb0fa075527d0ec46eeb68a13ea1c4678a664a1c55cce3b5f6",
+      "gitMode": "100644",
+      "gitBlob": "545ce21be3675c9e1a175cf7542572bfe29e4237"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesPhysicalDirectory.cs",
+      "bytes": 807,
+      "sha256": "435dad57c0d7b53421f857b3ab75b6763fe489a45fa09a397d4f30907de534b9",
+      "gitMode": "100644",
+      "gitBlob": "10efc8f163d1240600e9dd7f6b95ab50adf37d1a"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesProviderRegistry.cs",
+      "bytes": 4304,
+      "sha256": "7d3b1b3c17af950cd8be5b159e5033398e1665dfc890fe6fc674b128d535e9fd",
+      "gitMode": "100644",
+      "gitBlob": "15d6ed54b95838d1fa6bc22ca8847cedf706067b"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesServiceActionCatalog.cs",
+      "bytes": 5931,
+      "sha256": "fb5f740edc4c95f725c3ec2a9465ede3727a21e7881aea2b39f7071f2d88e804",
+      "gitMode": "100644",
+      "gitBlob": "f456507954d37d52d799f1ee965381ae45807ba4"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesSyncCursorStore.cs",
+      "bytes": 1466,
+      "sha256": "146ba1221c6a8b8c0b8ff5d92e07b06a5cc5ba61b8a4de2b8f7f98170003a96b",
+      "gitMode": "100644",
+      "gitBlob": "dcfed17c5edd1c7c576bc48c706477bb4efdf3ac"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesWorkspaceDirectoryResolver.cs",
+      "bytes": 18773,
+      "sha256": "672ff9f1497e364774393eb0929998b30d35741cbb8fe35ec8293e75362e782f",
+      "gitMode": "100644",
+      "gitBlob": "db7d7bde5dc0ff12363603d4297f9ee567e2afad"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/VersionedJsonStateStore.cs",
+      "bytes": 9496,
+      "sha256": "5736e28865831da0033f106ed2041e7429ab81dfb6fe9b185a1065be305254d6",
+      "gitMode": "100644",
+      "gitBlob": "2025a1822fe2c6b46612f0c4a6a37a6ac9105ce2"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesArtifactResourceResolver.Mail.cs",
+      "bytes": 2890,
+      "sha256": "53a144ca4fa440917ee52f354649238dea208e80670d2e6bd39808b9eaa80d8c",
+      "gitMode": "100644",
+      "gitBlob": "79100b90c8555ad8e22582f6c22b3bbadd8ceef3"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesArtifactResourceResolver.cs",
+      "bytes": 19100,
+      "sha256": "d1dd9aa3fd1730af5f68895b69c7d955c301f5788eeecfbbd76a796bdfce3b45",
+      "gitMode": "100644",
+      "gitBlob": "d8e635986e355800cbce5191fecc3f7041804d3f"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesCompatibilityPackageContentSource.cs",
+      "bytes": 12756,
+      "sha256": "e14ebb66de5ca093090d9b1629dd1bff755a9a7b1019d30bba963d942242b26f",
+      "gitMode": "100644",
+      "gitBlob": "4e3f6e41054aea6653a7f2914c08bef9f8125263"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesCompatibilityPackageOpenCoordinator.cs",
+      "bytes": 2257,
+      "sha256": "85098ba20a23a6bc5576ef28316f4f2cc8c19820893802f7406749ec200d3b17",
+      "gitMode": "100644",
+      "gitBlob": "ccbc60f40f90860e26bc0de9cf2e3933dd0315cd"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesMailAttachmentContentSource.cs",
+      "bytes": 11118,
+      "sha256": "00e1ddef3c2cb3b78f3d9f7a1a96676f67f65a4231f8a5334d56e4899289ec57",
+      "gitMode": "100644",
+      "gitBlob": "1726dcbcab799a4d314bc8e75817c9f19de050ab"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesMediaAssetSourceResolver.cs",
+      "bytes": 11855,
+      "sha256": "3d7f4fe97ce7f2a31b2717ed26487ba5bd450e9d9bf9cb79d1cf4fa3697be377",
+      "gitMode": "100644",
+      "gitBlob": "7e4b0377ce7f2906d9d1e60f62671e063730a799"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesNativeBrowserService.MailSelection.cs",
+      "bytes": 2185,
+      "sha256": "ea40bbf1c12c4c1fb2fda6070ab5c81c76610d572c322955664bd5f2b4370fc3",
+      "gitMode": "100644",
+      "gitBlob": "94cd0207d06c1731cb524c49ed6b683a2256e0c6"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesNativeBrowserService.cs",
+      "bytes": 14197,
+      "sha256": "169386e08a7125cbe4d8fa65cb37c8e18a1f97399f3c4e2fd8db054628845111",
+      "gitMode": "100644",
+      "gitBlob": "4cd0d4045b02800100efef640ff98ddb4c433f9c"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesNativeFolderReadSource.cs",
+      "bytes": 13749,
+      "sha256": "2fc37591e9ca2245aba18eb6f35d86c7418c14d255f965d475eb246112050ade",
+      "gitMode": "100644",
+      "gitBlob": "e461605ca077a104ce95803267be8ba8cce459c4"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesNativeHostComposition.cs",
+      "bytes": 2450,
+      "sha256": "8b813d46e56eb85da7162199c418585c326c107d9baea9263458874c978424b1",
+      "gitMode": "100644",
+      "gitBlob": "105cbc2bce49bdb7fe721e99b803992f44bcd08f"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesOriginalChildFolderReadSource.cs",
+      "bytes": 9585,
+      "sha256": "f1780348d000531fd714386842d8756dace8d3e82e93469047a3e604dedf8649",
+      "gitMode": "100644",
+      "gitBlob": "8f548174fb31745f25b6fa0b95ea93450a28934f"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj",
+      "bytes": 716,
+      "sha256": "d26b332185827ccf97b6648beaefa76b094fcabb7d22efab65828f7fb06e4238",
+      "gitMode": "100644",
+      "gitBlob": "5b489d637b97aee55186a0c56a2a68ca6a7d0cda"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/NativeFilesArtifactContentReader.cs",
+      "bytes": 6658,
+      "sha256": "b7e7227375c4c438bbde2c45920d8d226f7baaf7bda9658b34915f362b56adae",
+      "gitMode": "100644",
+      "gitBlob": "60484b8d144a5f1d113b152f8b0b2df38e4e5354"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/NativeFilesMediaAssetSourceResolver.cs",
+      "bytes": 5362,
+      "sha256": "88141b3eb5e51085f8400f80f5d05507923b3c63130507c4c8e9952346c9d0c7",
+      "gitMode": "100644",
+      "gitBlob": "2bb774376dd6f30c26ac38f9016c9618f8efda9b"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/NativeFilesWorkspaceService.cs",
+      "bytes": 21972,
+      "sha256": "57248c980869fda95aaa6a5b9d85bc49346d45d4e1cb4088a5a6591091f47295",
+      "gitMode": "100644",
+      "gitBlob": "84a6d90fc48a7896f0f90aa32eb688dddacae1c4"
     },
     {
       "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
@@ -101,6 +361,83 @@
       "sha256": "8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806",
       "gitMode": "100644",
       "gitBlob": "8e2a8b696d14da024e88c3cc4187295ee9dd585f"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Contracts/MailModels.cs",
+      "bytes": 8852,
+      "sha256": "aca350d14fcb825264300aa37d7029904a20ecec5106201eb9925823a7046282",
+      "gitMode": "100644",
+      "gitBlob": "c681263ca9fd68596160391c52bb86eed5880244"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Contracts/MailResults.cs",
+      "bytes": 6557,
+      "sha256": "d8ad1a2186085db318c0aaa0e3f7356b97fd4e8ff62866706be187693219b662",
+      "gitMode": "100644",
+      "gitBlob": "bb517d50b79ef9421b105b199f2b4b47ec7132ef"
+    },
+    {
+      "path": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+      "bytes": 925,
+      "sha256": "a81002c51c9716e6208c805d57ed3a73df68157fbf6d108b79266e01ec8ba245",
+      "gitMode": "100644",
+      "gitBlob": "7d9bb226578a844da620d0985af15a260a6e6b8c"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Providers/MailAttachmentContentSource.cs",
+      "bytes": 553,
+      "sha256": "4dc56f216b1c5c4c9580e674ef6a0ee6f5badb486e4615945a3e34929e79259f",
+      "gitMode": "100644",
+      "gitBlob": "42f845e69d9d8217006193fcf61be4856154eb81"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Providers/MailKitImapSmtpProvider.cs",
+      "bytes": 24270,
+      "sha256": "0d16249681e399f362a70eecb72e81d0f40a7e0a94fe1f999c5be9ddfe8e14e7",
+      "gitMode": "100644",
+      "gitBlob": "03c3c221985185c30dcff5d7d674b2576995f490"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Providers/MailProviderContracts.cs",
+      "bytes": 2650,
+      "sha256": "c85f5af76b193dea519dbb80dbdd844af0bb0769983e2ee09002792d16e9c9af",
+      "gitMode": "100644",
+      "gitBlob": "3b2e00945ca8b55f9980b50150b5066234d6341c"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Services/MailDomainService.cs",
+      "bytes": 48046,
+      "sha256": "2c0fdc2b726f17d20a6f1fd55a8a69c560d0db0cd9cb7980d99677e719e9f76e",
+      "gitMode": "100644",
+      "gitBlob": "1d3ccc93c9cbca5374f1717d3089f4ef38ff6b1a"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Services/MailHtmlSanitizer.cs",
+      "bytes": 1735,
+      "sha256": "a32bf75ae381a7c121d4204f42eb9652ff12c7c5b1709a8c75c556950c1343ab",
+      "gitMode": "100644",
+      "gitBlob": "ccf5409eac9fabbcfede76ea99eda4a3d03ce42a"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Services/MailSearchEngine.cs",
+      "bytes": 3905,
+      "sha256": "e7df05b300d77402f7a1d2a6d770691c06b5e0c16f3c65cc75a4ba9e11b22c9d",
+      "gitMode": "100644",
+      "gitBlob": "c2879ecc9f681900462e20d658ae0a0d679def81"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Storage/EncryptedJsonMailStateStore.cs",
+      "bytes": 10595,
+      "sha256": "9e2a7ac968f58f8d260e2ddbefa04a28f5c731d3fd6302b3c059d2154da96bd6",
+      "gitMode": "100644",
+      "gitBlob": "481e894ec3bdeb87ab1c877cb8ab6d9ba6585530"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Storage/MailStoreContracts.cs",
+      "bytes": 1718,
+      "sha256": "90f7b4fee715f0aba48040745f6a0f973fcd4e5b2d63e0c184f9cd4409835a15",
+      "gitMode": "100644",
+      "gitBlob": "7f617f2da67b71881509497cd3b9f9c0bcc04d35"
     },
     {
       "path": "9to1 Workspace/Present/HavenOS.Present.csproj",
@@ -173,6 +510,167 @@
       "gitBlob": "69afa9c2be8c0b16524fe8204fd51508da1810eb"
     },
     {
+      "path": "9to1 Workspace/Sites/Application/SiteActionAuthorization.cs",
+      "bytes": 852,
+      "sha256": "432d43f464575d1a6dac0eaa9d030e861b8eaa5161b4cc1396f2464250a6cbce",
+      "gitMode": "100644",
+      "gitBlob": "68e816364477d9b6a4847bb4f802e5b15efa876d"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteArtifactAuthoringService.cs",
+      "bytes": 2143,
+      "sha256": "bd4a5fb680e61f31c4d1c4a16690d9a427be72e4c868d81f25a9da57828bf07f",
+      "gitMode": "100644",
+      "gitBlob": "b8f3f2a1332907b00b28d838eee7a465b57b7ef2"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteAuthoringService.cs",
+      "bytes": 9127,
+      "sha256": "61b33ac84e4b6cb73782e9c25164b2101bd0b890e9408d0494a5686eef3fba1f",
+      "gitMode": "100644",
+      "gitBlob": "298647be5d33c32268b6ef20c494f17c6d56fd46"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteContentSelectionAuthoringService.cs",
+      "bytes": 5169,
+      "sha256": "495c2e80ffa67be1c2da707d3cd6a9e9bd5242b4cecdc86517a6e38f92c4ec31",
+      "gitMode": "100644",
+      "gitBlob": "b56b60a7800cc65cc7985e23a26ecbfd32e7e5c3"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteHtmlContentImporter.cs",
+      "bytes": 6789,
+      "sha256": "ee22b4337a263952694848c5d53964aa9a5e6454ca575c6e02491d6f930e8c73",
+      "gitMode": "100644",
+      "gitBlob": "0ffac3ec070aac4d188ccea2f053815901267095"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNameVerificationService.cs",
+      "bytes": 11451,
+      "sha256": "47e296ee20fe3d3fa06e5ef897748777f4b0921fc67c0fdf8e250f71b7c40a41",
+      "gitMode": "100644",
+      "gitBlob": "bcf81b9fd19e6bfeddd6cad8142192954b16318b"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeActionPolicies.cs",
+      "bytes": 625,
+      "sha256": "e34d9e40a1eb0fbbbff8d3d2f73878edef5160f040ca4591b3b1bc3dae51c6f5",
+      "gitMode": "100644",
+      "gitBlob": "769fece47d8f4a32841e1b77b9e7ed172bdc32d3"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeProjectAccessResolver.cs",
+      "bytes": 2817,
+      "sha256": "2bcffc7c432fbbd0a01e55a8b69f17cfe2633893ddeb7d914735d0450621f48e",
+      "gitMode": "100644",
+      "gitBlob": "108930e2f5866ae486ecbe83b94658350262bf1c"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeWorkspaceAuthority.cs",
+      "bytes": 880,
+      "sha256": "4a9824534d37503d5c370c8824d90b231af340a80ab833e70150c338148f2b66",
+      "gitMode": "100644",
+      "gitBlob": "e847c786dd751a68769aff82dee354dd8febfc2d"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeWriteCoordinator.cs",
+      "bytes": 18076,
+      "sha256": "e1fe109c3217f25f3f4f7072d9d881e76addfdaebeee9a9964efac78aed829c0",
+      "gitMode": "100644",
+      "gitBlob": "88acc0ae300bad2415866e1b50952547114f5df1"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteProjectService.cs",
+      "bytes": 9018,
+      "sha256": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9",
+      "gitMode": "100644",
+      "gitBlob": "42809ca25f0a6004549085e4644fa88c34cd2e4d"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+      "bytes": 29696,
+      "sha256": "c530e336a40e7c1b2fe6c9f4976bc4810e34996298252989ae0dc743e8a3898f",
+      "gitMode": "100644",
+      "gitBlob": "59959c2fe4a8114d8be5fae29d36759a3c43efc1"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Directory.Build.props",
+      "bytes": 663,
+      "sha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c",
+      "gitMode": "100644",
+      "gitBlob": "56f3d4ce2cc317e46a3d6914c98609b076226d02"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Domain/SiteModels.cs",
+      "bytes": 8654,
+      "sha256": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+      "gitMode": "100644",
+      "gitBlob": "8fb19b0e167ad0d6aed50c7583796c477add84f2"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Domain/SiteSlug.cs",
+      "bytes": 5341,
+      "sha256": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641",
+      "gitMode": "100644",
+      "gitBlob": "5975f0236103ebc9d7bfae791207d249bfab1a0f"
+    },
+    {
+      "path": "9to1 Workspace/Sites/HavenOS.Sites.csproj",
+      "bytes": 601,
+      "sha256": "f507b445cf59bbf9b45c700ea80f4da08ac080ccce8135c886011f9807a53ec3",
+      "gitMode": "100644",
+      "gitBlob": "e60f0fb12ba62d8fe44fde0ad28766af52a161f7"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "bytes": 7715,
+      "sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+      "gitMode": "100644",
+      "gitBlob": "90de2fd3bc79a3543d8dd57eb4c5d748281e2c29"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/R2NativeSiteArtifactReader.cs",
+      "bytes": 6714,
+      "sha256": "d82c24a3ee745cecbc5457d685a0b38cf9732d15f0f2b90d55a1f914236ed749",
+      "gitMode": "100644",
+      "gitBlob": "5554c382aa06a751c0d7a1f60ead77bca2f266c2"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/R2SiteArtifactReader.cs",
+      "bytes": 5577,
+      "sha256": "473c544eab3fbc3c40772ee5455c2151f4b18e913fe31cc3b9ff0adf2c2a0135",
+      "gitMode": "100644",
+      "gitBlob": "9558eab20bdb422d032895376edf339b63b34f65"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+      "bytes": 31952,
+      "sha256": "3eaf6fa80bdcdba8266eb5cd1921ff02cc5f57ce0506537b3ee9d1624a517644",
+      "gitMode": "100644",
+      "gitBlob": "b11fd09fd6b9daed2fc54cd133a6dfbc92093340"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs",
+      "bytes": 4280,
+      "sha256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+      "gitMode": "100644",
+      "gitBlob": "3dc6b98fc72b2d7c5deb78b566993b7e461289eb"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Infrastructure/FileSiteWorkspaceStore.cs",
+      "bytes": 10005,
+      "sha256": "e3ec22beb78ca0240c317b9e30db2fceeb2a3cd928ff27a051a2a666a1dc876c",
+      "gitMode": "100644",
+      "gitBlob": "46f15766cbde37fa05582eecb960623392c03ec4"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Runtime/SiteDocumentRenderer.cs",
+      "bytes": 13403,
+      "sha256": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8",
+      "gitMode": "100644",
+      "gitBlob": "b9632443e1a6a55fb510f80d4fc85d8162ff4bb7"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Directory.Packages.props",
       "bytes": 1922,
       "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c",
@@ -216,10 +714,10 @@
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
-      "bytes": 4210,
-      "sha256": "11693a3f96e57c3e50de966382734f38bdd9580431567a6703440d3861299a25",
+      "bytes": 4531,
+      "sha256": "dbade706bfe2c1f84be11dee38616ed9eb325d230cb86970b52cf136bfc10cb3",
       "gitMode": "100644",
-      "gitBlob": "6ae7df6e1cfbb54a312d1844fbb2737bf9eca762"
+      "gitBlob": "f2e202bf5ddfc4eb9afe36afde3b1dec644314f8"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenInteractiveAutomationPeers.cs",
@@ -241,6 +739,13 @@
       "sha256": "1762e440d6b60f7d08921174a1dc7d43ac566c1106073d5a09a9cc15c332afb2",
       "gitMode": "100644",
       "gitBlob": "1c3ad3775a5d890beae33ea1ce9f71e241ac0088"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/SitesNativeWorkspaceAuthority.cs",
+      "bytes": 1857,
+      "sha256": "b109d2333a07ebca06da23e882af803c246f5306326c02d3663ea12c3d2c8af5",
+      "gitMode": "100644",
+      "gitBlob": "c1c05cda80df221195f006aa76494d30aad548db"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Phase2.cs",
@@ -409,6 +914,13 @@
       "sha256": "6e869188bf9bcf85834c03bbfe4227e6e2040717ac69ef6f244d57f63c83d99c",
       "gitMode": "100644",
       "gitBlob": "a06a94050d7be19f45019ce2a62fa8770361f1e0"
+    },
+    {
+      "path": "apps/Web/Sites/Tests/SitesBrowser.Tests.csproj",
+      "bytes": 1426,
+      "sha256": "9024fbd9992e1f83c941be808d06904e1fe52e0eab8c421141cfa69d67a0ce90",
+      "gitMode": "100644",
+      "gitBlob": "d752ee22f6e9c6b071bbd645b0a981c6f98faf14"
     },
     {
       "path": "apps/Web/Tests/ci/run-ordinary-web-publish.py",
@@ -888,5 +1400,33 @@
       "Search local presentation titles": "whole EEC actual LibrarySearch AccessibleName",
       "library Open edited title": "actual summary title -> ActionButton AccessibleName; saved expected synthetic exact title"
     }
+  },
+  "retainedOriginalCompilerNegative": {
+    "runId": 37227144107,
+    "head": "946fe6c038eaf926fbcfec1888f2f864ef8ba160",
+    "artifactId": 11312049654,
+    "custodyArtifactId": 11312258846,
+    "owningCasesExecuted": 0,
+    "sharedCasesExecuted": 0,
+    "packageProduced": false,
+    "nativeUiExecuted": false,
+    "diagnosis": "CS0246 SitesNativeWorkspaceAuthority missing existing Sites and Files.NativeHost typed project references/import; both source Task assemblies built successfully; sourceAfterUnchanged true."
+  },
+  "reviewedExistingCompilerClosure": {
+    "productionPath": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+    "originalBlob": "6ae7df6e1cfbb54a312d1844fbb2737bf9eca762",
+    "recipeSource": "apps/Web/Sites/Tests/SitesBrowser.Tests.csproj",
+    "declarations": [
+      "ProjectReference ../../../Sites/HavenOS.Sites.csproj",
+      "ProjectReference ../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj",
+      "Using HavenOS.Files.NativeHost"
+    ],
+    "existingTypedOwnerGraphProjects": 13,
+    "staticCycles": [],
+    "staticMissingProjectBodies": [],
+    "originalAdapterAndAuthorityBodies": "UNCHANGED",
+    "DIAndAuthorization": "UNCHANGED",
+    "owning15Shared7AndOriginalNativeUiCriteria": "UNCHANGED",
+    "qualification": "Available original typed owner source closure; actual compilation/runtime still required."
   }
 }
