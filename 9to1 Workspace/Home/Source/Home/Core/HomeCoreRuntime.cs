@@ -47,6 +47,13 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
     private int _dependentLeases;
     private bool _started;
     private bool _stopped;
+    // First original failures remain bound to their actual service invocation/task.
+    // Storage is bounded by the registered implementations; later attempts cannot replace a cause.
+    private sealed record OriginalFailure(string ServiceId, Task? OriginalTask, Exception Cause);
+    private readonly Dictionary<string, OriginalFailure> _originalStartFailures = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, OriginalFailure> _originalStopFailures = new(StringComparer.Ordinal);
+    private readonly object _originalDisposeGate = new();
+    private Task? _originalDispose;
 
     public HomeCoreRuntime(
         IEnumerable<IHomeCoreService>? services = null,
@@ -122,9 +129,11 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
                     IsAvailable = false,
                     Diagnostic = null,
                 });
+                Task? originalStart = null;
                 try
                 {
-                    await service.StartAsync(cancellationToken).ConfigureAwait(false);
+                    originalStart = service.StartAsync(cancellationToken);
+                    await originalStart.ConfigureAwait(false);
                     UpdateService(descriptor with
                     {
                         State = HomeServiceLifecycleState.Ready,
@@ -132,8 +141,9 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
                         Diagnostic = null,
                     });
                 }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                catch (OperationCanceledException original) when (cancellationToken.IsCancellationRequested)
                 {
+                    lock (_sync) _originalStartFailures.TryAdd(serviceId, new(serviceId, originalStart, original));
                     UpdateService(descriptor with
                     {
                         State = HomeServiceLifecycleState.Stopped,
@@ -144,6 +154,7 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
                 }
                 catch (Exception exception)
                 {
+                    lock (_sync) _originalStartFailures.TryAdd(serviceId, new(serviceId, originalStart, exception));
                     UpdateService(descriptor with
                     {
                         State = HomeServiceLifecycleState.Degraded,
@@ -164,8 +175,10 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
                 var state = _services[serviceId];
                 if (state.State is not (HomeServiceLifecycleState.Starting or HomeServiceLifecycleState.Ready or HomeServiceLifecycleState.Degraded))
                     continue;
-                try { await service.StopAsync(CancellationToken.None).ConfigureAwait(false); }
-                catch { /* Startup cancellation must still release every service that may have started. */ }
+                Task? originalStop = null;
+                try { originalStop = service.StopAsync(CancellationToken.None); await originalStop.ConfigureAwait(false); }
+                catch (Exception original)
+                { lock (_sync) _originalStopFailures.TryAdd(serviceId, new(serviceId, originalStop, original)); }
                 UpdateService(state with { State = HomeServiceLifecycleState.Stopped, IsAvailable = false,
                     Diagnostic = "Service startup was cancelled and the service was stopped." });
             }
@@ -317,7 +330,10 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
         return new Subscription(this, id);
     }
 
-    public async Task<HomeCoreFailure?> StopAsync(bool explicitlyRequested, CancellationToken cancellationToken = default)
+    public Task<HomeCoreFailure?> StopAsync(bool explicitlyRequested, CancellationToken cancellationToken = default) =>
+        StopOriginalAsync(explicitlyRequested, cancellationToken, drainingOriginalClose: false);
+    private async Task<HomeCoreFailure?> StopOriginalAsync(bool explicitlyRequested, CancellationToken cancellationToken,
+        bool drainingOriginalClose)
     {
         await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -340,17 +356,23 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
                 if (!descriptor.IsAvailable && descriptor.State != HomeServiceLifecycleState.Degraded)
                     continue;
                 UpdateService(descriptor with { State = HomeServiceLifecycleState.Stopped, IsAvailable = false });
+                Task? originalStop = null;
                 try
                 {
-                    await service.StopAsync(cancellationToken).ConfigureAwait(false);
+                    originalStop = service.StopAsync(cancellationToken);
+                    await originalStop.ConfigureAwait(false);
                 }
-                catch (Exception exception) when (exception is not OperationCanceledException)
+                catch (Exception exception)
                 {
+                    lock (_sync) _originalStopFailures.TryAdd(serviceId, new(serviceId, originalStop, exception));
+                    if (!drainingOriginalClose && exception is OperationCanceledException) throw;
                     UpdateService(_services[serviceId] with
                     {
                         State = HomeServiceLifecycleState.Degraded,
                         IsAvailable = false,
-                        Diagnostic = $"HomeServiceStopFailed: {exception.GetType().Name}: {exception.Message}",
+                        Diagnostic = exception is OperationCanceledException ?
+                            "HomeServiceStopFailed: unexpected original cancellation during owned close." :
+                            $"HomeServiceStopFailed: {exception.GetType().Name}: {exception.Message}",
                     });
                 }
             }
@@ -367,10 +389,52 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
         }
     }
 
-    public async ValueTask DisposeAsync()
+    // Method-only observation of the first actual required-service startup causes.
+    // An observed historical error is never a replacement current decision or grant.
+    internal Exception? CaptureOriginalStartFailures(IReadOnlyList<string> requiredServices)
     {
-        await StopAsync(explicitlyRequested: true).ConfigureAwait(false);
-        _lifecycleGate.Dispose();
+        Exception[] originals;
+        lock (_sync) originals = requiredServices.Distinct(StringComparer.Ordinal)
+            .Where(_originalStartFailures.ContainsKey).Select(id => _originalStartFailures[id].Cause)
+            .Distinct<Exception>(ReferenceEqualityComparer.Instance).ToArray();
+        return originals.Length == 0 ? null : originals.Length == 1 ? originals[0] :
+            new AggregateException("Original required Home service startup failures retained.", originals);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task original;
+        lock (_originalDisposeGate)
+        {
+            if (_originalDispose is not null) return new(_originalDispose);
+            original = _originalDispose = DisposeOriginalAsync(start.Task);
+        }
+        start.SetResult(); // Publish SAME original close before Stop callbacks can reenter.
+        return new(original);
+    }
+    private async Task DisposeOriginalAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        Exception? primary = null; List<Exception> failures = [];
+        try { await StopOriginalAsync(explicitlyRequested: true, CancellationToken.None,
+            drainingOriginalClose: true).ConfigureAwait(false); }
+        catch (Exception error) { primary = error; }
+        finally
+        {
+            lock (_sync)
+                foreach (var failure in _originalStopFailures.Values)
+                    if (!ReferenceEquals(failure.Cause, primary) &&
+                        !failures.Any(item => ReferenceEquals(item, failure.Cause))) failures.Add(failure.Cause);
+            try { _lifecycleGate.Dispose(); }
+            catch (Exception error)
+            { if (!ReferenceEquals(error, primary) && !failures.Any(item => ReferenceEquals(item, error))) failures.Add(error); }
+        }
+        if (primary is null && failures.Count == 1)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count != 0) throw new AggregateException("Original Home runtime stop/disposal failures retained.",
+            primary is null ? failures : new[] { primary }.Concat(failures));
+        if (primary is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
     }
 
     private HomeCoreStateSnapshot Snapshot()

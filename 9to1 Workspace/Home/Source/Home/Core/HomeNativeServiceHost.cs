@@ -5,8 +5,34 @@ namespace HavenOS.Home.Core;
 public enum HomeNativeHostState { Ready, RequiresHomeRepair }
 public sealed record HomeNativeServiceSession(IServiceProvider Services, HomeCoreRuntime Runtime,
     IAuthenticatedResourceActorSource Actors);
+public enum HomeNativeOriginalFailureStage { None, Composition, RuntimeStartup, RequiredServiceStartup }
 public sealed record HomeNativeHostResult(HomeNativeHostState State, string Code, string Message,
-    IServiceProvider? Services, HomeCoreStateSnapshot? Snapshot);
+    IServiceProvider? Services, HomeCoreStateSnapshot? Snapshot)
+{
+    // Method-only same-process observation. No serialized exception, stack, message, authority or
+    // Ready fallback is added to the maintained public repair envelope.
+    private Exception? _originalFailure;
+    private HomeNativeOriginalFailureStage _originalStage;
+    private Task? _originalFailureTask;
+    internal HomeNativeHostResult RetainOriginalFailure(HomeNativeOriginalFailureStage stage, Exception? original, Task? originalTask = null)
+    {
+        if (original is null) return this;
+        if (_originalFailure is not null && !ReferenceEquals(_originalFailure, original))
+            throw new InvalidOperationException("The first original Home startup failure cannot be replaced.");
+        if (_originalFailure is null) { _originalFailure = original; _originalStage = stage; _originalFailureTask = originalTask; }
+        return this;
+    }
+    public HomeNativeOriginalFailureStage ObserveOriginalFailureStage() => _originalStage;
+    public void RethrowOriginalFailureIfPresent()
+    {
+        if (_originalFailure is { } original)
+        {
+            if (_originalFailureTask is { IsCompleted: false })
+                throw new InvalidOperationException("The retained original startup task has not settled.");
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original).Throw();
+        }
+    }
+}
 
 /// <summary>
 /// One process-wide bundled Home host, shared by launcher and primary UI. The factory must be the platform's
@@ -50,24 +76,30 @@ public sealed class HomeNativeServiceHost
         HomeNativeServiceSession session;
         try { session = await start.WaitAsync(cancellationToken).ConfigureAwait(false); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch { return Repair("HomeBootstrapFailed", "Home could not start safely. Open Home to repair its installation or recover its preserved state."); }
+        catch (Exception original) { return Repair("HomeBootstrapFailed", "Home could not start safely. Open Home to repair its installation or recover its preserved state.")
+            .RetainOriginalFailure(HomeNativeOriginalFailureStage.Composition, original, start); }
         if (session.Services is null || session.Runtime is null || session.Actors is null)
             return Repair("HomeCompositionInvalid", "The bundled Home composition is incomplete.");
+        Task<HomeCoreStateSnapshot>? originalRuntimeStart = null;
         try
         {
             var actor = await session.Actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
             if (actor is null) return Repair("HomeIdentityUnavailable", "Home cannot verify this operating-system profile. Open Home for recovery.");
-            var snapshot = await session.Runtime.StartAsync(cancellationToken).ConfigureAwait(false);
+            originalRuntimeStart = session.Runtime.StartAsync(cancellationToken);
+            var snapshot = await originalRuntimeStart.ConfigureAwait(false);
             var missing = requiredServices.Where(requirement => requirement.Required && !snapshot.Services.Any(s => s.ServiceId == requirement.ServiceId && s.IsAvailable &&
                 s.State == HomeServiceLifecycleState.Ready && requirement.Accepts(s.ContractVersion))).Select(r => r.ServiceId).ToArray();
             if (missing.Length != 0)
-                return new(HomeNativeHostState.RequiresHomeRepair, "HomeServiceUnavailable", "Required Home services are unavailable or incompatible: " + string.Join(", ", missing), null, snapshot);
+                return new HomeNativeHostResult(HomeNativeHostState.RequiresHomeRepair, "HomeServiceUnavailable", "Required Home services are unavailable or incompatible: " + string.Join(", ", missing), null, snapshot)
+                    .RetainOriginalFailure(HomeNativeOriginalFailureStage.RequiredServiceStartup,
+                        session.Runtime.CaptureOriginalStartFailures(missing));
             if (actor != await session.Actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false))
                 return Repair("HomeProfileChanged", "The active Home profile changed during startup. Open Home and retry.");
             return new(HomeNativeHostState.Ready, "Ready", "The canonical Home host is ready.", session.Services, snapshot);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch { return Repair("HomeRecoveryRequired", "Home state or profile authority requires recovery. Existing data was preserved."); }
+        catch (Exception original) { return Repair("HomeRecoveryRequired", "Home state or profile authority requires recovery. Existing data was preserved.")
+            .RetainOriginalFailure(HomeNativeOriginalFailureStage.RuntimeStartup, original, originalRuntimeStart); }
     }
     private static HomeNativeHostResult Repair(string code, string message) => new(HomeNativeHostState.RequiresHomeRepair, code, message, null, null);
 }

@@ -7,7 +7,7 @@ namespace NineToOne.Os.Shell.Authority;
 
 /// <summary>Distinct leased owner-registration listener. Locator is routing only; installed peer verification remains mandatory.
 /// This does not advertise an unavailable widget service as ready or supply controlled-launch evidence.</summary>
-public sealed class LinuxNativeWidgetRegistrationServer : IDisposable
+public sealed class LinuxNativeWidgetRegistrationServer : IDisposable, IAsyncDisposable
 {
     private readonly Socket _listener;
     private readonly HomeNativeSessionLease _lease;
@@ -16,6 +16,8 @@ public sealed class LinuxNativeWidgetRegistrationServer : IDisposable
     private readonly HomeNativeWidgetRegistry _registry;
     private readonly CancellationTokenSource _shutdown = new();
     private readonly Task[] _workers;
+    private readonly object _originalCloseGate = new();
+    private Task? _originalClose;
     public HomeNativeEndpointLocation Location { get; }
     private LinuxNativeWidgetRegistrationServer(Socket listener, HomeNativeEndpointLocation location, HomeNativeSessionLease lease,
         IAuthenticatedResourceActorSource actors, HomeCoreRuntime runtime, HomeNativeWidgetRegistry registry)
@@ -79,11 +81,28 @@ public sealed class LinuxNativeWidgetRegistrationServer : IDisposable
     private static bool Ready(HomeCoreRuntime runtime) => new[] { "home.core", "home.state", "apps.installed" }.All(id =>
         runtime.Current.Services.Any(s => s.ServiceId == id && s.IsAvailable && s.State == HomeServiceLifecycleState.Ready &&
             s.ContractVersion.Major == HomeCoreServiceCatalog.CurrentContractVersion.Major && s.ContractVersion.Minor >= HomeCoreServiceCatalog.CurrentContractVersion.Minor));
-    public void Dispose()
+    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
+    public ValueTask DisposeAsync()
     {
-        if (_shutdown.IsCancellationRequested) return;
-        _shutdown.Cancel(); _listener.Dispose();
-        Task.WhenAll(_workers).GetAwaiter().GetResult();
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task close;
+        lock (_originalCloseGate)
+        {
+            if (_originalClose is not null) return new(_originalClose);
+            close = _originalClose = CloseOriginalAsync(start.Task);
+        }
+        start.SetResult(); // Publish SAME close before cancellation callbacks can reenter.
+        return new(close);
+    }
+    private async Task CloseOriginalAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        var failures = new OsOriginalFailures();
+        try { _shutdown.Cancel(); } catch (Exception original) { failures.Retain(original); }
+        try { _listener.Dispose(); } catch (Exception original) { failures.Retain(original); }
+        // Independently join all four original workers, including held finally after Cancel throws.
+        foreach (var original in _workers)
+            try { await original.ConfigureAwait(false); } catch (Exception error) { failures.Retain(error); }
         try
         {
             var info = new FileInfo(Location.LocatorPath);
@@ -91,7 +110,10 @@ public sealed class LinuxNativeWidgetRegistrationServer : IDisposable
                 JsonSerializer.Deserialize<HomeNativeEndpointLocation>(File.ReadAllBytes(Location.LocatorPath))?.Epoch == Location.Epoch) TryDelete(Location.LocatorPath);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException) { }
-        TryDelete(Location.SocketPath); _shutdown.Dispose();
+        catch (Exception original) { failures.Retain(original); }
+        try { TryDelete(Location.SocketPath); } catch (Exception original) { failures.Retain(original); }
+        try { _shutdown.Dispose(); } catch (Exception original) { failures.Retain(original); }
+        failures.ThrowIfAny("Original leased listener cancellation and worker-close failures retained.");
     }
     private static void TryDelete(string path)
     { try { File.Delete(path); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } }

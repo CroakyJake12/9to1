@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "aa03b6a0724cad0798af9e2415e7dd6933cfd293",
-  "programTree": "539fdac9e67c7159c126eb432fdac8298e7839c7",
+  "baselineCommit": "5b62ae68469459d88f16360233768058346d5695",
+  "programTree": "9fd1acf2e481f44e22b041585e70bc74d1d103fe",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -183,9 +183,9 @@
     {
       "path": ".github/validation/astra-linux-supervised-home-owning-classes.json",
       "mode": "100644",
-      "object": "184e3956c5868c1adf8c72f9076111adf57e74a2",
-      "bytes": 34956,
-      "sha256": "1b7554d695df74164ea95e2de5f3e2d4bac5935ba2f1623d804c2fbb34e7ea8f"
+      "object": "734cb58fa92f612237a2a569ddff90d17f5ae668",
+      "bytes": 35729,
+      "sha256": "f9e6d02fd864be07f7068c582c42c07d5a17a3d9e84278938ba63c1fde0efeab"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -2374,9 +2374,9 @@
     {
       "path": "9to1 OS/apps/9to1-shell/Authority/LinuxNativeWidgetRegistrationServer.cs",
       "mode": "100644",
-      "object": "d7f9e53460e5b914073451cadbc178cf39e421d2",
-      "bytes": 6589,
-      "sha256": "ad8f77a84fd7de41b45814152daf72dd7fa37c9f3608411507a4ab2f86c6b229"
+      "object": "ac1d7585f8a6eaa12559298f3d342f496d21d1cf",
+      "bytes": 7970,
+      "sha256": "731c77742b19c9763600c74fdcab3dd38664136b81dfa36569332c63576add22"
     },
     {
       "path": "9to1 OS/apps/9to1-shell/Authority/LinuxOriginalChildPidfd.cs",
@@ -2556,9 +2556,9 @@
     {
       "path": "9to1 OS/apps/9to1-shell/Authority/LinuxSessionDiscoveryServer.cs",
       "mode": "100644",
-      "object": "91754c4c6466511d79cfb49541e0f8132318e0cf",
-      "bytes": 5877,
-      "sha256": "4eb7afe0c5e84fa8ff56f34ebe87b4fa0e1832ec4101f09c3d0714d232c0a7bd"
+      "object": "8dae2394b8e418491b64fcd8ad181225c0ef8c74",
+      "bytes": 7258,
+      "sha256": "37e5d3bd241ab13c6dfae0a5d6e7f009de88a0f673e7bce87dc3e9298f1cb046"
     },
     {
       "path": "9to1 OS/apps/9to1-shell/Authority/LinuxSupervisedWidgetOwnerConnection.cs",
@@ -2708,11 +2708,18 @@
       "sha256": "33a40952b7ff5c0d3542f653627a47418d0f87967c15274062ef97db2020c248"
     },
     {
+      "path": "9to1 OS/apps/9to1-shell/OsSessionOriginalWork.cs",
+      "mode": "100644",
+      "object": "3fdccf20b1b136614d095d4242606e331f43053f",
+      "bytes": 5732,
+      "sha256": "5bb0ca17ed34e56e268f6d91173da35b8ba6c1c3f1d165bbc0ca64bd7b253000"
+    },
+    {
       "path": "9to1 OS/apps/9to1-shell/Program.cs",
       "mode": "100644",
-      "object": "dcf0e993d1a67a3a115ad590e488897cbd702a5d",
-      "bytes": 19430,
-      "sha256": "51989b5a728d1305a308b5843f7860ee542cb9a88cc5bd23fecad8c89d6df04e"
+      "object": "78549aa00741ce9afdceb800b2f3e97dcb81ec59",
+      "bytes": 27269,
+      "sha256": "224a89941cc7cea6e64a8f106b90c1eec210ec3c93334cd2a923c82eb2e7fe1b"
     },
     {
       "path": "9to1 OS/apps/9to1-shell/Properties/AssemblyInfo.SupervisorRootOwning.cs",
@@ -3833,6 +3840,13 @@
       "object": "8038f5acb4b452eaf1ca5be2d881d33f017e7f3e",
       "bytes": 750,
       "sha256": "b3147ebfef35f31eef2bfc9e5bde819f0770d8200c400798fcd7084b59463381"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/OsSessionOriginalProviderCloseTests.cs",
+      "mode": "100644",
+      "object": "77eb62d7596f3d7290e5423a44a29a330a52ee8a",
+      "bytes": 27298,
+      "sha256": "38d05721342dc4e00f15abe70c6bb824bba9d10f006608335daa27c24b5f4135"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs",
@@ -23878,9 +23892,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
       "mode": "100644",
-      "object": "e2e3205a7f69fcd6ebf7d203b5f709d7b50b89a1",
-      "bytes": 21849,
-      "sha256": "fd3cf639b5b92bea5cda526610e0bf0f40b7c018e08ac4e943fcf26820f22444"
+      "object": "df29084cc4e7ef680d7a19cd1009ccde250a77d7",
+      "bytes": 26062,
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreStateService.cs",
@@ -24032,9 +24046,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeServiceHost.cs",
       "mode": "100644",
-      "object": "3c3a8ea3855dbbadc9d8c19fbd60901d752d0d44",
-      "bytes": 6504,
-      "sha256": "bedfe3a73a5cd8f9feb8df0a5402c1316903421a9ff24a78698de501c1413343"
+      "object": "de0dabb867eb9b13330b701ddaffecdec340922c",
+      "bytes": 8534,
+      "sha256": "9c4ed359b98e928cfd0c86490396ca35256e1d21b8ada6f3913934f88c3f30c4"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeSessionLease.cs",
@@ -66780,7 +66794,8 @@
     "Actual16 records root-owned /usr/share and /usr/share/applications mode0777, correctly refused by unchanged production ancestor protection. Sole TEST setup protects the SAME exact directory FDs to0755, preserves immutable original modes before changes, holds protection through genuine native work, and restores only after fresh authentication of ALL current original setup/root/cleanup sessions. Missing marker status is truthful, unproved restoration refuses, original causes retained. All other104 overlay bytes,84 product bindings/exact83 changes,112 Home62+12/36 classes/native16/signed triple/native5/oldProcess3/65s/helperdeath/source/PDB/task/restore/drain/workflow/constructor remain exact16. Bundle00/original native/whole signed acceptance remains mandatory and unreviewed; no authority from diagnostics.",
     "Actual17 completed the unchanged three signed first enrollments, then the same target-user fixture apphost exec was refused with EACCES. This bounded TEST successor stages the SAME complete source-built published payload under fresh unique root-owned0755 /run, verifies complete original and copied apphost/DLL/PDB/table bytes before-after and before both target-user invocations, and binds the exact protected manifest through the original setup/caller/wrapper environment. Cleanup removes only exact issued files after current original setup/root/userdel seals, retaining changed/incomplete payloads. No workspace ancestor chmod or inferred cause/trust relaxation. Original four Root facts and all positive trust/body/cleanup semantics survive whole inverses. Whole112 Home62+12/36/native16/signed triple/native5/oldProcess3/65s/helperdeath/receivedFD/source/PDB/task/restore/drain remain mandatory and unverified.",
     "The complete Linux19 original root32 run built with zero warnings/errors and executed20PASS12FAIL. All12 paired/supervised failures are canceled socket accepts; original TRX reports the generic early administrator Home startup refusal. Complete newly published root-test.log/pending/expected/receipt originals preserve the missing exact predicate. This sole Program diagnostic emits fixed type/reason labels at the original catch, preserving every protection predicate, caught type, generic line, order and return1. No kernel policy, path, permission, syscall or thread cause is inferred. Whole112/Home62+12/36/native16/signed/nativepair5/oldProcess3/65s/caller/task/PDB/restore/strict drains remain unchanged; Supervisor02, shutdown02 and OS222 SDK union are unselected. Full signed/native/installed/runtime acceptance remains mandatory.",
-    "Actual20 complete causal TRX records12 fixed NonDumpableCredentialPolicyRequired refusals before paired socket accepts. Production exact0 newline+EOF policy remains byte-exact. This TEST-only hosted ephemeral Ubuntu fixture records the observed original0/1/2 complete value and same endpoint before root-owned fixed0 provisioning, observes0 around original root/native credential journeys, and restores only the recorded value after fresh current setup/root/userdel seals and SAME original drains. Procfs observations do not prove namespace isolation, durable fsync or exclusion of unrelated privileged writers. All product/cohort/native/signature/task/PDB/restore/drain guards remain unchanged. Real policy/kernel/signed-native/runtime remains UNRUN."
+    "Actual20 complete causal TRX records12 fixed NonDumpableCredentialPolicyRequired refusals before paired socket accepts. Production exact0 newline+EOF policy remains byte-exact. This TEST-only hosted ephemeral Ubuntu fixture records the observed original0/1/2 complete value and same endpoint before root-owned fixed0 provisioning, observes0 around original root/native credential journeys, and restores only the recorded value after fresh current setup/root/userdel seals and SAME original drains. Procfs observations do not prove namespace isolation, durable fsync or exclusion of unrelated privileged writers. All product/cohort/native/signature/task/PDB/restore/drain guards remain unchanged. Real policy/kernel/signed-native/runtime remains UNRUN.",
+    "Actual21 complete causal originals confirm recorded policy2\u21920\u21922 and four async-only HomeCoreRuntime synchronous provider Dispose failures; the earlier child startup error remains masked/UNKNOWN. This source-only corrective package selects five exact peered actual21 replacements plus unchanged original Work and new owning fixture, retains first private startup/body/stop causes, coalesces original async provider/listener/worker close before lease retirement, and prints only fixed stage/result/type labels. Old112 whole owning class rows/Home62/regression12/resource36, root32/native16/paired5/old3/65s, signed installs, current authority, TEST policy14 controls, original seals/drains, source-built task, restore and physical DLL/PDB guards are retained. Added9 methods/11 outcomes are UNCOMPILED/UNRUN; future full OS210/Home340/root32 and whole113 class acceptance is required, never inferred from historical pass counts. No default authority, platform/module/installer/Core activation or production kernel/trust/timeout change."
   ],
   "inputManifests": [
     {
@@ -67539,6 +67554,71 @@
       "path": "/workspace/astra-source/worker5-linux20-hosted-nondumpable-policy-fixture-source01/sources/astra-linux-supervised-home-owning.py",
       "bytes": 39304,
       "sha256": "919fa1feb826f0f0b98b3712744ba797ca955f6a8989b6e11832df43efed0f83"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/manifest.json",
+      "bytes": 23853,
+      "sha256": "dcc27128d58ee5b655aaec306b0fbbc905e9c87e3bbfb7778ff158d76f141f92"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/Program.cs",
+      "sha256": "224a89941cc7cea6e64a8f106b90c1eec210ec3c93334cd2a923c82eb2e7fe1b"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/HomeNativeServiceHost.cs",
+      "sha256": "9c4ed359b98e928cfd0c86490396ca35256e1d21b8ada6f3913934f88c3f30c4"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/HomeCoreRuntime.cs",
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/LinuxSessionDiscoveryServer.cs",
+      "sha256": "37e5d3bd241ab13c6dfae0a5d6e7f009de88a0f673e7bce87dc3e9298f1cb046"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/LinuxNativeWidgetRegistrationServer.cs",
+      "sha256": "731c77742b19c9763600c74fdcab3dd38664136b81dfa36569332c63576add22"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/OsSessionOriginalProviderCloseTests.cs",
+      "sha256": "38d05721342dc4e00f15abe70c6bb824bba9d10f006608335daa27c24b5f4135"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/whole-actual21-inverses.json",
+      "sha256": "028ce22992623bf3d941c8fdfa649f4dda9a0a42335cf4dfb7ca679d97703d89"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/preflight.json",
+      "sha256": "9d1a24e2bffd05473ac3b774d71cf0af2a2d6ade23470ec439e1ad74acbfbe2c"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-os-session-original-async-shutdown-source02-retain-caller-cancellation/OsSessionOriginalWork.cs",
+      "sha256": "5bb0ca17ed34e56e268f6d91173da35b8ba6c1c3f1d165bbc0ca64bd7b253000"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-os-session-original-async-shutdown-source02-retain-caller-cancellation/manifest.json",
+      "sha256": "2fe8ac1d95cf6e6366397700993f36983954a28841e90425d1dea0278d453522"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package21-hosted-nondumpable-policy/config.json",
+      "sha256": "406dbc70fb6cdcd35a5913e80814925c96a35f076c9fa6cb2d345e3784a46981"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package21-hosted-nondumpable-policy/manifest.json",
+      "sha256": "e93e2ca9f4269e7b183dc3b417b01170ccf44650e124fb84cb701614f8977993"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package22-original-startup-async-cleanup/coherent-source-graph.json",
+      "sha256": "69fc0f88b66e1fb46583d4ee03a39bc51eaa3320fb364e988969917580ab81a3"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package22-original-startup-async-cleanup/assembly-inputs.json",
+      "sha256": "72c084ecd4a583bfc89936159a2e0037764e27a20ddc41ea1ace6ef049d8e837"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package22-original-startup-async-cleanup/astra-linux-supervised-home-owning-classes.json",
+      "sha256": "f9e6d02fd864be07f7068c582c42c07d5a17a3d9e84278938ba63c1fde0efeab"
     }
   ],
   "sharedCakeIdContract": null
