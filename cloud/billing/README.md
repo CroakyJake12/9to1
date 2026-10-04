@@ -66,3 +66,10 @@ No prices, currencies, rollover, grace periods, allocations, canonical identitie
 or production bindings have been invented. Shared product contracts are unchanged.
 
 `listReconciliationCandidates(db, mode, now, limit)` provides read-only, mode-scoped discovery of pending, reconciliation-required and expired-claim receipts. The explicit limit is 1–100, and ordering is accepted timestamp then unique event ID. A candidate can become unavailable immediately; only `claimEvent` acquires ownership. This API does not fetch current provider objects, run a scheduler, apply canonical effects or acknowledge completion. Canonical provider bindings, trusted verifiers/policies and an approved effect transport remain required and unconfigured.
+
+`provider-reconciliation.mjs` adds a read-only claimed-receipt recovery reader.
+With an explicitly configured authenticated transport it verifies the merchant,
+retrieves the event and current invoice/subscription, and rechecks lease custody.
+No live transport is configured and no receipt or canonical effect is mutated.
+See [PROVIDER-READ-RECOVERY.md](PROVIDER-READ-RECOVERY.md) for bounds, exact protocol
+basis, local controls and the remaining trusted-verifier/policy/effect boundary.
