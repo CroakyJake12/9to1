@@ -1,0 +1,37 @@
+{
+  "qualification": "Offline capability fault probes; fictional sentinel, DB receipt stub, no credentials or provider queries",
+  "observations": [
+    {
+      "kind": "transport",
+      "requests": 1,
+      "externalTypedErrorRetained": true,
+      "sentinelInMessage": true,
+      "safeCode": null,
+      "retryable": false
+    },
+    {
+      "kind": "stream",
+      "requests": 1,
+      "externalTypedErrorRetained": true,
+      "sentinelInMessage": true,
+      "safeCode": null,
+      "retryable": false
+    },
+    {
+      "kind": "database",
+      "requests": 0,
+      "externalTypedErrorRetained": true,
+      "sentinelInMessage": true,
+      "safeCode": null,
+      "retryable": false
+    },
+    {
+      "kind": "clock",
+      "requests": 0,
+      "externalTypedErrorRetained": true,
+      "sentinelInMessage": true,
+      "safeCode": null,
+      "retryable": false
+    }
+  ]
+}

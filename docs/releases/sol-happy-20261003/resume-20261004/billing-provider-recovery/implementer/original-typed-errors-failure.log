@@ -1,0 +1,138 @@
+✔ C3-PR-01: real signed durable receipt recovers current invoice after restart with three bounded GETs and no effect (34.668382ms)
+✔ C3-PR-02: delayed subscription event reads current subscription in explicit live mode without changing receipts (4.168515ms)
+✔ C3-PR-03: wrong, expired, failed or completed lease cannot trigger provider reads (3.713181ms)
+✔ C3-PR-04: provider reads returning after lease expiry/reclaim cannot return stale ownership (2.952898ms)
+✔ C3-PR-05: authenticated merchant mismatch refuses before event fetch (3.385967ms)
+✔ C3-PR-06: event identity/type/creation/mode/connected-account mismatches and unsupported context cannot fetch current state (5.222554ms)
+✔ C3-PR-07: object identity/path injection and wrong current object/mode fail without state changes (5.100954ms)
+✔ C3-PR-08: provider unavailability/rate limit and secret-containing faults are redacted with no retry or completion (4.810584ms)
+✔ C3-PR-09: streamed response byte ceiling, invalid UTF-8/JSON and content type fail closed (3.905385ms)
+✔ C3-PR-10: cancellation and timeout abort bounded transport, preserve claim and never complete (23.336143ms)
+✔ C3-PR-11: unsupported receipt/configuration refuses without requests; body/read failures do not expose diagnostics (3.357675ms)
+✔ C3-PR-12: captured configuration cannot change merchant/version/transport across awaits (2.022341ms)
+✔ C3-PR-13: timeout releases a stalled body read even when stream cancellation never settles (22.403183ms)
+✔ C3-PR-14: changed immutable receipt facts during provider fetch refuse without overwriting them (2.372899ms)
+✔ C3-PR-15: redirected/unexpected response origin and non-Response transport result fail before event fetch (2.388482ms)
+✖ C3-PR-16: externally constructed ProviderReadError from transport is redacted (2.616018ms)
+✖ C3-PR-17: externally constructed ProviderReadError from response stream is redacted (3.039686ms)
+✖ C3-PR-18: externally constructed ProviderReadError from database is redacted (1.917446ms)
+✖ C3-PR-19: externally constructed ProviderReadError from clock is redacted (2.294292ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 15
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 198.278297
+
+✖ failing tests:
+
+test at cloud/billing/test/provider-reconciliation.test.mjs:261:1
+✖ C3-PR-16: externally constructed ProviderReadError from transport is redacted (2.616018ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+      at async rejectsCode (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:61:3)
+      at async TestContext.<anonymous> (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:264:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+        at file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:263:27
+        at Object.fetch (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:49:38)
+        at file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:74:51
+        at bounded (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:67:38)
+        at get (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:74:28)
+        at readClaimedStripeState (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:123:28)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async rejectsCode (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:61:3)
+        at async TestContext.<anonymous> (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:264:3),
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at cloud/billing/test/provider-reconciliation.test.mjs:268:1
+✖ C3-PR-17: externally constructed ProviderReadError from response stream is redacted (3.039686ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+      at async rejectsCode (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:61:3)
+      at async TestContext.<anonymous> (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:273:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+        at Object.pull (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:271:22)
+        at Object.<anonymous> (node:internal/webstreams/util:190:25)
+        at readableStreamDefaultControllerCallPullIfNeeded (node:internal/webstreams/readablestream:2584:24)
+        at node:internal/webstreams/readablestream:2671:7
+        at node:internal/process/task_queues:151:7
+        at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+        at AsyncResource.runMicrotask (node:internal/process/task_queues:148:8),
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at cloud/billing/test/provider-reconciliation.test.mjs:277:1
+✖ C3-PR-18: externally constructed ProviderReadError from database is redacted (1.917446ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+      at async rejectsCode (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:61:3)
+      at async TestContext.<anonymous> (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:280:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+        at Object.prepare (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:279:42)
+        at currentClaim (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:37:24)
+        at file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:119:41
+        at bounded (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:67:38)
+        at readClaimedStripeState (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:119:27)
+        at file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:280:27
+        at waitForActual (node:assert:632:21)
+        at strict.rejects (node:assert:769:31)
+        at rejectsCode (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:61:16)
+        at TestContext.<anonymous> (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:280:9),
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at cloud/billing/test/provider-reconciliation.test.mjs:284:1
+✖ C3-PR-19: externally constructed ProviderReadError from clock is redacted (2.294292ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+      at async rejectsCode (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:61:3)
+      at async TestContext.<anonymous> (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:287:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: ProviderReadError: CONTROLLED_PRIVATE_DIAGNOSTIC_SENTINEL
+        at f.config.clock (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:286:34)
+        at epoch (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:25:17)
+        at file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:119:75
+        at bounded (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:67:38)
+        at readClaimedStripeState (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/src/provider-reconciliation.mjs:119:27)
+        at Object.read (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:57:28)
+        at file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:287:29
+        at waitForActual (node:assert:632:21)
+        at strict.rejects (node:assert:769:31)
+        at rejectsCode (file:///workspace/team-c-c3-provider-read-recovery/cloud/billing/test/provider-reconciliation.test.mjs:61:16),
+    operator: 'rejects',
+    diff: 'simple'
+  }

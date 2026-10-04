@@ -1,0 +1,29 @@
+✔ C3-PR-01: real signed durable receipt recovers current invoice after restart with three bounded GETs and no effect (35.232428ms)
+✔ C3-PR-02: delayed subscription event reads current subscription in explicit live mode without changing receipts (4.130675ms)
+✔ C3-PR-03: wrong, expired, failed or completed lease cannot trigger provider reads (3.466423ms)
+✔ C3-PR-04: provider reads returning after lease expiry/reclaim cannot return stale ownership (3.418893ms)
+✔ C3-PR-05: authenticated merchant mismatch refuses before event fetch (2.948949ms)
+✔ C3-PR-06: event identity/type/creation/mode/connected-account mismatches and unsupported context cannot fetch current state (5.381813ms)
+✔ C3-PR-07: object identity/path injection and wrong current object/mode fail without state changes (5.390587ms)
+✔ C3-PR-08: provider unavailability/rate limit and secret-containing faults are redacted with no retry or completion (4.779172ms)
+✔ C3-PR-09: streamed response byte ceiling, invalid UTF-8/JSON and content type fail closed (4.545408ms)
+✔ C3-PR-10: cancellation and timeout abort bounded transport, preserve claim and never complete (24.417085ms)
+✔ C3-PR-11: unsupported receipt/configuration refuses without requests; body/read failures do not expose diagnostics (4.076625ms)
+✔ C3-PR-12: captured configuration cannot change merchant/version/transport across awaits (2.578471ms)
+✔ C3-PR-13: timeout releases a stalled body read even when stream cancellation never settles (23.165956ms)
+✔ C3-PR-14: changed immutable receipt facts during provider fetch refuse without overwriting them (3.352625ms)
+✔ C3-PR-15: redirected/unexpected response origin and non-Response transport result fail before event fetch (2.55105ms)
+✔ C3-PR-16: externally constructed ProviderReadError from transport is redacted (2.112181ms)
+✔ C3-PR-17: externally constructed ProviderReadError from response stream is redacted (1.931345ms)
+✔ C3-PR-18: externally constructed ProviderReadError from database is redacted (1.885186ms)
+✔ C3-PR-19: externally constructed ProviderReadError from clock is redacted (1.960056ms)
+✔ C3-PR-20: externally constructed ProviderReadError while reading configuration is redacted (1.851166ms)
+✔ C3-PR-21: a module-created refusal cannot be relabelled with a private diagnostic (1.568518ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 205.60691
