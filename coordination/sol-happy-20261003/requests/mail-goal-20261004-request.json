@@ -30,10 +30,13 @@
     "cloudEnvironmentId": "ccarenv_b64_Y2NhcmVudl9kZDZhN2NlYTQxYWM4MTkxYjJkNDFlOTYyNmQ5ZWNjMg",
     "environmentNameModelEffortGoalId": "Not exposed by current readback tools; no settings change or substituted setting claimed.",
     "sdk": "Linux .NET 10.0.401",
-    "originalMailRelease": "13 passed, 3 failed, 16 total; real TLS fixtures require HAVEN_MAIL_FIXTURE_HOST. Original failures preserved; no remote mail performed.",
+    "originalMailRelease": "Final intact Mail Release suite: 69 passed, 3 failed, 0 skipped, 72 total. Three required real TLS tests still fail HAVEN_MAIL_FIXTURE_HOST configuration. Original assertions unchanged.",
     "package": "Mail project is a library; no accepted installed graphical entrypoint or Mail package supplied.",
-    "proposalWork": "Reproduce/fix remaining domain idempotency/currentness/journal defects and encrypted-store concurrency/error handling in isolated proposal; earlier reviewed eec journal/reconciliation repairs retained.",
-    "graphBoundary": "Bounded synthetic-token provider regression reproduced. Detailed findings remain in the Mail workspace pending specific public-repository publication authorization."
+    "proposalWork": "Send/currentness and encrypted-store repairs frozen. UI mutation acknowledgement work continues through real binding review. Detailed provider findings retained in workspace pending publication authorization.",
+    "graphBoundary": "Bounded synthetic-token provider regression reproduced. Detailed findings remain in the Mail workspace pending specific public-repository publication authorization.",
+    "releaseWinX64Build": "PASS zero warnings/errors; HavenOS.Mail.dll only, no graphical executable or package.",
+    "localIndependentReview": "Non-author review and separate Linux reproduction of 56 new domain/store regressions plus bounded provider controls passed. No Team A reviewer appointment/adoption or Windows acceptance claimed.",
+    "candidateCheckpoint1730London": "MISSED: no accepted Mail entrypoint/Home tuple/package supplied."
   },
   "blockers": [
     "No current source handover ACK",
@@ -41,5 +44,5 @@
     "No authorized connected-provider fixture",
     "No independently reviewed Windows acceptance/delivery"
   ],
-  "updatedUTC": "2026-10-04T16:36:46.792036+00:00"
+  "updatedUTC": "2026-10-04T16:46:58.312386+00:00"
 }
