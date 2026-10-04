@@ -153,7 +153,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T03:02:38.618302+00:00",
+  "updatedUTC": "2026-10-04T03:18:45.199283+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -1011,12 +1011,52 @@
       "diagnostics": 0,
       "cleanup": "Actual owned browser PIDs gone,18761listener absent, reuseaddrbindPASS.",
       "preservedPriorFailures": "Cold04 restoredinitial app page rejected beforequota+trace-stop-before-start;14discovered8PASS2FAIL4NOT_RUN retained. Cold05 deliberately blanks actualclean pages, so automatic URL/tab restoration is not accepted. Earlierhotquota/native03/04 failures retained.",
-      "independentReplay": "B6 actualcritical independent same14 running/queued on fresh ownprofile, exactfe bytes.",
-      "fullAcceptance": "Donor/fullWave/allplatform/provider/Files/crossdevice/automaticURLrestore/IME/physicalaudibility still outstanding; no8041 runtime acceptance fromfe."
+      "independentReplay": {
+        "pass": 14,
+        "fail": 0,
+        "notRun": 0,
+        "exitCode": 0,
+        "runtimeErrors": 0,
+        "reviewSha256": "864989e02ae6bff927c5bec3a06ade33f9c5f8847bf5234706c60f5b70f17bc3",
+        "resultsSha256": "2676d102aec492d2214c318acf9872b4856c3bb4239ac20e28eaed8c07d529f5",
+        "custodyManifestSha256": "9369ee68215b8494952f4f606cfce3a1e644610a835da1b9f8062f621f8f1618",
+        "actual": "B6 independently executed unchanged14 on sealedfe3d267assets/39immutablecuts; rawtrace independently proves bothstoreequality6/refusal and once7retry, PCM288044; strictownedPIDs gone/18764bindPASS."
+      },
+      "fullAcceptance": "Donor/fullWave/allplatform/provider/Files/crossdevice/automaticURLrestore/IME/physicalaudibility still outstanding; no8041 runtime acceptance fromfe.",
+      "portableDelivery": {
+        "branch": "artifact/team-b-browser-83c24b2",
+        "commit": "bd4642493dd54c9d21a8c2b837e403a57b570233",
+        "path": "docs/releases/sol-happy-20261003/team-b-wave-recorded-fe3d",
+        "archiveSha256": "233328a76e0e2c255d0cd63b966f230edd630289c83822020a8bdc2d80716a74",
+        "archiveBytes": 96582575,
+        "selectedFiles": 431,
+        "selectedBytes": 125144525,
+        "manifestSha256": "c170a44cf2ff330262b0c149a80d8f0d69a40c488d92b42609eb39e79d5177dc",
+        "rootAllMemberReviewSha256": "2e14709ae8a198c09b1fb4ae1a4395a921176831c12f95be4b0245b648dd0540",
+        "independentCustodyReviewSha256": "da6d04c8d6816bf6653424516ce08be5fcb1f9134a085ba01221cfc567082285",
+        "qualification": "Originalfailed hotquota03/metadata04/Wavecold04 rawretained. All267actualruntimeincluded. Publisher4615 inventory omittedfiveWaveowner.cs+generator; laterimmutablegitcuts documented separately, not beforeafterproof. Wholeprofiles/cookies/authcache excluded. No new8041/runtime/fullWave/platform/provider acceptance."
+      }
     }
   },
   "resourceRecoveryProgress": {
-    "actual": "New original account-regression generated bin/obj increased workspace use to565MBfree. SDK paused while root inventories/archives/verifies exact new generatedoutputs for reversible duplicate cleanup. Allsource/rawfailures/actualruntimecustody preserved; B5native12 runtime and CUIprobe DLLs stay untouched.",
-    "notGlobalBlock": "Independent WaveGUI replay and source/artifact/coord work continue."
+    "state": "REVERIFIABLE_GENERATED_DUPLICATE_CLEANUP_COMPLETE",
+    "receiptSha256": "5093fc2ac6a3888e1f4b5a6a51b3bc5032aee05f4b4552716a162a28b2c0ae29",
+    "generatedFiles": 174,
+    "generatedLogicalBytes": 575202437,
+    "archivePath": "/tmp/team-b-root-native-regression-output-custody/original-native-account-generated-output.zip",
+    "archiveBytes": 183308520,
+    "archiveSha256": "29e65b0cf0b2c8fc3685cb0190ff6c48ce5cff736aa443838738a1e5708bd95f",
+    "inventorySha256": "3194cfa58f7fbc8716727c0daa5a83e506be2822f76141fafdbf836389237525",
+    "freedWorkspaceBytes": 575799296,
+    "scope": "Only freshlygenerated untracked Accounts/Tests bin/obj174 exactverifiedarchivedduplicates removed. Source/rawfailures/actualreports/B5native12+loaderprobe/rootTestsbin untouched; archive+permissions/mtimeinventory enablesrestore. Perprojectrestore neededbeforeSDK."
+  },
+  "currentExecutableQueue": {
+    "actual": "B6Wave14 strictGUIreleased. B5 soleSDK actualoriginalCUIButton3 boundedreuse33managed+2nativeDLLs; expectedselfresetred meaningful. Home native20 exact8041/all15pins B6dcf4 clear queuesnext; Respond03 B2clear ready, thenfresh8041publication/realinterop, Data17realcacheonly, originalSQLiteSchedule3/concurrency1, Files17/Sites18 explicitnewrootconsumption."
+  },
+  "specificationMetadataRecheck": {
+    "readUTC": "2026-10-04T03:18:45.199283+00:00",
+    "modifiedUTC": "2026-10-03T21:06:10.712Z",
+    "state": "LIVE_METADATA_UNCHANGED_FROM_FULL_CURRENT_8534PARAGRAPH_READ",
+    "scope": "Currentfull31app/LE01-15/SolHappy/Terraform spec stillauthority; noolderTBDexport."
   }
 }
