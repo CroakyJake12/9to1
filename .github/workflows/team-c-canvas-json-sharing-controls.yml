@@ -1,0 +1,31 @@
+name: Team C synthetic Windows JSON reader sharing
+on:
+  push:
+    branches: [team-c/sol-happy-c3-canvas-json-sharing-probe-20261004]
+permissions:
+  contents: read
+jobs:
+  sharing-metadata:
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - name: Preserve exact original source line endings
+        shell: powershell
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - name: Observe original PS5 pipeline sharing on fictional owned JSON only
+        shell: powershell
+        env:
+          PROBE_OUTPUT: ${{ runner.temp }}\team-c-canvas-json-sharing-${{ github.run_id }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .github/scripts/canvas-json-sharing-controls.ps1 -OutputDirectory $env:PROBE_OUTPUT
+          exit $LASTEXITCODE
+      - name: Preserve bounded public diagnostic metadata only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-json-sharing-observation-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/team-c-canvas-json-sharing-${{ github.run_id }}/result.json
+          if-no-files-found: error
+          retention-days: 7

@@ -271,3 +271,28 @@ is introduced. Failure-only metadata contains six fixed count/equality flags;
 no private path/profile values or hashes are exported. Diagnostic read/output
 failures preserve the first completion failure. Original native Canvas approvals,
 stroke, durable save, normal close/reopen and cleanup remain receiving gates.
+
+### Separate synthetic Windows reader-sharing diagnostic
+
+The original b0db run retains 77 passing checks and the real 20-second failure
+with one original profile, matching original principal and no Files configuration.
+Its actual UI shows the generic guarded-binding-write failure requiring explicit
+recovery. The source maps any failed guarded write to that status, so its exact
+validation/conflict/guard/IO failure remains unobserved. No recovery or authority
+mutation follows from that text.
+
+The separate JSON sharing workflow runs only synthetic task-owned fictional JSON
+on the existing Windows runner. It extracts the unchanged Read-BoundedJson body,
+observes actual installed PS5 Get-Content assembly metadata and kernel read/write/
+delete-access flags while the original pipeline reaches its downstream conversion,
+then calls the same genuine .NET10 File.Move overwrite API against the fictional
+fixture. A downstream diagnostic shim calls the genuine ConvertFrom-Json cmdlet;
+it controls reader duration and does not represent native app timing. Deterministic
+held-reader controls compare absent Delete share against ReadWrite|Delete share,
+close the stream before parsing, and preserve old-versus-new complete JSON.
+
+Only bounded public metadata is uploaded. No package, native app, profile, private
+identifier, GUI input, request, ownership recovery, grant or policy is used. A
+confirmed synthetic sharing obstruction would identify an observer mechanism;
+the exact original native failure cause and every Canvas acceptance gate remain
+unestablished. No native reader correction or workflow retry is included here.
