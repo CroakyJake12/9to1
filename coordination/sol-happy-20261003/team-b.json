@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T20:51:21.948495+00:00",
+  "updatedUTC": "2026-10-04T20:56:11.491508+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -3833,5 +3833,58 @@
     "allPriorHistoryPreserved": true,
     "noAcceptanceWaiver": true
   },
-  "currentEngineeringRecoveryRequestRef": "engineeringRecoveryRequest_20261004T205121.948495+0000"
+  "currentEngineeringRecoveryRequestRef": "engineeringRecoveryRequest_20261004T205121.948495+0000",
+  "sharedSpaceBOwnerAck_20261004T205611.491508+0000": {
+    "UTC": "2026-10-04T20:56:11.491508+00:00",
+    "decision": "B_OWNER_ACK_EXACT_TWO_SHARED_SPACE_GUARDS_SOURCE_AND_PROVIDED_NATIVE_CASE_EVIDENCE",
+    "head": "50c9419f91743bf83fbfbbbd5cf15376317991a4",
+    "actualParent": "73aa39a39bbde7ae56d1ea8548ba1db5926e618c",
+    "path": "9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs",
+    "scope": "Exactly two historical68b guards; unchanged3f72 fixture/54e479 Theme; customtrue/Button/Input precedence and nontext Space/Enter preserved. B2 full source ownership review and root+B2 paired provided-native evidence clear. Original10PASS+SpaceFAIL retained; unchangedcorrected15PASS and identical163Debug/Release identities0fail/skip.",
+    "sourceReviewSHA256": "d01e1a3a73b08474d970c721b8fbd18fc81e5b57e97ea017aa59336f74b23c4f",
+    "providedNativeReviewLimits": "Build summaries82B; full source tree, compiled DLL/buildtask identity/native command-family closure not supplied. No independentlocal SDK rerun, physicalbrowser/installed/fullapp acceptance. Private packet locations/body excluded.",
+    "adoptionAuthority": "A shared/native ACK and C exact global adoption remain required. B did not write/adopt shared source. B focus/Wave/renderer consumer ownership retained."
+  },
+  "durableOriginalCASHandoff_20261004T205611.491508+0000": {
+    "UTC": "2026-10-04T20:56:11.491508+00:00",
+    "request": "Receiving durable65 seed23PASS thenfreshverify fails compound stale-save expectedRevisionConflict after12prefixPASS; preserve original failure/source/assertions.",
+    "verifiedProducerRef": "44a6403cf1683e8b54105d053a29cb15872a0b9f",
+    "currentRemoteBRef": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+    "pins": [
+      {
+        "path": "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+        "bytes": 1983,
+        "sha256": "a03ae96ff75514a85a54eb2f587d292d26d655a87d6b71d0111e6ace1dd4a3c2"
+      },
+      {
+        "path": "apps/Web/Write/Tests/Program.cs",
+        "bytes": 13599,
+        "sha256": "44b11fa3bb3b508bf249bfb52892144f999d754c56d333d0ab325c0e0f7217b8"
+      },
+      {
+        "path": "apps/Web/Write/WriteBrowserSession.cs",
+        "bytes": 31701,
+        "sha256": "741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+        "bytes": 40838,
+        "sha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesRevisionConflictException.cs",
+        "bytes": 577,
+        "sha256": "bb270c681eb82a1ad4e5ab461e3ee8fd2ab5e49e2465020fb698792d2f2ee34f"
+      }
+    ],
+    "referenceGraph": "Standalone source-linked persistence project: Session/broker, NotesRepository/native package store, AppPaths/reliability and4Home contracts; refsHaven.Application(Core+CUI.AI) andCUI.Core(Language). No Scene/Haven.UI/Avalonia/measured-text dependency.",
+    "originalCASContract": "Seed creates GUIDv1, inserts Alpha beta gamma/Boldbeta[6,10), savev2; export/close clean do not advancev2. Separate freshverify loads state GUID/blockIDs/sections and two real sessions atv2. Winner appends winner and savesv3. Stale appends stale butSaveCore snapshot retains durable basev2. Same-root repository gate reads physicalcurrentv3 and rejects expected2/actual3 beforepublication. Session maps exact Haven.Application.NotesRevisionConflictException to !Succeeded/RevisionConflict, remainsdirty; winning JSON SHA unchanged. Two repository instances in ONEverifyprocess.",
+    "implementationLocations": "Repository162-163 persisted.Version vsdocument.Version under normalized-root gate; Session391-392 exact conflict type mapping; fixtureProgram126 compound !Succeeded && CodeRevisionConflict && stale.IsDirty.",
+    "recommendedBoundedAction": "Preserve failure data/logs. Fresh ordinaryrestore and unchangedbuild into NEW durable-only SDK artifacts-path using SAMEconfig/RID/platform/SDK properties; fresh TargetPath query then execute THATnewapphost. No simultaneous Scene restore into same Tests/obj. Retain UseSharedCompilation=false,-m:1,-nodeReuse:false. Fresh HAVEN_DATA_DIR separate seed23 thenfreshverify40 same dataroot; subscriber2 otherfreshroot; all65literalassertions unchanged.",
+    "ifStillFails": "Capture actual resultSucceeded/Code/Message, stale.IsDirty/DurableRevision, winner revision, physicalJSON version and exceptionExpected/ActualVersion through debugger or diagnosticlogging without modifyingCheck predicate. TwelveprefixPASS cannotidentifywhichcompoundtermfailed. Compare fullsourcepins AND loadedHaven.Application assembly/typeidentity; sourceinspectedhere doesnotcertifyreceivingloadedbinaries.",
+    "noSourceOrOracleWaiver": true,
+    "deadlineUTC": "2026-10-04T21:30:00Z"
+  },
+  "currentSharedSpaceBOwnerAckRef": "sharedSpaceBOwnerAck_20261004T205611.491508+0000",
+  "currentDurableCASHandoffRef": "durableOriginalCASHandoff_20261004T205611.491508+0000"
 }
