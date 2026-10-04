@@ -165,7 +165,7 @@ function Record-OwnedPickerTreeWitness {
     }
     $result.pickerTreeWitness=$witness;Write-Result
 }
-function Find-OwnedForegroundPicker {
+function Find-OwnedForegroundPicker([bool]$Cleanup=$false) {
     $handle=[CanvasPackageInput]::ForegroundHandle();$expectedMain=[IntPtr]$window.Current.NativeWindowHandle
     $snapshot=[ordered]@{foregroundWindowHandle=$handle.ToInt64();foregroundProcessId=[CanvasPackageInput]::WindowPid($handle);nativeTitleMatches=$false;nativeWindowClass='WITHHELD';ownerChain=@();ownerChainMatches=$false;uiaProcessId=0;uiaWindowHandle=0;uiaRole='UNOBSERVED';uiaTitleMatches=$false;uiaVisible=$false;uiaEnabled=$false;uiaReadFailure=$null}
     if($snapshot.foregroundProcessId -eq $process.Id) {
@@ -186,7 +186,7 @@ function Find-OwnedForegroundPicker {
             $snapshot.uiaVisible=-not $current.IsOffscreen;$snapshot.uiaEnabled=$current.IsEnabled
         }catch{$snapshot.uiaReadFailure=$_.Exception.GetType().FullName}
     }
-    $result.pickerObservation=$snapshot;Write-Result
+    if($Cleanup){$result.pickerCleanupObservation=$snapshot}else{$result.pickerObservation=$snapshot};Write-Result
     if(Test-OwnedPickerSnapshot $snapshot){return $peer};return $null
 }
 function Observe-OwnedPicker {
@@ -201,7 +201,7 @@ function Observe-OwnedPicker {
     Record-OwnedPickerTreeWitness;return $dialog
 }
 function Cancel-OwnPickerOnFailure {
-    $dialog=Find-OwnedForegroundPicker
+    $dialog=Find-OwnedForegroundPicker $true
     if($null -eq $dialog){return}
     Require-OwnedControl $dialog 'ControlType.Window'
     $handle=[IntPtr]$dialog.Current.NativeWindowHandle
