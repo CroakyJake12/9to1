@@ -1,0 +1,37 @@
+{
+  "startedUTC": "2026-10-04T13:20:44.123274+00:00",
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "test",
+    "/workspace/team-c-c5-normal-test-contracts-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/workspace/team-c-resume-evidence/c5-normal-test-contracts-provisional/artifacts",
+    "-p:NuGetAudit=false",
+    "--logger",
+    "trx;LogFileName=normal-infrastructure.trx",
+    "--results-directory",
+    "/workspace/team-c-resume-evidence/c5-normal-test-contracts-provisional/Debug/results"
+  ],
+  "sourceCommit": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
+  "basis": "c8783e049fd03efd7f1798e47d6bc7806fb30844",
+  "sourceTree": "99d5f0627a037a22ccc14a63325554dea6dd6574",
+  "wholeNormalProject": true,
+  "filterUsed": false,
+  "environmentOverrides": {
+    "DOTNET_CLI_HOME": "/workspace/team-c-resume-evidence/c5-normal-test-contracts-provisional/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/.tools/nuget/packages",
+    "AVALONIA_TELEMETRY_OPTOUT": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false",
+    "C5_DURABLE_JOB_EVIDENCE": "/workspace/team-c-resume-evidence/c5-normal-test-contracts-provisional/Debug/databases",
+    "PATH": "/workspace/.tools/dotnet:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback"
+  },
+  "timeoutSeconds": 300,
+  "finishedUTC": "2026-10-04T13:21:16.803976+00:00",
+  "exit": 1,
+  "status": "COMPLETE",
+  "seconds": 32.679
+}

@@ -1,0 +1,180 @@
+{
+  "status": "C2_SOURCE_COMPILER_AND_THREE_CRITICAL_TEST_PEER_ACK_FULL_SUITE_FAILED",
+  "candidate": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
+  "parent": "c8783e049fd03efd7f1798e47d6bc7806fb30844",
+  "sourceTree": "99d5f0627a037a22ccc14a63325554dea6dd6574",
+  "onlyThreeTestLinesChanged": true,
+  "noProductionChangeOrAssertionRemoval": true,
+  "noAnalyzerDisableFilterOrSkips": true,
+  "all15105InputBodiesUnchangedBeforeAndAfter": true,
+  "sourceReviewSHA256": "561f1b827451da5d39375ea8167755a68565f23f41bfb599e5a5205d9a43cd33",
+  "sourceMapSHA256": "b70fe5b1fca9d86b9fa0ae0b52bf98846055ae0362be39726599a3fcab6bbb4d",
+  "actualFullNormalRelease": {
+    "candidate": "8f0b3ad00163618e835469db1f81b14ba1af83a8",
+    "parent": "c8783e049fd03efd7f1798e47d6bc7806fb30844",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c2-normal-test-contracts-peer-20261004/artifacts",
+      "-p:NuGetAudit=false",
+      "--logger",
+      "trx;LogFileName=normal-infrastructure.trx",
+      "--results-directory",
+      "/workspace/team-c-resume-evidence/c2-normal-test-contracts-peer-20261004/Release/results"
+    ],
+    "cwd": "/workspace/team-c-resume-evidence/c2-normal-test-contracts-peer-20261004/source-8f0b3ad",
+    "wholeNormalProject": true,
+    "filterUsed": false,
+    "environmentChanges": {
+      "XDG_CONFIG_HOME": "/workspace/team-c-resume-evidence/c2-normal-test-contracts-peer-20261004/xdg-config",
+      "DOTNET_CLI_HOME": "/workspace/team-c-resume-evidence/c2-normal-test-contracts-peer-20261004/dotnet-home",
+      "NUGET_PACKAGES": "/workspace/.tools/nuget/packages",
+      "C5_DURABLE_JOB_EVIDENCE": "/workspace/team-c-resume-evidence/c2-normal-test-contracts-peer-20261004/Release/databases",
+      "qualification": "Private writable OS config root; HOME/USERPROFILE unchanged. No test/product edits, skips, filters, analyzer disables or alternative harness."
+    },
+    "status": "COMPLETED",
+    "exit": 1,
+    "durationSeconds": 55.431,
+    "log": "/workspace/team-c-resume-evidence/c2-normal-test-contracts-peer-20261004/Release/run.log",
+    "logSHA256": "663d280c63ff86d4773c4550906254c9a2283e4226b734bc85ce3ebb41008b8b",
+    "testCounters": {
+      "total": "415",
+      "executed": "415",
+      "passed": "410",
+      "failed": "5",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    },
+    "trxSHA256": "2c3590bf9affb8b811e116f330a6ff54105aae67902de1690dbcb447a77de40c",
+    "failures": [
+      {
+        "name": "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_starts_serves_and_stops_a_real_loopback_site",
+        "outcome": "Failed",
+        "messageFirstLine": "System.InvalidOperationException : Project preview failed to start. System.IO.IOException: Read-only file system : '%USERPROFILE%/.dotnet'"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run",
+        "outcome": "Failed",
+        "messageFirstLine": "System.UnauthorizedAccessException : All requested package permissions must be reviewed and granted explicitly."
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.Worker02BackgroundLearningTests.Knowledge_schema_migrates_existing_records_without_losing_metadata",
+        "outcome": "Failed",
+        "messageFirstLine": "Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'table knowledge_records already exists'."
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks",
+        "outcome": "Failed",
+        "messageFirstLine": "Assert.Contains() Failure: Filter not matched in collection"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_ConfinesSenderFileNameToMeshInboxAndVerifiesHash",
+        "outcome": "Failed",
+        "messageFirstLine": "Assert.False() Failure"
+      }
+    ]
+  },
+  "criticalChangedTests": [
+    {
+      "testName": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "Haven.Infrastructure.Tests.FormsSubmissionStoreTests.Response_history_is_not_evicted_and_keyset_pages_have_no_duplicates",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "Haven.Infrastructure.Tests.PresentProductionTests.Native_package_round_trips_presentation_state_and_embedded_assets",
+      "outcome": "Passed"
+    }
+  ],
+  "receivingCasAfter": {
+    "receivingWorktree": "/workspace/team-c-integration",
+    "observedHead": "5eff0c583b6b9de939f1eef1b4b503f5f6b43b18",
+    "checks": [
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs",
+        "expectedOriginalSHA256": "0846270d7fbf2218e9bc1ce37a3f8efe0dd4b0ab49ea140946b752b94cf91099",
+        "candidateSHA256": "9f7d9f2dd71bab04ec444a41a8e00944493eb24544b31cbf54abbac3932888d8",
+        "receivingCommitSHA256": "0846270d7fbf2218e9bc1ce37a3f8efe0dd4b0ab49ea140946b752b94cf91099",
+        "receivingWorkingSHA256": "0846270d7fbf2218e9bc1ce37a3f8efe0dd4b0ab49ea140946b752b94cf91099",
+        "receivingCommitEqualsOriginal": true,
+        "receivingCommitEqualsCandidate": false,
+        "receivingWorkingEqualsCommit": true
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs",
+        "expectedOriginalSHA256": "acf3c407dc8a090e625f4b2a47c86e3ad13e0eff61a1cb6407817723ad144c33",
+        "candidateSHA256": "9b9f2475b013bccf7e0cc7c36f3ca2da3ebf6adbc78361f469cbf169dfba768f",
+        "receivingCommitSHA256": "acf3c407dc8a090e625f4b2a47c86e3ad13e0eff61a1cb6407817723ad144c33",
+        "receivingWorkingSHA256": "acf3c407dc8a090e625f4b2a47c86e3ad13e0eff61a1cb6407817723ad144c33",
+        "receivingCommitEqualsOriginal": true,
+        "receivingCommitEqualsCandidate": false,
+        "receivingWorkingEqualsCommit": true
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs",
+        "expectedOriginalSHA256": "3dc8307ff4e4264ce6d17b44c6e208a0878c8b8d10e0500d8bdaa4657d15507f",
+        "candidateSHA256": "e98b698ee46de19a6faf77b9d19079bbeed5bc95c28cbecac6d75a37f7f1771d",
+        "receivingCommitSHA256": "3dc8307ff4e4264ce6d17b44c6e208a0878c8b8d10e0500d8bdaa4657d15507f",
+        "receivingWorkingSHA256": "3dc8307ff4e4264ce6d17b44c6e208a0878c8b8d10e0500d8bdaa4657d15507f",
+        "receivingCommitEqualsOriginal": true,
+        "receivingCommitEqualsCandidate": false,
+        "receivingWorkingEqualsCommit": true
+      }
+    ],
+    "qualification": "Read-only final target CAS; root rechecks at adoption."
+  },
+  "outputs": [
+    {
+      "path": "artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll",
+      "bytes": 1135616,
+      "sha256": "6661ef41a2f0faeaada6e40e46bcde0032da07e6c9f3df5e0dc297ad717f5214"
+    },
+    {
+      "path": "artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.pdb",
+      "bytes": 201168,
+      "sha256": "f370a7bca6ab4097fcbc8b86306cb4c0001cd70dc60c0305734f3216fb00ece7"
+    },
+    {
+      "path": "artifacts/bin/Haven.Core/release/Haven.Core.dll",
+      "bytes": 1825792,
+      "sha256": "28beff5aea51385e313a4b35ce98a953968ccec0454ca7b93784ad9989712e85"
+    },
+    {
+      "path": "artifacts/bin/Haven.Application/release/Haven.Application.dll",
+      "bytes": 4078592,
+      "sha256": "816cec8028792cc10141de5ca223414a70b11412eda3153138074e623b258e63"
+    },
+    {
+      "path": "artifacts/bin/Haven.Infrastructure/release/Haven.Infrastructure.dll",
+      "bytes": 3129344,
+      "sha256": "938fa10db259ab93aceacca306de8f8c1611f9bd129147277650521b23a28139"
+    },
+    {
+      "path": "artifacts/bin/Haven.Browser/release/Haven.Browser.dll",
+      "bytes": 220160,
+      "sha256": "386b0a60039db53a7cef165b82448901cc2754ef58068d6eb21ae132290d4bf0"
+    },
+    {
+      "path": "artifacts/bin/Haven.PluginFixture/release/Haven.PluginFixture.dll",
+      "bytes": 11264,
+      "sha256": "ccc988424014fe9b27ece2285e9678e2014c06accac1dadfc85414f6ee53b8dc"
+    }
+  ],
+  "qualification": "Source/compiler corrections and actual critical tests peer-accepted for provisional composition. Full normal owning Release suite failed5 of415; C5Debug failed11 of415, with6 readonlyconfig failures resolved by private XDG root in independent Release. Every original failure/log/TRX retained. No owning suite pass, Windows runtime, global acceptance or owner authority adoption claimed."
+}
