@@ -1,0 +1,32 @@
+{
+  "harnessCommit": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc",
+  "producerCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "scenario": "rich-history",
+  "runId": 37212180165,
+  "jobId": 111465428151,
+  "runUrl": "https://github.com/CroakyJake12/9to1/actions/runs/37212180165",
+  "status": "BOUNDED_PACKAGED_NATIVE_UI_CONTROLS_PASS_UNACCEPTED",
+  "checksPassed": 85,
+  "checksFailed": 0,
+  "actualHistory": "Native Bold TogglePattern Off baseline\u2192On format\u2192Off app Undo\u2192On app Redo\u2192On actual reopen. Each state independently agrees with real canonical runs[].bold and paragraph text, same app-generated block/document IDs.",
+  "actualInputs": "Native keyboard types paragraph and focused Ctrl+B; actual canonical app Undo/Redo Buttons InvokePattern; current UIA peers reacquired after rebuild. Whole-paragraph formatting/selection only.",
+  "persistence": "Actual app writes .9to1board; no harness model/API/state writes. Existing autosave remains enabled, so Ctrl+S is not attributed as sole cause.",
+  "normalClose": "Two native HWND launches/normalcloseexit0, four bounded stdout/stderrdrains completed, empty stderr, noforcedcleanup.",
+  "visualReview": "Both exact original screenshots viewed; Bold toolbar On and bold typed paragraph visible before and after reopen. Visible-region crop includes taskbar; no full-window/donor/layout/theme parity claimed.",
+  "custody": "Official compact observationarchive SHA/bytes/CRC verified locally. Exact fd5 package, originalmanifest and282extractedfiles verified by actual Windows harness; C6 compactpeer will attribute those checks to harness.",
+  "originalFailure": "Original9c3aa3d run37211762149 timedout namedBold due actual PS dynamic-scope name shadow, retained untouched. Exact actual-function scopecontrol independently reproduces wrong label search; corrected ButtonName lookup verified.",
+  "priorRun": "Original67 run37210601635 and finalpublicindexSHA3443297bd208a7f8b7df49e888476574711ed2b0996bbc988e2c51b00cf347c5 remain unchanged. New rich-history scenario only dispatched.",
+  "qualification": {
+    "runner": "SDK-present Windows2022/PS5.1 actualinteractiveDesktop",
+    "installedHomeTuple": "NOT_RUN",
+    "cleanPcDelivery": "NOT_RUN",
+    "signing": "NOT_RUN",
+    "donorThemeMatrix": "NOT_RUN",
+    "fullAppAcceptance": "NOT_RUN",
+    "ownerAdoption": "UNACCEPTED"
+  },
+  "independentRuntimeReview": "C6_ACTUAL_85_WINDOWS_RICH_HISTORY_ACK_7bd9a4b4",
+  "resultSha256": "9ad45961e19150617e0478a8e9a35b80ca125b6183c01a3fd2912d56a16228da",
+  "independentSourceCorrectionReceiptSha256": "6521a3b04d9b3f7fc511027a8e08f7be8b5d54ac8b6ed1e227a83e01837eca6a",
+  "independentRuntimeReceiptSha256": "a794d143c828c2d0102a78a6f0fa8c5d69ca86f1a8b287866062e8a765b52c74"
+}
