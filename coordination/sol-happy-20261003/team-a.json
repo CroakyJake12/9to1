@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-04T09:37:59.015129+00:00",
+  "updatedUTC": "2026-10-04T10:02:06.941551+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -1366,7 +1366,7 @@
     },
     "qualification": "EntirepreviouscurrentExecution979 remainsinimmutablefullrecord; latest progress belongs canonicalcurrentExecution989."
   },
-  "canonicalExecutionField": "currentExecution993",
+  "canonicalExecutionField": "currentExecution1000",
   "currentExecution989": {
     "historicalFullRecordPreserved": {
       "commit": "9b37814cc31716c8b7e6b59a82327eed8da695ed",
@@ -1391,20 +1391,29 @@
     "requests": "ReadonlyWorkersAI metadata ownerACK09067b/provider35k currentdrift; A1queued afterinstallerpeer. CanonicalSites/Files originalauthority andimport/manifest/currentCAS/fullthemeparity; rootownerreview pending. NarrowC1artifactpropsSOURCEACK unchanged."
   },
   "currentExecution993": {
+    "historicalFullRecordPreserved": {
+      "commit": "1206e1878381ddc01941e9eb7e33fbfd9ac9e375",
+      "path": "coordination/sol-happy-20261003/team-a.json",
+      "bytes": 123475,
+      "sha256": "6151b412a8afc5272c33e755be15eda04b32c8847577891bfed9e4ef147c50f7"
+    },
+    "qualification": "Entire previous currentExecution993/conditionalWorkersAIACK remain whole immutable priorpublication; latest progress canonicalcurrentExecution1000."
+  },
+  "currentExecution1000": {
     "status": "ACTIVE_TEAM_A_ASTRA_ACCEPTANCE_INCOMPLETE",
-    "updatedUTC": "2026-10-04T09:37:59.015129+00:00",
+    "updatedUTC": "2026-10-04T10:02:06.941551+00:00",
     "scope": "User adopted Team A native/shared/provider-neutral Apps/OS/mobile assignment across passes1-3. Finish Astra acceptance/usablePC/exactTeamC handoff before Terraform then SolHappy. TeamB browser, TeamC hosted/billing/globalrelease/main writer.",
-    "priorCompleteLiveAddendum": {
-      "path": "/workspace/astra-source/root-teamA-live-addendum989.json",
-      "bytes": 14689,
-      "sha256": "bdb71161f41f80c246a08266e6b652d229d48b5ddf884adc11aae51edde08407"
+    "wholePriorRecordPreserved": {
+      "commit": "1206e1878381ddc01941e9eb7e33fbfd9ac9e375",
+      "path": "coordination/sol-happy-20261003/team-a.json",
+      "bytes": 123475,
+      "sha256": "6151b412a8afc5272c33e755be15eda04b32c8847577891bfed9e4ef147c50f7"
     },
-    "completePriorCheckpoint": {
-      "path": "/workspace/astra-source/root-teamA-current-continuation978.json",
-      "bytes": 128582,
-      "sha256": "ab0fc4c0181b98fa7ab991010ed5fc2ee828801fc63e70e8aab04ea43a6d784b"
+    "wholePriorLiveAddendum": {
+      "path": "/workspace/astra-source/root-teamA-live-addendum993.json",
+      "bytes": 13579,
+      "sha256": "b4d3f08353cf8bd972d9306e41b1cb295fb8482e886a3b8c19dff6536c7b11f2"
     },
-    "canonicalLatestExecution": "This addendum updates only facts below; all older complete spec/facts remain in whole prior immutable publications and local pinned checkpoints.",
     "normalWorkspace": {
       "head": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
       "indexSha256": "7c3c82142292302ff73e9adce99a49ed48d3bcf7fc9c2fa01e23cab8d90a83f3",
@@ -1414,171 +1423,193 @@
         "tmp": 1073741824
       }
     },
-    "compiler05CompleteCustody": {
-      "path": "/workspace/astra-source/root-compiler05-complete-original-custody-proof992.json",
-      "bytes": 4239,
-      "sha256": "569a09d0fb9367b4e8b912b4a101513dbf6cd36377150fe8f217627ad8dd4186"
-    },
-    "compiler05Cause": "169 original local files166 texts5984934B complete, all hidden sources recovered. Root+A1+A4+A6 full causal/custody closure. Actual original v3 Debug build succeeded then strict PDB mappingguard620 refused. Exact offending Agents.Tests document/candidates UNKNOWN; pair was not retained before guard. Other5 causes independent UNKNOWN. No runtime acceptance.",
-    "retention84": {
-      "reader": {
-        "path": "/workspace/astra-source/root-read-closed-evidence991.py",
-        "bytes": 10272,
-        "sha256": "227feddf003f3ca58c813702fa7bbe4bbe3b180d055b8d33f8f2eada0a71d2b7"
+    "compiler07": {
+      "sourceManifest": {
+        "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source07-exact-original-two-branch-admission/manifest.json",
+        "bytes": 56931,
+        "sha256": "037ce1096522c6927d9f6ef24847b8e8d992e1d34fd7dafe4cfe1f6c97140d60"
       },
-      "index": {
-        "path": "/workspace/astra-source/ready-artifacts/root-retained-home437-closed-git-cut-991/restoration-index.json",
-        "bytes": 2482,
-        "sha256": "a5ee3f4df5ca6653e2c8d298200f7994fe1595fc4eb01bd1d840a33d7843584c"
-      },
-      "rawGeneratedBytesRetained": 2880622,
-      "groups": 84,
-      "qualification": "Closed generated Home437 cut exact whole Git blob/durable retention ref/metadata/readback; no source/SDK/native/binary/originalZIP deletion."
-    },
-    "frozenSuccessors": {
-      "compiler06": {
-        "manifest": {
-          "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source06-original-physical-document-diagnostics/manifest.json",
-          "bytes": 52497,
-          "sha256": "3a1c732fa0af61963a6f1ae30d4a10ec68d8e33b482de37a268ba402af969f83"
-        },
-        "allocated": 483328,
-        "scope": "Same actual physical PE/PDB/ALL parsed Documents retained before unchanged mapping guards; exact refusal candidate diagnostics; only ONE new corrected-v3 Debug job, historical6 jobs unchanged/skip. A3+A6 full peers pending;9 pure-memory controls uninvoked; unconstructed/unrun."
-      },
-      "forms17": {
-        "manifest": {
-          "path": "/workspace/astra-source/worker3-forms17-native-viewport-and-exact-diagnostic-stage-source01/manifest.json",
-          "bytes": 72514,
-          "sha256": "1645a8212e3896441e74ac2d7402a754db309622f7295094f4eabffa6645104c"
-        },
-        "allocated": 208896,
-        "scope": "Same actual plot BringIntoView/Refresh/wait all original4 predicates within same90s original host/lifetime; original compound assertion/order preserved. Original280 metadata operations +distinct130 new-context; full same JSON compaction preserves1MiB record/8MiB content and pre-attempt charging. A4+A5 full peers pending; unconstructed/unrun."
-      },
-      "linux22": {
-        "manifest": {
-          "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package22-original-startup-async-cleanup/manifest.json",
-          "bytes": 116775,
-          "sha256": "e513c80b08d18ee82ca663ae05c47965433b00d5418b3258fa60ddc7873c18d4"
-        },
-        "allocated": 647168,
-        "scope": "Metadata-only actual5b62 caller recipe8 overlays7 product semantic paths89bindings113classes; oldHome62 unchanged OS199->210 adds9methods11outcomes. All310 external pins checked; A1+A6 full peers pending; unconstructed/unrun. Original initial signed startup cause remains UNKNOWN."
-      },
-      "dictation01": {
-        "manifest": {
-          "path": "/workspace/astra-source/worker4-notes-dictation-source01-same-original-worker-and-final-callback-retirement/manifest.json",
-          "bytes": 25317,
-          "sha256": "9d71170bfb6a7ab3faa435331548822db736a34b430466619696a910a8af410f"
-        },
-        "allocated": 188416,
-        "scope": "Same actual per-start original worker and final callbacks coalesced drain; callback-internalStop cancelonly preventsSelfAwait; source-only15outcomes old7 retained. A1 fullCLEAR/A6 pending; real microphone/Whisper/Notes apply/save/Call globalclose/native UNRUN."
-      }
-    },
-    "home437": "Debug and Release actual jobsFAILED independently; causes UNKNOWN. Tiny original indices downloaded/whole ZIPCRC/hash verified;203rows each. A4 constructing bounded dual-family original reader RAM;9MB original bundles not locally admitted.",
-    "home437TinyIndices": [
-      {
-        "path": "/workspace/attachments/fee9c2e8-ea32-4d51-b50d-31d0b03c0cb0/github-actions-artifact-11298566280.zip",
-        "bytes": 13560,
-        "sha256": "d35ba73a7fc88ba96f622f38cf1f577c45cddebcc4ed4aff279ccf88c54673f9",
-        "innerBytes": 117380,
-        "innerSha256": "0ad236910daf543c73cdd94dc7537fe500478f8a1c1455a78444db9cbf928a8d"
-      },
-      {
-        "path": "/workspace/attachments/ffac90c6-670b-4a6e-8dcd-7d608869dcb0/github-actions-artifact-11299145018.zip",
-        "bytes": 13575,
-        "sha256": "ae0ed3cc0444955cc6c0c00ff5b38afc245d52d9bdb9b2528beee3a5c83f0729",
-        "innerBytes": 118824,
-        "innerSha256": "429c7d72b9a2300f49c9a6df87962e4c13251bb3d6f8fddcafcd2111bd0c717d"
-      }
-    ],
-    "installer01": "A1+A3 complete peers HELD: two wrong repeat Execute test expectations must preserve UnauthorizedAccessException/currentness, actual confirmed Pending reserve then pre-effect refusal closes same audit root, and persisted-write observer can commit Pending then throw before Reserved revision custody. A5 coherent installer02 RAM correction, no fake fresh grant or root dispatch/reexecute.",
-    "workersAiMetadataOwnerAck": {
-      "status": "CONDITIONAL_NARROW_METADATA_OWNER_ACK_REBASE_REQUIRED",
-      "ownerReview": "A1 complete readonly source/API/inverse/TRX/current-owner review; root ratifies narrow observational metadata only",
-      "requestSnapshot": {
-        "bytes": 82819,
-        "sha256": "0d8f6ffa94acbe5b2ad701a44944aa53dd19ec6a4d00ef730aa32f9e38f0e294"
-      },
-      "proposalHead": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
-      "provider": {
-        "target": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
-        "proposalBytes": 34906,
-        "proposalSha256": "8d907d23fbc5ce7cbfdc90322722e2d668f00efb9f6383712225047ade339d4f",
-        "requiredOwnerBasis": {
-          "path": "/workspace/astra-source/teamA-C5-review-inputs821/00-CloudModelProviders.cs",
-          "bytes": 30593,
-          "sha256": "fd162747b5b95cb02bb5ca2e47cf7c596353d92a30551080622f265e24cbebd0"
-        },
-        "rebasedBytes": 35576,
-        "rebasedSha256": "b3fec98daa588c0d2d8e2afa8f3ac3e4ecf996c725e2af77c4cea6d10e0e111b",
-        "rebasedGitBlob": "0f4c16471df8fd853ecdeaed58870fe0fa084315",
-        "recipe": "Replace only unique full CheckHealthAsync span to next Retrieves models async XML summary, and GetModelsAsync/new metadata helpers span to next Performs stream chat asynchronously XML summary, with exact09067 proposal spans. Whole two-span reverse recovers entire821 basis; preserve all821 generation/tool/stream/usage/cancellation bytes. If selected current owner differs, rebase again; no CAS waiver.",
-        "healthBefore": {
-          "bytes": 1064,
-          "sha256": "7a3d00b52ec8297d370552c195db0d9d0635e9b37ccb48255fe0d65ab7ed8c35"
-        },
-        "healthAfter": {
-          "bytes": 1457,
-          "sha256": "4eb0b472db8562528ecb33f2a0931b23f5b165d693ffa9440920ff8692ccd0c4"
-        },
-        "modelsBefore": {
-          "bytes": 1686,
-          "sha256": "71131eac3078f4edce741467d3c51560c7052160726db5718fd31a1b715243ad"
-        },
-        "modelsAfter": {
-          "bytes": 6276,
-          "sha256": "ae1844e0cab284bbb7701e0581fdf8673aa24c624a8396836e672be9a3f42b59"
-        }
-      },
-      "testProject": {
-        "target": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
-        "requiredOwnerBasis": {
-          "path": "/workspace/astra-source/worker2-le07-original-files-attachment-source01-current-owner-read/Haven.Infrastructure.Tests.csproj",
-          "bytes": 1665,
-          "sha256": "c04a3520a284deb0d8220de3e03a5f9b002acba7b7c55a53966e1c77df7686d1"
-        },
-        "rebasedBytes": 1755,
-        "rebasedSha256": "e80f49d60244e7af9e95c44bae312dc9787d0d2bc816b6aebaf13ac86cfcf799",
-        "recipe": "Insert only one90B EmbeddedResource line for Fixtures/cloudflare-workers-ai-catalogue-20261004.json after FIRST literal two-space ItemGroup opening. Sole unique line removal recovers entire1665B basis. Preserve all current project references; delivered1205B whole replacement not accepted."
-      },
-      "additiveBodies": [
+      "sourcePeers": "A3+A6 COMPLETE CLEAR;06 complete peers HELD solely exact-ref mismatch;07 narrow fix closes it",
+      "controls": [
         {
-          "target": "CloudflareWorkersAiMetadataTests.cs",
-          "bytes": 10151,
-          "sha256": "7a4db7e89535112817c495bca06bfe75bea721df7503ec57b63b612403d9d9c5",
-          "gitBlob": "ae47fb91a981febdf75d7fb33500b1c352732ad7"
+          "path": "/workspace/astra-source/root-compiler06-exact-physical-document-memory-controls995.json",
+          "bytes": 3558,
+          "sha256": "628e17052d6f6d108bde64e8832f9f4387389a1991ad7472bc3829d27fa8ca7c"
         },
         {
-          "target": "Fixtures/cloudflare-workers-ai-catalogue-20261004.json",
-          "bytes": 1339,
-          "sha256": "205f4540c97e1ff91cb21b274f3582adc2214d0cb1e37b23a349f3abd2785ba5",
-          "gitBlob": "1a1bc7d1be00ac77bed457b31f531f2005f9f92c"
+          "path": "/workspace/astra-source/root-compiler07-exact-caller-branch-memory-controls998.json",
+          "bytes": 2956,
+          "sha256": "af67fdbc94a7afe347baea43b022dbf9fea5df38759098e9b75a0d4713281d49"
         }
       ],
-      "additiveGuard": "Both actual4f targets absent; remove only if those exact new bodies were selected. Existing tests unchanged.",
-      "docs": {
-        "target": "docs/system-map.md",
-        "beforeBytes": 6837,
-        "beforeSha256": "a9ea8ff2ea277ed542f20205e273ed82af48e3588d0c9d42551a866c1e462648",
-        "afterBytes": 6966,
-        "afterSha256": "c52249ed637d021465ba3463f72ff03a16dd36574828504dd74a084f553b0666",
-        "recipe": "Sole Model-runtime table-row replacement; reverse exact row recovers whole current4f original."
+      "controlsQualification": "RootONCE9 exact physicaldocument memory controls+6 exact branch controls PASS, no original/compiler/native runtime proof",
+      "launchReceipt": {
+        "path": "/workspace/astra-source/ready-artifacts/worker2-sdk09-agents-original-document-diagnostics07-actualfdcf-exact-branch/root-launch-receipt.json",
+        "bytes": 6216,
+        "sha256": "2c8a993726dea872d83150be551f7633ed97a189d21eb1cc680f27f9b2d7f69a"
       },
-      "validation": "Historical source-linked Debug24PASS/Release24PASS are18metadata+6old endpoint cases. Oversized-page negative1FAIL/23PASS retained. Current endpoint fixture has8 extra cases not covered by historical harness. Current full project Canvas511 pre-discovery failure retained; integrated current Compile/PEPDB/full-cohort/native unrun.",
-      "limits": "Native HTTPS configured custom-provider account/host/path/default-port recognition, confirmed success/result/name, <=100 parsed rows/page <=32 requests, stable dedup/positive context, Text-only observational descriptors. Whole HTTP body bytes/allocation remain unbounded. Existing inference lacks max-output-token cap; catalogue pricing ignored, configured rates are observations not trusted quote.",
-      "authority": "No source adoption/inference/funding/model-access/paid activation/deployment grant. Root relays conditional metadata-only ACK; global integrator must preserve current bodies and satisfy actual runtime gates."
+      "commit": "7b711a7f8e01eb0ff82917000743d11ef82ec08f",
+      "tree": "b96bd48fa8007920676b125cf8eec1054b6f5ff0",
+      "cutSha256": "35a38e638c203073e8c1b39d58752437ea6cd5eb4bd3a1a1b42400f49ad60192",
+      "run": 37193484941,
+      "job": 111410397649,
+      "conclusion": "failure",
+      "skippedFamilies": [
+        "joint-native-sdk",
+        "agents-compiler-verification",
+        "validate"
+      ],
+      "originalWholeService": {
+        "path": "/workspace/astra-source/root-compiler07-original-service-log999.txt",
+        "bytes": 28320,
+        "sha256": "179dc14213cc531e75796885b7a62acab78a68d3adb6b8846e363d6a2828ed25"
+      },
+      "cause": "UNKNOWN; sourcebound caller now passes and8 actual before/after mapping diagnostic records are indexed. Whole service onlyouter OriginalwholeSDKchildfailed. No new repeat job.",
+      "originalTinyIndex": {
+        "path": "/workspace/attachments/2b6cc6f5-4676-4546-b92e-e6e950fb03bb/github-actions-artifact-11299787648.zip",
+        "bytes": 12702,
+        "sha256": "128e8952cd03d52f8f14fc82ee4daea3845a7dda3d4c283d6ca6d395535e270e",
+        "innerBytes": 111839,
+        "innerSha256": "85ce245ba8c55ae2cdae5270eebeba05697a53144395d295b8f1000128dab900",
+        "rows": 191,
+        "parts": 1
+      },
+      "originalBundleRemoteOnly": {
+        "artifact": 11300296293,
+        "bytes": 12508842,
+        "sha256": "93d5fbaaaf556f301ae7bcb1c97fa25d44bb9dfa822200b351958cf25ee85ba3"
+      },
+      "next": "A4 narrow191row fixed originalreader RAM; need fullsamefailed document/candidates/physical pair and causal context before mapping correction. No guessed resolution/select-first/generator waiver."
     },
-    "canonicalSitesOwnerRequest": "A3 bounded readonly native/current directory/profile/store/session/canonical snapshot CAS/revision seam requested against entireC990; no duplicate importer/source/WP/user/cloud changes. Donor/fulltheme/editor/runtime/media parity remains OPEN.",
-    "continuingWork": "A4 actual scoped Files browser author/Infra Desktopnative Studio full unfiltered validation union RAM; A2 Notes same original document/block Save/Undo/rich-child ownership RAM; A3 secondary-page activation/remove/transfer and healthy closed WindowService reference retirement RAM. All prior scopes retained.",
-    "capacity": "Closed historical Picture15/20 proof metadata and optional canvas07b only if strict dependencies close, preparing lossless deduplicated capsule/current reader successor; source/SDK/native/binary/originalZIP excluded. Fixed floors unchanged.",
-    "nextActions": [
-      "Fullsource peers and root exact memory controls before corrected CI",
-      "Lossless closed metadata retention to satisfy constructor8MiB reserve",
-      "ONEcompiler06 diagnostic job; Forms17 and Linux22 actual owning/regression/resource gates",
-      "Home437 complete original causal replay; independent Debug/Release failures",
-      "Concrete coherent installer02/native Files/Notes source integration and full tests",
-      "UsablePC artifact and exact TeamC handoff before Terraform/SolHappy"
-    ],
-    "completion": "Astra acceptance INCOMPLETE; no whole-spec percent denominator/usablePC/installed/globalrelease/acceptedhead claim.",
+    "retention85": {
+      "index": {
+        "path": "/workspace/astra-source/ready-artifacts/root-retained-closed-picture-restore-metadata-993/restoration-index.json",
+        "bytes": 7974,
+        "sha256": "b7eb7857d95d7d139f063440fb7bf102a1c8080566eb2ab4706f8d534779dc01"
+      },
+      "reader": {
+        "path": "/workspace/astra-source/root-read-closed-evidence993.py",
+        "bytes": 10325,
+        "sha256": "ec20a3571cdf6b5008e9a508cdf80c532c3d1217faaa7651d97edbdd869de6e1"
+      },
+      "groups": 85,
+      "wholeOriginalPaths": 5,
+      "originalLogicalBytes": 6671213,
+      "capsuleBytes": 589416,
+      "scope": "Four closed Picture15/20 restore JSON snapshots +historical failed/noRetry Canvas07b metadata; each exact byte/metadata/cause distinction retained, fullreadback. No source/SDK/native/binary/raworiginalZIP removal.",
+      "workspaceFreeAtCompletion": 952750080,
+      "fixedFloorsUnchanged": true
+    },
+    "forms17": {
+      "manifest": {
+        "path": "/workspace/astra-source/worker3-forms17-native-viewport-and-exact-diagnostic-stage-source01/manifest.json",
+        "bytes": 72514,
+        "sha256": "1645a8212e3896441e74ac2d7402a754db309622f7295094f4eabffa6645104c"
+      },
+      "peers": "A4 fullCLEAR/A5 fullpending",
+      "rootSevenControls": {
+        "path": "/workspace/astra-source/root-forms17-exact-stage-memory-controls997.json",
+        "bytes": 1919,
+        "sha256": "940c17e8e96df021d02a2557d01a9cf2a1243a0b748b70488513daf3942461ff"
+      },
+      "scope": "Same native plot/viewport/4 predicates/original90s action lifetime; exact original280/new130 context quotas/lossless whole JSON unchanged byte/content caps. Sourceonly/nativeUNRUN; fullcaller RAM recipe next. Historical825managedPASS preserved."
+    },
+    "linux22": {
+      "manifest": {
+        "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package22-original-startup-async-cleanup/manifest.json",
+        "bytes": 116775,
+        "sha256": "e513c80b08d18ee82ca663ae05c47965433b00d5418b3258fa60ddc7873c18d4"
+      },
+      "peers": "A1+A6 fullCLEAR",
+      "runtime": "UNCONSTRUCTED_UNRUN, initial signedstartup cause UNKNOWN; root full source/CAS/branchguard review/constructor reserve next; prospectiveOS210/Home340 unchanged obligations"
+    },
+    "dictation01": {
+      "manifest": {
+        "path": "/workspace/astra-source/worker4-notes-dictation-source01-same-original-worker-and-final-callback-retirement/manifest.json",
+        "bytes": 25317,
+        "sha256": "9d71170bfb6a7ab3faa435331548822db736a34b430466619696a910a8af410f"
+      },
+      "peers": "A1+A6 fullCLEAR SOURCE-only15 outcomes UNRUN",
+      "remaining": "Actual microphone/Whisper/native Notes apply/save/Call global shutdown open; inherited audio queue unbounded. A3/A2 coordinated per-original utterance source-tag/currenthandle RAM successor fixes untagged multicast reentry; no tag-derived authority/global provider grant."
+    },
+    "installer02": {
+      "manifest": {
+        "path": "/workspace/astra-source/worker5-home-package-original-device-owner-source02-retained-reservation-audit/manifest.json",
+        "bytes": 26180,
+        "sha256": "af38270190f29d2993c8ac6774d1e1b168786d143cbc615fbe06dcf60dffd270"
+      },
+      "peers": "A1+A3 fullpending",
+      "scope": "Onlysameowner+fixture correction; private detached exactoriginal reservation intent/write task and same audit root survive lostreserveACK/pre-effect refusal; actualdurable Pending observer cases, UAE staleterminal assertions fixed, third ambiguousRejected exact.8methods9UNRUN, no installed/root/default activation."
+    },
+    "home437Reader01": {
+      "manifest": {
+        "path": "/workspace/astra-source/worker2-home437-original-evidence-reader-source01-fixed-both-original-families/manifest.json",
+        "bytes": 44158,
+        "sha256": "66f0056be78801db902897047997e76ff3bc572cb19361711f2b4f4d3e5bac9b"
+      },
+      "peerState": "A1+A6 complete source review ongoing with definite inverse metadata HOLD",
+      "hold": "Generic prefix inverse declares2 but actual source3 due separate exactbranch change; prescribed reversal cannot recover predecessor. Operative reader/config/WF unchanged. A4 metadata-only02 successor must fix anchored reverse spans;41controls uninvoked and both original causesUNKNOWN."
+    },
+    "canonicalSitesSemanticOwnerAck": {
+      "status": "SOURCE_ONLY_CURRENT_NATIVE_SEMANTIC_ACK_NO_ACTIVATION",
+      "ownerReview": "A3 complete readonly Sites/Files native source/API/authority/full14 requestpins plus3 ownerseams; root ratifies semantic boundaries only",
+      "requestProvenance": {
+        "requests": [
+          {
+            "path": "/workspace/astra-source/root-C990-canonical-sites-owner-request996.json",
+            "bytes": 3594,
+            "sha256": "4c966bc484c1d4d264a31179272e4970655620c2e3c12ddb733d683b506e4ee1"
+          },
+          {
+            "path": "/workspace/astra-source/root-C990-canonical-hosted-composition-ports996.json",
+            "bytes": 2224,
+            "sha256": "68dba07f00cc40a9bb621d05a4813fbd8f2b450916855d85cef0a68a2809c413"
+          }
+        ],
+        "qualification": "Quoted cc0cb0de fullref not accessible via GitHub connector NoCommit404; whole actual published release/sol-happy-20261003 request bodies/Gitblob/toolUTF8 equality verified. Both sourceCommit=e0c0310e5ed281b5e70a0cfd56a2615d93d022ef. All14 pinrows/11unique files verify entire e0c and are byte-exact at actual4f."
+      },
+      "additionalCurrentSeams": [
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/SitesNativeWorkspaceAuthority.cs",
+          "bytes": 1857,
+          "sha256": "b109d2333a07ebca06da23e882af803c246f5306326c02d3663ea12c3d2c8af5",
+          "gitBlob": "c1c05cda80df221195f006aa76494d30aad548db"
+        },
+        {
+          "path": "9to1 Workspace/Sites/Application/SiteArtifactAuthoringService.cs",
+          "bytes": 2143,
+          "sha256": "bd4a5fb680e61f31c4d1c4a16690d9a427be72e4c868d81f25a9da57828bf07f",
+          "gitBlob": "b8f3f2a1332907b00b28d838eee7a465b57b7ef2"
+        },
+        {
+          "path": "9to1 Workspace/Sites/Domain/SiteModels.cs",
+          "bytes": 8654,
+          "sha256": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+          "gitBlob": "8fb19b0e167ad0d6aed50c7583796c477add84f2"
+        }
+      ],
+      "originalFilesAuthority": "Use NativeFilesWorkspaceAuthority.GetCurrentAsync(EXACT configured StoreUUID) and original personal Home profile/Actor/AuthRevision with privately cached SAME Provider/Directories/Materializations. Reacquire configured cache after setup; ConfigureNew returned workspace is not original cached provenance. Existing ResolveProfileForOriginalStoreAsync binds exact profile/app/folder/provider/store. Original binding commit lease retains mapping only and grants no access/session lifetime. CaptureCommitAuthorityAsync captures original Home/config/raw receipt outside writer and rechecks host-write availability plus SAME receipt inside writer. CaptureOriginalReadCheckAsync repeats original lifetime/actor/config/raw receipt; no DTO grant. No actual identity/root/session in WP package; none manufactured.",
+      "currentNativeSitesAuthority": "Desktop SitesNativeWorkspaceAuthority projects actual configured sites folder metadata/revision/materialized direct directory and rechecks actor/store/folder. SiteNativeWorkspaceBinding omits StoreUUID and is not original session/commit lease. SiteNativeAuthoringSession checks binding and sites.project.read before UI/cache; write captures SAME original actor/manualHome approval/private capability -> coordinator Claim -> canonical locked expectedRevision CAS/final binding check -> audit-only recovery, never repeat mutation.",
+      "importBoundary": "Maintained SiteHtmlContentImporter.ImportPageAsync(siteID, expectedRevision, HTML) uses SiteProjectService CAS, but native write intent/coordinator/session has NO import case. Direct invocation is not approved native authority composition. Importer blocks scripts/embeds/forms/executable/unsafeURLs/head dependencies. DesignMappingRequired is nonblocking for content only; never theme/editor parity.",
+      "canonicalRevision": "SiteProjectService preserves SiteID/ProjectID/FilesDirectoryID and increments actual Int64 revision under FileSiteWorkspaceStore .9to1-sites-index.json lock with durable temp/final check. SourceRevision remains distinct captured Files source revision.",
+      "genuineSnapshotExportBuild": "SiteArtifactAuthoringService.BuildAsync gets SAME canonical project, requires expected revision, writes site.project.json into a host-authorised unique input directory and invokes NativeSiteBuildPipeline. Reuse this seam; no duplicate exporter/backend. It grants no independent actor permission/build-directory authority. Trusted current owner wrapper, real secret scanner and runtime registration remain missing.",
+      "hostedManifestContract": "ContentHash is SHA256 of whole manifest bytes. ArtifactReference is DIRECTORY. SizeBytes totals public listed files and EXCLUDES manifest. Per-file path/length/SHA plus full listed-file/reparse checks remain. Single-object R2 reader cannot consume this native artifact contract. Renderer/build use existing canonical static native models; unsupported bindings/runtime refuse.",
+      "remainingOwnerWork": "C owns manifest/per-file remote reader/endpoint/namespace/deployment; B editor composition; A native owner/lifetime/import action integration. Actual session, callable owner-authorised import route, unique build-directory authority/secret scan, authenticated remote transport, editable theme/editor/media/runtime/donor parity and actual runtime gates remain OPEN. No preview/public activation/source adoption/deployment grant.",
+      "attribution": "A3 bounded RAM semantic packet6045B SHA66cda0d3af1636f13895b542f5d2d154246205040067bdfd119da19cfff7f95b; this root relay preserves its full semantic clauses but has separate serialized bytes."
+    },
+    "workersAiConditionalMetadataAck": {
+      "wholePriorRecord": {
+        "commit": "1206e1878381ddc01941e9eb7e33fbfd9ac9e375",
+        "path": "coordination/sol-happy-20261003/team-a.json",
+        "bytes": 123475,
+        "sha256": "6151b412a8afc5272c33e755be15eda04b32c8847577891bfed9e4ef147c50f7"
+      },
+      "field": "currentExecution993/workersAiMetadataOwnerAck",
+      "status": "Conditional narrow metadata source ACK/rebase instructions published; integrated current compile/fullcohort/PEPDB/native and current endpoint cases remainOPEN; no inference/funding/model-access/deployment/source adoption grant."
+    },
+    "continuingNativeWork": "A2 actual Notes sameoriginal Save/Undo/richchild/status tasks+five real native cases RAM; A3 secondary-page/remove/transfer/global healthy reference retirement RAM; A4 real scoped Files browser/private issuer+full Infra/Desktopnative/Studio unfiltered validation union RAM. Original spec/acceptedsource/API/permission/freeLocal/commercial inputs preserved.",
+    "capacityNext": "ROOT two closed historical Android generatedcaptures-only RAM retention recipe requested, zero375configsubstringrefs; root14coherent capture EXCLUDED because five configs reference it. Full old APKreassemblypending and fixture qualifier preserved. No source/APK/SDK/native/binary/rawZIP delete.",
+    "completion": "Astra acceptance INCOMPLETE; no whole-spec percentage denominator/usablePC/installed/globalacceptedrelease claim. Finish Astra+PC+exacthandoff beforeTerraform thenSolHappy.",
     "restrictions": "No production/WP/DNS/accountdata/credentials/newbillableservice/deployment. No existingWPuser/linkeddata export backup import transfer. Sharednew-accountauth andsubscriptioncommercial work belongs current TeamC contracts; preservefreeLocal/modelaccess/no hostedallowance invention. Userdefined15% tax-exclusive revenueMARGIN/fulluse/servicefees/sharedonce/allmissingcostinputs remainconfigurable."
   }
 }
