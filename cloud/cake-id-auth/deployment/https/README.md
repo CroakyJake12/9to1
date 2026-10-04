@@ -5,7 +5,7 @@ From `cloud/cake-id-auth`:
 ```
 node --check deployment/https/validate.mjs
 node deployment/https/validate.test.mjs
-node deployment/https/validate.mjs /workspace/team-c/evidence/c2/https-anonymous-NEW.json
+node --use-env-proxy --use-system-ca deployment/https/validate.mjs /workspace/team-c/evidence/c2/https-anonymous-NEW.json
 ```
 
 The output path must be new. Transport/assertion failures and independent evidence-write failures remain separately observable; existing evidence is never overwritten. Requests omit credentials, never follow redirects and have15-second abort signals. Output retains status/CORS/path metadata, not response bodies, cookies or tokens. No secrets are required.
