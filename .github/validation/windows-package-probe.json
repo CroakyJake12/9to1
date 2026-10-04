@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "sourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "nativeNormalBasis": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "sourceAdoption": "PROVISIONAL_UNACCEPTED_EXACT_OWNER_DELIVERY",
+  "rid": "win-x64",
+  "proposalPaths": [
+    ".github/workflows/team-c-windows-package-probe.yml",
+    ".github/scripts/windows-package-probe.ps1",
+    ".github/validation/windows-package-probe.json",
+    ".github/validation/windows-package-owner-request.json"
+  ],
+  "sourcePins": [
+    {
+      "path": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+      "bytes": 2315,
+      "sha256": "ab1a0ab1fa185d4b66ef6f75d66546be457481947cc655cb164a9842a6b5344c",
+      "gitBlob": "8c2170917986fddc4160e5d3a388e4b7d196f3b8"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "bytes": 10725,
+      "sha256": "808580096627894af27d5a6f52ed6d41ee2b3385885159ea053de0f9f59ed9cc",
+      "gitBlob": "bfc82f6f825fe282f35485e29f935824dfa115a2"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+      "bytes": 2290,
+      "sha256": "ff6d497c337d5ce440d95814b360505206a7d7138bb447b3a1cd5498f59c98fa",
+      "gitBlob": "b0d7475a54fa5632547f86496b4003017d2b2e4c"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "bytes": 44045,
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740",
+      "gitBlob": "706f36e47d9ddf9f30c36b3411f81c72aecb7adc"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Host/HavenOS.Canvas.Host.csproj",
+      "bytes": 809,
+      "sha256": "53750fb532fd6765e836bcbaad126c936251b54030ab8b89a7e7bdf753ef112d",
+      "gitBlob": "d76beebfd0e8e1f66c950098e0aa86cc1e0a348f"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Host/Program.cs",
+      "bytes": 391,
+      "sha256": "16fb5e5c08b0e9cb5716cd1bf917ca436deceb13cf75af37395ca793a6ba30e0",
+      "gitBlob": "03c671f850ac817b3d133e4506a3ed9360a56fb1"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "bytes": 1169,
+      "sha256": "43bebd9ec4587e9e471fed79ef677c10436cf9c0458d758a195f3073f2f6858c",
+      "gitBlob": "44100e15aee2ffb529762c86a80bd3f66837553f"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/Program.cs",
+      "bytes": 313,
+      "sha256": "909f62c83a32a79e9dfa054ec7d39ec90499459da470c70bd88b16cf342cfb3b",
+      "gitBlob": "35f5f8019fb5efd155b1404bd1dc43eed128f7b3"
+    },
+    {
+      "path": "9to1 Workspace/Present/HavenOS.Present.csproj",
+      "bytes": 1091,
+      "sha256": "a48cdfb6733e68278d3de0abdffd3be98be8d1e608d3371334da9f0b42fa678f",
+      "gitBlob": "9e18307e9fe11ed768e126f086926a52990f479f"
+    },
+    {
+      "path": "9to1 Workspace/Present/Program.cs",
+      "bytes": 375,
+      "sha256": "8d88ed2961c9e94a8d3315a0548ce1658635971f2eeacffdda56ce4250d968c4",
+      "gitBlob": "e891a2e1fe13a4a4b250bf29eaa5a78e4e002f43"
+    },
+    {
+      "path": "9to1 Workspace/Picture/HavenOS.Images.csproj",
+      "bytes": 1270,
+      "sha256": "34edbb4866b2e5838f1552d95e0dd4f24d07bce80e96dadc18126b5c6cfec20e",
+      "gitBlob": "80c146c49f0ad7d63d237b4c1eac40e19aa3c556"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Program.cs",
+      "bytes": 428,
+      "sha256": "def314227374ed5f68a474c4c44544baa954ed53d45ef6a828624780b3222686",
+      "gitBlob": "413c310648133b627474c2f848861a8212f1ce71"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "bytes": 6312,
+      "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9",
+      "gitBlob": "60a07f89fbe75d944105b4e158625b90530b5aee"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Program.cs",
+      "bytes": 5398,
+      "sha256": "b2c59a97af4e1faa5e92fd327d56caef5b240d051f88523e620885446b51d01d",
+      "gitBlob": "c50f0172933c1c0a75fb6068d77e93a0bb08e639"
+    }
+  ],
+  "targets": [
+    {
+      "key": "home",
+      "productGroup": "Home",
+      "project": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+      "program": "apps/Home/src/AvaloniaHome/Program.cs",
+      "framework": "net10.0-windows",
+      "executable": "AvaloniaHome.exe",
+      "requiredFiles": [
+        "AvaloniaHome.runtimeconfig.json",
+        "AvaloniaHome.deps.json",
+        "coreclr.dll",
+        "hostfxr.dll",
+        "hostpolicy.dll",
+        "UI/Home.cui"
+      ],
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied. Current native Home uses DenyAllHomeCoreAuthorization and unavailable navigation; this is not complete installed Home."
+    },
+    {
+      "key": "boards",
+      "productGroup": "Boards",
+      "project": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+      "program": "9to1 Workspace/Boards/app/Program.cs",
+      "framework": "net10.0-windows",
+      "executable": "CakeOS.Apps.Boards.App.exe",
+      "requiredFiles": [
+        "CakeOS.Apps.Boards.App.runtimeconfig.json",
+        "CakeOS.Apps.Boards.App.deps.json",
+        "coreclr.dll",
+        "hostfxr.dll",
+        "hostpolicy.dll",
+        "Boards.cui"
+      ],
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+    },
+    {
+      "key": "canvas",
+      "productGroup": "Canvas",
+      "project": "9to1 Workspace/Canvas/Host/HavenOS.Canvas.Host.csproj",
+      "program": "9to1 Workspace/Canvas/Host/Program.cs",
+      "framework": "net10.0",
+      "executable": "HavenOS.Canvas.Host.exe",
+      "requiredFiles": [
+        "HavenOS.Canvas.Host.runtimeconfig.json",
+        "HavenOS.Canvas.Host.deps.json",
+        "coreclr.dll",
+        "hostfxr.dll",
+        "hostpolicy.dll"
+      ],
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+    },
+    {
+      "key": "studio",
+      "productGroup": "AI Studio",
+      "project": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "program": "9to1 Workspace/Studio/HavenOS.Studio/Program.cs",
+      "framework": "net10.0",
+      "executable": "HavenOS.Studio.exe",
+      "requiredFiles": [
+        "HavenOS.Studio.runtimeconfig.json",
+        "HavenOS.Studio.deps.json",
+        "coreclr.dll",
+        "hostfxr.dll",
+        "hostpolicy.dll"
+      ],
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+    },
+    {
+      "key": "present",
+      "productGroup": "Present",
+      "project": "9to1 Workspace/Present/HavenOS.Present.csproj",
+      "program": "9to1 Workspace/Present/Program.cs",
+      "framework": "net10.0",
+      "executable": "HavenOS.Present.exe",
+      "requiredFiles": [
+        "HavenOS.Present.runtimeconfig.json",
+        "HavenOS.Present.deps.json",
+        "coreclr.dll",
+        "hostfxr.dll",
+        "hostpolicy.dll"
+      ],
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+    },
+    {
+      "key": "picture",
+      "productGroup": "Picture",
+      "project": "9to1 Workspace/Picture/HavenOS.Images.csproj",
+      "program": "9to1 Workspace/Picture/Program.cs",
+      "framework": "net10.0",
+      "executable": "HavenOS.Images.exe",
+      "requiredFiles": [
+        "HavenOS.Images.runtimeconfig.json",
+        "HavenOS.Images.deps.json",
+        "coreclr.dll",
+        "hostfxr.dll",
+        "hostpolicy.dll"
+      ],
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+    },
+    {
+      "key": "shared-desktop",
+      "productGroup": "Shared legacy desktop dependency/route candidate",
+      "project": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "program": "9to1 Workspace/shared/src/Haven.Desktop/Program.cs",
+      "framework": "net10.0-windows10.0.19041.0",
+      "executable": "Haven.exe",
+      "requiredFiles": [
+        "Haven.runtimeconfig.json",
+        "Haven.deps.json",
+        "coreclr.dll",
+        "hostfxr.dll",
+        "hostpolicy.dll"
+      ],
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied. Existing legacy AXAML/HUI shell is not the canonical all-CUI all-app delivery or 29 accepted apps."
+    }
+  ],
+  "qualification": "Seven existing graphical entry points, including one legacy dependency host; not the complete 29 product package inventory. Build/package/launch probes preserve unmet Home, trust, donor and acceptance requirements. No native body edits, bypass properties, signing keys or alternate services."
+}

@@ -1,0 +1,60 @@
+name: Team C Windows package probe (unaccepted)
+
+on:
+  push:
+    branches: [team-c/sol-happy-c1-windows-build-proposal-20261004]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-package-probe-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        target: [home, boards, canvas, studio, present, picture, shared-desktop]
+    env:
+      AVALONIA_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+    steps:
+      - name: Keep reviewed source bytes in this disposable runner
+        shell: pwsh
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Acquire exact maintained UI dependencies
+        shell: bash
+        run: bash "9to1 Workspace/shared/eng/prepare-cui-source.sh"
+      - name: Install the repository-selected SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Publish, extract and observe the actual Windows executable
+        shell: pwsh
+        env:
+          PROBE_TARGET: ${{ matrix.target }}
+          PROBE_OUTPUT: ${{ runner.temp }}/windows-probe-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.target }}
+        run: |
+          & .github/scripts/windows-package-probe.ps1 -Target $env:PROBE_TARGET -OutputDirectory $env:PROBE_OUTPUT
+          exit $LASTEXITCODE
+      - name: Retain successful packages and all failed observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-unaccepted-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/windows-probe-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.target }}
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
