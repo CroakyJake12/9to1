@@ -1,0 +1,103 @@
+{
+  "result": {
+    "id": "713c1695-7e21-489b-bc97-906450972cfa",
+    "number": 2,
+    "metadata": {
+      "created_on": "2026-10-04T08:38:01.687408Z",
+      "source": "api",
+      "has_preview": true
+    },
+    "annotations": {
+      "workers/message": "Reviewed isolated CAKE ID production source d643d723; index SHA256 9d859012015fd20b67500d07646fd5e09dea3d08e8b89229494907adf37e54a2; public endpoint initially disabled",
+      "workers/tag": "isolated-auth-d643d723",
+      "workers/triggered_by": "upload"
+    },
+    "resources": {
+      "script": {
+        "etag": "c51d374c31259a83d0196ebf4da57e392df9b855188e65b5ba928c9b35f6b69f",
+        "handlers": [
+          "fetch"
+        ],
+        "named_handlers": [
+          {
+            "name": "fetchRequest",
+            "handlers": [
+              "class"
+            ]
+          }
+        ],
+        "last_deployed_from": "api"
+      },
+      "script_runtime": {
+        "compatibility_date": "2026-10-01",
+        "compatibility_flags": [
+          "nodejs_compat"
+        ],
+        "usage_model": "standard",
+        "limits": {
+          "cpu_ms": 1000
+        }
+      },
+      "bindings": [
+        {
+          "name": "ALLOWED_WEB_ORIGINS",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev",
+          "type": "plain_text"
+        },
+        {
+          "name": "API_RESOURCE",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev",
+          "type": "plain_text"
+        },
+        {
+          "name": "APP_MODE",
+          "text": "production",
+          "type": "plain_text"
+        },
+        {
+          "name": "AUTH_BASE_URL",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev",
+          "type": "plain_text"
+        },
+        {
+          "name": "AUTH_SECRET",
+          "type": "secret_text"
+        },
+        {
+          "database_id": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+          "id": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+          "name": "DB",
+          "type": "d1"
+        },
+        {
+          "name": "EMAIL_CAPTURE",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "LOGIN_LIMITER_KEY",
+          "type": "secret_text"
+        },
+        {
+          "name": "LOGIN_LOCK_SECONDS",
+          "text": "1800",
+          "type": "plain_text"
+        },
+        {
+          "name": "LOGIN_MAX_ATTEMPTS",
+          "text": "8",
+          "type": "plain_text"
+        },
+        {
+          "name": "LOGIN_WINDOW_SECONDS",
+          "text": "900",
+          "type": "plain_text"
+        }
+      ]
+    }
+  },
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "status": 200
+}
