@@ -239,7 +239,7 @@ static CuiDocument Document()
 }
 static async Task Route(string root)
 {
-    var fixture = await NativeSitesFixture.CreateAsync(root); using var route = new SitesBrowserRoute(fixture.Operations, Document());
+    var fixture = await NativeSitesFixture.CreateAsync(root); using var route = new SitesBrowserRoute(fixture.Operations, Document(), () => throw new NotSupportedException("Native fixture: actual issuer-group revocation is unavailable; no browser/private authority is established."), () => ValueTask.FromException(new NotSupportedException("Native fixture: actual issuer-group drain is unavailable; no browser/private authority is established.")));
     Check(!(await route.OpenAsync(new(SitesBrowserRoute.Id, "deployment", Guid.NewGuid().ToString()))).Succeeded, "Hosted deployment was substituted for authoring.");
     foreach (var request in new[] { new HomeFeatureNavigationRequest(SitesBrowserRoute.Id, DeepLink: "?private"), new(SitesBrowserRoute.Id, ModelPickerTarget: new("sites", null, "text", null)) })
     { var rejected = await route.OpenAsync(request); Check(!rejected.Succeeded && rejected.Request == request, "Unsupported context ignored or replaced."); }

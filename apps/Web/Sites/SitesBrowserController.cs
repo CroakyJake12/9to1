@@ -18,12 +18,39 @@ public sealed class SitesBrowserController(SitesBrowserOperations owner) : ICuiW
     private Edit _edit;
     private string _name = "", _path = "/", _text = "", _status = "";
     private bool _busy, _disposed, _denied, _uncertain;
+    private readonly object _issuedGate = new();
+    private readonly HashSet<TaskCompletionSource> _issued = [];
+    private bool _lifetimeDisposed;
+    internal Func<bool>? CommandAdmission { get; set; }
+    public bool HasUnsavedChanges => !_disposed && (_edit != Edit.None || _uncertain || _busy);
+    internal Task DrainIssuedAsync()
+    {
+        lock (_issuedGate) return Task.WhenAll(_issued.Select(work => work.Task).ToArray());
+    }
+    private IDisposable EnterIssued()
+    {
+        lock (_issuedGate)
+        {
+            if (_disposed) throw new OperationCanceledException("Private presentation closed.");
+            var work = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _issued.Add(work); return new IssuedLease(this, work);
+        }
+    }
+    private sealed class IssuedLease(SitesBrowserController owner, TaskCompletionSource work) : IDisposable
+    {
+        public void Dispose()
+        {
+            lock (owner._issuedGate) { owner._issued.Remove(work); work.TrySetResult(); }
+        }
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
     public SiteProject? CurrentProject => _project;
     public SitePage? CurrentPage => _page;
 
     public async Task InitializeAsync(Guid? siteID, CancellationToken cancellationToken)
     {
+        using var issued = EnterIssued();
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         if (siteID is { } id) await OpenAsync(id, linked.Token);
         else await ListAsync(linked.Token);
@@ -69,6 +96,7 @@ public sealed class SitesBrowserController(SitesBrowserOperations owner) : ICuiW
 
     public bool TrySetValue(string path, object? value)
     {
+        if (CommandAdmission?.Invoke() == false) return false;
         if (_disposed || _denied || _busy || _uncertain || _edit == Edit.None || value is not string text) return false;
         switch (path)
         {
@@ -80,7 +108,7 @@ public sealed class SitesBrowserController(SitesBrowserOperations owner) : ICuiW
         Changed(); return true;
     }
 
-    public bool? IsActionAvailable(string command) => Available(command);
+    public bool? IsActionAvailable(string command) => CommandAdmission?.Invoke() == false ? false : Available(command);
     private bool Available(string command)
     {
         if (_disposed || _denied || _busy) return false;
@@ -100,7 +128,8 @@ public sealed class SitesBrowserController(SitesBrowserOperations owner) : ICuiW
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
-        if (!Available(command)) return;
+        if (CommandAdmission?.Invoke() == false || !Available(command)) return;
+        using var issued = EnterIssued();
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         var ct = linked.Token; _busy = true;
         try
@@ -230,10 +259,18 @@ public sealed class SitesBrowserController(SitesBrowserOperations owner) : ICuiW
             catch (Exception error) { System.Diagnostics.Trace.TraceWarning("Sites presentation observer failed: {0}", error.GetType().Name); }
         }
     }
+    internal void ClearPrivatePresentation()
+    {
+        _disposed = true; Clear(); _status = "";
+    }
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true; Clear(); _status = "";
+        lock (_issuedGate)
+        {
+            if (_lifetimeDisposed) return;
+            _lifetimeDisposed = true;
+        }
+        ClearPrivatePresentation();
         try { _lifetime.Cancel(); }
         catch (Exception error) { System.Diagnostics.Trace.TraceWarning("Sites owner cancellation callback failed: {0}", error.GetType().Name); }
         finally { _lifetime.Dispose(); }
