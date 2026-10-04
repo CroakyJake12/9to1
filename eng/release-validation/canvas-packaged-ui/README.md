@@ -56,3 +56,20 @@ and embedded same-process Home workflow. Installed cross-app Home handshake,
 account/ACL authority, clean-PC/signing, donor breadth and full-app/source-owner
 acceptance remain unaccepted. Independent C6 review and root sole push/invocation
 are required before actual Windows runtime claims.
+
+The first exact1541 Windows run37219806215 is retained as a failure:48 checks
+passed, the original RootElement.Children picker query timed out after20seconds,
+and the screenshot visibly shows the correctly titled native modal. No folder
+choice or create/stroke request occurred; forced cleanup remained a failure.
+This successor queries the actual foreground HWND from Win32, verifies its kernel
+PID and bounded owner chain to the original app HWND, and requires the actual
+UIA FromHandle peer to match that exact HWND/PID/Window role/source title before
+any input. Bounded child-role/count/title-match witnesses compare the root and
+owned main-window children without dumping text, paths, profiles or directory
+contents. Unknown ownership, titles, native peers or geometry still refuse.
+On failure only, an exactly proven current owned picker can receive its genuine
+observed Cancel button action, with same PID/tree/role/focus/geometry guards and
+actual HWND disappearance. A cancellation refusal/failure is retained; normal
+app cleanup still proceeds, and forced or failed cleanup blocks success. This
+never submits or retries a request. Original one-shot operations, gesture points,
+source pins, manifest, timeout, commit/reopen and all other criteria stay intact.

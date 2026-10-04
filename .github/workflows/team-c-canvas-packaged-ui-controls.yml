@@ -1,7 +1,7 @@
 name: Team C immutable Canvas native workflow controls (unaccepted)
 on:
   push:
-    branches: [team-c/sol-happy-c3-canvas-packaged-ui-20261004]
+    branches: [team-c/sol-happy-c3-canvas-picker-observation-20261004]
   workflow_dispatch:
 permissions:
   contents: read

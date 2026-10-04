@@ -143,15 +143,79 @@ function Start-Canvas([string]$LaunchLabel) {
     Check ($window.Current.ProcessId -eq $process.Id -and $window.Current.ControlType -eq [System.Windows.Automation.ControlType]::Window) 'Exact packaged Canvas HWND exposes native Window'
     $launchRecord.windowObserved=$true;$launchRecord.windowTitle=$window.Current.Name;return $window
 }
+function Test-OwnedPickerSnapshot($Snapshot) {
+    return $Snapshot.foregroundProcessId -eq $process.Id -and $Snapshot.nativeTitleMatches -and
+        $Snapshot.ownerChainMatches -and $Snapshot.uiaProcessId -eq $process.Id -and
+        $Snapshot.uiaRole -ceq 'ControlType.Window' -and $Snapshot.uiaTitleMatches -and
+        $Snapshot.uiaWindowHandle -eq $Snapshot.foregroundWindowHandle -and
+        $Snapshot.foregroundWindowHandle -ne 0
+}
+function Record-OwnedPickerTreeWitness {
+    $condition=New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty,$process.Id)
+    $witness=[ordered]@{}
+    foreach($entry in @(@{label='rootChildren';root=[System.Windows.Automation.AutomationElement]::RootElement},@{label='ownedMainWindowChildren';root=$window})) {
+        $roles=[ordered]@{Window=0;Button=0;Edit=0;Text=0;Custom=0;Other=0};$titleCount=0;$count=0
+        foreach($peer in $entry.root.FindAll([System.Windows.Automation.TreeScope]::Children,$condition)) {
+            if($count -ge 64){throw 'Owned picker tree witness exceeds bounded child count.'}
+            $count++;$role=$peer.Current.ControlType.ProgrammaticName.Replace('ControlType.','')
+            if($roles.Contains($role)){$roles[$role]++}else{$roles.Other++}
+            if($peer.Current.Name -ceq 'Choose an empty Files workspace folder'){$titleCount++}
+        }
+        $witness[$entry.label]=[ordered]@{ownProcessChildCount=$count;exactSourceTitleCount=$titleCount;roles=$roles}
+    }
+    $result.pickerTreeWitness=$witness;Write-Result
+}
+function Find-OwnedForegroundPicker {
+    $handle=[CanvasPackageInput]::ForegroundHandle();$expectedMain=[IntPtr]$window.Current.NativeWindowHandle
+    $snapshot=[ordered]@{foregroundWindowHandle=$handle.ToInt64();foregroundProcessId=[CanvasPackageInput]::WindowPid($handle);nativeTitleMatches=$false;nativeWindowClass='WITHHELD';ownerChain=@();ownerChainMatches=$false;uiaProcessId=0;uiaWindowHandle=0;uiaRole='UNOBSERVED';uiaTitleMatches=$false;uiaVisible=$false;uiaEnabled=$false;uiaReadFailure=$null}
+    if($snapshot.foregroundProcessId -eq $process.Id) {
+        $snapshot.nativeTitleMatches=[CanvasPackageInput]::WindowTitleEquals($handle,'Choose an empty Files workspace folder')
+        $snapshot.nativeWindowClass=[CanvasPackageInput]::WindowClass($handle)
+        $owner=[CanvasPackageInput]::OwnerHandle($handle)
+        for($depth=0;$owner -ne [IntPtr]::Zero -and $depth -lt 8;$depth++) {
+            $ownerPid=[CanvasPackageInput]::WindowPid($owner)
+            $snapshot.ownerChain+=[ordered]@{windowHandle=$owner.ToInt64();processId=$ownerPid;isOriginalMainWindow=$owner -eq $expectedMain}
+            if($ownerPid -ne $process.Id){break}
+            if($owner -eq $expectedMain){$snapshot.ownerChainMatches=$true;break}
+            $owner=[CanvasPackageInput]::OwnerHandle($owner)
+        }
+        try {
+            $peer=[System.Windows.Automation.AutomationElement]::FromHandle($handle);$current=$peer.Current
+            $snapshot.uiaProcessId=$current.ProcessId;$snapshot.uiaWindowHandle=[long]$current.NativeWindowHandle
+            $snapshot.uiaRole=$current.ControlType.ProgrammaticName;$snapshot.uiaTitleMatches=$current.Name -ceq 'Choose an empty Files workspace folder'
+            $snapshot.uiaVisible=-not $current.IsOffscreen;$snapshot.uiaEnabled=$current.IsEnabled
+        }catch{$snapshot.uiaReadFailure=$_.Exception.GetType().FullName}
+    }
+    $result.pickerObservation=$snapshot;Write-Result
+    if(Test-OwnedPickerSnapshot $snapshot){return $peer};return $null
+}
+function Observe-OwnedPicker {
+    try {$dialog=Wait-Observed {Find-OwnedForegroundPicker} 'Actual source-declared native folder picker'}
+    catch {
+        $originalPickerFailure=$_
+        try{Record-OwnedPickerTreeWitness}catch{$result.pickerWitnessFailure=$_.Exception.GetType().FullName}
+        throw $originalPickerFailure
+    }
+    Require-OwnedControl $dialog 'ControlType.Window'
+    Check ([CanvasPackageInput]::ForegroundMatches([IntPtr]$dialog.Current.NativeWindowHandle)) 'Native picker observation binds exact current owned foreground HWND'
+    Record-OwnedPickerTreeWitness;return $dialog
+}
+function Cancel-OwnPickerOnFailure {
+    $dialog=Find-OwnedForegroundPicker
+    if($null -eq $dialog){return}
+    Require-OwnedControl $dialog 'ControlType.Window'
+    $handle=[IntPtr]$dialog.Current.NativeWindowHandle
+    $cancel=Find-Unique 'Cancel' 'ControlType.Button' $false $dialog
+    Require-OwnedControl $cancel 'ControlType.Button'
+    Check ((Is-InSurface $cancel $dialog) -and [CanvasPackageInput]::ForegroundMatches($handle)) 'Failure Cancel targets exact proven owned native picker'
+    $cancel.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $result.pickerCancellation=[ordered]@{admitted=$true;windowHandle=$handle.ToInt64();closed=$false};Write-Result
+    [void](Wait-Observed {-not [CanvasPackageInput]::WindowExists($handle)} 'Actual owned failed picker closed after controlled Cancel')
+    $result.pickerCancellation.closed=$true;Write-Result
+}
 function Choose-OwnFolder {
     Invoke-Button 'Set up Canvases'
-    $dialog=Wait-Observed {
-        $condition=New-Object System.Windows.Automation.AndCondition(
-            (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty,$process.Id)),
-            (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty,'Choose an empty Files workspace folder')))
-        $found=[System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Children,$condition)
-        if($found.Count -gt 1){throw 'Ambiguous actual native folder picker.'};if($found.Count -eq 1){$found[0]}
-    } 'Actual source-declared native folder picker'
+    $dialog=Observe-OwnedPicker
     $handle=[IntPtr]$dialog.Current.NativeWindowHandle
     Check ([CanvasPackageInput]::SetForegroundWindow($handle) -and [CanvasPackageInput]::ForegroundMatches($handle)) 'Native folder address input targets exact owned picker HWND'
     [CanvasPackageInput]::Chord(0x11,0x4C)
@@ -302,6 +366,16 @@ public static class CanvasPackageInput {
     [StructLayout(LayoutKind.Sequential)] struct POINT { public int x,y; public POINT(int a,int b) {x=a;y=b;} }
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(POINT point);
     public static bool ForegroundMatches(IntPtr expected) { return GetForegroundWindow()==expected; }
+    public static IntPtr ForegroundHandle() { return GetForegroundWindow(); }
+    public static int WindowPid(IntPtr window) { uint pid; GetWindowThreadProcessId(window,out pid); return (int)pid; }
+    [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr window,uint command);
+    public static IntPtr OwnerHandle(IntPtr window) { return GetWindow(window,4); }
+    [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern int GetWindowText(IntPtr window,System.Text.StringBuilder text,int maximum);
+    [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern int GetClassName(IntPtr window,System.Text.StringBuilder text,int maximum);
+    [DllImport("user32.dll")] public static extern bool IsWindow(IntPtr window);
+    public static bool WindowExists(IntPtr window) { return IsWindow(window); }
+    public static bool WindowTitleEquals(IntPtr window,string expected) { var text=new System.Text.StringBuilder(512); GetWindowText(window,text,text.Capacity); return string.Equals(text.ToString(),expected,StringComparison.Ordinal); }
+    public static string WindowClass(IntPtr window) { var text=new System.Text.StringBuilder(256); GetClassName(window,text,text.Capacity); return text.ToString(); }
     public static bool OwnsPoint(int x,int y,int expected) { uint pid; GetWindowThreadProcessId(WindowFromPoint(new POINT(x,y)),out pid); return pid==(uint)expected; }
     public static void Press(ushort key) { Send(new[] { Key(key,0,0),Key(key,0,2) }); }
     public static void Move(int x,int y,int sx,int sy,int sw,int sh) {
@@ -374,11 +448,15 @@ public static class CanvasPackageInput {
     if($mouseDown){$result.mouseReleaseFailure='Own native gesture did not release normally.';$result.status='FAILED_OR_BLOCKED_UNACCEPTED';$exitCode=1}
     if($null -ne $process){
         try{
-            if(-not $process.HasExited){[void]$process.CloseMainWindow();if(-not $process.WaitForExit(5000)){$process.Kill();$result.forcedCleanup=$true;[void]$process.WaitForExit(5000)}}
-            if($process.HasExited){if(-not (Drain-OwnedLogs)){$result.cleanupDrainFailure='Own streams did not complete bounded drain.'}}
+            $result.failureCleanup=[ordered]@{processId=$process.Id;closeRequested=$false;exited=$false;exitCode=$null}
+            if(-not $process.HasExited -and $result.status -ceq 'FAILED_OR_BLOCKED_UNACCEPTED'){
+                try{Cancel-OwnPickerOnFailure}catch{$result.pickerCancellationFailure=$_.Exception.GetType().FullName}
+            }
+            if(-not $process.HasExited){$result.failureCleanup.closeRequested=$process.CloseMainWindow();if(-not $process.WaitForExit(5000)){$process.Kill();$result.forcedCleanup=$true;[void]$process.WaitForExit(5000)}}
+            if($process.HasExited){$result.failureCleanup.exited=$true;$result.failureCleanup.exitCode=$process.ExitCode;if(-not (Drain-OwnedLogs)){$result.cleanupDrainFailure='Own streams did not complete bounded drain.'}}
         }catch{$result.cleanupFailure=$_.Exception.GetType().FullName}finally{$process.Dispose()}
     }
-    if($result.forcedCleanup -or $result.Contains('cleanupDrainFailure') -or $result.Contains('cleanupFailure')){$result.status='FAILED_OR_BLOCKED_UNACCEPTED';$exitCode=1}
+    if($result.forcedCleanup -or $result.Contains('cleanupDrainFailure') -or $result.Contains('cleanupFailure') -or $result.Contains('pickerCancellationFailure')){$result.status='FAILED_OR_BLOCKED_UNACCEPTED';$exitCode=1}
     Write-Result
 }
 exit $exitCode
