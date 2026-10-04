@@ -1,0 +1,332 @@
+{
+  "state": "INDEPENDENT_ORDINARY_CI_SAME_NINE_REPRODUCED_PASS_SCOPED",
+  "role": "B6 independently dispatched existing normal workflow and independently reviewed full recorded bodies; actual executor GitHub Actions",
+  "dispatch": {
+    "authorizedBy": "root exact head-held dispatch instruction",
+    "workflowID": 374608436,
+    "workflowPath": ".github/workflows/team-b-picture-browser.yml",
+    "HTTPStatus": 204,
+    "requestedRef": "team-b/astra-browser-validation-20261003",
+    "requestedSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "resolvedSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "UTC": "2026-10-04T14:02:06Z",
+    "run": 37207768958,
+    "attempt": 1,
+    "event": "workflow_dispatch",
+    "conclusion": "success",
+    "url": "https://github.com/CroakyJake12/9to1/actions/runs/37207768958"
+  },
+  "APIArtifacts": [
+    {
+      "id": 11305368392,
+      "name": "team-b-picture-browser-nine-22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "sizeBytes": 28649413,
+      "digest": "sha256:fc32f0ff41d6cb1ccefb73ad81ccc8f9ffcab9224932346a9759571e397d49a9"
+    },
+    {
+      "id": 11305119116,
+      "name": "team-b-picture-browser-publisher-22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "sizeBytes": 1472647,
+      "digest": "sha256:1a9d726839f251aa0acc303063acfd0b782b4896a169e273615b25963ca53203"
+    }
+  ],
+  "checkedSummary": {
+    "path": "/tmp/team-b-b6-picture-browser22d-independent-ci-review01/checked-summary.json",
+    "sha256": "0e8a6842fc5e6a23b66a90b0698693ca3790ca07c634550d7d6050d279d39274",
+    "bytes": 16276
+  },
+  "archives": [
+    {
+      "archive": "/workspace/attachments/2b8503b1-e43e-47ea-8893-27bdc28c595b/picture-browser-b6-independent-22d-nine.zip",
+      "sha256": "fc32f0ff41d6cb1ccefb73ad81ccc8f9ffcab9224932346a9759571e397d49a9",
+      "members": 15,
+      "bytes": 28649413
+    },
+    {
+      "archive": "/workspace/attachments/d6ef8d88-2246-49e6-919b-7e17bbab0492/picture-b6-independent-22d-publisher.zip",
+      "sha256": "1a9d726839f251aa0acc303063acfd0b782b4896a169e273615b25963ca53203",
+      "members": 27,
+      "bytes": 1472647
+    }
+  ],
+  "counts": {
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "allNineActualOutcomes": {
+    "create-real-png-local-document": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "43412d1f-8b70-4407-a929-db3631757195",
+        "revision": 0,
+        "realNativeImage": {
+          "automationId": null,
+          "name": "Canonical Picture raster preview",
+          "className": "Image",
+          "controlType": "Image",
+          "bounds": {
+            "x": 203,
+            "y": 265,
+            "width": 693.3333333333334,
+            "height": 520
+          }
+        },
+        "canonical": {
+          "documentId": "43412d1f-8b70-4407-a929-db3631757195",
+          "schemaVersion": 1,
+          "displayName": "10ab39289ae544bda0bb5ec81913c4cf",
+          "fileId": null,
+          "sourcePath": "/tmp/9to1-picture-local/sources/10ab39289ae544bda0bb5ec81913c4cf.png",
+          "sourceRevision": "A17E304D0A333065202CF77C656D7BC86ABDD37237B407A0A5CB870D33870297",
+          "canvasWidth": 8,
+          "canvasHeight": 6,
+          "operations": [],
+          "revision": 0
+        }
+      }
+    },
+    "canonical-crop": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "43412d1f-8b70-4407-a929-db3631757195",
+        "revision": 1,
+        "crop": {
+          "type": "crop",
+          "x": 1,
+          "y": 2,
+          "width": 5,
+          "height": 3
+        }
+      }
+    },
+    "canonical-undo-redo": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "43412d1f-8b70-4407-a929-db3631757195",
+        "undoRevision": 2,
+        "redoRevision": 3
+      }
+    },
+    "clean-save-close": {
+      "state": "PASS",
+      "observed": {
+        "savedRevision": 3,
+        "actualClosed": true,
+        "packageUnchanged": true
+      }
+    },
+    "reopen-real-local-row": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "43412d1f-8b70-4407-a929-db3631757195",
+        "revision": 3,
+        "sameOriginalSource": true,
+        "realNativeImage": {
+          "automationId": null,
+          "name": "Canonical Picture raster preview",
+          "className": "Image",
+          "controlType": "Image",
+          "bounds": {
+            "x": 170,
+            "y": 265,
+            "width": 760,
+            "height": 456
+          }
+        }
+      }
+    },
+    "real-png-download-exact-pixels": {
+      "state": "PASS",
+      "observed": {
+        "pixelsChecked": 15,
+        "rgbaBytes": 60,
+        "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+        "actualPngSHA256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+        "canonicalPackageUnchanged": true
+      }
+    },
+    "clean-browser-process-restart": {
+      "state": "PASS",
+      "observed": {
+        "firstPID": 11422,
+        "secondPID": 11529,
+        "sameCanonicalID": "43412d1f-8b70-4407-a929-db3631757195",
+        "sameRevision": 3,
+        "packageByteObjectEquality": true,
+        "qualification": "Deliberately clean blank navigation covers controlled process restart; no automatic tab restoration/BFCache claim"
+      }
+    },
+    "real-presentation-and-pending-input-refusal": {
+      "state": "PASS",
+      "observed": {
+        "refusedDeepLinks": [
+          "",
+          "unsupported"
+        ],
+        "pendingInputRetainedBeforeExplicitRestoration": true,
+        "sameCanonicalRevision": 3
+      }
+    },
+    "two-tab-cas-dirty-close-and-explicit-reload": {
+      "state": "PASS",
+      "observed": {
+        "winnerRevision": 4,
+        "winnerCanvas": [
+          6,
+          3
+        ],
+        "loserRevision": 4,
+        "retainedLoserCanvasBeforeConsent": [
+          3,
+          5
+        ],
+        "actualBothStoresUnchangedOnConflict": true,
+        "failedCloseRetainedDirty": true,
+        "explicitBrowserDiscardReloadObserved": true,
+        "inAppConflictMerge": "NOT_RUN/not implemented by this slice",
+        "quotaAndTransactionAbort": "NOT_RUN/separate genuine calibration and two-store invariance gates required"
+      }
+    }
+  },
+  "criterionMappingReusedExact": {
+    "firstRecordedReview": "/tmp/team-b-b6-picture-browser22d-recorded-review01/review.json",
+    "sha256": "c5a7409d7b3d8daed19784962900f6b9b1ab4665968050969b8617076895f644",
+    "allNineNamesSame": true,
+    "actualRunnerAndPNGOracleGitSHA": true
+  },
+  "criticalActual": {
+    "PNG": {
+      "fixtureChunks": [
+        "IHDR",
+        "iTXt",
+        "tEXt",
+        "tEXt",
+        "tEXt",
+        "sRGB",
+        "IDAT",
+        "IEND"
+      ],
+      "exportChunks": [
+        "IHDR",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ],
+      "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+      "exportSHA256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+      "pixels": 15,
+      "rgbaBytes": 60,
+      "exactCrop": true
+    },
+    "readonlyTwoStoreObservations": 19,
+    "revisions": [
+      0,
+      0,
+      1,
+      2,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      4,
+      4,
+      4,
+      4
+    ],
+    "CASWinnerFourObservationsEqual": true,
+    "controlledCleanRestart": [
+      {
+        "number": 1,
+        "initialUrls": [
+          "about:blank"
+        ],
+        "browserPID": 11422,
+        "browserVersion": "151.0.7922.34"
+      },
+      {
+        "number": 2,
+        "initialUrls": [
+          "about:blank"
+        ],
+        "browserPID": 11529,
+        "browserVersion": "151.0.7922.34"
+      }
+    ],
+    "normalClosedContexts": [
+      {
+        "number": 1,
+        "browserPID": 11422,
+        "contextCloseResolved": true
+      },
+      {
+        "number": 2,
+        "browserPID": 11529,
+        "contextCloseResolved": true
+      }
+    ],
+    "singleExplicitConsentDialog": [
+      {
+        "type": "beforeunload",
+        "controlledExplicitDiscard": true,
+        "page": "http://127.0.0.1:18761/#/app.picture?entityType=PictureDocument&entityId=43412d1f-8b70-4407-a929-db3631757195"
+      }
+    ]
+  },
+  "custody": {
+    "outerZIPMembersCRCAndFullSHA": 42,
+    "traceMembersCRCAndFullSHA": 252,
+    "allPublisherSelected4783GitBodies": true,
+    "allPublisherBeforeAfterFinalRowsAndBytesEqual": true,
+    "normalEOFCommandFamilies": 26,
+    "recordedBirthsGone": 149,
+    "allSignalsEmptyFinalECHILD": true,
+    "sourceManifest285Stable": true,
+    "candidate": {
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "manifestSHA256": "c9183b5ed6ed86405f85dbfe5f446da86d07f97d834ed87abf0d8ed67ec11d9a",
+      "sourceBeforeSHA256": "82923f28f18e2418b89ff7bafcd2ddae2fbc41b99b423aeee67fde5df38fa9b0",
+      "sourceAfterSHA256": "82923f28f18e2418b89ff7bafcd2ddae2fbc41b99b423aeee67fde5df38fa9b0",
+      "assets": 285,
+      "assetBytes": 58421138
+    },
+    "zeroDiagnostics": {
+      "counts": {},
+      "samples": [],
+      "maximumSamples": 64
+    },
+    "integrity": {
+      "state": "PASS"
+    },
+    "contextAndServerClosedAndPortRebind": true,
+    "networkActualRequests": 348,
+    "networkRehashedResponseBodies": 296,
+    "networkMissingResponseBodies": 52,
+    "observedAssetNames": 87
+  },
+  "qualifications": [
+    "Scope nine concrete criteria; full156 Picture paragraphs are not all accepted.",
+    "No full assistive technology, pointer/touch/IME/hardware or provider/private actor acceptance. Native Image peer bounds do not prove on-screen pixel raster.",
+    "Restart is deliberately clean controlled process restart, not automatic restoration/BFCache.",
+    "Both-store equality is complete JSON row object equality; no raw IDB disk-file byte equivalence claim.",
+    "No quota/transaction-abort, in-app conflict merge or untested export/operation acceptance.",
+    "All285 manifest rows unchanged; full public bundle bodies are not in downloaded diagnostic ZIP. Only296 trace response bodies covering87 distinct manifest assets were actually rehashed;52 trace responses had no body reference.",
+    "Recorded profile/font output inventory is attestation where bodies are not uploaded.",
+    "Source4783 is publisher-selected tracked subset, not exhaustive evaluated build closure; every selected Git body and immutable tree identity independently matched.",
+    "Build command exit0 is recorded; no invented zero-warning claim.",
+    "Separate native15 cohort14PASS1rasterFAIL remains separate and unresolved; browser9 does not upgrade it.",
+    "Historical local resource holds and other failures remain preserved.",
+    "This fresh independent run is separate from first run37206507446; exact source and receipt match, public ZIP whole hashes differ between generated archives and are not conflated.",
+    "Hosted workflow runs ordinary source build/publish plus real browser cases; no local SDK/browser execution, source alteration, downloaded profile extraction or new runner.",
+    "Source-before/after subset equals first run; standalone private provider/AT/full Picture acceptance remains outside these nine criteria."
+  ]
+}

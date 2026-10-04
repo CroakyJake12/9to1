@@ -1,0 +1,1323 @@
+{
+  "recordedUTC": "2026-10-04T14:24:03.270967+00:00",
+  "reviewer": "B4 primary actual diagnostic/source/TRX review (fixture author, independent B6 review remains next)",
+  "verdict": "FOUR_ACTUAL_ORIGINAL_OWNER_NATIVE_BOUNDARY_CASES_PASS_NO_BROWSER_HOST_AUTHORITY_ACCEPTANCE",
+  "github": {
+    "run": 37208598089,
+    "job": 111454935265,
+    "runURL": "https://github.com/CroakyJake12/9to1/actions/runs/37208598089",
+    "jobConclusion": "success",
+    "artifactID": 11305763351,
+    "artifactGitHubDigest": "sha256:e302ffc177462af86d3edf608d6730408206e2230869756cf80afde5d509d9f4",
+    "sourceCommit": "23eb00d488de2b519b722f8817dc3849bb2c8a93"
+  },
+  "artifact": {
+    "path": "/workspace/attachments/317fa9cb-4c93-4627-8da3-248315dea936/math-native-four-23eb00d4.zip",
+    "bytes": 374993,
+    "sha256": "e302ffc177462af86d3edf608d6730408206e2230869756cf80afde5d509d9f4",
+    "members": 20,
+    "allFullBodySHAAndCRCRead": true,
+    "inventory": [
+      {
+        "path": "build.log",
+        "bytes": 6362,
+        "sha256": "442681847e89ec47cdf92d5fd42f03c63c373469e6dfb12f713d9c95e46cc106",
+        "crc32": "550629ea"
+      },
+      {
+        "path": "commands.json",
+        "bytes": 12248,
+        "sha256": "0fdc3ebfea14835ad722b0f510007a2e256b01c9489b98b62c33e7f54df21eb8",
+        "crc32": "ae673495"
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2968,
+        "sha256": "6fba493a35774445fcd18e316498134ef3aec18c26dab456c7e740e9e2206072",
+        "crc32": "dc30ab73"
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+        "crc32": "c22d2381"
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "sha256": "79558800b09e0a38d1193d9778b950fd8d389645c04e79c4a4796a891c8c072b",
+        "crc32": "86332f66"
+      },
+      {
+        "path": "native-submodule-pins.log",
+        "bytes": 202,
+        "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+        "crc32": "f1749c30"
+      },
+      {
+        "path": "reported-emitted-runtime-after.json",
+        "bytes": 43245,
+        "sha256": "69cc518823cb3e491f39f1fcace9329580a322b043d76dfd0d05def8cc2ac56b",
+        "crc32": "b9754598"
+      },
+      {
+        "path": "reported-emitted-runtime.json",
+        "bytes": 43245,
+        "sha256": "69cc518823cb3e491f39f1fcace9329580a322b043d76dfd0d05def8cc2ac56b",
+        "crc32": "b9754598"
+      },
+      {
+        "path": "restore.log",
+        "bytes": 5570,
+        "sha256": "6aa4f04c2a1d22b595437f869e7d95e7df5babd13e5b50d034db1788350d7217",
+        "crc32": "0407a93e"
+      },
+      {
+        "path": "result.json",
+        "bytes": 7027,
+        "sha256": "dc93a956f0ec8627a7e0bace611ce11a4ba1a4c9e5b156f8fe405170ea6b1903",
+        "crc32": "858e1285"
+      },
+      {
+        "path": "source-after.json",
+        "bytes": 13515,
+        "sha256": "df43322d8ebc1e4301c31d462e498e05ae5e7d8f9a6dd11c87e1417b677a541c",
+        "crc32": "e442b74b"
+      },
+      {
+        "path": "source-before.json",
+        "bytes": 13515,
+        "sha256": "df43322d8ebc1e4301c31d462e498e05ae5e7d8f9a6dd11c87e1417b677a541c",
+        "crc32": "e442b74b"
+      },
+      {
+        "path": "source-tree-pins.log",
+        "bytes": 1299751,
+        "sha256": "133ef9af3296cb04ae5e064b2231b3944a5f8e550986ee2eed54618e41fe093b",
+        "crc32": "7e2850bf"
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 555,
+        "sha256": "1a719ef6fde7a61b7b31cb3c6192770631f78938cf50f8661dcdee3df52ed503",
+        "crc32": "c0913319"
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 591,
+        "sha256": "f1598d114c905efa65c7273b55fb4aab6d186b502d1fd73f547852d61d5653bc",
+        "crc32": "14bf7178"
+      },
+      {
+        "path": "test-results/math-owner-input-geometry.trx",
+        "bytes": 8395,
+        "sha256": "272e11f1ec001ec678ca7b39d9f7a857c4ce535e92d6a647b53dbe04bb3fe556",
+        "crc32": "01950c50"
+      },
+      {
+        "path": "test.log",
+        "bytes": 497,
+        "sha256": "d4391841f84125a407484718c58826b00925b451e835e1957e27fe4cde75037e",
+        "crc32": "f010b510"
+      },
+      {
+        "path": "trx-summary.json",
+        "bytes": 3727,
+        "sha256": "e28a2440baa8f419154c2354554b5412f5a7e54d12ef14498bbe06e90410d899",
+        "crc32": "9b7cf128"
+      }
+    ]
+  },
+  "sourceCustody": {
+    "wholeGitLsTreeExact": true,
+    "checkoutCleanBeforeAfter": true,
+    "selectedBodies": 73,
+    "beforeAfterLedgerExact": true,
+    "all73GitSourceBodiesSHAAndSizeChecked": true,
+    "fixtureByteExactReviewed02": true,
+    "projectDriverWorkflowByteExactAdopted03": true,
+    "commandsEngine": "Exact maintained a57 imported, not copied or patched",
+    "sourceRows": [
+      {
+        "path": "9to1 Workspace/Directory.Build.props",
+        "bytes": 781,
+        "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+        "gitBlobSHA1": "76a5b6e697b64fec33efc1a7319d2d723163de83"
+      },
+      {
+        "path": "9to1 Workspace/Directory.Build.targets",
+        "bytes": 262,
+        "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374",
+        "gitBlobSHA1": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc"
+      },
+      {
+        "path": "9to1 Workspace/Directory.Packages.props",
+        "bytes": 2581,
+        "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
+        "gitBlobSHA1": "10c3be91da5507a7e1d945561ec11f2264c12c8b"
+      },
+      {
+        "path": "9to1 Workspace/Forms/CUI/FormNativePreview.cs",
+        "bytes": 15196,
+        "sha256": "1ebe93993396a46c32516bd4ee88bad7d86e6a5243e22849748d17c6661eaf2f",
+        "gitBlobSHA1": "c8c1c3c85fadd25763b0a8dae04bbceb79c00824"
+      },
+      {
+        "path": "9to1 Workspace/Forms/CUI/FormNativePublicationValidator.cs",
+        "bytes": 2074,
+        "sha256": "a0f4e8f8dff191abc0429fc2c8fdf011268682efad2e3adaaf7aa6709a011505",
+        "gitBlobSHA1": "4d7ac95cfdbf9ee3cde0862e38c33a6dc12b6150"
+      },
+      {
+        "path": "9to1 Workspace/Forms/CUI/FormNativeResponseSurface.cs",
+        "bytes": 14028,
+        "sha256": "d5cdbc0700854b094b7012dcf5df945f34c4cdb24d7243be7a21a50aba8dd195",
+        "gitBlobSHA1": "a01b96e4d70fd1c7805c78cfb4a69c697726dcc2"
+      },
+      {
+        "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+        "bytes": 1745,
+        "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8",
+        "gitBlobSHA1": "5253f562466c16ec93933e620789a15d554a6207"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/Controls/HomeApprovalCuiSurface.cs",
+        "bytes": 16581,
+        "sha256": "0e07fd3c032e13406fbd03b8100ede8b28d54b298d629a940e44966f66e796e6",
+        "gitBlobSHA1": "2b71b0df6d3f72b6a4519c5c604811354251de9d"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerBindings.cs",
+        "bytes": 14938,
+        "sha256": "24865e7874373fa6ed706ef0625b9983512615a248b5b3883d8ecab0b9790e57",
+        "gitBlobSHA1": "5f412a4f145d1895f53ce443bafb35f7a179e03f"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerCuiSurface.cs",
+        "bytes": 3118,
+        "sha256": "9f214ca4f92b10037229ad74a89e05a20271efef0ad1cfb5c81ae3ccffadc0ca",
+        "gitBlobSHA1": "a106fc62fb9866331574f62a4b2097181066193e"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/Controls/HomeNotesObjectRenderer.cs",
+        "bytes": 5171,
+        "sha256": "7c93637c9d324acb140c8283ce4277cb6e9d8baf2ea6bdea4ab8701cdd0b77b3",
+        "gitBlobSHA1": "bb4ebbd2a5f575238e03b8b4a60b1210bf8eeb42"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/Controls/HomeProductivityCuiSurface.cs",
+        "bytes": 6990,
+        "sha256": "0b36b3b740bbce6dd4f42968301204088ec802dd451f6646dde8419f836f9711",
+        "gitBlobSHA1": "07266b5d044cd6cec500723995de8a0984c5deb8"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+        "bytes": 1107,
+        "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff",
+        "gitBlobSHA1": "6ffdb4b8863ee938320aa9daf418f9a111a067f7"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/HomeEquationObjectRenderer.cs",
+        "bytes": 6518,
+        "sha256": "43e680ffe1fa60c5292c8da0411110ee701935a152ff6de20e7dce1d8c01e84b",
+        "gitBlobSHA1": "0abba0ec819071900baa839c985f9a67b9ba648f"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/HomeLocalStoreSetupCuiSurface.cs",
+        "bytes": 6422,
+        "sha256": "c9c749ca972ee6ab4d24c62d7209bf63476feeda85576b78931fdf121d33d4b6",
+        "gitBlobSHA1": "f9d33e6592b292ef9cbcae8dbc4fe7b6c34f097d"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/HomeProfileCuiReadiness.cs",
+        "bytes": 3229,
+        "sha256": "27ce7b43117f5a5e2cae8bf738a1eb0326058e4f2f903df0d8bbd687ee61a982",
+        "gitBlobSHA1": "85e46148777ffdfcf084a6abd8683b53c4a5c682"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/HomeResourceCuiReadiness.cs",
+        "bytes": 2709,
+        "sha256": "ab9c93f06075653e46657c7a3335578274c5700c24094841c6a2f01c1a5a965f",
+        "gitBlobSHA1": "f020378aa7976b3c8932e0eba82bcd358950e505"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/HomeVectorObjectRenderer.cs",
+        "bytes": 4336,
+        "sha256": "068af91168cfaf160f5479628e6109589838f489cf4fa0814198bfcfd953049f",
+        "gitBlobSHA1": "c8c3d16fc4492ee87d67a809c6236dd6b5ff96ec"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/HomeApprovals.cui",
+        "bytes": 4199,
+        "sha256": "871c474eab03aef495347f24db4f21621072baf7155e114c278e193f98f18381",
+        "gitBlobSHA1": "9e6865133b8c96a3ad5311210783f5848890ae9f"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/Models.cui",
+        "bytes": 4081,
+        "sha256": "ea306ce8760943eb31ae4e1e5d71f41f828c5764006d7ccb37951f85bdf75697",
+        "gitBlobSHA1": "07d53f8b640624f41dbaf7c073fe14986edb2bad"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-MIT.txt",
+        "bytes": 1087,
+        "sha256": "7c8f476bf7e35d9eaeb986eef4e77e9a71c31ca4f8b98a3b7378e26321ce23e3",
+        "gitBlobSHA1": "82113adfff747e39ea347ca6efff9264b62f74b6"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-upstream-license-declarations.md",
+        "bytes": 4593,
+        "sha256": "7965122970372c7b294c2341a940c9ecba18515ffdafabdf5abb8f149d2d34f4",
+        "gitBlobSHA1": "ac97c864b47cda455275b2bfdc78327943ded277"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Font-copyright-notices.txt",
+        "bytes": 996,
+        "sha256": "f378cfbd5178c319c12f30ac5c2aa070ab6b51655b00e212f4dd2c46c3075f7d",
+        "gitBlobSHA1": "b43d4eaf60cd45a1ea6d350852dae557f0597a57"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/FreeType-FTL.txt",
+        "bytes": 6620,
+        "sha256": "e4b7fdb18fc04b1e0197c41e1ce072cf49b2f5f4a8f5ed26768440d1c957156f",
+        "gitBlobSHA1": "32de4e0213093b4adf472e8cdace5c949d087989"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/GUST-FONT-LICENSE.txt",
+        "bytes": 1456,
+        "sha256": "2bd69affc3da00715116f713f57eab9707e96daf3562ad0215987b15b9c16f73",
+        "gitBlobSHA1": "60b55002ee60701a43c2523112770b400a2f0c55"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/ICU60-LICENSE.txt",
+        "bytes": 19442,
+        "sha256": "24c771ce37201a3ab604852e47d10d21595d0493269dd6c8a5e567e998e18c00",
+        "gitBlobSHA1": "c84076cd072b806782999d6f4672df93cac1d3c6"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LPPL-1.3c.tex",
+        "bytes": 23386,
+        "sha256": "c3c7c49085d4c8d722ca98937b2378619b45dd0b5bd1456bcd61be95d8b954f1",
+        "gitBlobSHA1": "c2a54c1532d906bcef1746490ca8a647fe7d61e7"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-MANIFEST.txt",
+        "bytes": 2186,
+        "sha256": "1daa729f7922c42ba5ce8da7dfe4ecdc9e5c878ad86217fd6f32c4671505b007",
+        "gitBlobSHA1": "c84e1e5a55f3b3d08dc16fc30bfa785bc438315e"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-README.txt",
+        "bytes": 4588,
+        "sha256": "e6fdd5fb44b656146fa988d191f58901c09a347d3f4fbaa3b45b24a6ad7ec30b",
+        "gitBlobSHA1": "30c8e602ee8087ce617fa43e0a540aad3913f053"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/NOTICE.txt",
+        "bytes": 1657,
+        "sha256": "e71767fe62fdad5c3fcb0b9df2bfcf577279f2f2198c7bee80c6cdbb979531fd",
+        "gitBlobSHA1": "788939f1f4a44f240f71b88747d56d7005ffe905"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/SIL-Open-Font-License-1.1.md",
+        "bytes": 4566,
+        "sha256": "d4274903cbedb0566531e9856e5353991818e84ff17b747d7d41cbdd4e736ff5",
+        "gitBlobSHA1": "42b160b2cabbce5bb1a4c668eb79251d3508df5a"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-Apache-2.0.txt",
+        "bytes": 11361,
+        "sha256": "a22a0c495566ce9b09b25aa3feab8d54a5b12c6a26eb3dcb5324ead9a586da66",
+        "gitBlobSHA1": "6fc753f052612a992ee59f6d13f8e0e393bc45ae"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-MIT.txt",
+        "bytes": 1185,
+        "sha256": "c72384e3fe4818ff9ee516f9e5d2ba579c6299856fde53d9fa37384df4343d4a",
+        "gitBlobSHA1": "cfb826a86d29519df0c4d74c3040deef42764f09"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-attributions.md",
+        "bytes": 2323,
+        "sha256": "e2449e386e85f43cd5ad20869d23653315d656ac0ffb8630143308a83bd79522",
+        "gitBlobSHA1": "78fe36d31fbf8618ca8ac5dd6c80dae359fbd5fe"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-source-headers.txt",
+        "bytes": 23603,
+        "sha256": "f90dee3e11f6b139874f09f792eba0c389107a6d40db9ef6876cdeadeda55faf",
+        "gitBlobSHA1": "9da591332f7b610e400e3707bed51058ab7a122f"
+      },
+      {
+        "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/provenance.json",
+        "bytes": 3794,
+        "sha256": "7231dcead098b1bdc4e57c3e39ac4d8b11ec34d0251e9ac62dccc4f9e86d00eb",
+        "gitBlobSHA1": "b709e47d05f18b1731f3d396553761a31b1a1d7f"
+      },
+      {
+        "path": "9to1 Workspace/Home/Source/Home/Core/HomeEquationObjects.cs",
+        "bytes": 8684,
+        "sha256": "33605774b9e004fc6202d1bf92fcd1e6262503f5243d148e9a1c0c484917d3d6",
+        "gitBlobSHA1": "aa2cbde52146b3244af94fa152b469693712954e"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+        "bytes": 1993,
+        "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8",
+        "gitBlobSHA1": "3d06cea5f9131680ed447fb423feebeba5f477e3"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+        "bytes": 700,
+        "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d",
+        "gitBlobSHA1": "cc85c272caa8e95166986e1294cd827f7527e354"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+        "bytes": 2955,
+        "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d",
+        "gitBlobSHA1": "36b36dc1c7125e19730d6af26bc37855c7dc20d1"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+        "bytes": 6875,
+        "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67",
+        "gitBlobSHA1": "083b6d7e7b0a286deefabf0666777db73d004c75"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+        "bytes": 985,
+        "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b",
+        "gitBlobSHA1": "4a5a4faf91adf7d8411cc48b154abe60c3d4891b"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormProject.cs",
+        "bytes": 16248,
+        "sha256": "8fc5a2d3ceb5c36e948ce6daae7fb19e583364267509e884220848ed4973ad6e",
+        "gitBlobSHA1": "bd572d90e8e3699aac32e0edc27758ecf13e5aa8"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+        "bytes": 375,
+        "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121",
+        "gitBlobSHA1": "a6996aa2c75031e77bf1c4d60861ff365ed1e386"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+        "bytes": 2442,
+        "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec",
+        "gitBlobSHA1": "feb448bd1efb310a3c1b13a6080ec1b3d682e045"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+        "bytes": 713,
+        "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad",
+        "gitBlobSHA1": "d2dc5869041bb679ec660c8779d40e37f0357f4c"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+        "bytes": 2387,
+        "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54",
+        "gitBlobSHA1": "447b4f5a3a7fa7bf6baabd25a5b9cfdee4c51385"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+        "bytes": 1569,
+        "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c",
+        "gitBlobSHA1": "d859f7dcef2ff9d83a1025a0e497f1ae7abc83e3"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+        "bytes": 14310,
+        "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162",
+        "gitBlobSHA1": "87785d51f086935fe1dbdec0490347c7d2534106"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+        "bytes": 1943,
+        "sha256": "1924346384b8943949b06c416be834f5f580a6bb1aebe25f12482e7d3178fb28",
+        "gitBlobSHA1": "e95474e1f7a0e8ebbfee0833c8efe56f655333c1"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+        "bytes": 4260,
+        "sha256": "a4ecc966757fe6d99fe0e2decd3cc96c5c75290d853efeb3eeddbaa23c78d7b1",
+        "gitBlobSHA1": "0e9e62652249a366082433a1b0390e473529637b"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+        "bytes": 8178,
+        "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362",
+        "gitBlobSHA1": "23907c9fb325b582408e59b191a70c3ff6e14e73"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+        "bytes": 9274,
+        "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f",
+        "gitBlobSHA1": "9f7fedf9835b87c8a869109360fa24de7f3cd3ef"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/LICENSE.txt",
+        "bytes": 1096,
+        "sha256": "d32218dd6fcc1e749bcbe2c193cb5703863724e58d1693aa9f278edefee69f7b",
+        "gitBlobSHA1": "cb177033a11de9529081995dad49bc207ec6b413"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/NOTICES.txt",
+        "bytes": 20768,
+        "sha256": "35d4c7707199a9c30ae29879cda7d961ecbd9b5b9f22039701717f9040ee064b",
+        "gitBlobSHA1": "c3e3aad4003dd43ede60171e9aa63f5ee0c2debf"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+        "bytes": 8238,
+        "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d",
+        "gitBlobSHA1": "e24c61c11dfe39165bdc0868f15371557a789203"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs",
+        "bytes": 309,
+        "sha256": "476ebbfbe45b12c6e9becf8bc5a79ad2fe6d419638dc8d660a97b6df58429a87",
+        "gitBlobSHA1": "d7e1603b85b00dc49fd9ac66d1128c06e229dfec"
+      },
+      {
+        "path": "NuGet.Config",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e",
+        "gitBlobSHA1": "24489cbd21c319685f8e7d5caee66965cd4a9e57"
+      },
+      {
+        "path": "apps/Web/Mathematics/Tests/MathOwner.InputGeometry.Tests.csproj",
+        "bytes": 3044,
+        "sha256": "39d785fdd669ee013ad8ad82aa48e251f3d2693305e23eb4e17dd00d429eb71c",
+        "gitBlobSHA1": "ba926d0cd37c22634ca11ee5c6a4892f2baf1f37"
+      },
+      {
+        "path": "apps/Web/Mathematics/Tests/MathOwnerInputGeometryTests.cs",
+        "bytes": 12985,
+        "sha256": "7da36b8c568654a539aea18d4fff3f1b0d9fed13bb61ac52d313617b91f386bb",
+        "gitBlobSHA1": "9deb7d600324cce4f9da1091017fac2cf55d3490"
+      },
+      {
+        "path": "apps/Web/NineToOne.Web.csproj",
+        "bytes": 4978,
+        "sha256": "0152d45e23a0ef467fe32ab1be1c9cfb0772b628ad69afec426746ac364e0803",
+        "gitBlobSHA1": "7740a66aa1e492bdb60009148df78c8c1ddae942"
+      },
+      {
+        "path": "apps/Web/Productivity/Mathematics/OWNER-CONTRACT-REQUEST.json",
+        "bytes": 9920,
+        "sha256": "a95815367fd6f9a8e41dc5049770bfef57f17a3744bd128451bfcb9cb828cb0b",
+        "gitBlobSHA1": "5e7538926095f64e7495a9d9a718d8d43779e46b"
+      },
+      {
+        "path": "apps/Web/Productivity/Mathematics/README.md",
+        "bytes": 1427,
+        "sha256": "7cca1108c6d0a5b0f3300eefd67a44bf49531695ef45fbec6e38c9dc29614748",
+        "gitBlobSHA1": "8c32fa188f05259c1a61c527f3721f0ff28fcb7b"
+      },
+      {
+        "path": "apps/Web/Productivity/Mathematics/Tests/NativePixelHost.cs",
+        "bytes": 832,
+        "sha256": "9073adea34ac3661f6d146d35e9771bbafa46dd041b89315ee3d23919df1d8c7",
+        "gitBlobSHA1": "ec4e9e03ea372e969698b704c4cb556c04dfcbe4"
+      },
+      {
+        "path": "apps/Web/Productivity/Mathematics/Tests/OwnerMath.Tests.csproj",
+        "bytes": 3369,
+        "sha256": "1b7ab2ae88d9b1cc1429f729e385ae64c174315f2b8c34856c60e63c78d68eaf",
+        "gitBlobSHA1": "16fe158cff7a7e577727d8b48dcdc4bc4a6c949a"
+      },
+      {
+        "path": "apps/Web/Program.cs",
+        "bytes": 3074,
+        "sha256": "68d8bb7f09be106303b8df9001704b8363e20cd7f26b6aee4867ad2f36982efa",
+        "gitBlobSHA1": "11411587f8a03714b0fc57f82c7efe7d9998da5a"
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+        "gitBlobSHA1": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0"
+      },
+      {
+        "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+        "bytes": 6624,
+        "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2",
+        "gitBlobSHA1": "d97b06d21bc8a2db7a997b76112cdfe1e45aad31"
+      },
+      {
+        "path": "framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj",
+        "bytes": 1070,
+        "sha256": "f4ec1368c3f9563d3e6fcad54704dad08249e2f9e38786a4c33950d994549434",
+        "gitBlobSHA1": "188be08475473a5daabd793892396ffcadda7faa"
+      },
+      {
+        "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+        "bytes": 495,
+        "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0",
+        "gitBlobSHA1": "a0b53e0143e96dba6ebc5c9557fa1b91e77d7eb3"
+      },
+      {
+        "path": "framework/CUI/Directory.Packages.props",
+        "bytes": 429,
+        "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22",
+        "gitBlobSHA1": "016ac27619beda53b745721030cc89a9c71da843"
+      },
+      {
+        "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+        "bytes": 1315,
+        "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4",
+        "gitBlobSHA1": "23ff127016cb32a176eeb19b8d576000bf17c814"
+      },
+      {
+        "path": "global.json",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b",
+        "gitBlobSHA1": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89"
+      }
+    ]
+  },
+  "sdk": "10.0.401",
+  "compiler": {
+    "exit": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "evaluatedActualTarget": {
+    "TargetPath": "/home/runner/work/_temp/math-native-four/artifacts/bin/MathOwner.InputGeometry.Tests/release_linux-x64/NineToOne.Math.Owner.InputGeometry.Tests.dll",
+    "TargetDir": "/home/runner/work/_temp/math-native-four/artifacts/bin/MathOwner.InputGeometry.Tests/release_linux-x64/",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "UseAppHost": "true",
+    "IsTestProject": "true",
+    "AvaloniaBuildTasksLocation": "/home/runner/work/_temp/math-native-four/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+  },
+  "actualTaskReportedIdentity": {
+    "bytes": 754176,
+    "sha256": "dd1f93a07fcb9ea6d2d9de270f8ca8f645cfdbb5096b011d887330c7647a9778"
+  },
+  "actualRuntimeReportedMetadata": {
+    "rows": 263,
+    "beforeAfterFullIdentityExact": true,
+    "entryApphostDLLPDBDepsRuntimeConfigPresent": true,
+    "originalScottPlotThreeNoticeBodiesCopyMetadataExact": true,
+    "bodiesUploaded": false,
+    "taskBodyUploaded": false,
+    "qualification": "Actual generated package/native/owner binaries are NOT in downloaded diagnostics; hashes prove reported identity, not portable full binary custody"
+  },
+  "trx": {
+    "bytes": 8395,
+    "sha256": "272e11f1ec001ec678ca7b39d9f7a857c4ce535e92d6a647b53dbe04bb3fe556",
+    "summaryOutcome": "Completed",
+    "counters": {
+      "total": "4",
+      "executed": "4",
+      "passed": "4",
+      "failed": "0",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    },
+    "definitions": [
+      {
+        "id": "fa178c5a-c5eb-c0c4-3579-c35090c699ca",
+        "name": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Native_keyboard_coordinates_emit_same_typed_response_and_rejected_decimal_retains_previous_response",
+        "className": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests",
+        "method": "Native_keyboard_coordinates_emit_same_typed_response_and_rejected_decimal_retains_previous_response"
+      },
+      {
+        "id": "94e6aa76-c9b7-2005-47a2-c8429e3c765a",
+        "name": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Failed_native_precision_projection_preserves_existing_pixels_and_exact_canonical_source",
+        "className": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests",
+        "method": "Failed_native_precision_projection_preserves_existing_pixels_and_exact_canonical_source"
+      },
+      {
+        "id": "8e0b014d-55d0-6ae9-8cb9-7a32a655c442",
+        "name": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Actual_keyboard_equation_error_retains_last_valid_pixels_identity_and_source_until_restore",
+        "className": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests",
+        "method": "Actual_keyboard_equation_error_retains_last_valid_pixels_identity_and_source_until_restore"
+      },
+      {
+        "id": "23ee00d3-651b-d7cc-af71-3a50dcb9ccd2",
+        "name": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Outside_plot_and_right_pointer_release_preserve_graph_before_real_left_click_advances_once",
+        "className": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests",
+        "method": "Outside_plot_and_right_pointer_release_preserve_graph_before_real_left_click_advances_once"
+      }
+    ],
+    "results": [
+      {
+        "testId": "fa178c5a-c5eb-c0c4-3579-c35090c699ca",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Native_keyboard_coordinates_emit_same_typed_response_and_rejected_decimal_retains_previous_response",
+        "outcome": "Passed",
+        "executionId": "b4043c06-8e8a-48fb-a399-337060b35071"
+      },
+      {
+        "testId": "23ee00d3-651b-d7cc-af71-3a50dcb9ccd2",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Outside_plot_and_right_pointer_release_preserve_graph_before_real_left_click_advances_once",
+        "outcome": "Passed",
+        "executionId": "ced8da4c-fa7a-4b74-98f0-5391f559751d"
+      },
+      {
+        "testId": "8e0b014d-55d0-6ae9-8cb9-7a32a655c442",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Actual_keyboard_equation_error_retains_last_valid_pixels_identity_and_source_until_restore",
+        "outcome": "Passed",
+        "executionId": "c044216b-36ed-47f4-a79a-9afc0425533a"
+      },
+      {
+        "testId": "94e6aa76-c9b7-2005-47a2-c8429e3c765a",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Failed_native_precision_projection_preserves_existing_pixels_and_exact_canonical_source",
+        "outcome": "Passed",
+        "executionId": "80a0e409-1aeb-463a-8c5b-2a7a5b639445"
+      }
+    ]
+  },
+  "nativeCounts": {
+    "discovered": 4,
+    "executed": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0
+  },
+  "criteria": {
+    "Actual_keyboard_equation_error_retains_last_valid_pixels_identity_and_source_until_restore": "Real native keyboard/accepted-button invalid equation retains same displayedBitmap/pixels/ID/revision/validsource then restore and genuine acceptedrevision",
+    "Native_keyboard_coordinates_emit_same_typed_response_and_rejected_decimal_retains_previous_response": "Real native coordinate keyboard produces canonicalGraphResponse and rejects overprecision without changing graph/previousresponse",
+    "Outside_plot_and_right_pointer_release_preserve_graph_before_real_left_click_advances_once": "Actual first captured renderedframe and native mouse outside/right releases deny effect; inside left advances same canonicalGraph once",
+    "Failed_native_precision_projection_preserves_existing_pixels_and_exact_canonical_source": "Actual owner grid-budget and decimal-precision typed failures preserve renderedpixels and originaltypedcanonicalsource"
+  },
+  "commandCustody": {
+    "commands": 11,
+    "births": 62,
+    "normalFullEOFAll": true,
+    "normalExit0All": true,
+    "finalECHILDAll": true,
+    "heldBirthsGoneAll": true,
+    "signals": 0,
+    "records": [
+      {
+        "name": "git-head",
+        "argv": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2665,
+            "birth": 3627,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.056,
+        "bytes": 41,
+        "familyClosed": true
+      },
+      {
+        "name": "git-clean-before",
+        "argv": [
+          "git",
+          "diff",
+          "--exit-code",
+          "HEAD",
+          "--"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2666,
+            "birth": 3632,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.065,
+        "bytes": 0,
+        "familyClosed": true
+      },
+      {
+        "name": "source-tree-pins",
+        "argv": [
+          "git",
+          "ls-tree",
+          "-r",
+          "HEAD"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2688,
+            "birth": 3639,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.187,
+        "bytes": 1299751,
+        "familyClosed": true
+      },
+      {
+        "name": "native-submodule-pins",
+        "argv": [
+          "git",
+          "submodule",
+          "status",
+          "--recursive",
+          "--",
+          "framework/CUI/vendor/Avalonia/external/XamlX",
+          "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2690,
+            "birth": 3658,
+            "gone": true
+          },
+          {
+            "pid": 2691,
+            "birth": 3658,
+            "gone": true
+          },
+          {
+            "pid": 2715,
+            "birth": 3660,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.091,
+        "bytes": 202,
+        "familyClosed": true
+      },
+      {
+        "name": "dotnet-version",
+        "argv": [
+          "dotnet",
+          "--version"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2726,
+            "birth": 3668,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 2.587,
+        "bytes": 9,
+        "familyClosed": true
+      },
+      {
+        "name": "dotnet-info",
+        "argv": [
+          "dotnet",
+          "--info"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2734,
+            "birth": 3927,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 1.465,
+        "bytes": 2968,
+        "familyClosed": true
+      },
+      {
+        "name": "restore",
+        "argv": [
+          "dotnet",
+          "restore",
+          "apps/Web/Mathematics/Tests/MathOwner.InputGeometry.Tests.csproj",
+          "--artifacts-path",
+          "/home/runner/work/_temp/math-native-four/artifacts",
+          "-r",
+          "linux-x64",
+          "--configfile",
+          "/home/runner/work/9to1/9to1/NuGet.Config",
+          "--disable-build-servers",
+          "-p:Configuration=Release",
+          "-m:1",
+          "-nodeReuse:false",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/math-native-four/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+          "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2742,
+            "birth": 4073,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 18.219,
+        "bytes": 5570,
+        "familyClosed": true
+      },
+      {
+        "name": "build",
+        "argv": [
+          "dotnet",
+          "build",
+          "apps/Web/Mathematics/Tests/MathOwner.InputGeometry.Tests.csproj",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--artifacts-path",
+          "/home/runner/work/_temp/math-native-four/artifacts",
+          "-r",
+          "linux-x64",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/math-native-four/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+          "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2792,
+            "birth": 5895,
+            "gone": true
+          },
+          {
+            "pid": 2815,
+            "birth": 6285,
+            "gone": true
+          },
+          {
+            "pid": 2850,
+            "birth": 7223,
+            "gone": true
+          },
+          {
+            "pid": 2869,
+            "birth": 7455,
+            "gone": true
+          },
+          {
+            "pid": 2918,
+            "birth": 8717,
+            "gone": true
+          },
+          {
+            "pid": 2937,
+            "birth": 8887,
+            "gone": true
+          },
+          {
+            "pid": 2956,
+            "birth": 9121,
+            "gone": true
+          },
+          {
+            "pid": 2982,
+            "birth": 9463,
+            "gone": true
+          },
+          {
+            "pid": 3000,
+            "birth": 9720,
+            "gone": true
+          },
+          {
+            "pid": 3019,
+            "birth": 10204,
+            "gone": true
+          },
+          {
+            "pid": 3037,
+            "birth": 10316,
+            "gone": true
+          },
+          {
+            "pid": 3056,
+            "birth": 10474,
+            "gone": true
+          },
+          {
+            "pid": 3076,
+            "birth": 10590,
+            "gone": true
+          },
+          {
+            "pid": 3094,
+            "birth": 10724,
+            "gone": true
+          },
+          {
+            "pid": 3112,
+            "birth": 10860,
+            "gone": true
+          },
+          {
+            "pid": 3165,
+            "birth": 13246,
+            "gone": true
+          },
+          {
+            "pid": 3184,
+            "birth": 13467,
+            "gone": true
+          },
+          {
+            "pid": 3234,
+            "birth": 15523,
+            "gone": true
+          },
+          {
+            "pid": 3272,
+            "birth": 15840,
+            "gone": true
+          },
+          {
+            "pid": 3291,
+            "birth": 16010,
+            "gone": true
+          },
+          {
+            "pid": 3311,
+            "birth": 16317,
+            "gone": true
+          },
+          {
+            "pid": 3333,
+            "birth": 16665,
+            "gone": true
+          },
+          {
+            "pid": 3351,
+            "birth": 16854,
+            "gone": true
+          },
+          {
+            "pid": 3374,
+            "birth": 17191,
+            "gone": true
+          },
+          {
+            "pid": 3395,
+            "birth": 17997,
+            "gone": true
+          },
+          {
+            "pid": 3436,
+            "birth": 19218,
+            "gone": true
+          },
+          {
+            "pid": 3456,
+            "birth": 19507,
+            "gone": true
+          },
+          {
+            "pid": 3476,
+            "birth": 19788,
+            "gone": true
+          },
+          {
+            "pid": 3494,
+            "birth": 19990,
+            "gone": true
+          },
+          {
+            "pid": 3510,
+            "birth": 20030,
+            "gone": true
+          },
+          {
+            "pid": 3531,
+            "birth": 20340,
+            "gone": true
+          },
+          {
+            "pid": 3556,
+            "birth": 20598,
+            "gone": true
+          },
+          {
+            "pid": 3576,
+            "birth": 20961,
+            "gone": true
+          },
+          {
+            "pid": 3610,
+            "birth": 21467,
+            "gone": true
+          },
+          {
+            "pid": 3630,
+            "birth": 21800,
+            "gone": true
+          },
+          {
+            "pid": 3648,
+            "birth": 21965,
+            "gone": true
+          },
+          {
+            "pid": 3692,
+            "birth": 22710,
+            "gone": true
+          },
+          {
+            "pid": 3721,
+            "birth": 23276,
+            "gone": true
+          },
+          {
+            "pid": 3739,
+            "birth": 23492,
+            "gone": true
+          },
+          {
+            "pid": 3764,
+            "birth": 23662,
+            "gone": true
+          },
+          {
+            "pid": 3786,
+            "birth": 24360,
+            "gone": true
+          },
+          {
+            "pid": 3805,
+            "birth": 24520,
+            "gone": true
+          },
+          {
+            "pid": 3823,
+            "birth": 24771,
+            "gone": true
+          },
+          {
+            "pid": 3842,
+            "birth": 24962,
+            "gone": true
+          },
+          {
+            "pid": 3860,
+            "birth": 25199,
+            "gone": true
+          },
+          {
+            "pid": 3878,
+            "birth": 25407,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 197.468,
+        "bytes": 6362,
+        "familyClosed": true
+      },
+      {
+        "name": "target-properties",
+        "argv": [
+          "dotnet",
+          "msbuild",
+          "apps/Web/Mathematics/Tests/MathOwner.InputGeometry.Tests.csproj",
+          "-p:Configuration=Release",
+          "-p:RuntimeIdentifier=linux-x64",
+          "-p:UseArtifactsOutput=true",
+          "-p:ArtifactsPath=/home/runner/work/_temp/math-native-four/artifacts",
+          "-nodeReuse:false",
+          "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,UseAppHost,IsTestProject,AvaloniaBuildTasksLocation",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/math-native-four/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+          "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 3899,
+            "birth": 25642,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.613,
+        "bytes": 591,
+        "familyClosed": true
+      },
+      {
+        "name": "test",
+        "argv": [
+          "dotnet",
+          "test",
+          "apps/Web/Mathematics/Tests/MathOwner.InputGeometry.Tests.csproj",
+          "--no-build",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--artifacts-path",
+          "/home/runner/work/_temp/math-native-four/artifacts",
+          "-r",
+          "linux-x64",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false",
+          "--logger",
+          "trx;LogFileName=math-owner-input-geometry.trx",
+          "--results-directory",
+          "/home/runner/work/_temp/math-native-four/diagnostics/test-results",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/math-native-four/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+          "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 3910,
+            "birth": 25712,
+            "gone": true
+          },
+          {
+            "pid": 3925,
+            "birth": 25767,
+            "gone": true
+          },
+          {
+            "pid": 3938,
+            "birth": 25818,
+            "gone": true
+          },
+          {
+            "pid": 3970,
+            "birth": 25874,
+            "gone": true
+          },
+          {
+            "pid": 3982,
+            "birth": 25898,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 4.101,
+        "bytes": 497,
+        "familyClosed": true
+      },
+      {
+        "name": "git-clean-after",
+        "argv": [
+          "git",
+          "diff",
+          "--exit-code",
+          "HEAD",
+          "--"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 4002,
+            "birth": 26132,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.055,
+        "bytes": 0,
+        "familyClosed": true
+      }
+    ]
+  },
+  "limits": [
+    "Four new native purposes only; historical OwnerMath22 remains separate and unchanged.",
+    "Original canonical models/codec/actual CUI/Skia/ScottPlot controls and pixel testhost consumed; no alternate engine/model/parser/renderer.",
+    "No browser renderer/fonts/input/trim parity, Forms embedding, durable host/storage/CAS, actor/ACL or full-platform acceptance.",
+    "No local SDK/GUI/run/module import by reviewer. CI did genuine ordinary source/project/package graph; resource observations are ordinary CI, not local100MiB or transientpeak proof."
+  ],
+  "findings": []
+}

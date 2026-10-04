@@ -1,0 +1,137 @@
+{
+  "state": "RECORDED_ACTUAL_SEVEN_SCOPE_CLEAR_NO_RERUN",
+  "reviewSource": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/sealed-replay-22d-actual-run01/accounts7-actual-raw-review01.json",
+    "bytes": 9953,
+    "sha256": "6b277ab8130b6a61673c849c482e12f65ee927749ad9aab019b0aab54b1ab6fb"
+  },
+  "rawArchive": {
+    "path": "/workspace/attachments/9bf1f8f1-cef2-46ba-9b98-e02b9bbd9aa0/accounts7-22d-replay-diagnostics.zip",
+    "bytes": 32318,
+    "sha256": "0bf5c22d600379281ae551771464c20460599e8bf020eb5c81e881e11e725ef8"
+  },
+  "all26UniqueRawMembersCRCFullSHAAndSizeMatch": true,
+  "all10CurrentSourceBodyHashesMatch": true,
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "driverCommit": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+  "actualCounts": {
+    "discovered": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "notRun": 0
+  },
+  "caseOutcomes": {
+    "actual-unconfigured-native-account-read": {
+      "status": "PASS",
+      "observed": {
+        "actualRenderReady": true,
+        "nullConfiguration": true,
+        "privateDataAbsent": true,
+        "signInUnavailable": true
+      }
+    },
+    "physical-check-truthful-unavailable": {
+      "status": "PASS",
+      "observed": {
+        "physicalNativeCheck": true,
+        "truthfulUnavailable": true,
+        "noPrivateGrant": true
+      }
+    },
+    "native-revoke-immediate-fence": {
+      "status": "PASS",
+      "observed": {
+        "immediateEmpty": true,
+        "immediateGeneration": 2,
+        "staleAccepted": false,
+        "settledEmpty": true
+      }
+    },
+    "retained-stale-native-peer-refused": {
+      "status": "PASS",
+      "observed": {
+        "oldPeerRefusedBeforeAndAfterFreshRoute": true,
+        "newOwnerGeneration": true,
+        "revokedSettingsUnavailable": true,
+        "explicitRootReplacement": true,
+        "noIdentityFabricated": true
+      }
+    },
+    "native-invalidation-fresh-owner-route": {
+      "status": "PASS",
+      "observed": {
+        "actualNativeInvalidationJoined": true,
+        "immediateEmpty": true,
+        "oldPeersRefused": true,
+        "newOwnerGeneration": true,
+        "freshCanonicalSettingsAvailable": true,
+        "noIdentityFabricated": true,
+        "brokerDrainNotClaimed": true
+      }
+    },
+    "terminal-close-true-native-and-JS-release": {
+      "status": "PASS",
+      "observed": {
+        "actualCloseReturnedTrue": true,
+        "nativeAXEmpty": true,
+        "JSProjectionRemoved": true,
+        "stalePeerRefused": true,
+        "terminalRouteCannotReopen": true,
+        "repeatCloseTrue": true
+      }
+    },
+    "exact-assets-runtime-cleanup-integrity": {
+      "status": "PASS",
+      "observed": {
+        "exactCustodyAndCleanup": true
+      }
+    }
+  },
+  "unexpected": {
+    "pageError": 0,
+    "consoleError": 0,
+    "requestFailed": 0,
+    "nonClientRequests": 0
+  },
+  "cleanupFailures": [],
+  "sealBeforeAfterEqual": true,
+  "port5096RebindClosed": true,
+  "all15CommandsNormalZeroExitFullBirthGoneEOFClosedECHILDZeroSignals": true,
+  "browserFamily": {
+    "state": "CLOSED",
+    "runnerExitCode": 0,
+    "allOwnedKernelIdentitiesExited": true,
+    "allOwnedBirthsDisappeared": true,
+    "finalPinsUnchanged": true,
+    "uniqueBoundTopBrowserLauncher": true,
+    "kernelOwnChildrenEmpty": true,
+    "custodyClean": true,
+    "forcedCleanup": false
+  },
+  "heldBrowserIdentities": 11,
+  "originalTransportMap": {
+    "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "originalReceiptSha256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+    "originalSealSha256": "1b1b92c927ab4949cc9f42805db2a243f494af0248f9a0daae42da9f9f6b6f5a",
+    "originalInnerZipSha256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+    "localReceiptSha256": "5e0a0c65df9f4e732b676b9e543659875619052e708149874a542a0af1ec7095",
+    "onlySemanticChangedField": "publishRoot",
+    "originalRoot": "/home/runner/work/_temp/team-b-web-publication/sdk-publish/wwwroot",
+    "localRoot": "/home/runner/work/_temp/team-b-sealed-22d/accounts7/wwwroot"
+  },
+  "qualification": [
+    "Null public configuration with controlled actual native exports and genuine physical Check on actual sealed22d/native WASM. No issuer/profile/session/token/realBFCache/AT/provider acceptance; providerAccepted false.",
+    "Original raw seal/innerZIP/full285 inventory verification observed in actual reviewed driver logs/metadata and exact source, but full public35MB inner bundle bodies not locally downloaded/read by this peer. Ten selected source body hashes rechecked current.",
+    "Seven complete criteria include actual true-awaited native statuscaption, oldpeer denial across revocation/newowner generation and terminalClose release; no historical caption/8041/old8ff procedure promoted. This is recorded evidence review, not fresh independent execution.",
+    "One profile-bound top launcher and11 held identities normalclosed/exit0/no forced signals/ECHILD. No fixture8799/8798 custody claim."
+  ],
+  "executionByReviewer": {
+    "SDK": false,
+    "GUI": false,
+    "provider": false,
+    "imports": false,
+    "rerun": false
+  },
+  "findings": []
+}

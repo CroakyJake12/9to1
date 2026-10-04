@@ -1,0 +1,465 @@
+{
+  "scope": "Independent recorded-artifact fullread only; no native/browser replay. Approved synthetic PNG/local paths only. Original22d14/15 failure remains unchanged.",
+  "runId": 37208074600,
+  "commit": "b8cc9531fe9de12307402d2581230ed699af0554",
+  "artifactId": 11305204833,
+  "archive": {
+    "path": "/workspace/attachments/00d1c72f-962d-47f2-9d19-695bb51b2a0e/picture-b8-current.zip",
+    "bytes": 352766,
+    "sha256": "6ab9d9be4dce854718c0cc45b70e31b9726612bc353e01a72862a6abc20ade6e"
+  },
+  "members": [
+    {
+      "path": "actual-native-binary-pins.json",
+      "bytes": 130652,
+      "sha256": "ffd8214721311c33a874adf0948a8bf69c98a8fe911cd46e007208d824c50bc7",
+      "zipCRCverified": true
+    },
+    {
+      "path": "commands.json",
+      "bytes": 11271,
+      "sha256": "2926353c06c9c06c0569cc7092bf83ea79981799f4cd596966d9dff92f075f99",
+      "zipCRCverified": true
+    },
+    {
+      "path": "build.log",
+      "bytes": 7878,
+      "sha256": "a2599146ba8cf4acc913a0c6bfc516aa45551e5bfac22a3ad228113ac94fffca",
+      "zipCRCverified": true
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 2974,
+      "sha256": "b58778e8bc868bb88126c257c9fd3789d25b83f3812461bf2a1261af87bcf47e",
+      "zipCRCverified": true
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+      "zipCRCverified": true
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "zipCRCverified": true
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "zipCRCverified": true
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "815e5458274b3938ad5ea65fe4ecb6b70e7f1b833b0e6c0707bd71979947ea87",
+      "zipCRCverified": true
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 63486,
+      "sha256": "04c5b04f4d6d26ff1ddddeffba0da0a0514f36ce3af89aac6aa3c826f04f100d",
+      "zipCRCverified": true
+    },
+    {
+      "path": "native-submodule-pins.log",
+      "bytes": 202,
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+      "zipCRCverified": true
+    },
+    {
+      "path": "native.log",
+      "bytes": 1907,
+      "sha256": "6364791ff5d7ca05589999cfa81ea70738d5126a226dba8752df7b7652580df1",
+      "zipCRCverified": true
+    },
+    {
+      "path": "restore.log",
+      "bytes": 5564,
+      "sha256": "ab6e532a2d666afd8ff5abe6381732d8b19f5f498377db708362c70794277505",
+      "zipCRCverified": true
+    },
+    {
+      "path": "result.json",
+      "bytes": 1582,
+      "sha256": "aba2d9ee5f7f64b679c5b370030e199cfd4ff50f0f846d419f8a64991c0868e7",
+      "zipCRCverified": true
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 404,
+      "sha256": "499a3bed62ceca50c3d19d667904bb996421f421d2239fa315ce76308b18da40",
+      "zipCRCverified": true
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 436,
+      "sha256": "8e404f2e6be5d8e00bf183dd4a909a8f9a57f9c7456da08a10c1273f3b890ffe",
+      "zipCRCverified": true
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1299200,
+      "sha256": "9982ddb95f16fc167c322abe6c94b9ba307646e2f279ad716d2cdeff82465f89",
+      "zipCRCverified": true
+    }
+  ],
+  "driver": {
+    "status": "FAIL",
+    "variant": "current",
+    "expected": 15,
+    "scope": "Controlled actual native Picture criteria only; all browser/provider/durable restart acceptance NOT_RUN",
+    "preservedHistory": "Original Picture GPS Preserve RED, old admission01/source-review and all prior browser/native evidence are not replaced",
+    "sourceCommit": "b8cc9531fe9de12307402d2581230ed699af0554",
+    "nativeStarted": true,
+    "actualNativeCommandRecord": {
+      "name": "native",
+      "argv": [
+        "/home/runner/work/_temp/team-b-picture-current/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests",
+        "/home/runner/work/_temp/team-b-picture-current/fixture-data/picture"
+      ],
+      "exit": 1,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3899,
+          "birth": 30713,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 1,
+      "seconds": 1.046,
+      "bytes": 1907,
+      "familyClosed": true
+    },
+    "actualNativeCommandException": "RuntimeError('native exit 1')",
+    "nativeResultSHA256": "04c5b04f4d6d26ff1ddddeffba0da0a0514f36ce3af89aac6aa3c826f04f100d",
+    "nativeResultBytes": 63486,
+    "nativeResultDiagnostic": "native-results.json",
+    "nativeResultCaptureState": "STRUCTURED_CAPTURED_NOT_VALIDATED",
+    "actualNativeCounters": {
+      "discovered": 15,
+      "executed": 15,
+      "passed": 14,
+      "failed": 1,
+      "notRun": 0,
+      "timedOut": false,
+      "prerequisite": null,
+      "assertions": 128,
+      "exitCode": 1
+    },
+    "error": "RuntimeError('native exit 1')"
+  },
+  "nativeWithoutSeparatedReceipts": {
+    "scope": "Controlled native feature/CUI/codec/raster admission and fault boundary only; no browser IDB/provider/permission/Files/complete Picture acceptance",
+    "discovered": 15,
+    "executed": 15,
+    "passed": 14,
+    "failed": 1,
+    "notRun": 0,
+    "timedOut": false,
+    "prerequisite": null,
+    "actualMarkupSHA256": "2D408A38D204E9704A4F39491BF457355C38162D71A3F28FC9B9A83DC7A18402",
+    "actualMarkupDiagnostics": [],
+    "assertions": 128,
+    "results": [
+      {
+        "Name": "independent-target-prepare-and-reject-preserve-active-bitmap-and-canonical",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "invalid-route-refused-before-owner-or-device-effects",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "Name": "controlled-target-read-failure-preserves-active-owner",
+        "state": "PASS",
+        "assertions": 6
+      },
+      {
+        "Name": "typed-input-before-navigation-and-close-is-retained",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "Name": "typed-input-after-render-fences-native-admission",
+        "state": "PASS",
+        "assertions": 9
+      },
+      {
+        "Name": "acknowledged-owner-edit-after-render-fences-target",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "forged-view-state-and-superseded-offer-have-no-authority",
+        "state": "PASS",
+        "assertions": 12
+      },
+      {
+        "Name": "cancelled-late-read-and-pending-close-preserve-owner",
+        "state": "PASS",
+        "assertions": 7
+      },
+      {
+        "Name": "disposal-during-read-fences-late-candidate-without-extra-release",
+        "state": "PASS",
+        "assertions": 6
+      },
+      {
+        "Name": "candidate-preview-does-not-write-native-cache-before-accept",
+        "state": "PASS",
+        "assertions": 9
+      },
+      {
+        "Name": "changed-native-cache-refuses-admission-without-overwrite",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "Name": "old-retirement-cannot-clear-new-real-canonical-dirty-edit",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "actual-raster-crop-history-save-close-reopen-and-pixel-export",
+        "state": "FAIL",
+        "assertions": 4,
+        "failure": "System.InvalidOperationException: Canonical crop consumes real input, preserves identity and acknowledges once.\n   at Program.<>c__DisplayClass0_0.<<Main>$>g__Check|1(Boolean condition, String message) in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 40\n   at Program.<>c__DisplayClass0_0.<<<Main>$>b__22>d.MoveNext()\n--- End of stack trace from previous location ---\n   at Program.<>c__DisplayClass0_7.<<<Main>$>b__41>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 297"
+      },
+      {
+        "Name": "candidate-publication-cannot-write-detached-previous-input",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "candidate-observer-reentrant-navigation-waits-coherent-retirement",
+        "state": "PASS",
+        "assertions": 11
+      }
+    ],
+    "exitCode": 1
+  },
+  "canonicalReceipts": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-b8-remote-review01/current-canonical-receipts.json",
+    "bytes": 56404,
+    "sha256": "ed1d386805151a68bb4b2dd0935a2f736b399bf06fb585b374ad56e666ad3305"
+  },
+  "actualCropDiagnostic": {
+    "before": {
+      "name": "actual-raster-crop-state",
+      "stage": "after-four-real-field-setters-before-dispatch",
+      "fields": {
+        "CropX": "1",
+        "CropY": "2",
+        "CropWidth": "5",
+        "CropHeight": "3",
+        "ResizeWidth": "8",
+        "ResizeHeight": "6"
+      },
+      "IsDirty": false,
+      "IsBusy": false,
+      "HasPendingInput": true,
+      "SavedRevision": 0,
+      "Status": "Saved in this browser \u00b7 revision 0",
+      "ErrorCode": null,
+      "featureHasUnsavedChanges": true,
+      "retirementFieldPresent": true,
+      "retirementStatus": "WaitingForActivation",
+      "retirementCompletedSuccessfully": false,
+      "revisionMatches": false,
+      "operationCount": 0,
+      "cropMatches": false,
+      "CommitCalls": 1,
+      "Dirty": false
+    },
+    "after": {
+      "name": "actual-raster-crop-state",
+      "stage": "after-awaited-dispatch-before-unchanged-combined-assertion",
+      "fields": {
+        "CropX": "1",
+        "CropY": "2",
+        "CropWidth": "5",
+        "CropHeight": "3",
+        "ResizeWidth": "5",
+        "ResizeHeight": "3"
+      },
+      "IsDirty": false,
+      "IsBusy": false,
+      "HasPendingInput": false,
+      "SavedRevision": 1,
+      "Status": "Saved in this browser \u00b7 revision 1",
+      "ErrorCode": null,
+      "featureHasUnsavedChanges": true,
+      "retirementFieldPresent": true,
+      "retirementStatus": "WaitingForActivation",
+      "retirementCompletedSuccessfully": false,
+      "revisionMatches": true,
+      "operationCount": 1,
+      "cropMatches": true,
+      "CommitCalls": 2,
+      "Dirty": false
+    },
+    "sameCanonicalID": "e798ced3-347a-4742-ac5d-cd5d9adea333",
+    "afterCanonical": {
+      "documentId": "e798ced3-347a-4742-ac5d-cd5d9adea333",
+      "schemaVersion": 1,
+      "displayName": "79c24c0088044dd28c358317be3f6b54",
+      "fileId": null,
+      "sourcePath": "/home/runner/work/_temp/team-b-picture-current/tmp/9to1-picture-local/sources/79c24c0088044dd28c358317be3f6b54.png",
+      "sourceRevision": "A17E304D0A333065202CF77C656D7BC86ABDD37237B407A0A5CB870D33870297",
+      "canvasWidth": 5,
+      "canvasHeight": 3,
+      "operations": [
+        {
+          "type": "crop",
+          "x": 1,
+          "y": 2,
+          "width": 5,
+          "height": 3
+        }
+      ],
+      "revision": 1
+    },
+    "actualSavedDocumentEqualsSession": true,
+    "savedEnvelopeRevision": 1,
+    "falseCombinedAssertionComponent": "feature.HasUnsavedChanges only; true due actual WaitingForActivation retirement task while real crop, savedRevision, dirty, busy and pendinginput all satisfy oracle."
+  },
+  "readinessContract": "Session.DispatchAsync awaits actual save and own IsBusy reset; it does not wait feature retirement. Feature.PrepareToCloseAsync explicitly awaits retirement, then actual session close-preparation. Same-session app-root Accept currently schedules deferred retirement despite no old session to dispose. Native test invokes synchronously completing controlled media on AvaloniaUI; queued retirement has not resumed before assertion.",
+  "commandSummary": [
+    {
+      "name": "git-head",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "git-clean-before",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "tracked-source-tree",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "native-submodule-pins",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 3,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "dotnet-version",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "dotnet-info",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "restore",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "build",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 46,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "target-properties",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "native",
+      "exit": 1,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "git-clean-after",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    }
+  ],
+  "notClaimed": [
+    "No crop/storage/owner engine defect inferred; actual crop and save validated here.",
+    "No product change or assertion weakening; root reviews lifecycle/readiness decision before any repair.",
+    "Controlled native media receipts are not actual IndexedDB/browser/provider acceptance.",
+    "Real22d9/9 browser and independently reproduced9/9 remain separate actual evidence."
+  ]
+}

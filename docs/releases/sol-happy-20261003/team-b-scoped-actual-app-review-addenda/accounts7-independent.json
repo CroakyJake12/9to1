@@ -1,0 +1,180 @@
+{
+  "state": "CLEAR_SCOPED_ACTUAL_SEVEN_ANONYMOUS_SEALED_NATIVE_INTEROP",
+  "UTC": "2026-10-04T14:25:08.941356+00:00",
+  "role": "B6 independent full recorded ZIP/log/source/criteria review; actual executor GitHub Actions. No new runtime, dispatch, SDK or GUI.",
+  "run": 37208724474,
+  "jobID": 111455321576,
+  "artifactID": 11305244605,
+  "APIConclusion": "success",
+  "driverSource": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+  "runtimeSource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "archive": {
+    "path": "/workspace/attachments/9bf1f8f1-cef2-46ba-9b98-e02b9bbd9aa0/accounts7-22d-replay-diagnostics.zip",
+    "bytes": 32318,
+    "sha256": "0bf5c22d600379281ae551771464c20460599e8bf020eb5c81e881e11e725ef8",
+    "all26CRCFullMemberSHA": true,
+    "APIWholeDigestMatches": true
+  },
+  "primary": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/sealed-replay-22d-actual-run01/accounts7-actual-raw-review01.json",
+    "sha256": "6b277ab8130b6a61673c849c482e12f65ee927749ad9aab019b0aab54b1ab6fb",
+    "notUsedAsAcceptanceOracle": true
+  },
+  "counts": {
+    "discovered": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "notRun": 0
+  },
+  "allSevenActualOracles": {
+    "actual-unconfigured-native-account-read": {
+      "status": "PASS",
+      "observed": {
+        "actualRenderReady": true,
+        "nullConfiguration": true,
+        "privateDataAbsent": true,
+        "signInUnavailable": true
+      }
+    },
+    "physical-check-truthful-unavailable": {
+      "status": "PASS",
+      "observed": {
+        "physicalNativeCheck": true,
+        "truthfulUnavailable": true,
+        "noPrivateGrant": true
+      }
+    },
+    "native-revoke-immediate-fence": {
+      "status": "PASS",
+      "observed": {
+        "immediateEmpty": true,
+        "immediateGeneration": 2,
+        "staleAccepted": false,
+        "settledEmpty": true
+      }
+    },
+    "retained-stale-native-peer-refused": {
+      "status": "PASS",
+      "observed": {
+        "oldPeerRefusedBeforeAndAfterFreshRoute": true,
+        "newOwnerGeneration": true,
+        "revokedSettingsUnavailable": true,
+        "explicitRootReplacement": true,
+        "noIdentityFabricated": true
+      }
+    },
+    "native-invalidation-fresh-owner-route": {
+      "status": "PASS",
+      "observed": {
+        "actualNativeInvalidationJoined": true,
+        "immediateEmpty": true,
+        "oldPeersRefused": true,
+        "newOwnerGeneration": true,
+        "freshCanonicalSettingsAvailable": true,
+        "noIdentityFabricated": true,
+        "brokerDrainNotClaimed": true
+      }
+    },
+    "terminal-close-true-native-and-JS-release": {
+      "status": "PASS",
+      "observed": {
+        "actualCloseReturnedTrue": true,
+        "nativeAXEmpty": true,
+        "JSProjectionRemoved": true,
+        "stalePeerRefused": true,
+        "terminalRouteCannotReopen": true,
+        "repeatCloseTrue": true
+      }
+    },
+    "exact-assets-runtime-cleanup-integrity": {
+      "status": "PASS",
+      "observed": {
+        "exactCustodyAndCleanup": true
+      }
+    }
+  },
+  "criterionMapping": {
+    "actual-unconfigured-native-account-read": "Actual native render Ready and ReadAccessibility; null account config/no selected private captions, disabled sign-in; no identity issued.",
+    "physical-check-truthful-unavailable": "Real native control bounds map to canvas; actual Playwright mouse.click invokes Check; TRUE-AWAIT actual native caption confirms services unavailable and enabled retry.",
+    "native-revoke-immediate-fence": "Actual native RevokePrivateContext export: immediate synchronous AX empty/generation advance/stale peer refused before await, then actual joined settled empty.",
+    "retained-stale-native-peer-refused": "Bare revocation denies Settings route through actual Loading\u2192HomeServiceUnavailable MutationObserver; explicit native PrivateContextInvalidated registers fresh null-config owner; actual Home/Settings waits verify newer owner and persistent stale-ID refusal.",
+    "native-invalidation-fresh-owner-route": "Actual invalidation immediate prefix empties/advances generation/refuses old and current IDs before await; after join fresh owner and real routes have newer generation without private data; no broker/provider completion asserted.",
+    "terminal-close-true-native-and-JS-release": "Actual CloseShell true, AX empty, JS semantic projection removed, stale IDs false, real route changes cannot reopen, repeatClose true.",
+    "exact-assets-runtime-cleanup-integrity": "Actual exact seal checks before/after, no unexpected errors, normal context/browser/server close and strict5096bind/reclose."
+  },
+  "sourceCustody": {
+    "all10UploadedSourcePinsGitBodySHAAtActualDriverHead": true,
+    "fiveActualRuntimeSourceBodiesByteExactReviewedSOURCE03": true,
+    "runnerSHA": "02b7f2ac22f383b8bd67e496ace3208e27d5d1a7340f380f2c6ba9a4a471027c",
+    "trueAwait": "Actual source uses await Promise.race(page.evaluate predicate, absolute remaining deadline); strictBooleantrue, timer cleared finally, no errors suppressed or further eval after timeout; previous full source02 cd03/source03 89f351 reviews stand.",
+    "sameSevenPredicateAndAssertionBodies": true
+  },
+  "receiptMap": {
+    "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "originalReceiptSha256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+    "originalSealSha256": "1b1b92c927ab4949cc9f42805db2a243f494af0248f9a0daae42da9f9f6b6f5a",
+    "originalInnerZipSha256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+    "localReceiptSha256": "5e0a0c65df9f4e732b676b9e543659875619052e708149874a542a0af1ec7095",
+    "onlySemanticChangedField": "publishRoot",
+    "originalRoot": "/home/runner/work/_temp/team-b-web-publication/sdk-publish/wwwroot",
+    "localRoot": "/home/runner/work/_temp/team-b-sealed-22d/accounts7/wwwroot"
+  },
+  "assetCustody": {
+    "actualDriverInnerZIPReceiptSealGate": true,
+    "actualNormalVerifierBeforeAfter": {
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "receiptSha256": "5e0a0c65df9f4e732b676b9e543659875619052e708149874a542a0af1ec7095",
+      "receiptPath": "/home/runner/work/_temp/team-b-sealed-22d/accounts7/local-publish-manifest.json",
+      "bundlePath": "/home/runner/work/_temp/team-b-sealed-22d/accounts7/wwwroot",
+      "originalPublishRoot": "/home/runner/work/_temp/team-b-sealed-22d/accounts7/wwwroot",
+      "scope": "Normal source build/publish and public artifact custody; browser/runtime/provider/deployment/full parity NOT_RUN",
+      "fileCount": 285,
+      "totalBytes": 58424254,
+      "transportVerified": true,
+      "runtimeVerified": false,
+      "deploymentVerified": false,
+      "packageAuthorityVerified": false
+    },
+    "actualRunnerSealBeforeAfter": {
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "manifestSha256": "5e0a0c65df9f4e732b676b9e543659875619052e708149874a542a0af1ec7095",
+      "fileCount": 285
+    },
+    "original285PublicBodyStreamsLocallyReadByB6Here": false,
+    "qualification": "Recorded actual driver and both independent verifier command receipts prove asserted full285 SHA/filecount checks. Diagnostic ZIP omits public inner archive/receipt/asset bodies; public parts not read in this review. No whole285 direct-body local claim; distinct Picture c918/73c7/a90c tuple is not substituted."
+  },
+  "normalFamilies": {
+    "commandFamilies": 15,
+    "recordedBirthsGone": 94,
+    "normalEOFAll0ExitSignalsEmptyECHILD": true,
+    "browserHeldIdentities": 11,
+    "actualTopBrowserPID": 3190,
+    "normalClosed": true,
+    "forcedCleanup": false,
+    "finalAllFDExitBirthsGoneECHILD": true,
+    "finalPinsUnchanged": true,
+    "sampledFourRootsFinalBytes": 291467
+  },
+  "TLSAndTools": {
+    "publicTLSProof": {
+      "san": "client.example.test",
+      "certSha256": "026d418fec1f09797d45472f05dd0bb67fd910a0d0702e67cdb1abbd141b694f",
+      "spkiBase64Sha256": "kceOjTKjoyfqNsvTBBTMZtZbw5bTVbODLnun9gWk4BE=",
+      "keyBodyUploaded": false,
+      "issuerAuthority": false
+    },
+    "actualBrowserVersion": "151.0.7922.34",
+    "toolBodyInventoryRows": 481,
+    "qualification": "Tool hashes/runtime browser executable/temporarybinding recorded but these bodies not included. One-day controlled client.example.test SPKI exception only, no TLS privatekey/profile/cookies uploaded. Not issuer authority."
+  },
+  "limitations": [
+    "Null public configuration; direct native lifecycle controls, not genuine signed-in actor, profile/session/token/provider login/expiry/activebroker drain acceptance.",
+    "No actual BFCache/assistive technology/hardware/fullAccounts/fullparity acceptance.",
+    "No browser trace/raw AX transcript uploaded; actual predicate assertions and scopedboolean outcomes are recorded and source-procedure pinned.",
+    "285 public bodies and original outer publicActions archive absent from this diagnostic ZIP; original producer/body artifact custody cannot be relabelled local direct read.",
+    "Resource291467B is sampled final current four-root footprint, not cumulative transientMAX/hardquota or all-tool installation footprint.",
+    "Prior original7 async-Promise flaw/failures and original8041 observations retained; actual corrected true-await run at7cdf newly supports seven scoped cases only.",
+    "Wave job nowAPI success, but counts/criteria require separate raw review; noWave acceptance inferred here."
+  ]
+}

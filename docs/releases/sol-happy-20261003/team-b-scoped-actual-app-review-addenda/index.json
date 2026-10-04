@@ -1,0 +1,73 @@
+{
+  "state": "ACTUAL_SCOPED_REVIEW_FOLLOWUPS_PRESERVED_AFTER_INITIAL_PACKET",
+  "UTC": "2026-10-04T14:26:29.278861+00:00",
+  "files": [
+    {
+      "path": "picture9-first-independent.json",
+      "bytes": 6548,
+      "sha256": "c5a7409d7b3d8daed19784962900f6b9b1ab4665968050969b8617076895f644",
+      "source": "/tmp/team-b-b6-picture-browser22d-recorded-review01/review.json"
+    },
+    {
+      "path": "picture9-critical-independent-reproduction.json",
+      "bytes": 11216,
+      "sha256": "eb07e9c8ccb8c0b990e2ca8f7e085b4e871b95454b83c93200286410b03c0d55",
+      "source": "/tmp/team-b-b6-picture-browser22d-independent-ci-review01/review.json"
+    },
+    {
+      "path": "boards47-primary.json",
+      "bytes": 31575,
+      "sha256": "471465c62c7f260ef689caa2cf65997a6165ed353ef5f61eaff555f82dba4e71",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/boards-notebook-ci-recorded-review01/REVIEW.json"
+    },
+    {
+      "path": "boards47-independent.json",
+      "bytes": 12521,
+      "sha256": "b42b622e0f95f52f331dfcecc165bee8d4672c3fe24230db9e26f90d8dc7fdcf",
+      "source": "/tmp/team-b-b6-boards-notebook1b05-recorded-review01/review.json"
+    },
+    {
+      "path": "math4-primary.json",
+      "bytes": 46805,
+      "sha256": "afb86fd24599d1a294cbfac65c561a7e7f4dd61ad4d1122ad917b9cf430fc030",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/mathematics-native4-ci23eb-primary-review01/review.json"
+    },
+    {
+      "path": "accounts7-primary.json",
+      "bytes": 9953,
+      "sha256": "6b277ab8130b6a61673c849c482e12f65ee927749ad9aab019b0aab54b1ab6fb",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/sealed-replay-22d-actual-run01/accounts7-actual-raw-review01.json"
+    },
+    {
+      "path": "accounts7-peer.json",
+      "bytes": 5197,
+      "sha256": "ea761bd6586b412a2a9e43d584e3c35e455a37bbab19d80aaee279d09f5e7fa8",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/accounts7-22d-actual-recorded-peer01.json"
+    },
+    {
+      "path": "accounts7-independent.json",
+      "bytes": 9454,
+      "sha256": "90eeec0ce0db7961f452cbd835a069b83b39ea7bcbe4687bed4145f818ee9aae",
+      "source": "/tmp/team-b-b6-sealed-accounts7-22d-recorded-review01/review.json"
+    },
+    {
+      "path": "picture-native-crop-failure-state.json",
+      "bytes": 14902,
+      "sha256": "539d6e21f2699c0255541cedd3742b60237036427e10921f87dcb1373be2751e",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-b8-remote-review01/current-review.json"
+    },
+    {
+      "path": "picture-native-crop-canonical-receipts.json",
+      "bytes": 56404,
+      "sha256": "ed1d386805151a68bb4b2dd0935a2f736b399bf06fb585b374ad56e666ad3305",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-b8-remote-review01/current-canonical-receipts.json"
+    }
+  ],
+  "counts": "Picture browser9/9 independently reproduced exact22d; Boards seed24/verify23 independently recorded; Math4/4 primary recorded; Accounts7/7 independent recorded. All scoped, notfull31 denominator.",
+  "separateFailure": "Picture b8current14/15: crop/model/store/receipt allcorrect, Feature same-session no-op retirement pending makes HasUnsavedChanges true. Current repair source pending; oldfailure retained.",
+  "assets": "Accounts actual285 body verifier reports recorded, local bodies absent; normal22d330d/b325/1b1b differs Picture22dc918/73c7/a90c tuple.",
+  "traceQualification": "Picture296 response bodies rehashed;52 absent trace body refs explicitly qualified. Whole traceZIP CRC/custody reviewed; never claim348 response bodies rehashed.",
+  "Wave": "Workflow completed SUCCESS, fullraw14/family review pending bounded receipt receiver because44MBartifact exceeds32MiBdownload cap.",
+  "acceptedHead": null,
+  "fullParity": false
+}

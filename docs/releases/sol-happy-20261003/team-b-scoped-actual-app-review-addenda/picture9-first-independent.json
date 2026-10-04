@@ -1,0 +1,129 @@
+{
+  "state": "CLEAR_SCOPED_RECORDED_NINE",
+  "role": "B6 independent full recorded review; original execution GitHub Actions, no local product invocation",
+  "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "run": 37206507446,
+  "checkedSummary": {
+    "path": "/tmp/team-b-b6-picture-browser22d-recorded-review01/checked-summary.json",
+    "bytes": 16254,
+    "sha256": "b1cdad00af3358ad3e8d5dbd077f9be7edd2d441b70b04062e850d44a03ca4dd"
+  },
+  "checked": {
+    "archives": [
+      {
+        "archive": "/workspace/attachments/1bde4784-232c-4947-b72a-c5e81fe8abcb/picture-browser-22d-nine.zip",
+        "sha256": "571dfec74b3cb889ff7f6f4e6c6c2242e7c1782da8f92e7e5afeb6870ff90b75",
+        "members": 15,
+        "bytes": 28690701
+      },
+      {
+        "archive": "/workspace/attachments/c760716b-2e3b-4070-890a-67d448b476be/picture-22d-browser-publisher.zip",
+        "sha256": "7545bdd49f0a6f4403be48a0ce9aa09bcfaa3f7da371e569cb820bbf82c57c76",
+        "members": 27,
+        "bytes": 1472662
+      }
+    ],
+    "normalCommandFamilies": 26,
+    "allRecordedBirthsGone": 151,
+    "sourceRows": 4783,
+    "sourceBytes": 43622212,
+    "all4783GitBodySHAAndPathVerified": true,
+    "counts": {
+      "discovered": 9,
+      "executed": 9,
+      "passed": 9,
+      "failed": 0,
+      "notRun": 0
+    },
+    "candidate": {
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "manifestSHA256": "c9183b5ed6ed86405f85dbfe5f446da86d07f97d834ed87abf0d8ed67ec11d9a",
+      "sourceBeforeSHA256": "82923f28f18e2418b89ff7bafcd2ddae2fbc41b99b423aeee67fde5df38fa9b0",
+      "sourceAfterSHA256": "82923f28f18e2418b89ff7bafcd2ddae2fbc41b99b423aeee67fde5df38fa9b0",
+      "assets": 285,
+      "assetBytes": 58421138
+    },
+    "traceMeta": [
+      {
+        "path": "raw/picture-first-process.zip",
+        "sha256": "aed286ab9c5dc7b8a3df1a24dc8a14c291884be88fa7724664da8d92469f649c",
+        "members": 122,
+        "uncompressedBytes": 35437861,
+        "sortedAllMemberNameSHABytesDigest": "212e1d079bc8447ed2afd3edae8f1e4e82a7607e271e5becb16a7ebac55b5316"
+      },
+      {
+        "path": "raw/picture-final-process.zip",
+        "sha256": "d668ea3fbd91f65556de90d5bd30f32fd7ec92cc6d3c13fab2e4fd3c96e5b4e3",
+        "members": 130,
+        "uncompressedBytes": 35745978,
+        "sortedAllMemberNameSHABytesDigest": "5ecbad255190087f75ba362a660bacea2cd231d4a8a00b5b7a132ec26ff78cab"
+      }
+    ],
+    "networkRequests": 348,
+    "networkRecordedBodies": 296,
+    "networkMissingBodies": 52,
+    "distinctManifestAssetsObservedInNetwork": 87,
+    "PNG": {
+      "fixtureChunks": [
+        "IHDR",
+        "iTXt",
+        "tEXt",
+        "tEXt",
+        "tEXt",
+        "sRGB",
+        "IDAT",
+        "IEND"
+      ],
+      "exportChunks": [
+        "IHDR",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ],
+      "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+      "exportSHA256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+      "pixels": 15,
+      "rgbaBytes": 60,
+      "exactCrop": true
+    },
+    "integrity": {
+      "state": "PASS"
+    }
+  },
+  "mapping": {
+    "create-real-png-local-document": "Actual native picker and unchanged Picture owner create canonical document revision0/source8x6; actual native Image peer has finite bounds.",
+    "canonical-crop": "Real owner inputs x1 y2 width5 height3 and native action create exact crop at revision1.",
+    "canonical-undo-redo": "Actual undo revision2 restores8x6/no operations; redo revision3 restores5x3/crop, same canonicalID/source, retained native history.",
+    "clean-save-close": "Actual Save and Save-and-close close cleanly, both real IDB stores remain revision3.",
+    "reopen-real-local-row": "Actual maintained local row reopens same ID/revision/source and native Image peer.",
+    "real-png-download-exact-pixels": "Independent stdlib PNG CRC/inflate/unfilter verifies all15RGBA pixels equal source crop including alpha; original metadata present/export metadata absent; canonical store unchanged.",
+    "clean-browser-process-restart": "Two distinct actual Chromium PIDs after controlled clean blank navigation/restart, actual readonly both-store objects and canonical ID/revision3 retained.",
+    "real-presentation-and-pending-input-refusal": "Actual unsupported/empty deep links refused without canonical changes; pending native input retained on refused navigation then explicitly restored.",
+    "two-tab-cas-dirty-close-and-explicit-reload": "Real second page CAS loser fails RevisionConflict; winner revision4 resize6x3 retained exactly in both stores before/after failed dirty close and explicitly consented reload."
+  },
+  "qualifications": [
+    "Scope nine concrete criteria; full156 Picture paragraphs are not all accepted.",
+    "No full assistive technology, pointer/touch/IME/hardware or provider/private actor acceptance. Native Image peer bounds do not prove on-screen pixel raster.",
+    "Restart is deliberately clean controlled process restart, not automatic restoration/BFCache.",
+    "Both-store equality is complete JSON row object equality; no raw IDB disk-file byte equivalence claim.",
+    "No quota/transaction-abort, in-app conflict merge or untested export/operation acceptance.",
+    "All285 manifest rows unchanged; full public bundle bodies are not in downloaded diagnostic ZIP. Only296 trace response bodies covering87 distinct manifest assets were actually rehashed;52 trace responses had no body reference.",
+    "Recorded profile/font output inventory is attestation where bodies are not uploaded.",
+    "Source4783 is publisher-selected tracked subset, not exhaustive evaluated build closure; every selected Git body and immutable tree identity independently matched.",
+    "Build command exit0 is recorded; no invented zero-warning claim.",
+    "Separate native15 cohort14PASS1rasterFAIL remains separate and unresolved; browser9 does not upgrade it.",
+    "Historical local resource holds and other failures remain preserved."
+  ],
+  "independentReproduction": {
+    "dispatchAuthorizedBy": "root explicit exact existing workflow instruction",
+    "workflowID": 374608436,
+    "workflow": ".github/workflows/team-b-picture-browser.yml",
+    "ref": "team-b/astra-browser-validation-20261003",
+    "dispatchHTTPStatus": 204,
+    "dispatchUTC": "2026-10-04T14:02:06Z",
+    "run": 37207768958,
+    "resolvedHead": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "completedConclusion": "success",
+    "artifactReview": "PENDING_CURRENT_RAW_REVIEW"
+  }
+}

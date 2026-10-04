@@ -1,0 +1,808 @@
+{
+  "status": "RECORDED_EVIDENCE_CLEAR_SCOPED_OWNER_NOTEBOOK_EDITOR_DURABILITY",
+  "reviewUTC": "2026-10-04T14:12:12.703080+00:00",
+  "runId": 37207970188,
+  "url": "https://github.com/CroakyJake12/9to1/actions/runs/37207970188",
+  "artifactId": 11305891797,
+  "sourceCommit": "1b05262b6adb025ba56850f566c91d0de4cf1772",
+  "archive": {
+    "path": "/workspace/attachments/39ee7996-3309-4f32-a5d7-7133e2882e9b/boards-notebook-owner-1b05262b.zip",
+    "bytes": 353411,
+    "sha256": "911cd723864a0810895fec83fa1cde42a4b826b62d83de604e462ff5493d316c",
+    "all19CRCAndFullMemberHashesVerified": true
+  },
+  "members": [
+    {
+      "name": "commands.json",
+      "bytes": 11279,
+      "compressedBytes": 1529,
+      "crc32": "f34451a3",
+      "sha256": "d2c3de8b7d81c1b35f6af37b2a9bd5ea7afeb959af6b209511bc14066fef87ef"
+    },
+    {
+      "name": "dotnet-info.log",
+      "bytes": 2973,
+      "compressedBytes": 789,
+      "crc32": "a9132223",
+      "sha256": "c42a62f398c1549856611550ec3e0eb48d3f384c180f321019761ced6f45c2f0"
+    },
+    {
+      "name": "build.log",
+      "bytes": 6101,
+      "compressedBytes": 904,
+      "crc32": "a3479ed3",
+      "sha256": "31fdda41a42114a8188dfcb91b96c7649fea7a71e91ff49eb55ba0447f75f390"
+    },
+    {
+      "name": "dotnet-version.log",
+      "bytes": 9,
+      "compressedBytes": 11,
+      "crc32": "c22d2381",
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "name": "git-clean-after.log",
+      "bytes": 0,
+      "compressedBytes": 2,
+      "crc32": "00000000",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "git-clean-before.log",
+      "bytes": 0,
+      "compressedBytes": 2,
+      "crc32": "00000000",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "git-head.log",
+      "bytes": 41,
+      "compressedBytes": 42,
+      "crc32": "093da411",
+      "sha256": "f44e63826b26ee80d33ff65a436585d008cd088d2aedbbff2e09e6454335100c"
+    },
+    {
+      "name": "native-submodule-pins.log",
+      "bytes": 202,
+      "compressedBytes": 136,
+      "crc32": "f1749c30",
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999"
+    },
+    {
+      "name": "reported-emitted-runtime-after.json",
+      "bytes": 14346,
+      "compressedBytes": 4725,
+      "crc32": "db7eb03f",
+      "sha256": "fb61b42f06029599222282e7e3e63f06b7aa21faf7b628ff7b2a1a14a021847b"
+    },
+    {
+      "name": "reported-emitted-runtime.json",
+      "bytes": 14346,
+      "compressedBytes": 4725,
+      "crc32": "db7eb03f",
+      "sha256": "fb61b42f06029599222282e7e3e63f06b7aa21faf7b628ff7b2a1a14a021847b"
+    },
+    {
+      "name": "restore.log",
+      "bytes": 5186,
+      "compressedBytes": 734,
+      "crc32": "be7a41bd",
+      "sha256": "eaad4757c10ca7f60bfc9d0ce2cc7608dfb41c564cf2a67141590a1d74bf0229"
+    },
+    {
+      "name": "result.json",
+      "bytes": 4508,
+      "compressedBytes": 1582,
+      "crc32": "b00d2e16",
+      "sha256": "9f5e164e633758eaac1a9f6a4f5ec56d8369a350eba66824117f993bba8b62b4"
+    },
+    {
+      "name": "seed.log",
+      "bytes": 1519,
+      "compressedBytes": 538,
+      "crc32": "f8ec161e",
+      "sha256": "bcd798144801832f08c89e666a574b4c7ade3c4f6fea169e096b2d72ede53a4f"
+    },
+    {
+      "name": "source-after.json",
+      "bytes": 9909,
+      "compressedBytes": 3212,
+      "crc32": "3fb7b839",
+      "sha256": "86018aa2de5640d723f72300978c153b0c813ac229ddb0b35b31779224264dad"
+    },
+    {
+      "name": "source-before.json",
+      "bytes": 9909,
+      "compressedBytes": 3212,
+      "crc32": "3fb7b839",
+      "sha256": "86018aa2de5640d723f72300978c153b0c813ac229ddb0b35b31779224264dad"
+    },
+    {
+      "name": "source-tree-pins.log",
+      "bytes": 1299200,
+      "compressedBytes": 327755,
+      "crc32": "cae7021b",
+      "sha256": "c2769bc2e5589fc2b769e0acfe2a20acc4bd6456549566c668d067948f7c7952"
+    },
+    {
+      "name": "target-properties.json",
+      "bytes": 532,
+      "compressedBytes": 218,
+      "crc32": "83a068e3",
+      "sha256": "73d291e85fbfa88de50ec271b0d68d8858cd616e9179e733bfe445e588566c53"
+    },
+    {
+      "name": "target-properties.log",
+      "bytes": 566,
+      "compressedBytes": 233,
+      "crc32": "1ea6c8cc",
+      "sha256": "0aa1e0ea74c11d3fe4c97b00290b40fa17e7d4c71ddef747476435174618f152"
+    },
+    {
+      "name": "verify.log",
+      "bytes": 1485,
+      "compressedBytes": 626,
+      "crc32": "9e7adcc3",
+      "sha256": "67e00f022adee9c577619a24dab32fa9ceddf7958f581dfa543309381c741731"
+    }
+  ],
+  "actualGitTree": {
+    "sha256": "c2769bc2e5589fc2b769e0acfe2a20acc4bd6456549566c668d067948f7c7952",
+    "entries": 9674,
+    "byteExactRawMatchesActualCommit": true
+  },
+  "selectedSources": [
+    {
+      "path": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "bytes": 28237,
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "d6d8c0fc6bfe938920f5561bf21df112d9944bc2",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/RichBoardSession.cs",
+      "bytes": 19529,
+      "sha256": "e5406be4fd78dc7a7828f9b9646a8f8b0e9896a634753cb920d26b03c5a86134",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "61f9f44e1de0bc92db495ba7c0a6a53c9a903036",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/hui/HavenBoardsHuiSession.cs",
+      "bytes": 9600,
+      "sha256": "f4860624409ecc9ead64ae56f0192d3722f57c3a107e4a008e2562c2ea442dbb",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "18fa0a13a6c4039d9204f16194eb0bd35f87c5a2",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+      "bytes": 7402,
+      "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "e96d5d09d8262e08cc0db9b43e1a9326015105a6",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs",
+      "bytes": 17696,
+      "sha256": "02def3189de0070dd6b33d8eea1d62a5c74ba9fd0699786ca1bcc934b28631ff",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "82c01099cf74c402fd2c967b1c0c0832a2b48413",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs",
+      "bytes": 466,
+      "sha256": "05d89400297f02174d01f89f1979eaa5bdea447d8ce2b9e435c1093de6523320",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "c6a176077bdd4f9e1fa27ac3051e55ab0eea87f7",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeDashboard.cs",
+      "bytes": 14373,
+      "sha256": "6631e03a072f32c7922d87ebebdf3d64af604df359d3211b7635af054b10d9b9",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "b33c7d6142006c964ad6932778464520b66cd0f3",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsOperations.cs",
+      "bytes": 12399,
+      "sha256": "43a38677fb29208f5eec2e99f7c801ba7c4b5ac5ef6e15027593e8e1373cd59d",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "1d2dd534100b69444a1188297441b7e3afca84b3",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.Recovery.cs",
+      "bytes": 20254,
+      "sha256": "df448a7172b37e1786a5884a990f5c60fde13ead0588649238e4b24b6f927dba",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "28f238a992c5dcda8dac5569edea7c72e090b884",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.cs",
+      "bytes": 20685,
+      "sha256": "dfd7c06bafecbe30d301511d4afa76d8b67c3dc0459e7644cc5d4524219b9303",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "dbf6375985fedc28034e346dd9b01df11e4a3a43",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "bytes": 700,
+      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "cc85c272caa8e95166986e1294cd827f7527e354",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesDocumentValidator.cs",
+      "bytes": 22785,
+      "sha256": "d00c18aa25dc513e8f0623057920b7d26d5c2ad14bdfbd0d2e07ea8539169669",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "00729740b47fa5cab39b0cccfc6feb017ff7fe02",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/NotesAbstractions.cs",
+      "bytes": 11449,
+      "sha256": "72d70b50c9c6a09ecd53e1faf18c0069b8a6f7c7409ad0c78980b0d64868bd0b",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "cbcd5b7a69e43f568de91db0871c7de601f4a5e4",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/PresentAbstractions.cs",
+      "bytes": 3583,
+      "sha256": "1563010284f20598c295b76c4b16061c1a57c765098fbe727ee1446100aec216",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "7434f20642edabddfd0d7fbb613b641727f1e9b2",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+      "bytes": 14936,
+      "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "eb3dbd9b3f388bf41eb2489ea6c9f967a5c316b3",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+      "bytes": 40304,
+      "sha256": "98beb6356609b19abddfee2a5c08357b82278be26377767a176450405246ac89",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "9a10ad1efcd5e5c899a332ec410958e4642c0129",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Boards/BoardsLiveComponent.cs",
+      "bytes": 2270,
+      "sha256": "1535efc71a63ab4a7f7a08e03963d58daa53dfdb5940367c432b2674953353f4",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "861695c2af845e34d806c810547ed44b8f311566",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "bytes": 14310,
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "87785d51f086935fe1dbdec0490347c7d2534106",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesBlock.cs",
+      "bytes": 19407,
+      "sha256": "a38e7219429490bd10debe93960a0c14036fc939d3b109ad0ccc248f644c7916",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "433d6895cdd4d6b3135950b925ea1c5e3b021e76",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesCollaboration.cs",
+      "bytes": 3738,
+      "sha256": "4473e1292f029a5e84aa1b7aaab16646b6687e0a57f6822d1390e9e53e466544",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "9f586c9e8441843a8f6926a3ce2cc547f2f7e006",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+      "bytes": 8528,
+      "sha256": "6aaf49f88b08b77ae98c3efdef067f7af3741c52df51e89e3aee4815e9947bc4",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "abed72f3be1ed2ad7e1ad3d4b647ec419f7c64ad",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesEnums.cs",
+      "bytes": 2392,
+      "sha256": "5a7ab9574af8ae44be8fe22c5fef65f14d179ec2fe81c5055c998a2026d83ef8",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "dfaf9371dae220e65c35fa811cbde6651e5809b3",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesInkAndStudy.cs",
+      "bytes": 8055,
+      "sha256": "8b90aac61d2f05961c20b083deda0b8703908da510ebe98ab8ce94a00d8e4b3e",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "4cbcd87bfcb510f5b7b68253563282a816fa231a",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesMetadata.cs",
+      "bytes": 10683,
+      "sha256": "3019980292b53b48727e775aa50786071f67c59e31f7cc59094a885df36417a4",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "91ab568b61136e32b760d68369a4f0114eb524cd",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Editor.cs",
+      "bytes": 14748,
+      "sha256": "6a5e8a2902a5b5768e9ceeebd5cd9bfea3c8ea2f935fb8b8e7f75abaf4be71db",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "f0595775fa4db9574853dfbf1a38b0f42f39796d",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.NotebookNavigation.cs",
+      "bytes": 4922,
+      "sha256": "e0af63ade2b2d50181c0bdea034d8b6379e8dfbcac21069597652d3b15bfad51",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "a4eb9fb05e0cc4d748cc42a1ada264fc7ed3df19",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.cs",
+      "bytes": 17605,
+      "sha256": "11bd101621c8a5bb2b79cb456ed3b6dbde434d65bbf50ec665f6de5edff6156e",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "c2a3957ab66a6fcb70a209c774fe1fac9abf1f60",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface.cs",
+      "bytes": 31995,
+      "sha256": "cba8ec28168a119a3a156e1a8867cede51098e9219493c9122914c873b6bf383",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "ced0c5db41fc40c3b092158d9635093a95491192",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs",
+      "bytes": 2916,
+      "sha256": "9454fdd9956fbe034a6b642436567791e8a4120612eb7119b60863d5f193ddc6",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "0e36a122320b443cd16ea456aa30388e136ac9da",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs",
+      "bytes": 24341,
+      "sha256": "a46ad14f586f24501591637275717db4698bd3c3f9c5fc9019c3847c64717f80",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "2c1b1ad79be709e0066003d896db45ead7b21f77",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+      "bytes": 40838,
+      "sha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "3768f23d1d6635d12dbfd9ae9eaf36245ec010a7",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentPackageCodec.cs",
+      "bytes": 21811,
+      "sha256": "756a022e140c0d2f7c4bd7d0957a9feab04e7fdc8d95f40f34302f7912b36ed5",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "9ea9aed3f4a038acbe07a9e284ba6d0e8abba2d5",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs",
+      "bytes": 11032,
+      "sha256": "f5c56fc195126c9eadcca468c44123c0f1409acc649d5cce3051060a245085d5",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "b1ef9eff0158bf4a10977b4ebb1e83bf45ccd898",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Write/WriteNativeDocumentPackageStore.cs",
+      "bytes": 23242,
+      "sha256": "559b61801042107efb622070ac08d3aa5f59b6a54119c4a0966a7f5c29f7c502",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "0b3a416f1ecb639ee4189159876e5b93ce00ad4b",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs",
+      "bytes": 30893,
+      "sha256": "eb887775d9c1ec9928acf9a1411c8ab1ebe5e77550ac2f7aae4c478963d927dd",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "24698864af9413b8c89c9aab1763bd8d6d3dfd0a",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "NuGet.Config",
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "24489cbd21c319685f8e7d5caee66965cd4a9e57",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 14479,
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "b94fd700a4bced5197cbe1f1ae1cee4f96b2ca6f",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "bytes": 4978,
+      "sha256": "0152d45e23a0ef467fe32ab1be1c9cfb0772b628ad69afec426746ac364e0803",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "7740a66aa1e492bdb60009148df78c8c1ddae942",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Productivity/Boards/BoardsBrowserCore.RichText.cs",
+      "bytes": 4174,
+      "sha256": "1401e5db32c62811f82ca77b33997a8f042e701bd33340e8cb31ffe93ffc6fdc",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "5631f03d1458023f33d36cae92f81d5738b399a5",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Productivity/Boards/BoardsBrowserCore.cs",
+      "bytes": 21719,
+      "sha256": "0eafaba9fdb20c4cb05822c3dc7dfaada7c6897dbc4ca4c191b3518a7772d856",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "7a52a3751110bdead9666a6d89a303c6dd655a12",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Productivity/Boards/BoardsBrowserFeature.cs",
+      "bytes": 10855,
+      "sha256": "00602ade76fd5c8c4d5413fc490e9ac04e7d8ab274a717b9b0d4b11c98d88897",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "adb537856df0f738242baa0043a66992a8225d16",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Productivity/Boards/Tests/BoardsNotebook.RichText.Tests.csproj",
+      "bytes": 1806,
+      "sha256": "d1bc03a49653f7401c09f7b4913bdd5914f5ab479de97a038fd17d26f0ff35f7",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "e7e1af554bb21263321a4c561b1baceebf2a813d",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Productivity/Boards/Tests/BoardsNotebookRichTextRegression.cs",
+      "bytes": 9005,
+      "sha256": "678b0377cb2f39c00e88d27f679e6a556bda08083769104db54825606283f882",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "588a4c09a7741e4adedc57e93ada8f09e2bde29b",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Services/notes-indexeddb.js",
+      "bytes": 11550,
+      "sha256": "931bca83e2963f205a7991ba605b9496e0d42c2536ea0e76af2f4d20baab14e9",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "f4037c97953e2b14d21d25646b2ada4504564aec",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "d97b06d21bc8a2db7a997b76112cdfe1e45aad31",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "bytes": 4010,
+      "sha256": "7640a081cd4efb66fd28750b9c90ee7c8caa0c0a9ccdce6a499bb8744b0a27f3",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "58bb4664d40e0f125436652db641dc440e8d8046",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Write/Storage/BrowserNotesTransport.cs",
+      "bytes": 1507,
+      "sha256": "af77f347d413cafa78e253ee9875dd9fa245435e809f13a4bcc9494a4efe1d83",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "eda0e3b7c5081e41891ba844d68ebde334d8eeef",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Write/Storage/INotesBrowserTransport.cs",
+      "bytes": 738,
+      "sha256": "ff3f2ec8f0a3074e82a77cee5d3e1c23200b0fda4a52775abcb04491aee852fd",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "4609d650bc365dcc728fc6fc4c55992f1a86aca9",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "apps/Web/Write/Storage/IndexedDbNotesRepository.cs",
+      "bytes": 15773,
+      "sha256": "3f55f1e49b687ea91fabd6ffc056ffafebfc67f46cf9f05bb77e757e50daec15",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "4461403a1ab41a2fce26dda16f8af3f6bf73629d",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+      "bytes": 495,
+      "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "a0b53e0143e96dba6ebc5c9557fa1b91e77d7eb3",
+      "actualGitBlobBodyVerified": true
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4",
+      "mode": "100644",
+      "type": "blob",
+      "gitBlob": "23ff127016cb32a176eeb19b8d576000bf17c814",
+      "actualGitBlobBodyVerified": true
+    }
+  ],
+  "selectedSourceCount": 53,
+  "sourceBeforeAfterIdentical": true,
+  "driver": {
+    "path": "apps/Web/Productivity/Boards/Tests/ci/run-boards-notebook.py",
+    "mode": "100644",
+    "type": "blob",
+    "gitBlob": "55e77d3ed809094810e0ab0fc61bac7d66474490",
+    "bytes": 12815,
+    "sha256": "c22ac94de1ffb1d159a7f62d5ec6214202231134fe68d81d76fd7a34d823b676"
+  },
+  "commonCommandsSHA256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+  "fixture": {
+    "path": "apps/Web/Productivity/Boards/Tests/BoardsNotebookRichTextRegression.cs",
+    "mode": "100644",
+    "type": "blob",
+    "gitBlob": "588a4c09a7741e4adedc57e93ada8f09e2bde29b",
+    "bytes": 9005,
+    "sha256": "678b0377cb2f39c00e88d27f679e6a556bda08083769104db54825606283f882"
+  },
+  "build": {
+    "status": "PASS",
+    "warnings": 0,
+    "errors": 0,
+    "sourceOwnerProjectGraph": "Actual Haven.Core/Haven.Application/CUI.Core/CUI.Runtime + original repository/path/package/diagnostics leaves; normal original vendor compiler/task/analyzer graph",
+    "sdk": "10.0.401",
+    "platform": "Ubuntu24.04/Linux-x64",
+    "nativeRendererIncluded": false
+  },
+  "assertions": {
+    "seed": {
+      "status": "PASS",
+      "executedAssertionCheckpoints": 24,
+      "failed": 0,
+      "notRun": 0,
+      "orderedLabels": [
+        "Fresh seed never overwrites another fixture",
+        "Actual Boards owner creates a durable notebook",
+        "Actual Boards service creates a canonical paragraph on the owner page",
+        "Editor selects the exact owner block ID",
+        "Actual public owner editor mutation marks the same notebook dirty",
+        "Retained editor and core expose the same owning document identity/content",
+        "Owner beta range6..10 selected",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Owner undo removes only selected bold format",
+        "Undo does not invent durable revision",
+        "Owner redo restores selected rich format",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Actual durable owner receipt acknowledges save",
+        "Save preserves the actual editor and its undo history",
+        "Actual owner persists create and rich edit revision history",
+        "Latest real historical snapshot preserves canonical identity/revision",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Saved close releases editor and notebook"
+      ],
+      "exactReceipt": {
+        "mode": "seed",
+        "assertions": 24,
+        "scope": "real owner notebook editor/local durable fixture; native/browser NOT_RUN"
+      },
+      "rawLogSha256": "bcd798144801832f08c89e666a574b4c7ade3c4f6fea169e096b2d72ede53a4f"
+    },
+    "verify": {
+      "status": "PASS",
+      "executedAssertionCheckpoints": 23,
+      "failed": 0,
+      "notRun": 0,
+      "orderedLabels": [
+        "Fresh process opens the same actual notebook ID",
+        "Canonical revision/section/page identities survive fresh process",
+        "Whole sections/pages/blocks/runs/attributes survive restart exactly",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Fresh process preserves exact owner history revision IDs/digests/metadata",
+        "Fresh process loads canonical rich history snapshot",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Independent real repository object opens the same base",
+        "Winning owner save publishes next revision",
+        "Stale owner CAS failure preserves the rich draft",
+        "Conflict cannot change winner durable bytes",
+        "Conflict retains exact unsaved text and original IDs",
+        "Dirty conflict denies close and retains the active notebook",
+        "Real saved notebook opens in read-only presentation",
+        "Typed read-only authoring and retained input admission denied",
+        "Owning View mode freezes rich authoring",
+        "View mode denies typed rich formatting",
+        "Owning Edit mode restores authoring permission",
+        "Known clean owner document saves and closes"
+      ],
+      "exactReceipt": {
+        "mode": "verify",
+        "assertions": 23,
+        "scope": "real owner notebook editor/local durable fixture; native/browser NOT_RUN"
+      },
+      "rawLogSha256": "67e00f022adee9c577619a24dab32fa9ceddf7958f581dfa543309381c741731"
+    }
+  },
+  "totalAssertionCheckpoints": 47,
+  "testCaseQualification": "24+23 console assertion checkpoints across two separate apphost invocations; not47 discovered xUnit tests; repeated Format checkpoints intentionally preserved",
+  "processCustody": {
+    "commands": 12,
+    "observedBirthRecords": 55,
+    "allNaturalExit0": true,
+    "allEOF": true,
+    "allHeldBirthsGone": true,
+    "allECHILD": true,
+    "signals": 0,
+    "seedBirth": [
+      {
+        "pid": 3770,
+        "birth": 22453,
+        "gone": true
+      }
+    ],
+    "verifyBirth": [
+      {
+        "pid": 3783,
+        "birth": 22510,
+        "gone": true
+      }
+    ],
+    "freshSeparateProcesses": true,
+    "rawCommandsSha256": "d2c3de8b7d81c1b35f6af37b2a9bd5ea7afeb959af6b209511bc14066fef87ef"
+  },
+  "reportedRuntime": {
+    "bodies": 97,
+    "apparentBytes": 39359695,
+    "beforeAfterRowsExact": true,
+    "rawInventorySha256": "fb61b42f06029599222282e7e3e63f06b7aa21faf7b628ff7b2a1a14a021847b",
+    "qualification": "Actual driver reports generated bodies; binaries/apphost and canonical fixture stores not packaged. Review verifies inventories, not original emitted body custody or package archive/extraction byte provenance."
+  },
+  "persistedOracle": {
+    "bytes": 5626,
+    "sha256": "f06abffe361639251bb1abe53725a3805a91f82a38f1970317552894df0787c8",
+    "qualification": "Hash/size only; actual fixture checks canonical IDs/content/history from stored oracle in fresh process. Private/synthetic document body not uploaded."
+  },
+  "acceptedSubset": [
+    "same actual NotesDocument instance shared by canonical public BoardsWorkspaceService and WriteDocumentEditor",
+    "exact Alpha beta gamma text and only selected beta bold, canonical block/run data",
+    "real owner undo/redo no fabricated durable revision; editor same instance retained on save",
+    "actual native filesystem NotesRepository create/save/history/load, known-close and freshprocess reopen preserving canonical doc/section/page/block/attributes/runs/revision/history metadata",
+    "same-process independent actual repository object stale CAS conflict; winner bytes unchanged, exact losing draft preserved, dirty close refused",
+    "typed readonly presentation and owner View/Edit mode authoring denial/restoration"
+  ],
+  "notAccepted": [
+    "browser IndexedDB storage/rendering/input/cold browser profile restart",
+    "seamless Native Boards page geometry/rendering",
+    "actual raw Space keyboard or owner input fix",
+    "native BoardsPage detach/close parity or owner public guarded factory",
+    "backend ACL/identity/account authorization",
+    "cross-process concurrent writes/SQLite/hosted backend",
+    "full rich/freeform Board canonical model/AppFlowy donor parity/nested parent hierarchy/collaboration/attachments/graph/Data/AI/tool island/import/export"
+  ],
+  "productSurface": "HELD/unregistered, diagnostic renderer not adopted. Actual shared Space required assertion still FAIL in separate Write CI; shared A patches not applied here.",
+  "preservedOwnerFinding": "Original async-void BoardsPage Detached saves after teardown; SaveAsync catches all errors; no typed awaited public close result. Source-only request/reproduce NOT_RUN unchanged.",
+  "downloadTransport": {
+    "initialDirectGhRedirect": "FORBIDDEN;0-byte file preserved",
+    "successfulConnectorDownload": true
+  },
+  "actions": {
+    "localSDK": false,
+    "nativeReplay": false,
+    "helperImports": false,
+    "gui": false,
+    "productEdits": false,
+    "workflowRerun": false
+  }
+}

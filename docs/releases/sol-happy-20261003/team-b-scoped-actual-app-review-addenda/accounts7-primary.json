@@ -1,0 +1,295 @@
+{
+  "scope": "Independent raw actual Accounts7 CI diagnostic read: null-config controlled native lifecycle +physical Check, not issuer/account/provider/realBFcache/AT/fullparity acceptance",
+  "runId": 37208724474,
+  "jobId": 111455321576,
+  "artifactId": 11305244605,
+  "diagnosticArchive": {
+    "path": "/workspace/attachments/9bf1f8f1-cef2-46ba-9b98-e02b9bbd9aa0/accounts7-22d-replay-diagnostics.zip",
+    "bytes": 32318,
+    "sha256": "0bf5c22d600379281ae551771464c20460599e8bf020eb5c81e881e11e725ef8"
+  },
+  "all26MembersFullCRCByteRead": true,
+  "memberPins": [
+    {
+      "path": "actual-browser-oracles.log",
+      "bytes": 247,
+      "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193"
+    },
+    {
+      "path": "anonymous-tls-public-proof.json",
+      "bytes": 245,
+      "sha256": "f71b97bb9e5b96273583d7736b40c1decfa0e798ca55e0e64d0b29a1f7a5d6f8"
+    },
+    {
+      "path": "browser/results.json",
+      "bytes": 2991,
+      "sha256": "95b62d5017a8ba703e2934d2c5fcabe5361625f4cc8ecd66d72cc532d71927ec"
+    },
+    {
+      "path": "browser-install.log",
+      "bytes": 18584,
+      "sha256": "2bedd44e1db6decb6af86995721d45d0da4f7c9c7be46469e5204343ebcc23a9"
+    },
+    {
+      "path": "browser-path.log",
+      "bytes": 102,
+      "sha256": "7fc19b87a4c9024fbff7610b08cf5296e92d2a1035e304fdc7eae2de5d2fbc26"
+    },
+    {
+      "path": "browser-tool-identity.json",
+      "bytes": 365,
+      "sha256": "b76befa8ac592ab101cdbe12b2a9a080b85a9939af5645a528a8d6cfa6e7f812"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 15003,
+      "sha256": "b48cb94116a69360c6db5fab163d12ce3bb0b7c48f1e861a3397bb50a538e27b"
+    },
+    {
+      "path": "driver-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver-clean-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver-git-head.log",
+      "bytes": 41,
+      "sha256": "865dab0f571dcf9ae9f2f19f1d42778d7ab53d23b7fa20ba192bb7b01583222d"
+    },
+    {
+      "path": "execution-plan.json",
+      "bytes": 3939,
+      "sha256": "0725dfccdfce78ab40f06e878dd3f5e920c3c673344432cbe82428d169437245"
+    },
+    {
+      "path": "fixture-cert-san-and-dates.log",
+      "bytes": 131,
+      "sha256": "ecc05f760848539ff2bc84af22ada198952c345e81b6df3d0f76104cc4475c39"
+    },
+    {
+      "path": "fixture-cert-unexpired.log",
+      "bytes": 28,
+      "sha256": "884cfe6153fc074f92defed83aaabbca814ec8e4f43e37b01e55ed76a86aaf8b"
+    },
+    {
+      "path": "fixture-public-key.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fixture-public-spki.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fixture-tls-create.log",
+      "bytes": 1020,
+      "sha256": "471d6b73f69b5c69c4e36c88718baf79688d3758af457ed306afe1af89118580"
+    },
+    {
+      "path": "full-inventory-before.log",
+      "bytes": 717,
+      "sha256": "d3b4ad3ad98b9a3da4e745736851dee4616797a0251ffc294bf89bbb7f4292a8"
+    },
+    {
+      "path": "full-inventory-final.log",
+      "bytes": 717,
+      "sha256": "d3b4ad3ad98b9a3da4e745736851dee4616797a0251ffc294bf89bbb7f4292a8"
+    },
+    {
+      "path": "openssl-version.log",
+      "bytes": 65,
+      "sha256": "54668ea977da3703d07ac46186e7c727c114a5243657f46b69a83c69ec005f34"
+    },
+    {
+      "path": "owned-family/owned-family-receipt.json",
+      "bytes": 5671,
+      "sha256": "7183de796b738e728ba0410bf4f381bb150faef7ab78bca56549024fc8ecfc1d"
+    },
+    {
+      "path": "owned-family/runner-safe-stdout.log",
+      "bytes": 404,
+      "sha256": "cd54258ed89c3ab5fdbfd78a7f918d5a7603eeff0f60b466be4daeb87b36e92f"
+    },
+    {
+      "path": "playwright-install.log",
+      "bytes": 24,
+      "sha256": "bf14b7a2bc076990244fa3239536925868dfe5ad05089c7d459b5fa482abfc72"
+    },
+    {
+      "path": "public-tool-pins.json",
+      "bytes": 115940,
+      "sha256": "9cc57a866cebcc9c71e4f6e661541e6c8dce8ff71586cd63fc984e43ef30b156"
+    },
+    {
+      "path": "result.json",
+      "bytes": 725,
+      "sha256": "c4e1e40b7fe207e075ba63ebee1973cdfffad16253b4b81225584f7bae256759"
+    },
+    {
+      "path": "receipt-map.json",
+      "bytes": 651,
+      "sha256": "498f30ecfd2b9144ae20d0875e766e5be12af29c5c8590967207b27bb3ee0909"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 1977,
+      "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4"
+    }
+  ],
+  "driverCommit": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "counts": {
+    "discovered": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "notRun": 0
+  },
+  "allSevenOracles": {
+    "actual-unconfigured-native-account-read": {
+      "status": "PASS",
+      "observed": {
+        "actualRenderReady": true,
+        "nullConfiguration": true,
+        "privateDataAbsent": true,
+        "signInUnavailable": true
+      }
+    },
+    "physical-check-truthful-unavailable": {
+      "status": "PASS",
+      "observed": {
+        "physicalNativeCheck": true,
+        "truthfulUnavailable": true,
+        "noPrivateGrant": true
+      }
+    },
+    "native-revoke-immediate-fence": {
+      "status": "PASS",
+      "observed": {
+        "immediateEmpty": true,
+        "immediateGeneration": 2,
+        "staleAccepted": false,
+        "settledEmpty": true
+      }
+    },
+    "retained-stale-native-peer-refused": {
+      "status": "PASS",
+      "observed": {
+        "oldPeerRefusedBeforeAndAfterFreshRoute": true,
+        "newOwnerGeneration": true,
+        "revokedSettingsUnavailable": true,
+        "explicitRootReplacement": true,
+        "noIdentityFabricated": true
+      }
+    },
+    "native-invalidation-fresh-owner-route": {
+      "status": "PASS",
+      "observed": {
+        "actualNativeInvalidationJoined": true,
+        "immediateEmpty": true,
+        "oldPeersRefused": true,
+        "newOwnerGeneration": true,
+        "freshCanonicalSettingsAvailable": true,
+        "noIdentityFabricated": true,
+        "brokerDrainNotClaimed": true
+      }
+    },
+    "terminal-close-true-native-and-JS-release": {
+      "status": "PASS",
+      "observed": {
+        "actualCloseReturnedTrue": true,
+        "nativeAXEmpty": true,
+        "JSProjectionRemoved": true,
+        "stalePeerRefused": true,
+        "terminalRouteCannotReopen": true,
+        "repeatCloseTrue": true
+      }
+    },
+    "exact-assets-runtime-cleanup-integrity": {
+      "status": "PASS",
+      "observed": {
+        "exactCustodyAndCleanup": true
+      }
+    }
+  },
+  "browserVersion": "151.0.7922.34",
+  "unexpected": {
+    "pageError": 0,
+    "consoleError": 0,
+    "requestFailed": 0,
+    "nonClientRequests": 0
+  },
+  "providerAccepted": false,
+  "sourcePinsMatchedCurrent": [
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    {
+      "path": "apps/Web/Tests/verify-publish-receipt.cjs",
+      "sha256": "e5481670b9647ccb7f8cfb6b1106d6a3ee1973b0e507e0ef77ec70e53bb31f8a"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/sealed-https-host-explicit-binding.cjs",
+      "sha256": "3b9c4e4adb44b18629619800335cc4041327588c05748d015b6c97281bc40b0c"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-account-replay01.py",
+      "sha256": "0dde0b377f5de784ff3e93a8d3edec40bd21a8dd12d7aa154be65910ba1cbf95"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-wave-browser-cold-quota.cjs",
+      "sha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-wave-replay01.py",
+      "sha256": "95f3a1519f761c2cc014dd8c027897b9c76565e622b88182249f943fedc01ba7"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-sealed-browser-replay.py",
+      "sha256": "9d1a08b247770646c93e2f12dcf0e70e190389e68b208e53cb129f4918956ed6"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-unconfigured-interop7-portable-ci02.cjs",
+      "sha256": "02b7f2ac22f383b8bd67e496ace3208e27d5d1a7340f380f2c6ba9a4a471027c"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/owned-kernel-child-proof01.py",
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/README.md",
+      "sha256": "94e7e94175825dce11df61a0704af4c9251f405a852b9b6e62caa66a73f96870"
+    }
+  ],
+  "commandsCount": 15,
+  "allCommandsZeroNormalEOFNoSignalsBirthsGoneECHILD": true,
+  "browserFamily": {
+    "heldIdentities": 11,
+    "boundTopLaunchers": 1,
+    "normalClosed": true,
+    "kernelStatus": "ECHILD",
+    "forcedSignals": 0,
+    "finalPinsUnchanged": true,
+    "outputAndTempBytes": 291467
+  },
+  "receiptMap": {
+    "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "originalReceiptSha256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+    "originalSealSha256": "1b1b92c927ab4949cc9f42805db2a243f494af0248f9a0daae42da9f9f6b6f5a",
+    "originalInnerZipSha256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+    "localReceiptSha256": "5e0a0c65df9f4e732b676b9e543659875619052e708149874a542a0af1ec7095",
+    "onlySemanticChangedField": "publishRoot",
+    "originalRoot": "/home/runner/work/_temp/team-b-web-publication/sdk-publish/wwwroot",
+    "localRoot": "/home/runner/work/_temp/team-b-sealed-22d/accounts7/wwwroot"
+  },
+  "full285TransportActualDriverVerifiedBeforeAndAfter": true,
+  "originalPublicOuterArchiveIndependentlyReadHere": false,
+  "wave14Status": "IN_PROGRESS_NO_COUNTS_ACCEPTED",
+  "publicPartsNotDownloaded": true
+}

@@ -1,0 +1,272 @@
+{
+  "state": "CLEAR_RECORDED47_ASSERTIONS_SCOPED_REAL_OWNER_FILESYSTEM_NOTEBOOK",
+  "UTC": "2026-10-04T14:19:36.243954+00:00",
+  "role": "B6 independent full recorded ZIP/source/log/criteria review; executor GitHub Actions. No runtime invoked or new workflow dispatched.",
+  "sourceCommit": "1b05262b6adb025ba56850f566c91d0de4cf1772",
+  "run": 37207970188,
+  "runURL": "https://github.com/CroakyJake12/9to1/actions/runs/37207970188",
+  "artifactID": 11305891797,
+  "archive": {
+    "path": "/workspace/attachments/39ee7996-3309-4f32-a5d7-7133e2882e9b/boards-notebook-owner-1b05262b.zip",
+    "bytes": 353411,
+    "sha256": "911cd723864a0810895fec83fa1cde42a4b826b62d83de604e462ff5493d316c",
+    "APIWholeDigestMatches": true,
+    "all19CRCFullBodySHA": true
+  },
+  "primaryReview": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/boards-notebook-ci-recorded-review01/REVIEW.json",
+    "sha256": "471465c62c7f260ef689caa2cf65997a6165ed353ef5f61eaff555f82dba4e71",
+    "acceptedAsConclusion": false
+  },
+  "memberBodies": [
+    {
+      "path": "commands.json",
+      "bytes": 11279,
+      "sha256": "d2c3de8b7d81c1b35f6af37b2a9bd5ea7afeb959af6b209511bc14066fef87ef"
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 2973,
+      "sha256": "c42a62f398c1549856611550ec3e0eb48d3f384c180f321019761ced6f45c2f0"
+    },
+    {
+      "path": "build.log",
+      "bytes": 6101,
+      "sha256": "31fdda41a42114a8188dfcb91b96c7649fea7a71e91ff49eb55ba0447f75f390"
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "f44e63826b26ee80d33ff65a436585d008cd088d2aedbbff2e09e6454335100c"
+    },
+    {
+      "path": "native-submodule-pins.log",
+      "bytes": 202,
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999"
+    },
+    {
+      "path": "reported-emitted-runtime-after.json",
+      "bytes": 14346,
+      "sha256": "fb61b42f06029599222282e7e3e63f06b7aa21faf7b628ff7b2a1a14a021847b"
+    },
+    {
+      "path": "reported-emitted-runtime.json",
+      "bytes": 14346,
+      "sha256": "fb61b42f06029599222282e7e3e63f06b7aa21faf7b628ff7b2a1a14a021847b"
+    },
+    {
+      "path": "restore.log",
+      "bytes": 5186,
+      "sha256": "eaad4757c10ca7f60bfc9d0ce2cc7608dfb41c564cf2a67141590a1d74bf0229"
+    },
+    {
+      "path": "result.json",
+      "bytes": 4508,
+      "sha256": "9f5e164e633758eaac1a9f6a4f5ec56d8369a350eba66824117f993bba8b62b4"
+    },
+    {
+      "path": "seed.log",
+      "bytes": 1519,
+      "sha256": "bcd798144801832f08c89e666a574b4c7ade3c4f6fea169e096b2d72ede53a4f"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 9909,
+      "sha256": "86018aa2de5640d723f72300978c153b0c813ac229ddb0b35b31779224264dad"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 9909,
+      "sha256": "86018aa2de5640d723f72300978c153b0c813ac229ddb0b35b31779224264dad"
+    },
+    {
+      "path": "source-tree-pins.log",
+      "bytes": 1299200,
+      "sha256": "c2769bc2e5589fc2b769e0acfe2a20acc4bd6456549566c668d067948f7c7952"
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 532,
+      "sha256": "73d291e85fbfa88de50ec271b0d68d8858cd616e9179e733bfe445e588566c53"
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 566,
+      "sha256": "0aa1e0ea74c11d3fe4c97b00290b40fa17e7d4c71ddef747476435174618f152"
+    },
+    {
+      "path": "verify.log",
+      "bytes": 1485,
+      "sha256": "67e00f022adee9c577619a24dab32fa9ceddf7958f581dfa543309381c741731"
+    }
+  ],
+  "sourceCustody": {
+    "fullActualGitTreeRawExact": true,
+    "selected53GitBodiesSHABytesPathExact": true,
+    "beforeAfterBytesExact": true,
+    "sourceBeforeAfterSHA": "86018aa2de5640d723f72300978c153b0c813ac229ddb0b35b31779224264dad",
+    "sourceLedgerExact53Rows": true,
+    "additionalDriverLedgerWorkflowGitBodies": {
+      "apps/Web/Productivity/Boards/Tests/ci/run-boards-notebook.py": {
+        "bytes": 12815,
+        "sha256": "c22ac94de1ffb1d159a7f62d5ec6214202231134fe68d81d76fd7a34d823b676"
+      },
+      "apps/Web/Productivity/Boards/Tests/ci/boards-notebook-source-pins.json": {
+        "bytes": 10953,
+        "sha256": "d446aece95b73f9bf109a58d7d768b3963c575d79c8af7f2feac21cc18f8086a"
+      },
+      ".github/workflows/team-b-boards-notebook.yml": {
+        "bytes": 2516,
+        "sha256": "2f9082ad9fdbad0bac99540c2c51cdad9d5abcbdaded478d9cd35f310e1a7b6a"
+      }
+    },
+    "scope": "Conservative source-ledger subset; no complete evaluated transitive compiler closure claim; some pinned renderer/browser sources are not compiled or exercised."
+  },
+  "build": {
+    "normalSourceSDK": "10.0.401",
+    "framework": "net10.0",
+    "RID": "linux-x64",
+    "normalBuildExit": 0,
+    "actualBuildWarnings": 0,
+    "actualBuildErrors": 0,
+    "sourceBuiltApphostFromActualEvaluatedTarget": true
+  },
+  "assertions": {
+    "seed": {
+      "mode": "seed",
+      "assertions": 24,
+      "assertionNames": [
+        "Fresh seed never overwrites another fixture",
+        "Actual Boards owner creates a durable notebook",
+        "Actual Boards service creates a canonical paragraph on the owner page",
+        "Editor selects the exact owner block ID",
+        "Actual public owner editor mutation marks the same notebook dirty",
+        "Retained editor and core expose the same owning document identity/content",
+        "Owner beta range6..10 selected",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Owner undo removes only selected bold format",
+        "Undo does not invent durable revision",
+        "Owner redo restores selected rich format",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Actual durable owner receipt acknowledges save",
+        "Save preserves the actual editor and its undo history",
+        "Actual owner persists create and rich edit revision history",
+        "Latest real historical snapshot preserves canonical identity/revision",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Saved close releases editor and notebook"
+      ],
+      "receipt": {
+        "mode": "seed",
+        "assertions": 24,
+        "scope": "real owner notebook editor/local durable fixture; native/browser NOT_RUN"
+      },
+      "logSha256": "bcd798144801832f08c89e666a574b4c7ade3c4f6fea169e096b2d72ede53a4f"
+    },
+    "verify": {
+      "mode": "verify",
+      "assertions": 23,
+      "assertionNames": [
+        "Fresh process opens the same actual notebook ID",
+        "Canonical revision/section/page identities survive fresh process",
+        "Whole sections/pages/blocks/runs/attributes survive restart exactly",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Fresh process preserves exact owner history revision IDs/digests/metadata",
+        "Fresh process loads canonical rich history snapshot",
+        "Exact three-word content, including both spaces",
+        "Only selected beta forms the middle owner run",
+        "Exact owner rich formatting on beta and unaffected neighbours",
+        "Independent real repository object opens the same base",
+        "Winning owner save publishes next revision",
+        "Stale owner CAS failure preserves the rich draft",
+        "Conflict cannot change winner durable bytes",
+        "Conflict retains exact unsaved text and original IDs",
+        "Dirty conflict denies close and retains the active notebook",
+        "Real saved notebook opens in read-only presentation",
+        "Typed read-only authoring and retained input admission denied",
+        "Owning View mode freezes rich authoring",
+        "View mode denies typed rich formatting",
+        "Owning Edit mode restores authoring permission",
+        "Known clean owner document saves and closes"
+      ],
+      "receipt": {
+        "mode": "verify",
+        "assertions": 23,
+        "scope": "real owner notebook editor/local durable fixture; native/browser NOT_RUN"
+      },
+      "logSha256": "67e00f022adee9c577619a24dab32fa9ceddf7958f581dfa543309381c741731"
+    },
+    "totalExecutedAssertionCheckpoints": 47,
+    "failedAssertions": 0,
+    "qualification": "Two ordered seed/verify procedures;47 Check checkpoints including repeated Format checks, not47 independent test cases or fullBoards requirements denominator."
+  },
+  "normalProcessCustody": {
+    "commandFamilies": 12,
+    "recordedBirths": 55,
+    "allNaturalExit0FullEOF": true,
+    "allHeldBirthsGoneStrictECHILD": true,
+    "signals": 0,
+    "distinctSeedAndVerifyPIDs": [
+      3770,
+      3783
+    ]
+  },
+  "reportedRuntime": {
+    "records": 97,
+    "apparentBytes": 39359695,
+    "beforeAfterRowsExact": true,
+    "rawInventorySHA": "fb61b42f06029599222282e7e3e63f06b7aa21faf7b628ff7b2a1a14a021847b",
+    "qualification": "Emitted inventory attestation only. Apphost/DLL/package/store bodies are not uploaded and were not individually rehashed locally."
+  },
+  "persistedOracle": {
+    "bytes": 5626,
+    "sha256": "f06abffe361639251bb1abe53725a3805a91f82a38f1970317552894df0787c8",
+    "qualification": "Hash/size reported. Actual seed/verify read canonical contents in real filesystem; oracle/store bodies are not uploaded here."
+  },
+  "criticalCriterionMapping": [
+    "Real NotesRepository/AppPaths/NotesDocumentValidator and retained public WriteDocumentEditor on actual Boards document; same editor reference survives acknowledged save. No fake repository or parallel text model.",
+    "Seed exact Alpha beta gamma, only beta range6..10 bold, neighbours unchanged; real undo/redo preserves durable revision until save.",
+    "Acknowledged real save, owner GetVersions/LoadVersion, exact identity/revision/rich snapshot and saved close releasing editor/document.",
+    "Separate fresh verify apphost process reopens same canonical ID/section/page/revision and byte-serialized whole sections/pages/blocks/runs/attributes; exact owner history revision metadata/digests and loaded rich snapshot.",
+    "Independent real repository objects inside verify process create same-base stale CAS: winner saves; loser returns RevisionConflict retaining IsDirty, exact losing text/block; SHA256 of current.haven-notes.json equal before/after failed loser save.",
+    "Dirty stale PrepareToClose denies and retains document; this is concrete failure-path test, not a general no-autosave contract (SaveBeforeLeaving can save acknowledged dirty documents).",
+    "Typed read-only input and owner View mode formatting denied; owner Edit returns capability; known clean save/close succeeds. No raw-key or rendered surface admission proved."
+  ],
+  "notAccepted": [
+    "Full/seamless rendered native Boards workspace geometry, original BoardsPage public guarded factory/awaited teardown; product surface remains HELD and unregistered.",
+    "Browser IndexedDB, actual keyboard Space, native pointer/AT/input, cold browser profile restart/BFCache.",
+    "Backend/account/ACL/private-actor authority; owner readOnly parameter and View mode are controlled domain inputs.",
+    "Cross-process simultaneous CAS writes; concurrency uses two real objects in same verify process. Only sequential freshprocess persistence tested.",
+    "Full rich/freeform Board operations, imports/exports/collaboration/nested hierarchy/Data/AI/donor parity.",
+    "All original owner source findings and separate Write Space failure remain preserved; actualsource authored-NOT_RUN comments do not override new scoped actual47 evidence."
+  ],
+  "actions": {
+    "localSDK": false,
+    "localGUI": false,
+    "runtimeReplay": false,
+    "extraction": false,
+    "sourceAdoption": false
+  }
+}
