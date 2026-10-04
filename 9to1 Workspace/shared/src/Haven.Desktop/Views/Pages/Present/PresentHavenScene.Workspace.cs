@@ -159,7 +159,7 @@ internal sealed partial class PresentHavenScene
         WorkspaceHost.SetValue(HavenProperties.Gap, HavenLength.Px(12));
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
 
-        SlideRail = new Container { Name = "Present.SlideRail", Layout = HavenLayout.Vertical };
+        SlideRail = new Container { Name = "Present.SlideRail", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "1fr Auto Auto" };
         SlideRail.SetValue(HavenProperties.Column, 0);
         SlideRail.SetValue(HavenProperties.Background, "SurfaceRaised");
         SlideRail.SetValue(HavenProperties.BorderColor, "Border");
@@ -167,10 +167,24 @@ internal sealed partial class PresentHavenScene
         SlideRail.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(16)));
         SlideRail.SetValue(HavenProperties.Padding, HavenThickness.Parse("10px"));
         SlideRail.SetValue(HavenProperties.Gap, HavenLength.Px(8));
-        SlideRail.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        SlideRail.SetValue(HavenProperties.Height, HavenLength.Percent(100));
+        SlideRail.SetValue(HavenProperties.Overflow, HavenOverflow.Clip);
+        SlidePane.Remove(SlideNavigator);
+        SlideNavigator.SetValue(HavenProperties.Row, 0);
+        SlideRail.Add(SlideNavigator);
+        SlideToolbar.Remove(AddSlideButton);
+        AddSlideButton.SetValue(HavenProperties.Row, 1);
+        AddSlideButton.Content = "+ Add slide";
+        AddSlideButton.Variant = ButtonVariant.Tertiary;
+        SlideRail.Add(AddSlideButton);
+        SlideToolbar.Remove(DeleteSlideButton);
+        DeleteSlideButton.SetValue(HavenProperties.Row, 2);
+        DeleteSlideButton.Variant = ButtonVariant.Ghost;
+        SlideRail.Add(DeleteSlideButton);
+        PolishSlideRail();
         WorkspaceHost.Add(SlideRail);
 
-        StageHost = new Container { Name = "Present.Stage", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "1fr Auto" };
+        StageHost = new Container { Name = "Present.Stage", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "1fr Auto Auto" };
         StageHost.SetValue(HavenProperties.Column, 1);
         StageHost.SetValue(HavenProperties.Gap, HavenLength.Px(8));
         CanvasOverlay = new Container { Name = "Present.Stage.CanvasOverlay", Layout = HavenLayout.Overlay };
@@ -333,6 +347,9 @@ internal sealed partial class PresentHavenScene
         PositionText.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         notesBar.Add(PositionText);
         StageHost.Add(notesBar);
+        InspectorPane.Remove(ObjectToolbar);
+        ObjectToolbar.SetValue(HavenProperties.Row, 2);
+        StageHost.Add(ObjectToolbar);
         WorkspaceHost.Add(StageHost);
         Root.Add(WorkspaceHost);
 
@@ -400,24 +417,7 @@ internal sealed partial class PresentHavenScene
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         MenuBar.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         PlaybackOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-        ClearChildren(SlideRail);
-        for (var index = 0; index < document.Slides.Count; index++)
-        {
-            var captured = index;
-            var slide = document.Slides[index];
-            var button = ActionButton($"Present.Rail.{slide.Id:N}", $"{index + 1}  {DisplayTitle(slide.Title)}", ButtonVariant.Navigation, () => SlideSelected?.Invoke(captured));
-            button.SetState(HavenElementState.Selected, index == slideIndex);
-            button.Accessibility.AccessibleName = $"Slide {index + 1}: {DisplayTitle(slide.Title)}";
-            SlideRail.Add(button);
-        }
-        SlideToolbar.Remove(AddSlideButton);
-        AddSlideButton.Content = "+ Add slide";
-        AddSlideButton.Variant = ButtonVariant.Tertiary;
-        SlideRail.Add(AddSlideButton);
-        SlideToolbar.Remove(DeleteSlideButton);
-        DeleteSlideButton.Variant = ButtonVariant.Ghost;
-        SlideRail.Add(DeleteSlideButton);
-        PolishSlideRail();
+        SlideNavigator.SetDocument(document, slideIndex);
         StatusText.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
     }
 

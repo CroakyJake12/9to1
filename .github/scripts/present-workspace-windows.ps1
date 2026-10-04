@@ -134,9 +134,6 @@ try {
     $result.avaloniaBuildTaskSHA256 = (Get-FileHash -LiteralPath $avaloniaTasks -Algorithm SHA256).Hash.ToLowerInvariant()
     $avaloniaTaskFlag = "-p:AvaloniaBuildTasksLocation=$avaloniaTasks"
     $flags += $avaloniaTaskFlag
-    $result.stage = 'ordinary-owning15-and-shared7'
-    Run-OriginalCases 'owning' $catalog.owningProject ([int]$catalog.owningCases) ''
-    Run-OriginalCases 'shared' $catalog.sharedProject ([int]$catalog.sharedCases) $catalog.sharedFilter
     $result.stage = 'new-native-release-package'
     $nativeProject = '9to1 Workspace/Present/HavenOS.Present.csproj'
     [void](Invoke-DotNet 'native-present-release' (@('build',$nativeProject,'-c','Release','-f','net10.0',$taskFlag) + $flags))
@@ -172,8 +169,18 @@ try {
     if ($env:GITHUB_OUTPUT) { Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "part_count=$partCount"; Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'parts_ready=true' }
     $result.stage = 'actual-new-package-native-ui'
     $nativeOutput = Join-Path $output 'native-ui'
-    & powershell.exe -NoProfile -NonInteractive -File (Join-Path $repo '.github/scripts/present-workspace-native-ui-controls.ps1') -PackageInput $publication -ObservationInput $publication -OutputDirectory $nativeOutput -ExpectedCommit $ExpectedCommit -ExpectedRunId $env:GITHUB_RUN_ID -ExpectedRunAttempt $env:GITHUB_RUN_ATTEMPT
-    $result.nativeUiExitCode = $LASTEXITCODE
+    try {
+        & powershell.exe -NoProfile -NonInteractive -File (Join-Path $repo '.github/scripts/present-workspace-native-ui-controls.ps1') -PackageInput $publication -ObservationInput $publication -OutputDirectory $nativeOutput -ExpectedCommit $ExpectedCommit -ExpectedRunId $env:GITHUB_RUN_ID -ExpectedRunAttempt $env:GITHUB_RUN_ATTEMPT
+        $result.nativeUiExitCode = $LASTEXITCODE
+    } finally {
+        # The unchanged native fresh-profile refusal runs before shared App initialization
+        # creates the genuine default profile. Retain both managed cohorts after any
+        # native outcome, without deleting state or changing the original UI criteria.
+        $result.stage = 'ordinary-owning15-and-shared7-after-native'
+        Run-OriginalCases 'owning' $catalog.owningProject ([int]$catalog.owningCases) ''
+        Run-OriginalCases 'shared' $catalog.sharedProject ([int]$catalog.sharedCases) $catalog.sharedFilter
+        $result.stage = 'actual-new-package-native-ui'
+    }
     $runtimeAfter = @(Get-FileCatalog $publish -Exclusive); Write-Json (Join-Path $diagnostics 'producer-runtime-after.json') $runtimeAfter
     if (-not (Same-Catalog $runtime $runtimeAfter)) { throw 'Original published runtime changed during native observation.' }
     if ($result.nativeUiExitCode -ne 0) { throw 'Actual new package native UI criteria failed; safe first original observation retained.' }

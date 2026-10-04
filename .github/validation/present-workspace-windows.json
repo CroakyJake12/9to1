@@ -10,7 +10,11 @@
     "eng/release-validation/present-workspace-windows/README.md",
     "9to1 Workspace/Present/Tests/PresentWorkspaceCompositionTests.cs",
     "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
-    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Freeform.cs"
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Freeform.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Workspace.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneAutomationPeer.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentThumbnailNavigator.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/PresentThumbnailNavigatorAutomationPeer.cs"
   ],
   "sourcePins": [
     {
@@ -498,10 +502,10 @@
     },
     {
       "path": "9to1 Workspace/Present/Tests/PresentWorkspaceCompositionTests.cs",
-      "bytes": 9612,
-      "sha256": "e0bd439b927822795f9d552c3ef0d51ee9333a1f9d1f16c79f4c39596f57ab2e",
+      "bytes": 9587,
+      "sha256": "489c56727b56036c084053aaa965b54eebca399586889c985a5088463c1213db",
       "gitMode": "100644",
-      "gitBlob": "a0d54429da142a9dc109866494c53cfc2f6e771d"
+      "gitBlob": "60a18efbbc62d8f46293e728a7c6b4ab38c6f54b"
     },
     {
       "path": "9to1 Workspace/Present/Tests/TestAppBuilder.cs",
@@ -736,10 +740,10 @@
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneAutomationPeer.cs",
-      "bytes": 10119,
-      "sha256": "8c2d8957371c014892c4c6b606d9673389b13048f94c9f02516060ee5e285cda",
+      "bytes": 10277,
+      "sha256": "53e6e721ab6937908126838f9e545dd408dee6493094fb3934857e96cf67f887",
       "gitMode": "100644",
-      "gitBlob": "b6b596ef7ed59972290170969ba3802b8eeef81d"
+      "gitBlob": "8f298c754ec526d86ddc4ee9c6f4d22017bad2c3"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
@@ -747,6 +751,20 @@
       "sha256": "1762e440d6b60f7d08921174a1dc7d43ac566c1106073d5a09a9cc15c332afb2",
       "gitMode": "100644",
       "gitBlob": "1c3ad3775a5d890beae33ea1ce9f71e241ac0088"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSelectItemAutomationPeer.cs",
+      "bytes": 3647,
+      "sha256": "1e5e085ad8ca0574a21589904819179bcdac5f10feb53cf6541ae5fe88ca43f4",
+      "gitMode": "100644",
+      "gitBlob": "c9b950a6f6f176855ee137be34e637be5f5ab485"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/PresentThumbnailNavigatorAutomationPeer.cs",
+      "bytes": 3610,
+      "sha256": "fa65858f233c422f1ec0368309a4e1c06b6f6ddc7d0ce85e5c00e8902b80c5f3",
+      "gitMode": "100644",
+      "gitBlob": "c4e98f19a22f01f71a919b666b630b5b4c3672ca"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/SitesNativeWorkspaceAuthority.cs",
@@ -785,10 +803,10 @@
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Workspace.cs",
-      "bytes": 47478,
-      "sha256": "0f69a2fb7487fc7660a8a17204a29e81c54ed69ea94024e52f7a44aba71ebbec",
+      "bytes": 47451,
+      "sha256": "2daa165387c55de238d4a72a48f6fa5ab89da44603c8012f6002cf6c0e42c7df",
       "gitMode": "100644",
-      "gitBlob": "d5aadfcabf45125d1dd87d3ac269ebcfc9b0a2bb"
+      "gitBlob": "1ce416d3c61e5627b7d3475d027ffcc68b2c88e6"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.cs",
@@ -824,6 +842,13 @@
       "sha256": "e6e702444e0cf4b9784bd26f4db44c11fc28763b6db7406a714b363c0f13d574",
       "gitMode": "100644",
       "gitBlob": "42c7fbef091c359cc4518f30f23c2b30ea408d3b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentThumbnailNavigator.cs",
+      "bytes": 19083,
+      "sha256": "ba7739e03b77a09026bef01e9a290c9ec096f931b87190ebf20bb5874605a741",
+      "gitMode": "100644",
+      "gitBlob": "d96ed4eaeb9e11469c045b31f165e6717ae5ca40"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs",
@@ -1471,5 +1496,47 @@
     "maintainedMainPartialImportSource": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.cs",
     "scope": "One existing namespace import only; no enum/lock/authority/placement/persistence/UI policy/test change.",
     "qualification": "Actual receiving whole-source compile/15/shared7/newpackage/native UI still required."
+  },
+  "retainedOriginal7432Negative": {
+    "runId": 37231040568,
+    "head": "7432f8326246b2a7603b2d8effa1509216b527b2",
+    "artifactId": 11314281248,
+    "custodyArtifactId": 11313549355,
+    "owningCasesExecuted": 0,
+    "owningCause": "Four xUnit2031 on new C1 Assert.Single(filtered Where) expressions; original13 unchanged",
+    "sharedCasesExecuted": 7,
+    "sharedCasesPassed": 5,
+    "sharedCasesFailed": 2,
+    "sharedCauses": [
+      "Present_thumbnail_navigator_stays_retained_and_scrolls_a_50_slide_deck: original navigator.Bounds.Height>200 false",
+      "Present_canvas_renders_native_cubic_shape_and_drag_is_undoable: actual Present.Object.AddShape and Present.Objects.Toolbar zero bounds, hit Present.Root1200x900"
+    ],
+    "package": {
+      "bytes": 112181127,
+      "sha256": "7ef441e9619d118ebfa8efe825e12dfe810f9d305bb7110313480a514d85008e",
+      "fileCount": 379,
+      "uncompressedBytes": 309068255,
+      "authenticodeStatus": "NotSigned"
+    },
+    "nativeChecksPassed": 207,
+    "nativeChecksTotal": 208,
+    "nativeCause": "Fresh actual default ApplicationData/Haven profile refusal after shared App initialization",
+    "nativeLaunches": 0,
+    "sourceAfterUnchanged": true,
+    "qualification": "Original negative and original sealed package retained; no actual native GUI launch or full acceptance inferred."
+  },
+  "reviewedRetainedWorkspaceRepair": {
+    "status": "PROVISIONAL_PENDING_PEER_AND_ACTUAL_WINDOWS",
+    "basis": "7432f8326246b2a7603b2d8effa1509216b527b2",
+    "productionPaths": [
+      "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Workspace.cs",
+      "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneAutomationPeer.cs",
+      "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentThumbnailNavigator.cs",
+      "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/PresentThumbnailNavigatorAutomationPeer.cs"
+    ],
+    "actualControls": "Same one retained SlideNavigator and same ObjectToolbar instances reparent into active SlideRail and StageHost. No duplicate per-slide button list. Present-only logical automation items preserve source IDs/names/Button semantics from same real draw/hit geometry and current visible document GUIDs, following maintained Select logical-item peer recipe.",
+    "originalControls": "Original13 owning and all7 shared source wholebodies unchanged; new C1 two controls only four same-predicate Assert.Single overload corrections; entire native UI/workflow unchanged.",
+    "executionOrder": "Fresh source build/package/native observation FIRST on actual unmodified default profile; unchanged owning15 and shared7 always invoked in actual native-attempt finally, even nonzero/exception; all original final pass/custody/refusal guards retained.",
+    "profilePolicy": "No profile deletion, override, injected config/actor, or hidden compatibility route."
   }
 }

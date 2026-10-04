@@ -41,6 +41,40 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
     public double ScrollOffset => _scrollOffset;
     public int SlideCount => _document?.Slides.Count ?? 0;
 
+    // Logical automation items describe the same retained thumbnail geometry
+    // drawn and hit-tested below; they never add visual child elements.
+    internal IReadOnlyList<PresentThumbnailItem> GetVisibleItems()
+    {
+        if (_document is null || Bounds.Width <= 1 || Bounds.Height <= 1) return [];
+        var items = new List<PresentThumbnailItem>();
+        var itemWidth = Math.Max(40, Bounds.Width - HorizontalPadding * 2);
+        var itemHeight = ThumbnailHeight(itemWidth) + LabelHeight;
+        var stride = itemHeight + ItemGap;
+        var first = Math.Max(0, (int)Math.Floor((_scrollOffset - VerticalPadding) / stride));
+        var last = Math.Min(_document.Slides.Count - 1, (int)Math.Ceiling((_scrollOffset + Bounds.Height) / stride));
+        for (var index = first; index <= last; index++)
+        {
+            var rect = ItemBounds(index, itemWidth, itemHeight);
+            var left = Math.Max(rect.Left, Bounds.Left);
+            var top = Math.Max(rect.Top, Bounds.Top);
+            var right = Math.Min(rect.Right, Bounds.Right);
+            var bottom = Math.Min(rect.Bottom, Bounds.Bottom);
+            if (right <= left || bottom <= top) continue;
+            var slide = _document.Slides[index];
+            var title = string.IsNullOrWhiteSpace(slide.Title) ? "Untitled slide" : slide.Title.Trim();
+            items.Add(new PresentThumbnailItem(slide.Id, $"Slide {index + 1}: {title}",
+                new HavenRect(left, top, right - left, bottom - top), index == _selectedIndex));
+        }
+        return items;
+    }
+
+    internal bool ActivateSlide(Guid slideId)
+    {
+        if (_document is null) return false;
+        var index = _document.Slides.FindIndex(slide => slide.Id == slideId);
+        return index >= 0 && SelectKeyboardSlide(index);
+    }
+
     public void SetDocument(PresentDocument document, int selectedIndex)
     {
         _document = document ?? throw new ArgumentNullException(nameof(document));
@@ -177,8 +211,7 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
         context.Add(new HavenPushClipCommand(Bounds));
         for (var index = first; index <= last; index++)
         {
-            var localY = VerticalPadding + index * stride - _scrollOffset;
-            var itemRect = new HavenRect(Bounds.X + HorizontalPadding, Bounds.Y + localY, itemWidth, itemHeight);
+            var itemRect = ItemBounds(index, itemWidth, itemHeight);
             if (itemRect.Bottom < Bounds.Y || itemRect.Y > Bounds.Bottom) continue;
             DrawThumbnail(context, _document.Slides[index], index, itemRect, opacity);
         }
@@ -314,6 +347,10 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
         return VerticalPadding * 2 + _document.Slides.Count * itemHeight + Math.Max(0, _document.Slides.Count - 1) * ItemGap;
     }
 
+    private HavenRect ItemBounds(int index, double itemWidth, double itemHeight) =>
+        new(Bounds.X + HorizontalPadding, Bounds.Y + VerticalPadding + index * (itemHeight + ItemGap) - _scrollOffset,
+            itemWidth, itemHeight);
+
     private static double ThumbnailHeight(double itemWidth) => Math.Max(36, itemWidth * 9d / 16d);
 
     private HavenBrush SlideBackground(PresentSlide slide)
@@ -342,3 +379,5 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
         return normalized.Length <= 20 ? normalized : normalized[..17] + "…";
     }
 }
+
+internal readonly record struct PresentThumbnailItem(Guid SlideId, string Name, HavenRect Bounds, bool IsSelected);
