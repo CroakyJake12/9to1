@@ -1,0 +1,137 @@
+{
+  "status": "PASS",
+  "publishManifestSha256": "d985cbfc154ca295dc816ee7ff3e07a1676bb75b0cea54b3344393025d8852f8",
+  "archiveRuntimeFullDenominatorExact": true,
+  "runtimeFiles": 267,
+  "runtimeBytes": 56962891,
+  "closedNativeStoresIncluded": {
+    "quota-cold-probe-21905": {
+      "files": 18,
+      "bytes": 66236
+    },
+    "quota-probe-21903": {
+      "files": 6,
+      "bytes": 915318
+    },
+    "wave-browser-fe3dbaef-cold04": {
+      "files": 6,
+      "bytes": 208437
+    },
+    "wave-browser-fe3dbaef-cold05": {
+      "files": 7,
+      "bytes": 223883
+    }
+  },
+  "recordedResults": {
+    "wave-browser-fe3dbaef-cold05": {
+      "resultBytesSha256": "b113e42150788fbe1ebeaa88cea432af6414353d82ed0551f8abd015662c1ec9",
+      "topLevelKeys": [
+        "scope",
+        "runnerSha256AtStart",
+        "bundleRoot",
+        "candidateManifest",
+        "outcomes",
+        "browserVersion",
+        "console",
+        "downloads",
+        "fixture",
+        "diagnostics",
+        "interactionLimits",
+        "candidateManifestSha256",
+        "candidateCommit",
+        "bundleInventoryBefore",
+        "origin",
+        "browserLaunchPages",
+        "operationReadiness",
+        "deliberateBlankRestarts",
+        "secondPage",
+        "actualQuotaRestart",
+        "actualQuotaControl",
+        "narrowScreenshot",
+        "bundleInventoryAfter",
+        "runnerSha256AtEnd",
+        "exit",
+        "counts"
+      ]
+    },
+    "wave-browser-fe3dbaef-cold04": {
+      "resultBytesSha256": "2079f2249bf0d1b8e423537eabf346851a0690788a7e6cfbaddb9bcb33e6a15c",
+      "topLevelKeys": [
+        "scope",
+        "runnerSha256AtStart",
+        "bundleRoot",
+        "candidateManifest",
+        "outcomes",
+        "browserVersion",
+        "console",
+        "downloads",
+        "fixture",
+        "diagnostics",
+        "interactionLimits",
+        "candidateManifestSha256",
+        "candidateCommit",
+        "bundleInventoryBefore",
+        "origin",
+        "browserLaunchPages",
+        "operationReadiness",
+        "failure",
+        "finalizationFailures",
+        "bundleInventoryAfter",
+        "runnerSha256AtEnd",
+        "exit",
+        "counts"
+      ]
+    },
+    "quota-cold-probe-21905": {
+      "resultBytesSha256": "4da93ca5dbacca6430b50965ddbbe88ba7eeaf28c21d7d244392442d9b23bc20",
+      "topLevelKeys": [
+        "scope",
+        "authoredCases",
+        "sourceSha256AtStart",
+        "observations",
+        "unexpectedErrors",
+        "finalizationErrors",
+        "counts",
+        "origin",
+        "browserVersion",
+        "capability",
+        "sourceSha256AtEnd",
+        "exit"
+      ]
+    },
+    "quota-probe-21903": {
+      "resultBytesSha256": "3ec2405ecb5f7e82b9f5a4f3a5da03d7fb1dcfb1175569a4302bc47dbc404dd1",
+      "topLevelKeys": [
+        "scope",
+        "authoredCases",
+        "sourceSha256AtStart",
+        "observations",
+        "unexpectedErrors",
+        "finalizationErrors",
+        "counts",
+        "origin",
+        "browserVersion",
+        "capability",
+        "sourceSha256AtEnd",
+        "exit"
+      ]
+    },
+    "quota-cold-probe-21904": {
+      "resultBytesSha256": "eb60ccdeff9ef0cf9c82200ca6ef272f82c211e1ca667fb936f8e790873b4bdd",
+      "topLevelKeys": [
+        "scope",
+        "authoredCases",
+        "sourceSha256AtStart",
+        "observations",
+        "unexpectedErrors",
+        "finalizationErrors",
+        "counts",
+        "origin",
+        "browserVersion",
+        "failure",
+        "sourceSha256AtEnd",
+        "exit"
+      ]
+    }
+  }
+}

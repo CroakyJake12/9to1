@@ -1,0 +1,11 @@
+{
+  "verifiedUTC": "2026-10-04T03:15:56.122786+00:00",
+  "archiveSha256": "233328a76e0e2c255d0cd63b966f230edd630289c83822020a8bdc2d80716a74",
+  "manifestSha256": "c170a44cf2ff330262b0c149a80d8f0d69a40c488d92b42609eb39e79d5177dc",
+  "selectedMembersVerified": 431,
+  "tarMembersIncludingManifest": 432,
+  "selectedBytes": 125144525,
+  "safePathsUniqueRegularFiles": true,
+  "everyMemberHashAndByteCountVerified": true,
+  "scope": "Portable recorded immutablefe3d localWave14/nativequota evidence; no provider/allapp/platform release claim."
+}

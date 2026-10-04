@@ -1,0 +1,59 @@
+{
+  "verdict": "SELECTED_PORTABLE_CUSTODY_CONSISTENT",
+  "archiveSHA256": "233328a76e0e2c255d0cd63b966f230edd630289c83822020a8bdc2d80716a74",
+  "transportManifestSHA256": "c170a44cf2ff330262b0c149a80d8f0d69a40c488d92b42609eb39e79d5177dc",
+  "hashedEvidenceMembers": 431,
+  "tarTotalRegularMembersIncludingManifest": 432,
+  "hashedEvidenceBytes": 125144525,
+  "runtimeAssets": 267,
+  "runtimeBytes": 56962891,
+  "allMembersSafeRegularUniquePaths": true,
+  "exactOriginalOwnerGitCutsVerified": 12,
+  "traceNetworkIndependentScan": [
+    {
+      "archivePath": "recorded/wave-browser-fe3dbaef-cold04/browser-phase1.zip",
+      "requests": 82,
+      "origins": [
+        "127.0.0.1:18761"
+      ],
+      "credentialRequestHeaders": 0,
+      "credentialResponseHeaders": 0
+    },
+    {
+      "archivePath": "recorded/wave-browser-fe3dbaef-cold05/browser-before-quota-restart.zip",
+      "requests": 162,
+      "origins": [
+        "127.0.0.1:18761"
+      ],
+      "credentialRequestHeaders": 0,
+      "credentialResponseHeaders": 0
+    },
+    {
+      "archivePath": "recorded/wave-browser-fe3dbaef-cold05/browser-final.zip",
+      "requests": 81,
+      "origins": [
+        "127.0.0.1:18761"
+      ],
+      "credentialRequestHeaders": 0,
+      "credentialResponseHeaders": 0
+    },
+    {
+      "archivePath": "recorded/wave-browser-fe3dbaef-cold05/browser-phase1.zip",
+      "requests": 82,
+      "origins": [
+        "127.0.0.1:18761"
+      ],
+      "credentialRequestHeaders": 0,
+      "credentialResponseHeaders": 0
+    }
+  ],
+  "excludedAuthenticationCacheProfilePathFindings": [],
+  "publisherLimitation": "4615 original source inventory omits five linked owner Wave .cs inputs and generator; later immutable fe3d git cuts verify source identity, not contemporaneous before/after closure.",
+  "limits": [
+    "No extraction or execution; every tar member SHA/bytes streaming-verified.",
+    "Network request/response header and origin scan covers recorded trace network; no exhaustive arbitrary binary secret detector claim.",
+    "Closed synthetic native IDB files retained as opaque exact bytes, not parsed independently.",
+    "B6 separate real14 replay evidence not in this archive.",
+    "Local Wave14 evidence does not establish hosted/provider/full Wave/platform parity."
+  ]
+}

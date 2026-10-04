@@ -1,0 +1,136 @@
+{
+  "verdict": "INDEPENDENT_REAL_LOCAL_WAVE14_REPRODUCED",
+  "sourceCommit": "fe3dbaef2629e2e556ab478e5dd42059e3e6ade7",
+  "currentProductionCommitNotRelabelled": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "counts": {
+    "discovered": 14,
+    "executed": 14,
+    "passed": 14,
+    "failed": 0,
+    "notRun": 0
+  },
+  "exitCode": 0,
+  "diagnostics": {
+    "counts": {
+      "consoleError": 0,
+      "managedRuntimeError": 0,
+      "pageError": 0,
+      "requestFailed": 0
+    },
+    "boundedSamples": [],
+    "sampleLimit": 80
+  },
+  "frozenInputsBeforeAfter": {
+    "bundleCount": 267,
+    "bundleBytes": 56962891,
+    "immutableSourceCuts": 39,
+    "runnerSHA256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f",
+    "manifestSHA256": "d985cbfc154ca295dc816ee7ff3e07a1676bb75b0cea54b3344393025d8852f8",
+    "cutsManifestSHA256": "09cc6cff867dd30937c5018f2ee2780fc0ea57880e68bc71801367a997f305fc"
+  },
+  "criticalTraceRecomputation": {
+    "projectStoreBeforeCall": "call@503",
+    "projectStoreAfterRefusalCall": "call@529",
+    "exactFullArrayEquality": true,
+    "summaryBeforeRefusalCall": "browser-before-quota-restart.zip call@437",
+    "summaryAfterRefusalCall": "call@531",
+    "exactSummaryEquality": true,
+    "durableBothStoreRevisionAfterRefusal": 6,
+    "actualNativeRefusalCall": "call@526",
+    "actualRenderedRefusalAndDraftTimelineCall": "call@533",
+    "draftTimelineFrame": 16800,
+    "recoveredSaveCall": "call@547",
+    "durableBothStoreRevisionAfterRetry": 7,
+    "summaryAfterRetryCall": "call@554",
+    "nativeSuccessfulCompletionCall": "call@551"
+  },
+  "exportIndependentRecomputation": {
+    "bytes": 288044,
+    "sampleRate": 48000,
+    "leadingSilentFrames": 24000,
+    "remainingDataExactSourcePCM": true,
+    "sha256": "71a6402a78f20031a04fd757749cc440f22db5c3ab8efad307b5426407b72882"
+  },
+  "actualQuotaRestart": {
+    "previousIdentity": {
+      "browserPid": 117475,
+      "version": {
+        "protocolVersion": "1.3",
+        "product": "Chrome/151.0.7922.173",
+        "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+        "jsVersion": "15.1.206.23"
+      }
+    },
+    "restartedIdentity": {
+      "browserPid": 117674,
+      "version": {
+        "protocolVersion": "1.3",
+        "product": "Chrome/151.0.7922.173",
+        "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+        "jsVersion": "15.1.206.23"
+      }
+    },
+    "previousBrowserDisconnected": true,
+    "order": "Original baseline in prior process; close/disconnect; new same-profile process; quota override BEFORE page navigation/production storage access; original owner project open; first owner mutation is Move.",
+    "beforeOverridePageUrls": [
+      "about:blank",
+      "about:blank",
+      "about:blank",
+      "about:blank",
+      "about:blank",
+      "about:blank"
+    ]
+  },
+  "actualQuotaControl": {
+    "usage": 0,
+    "quota": 1,
+    "overrideActive": true,
+    "usageBreakdown": [
+      {
+        "storageType": "file_systems",
+        "usage": 0
+      },
+      {
+        "storageType": "indexeddb",
+        "usage": 0
+      },
+      {
+        "storageType": "cache_storage",
+        "usage": 0
+      },
+      {
+        "storageType": "service_workers",
+        "usage": 0
+      }
+    ]
+  },
+  "zipMetadata": [
+    {
+      "path": "/tmp/team-b-b6-wave-fe3d-cold05-independent02/browser-final.zip",
+      "members": 97,
+      "uncompressedBytes": 33785809
+    },
+    {
+      "path": "/tmp/team-b-b6-wave-fe3d-cold05-independent02/browser-before-quota-restart.zip",
+      "members": 111,
+      "uncompressedBytes": 36605241
+    },
+    {
+      "path": "/tmp/team-b-b6-wave-fe3d-cold05-independent02/browser-phase1.zip",
+      "members": 150,
+      "uncompressedBytes": 40088173
+    }
+  ],
+  "evidenceManifestSHA256": "9369ee68215b8494952f4f606cfce3a1e644610a835da1b9f8062f621f8f1618",
+  "cleanupReceiptSHA256": "dbea39a22b97a839fb451a99c0c755974fe90a1399b4e6739aaedcc933802f9c",
+  "limits": [
+    "Local Chromium original CUI/engine/browser device IndexedDB only; no hosted backend, Files sync, cross-device or full Wave/LE parity.",
+    "Physical pointer/touch/IME/assistive technology, hardware audio and automatic URL restoration not established.",
+    "Fourteen declared cases include runtime integrity; not a complete canonical operation denominator.",
+    "Raw traces independently decoded for critical store equality, native refusal/completion and exact PCM; profile bytes retained, not parsed as an independent LevelDB database.",
+    "First preflight wrapper path error preserved separately; no runtime launched then."
+  ],
+  "historicalFailuresPreserved": true
+}
