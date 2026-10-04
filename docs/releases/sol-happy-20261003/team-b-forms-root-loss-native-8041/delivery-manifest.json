@@ -1,0 +1,19 @@
+{
+  "recordedUTC": "2026-10-04T07:16:55.237814+00:00",
+  "state": "PORTABLE_FAILURE_PRESERVING_REAL_NATIVE_SOURCE_AND_RUNTIME",
+  "sourceCandidate": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "logicalFiles": 173,
+  "uniqueBlobs": 124,
+  "logicalBytes": 72822511,
+  "uniqueBlobBytes": 37972079,
+  "actual": "Original08 native loader setup8FAIL0assert retained. Original09 and independent unchanged same8 both7PASS1FAIL; childseed/verify bothPASS. Diagnostic11 same8 keeps joint assertion: FIRSTSave privateResponseNull=false, replacementBytesUnchanged=true, SaveOutcomeUnknownReloadRequired, originalcanonicalresponse revision1 retained.",
+  "ownerRequestSHA256": "9235ab1ebc88094ab04e8c10de324290ac6562c73306b8cec6258f08698b44d1",
+  "qualification": "Failed local native private-clear gate. No replacement write/adoption observed. No browser/public invitation/provider/Worker/AT/integrated-candidate acceptance. Exact native runtime08 and runtime11 all46 bodies included as content-addressed blobs; private fixture settings/data/fontcaches excluded and local custody qualified by preserved inventories. Original absolute paths are provenance, not portable receiving paths.",
+  "archive": {
+    "path": "portable-original8-and-diagnostic11.zip",
+    "bytes": 14012056,
+    "sha256": "f3b45020f4ac55503d7da6234381572b72a3d328ed0c5df0e60725f0a614bdfd"
+  },
+  "allBlobFullSHAAndCRC": "PASS",
+  "sourceAfterFullSHA": "PASS"
+}
