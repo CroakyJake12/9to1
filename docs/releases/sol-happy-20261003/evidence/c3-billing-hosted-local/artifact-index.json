@@ -429,6 +429,16 @@
       "path": ".gitattributes",
       "bytes": 556,
       "sha256": "77bf86de18987e17ce0a5294725cb110e5da8416a1e5fb4748d9ce93b338727d"
+    },
+    {
+      "path": "raw/billing-hosted-node-preview-closed.log",
+      "bytes": 1526,
+      "sha256": "1c04a8db7875365a7950015405dc6bf792d7255f013338264fa160d2f044c510"
+    },
+    {
+      "path": "closed-preview-successor.json",
+      "bytes": 1231,
+      "sha256": "99d591cea697ea343dfb1f19ae71754d504e1b1bcd97a58a5f9588607a9e82ee"
     }
   ],
   "binaryScan": "All recursive payloads UTF-8 and no PE/ELF/PDB/ZIP/SQLite magic",
