@@ -47,9 +47,9 @@ def restore(source,destination,migrations,receipt,before_publish=None,before_sea
  if destination.exists() or destination.is_symlink():raise ValueError('restore destination must be new')
  current={p.name:digest(p) for p in sorted(Path(migrations).glob('*.sql'))}
  if current!=receipt['migrationHashes']:raise ValueError('migration provenance mismatch')
+ if before_seal:before_seal()
  fd,temp=tempfile.mkstemp(prefix='.restore-',dir=destination.parent)
  try:
-  if before_seal:before_seal()
   # Consume only the sealed, receipt-matching image, never the live path.
   h=hashlib.sha256()
   with os.fdopen(fd,'wb') as staged, open(source,'rb') as original:
