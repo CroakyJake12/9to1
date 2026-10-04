@@ -1,0 +1,216 @@
+{
+  "state": "EXACT_ORIGINAL_ACTIONS_ZIP_PERMANENT_FULL_BODY_READBACK",
+  "branch": "artifact/team-b-write-package5864-original-diagnostics-20261004",
+  "base": "400ecdf1ec36a3d28e742beeba28e223f3ab0d14",
+  "sourceRun": 37215109573,
+  "sourceCommit": "5864fa22990df233fef9b30a27355a2ab722797f",
+  "artifact": 11308371140,
+  "path": "docs/releases/sol-happy-20261003/team-b-write-package5864-original-diagnostics/original-actions-diagnostics.zip",
+  "bytes": 12847096,
+  "sha256": "f9fb85b0cfbb623c2fe757edb291572d637c7b0b71929666e921842c56d146cb",
+  "gitBlob": "6d7b2184160e829358fae7bf0319b872757a915b",
+  "rootWholeRemoteBodyReadback": true,
+  "members": [
+    {
+      "path": "diagnostics/actual-write-package-browser.log",
+      "bytes": 682,
+      "sha256": "85b25d2c2a37e679941e59a40c0f4f21e261c88c682ce660408ceae17d6630c8",
+      "crc": 2732282896,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/build-fixture.log",
+      "bytes": 758,
+      "sha256": "0ec094f9bd845b3b6178735623c56f774c443014269b5fc5dc238e33404de861",
+      "crc": 1528708171,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/chromium-path.log",
+      "bytes": 89,
+      "sha256": "c1c44f29652c3fa3c4ede72a01a8d11fc1309f3d115becca03d1b05f7dbf2421",
+      "crc": 1895122985,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/commands.json",
+      "bytes": 8545,
+      "sha256": "4f17177d31ce91dfbc1de3ba9bb22d385114221565f5b8e56cd9db5840d00b0f",
+      "crc": 2740903582,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/dotnet-info.log",
+      "bytes": 3194,
+      "sha256": "2a2f2be0512496ebcc108094c48143f8a90bcb46b78d263648449c3c481d7bba",
+      "crc": 4226940602,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+      "crc": 3257738113,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/fixture-properties.json",
+      "bytes": 379,
+      "sha256": "01e8e76853b451c4dde8d48ad2ee5264ea1b5bd119d84aa1706381f781098e32",
+      "crc": 208600125,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/fixture-properties.log",
+      "bytes": 411,
+      "sha256": "b54bd288be3b1b314ec598e91ae8ac6e645886c91d58cd8db399c6ad947b7eb3",
+      "crc": 957762618,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "crc": 0,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "crc": 0,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/git-head.log",
+      "bytes": 41,
+      "sha256": "31ce68af617203c646402882dec3a00f42d2fa87b3cde13b0651f73daf702ef7",
+      "crc": 4124074307,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/native-fixture-seed.log",
+      "bytes": 369,
+      "sha256": "83f4f4e3b90fdd6a50273455311b0cb60b76207f9840ec6aa4346fab2036be83",
+      "crc": 995152394,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/playwright-version.log",
+      "bytes": 7,
+      "sha256": "bc43ef34a131fd2f99047a8aca491f24fa0a36010dcb90166e73c49f58a1928d",
+      "crc": 3621641429,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/restore-fixture.log",
+      "bytes": 568,
+      "sha256": "7c5a4e0668bff8c4583dea1a5ba64e3dda536e8eac6d13e42d88a827e8d508cc",
+      "crc": 1194991537,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/result.json",
+      "bytes": 984,
+      "sha256": "f315974025de0d48fffcc007f66a77c18dbf8f3c50611b7abcbd7ae948b8e243",
+      "crc": 3715415380,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/runtime-after.json",
+      "bytes": 2033,
+      "sha256": "4284f4196070ad8f091f0ebc5403b673fffe78dc671730fe8e6e1606c16c58c4",
+      "crc": 3753425212,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/runtime-before.json",
+      "bytes": 2033,
+      "sha256": "4284f4196070ad8f091f0ebc5403b673fffe78dc671730fe8e6e1606c16c58c4",
+      "crc": 3753425212,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/source-before.json",
+      "bytes": 98453,
+      "sha256": "4b55c62c7b419c39e5407c1dfb7504fc0b2fc92f1b8de534e09530d90f0fe849",
+      "crc": 1575618583,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/source-after.json",
+      "bytes": 98453,
+      "sha256": "4b55c62c7b419c39e5407c1dfb7504fc0b2fc92f1b8de534e09530d90f0fe849",
+      "crc": 1575618583,
+      "mode": 33188
+    },
+    {
+      "path": "diagnostics/source-tree-pins.log",
+      "bytes": 1305352,
+      "sha256": "1254a5db1177938419eb6d76cb670a26a0e398d0dea0687de4e3e5c0a5a9baf3",
+      "crc": 2746646696,
+      "mode": 33188
+    },
+    {
+      "path": "raw/results.json",
+      "bytes": 3827,
+      "sha256": "06d02789e6a2b79727276c84684abcbced1f1d405fab29869ed0b9f88ddb2e80",
+      "crc": 219757274,
+      "mode": 33188
+    },
+    {
+      "path": "raw/saved-storage.json",
+      "bytes": 28948,
+      "sha256": "6a6d387b0f20ebebb7cd4f8afc27554f153c3139232fcfb17e0d20eeac097628",
+      "crc": 3839159308,
+      "mode": 33188
+    },
+    {
+      "path": "raw/failed-process.zip",
+      "bytes": 12503889,
+      "sha256": "d2ca681c9cdc43d511f3456db5883771bf118ddd951f4eb2e2909076dbd89ea0",
+      "crc": 138042332,
+      "mode": 33188
+    },
+    {
+      "path": "fixture/source.9to1w",
+      "bytes": 1968,
+      "sha256": "6b5f6fd2c9f5bb0f4b7ea2094a3b31bd1219c52c4946c2aa6e0cb3689865b757",
+      "crc": 1905654947,
+      "mode": 33188
+    },
+    {
+      "path": "fixture/tampered.9to1w",
+      "bytes": 1960,
+      "sha256": "bc8c10bd7f5f3e84e0d2ef7b0e507eb66a940a6f3baddf5657390f7f0395459c",
+      "crc": 3492085383,
+      "mode": 33188
+    },
+    {
+      "path": "fixture/expected-canonical.json",
+      "bytes": 8419,
+      "sha256": "9ddd3141093d861f79a732b3cc3446d08905bfcd96d64e3fc90f47d0eb7bf688",
+      "crc": 2826933940,
+      "mode": 33188
+    },
+    {
+      "path": "fixture/native-seed.json",
+      "bytes": 4929,
+      "sha256": "563d38c065063f7fd969dd934101dd8f6e8ab170af70ff0fb56b54ed486705c6",
+      "crc": 998782973,
+      "mode": 33188
+    },
+    {
+      "path": "fixture/native-seed-results.json",
+      "bytes": 54,
+      "sha256": "637b9bba96283d00a896855fc271e94469851f1537b259684323c756dc852974",
+      "crc": 2238319490,
+      "mode": 33188
+    }
+  ],
+  "originalActionsOuterWholeBodyReadHere": true,
+  "temporarySourcePath": "/workspace/attachments/e041e013-ae1b-425f-bb81-e75135504c3f/write-package-5864-original-failure-diagnostics.zip",
+  "temporaryRetired": false,
+  "temporaryPredeclaredPlan": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/write-5864-temporary-diagnostic-transport-plan.json",
+  "scope": "Original failed first package run. Native seed7 PASS; browser4 PASS/1 FAIL/4 NOT_RUN; native readback9 NOT_RUN. No full Write or provider acceptance."
+}
