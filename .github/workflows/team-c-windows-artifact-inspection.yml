@@ -1,0 +1,70 @@
+name: Team C inspect original Windows observations
+
+on:
+  push:
+    branches: [team-c/sol-happy-c1-windows-artifact-inspection-20261004]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: original-windows-artifact-inspection-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - target: home
+            artifact_id: 11303772514
+          - target: boards
+            artifact_id: 11303607880
+          - target: canvas
+            artifact_id: 11304710012
+          - target: studio
+            artifact_id: 11304475788
+          - target: picture
+            artifact_id: 11304286833
+          - target: present
+            artifact_id: 11303633502
+          - target: shared-desktop
+            artifact_id: 11304576532
+    env:
+      ORIGINAL_OUTPUT: ${{ runner.temp }}/original-observation-${{ matrix.target }}
+      ORIGINAL_INPUT: ${{ runner.temp }}/original-package-${{ matrix.target }}
+      ORIGINAL_TARGET: ${{ matrix.target }}
+      GIT_OPTIONAL_LOCKS: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Bind original run and artifact metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/inspect-original-windows-artifact.py --target "$ORIGINAL_TARGET" --output "$ORIGINAL_OUTPUT" --validate-metadata
+      - name: Download exact original immutable artifact without executing it
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: CroakyJake12/9to1
+          run-id: 37203799923
+          artifact-ids: ${{ matrix.artifact_id }}
+          path: ${{ env.ORIGINAL_INPUT }}
+          merge-multiple: true
+      - name: Copy bounded original JSON and logs with full file hashes
+        run: python3 .github/scripts/inspect-original-windows-artifact.py --target "$ORIGINAL_TARGET" --output "$ORIGINAL_OUTPUT" --source "$ORIGINAL_INPUT"
+      - name: Retain compact original observations and inspection failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-windows-observation-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ env.ORIGINAL_OUTPUT }}
+          if-no-files-found: warn
+          retention-days: 7

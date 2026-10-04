@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "repository": "CroakyJake12/9to1",
+  "runId": 37203799923,
+  "runAttempt": 1,
+  "workflowCommit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "nativeSourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "requiredWindowsProductGroups": 29,
+  "verifiedWindowsProductGroups": 0,
+  "acceptanceVerified": false,
+  "qualification": "Read-only retrieval of original probe result/log bytes. No executable runs, builds, new original observations, Windows GUI acceptance or approved package delivery.",
+  "artifacts": [
+    {
+      "target": "home",
+      "id": 11303772514,
+      "name": "windows-unaccepted-home-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "bytes": 4695,
+      "digest": "sha256:e376de55fd528fa44e2baab90597067b5a341937140a9fd665ff8d659e1cab35"
+    },
+    {
+      "target": "boards",
+      "id": 11303607880,
+      "name": "windows-unaccepted-boards-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "bytes": 233801465,
+      "digest": "sha256:eb6506b14d0c6aeb9d8ea10510a5e79d00ae89f1619c69d741bef176523e4232"
+    },
+    {
+      "target": "canvas",
+      "id": 11304710012,
+      "name": "windows-unaccepted-canvas-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "bytes": 302578514,
+      "digest": "sha256:51af4aced29d8cf68e2f1e0b5cb0200194ce44d6772aae914da6d79b6878f9c0"
+    },
+    {
+      "target": "studio",
+      "id": 11304475788,
+      "name": "windows-unaccepted-studio-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "bytes": 287693964,
+      "digest": "sha256:aa8401333ca65f10e899d56698f4be160fb2e3e8e2a3d7a6efd43ce0c4251bd6"
+    },
+    {
+      "target": "picture",
+      "id": 11304286833,
+      "name": "windows-unaccepted-picture-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "bytes": 300428673,
+      "digest": "sha256:f7668510130cd1c19b69cc152c3cda375c15c411d714d6b3beb97c76d3290a4a"
+    },
+    {
+      "target": "present",
+      "id": 11303633502,
+      "name": "windows-unaccepted-present-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "bytes": 350310332,
+      "digest": "sha256:5f3df6c66a1f19ccfdabda2046ab86090b21cc6a35bf6656ed67c062de1a4028"
+    },
+    {
+      "target": "shared-desktop",
+      "id": 11304576532,
+      "name": "windows-unaccepted-shared-desktop-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "bytes": 414242505,
+      "digest": "sha256:c881c77499a6ab83a18a943e2a424dabf78172ba9f7355935e58f97b7cdc5c83"
+    }
+  ]
+}
