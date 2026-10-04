@@ -1,0 +1,95 @@
+{
+  "status": "BLOCKED_OWNER_CONTRACT",
+  "spec": {
+    "path": "/workspace/team-c/spec-fresh.txt",
+    "sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1",
+    "section": "SH10",
+    "lines": [
+      9940,
+      9941,
+      9942,
+      9943,
+      9944,
+      9945,
+      9946,
+      9947,
+      9948
+    ]
+  },
+  "review": "Existing provider, execution/task, automation delivery, durableSQLite repositories and canonical draft funding ports inspected. No approved C-owned executable gateway/job integration port found. No new code or replacement service authored.090 proposal preserved.",
+  "sourceBindings": [
+    {
+      "head": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+      "path": "9to1 Workspace/shared/src/Haven.Application/ModelProviderAbstractions.cs",
+      "sha256": "b999194c5733502d209de7ee963b63cb71f8c6a4c04954913d0a8ef920b5502c"
+    },
+    {
+      "head": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+      "path": "9to1 Workspace/shared/src/Haven.Application/Execution/ExecutionAbstractions.cs",
+      "sha256": "8848018fd8c1ecdaf325839d40fb51e253c437dadeb7c7f25e4e69459e4273e0"
+    },
+    {
+      "head": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+      "path": "9to1 Workspace/shared/src/Haven.Application/Tasks/ExternalAgentTaskService.cs",
+      "sha256": "0834aaa768e359da4886e18744aaa9f15128bc2bc0f88e24ce7e57a1e6dc51b6"
+    },
+    {
+      "head": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+      "path": "9to1 Workspace/shared/src/Haven.Application/AutomationDeliveryAbstractions.cs",
+      "sha256": "c12b86acb9929fcf84952b893c71f93002c7f3b84b0cebb78cc31119b42b3ced"
+    },
+    {
+      "head": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/TaskExecutionRepository.cs",
+      "sha256": "86b9cd9a3222112a4162a5eb0aac3166ff231effdd0158b93d151911ddc9763c"
+    },
+    {
+      "head": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/UnifiedExecutionRepositories.cs",
+      "sha256": "5c2bbaac4ea3a51969d1580325f9544b7fad6d6199f427ea61309e845d8e59cc"
+    },
+    {
+      "head": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Accounts/OrganisationUsageContracts.cs",
+      "sha256": "cc4119aa05a80fb78acd997493a712cbb57bf342cb021bdfdfdc4eba1e770f35",
+      "qualification": "Draft source absent currentdb463 baseline; not approved deployed bridge"
+    }
+  ],
+  "dependencies": [
+    {
+      "owner": "TeamA/C2",
+      "required": "Versioned hosted gateway ingress and dispatch principal/current session/org policy/model entitlement envelope over actual owner source, preserving local/cloud/enrolled-device locality; ACK composition into existing provider/job contracts."
+    },
+    {
+      "owner": "TeamA/C3",
+      "required": "Approved existing funding authority hosting bridge and trusted quote issuer, versioned route/model/provider prices\u2192Dust/period/maximum policy; personal vsorganisation allocation mapping; no duplicate balances."
+    },
+    {
+      "owner": "TeamA/C3",
+      "required": "Trusted usage observation/idempotent settlement identity and uncertain-provider outcome reconciliation/cancellation policy. Cancellation after dispatch cannot automatically refund or settlezero."
+    },
+    {
+      "owner": "TeamA",
+      "required": "Exact bounded output-token request contract; current GenerationOptions ContextLimit is not outputtoken allowance."
+    },
+    {
+      "owner": "TeamA/C5",
+      "required": "Durable hosted job lifecycle/claim/ack/replay and original session principal/funding identity; queue/servicebinding must compose existing orchestration, not translate localSQLite rows into advertised cloud execution."
+    },
+    {
+      "owner": "Owning apps/C2",
+      "required": "Notifications/collaboration/Forms/Agents/Automations exact authorized transport and revocation/result publication contracts; read-only catalogue proves none."
+    }
+  ],
+  "ownerCandidateDefect": {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Tasks/ExternalAgentTaskService.cs",
+    "method": "GetAuthorisedAsync vsGetRecentAuthorisedAsync",
+    "finding": "Single-task expired timestamp overlay replaces Completed/Cancelled with Expired while recent-list explicitly preserves those terminal statuses. Owner-approved terminal-status consistency fix can be tested without inference; sharedA-owned source cannot be changed under C-only authorization.",
+    "status": "OWNER_REVIEW_REQUIRED"
+  },
+  "validationNeeded": [
+    "Owner-contract negatives: revoked session/org switch, wrongfundingroute/principal, stale policy, concurrent reserves, unknown provider outcome, cancellation before/afterdispatch, reconnect replay, localmodelzero cloudcharge.",
+    "Actual hosted job survives tab close and recovery with samejobidentity, scope and funding.",
+    "No provider/inference/real-service acceptance inferred from local tests."
+  ]
+}
