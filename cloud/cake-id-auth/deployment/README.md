@@ -22,3 +22,5 @@ For a new Worker, first upload the compiled closed503 baseline and record its ac
 Real HTTPS acceptance still requires provider creation/deployment receipts, secret readiness, actual migrations, issuer discovery/JWKS/token/account/session checks, approved mail delivery and approved canonical administrator/client authority. Turnstile enforcement does not exist in this maintained source. The stricter .NET RSA/auth_revision contract remains unresolved; compiling this browser-compatible EdDSA issuer does not establish native integration.
 
 Initial provider observability is disabled: authorization URLs can contain codes/state. Enable logging or tracing only after a reviewed redaction policy; never publish raw authentication URLs or secrets.
+
+`upload-manifest.json` enumerates both actual module parts; uploading only index.js would omit its maintained auth UI text import. `artifact-manifest.json` binds their SHA256 hashes. CPU limits remain an operator budget decision; local wall-clock password timings do not establish Cloudflare CPU usage. Root must set the approved explicit limit before live upload.
