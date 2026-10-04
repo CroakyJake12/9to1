@@ -15,10 +15,13 @@ namespace HavenOS.Home.Core;
 internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
 {
     internal readonly record struct FileIdentity(uint Volume, ulong File, ulong Created,
-        ulong Changed, ulong Length, uint Attributes);
+        ulong Changed, ulong Length, uint Attributes, uint Links);
     private readonly SafeProcessHandle _process;
     private readonly List<(string Path, SafeFileHandle Handle, FileIdentity Identity)> _files = [];
     private readonly HashSet<string> _protectedOwners;
+    private readonly Dictionary<string, (SafeFileHandle Handle, FileIdentity Identity)> _originalPaths =
+        new(StringComparer.OrdinalIgnoreCase);
+    private const int MaximumOriginalPaths = 64 + 4096 + 4096 + 2;
     private bool _disposed;
 
     internal int ProcessId { get; }
@@ -71,6 +74,16 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         path = Path.GetFullPath(path);
+        if (_originalPaths.TryGetValue(path, out var retained))
+        {
+            if (Identity(retained.Handle) != retained.Identity ||
+                ((retained.Identity.Attributes & 0x10) != 0) != directory)
+                throw new UnauthorizedAccessException("The original protected path/type changed.");
+            RequireProtectedAcl(retained.Handle);
+            return retained.Handle;
+        }
+        if (_originalPaths.Count >= MaximumOriginalPaths)
+            throw new InvalidDataException("The original protected handle inventory exceeds its bound.");
         // The configured verifier supplies canonical absolute paths. Reparse
         // admission is refused, rather than accepting a resolved alias.
         var access = 0x00020000u | 0x00000080u | (directory ? 0u : 0x80000000u);
@@ -86,10 +99,11 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
         {
             var identity = Identity(handle);
             if ((identity.Attributes & 0x400) != 0 ||
-                ((identity.Attributes & 0x10) != 0) != directory)
+                ((identity.Attributes & 0x10) != 0) != directory || !directory && identity.Links != 1)
                 throw new UnauthorizedAccessException("Protected path has a reparse or foreign type.");
             RequireProtectedAcl(handle);
             _files.Add((path, handle, identity));
+            _originalPaths.Add(path, (handle, identity));
             return handle;
         }
         catch (Exception error) { HomeNativeWindowsOriginalEvidenceLifetime.ThrowWithCleanup(error, handle.Dispose); throw; }
@@ -136,60 +150,103 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
     internal string VerifyOriginalAuthenticode(SafeFileHandle image,
         IReadOnlySet<string> publisherCertificateSha256)
     {
-        var file = new TrustFile { Size = (uint)Marshal.SizeOf<TrustFile>(),
+        RequireNativeAbi();
+        var file = new TrustFile { Size = (uint)Marshal.SizeOf<NativeTrustFile>(),
             FilePath = ImagePath, File = image.DangerousGetHandle() };
-        var nativeFile = Marshal.AllocHGlobal(Marshal.SizeOf<TrustFile>());
+        IntPtr nativeFile = IntPtr.Zero;
+        var structureInitialized = false;
         var data = new TrustData { Size = (uint)Marshal.SizeOf<TrustData>(),
             UiChoice = 2, RevocationChecks = 1, UnionChoice = 1,
-            FileInfo = nativeFile, StateAction = 1, ProviderFlags = 0x80 };
+            StateAction = 1, ProviderFlags = 0x80 };
         var action = new Guid("00AAC56B-CD44-11D0-8CC2-00C04FC295EE");
         Exception? primary = null;
         string? publisher = null;
         List<Exception> cleanup = [];
         try
         {
-            Marshal.StructureToPtr(file, nativeFile, false);
-            var result = WinVerifyTrust(new IntPtr(-1), ref action, ref data);
-            if (result != 0)
-                throw new UnauthorizedAccessException($"Authenticode refused the original image: 0x{result:X8}.");
-            var provider = WTHelperProvDataFromStateData(data.StateData);
-            var signer = WTHelperGetProvSignerFromChain(provider, 0, false, 0);
-            var certificate = WTHelperGetProvCertFromChain(signer, 0);
-            if (provider == IntPtr.Zero || signer == IntPtr.Zero || certificate == IntPtr.Zero)
-                throw new UnauthorizedAccessException("The original publisher chain is missing.");
-            var providerCertificate = Marshal.PtrToStructure<ProviderCertificate>(certificate);
-            var context = Marshal.PtrToStructure<CertificateContext>(providerCertificate.Context);
-            if (context.Bytes is < 1 or > 16384 || context.Encoded == IntPtr.Zero)
-                throw new UnauthorizedAccessException("The original publisher certificate is unsupported.");
-            var encoded = new byte[context.Bytes];
-            Marshal.Copy(context.Encoded, encoded, 0, encoded.Length);
-            using var parsed = X509CertificateLoader.LoadCertificate(encoded);
-            publisher = Convert.ToHexString(SHA256.HashData(parsed.RawData));
-            if (!publisherCertificateSha256.Contains(publisher))
-                throw new UnauthorizedAccessException("The trusted publisher pin does not match the original image.");
+            nativeFile = Marshal.AllocHGlobal(Marshal.SizeOf<TrustFile>());
+            // Pointer fields are initialized explicitly. No partial LPWSTR marshalling
+            // owns a second allocation if native-structure initialization fails.
+            var nativePath = Marshal.StringToHGlobalUni(file.FilePath);
+            try
+            {
+                var native = new NativeTrustFile { Size = file.Size,
+                    FilePath = nativePath, File = file.File, KnownSubject = IntPtr.Zero };
+                Marshal.StructureToPtr(native, nativeFile, false);
+                structureInitialized = true;
+                data.FileInfo = nativeFile;
+                var result = WinVerifyTrust(new IntPtr(-1), ref action, ref data);
+                if (result != 0)
+                    throw new UnauthorizedAccessException($"Authenticode refused the original image: 0x{unchecked((uint)result):X8}.");
+                var certificate = HomeNativeWindowsOriginalEvidenceLifetime.FollowBorrowedTrustChain(
+                    data.StateData, WTHelperProvDataFromStateData,
+                    provider => WTHelperGetProvSignerFromChain(provider, 0, false, 0),
+                    signer => WTHelperGetProvCertFromChain(signer, 0));
+                var declaredBytes = unchecked((uint)Marshal.ReadInt32(certificate));
+                if (declaredBytes < (IntPtr.Size == 8 ? 88u : 60u) || declaredBytes > 4096)
+                    throw new UnauthorizedAccessException("The original publisher certificate prefix is unsupported.");
+                var prefix = Marshal.PtrToStructure<ProviderCertificate>(certificate);
+                if (prefix.Size != declaredBytes || prefix.Context == IntPtr.Zero)
+                    throw new UnauthorizedAccessException("The original publisher certificate context is unsupported.");
+                var context = Marshal.PtrToStructure<CertificateContext>(prefix.Context);
+                if ((context.Encoding & 1) == 0 || context.Bytes is < 1 or > 16384 ||
+                    context.Encoded == IntPtr.Zero || context.Info == IntPtr.Zero)
+                    throw new UnauthorizedAccessException("The original publisher certificate is unsupported.");
+                var encoded = new byte[checked((int)context.Bytes)];
+                Marshal.Copy(context.Encoded, encoded, 0, encoded.Length);
+                using var parsed = X509CertificateLoader.LoadCertificate(encoded);
+                publisher = Convert.ToHexString(SHA256.HashData(parsed.RawData));
+                if (!publisherCertificateSha256.Contains(publisher))
+                    throw new UnauthorizedAccessException("The trusted publisher pin does not match the original image.");
+            }
+            catch (Exception error) { primary = error; }
+            finally
+            {
+                try
+                {
+                    if (data.StateData != IntPtr.Zero)
+                    {
+                        data.StateAction = 2;
+                        var result = WinVerifyTrust(new IntPtr(-1), ref action, ref data);
+                        if (result != 0) throw new IOException("Original Authenticode state close refused.");
+                    }
+                }
+                catch (Exception error) { cleanup.Add(error); }
+                try { Marshal.FreeHGlobal(nativePath); }
+                catch (Exception error) { cleanup.Add(error); }
+            }
         }
-        catch (Exception error) { primary = error; }
+        catch (Exception error)
+        {
+            if (primary is null) primary = error;
+            else if (!ReferenceEquals(primary, error)) cleanup.Add(error);
+        }
         finally
         {
             try
             {
-                if (data.StateData != IntPtr.Zero)
-                {
-                    data.StateAction = 2;
-                    var result = WinVerifyTrust(new IntPtr(-1), ref action, ref data);
-                    if (result != 0) throw new IOException("Original Authenticode state close refused.");
-                }
+                if (structureInitialized) Marshal.DestroyStructure<NativeTrustFile>(nativeFile);
             }
             catch (Exception error) { cleanup.Add(error); }
-            try { Marshal.DestroyStructure<TrustFile>(nativeFile); }
-            catch (Exception error) { cleanup.Add(error); }
-            try { Marshal.FreeHGlobal(nativeFile); }
+            try { if (nativeFile != IntPtr.Zero) Marshal.FreeHGlobal(nativeFile); }
             catch (Exception error) { cleanup.Add(error); }
             GC.KeepAlive(image);
         }
-        if (primary is not null) cleanup.Insert(0, primary);
-        ThrowOriginals(cleanup);
+        HomeNativeWindowsOriginalEvidenceLifetime.ThrowCleanupFailure(primary, cleanup);
         return publisher!;
+    }
+
+    // Windows SDK headers use pack8, DWORD/LONG32 and pointer-width HANDLE.
+    // These checks cover the exact prefixes and structures dereferenced above.
+    internal static void RequireNativeAbi()
+    {
+        if (IntPtr.Size is not 4 and not 8 ||
+            Marshal.SizeOf<Time>() != 8 || Marshal.SizeOf<FileInfo>() != 52 ||
+            Marshal.SizeOf<NativeTrustFile>() != (IntPtr.Size == 8 ? 32 : 16) ||
+            Marshal.SizeOf<TrustData>() != (IntPtr.Size == 8 ? 88 : 52) ||
+            Marshal.SizeOf<CertificateContext>() != (IntPtr.Size == 8 ? 40 : 20) ||
+            Marshal.OffsetOf<ProviderCertificate>(nameof(ProviderCertificate.Context)).ToInt32() != IntPtr.Size)
+            throw new PlatformNotSupportedException("The original Windows evidence ABI is unsupported.");
     }
 
     internal void RequireSame()
@@ -204,11 +261,14 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
             if (Identity(entry.Handle) != entry.Identity)
                 throw new UnauthorizedAccessException("Original protected descriptor metadata changed.");
             RequireProtectedAcl(entry.Handle);
-            using var reopened = CreateFile(entry.Path, 0x00020000 | 0x80, 7,
+            var reopened = CreateFile(entry.Path, 0x00020000 | 0x80, 7,
                 IntPtr.Zero, 3, 0x00200000 | ((entry.Identity.Attributes & 0x10) != 0 ? 0x02000000u : 0), IntPtr.Zero);
-            if (reopened.IsInvalid || Identity(reopened) != entry.Identity)
-                throw new UnauthorizedAccessException("Original protected path no longer names the same file.");
-            RequireProtectedAcl(reopened);
+            HomeNativeWindowsOriginalEvidenceLifetime.RunWithCleanup(() =>
+            {
+                if (reopened.IsInvalid || Identity(reopened) != entry.Identity)
+                    throw new UnauthorizedAccessException("Original protected path no longer names the same file.");
+                RequireProtectedAcl(reopened);
+            }, reopened.Dispose);
         }
     }
 
@@ -256,16 +316,25 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
         return new(info.Volume, ((ulong)info.IndexHigh << 32) | info.IndexLow,
             ((ulong)info.Creation.High << 32) | info.Creation.Low,
             ((ulong)info.Write.High << 32) | info.Write.Low,
-            ((ulong)info.SizeHigh << 32) | info.SizeLow, info.Attributes);
+            ((ulong)info.SizeHigh << 32) | info.SizeLow, info.Attributes, info.Links);
     }
 
     private static string PrincipalOf(SafeProcessHandle process)
     {
-        if (!OpenProcessToken(process, 8, out var token)) throw NativeFailure("Read original peer token");
-        using (token)
-        using (var identity = new WindowsIdentity(token.DangerousGetHandle()))
-            return identity.User?.Value is { } sid ? "windows-sid:" + sid
+        if (!OpenProcessToken(process, 8, out var token))
+        {
+            var failure = NativeFailure("Read original peer token");
+            HomeNativeWindowsOriginalEvidenceLifetime.ThrowWithCleanup(failure, () => token?.Dispose());
+        }
+        WindowsIdentity? identity = null;
+        string? principal = null;
+        HomeNativeWindowsOriginalEvidenceLifetime.RunWithCleanups(() =>
+        {
+            identity = new WindowsIdentity(token.DangerousGetHandle());
+            principal = identity.User?.Value is { } sid ? "windows-sid:" + sid
                 : throw new UnauthorizedAccessException("Original peer SID is unavailable.");
+        }, () => identity?.Dispose(), token.Dispose);
+        return principal!;
     }
     private static string StartOf(SafeProcessHandle process)
     {
@@ -304,10 +373,14 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
         public uint Attributes; public Time Creation, Access, Write;
         public uint Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow;
     }
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct TrustFile
+    private struct TrustFile
     {
-        public uint Size; [MarshalAs(UnmanagedType.LPWStr)] public string FilePath;
+        public uint Size; public string FilePath;
         public IntPtr File, KnownSubject;
+    }
+    [StructLayout(LayoutKind.Sequential, Pack = 8)] private struct NativeTrustFile
+    {
+        public uint Size; public IntPtr FilePath, File, KnownSubject;
     }
     [StructLayout(LayoutKind.Sequential)] private struct TrustData
     {
@@ -319,7 +392,7 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
     [StructLayout(LayoutKind.Sequential)] private struct ProviderCertificate
     { public uint Size; public IntPtr Context; }
     [StructLayout(LayoutKind.Sequential)] private struct CertificateContext
-    { public uint Encoding; public IntPtr Encoded; public int Bytes; public IntPtr Info, Store; }
+    { public uint Encoding; public IntPtr Encoded; public uint Bytes; public IntPtr Info, Store; }
 
     [DllImport("kernel32.dll", SetLastError = true)] private static extern SafeProcessHandle OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint pid);
     [DllImport("kernel32.dll")] private static extern int GetProcessId(SafeProcessHandle process);
@@ -340,7 +413,7 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
     [DllImport("advapi32.dll")] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsValidSecurityDescriptor(IntPtr descriptor);
     [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr handle);
-    [DllImport("wintrust.dll", ExactSpelling = true)] private static extern uint WinVerifyTrust(IntPtr window, ref Guid action, ref TrustData data);
+    [DllImport("wintrust.dll", ExactSpelling = true)] private static extern int WinVerifyTrust(IntPtr window, ref Guid action, ref TrustData data);
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern IntPtr WTHelperProvDataFromStateData(IntPtr state);
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern IntPtr WTHelperGetProvSignerFromChain(IntPtr provider, uint signer, [MarshalAs(UnmanagedType.Bool)] bool counterSigner, uint counterSignerIndex);
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern IntPtr WTHelperGetProvCertFromChain(IntPtr signer, uint certificate);

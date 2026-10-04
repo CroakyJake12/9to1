@@ -30,12 +30,14 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
     private readonly HomePackageDatabase _packages;
     private readonly IHomeNativeControlledLaunchAuthority _launches;
     private readonly CapturedConfiguration _configuration;
+    private readonly IHomeNativeWindowsProtectedInstallationReceiptAuthority _receipts;
 
     public HomeNativeWindowsProtectedInstalledPeerVerifier(
         HomeLocalProfileIdentity originalProfiles, ITrustedHostPrincipalSource originalPrincipals,
         HomeNativeSessionLease originalLease, HomePackageDatabase originalPackages,
         IHomeCoreStateStore originalDeviceStore, IHomeNativeControlledLaunchAuthority originalLaunches,
-        HomeNativeWindowsProtectedPeerConfiguration configuredTrust)
+        HomeNativeWindowsProtectedPeerConfiguration configuredTrust,
+        IHomeNativeWindowsProtectedInstallationReceiptAuthority? originalReceipts = null)
     {
         _profiles = originalProfiles ?? throw new ArgumentNullException(nameof(originalProfiles));
         _principals = originalPrincipals ?? throw new ArgumentNullException(nameof(originalPrincipals));
@@ -47,6 +49,7 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             throw new UnauthorizedAccessException("The original canonical device or held Home lease differs.");
         _originalLease = _lease.LeaseIdentity;
         _configuration = CapturedConfiguration.Capture(configuredTrust);
+        _receipts = originalReceipts ?? new UnavailableHomeNativeWindowsProtectedInstallationReceiptAuthority();
     }
 
     public ValueTask<HomeNativeInstalledPeer?> VerifyAsync(HomeNativeObservedPeer observedPeer,
@@ -70,7 +73,8 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
         AuthenticatedResourceActor? expectedActor, HomeNativeSessionHostRequirement? host, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        if (!OperatingSystem.IsWindows()) return null;
+        if (!OperatingSystem.IsWindows() ||
+            _receipts is UnavailableHomeNativeWindowsProtectedInstallationReceiptAuthority) return null;
         if (host is not null && (host.AppId != _configuration.Package.AppId ||
             host.OperatingSystemApplicationId != _configuration.Package.OsApplicationId)) return null;
         HomeNativeWindowsProtectedPeerEvidence? original = null;
@@ -106,6 +110,11 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             if (!registry.Succeeded) return null;
             var before = RequireRegistryEntry(registry.Snapshot!, descriptor, receipt);
             var entryBytes = JsonSerializer.SerializeToUtf8Bytes(before);
+            var installedObservation = new HomeNativeInstalledPeer(descriptor.AppId,
+                receipt.InstalledApplicationId, receipt.InstallationRevision, "",
+                receipt.AllowedServiceIds.ToFrozenSet(StringComparer.Ordinal))
+                { Roles = receipt.Roles.ToFrozenSet(StringComparer.Ordinal) };
+
             var files = CaptureFiles(receipt.Files);
             RequireExactFiles(original, files);
             var imageRelative = RelativeImage(original.ImagePath);
@@ -129,6 +138,16 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             if (imageDigest is null || publisher is null ||
                 !StringComparer.OrdinalIgnoreCase.Equals(publisher, receipt.PublisherCertificateSha256)) return null;
             original.RequireSame();
+            // The proposed codec is accepted only when the genuine Windows installer
+            // owner independently authenticates this exact format/current generation.
+            var receiptObservation = new HomeNativeWindowsProtectedInstallationReceiptObservation(
+                descriptorBytes, receiptBytes, entryBytes, original.ProcessId, original.Principal,
+                original.StartIdentity, _configuration.Root, _configuration.Descriptor,
+                _configuration.Receipt, registry.Snapshot!.Revision, _originalLease, actor,
+                installedObservation with { ExecutableIdentity = imageDigest });
+            if (!await _receipts.IsCurrentAsync(receiptObservation, ct).ConfigureAwait(false)) return null;
+            await RequireActorAsync(actor, ct).ConfigureAwait(false);
+            original.RequireSame();
             var launch = new HomeNativeControlledLaunchObservation(original.ProcessId, original.Principal,
                 original.StartIdentity, imageDigest, actor.ProfileId, _originalLease.ToString("D"),
                 descriptor.AppId, host is null ? "" : HomeNativeSessionHostRequirement.RequiredRole);
@@ -148,6 +167,9 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             original.RequireSame();
             if (!original.ReadBounded(descriptorFile, 1024 * 1024).AsSpan().SequenceEqual(descriptorBytes) ||
                 !original.ReadBounded(receiptFile, 2 * 1024 * 1024).AsSpan().SequenceEqual(receiptBytes)) return null;
+            if (!await _receipts.IsCurrentAsync(receiptObservation, ct).ConfigureAwait(false)) return null;
+            await RequireActorAsync(actor, ct).ConfigureAwait(false);
+            original.RequireSame();
             return new HomeNativeInstalledPeer(descriptor.AppId, receipt.InstalledApplicationId, receipt.InstallationRevision,
                 imageDigest, receipt.AllowedServiceIds.ToFrozenSet(StringComparer.Ordinal))
                 { Roles = receipt.Roles.ToFrozenSet(StringComparer.Ordinal) };
@@ -233,9 +255,18 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             descriptor.PayloadBytes is < 1 or > 8L * 1024 * 1024 * 1024 ||
             !StringComparer.OrdinalIgnoreCase.Equals(Convert.ToHexString(SHA256.HashData(signedReceipt)),
                 descriptor.SignedInstallationReceiptSha256) ||
-            !HomePackageArtifactSelection.Identifier(descriptor.ComponentClass) ||
+            !HomePackageArtifactSelection.Text(descriptor.Version, 256) ||
+            !HomePackageArtifactSelection.Text(descriptor.Channel, 128) ||
+            !Enum.GetValues<HomePackageComponentClass>().Any(classification =>
+                descriptor.ComponentClass == HomePackageOriginalLifecyclePolicy.DeclaredComponentClass(classification)) ||
             !Sha256(receipt.PublisherCertificateSha256))
             throw new UnauthorizedAccessException("The original configured installed declaration differs.");
+        var dependencies = Bounded(descriptor.Dependencies, 128);
+        if (dependencies.Any(row => !HomePackageArtifactSelection.Identifier(row.PackageId) ||
+                row.MinimumVersion is not null && !HomePackageArtifactSelection.Text(row.MinimumVersion, 256) ||
+                row.MaximumVersionExclusive is not null && !HomePackageArtifactSelection.Text(row.MaximumVersionExclusive, 256)) ||
+            dependencies.Select(row => row.PackageId).Distinct(StringComparer.Ordinal).Count() != dependencies.Length)
+            throw new UnauthorizedAccessException("The original signed dependency declaration is invalid.");
         var services = Bounded(receipt.AllowedServiceIds, 128);
         var roles = Bounded(receipt.Roles, 32);
         var required = Bounded(descriptor.RequiredServiceIds, 128);
@@ -253,6 +284,11 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
         var entries = registry.Packages.Where(entry => entry.PackageId == descriptor.PackageId).Take(2).ToArray();
         if (entries.Length != 1) throw new UnauthorizedAccessException("The canonical installed package is unavailable.");
         var entry = entries[0];
+        var currentDependencies = Bounded(entry.Dependencies, 128);
+        var signedDependencies = Bounded(descriptor.Dependencies, 128);
+        if (!currentDependencies.OrderBy(row => row.PackageId, StringComparer.Ordinal)
+                .SequenceEqual(signedDependencies.OrderBy(row => row.PackageId, StringComparer.Ordinal)))
+            throw new UnauthorizedAccessException("The canonical installed dependency declarations differ.");
         if (entry.AppId != descriptor.AppId || entry.Revision != receipt.PackageEntryRevision ||
             entry.InstalledVersion != descriptor.Version || entry.UpdateChannel != descriptor.Channel ||
             entry.InstallationState != HomePackageInstallState.Installed ||
@@ -433,6 +469,10 @@ internal static class HomeNativeWindowsOriginalEvidenceLifetime
         Exception? refusal = null;
         List<Exception> errors = [];
         try { result = await body().ConfigureAwait(false); }
+        catch (HomeNativeWindowsOriginalEvidenceCleanupFailure error)
+        {
+            foreach (var original in error.OriginalFailures) Add(errors, original);
+        }
         catch (Exception error) when (IsRefusal(error)) { refusal = error; }
         catch (Exception error) { Add(errors, error); }
         finally
@@ -446,17 +486,47 @@ internal static class HomeNativeWindowsOriginalEvidenceLifetime
         return result;
     }
 
-    internal static void RunWithCleanup(Action body, Action close)
+    internal static void RunWithCleanup(Action body, Action close) =>
+        RunWithCleanups(body, close);
+
+    internal static void RunWithCleanups(Action body, params Action[] closes)
     {
         ArgumentNullException.ThrowIfNull(body);
-        ArgumentNullException.ThrowIfNull(close);
-        List<Exception> errors = [];
-        try { body(); } catch (Exception error) { Add(errors, error); }
+        ArgumentNullException.ThrowIfNull(closes);
+        if (closes.Any(close => close is null)) throw new ArgumentException("Original cleanup is missing.");
+        Exception? primary = null;
+        List<Exception> cleanup = [];
+        try { body(); } catch (Exception error) { primary = error; }
         finally
         {
-            try { close(); } catch (Exception error) { Add(errors, error); }
+            foreach (var close in closes)
+                try { close(); } catch (Exception error) { Add(cleanup, error); }
         }
-        ThrowOriginals(errors);
+        ThrowCleanupFailure(primary, cleanup);
+    }
+
+    internal static void ThrowCleanupFailure(Exception? primary, List<Exception> cleanup)
+    {
+        if (cleanup.Count != 0)
+        {
+            List<Exception> originals = [];
+            if (primary is not null) Add(originals, primary);
+            foreach (var error in cleanup) Add(originals, error);
+            // Cleanup-only IO failures must not be classified as ordinary evidence refusal.
+            throw new HomeNativeWindowsOriginalEvidenceCleanupFailure(originals);
+        }
+        if (primary is not null) ExceptionDispatchInfo.Capture(primary).Throw();
+    }
+
+    internal static IntPtr FollowBorrowedTrustChain(IntPtr originalState,
+        Func<IntPtr, IntPtr> provider, Func<IntPtr, IntPtr> signer, Func<IntPtr, IntPtr> certificate)
+    {
+        static IntPtr Require(IntPtr pointer, string stage) => pointer != IntPtr.Zero
+            ? pointer : throw new UnauthorizedAccessException(stage);
+        var state = Require(originalState, "The original WinTrust state is missing.");
+        var originalProvider = Require(provider(state), "The original publisher provider is missing.");
+        var originalSigner = Require(signer(originalProvider), "The original publisher signer is missing.");
+        return Require(certificate(originalSigner), "The original publisher certificate is missing.");
     }
 
     internal static void ThrowWithCleanup(Exception original, Action close) =>
@@ -468,7 +538,11 @@ internal static class HomeNativeWindowsOriginalEvidenceLifetime
 
     private static void Add(List<Exception> errors, Exception error)
     {
-        if (!errors.Any(previous => ReferenceEquals(previous, error))) errors.Add(error);
+        if (error is HomeNativeWindowsOriginalEvidenceCleanupFailure cleanup)
+        {
+            foreach (var original in cleanup.OriginalFailures) Add(errors, original);
+        }
+        else if (!errors.Any(previous => ReferenceEquals(previous, error))) errors.Add(error);
     }
 
     private static void ThrowOriginals(List<Exception> errors)
@@ -476,5 +550,16 @@ internal static class HomeNativeWindowsOriginalEvidenceLifetime
         if (errors.Count == 1) ExceptionDispatchInfo.Capture(errors[0]).Throw();
         if (errors.Count > 1)
             throw new AggregateException("Original Windows peer evidence and independent cleanup failed.", errors);
+    }
+}
+
+internal sealed class HomeNativeWindowsOriginalEvidenceCleanupFailure : Exception
+{
+    internal IReadOnlyList<Exception> OriginalFailures { get; }
+    internal HomeNativeWindowsOriginalEvidenceCleanupFailure(List<Exception> originals)
+        : base("Original Windows evidence cleanup failed.",
+            originals.Count == 1 ? originals[0] : new AggregateException(originals))
+    {
+        OriginalFailures = Array.AsReadOnly(originals.ToArray());
     }
 }
