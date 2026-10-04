@@ -8,6 +8,7 @@ on:
       - apps/Web/Tests/BrowserWriteSpace.Tests.csproj
       - apps/Web/Tests/BrowserWriteSpaceRegression.cs
       - apps/Web/Write/Tests/**
+      - apps/Web/Write/Scene/**
 permissions:
   contents: read
 jobs:
@@ -18,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [space15, durable65]
+        suite: [space15, durable65, scene-focus58]
     steps:
       - uses: actions/checkout@v4
         with:

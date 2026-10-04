@@ -82,6 +82,20 @@ jobs:
             ${{ runner.temp }}/write-package-run/fixture/native-verify-results.json
           if-no-files-found: warn
           retention-days: 7
+      - name: Validate bounded exact existing restore assets for upload
+        id: selected-assets
+        if: always()
+        run: >-
+          python3 apps/Web/Write/Tests/ci/run-write-package-browser.py
+          --validate-restore-assets-for-upload "$RUNNER_TEMP/write-package-run"
+      - name: Preserve only validated selected restore asset bodies
+        if: always() && steps.selected-assets.outputs.validated == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-native-package-selected-assets-${{ github.sha }}
+          path: ${{ steps.selected-assets.outputs.paths }}
+          if-no-files-found: error
+          retention-days: 7
       - name: Preserve genuine publisher evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -19,6 +19,7 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
     private WriteDocumentSurface? _surface;
     private WriteDocumentEditor? _editor;
     private bool _inputAllowed;
+    private bool _focusInitialEditorOnEnable;
     private bool _disposed;
 
     public WriteRetainedSceneControl(Func<bool> reduceMotion)
@@ -46,6 +47,7 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
         if (ReferenceEquals(editor, _editor)) return;
         if (_editor is not null) _editor.Changed -= OnEditorChanged;
         _editor = editor;
+        _focusInitialEditorOnEnable = false;
         _scene.Root = null;
         _surface = null;
         if (editor is null) return;
@@ -56,6 +58,7 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
         _scene.Root = _surface;
         editor.Changed += OnEditorChanged;
         if (_inputAllowed) _scene.FocusElement(_surface);
+        else _focusInitialEditorOnEnable = true;
     }
 
     public void SetInputAllowed(bool allowed)
@@ -75,10 +78,15 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
             _scene.Root = null;
             _scene.Root = _surface;
         }
-        // Re-enabling input must not steal the current toolbar focus. Initial
-        // editor attachment still focuses the real owner in SetEditor; explicit
-        // native pointer/tab focus remains available. Busy release alone is not
-        // a request to scroll the whole presentation to the retained editor.
+        else if (_focusInitialEditorOnEnable)
+        {
+            // An initial attach may happen while Create/import is busy. Consume
+            // that single real owner focus request when input first becomes legal.
+            // An unchanged editor during later Save has no pending request, so
+            // re-enabling it preserves the current toolbar focus and viewport.
+            _focusInitialEditorOnEnable = false;
+            _scene.FocusElement(_surface);
+        }
     }
 
     private void GateKey(object? sender, KeyEventArgs args) { if (!_inputAllowed) args.Handled = true; }
@@ -92,6 +100,7 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
         if (_editor is not null) _editor.Changed -= OnEditorChanged;
         _scene.Root = null;
         _editor = null;
+        _focusInitialEditorOnEnable = false;
         _surface = null;
         _disposed = true;
     }
