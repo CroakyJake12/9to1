@@ -1,0 +1,26 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 98 ms).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Models/Dulche Alpha/Den.csproj (in 94 ms).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 99 ms).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/Home/HavenOS.Home.csproj (in 98 ms).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 1 ms).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 1 ms).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 1 ms).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 0.9 ms).
+  Restored /workspace/team-c/evidence/c6/ai-65f/production/C5.Provider.Tests.csproj (in 5.27 sec).
+  Restored /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj (in 5.27 sec).
+  CakeOS.Cui.Language -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/CakeOS.Cui.Language/debug/CakeOS.Cui.Language.dll
+  Den -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Den/debug/Den.dll
+  CakeOS.Cui.Core -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/CakeOS.Cui.Core/debug/CakeOS.Cui.Core.dll
+  Haven.Core -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Haven.Core/debug/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/NineToOne.Cui.AI/debug/NineToOne.Cui.AI.dll
+  Haven.Application -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Haven.Application/debug/Haven.Application.dll
+  Dulche.Runtime -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Dulche.Runtime/debug/Dulche.Runtime.dll
+  HavenOS.Home -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/HavenOS.Home/debug/HavenOS.Home.dll
+  Haven.Infrastructure -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Haven.Infrastructure/debug/Haven.Infrastructure.dll
+  C5.Provider.Tests -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/C5.Provider.Tests/debug/Haven.Infrastructure.Tests.dll
+Test run for /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/C5.Provider.Tests/debug/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c/evidence/c6/ai-65f/results/independent-Debug.trx
+
+Passed!  - Failed:     0, Passed:    32, Skipped:     0, Total:    32, Duration: 167 ms - Haven.Infrastructure.Tests.dll (net10.0)

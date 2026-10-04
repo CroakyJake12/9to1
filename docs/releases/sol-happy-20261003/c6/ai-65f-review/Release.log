@@ -1,0 +1,17 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CakeOS.Cui.Language -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/CakeOS.Cui.Language/release/CakeOS.Cui.Language.dll
+  Den -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Den/release/Den.dll
+  NineToOne.Cui.AI -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/NineToOne.Cui.AI/release/NineToOne.Cui.AI.dll
+  Haven.Core -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Haven.Core/release/Haven.Core.dll
+  CakeOS.Cui.Core -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/CakeOS.Cui.Core/release/CakeOS.Cui.Core.dll
+  Haven.Application -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Haven.Application/release/Haven.Application.dll
+  Dulche.Runtime -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Dulche.Runtime/release/Dulche.Runtime.dll
+  HavenOS.Home -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/HavenOS.Home/release/HavenOS.Home.dll
+  Haven.Infrastructure -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/Haven.Infrastructure/release/Haven.Infrastructure.dll
+  C5.Provider.Tests -> /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/C5.Provider.Tests/release/Haven.Infrastructure.Tests.dll
+Test run for /workspace/team-c/evidence/c6/ai-65f/artifacts/bin/C5.Provider.Tests/release/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c/evidence/c6/ai-65f/results/independent-Release.trx
+
+Passed!  - Failed:     0, Passed:    32, Skipped:     0, Total:    32, Duration: 145 ms - Haven.Infrastructure.Tests.dll (net10.0)
