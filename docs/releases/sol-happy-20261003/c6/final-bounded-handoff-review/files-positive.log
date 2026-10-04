@@ -1,0 +1,8 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/evidence/c6/files-22c/harness/ActualUpload.Tests.csproj (in 613 ms).
+  ActualUpload.Tests -> /workspace/team-c/evidence/c6/files-22c/harness/bin/Debug/net10.0/ActualUpload.Tests.dll
+Test run for /workspace/team-c/evidence/c6/files-22c/harness/bin/Debug/net10.0/ActualUpload.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c/evidence/c6/files-22c/harness/TestResults/upload.trx
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 218 ms - ActualUpload.Tests.dll (net10.0)
