@@ -1,0 +1,9 @@
+{
+  "state": "ROOT_REVIEWED_ADOPTION_ONLY",
+  "destination": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+  "baseSHA256": "20fc542341b8d88ad1b2b96094dbbe33ecc6a0567378cbef7f3b0b3b5c3ba0ca",
+  "proposalSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+  "fullReconstruction": "Require exact baseSHA256; apply entire proposal.patch with git apply --check then git apply by root only, or copy full adjacent proposed body after checking exact proposal SHA. All full helper/wiring bytes are in patch and proposed body. Root remains sole adopter.",
+  "inverse": "git apply --reverse proposal.patch reconstructs exact 11089-byte base; check baseSHA256.",
+  "unmodified": "Immutable original14 and responsive3 CJS bodies/oracles, publisher, native prerequisites, a57 Commands, caps/deadlines/family/final stdout logic."
+}

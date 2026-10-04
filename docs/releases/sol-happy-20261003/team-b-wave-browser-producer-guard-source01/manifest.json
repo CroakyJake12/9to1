@@ -1,0 +1,114 @@
+{
+  "state": "SOURCE_FROZEN_CONTROLLED14_PASS_BROWSER17_NOT_RUN",
+  "files": {
+    "RECONSTRUCTION.json": {
+      "bytes": 848,
+      "sha256": "fcd8f65fd5585526d4657b5e23463edddcd072fcbb798d871becd607e3a7592a"
+    },
+    "controls-results.json": {
+      "bytes": 1691,
+      "sha256": "0ef566f93e39a300b1517092c22103e9ccb9b746f7fda8aaad6c1dfb1b0e4d64"
+    },
+    "producer-guard-controls.py": {
+      "bytes": 8422,
+      "sha256": "969c824e5edb4073da942fa0ff05b0e86d8d170f6570f3427e2994ff4cd926ef"
+    },
+    "proposal.patch": {
+      "bytes": 9624,
+      "sha256": "15a635c873bdee43617fe69d081a315b1650a67c38b239594b0e074839050eb7"
+    },
+    "run-wave-responsive-browser.py": {
+      "bytes": 14913,
+      "sha256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026"
+    }
+  },
+  "actualFailure": {
+    "sourceCommit": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+    "sourceRun": 37230828986,
+    "sourceArtifact": 11313603170,
+    "outerBytes": 1495261,
+    "outerSHA256": "e794fb5e3ab92b8019876f14bb908c340bd0a88be1be53a585ac36122b35fcc7",
+    "selectedRemoteHead": "9e7ac886822b4c111e8ea0177637cd86d77c7339",
+    "selectedRemoteBlob": "4b123f3091266c88d28f0dadf07e886834fc37c5",
+    "selectedZIPBytes": 8599,
+    "selectedZIPSHA256": "91f3eb8c7756ccf4c47bc2941634d647dd1cdc8d99129231283e32b0409291e2",
+    "allFiveSelectedBodiesFullSHA_CRCVerified": true,
+    "sourceGuardCause": "Both actual status logs contain only six owner build outputs; all19 producer command records normal. Strict source guard rejects legitimate outputs before publisher authentication.",
+    "ownerAssets": [
+      {
+        "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/avalonia.js",
+        "bytes": 29170,
+        "sha256": "e8782504d89cc1c41add8d99460369b2c04b4e486d43ff77bced979056791e84"
+      },
+      {
+        "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/avalonia.js.map",
+        "bytes": 110049,
+        "sha256": "95a063040e549acd9b9fd7f277dc47b5fd1222524c1e6ef200c4e483d172e2d2"
+      },
+      {
+        "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/storage.js",
+        "bytes": 43044,
+        "sha256": "b38d9247eed6e02e9b57f82997b66e603a2f71584d7c68cfd70b309a1cc3b6c1"
+      },
+      {
+        "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/storage.js.map",
+        "bytes": 151518,
+        "sha256": "86afa660003f915c148e52c265c62a0f05b1fd5088032fd027b3eadda4b1d8ab"
+      },
+      {
+        "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/sw.js",
+        "bytes": 971,
+        "sha256": "8e197b0f4175cd81d8bcc0921a41bcca5551777f6d3d42c612697c66ccd7e1dd"
+      },
+      {
+        "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/sw.js.map",
+        "bytes": 3749,
+        "sha256": "4d30d6a176825a8747fc150b91a30437a7f82c4d6d18564aeeb08d3bc5d5133d"
+      }
+    ],
+    "statusSHA256": "932916bb1844b0abc740ac4b810c65e43674e3107a055e800b7aa739c8ac232a",
+    "originalResultMemberMetadata": {
+      "path": "wr-run/diagnostics/result.json",
+      "bytes": 967,
+      "sha256": "ded5041dd386af90bfa86722ff4117ab3ea4228b8d3763824e8f40f624c133ea",
+      "crc32": 1207497766,
+      "mode": 33188,
+      "directory": false
+    },
+    "browserCriteria": "Original14 and responsive3 NOT_RUN at source prerequisite failure; no selected result-body reread claim."
+  },
+  "controlledOutcomes": {
+    "declared": 14,
+    "executed": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "controlledAssertions": 22,
+  "processExit": 0,
+  "resources": {
+    "beforeSourceWorkspaceFree": 268697600,
+    "beforeSourceTMPFree": 256073728,
+    "workspaceFloor": 268435456,
+    "tmpFloor": 256000000,
+    "onlyTinyNewSyntheticFiles": true,
+    "controlledFixtureDirectoriesRemoved": true,
+    "currentWorkspaceFree": 268627968,
+    "currentTMPFree": 256073728,
+    "ownedAllocatedBytes": 49152,
+    "noGlobalPeakClaim": true
+  },
+  "qualification": "Controlled source guard only; no local SDK/Node/browser/native/provider rerun. Root sole production adopter; full changed-head14+3 still required. Selected ZIP remotely RAM-read; no root temporary archive reopened.",
+  "preservedDiagnosticFailures": [
+    "Initial read-only ZIP schema assumed list.items; corrected explicit-list reader succeeded, no writes/reader held.",
+    "Initial manifest serialization referenced unselected result.json; no manifest written, source/control/patch/recipe unchanged; corrected metadata-only reference."
+  ],
+  "reconstruction": {
+    "state": "ROOT_REVIEWED_ADOPTION_ONLY",
+    "destination": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+    "baseSHA256": "20fc542341b8d88ad1b2b96094dbbe33ecc6a0567378cbef7f3b0b3b5c3ba0ca",
+    "proposalSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+    "fullReconstruction": "Require exact baseSHA256; apply entire proposal.patch with git apply --check then git apply by root only, or copy full adjacent proposed body after checking exact proposal SHA. All full helper/wiring bytes are in patch and proposed body. Root remains sole adopter.",
+    "inverse": "git apply --reverse proposal.patch reconstructs exact 11089-byte base; check baseSHA256.",
+    "unmodified": "Immutable original14 and responsive3 CJS bodies/oracles, publisher, native prerequisites, a57 Commands, caps/deadlines/family/final stdout logic."
+  }
+}

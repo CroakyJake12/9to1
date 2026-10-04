@@ -1,0 +1,72 @@
+{
+  "state": "PASS_SOURCE_GUARD_CONTROLS",
+  "counts": {
+    "declared": 14,
+    "executed": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "assertions": 22,
+  "sourceSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+  "immutableOriginalSHA256": "20fc542341b8d88ad1b2b96094dbbe33ecc6a0567378cbef7f3b0b3b5c3ba0ca",
+  "outcomes": [
+    {
+      "name": "authentic-six-and-immutable-original-refusal",
+      "state": "PASS"
+    },
+    {
+      "name": "unknown-additional-input",
+      "state": "PASS"
+    },
+    {
+      "name": "same-length-tamper-and-digest-removal-mutant",
+      "state": "PASS"
+    },
+    {
+      "name": "duplicate-producer-row",
+      "state": "PASS"
+    },
+    {
+      "name": "incomplete-producer-set",
+      "state": "PASS"
+    },
+    {
+      "name": "extra-producer-row",
+      "state": "PASS"
+    },
+    {
+      "name": "noncanonical-path",
+      "state": "PASS"
+    },
+    {
+      "name": "symlink-output-and-ancestor",
+      "state": "PASS"
+    },
+    {
+      "name": "nonregular-output",
+      "state": "PASS"
+    },
+    {
+      "name": "tracked-and-rename-status",
+      "state": "PASS"
+    },
+    {
+      "name": "incomplete-status-framing",
+      "state": "PASS"
+    },
+    {
+      "name": "producer-build-failed-or-wrong-command",
+      "state": "PASS"
+    },
+    {
+      "name": "sealed-module-disagreement",
+      "state": "PASS"
+    },
+    {
+      "name": "post-run-producer-pin-drift",
+      "state": "PASS"
+    }
+  ],
+  "qualification": "Controlled source guard only: six real synthetic files and controlled command receipts; no browser/native/provider acceptance or actual producer replay.",
+  "fixtureDirectoriesRemoved": true
+}

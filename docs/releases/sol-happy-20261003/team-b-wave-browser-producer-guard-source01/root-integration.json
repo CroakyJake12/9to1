@@ -1,0 +1,120 @@
+{
+  "state": "ROOT_SOURCE01_FULLBODY_INTEGRATED_B4_PEER_CLEAR_GUARD14_CASES22_ASSERTIONS_ACTUAL_PASS",
+  "productHead": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+  "parent": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+  "productPath": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+  "productBlob": "1f617d0c5f80a79c3e4bfff74a0d9829d12b5cc7",
+  "productBytes": 14913,
+  "productSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+  "onlyOneProductLeafChanged": true,
+  "original14New3OraclesAndLimitsUnchanged": true,
+  "independentB4": "Full source/inverse/old4helpers/original17commandblock/allcaps/finaltail/rawactual5 checked; readerclosed.",
+  "actualGuardControls": {
+    "state": "PASS_SOURCE_GUARD_CONTROLS",
+    "counts": {
+      "declared": 14,
+      "executed": 14,
+      "passed": 14,
+      "failed": 0
+    },
+    "assertions": 22,
+    "sourceSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+    "immutableOriginalSHA256": "20fc542341b8d88ad1b2b96094dbbe33ecc6a0567378cbef7f3b0b3b5c3ba0ca",
+    "outcomes": [
+      {
+        "name": "authentic-six-and-immutable-original-refusal",
+        "state": "PASS"
+      },
+      {
+        "name": "unknown-additional-input",
+        "state": "PASS"
+      },
+      {
+        "name": "same-length-tamper-and-digest-removal-mutant",
+        "state": "PASS"
+      },
+      {
+        "name": "duplicate-producer-row",
+        "state": "PASS"
+      },
+      {
+        "name": "incomplete-producer-set",
+        "state": "PASS"
+      },
+      {
+        "name": "extra-producer-row",
+        "state": "PASS"
+      },
+      {
+        "name": "noncanonical-path",
+        "state": "PASS"
+      },
+      {
+        "name": "symlink-output-and-ancestor",
+        "state": "PASS"
+      },
+      {
+        "name": "nonregular-output",
+        "state": "PASS"
+      },
+      {
+        "name": "tracked-and-rename-status",
+        "state": "PASS"
+      },
+      {
+        "name": "incomplete-status-framing",
+        "state": "PASS"
+      },
+      {
+        "name": "producer-build-failed-or-wrong-command",
+        "state": "PASS"
+      },
+      {
+        "name": "sealed-module-disagreement",
+        "state": "PASS"
+      },
+      {
+        "name": "post-run-producer-pin-drift",
+        "state": "PASS"
+      }
+    ],
+    "qualification": "Controlled source guard only: six real synthetic files and controlled command receipts; no browser/native/provider acceptance or actual producer replay.",
+    "fixtureDirectoriesRemoved": true
+  },
+  "actualChangedSourceBrowserRun": 37235516659,
+  "actualNativeRun": 37235516627,
+  "acceptance": "IN_PROGRESS; source/control proof doesnotprove actualbrowser17/native/fullacceptance.",
+  "savedSources": [
+    {
+      "name": "run-wave-responsive-browser.py",
+      "bytes": 14913,
+      "sha256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026"
+    },
+    {
+      "name": "producer-guard-controls.py",
+      "bytes": 8422,
+      "sha256": "969c824e5edb4073da942fa0ff05b0e86d8d170f6570f3427e2994ff4cd926ef"
+    },
+    {
+      "name": "controls-results.json",
+      "bytes": 1691,
+      "sha256": "0ef566f93e39a300b1517092c22103e9ccb9b746f7fda8aaad6c1dfb1b0e4d64"
+    },
+    {
+      "name": "manifest.json",
+      "bytes": 5490,
+      "sha256": "51c7fc6ec2d06cb47fa48327c2120210d6f271d5bf952dd343a991816fbb493a"
+    },
+    {
+      "name": "proposal.patch",
+      "bytes": 9624,
+      "sha256": "15a635c873bdee43617fe69d081a315b1650a67c38b239594b0e074839050eb7"
+    },
+    {
+      "name": "RECONSTRUCTION.json",
+      "bytes": 848,
+      "sha256": "fcd8f65fd5585526d4657b5e23463edddcd072fcbb798d871becd607e3a7592a"
+    }
+  ],
+  "noJacobPCDependency": "CloudLinuxsource+ordinaryGitHubCI; no localSDK/browser/process held byB3."
+}
