@@ -1,0 +1,71 @@
+name: Team B existing Wave diagnostic custody export
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export:
+    if: startsWith(github.ref, 'refs/heads/team-b/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Receive only existing sealed Wave diagnostic artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: "11305985932"
+          run-id: "37208724474"
+          repository: CroakyJake12/9to1
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/existing-wave-7cdf/input
+      - name: Verify existing raw records and preserve complete extracted member bodies
+        run: >-
+          python3 apps/Web/Tests/ci/sealed-browser-replay/export-existing-wave-diagnostics.py
+          --input "$RUNNER_TEMP/existing-wave-7cdf/input"
+          --output "$RUNNER_TEMP/existing-wave-7cdf/output"
+      - name: Retain complete small causal JSON and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-existing-wave-causal-11305985932-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7cdf/output/causal
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain complete diagnostic member transport part one
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-existing-wave-member-part01-11305985932-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7cdf/output/transport-parts/part01
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain complete diagnostic member transport part two
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-existing-wave-member-part02-11305985932-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7cdf/output/transport-parts/part02
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain complete diagnostic member transport part three
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-existing-wave-member-part03-11305985932-${{ github.sha }}
+          path: ${{ runner.temp }}/existing-wave-7cdf/output/transport-parts/part03
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
