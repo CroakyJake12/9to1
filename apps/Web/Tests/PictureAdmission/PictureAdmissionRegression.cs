@@ -204,7 +204,28 @@ tests.Add(("actual-raster-crop-history-save-close-reopen-and-pixel-export", asyn
     var media = new ControlledMedia(source); using var feature = new PictureBrowserFeature(media, markup); using var first = await Open(feature);
     Check(await first.Session.ImportAsync(), "Actual original PNG/native owner create."); var original = first.Session.Document!; var sourcePath = original.SourcePath!; var originalBytes = File.ReadAllBytes(sourcePath);
     first.Session.TrySetValue("CropX", "1"); first.Session.TrySetValue("CropY", "2"); first.Session.TrySetValue("CropWidth", "5"); first.Session.TrySetValue("CropHeight", "3");
-    await first.Session.DispatchAsync("Crop", null); Check(first.Session.Document!.Revision == 1 && first.Session.Document.Operations.Single() == new CropOperation(1, 2, 5, 3) && !first.Session.IsDirty && !feature.HasUnsavedChanges, "Canonical crop consumes real input, preserves identity and acknowledges once.");
+    object CropState(string stage)
+    {
+        var retirement = typeof(PictureBrowserFeature).GetField("_retirement", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(feature) as Task;
+        var fields = new Dictionary<string, object?>();
+        foreach (var name in new[] { "CropX", "CropY", "CropWidth", "CropHeight", "ResizeWidth", "ResizeHeight" })
+            fields[name] = first.Session.TryGetValue(name, out var value) ? value : null;
+        var document = first.Session.Document;
+        return new { name = "actual-raster-crop-state", stage,
+            canonical = document is null ? null : Canonical(first.Session),
+            fields, first.Session.IsDirty, first.Session.IsBusy, first.Session.HasPendingInput, first.Session.SavedRevision,
+            first.Session.Status, first.Session.ErrorCode, featureHasUnsavedChanges = feature.HasUnsavedChanges,
+            retirementFieldPresent = retirement is not null, retirementStatus = retirement?.Status.ToString(),
+            retirementCompletedSuccessfully = retirement?.IsCompletedSuccessfully,
+            revisionMatches = document?.Revision == 1,
+            operationCount = document?.Operations.Count,
+            cropMatches = document?.Operations.Count == 1 && document.Operations[0] == new CropOperation(1, 2, 5, 3),
+            media.CommitCalls, media.Dirty, actualSaved = media.Saved.ToDictionary(x => x.Key, x => x.Value.GetRawText()) };
+    }
+    receipts.Add(CropState("after-four-real-field-setters-before-dispatch"));
+    await first.Session.DispatchAsync("Crop", null);
+    receipts.Add(CropState("after-awaited-dispatch-before-unchanged-combined-assertion"));
+    Check(first.Session.Document!.Revision == 1 && first.Session.Document.Operations.Single() == new CropOperation(1, 2, 5, 3) && !first.Session.IsDirty && !feature.HasUnsavedChanges, "Canonical crop consumes real input, preserves identity and acknowledges once.");
     Check(await first.Session.UndoAsync() && first.Session.Document!.Revision == 2 && first.Session.Document.Operations.Count == 0, "Undo restores actual codec graph with owner-compatible current+1 revision.");
     Check(await first.Session.UndoAsync(true) && first.Session.Document!.Revision == 3 && first.Session.Document.Operations.Single() == new CropOperation(1, 2, 5, 3), "Redo restores canonical typed operation at revision3.");
     var saved = Canonical(first.Session); var id = original.DocumentId.ToString(); var commits = media.CommitCalls;
