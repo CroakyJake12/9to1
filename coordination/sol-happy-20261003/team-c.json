@@ -205,7 +205,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-04T14:14:37.108743+00:00",
+  "updatedUTC": "2026-10-04T14:32:28.468445+00:00",
   "candidateStatus": "UNACCEPTED_PROVISIONAL_COMBINED_SOURCE_RECEIVING_AND_WINDOWS_TESTS_ACTIVE",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -729,8 +729,9 @@
         "source": "ce7f7ce1",
         "scope": "Two exacthistoricalb7reader/testtrackedwholebodies; coherentEECmanifesttypes nowavailable inroot311",
         "C6": "ExactsourceACK;4protectedSitesandbothprojectsbyteunchanged",
-        "actualNormalOwnerSuite": "RUNNING_NOT_CLAIMED_PASS",
-        "remaining": "ExistingtrustedoriginalFiles/session/import/scanner/runtimecomposition andowneradoption remainopen; nofakeprovider/canonicalmodel oractivation."
+        "actualNormalOwnerSuite": "Release76/76PASSall21R2cases,C6source/runtime/custody/publicsafeACK; caller/provider/scanner/nativeimportportsstillopen.",
+        "remaining": "ExistingtrustedoriginalFiles/session/import/scanner/runtimecomposition andowneradoption remainopen; nofakeprovider/canonicalmodel oractivation.",
+        "integratedHead": "d5111d6a"
       }
     },
     "durableCancellation": {
@@ -788,10 +789,11 @@
       "owner": "Team A existing shared production/test owner; C5 isolatedMesh/root fixture preparation, C6 independent reviewer",
       "MeshSource": "c996db6d",
       "request": "ACK exactboundedsourceadoption Meshc996/preview40cd andfixtures71f withalloriginalassertions preserved orboundedcurrentownerrebase. No fakegrants/envprofileoverride/fixturewaiver. Newcombinednormalresultpending.",
-      "remainingFailures": "Originalc9963fail preserved; combined5110 resultpending",
-      "state": "MESH_AND_TWO_FIXTURES_AND_PREVIEW_SOURCE_RUNTIME_PEER_ACK_COMPOSED_UNACCEPTED_COMBINED_NORMAL_RUN_ACTIVE",
+      "remainingFailures": "0incombined5110Release; originalfailedsource/environmentreceiptsretained",
+      "state": "REVIEWED_COMPOSED_ALL_428_NORMAL_RELEASE_PASS_OWNER_ADOPTION_OPEN",
       "testFixtureSource": "71f8014e",
-      "previewSource": "40cd428f"
+      "previewSource": "40cd428f",
+      "actualNormalSuite": "428/428PASS0skip at5110 +independentC6actualTRX/sourceaudit; nofullreleaseacceptance."
     },
     "writeSceneRealLayout": {
       "owner": "Team A canonical sharedWriteDocumentSurface/text metrics/layout; B owns browsercomposition; C2 readonlyisolateddiagnosis",
@@ -907,8 +909,8 @@
     "modelAssignment": "Inherited current session model; no explicit GPT-6.1 model override requested in current user instruction",
     "next": "Continue actualfd5Windows cohort, exact combinednormal5110, R2receiving, canonicalbrowserPR6review andA-ownedlayoutdependency. All29Windows0verified/0delivered; mainreleaseunchanged.",
     "acceptedHead": null,
-    "latestCoordinationRead": "3ccf48a591cb37dee876c115e22373939abd7788",
-    "candidate": "5110f97bb6db6c3e465e1ddbf01a3ba900505743",
+    "latestCoordinationRead": "c8802837bd9f4809f59a67df1c0893cb731132aa",
+    "candidate": "de52ec43b8020ef3752e65621bd228d0d31391f2",
     "goalStarted": false
   },
   "continuation20261004": {
@@ -1020,13 +1022,13 @@
   },
   "currentImplementation20261004": {
     "status": "ACTIVE_IMPLEMENTATION_INTEGRATION_AND_REAL_WINDOWS_VALIDATION",
-    "recordedUTC": "2026-10-04T14:14:37.108743+00:00",
+    "recordedUTC": "2026-10-04T14:32:28.468445+00:00",
     "userRequest": "Direct pasted implementation request received in successor chat; supersedes prior stop at hosted-identity blocker.",
     "provisionalCandidate": {
       "branch": "integration/team-c-unaccepted-20261004",
-      "head": "5110f97bb6db6c3e465e1ddbf01a3ba900505743",
+      "head": "de52ec43b8020ef3752e65621bd228d0d31391f2",
       "base": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
-      "state": "LATEST_5110_LOCAL_REVIEWED_COMPOSED_COMBINED_NORMAL_RELEASE_RUNNING_REMOTE43C5_DRAFT_PR5",
+      "state": "LATEST_DE52_RECEIPTS_LOCAL_NATIVE_R2_REVIEWED_COMPOSED_REMOTE_D511_DRAFT_PR5",
       "contents": [
         "31 exact reviewed Accounts core/spec bodies from f7b65b8c",
         "Durable cancellation CAS source/test a4be0cd0 plus retained 67636bb0 evidence",
@@ -1040,7 +1042,7 @@
       ],
       "qualification": "No active Team A/B files edited; no main promotion; no acceptance inferred from composition.",
       "pullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
-      "remoteVerifiedHead": "43c5b0ebf7d26f46ee9a29ad009e9dd0e68b835a"
+      "remoteVerifiedHead": "d5111d6a73fbd489b52e010096e0d960dcb2a594"
     },
     "windows": {
       "requiredProductGroups": 29,
@@ -1089,9 +1091,27 @@
         "source": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
         "run": 37208129079,
         "url": "https://github.com/CroakyJake12/9to1/actions/runs/37208129079",
-        "state": "QUEUED_OR_EXECUTING_NO_RESULT_INFERRED",
+        "state": "COMPLETED_OVERALL_FAILURE_STUDIO_ORIGINAL_AVATAR_WINDOWS_PLATFORM_GUARD",
         "basis": "ExactEEC/e2 +9dBoards/6baPresent/a0Studio reviewednativeproposals; all13path/26pin C6source/harnessACK; rootonlypush/readback",
-        "controls": "Actual normal maintainednativecontrols beforepackage; failedcontrolsretained anddo notpreventpackage/windowattempt, finaljobfailsonnativefailure. NoexistingHome/3successfulprobe reruns."
+        "controls": "Actual normal maintainednativecontrols beforepackage; failedcontrolsretained anddo notpreventpackage/windowattempt, finaljobfailsonnativefailure. NoexistingHome/3successfulprobe reruns.",
+        "observed": "Boards54/54WindowsnormalPASS+package/extract/window/normalclose0; Present13/13including8realrendersPASS+package/extract/window/normalclose0; Studio2/3nativePASS1originalavatarFAILexplicitlibglycinunsupportedWindows, packagedwindow/extract/normalclose0PASS. No forcedcleanup/stderr for3. IndependentC6directprovider/body/TRX/sourceaudits complete; originalfailuresunchanged."
+      },
+      "all29Manifest": {
+        "path": "/workspace/team-c-resume-evidence/windows/pass1-windows-package-observation-manifest.json",
+        "bytes": 64066,
+        "sha256": "480368dfa02aea0b2dadd168706bb46ade5083311081ae5cdc935d212c5ea7ff",
+        "state": "C1frozen actual29 rows/6sourcepackagetuples; C6manifestreadbackpending, rootpubliccopyforthcoming",
+        "nativeControls": "70executed69PASS1FAIL; notsemanticfullappdenominator",
+        "fullAccepted": 0,
+        "delivered": 0,
+        "unresolved": "Unsigned/SDKpresentrunner, Homeforcedcleanup/installedmatchedruntime/bootstrap, cleanPC/localdestination, accessibility/fullflows/donors/all29entrypoints; legacyHostexcludedfrom29"
+      },
+      "packagedBoardsContinuation": {
+        "owner": "C3disjointactualpackage UIharness; C1sources/artifactcustody; C6peer; rootsolepush",
+        "packageArtifact": 11305252552,
+        "source": "fd5b989b",
+        "packageSHA256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64",
+        "work": "Preparationof boundedstandardWindowsUIAutomation/actualkeyboard/edit/save/normalclose/reopen/accessibilityontheimmutablepackagedexe. NoSDK/testrebuild/noheadless/APIreplacement; actualtoolavailability/Home/fullscope remainunverified."
       }
     },
     "functionalResults": {
@@ -1100,15 +1120,15 @@
       "recovery": "C4 and independent C6 each14 original/new controls PASS; original equal-count main and WAL drift false successes retained. No provider restore acceptance.",
       "billing": "Correctedf352 independent21PASS+original4 diagnostic probes pass; actual entire receivinga095 billing npm37PASS0FAIL0skip. Original external diagnostic leak and expected guard-omission failures retained; no live requests/effects.",
       "browser": "c878five unchangednormalreceivingsuites93/93PASS; sourceclosure3b Nav5/5 actualnormalPASS+C6custodyACK, originalcompile/diskfailuresretained. Actual canonicalemojiFact1/1 onsourcebuiltWriteScene ownresourcePASS independentruntimeauditpending. ExistingWriteScene fourmodes117assertionsPASS; layoutfailsafter12assertions, boldbeta34.132height>23.625 at31.36width. C2trace actualAownedWriteDocumentSurface approximates.56/char but backendweightedMontserratrealmetricswrap; genuine sharedmeasure/layout/caret/hit ownerport needed. No MaxWidth wrapper/oracle/font fallback.",
-      "normal": "At exactMesh c996 normalRelease428/425PASS3FAIL0skip. Root71f two entire original fixture classes16DebugPASS+independentC5Release16PASS/C6sourceACK, alloriginalassertions retained. Preview40cd independent realchildRelease2PASS/C6sourceACK nowcomposed5110. Actual whole normal combinedRelease running; no outcome inferred.",
-      "nativeR2": "Newisolatedce7f7ce1 addsONLY two exactreviewedhistoricalb7 source/testbodies againstactualEECmanifesttypes; protected4Sitesbodies/projectbyteunchanged. C6sourceACK; actual normal wholeSites owner suite running. NoauthenticatedR2/import/scanner/activationacceptance."
+      "normal": "Exactcombined5110 actualunfilteredmaintainedInfrastructureRelease428/428PASS0FAIL0skip/zero compilerwarnings/errors. IndependentC6 rawTRX/Git/API/conservation audit: alloriginal415 identities+13 reviewedMesh additions andall33criticalregressionidentitiesPASS; source6receivingbodiesexact reviewedc996/71f/40cd. Old8f/10eff/c996/40cdfailures preservedatownsource/environment; no native/provider/fullpassacceptance inferred.",
+      "nativeR2": "Sourcece7 exact2historicalb7fullbodies composedasd511 againstactualEECtypes; actualnormalSitesownerRelease76/76PASS includingall21readercontrols, sourcebuiltmodule/whole-sourcepins/custody/C6runtimeandpublicsafe28ACK. FourprotectedSitesbodies/projects unchanged. NoauthenticatedR2/import/currentSession/scanner/deployment/Files12HTTPacceptance."
     },
     "workerLogs": {
       "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
       "url": "https://docs.google.com/document/d/1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
       "writer": "Team C sole successor integrator",
       "directUserWriteAuthorization": true,
-      "checkpoints": "13:56,14:33,15:00 Europe/London appended underall3passsections; actual15:00 threeH1/bodybold/NORMAL_TEXT/progress18pt/terminalsemicolons/BLOCKEDreadbackverified.",
+      "checkpoints": "13:56,14:33,15:00,15:30 Europe/London appendedunderall3existingpasssections;15:30 all3H1/boldNORMAL_TEXT/progress18pt/terminalsemicolons/BLOCKEDreadbackverified.",
       "formatQualification": "13:56formatcorrectionretainedin14:33; nohistoryrewritten."
     },
     "next": "Continue actualfd5Windows cohort, exact combinednormal5110, R2receiving, canonicalbrowserPR6review andA-ownedlayoutdependency. All29Windows0verified/0delivered; mainreleaseunchanged.",
@@ -1120,6 +1140,12 @@
       "path": "coordination/sol-happy-20261003/team-c.json",
       "field": "currentImplementation20261004",
       "qualification": "Entire original source/evidence/failure approvals retained; this update advances executable receiving work."
+    },
+    "forecast": {
+      "recordedLondon": "2026-10-04T15:30:00+01:00",
+      "fullPasses1to3By2000": "NOT_CREDIBLE_ON_CURRENT_MANDATORY_PREREQUISITES",
+      "protectedMinimum": "All29remainvisible0verified0delivered; actualpackageworkflows/sourcefixes prioritised; noacceptance/price/permissionwaiver.",
+      "missing": "Ownerremainingactualinstalledentrypoints/HomeAppIDpackageABI/publisher/currentauthority+Windowsdecoder; noSDKcleanPCandlocaldeliveryroute; billingpolicy; fullprovider/browser/installed/donor/platformacceptance."
     }
   },
   "progressReportingAcknowledgement": {
@@ -1137,6 +1163,10 @@
     "source": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
     "base": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
     "reviewer": "C5 independentactualproduct/CI/sourceclosure reviewactive",
-    "state": "NOT_ADOPTED; actualGitobjects fetched. No source reconstructedfromprior8ffvalidationcut. CurrentbaseWebbodies preserved."
+    "state": "UNADOPTED_REVIEW_TEST_ACTIVE_PICTURE_TWO_NATIVE_OWNER_BODIES_AVAILABLE",
+    "receivingProposal": "1a0a824ad06905467c280730a85429f37feabce1",
+    "actualSourceDeltaPaths": 66,
+    "receiving": "Lifecycle14/Chat10/Files17normalPASS atactual1a; normalSitescorrectedinvocationpending; firstPictureactualsourcehash/compilerguardFAILpreserved.",
+    "nativePictureClosure": "Two missingrootdependenciesPictureDocument andPictureCropService are actualEECbytes equalAef/22d; C5isolatedboundedproposalpreparation,C4/C6wholebody/behaviorreview before rootcomposition. Nohash-onlyrepin orsourcefromhashreconstruction; originalPicture14/15GPSfailuremustremain."
   }
 }
