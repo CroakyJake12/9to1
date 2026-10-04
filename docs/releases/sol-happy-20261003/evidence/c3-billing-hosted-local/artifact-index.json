@@ -424,8 +424,14 @@
       "path": "source-pins.json",
       "bytes": 2781,
       "sha256": "374dcd6f936f91f334e644b06affef84bfd7fe9a2bce0875e1dd0002c8e6a4ff"
+    },
+    {
+      "path": ".gitattributes",
+      "bytes": 556,
+      "sha256": "77bf86de18987e17ce0a5294725cb110e5da8416a1e5fb4748d9ce93b338727d"
     }
   ],
   "binaryScan": "All recursive payloads UTF-8 and no PE/ELF/PDB/ZIP/SQLite magic",
-  "excludedNativeStateFiles": 63
+  "excludedNativeStateFiles": 63,
+  "rawWhitespacePolicy": "Exact offending raw paths only; originals never normalized."
 }
