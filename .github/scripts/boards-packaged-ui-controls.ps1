@@ -159,7 +159,7 @@ function Find-SaveLabel([string]$StatusPrefix, [bool]$Exact) {
         $matchesStatus = if ($Exact) { $c.Name -ceq $StatusPrefix } else { $c.Name.StartsWith($StatusPrefix, [StringComparison]::Ordinal) }
         if ($matchesStatus -and $c.IsEnabled -and -not $c.IsOffscreen -and $r.Width -gt 0 -and $r.Height -gt 0 -and
             $r.Left -ge $work.Left -and $r.Top -ge $work.Top -and $r.Right -le $work.Right -and $r.Bottom -le $work.Bottom) {
-            return @{ element = $text; region = 'OwnedWindowText' }
+            return @{ element = $text; scope = 'OwnedWindowText' }
         }
     }
     return $null
@@ -182,7 +182,7 @@ function Observe-SaveLabel([string]$StatusPrefix, [bool]$Exact = $true) {
             }
             foreach ($regionId in @('TopBarRight', 'FooterBar', 'OwnedWindowText')) {
                 $region = if ($regionId -ceq 'OwnedWindowText') { $window } else { Find-Control $window $regionId }
-                $regionObservation = [ordered]@{ automationId = $regionId; found = $null -ne $region; texts = @() }
+                $regionObservation = [ordered]@{ scope = $regionId; automationId = if ($regionId -ceq 'OwnedWindowText') { $null } else { $regionId }; found = $null -ne $region; texts = @() }
                 if ($null -ne $region) {
                     if ($region.Current.ProcessId -ne $process.Id) { throw 'Status diagnostic region belongs to another process.' }
                     $condition = New-Object System.Windows.Automation.AndCondition(
@@ -205,7 +205,7 @@ function Observe-SaveLabel([string]$StatusPrefix, [bool]$Exact = $true) {
         throw $statusObservationFailure
     }
     Check (-not $process.HasExited -and $observed.element.Current.ProcessId -eq $process.Id) 'Observed save-state text belongs to the exact live packaged app'
-    $result.storageStatusObservations += [ordered]@{ text = $observed.element.Current.Name; region = $observed.region; processId = $process.Id; controlType = 'Text'; observedAtUtc = [DateTimeOffset]::UtcNow.ToString('o') }
+    $result.storageStatusObservations += [ordered]@{ text = $observed.element.Current.Name; scope = $observed.scope; processId = $process.Id; controlType = 'Text'; observedAtUtc = [DateTimeOffset]::UtcNow.ToString('o') }
     Write-Result
 }
 function Position-OwnedWindow([System.Windows.Automation.AutomationElement]$Editor) {
