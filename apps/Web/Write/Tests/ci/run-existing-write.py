@@ -16,9 +16,9 @@ import sys
 COMMANDS_PATH = "apps/Web/Tests/ci/run-ordinary-native.py"
 COMMANDS_SHA = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 SUITES = {
-    "scene-focus58": ("apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+    "scene-focus60": ("apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
                       "apps/Web/Write/Tests/SceneProgram.cs",
-                      "72048cc02a8498ecd96d9621503c992d824660914bf9f474db860250bd5d8846"),
+                      "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80"),
     "space15": ("apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
                 "apps/Web/Tests/BrowserWriteSpaceRegression.cs",
                 "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee"),
@@ -28,8 +28,8 @@ SUITES = {
 }
 
 
-SCENE_SOURCE_SHA = {'apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj': 'c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2', 'apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj': 'c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2', 'apps/Web/Write/Scene/WriteRetainedSceneResources.cs': 'bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e', 'apps/Web/Write/Scene/WriteRetainedSceneControl.cs': '40a325d9ba36cb61671cf91657f4fb9b3d8fabd1ab54c8bb87015b4275543d1e', 'apps/Web/Write/WriteBrowserSession.cs': '741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f', 'apps/Web/Write/WriteBrowserSurface.cs': '04f2dfce3b52e212ab8eaa09ad77370b8e324ce0863231c2cfd5487fc2a18ad0', 'apps/Web/Write/WriteBrowserFeature.cs': 'dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4', 'apps/Web/Write/IWriteBrowserPackageBroker.cs': '67599b070ef01fa5a8a4dedd1f9aa00784bc90cf41d4e136328f4709d29ebcb0', 'apps/Web/Write/Write.cui': 'cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e', 'apps/Web/BrowserSurfaceRegistry.cs': 'ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283', 'apps/Web/BrowserActionAvailability.cs': 'ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369'}
-SCENE_ASSERTIONS = {'toolbar': ['actual packed font resolves original asset URI and matches exact owner bytes', 'actual owning Write.cui parses', 'actual registered owner surface lowers', 'actual native templates render before querying editor descendants', 'actual toolbar New enabled=True', 'actual toolbar Save enabled=False', 'actual toolbar Bold enabled=False', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'actual toolbar Close enabled=False', 'actual New control permits interaction', 'actual toolbar Save enabled=True', 'actual toolbar Bold enabled=True', 'actual toolbar Close enabled=True', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'toolbar journey actual routed typing mutates owner', 'actual toolbar Undo enabled=True', 'actual toolbar Redo enabled=False', 'actual Bold control permits interaction', 'toolbar actual Bold changes only selected structured run', 'actual Undo control permits interaction', 'actual toolbar Redo enabled=True', 'actual Redo control permits interaction', 'actual toolbar Redo enabled=False', 'actual Save control permits interaction', 'toolbar Save awaits actual repository barrier with unsaved work', 'actual toolbar New enabled=False', 'actual toolbar Save enabled=False', 'actual toolbar Bold enabled=False', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'actual toolbar Close enabled=False', 'actual toolbar Import native package enabled=False', 'actual toolbar Download native package enabled=False', 'actual toolbar Refresh documents enabled=False', 'actual toolbar New enabled=True', 'actual toolbar Save enabled=True', 'actual toolbar Bold enabled=True', 'actual toolbar Close enabled=True', 'toolbar actual Save commits canonical revision and selected formatting', 'actual Close control permits interaction', 'actual toolbar New enabled=True', 'actual toolbar Save enabled=False', 'actual toolbar Bold enabled=False', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'actual toolbar Close enabled=False'], 'initial-focus': ['actual packed font resolves original asset URI and matches exact owner bytes', 'initial-focus actual native owner frame renders', 'initial-focus disabled new editor does not seize native focus', 'initial-focus new owner attachment focuses native scene once when enabled', 'initial-focus actual routed native text reaches same original owner editor', 'initial-focus same editor busy release preserves real toolbar focus', 'initial-focus toolbar-focused text does not mutate original document', 'initial-focus null attachment clears pending focus before enable', 'initial-focus enabled non-null replacement uses actual owner focus', 'initial-focus disposed pending editor leaves native toolbar focused and root detached']}
+SCENE_SOURCE_SHA = {'apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj': 'c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2', 'apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj': 'c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2', 'apps/Web/Write/Scene/WriteRetainedSceneResources.cs': 'bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e', 'apps/Web/Write/Scene/WriteRetainedSceneControl.cs': 'b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c', 'apps/Web/Write/WriteBrowserSession.cs': '741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f', 'apps/Web/Write/WriteBrowserSurface.cs': '04f2dfce3b52e212ab8eaa09ad77370b8e324ce0863231c2cfd5487fc2a18ad0', 'apps/Web/Write/WriteBrowserFeature.cs': 'dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4', 'apps/Web/Write/IWriteBrowserPackageBroker.cs': '67599b070ef01fa5a8a4dedd1f9aa00784bc90cf41d4e136328f4709d29ebcb0', 'apps/Web/Write/Write.cui': 'cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e', 'apps/Web/BrowserSurfaceRegistry.cs': 'ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283', 'apps/Web/BrowserActionAvailability.cs': 'ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369'}
+SCENE_ASSERTIONS = {'toolbar': ['actual packed font resolves original asset URI and matches exact owner bytes', 'actual owning Write.cui parses', 'actual registered owner surface lowers', 'actual native templates render before querying editor descendants', 'actual toolbar New enabled=True', 'actual toolbar Save enabled=False', 'actual toolbar Bold enabled=False', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'actual toolbar Close enabled=False', 'actual New control permits interaction', 'actual toolbar Save enabled=True', 'actual toolbar Bold enabled=True', 'actual toolbar Close enabled=True', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'toolbar journey actual routed typing mutates owner', 'actual toolbar Undo enabled=True', 'actual toolbar Redo enabled=False', 'actual Bold control permits interaction', 'toolbar actual Bold changes only selected structured run', 'actual Undo control permits interaction', 'actual toolbar Redo enabled=True', 'actual Redo control permits interaction', 'actual toolbar Redo enabled=False', 'actual Save control permits interaction', 'toolbar Save awaits actual repository barrier with unsaved work', 'actual toolbar New enabled=False', 'actual toolbar Save enabled=False', 'actual toolbar Bold enabled=False', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'actual toolbar Close enabled=False', 'actual toolbar Import native package enabled=False', 'actual toolbar Download native package enabled=False', 'actual toolbar Refresh documents enabled=False', 'actual toolbar New enabled=True', 'actual toolbar Save enabled=True', 'actual toolbar Bold enabled=True', 'actual toolbar Close enabled=True', 'toolbar actual Save commits canonical revision and selected formatting', 'actual Close control permits interaction', 'actual toolbar New enabled=True', 'actual toolbar Save enabled=False', 'actual toolbar Bold enabled=False', 'actual toolbar Undo enabled=False', 'actual toolbar Redo enabled=False', 'actual toolbar Close enabled=False'], 'initial-focus': ['actual packed font resolves original asset URI and matches exact owner bytes', 'initial-focus actual native owner frame renders', 'initial-focus disabled new editor does not seize native focus', 'initial-focus new owner attachment focuses native scene once when enabled', 'initial-focus actual routed native text reaches same original owner editor', 'initial-focus same editor busy release preserves real toolbar focus', 'initial-focus toolbar-focused text does not mutate original document', 'initial-focus null attachment clears pending focus before enable', 'initial-focus enabled non-null replacement uses actual owner focus', 'initial-focus actual busy router renewal preserves already-native-focused scene', 'initial-focus renewed actual owner router accepts native text after busy roundtrip', 'initial-focus disposed pending editor leaves native toolbar focused and root detached']}
 
 def require(value, message):
     if not value:
@@ -136,7 +136,7 @@ def main():
         require(digest(fixture) == fixture_sha, "Existing fixture/oracle changed; new review required")
         selected = [project, fixture_name, COMMANDS_PATH,
                     str(Path(__file__).resolve().relative_to(root)), "NuGet.Config", "global.json"]
-        if args.suite == "scene-focus58":
+        if args.suite == "scene-focus60":
             require(all(digest(root / name) == pin for name, pin in SCENE_SOURCE_SHA.items()),
                     "Reviewed actual native Scene/source closure differs")
             selected += list(SCENE_SOURCE_SHA)
@@ -192,14 +192,46 @@ def main():
             commands.env["HAVEN_DATA_DIR"] = str(data)
             outcomes.append(validate_space(commands.run("native-space", [str(apphost)], 120), fixture))
             result.update(executed=15, passed=15, failed=0)
-        elif args.suite == "scene-focus58":
+        elif args.suite == "scene-focus60":
             require(task.is_file(), "Actual source-built Scene native resource task required")
+            failed_modes = []
             for mode in ("toolbar", "initial-focus"):
                 data = output / ("scene-" + mode + "-fixture")
                 data.mkdir()
                 commands.env["HAVEN_DATA_DIR"] = str(data)
-                outcomes.append(validate_scene(commands.run("native-" + mode, [str(apphost), mode], 120), mode))
-            result.update(executed=58, passed=58, failed=0)
+                deferred = None
+                name, argv = "native-" + mode, [str(apphost), mode]
+                try:
+                    text = commands.run(name, argv, 120)
+                except Exception as error:
+                    deferred = error
+                    text = (diagnostics / (name + ".log")).read_text(errors="replace")
+                # A functional assertion abort can still have complete custody.
+                # Never continue after a custody fault or in the failed process.
+                record = commands.records[-1]
+                require(record["name"] == name and record["argv"] == argv
+                        and record["exit"] == record["exitAfterDrain"]
+                        and record["normalEOF"] and record["familyClosed"] and record["finalECHILD"]
+                        and record["error"] is None and not record["signals"] and record["births"]
+                        and all(birth["gone"] for birth in record["births"]),
+                        "Native mode custody HOLD; refuse every later process")
+                try:
+                    require(deferred is None and record["exit"] == 0,
+                            "Actual native functional failure: " + mode + " exit=" + str(record["exit"]))
+                    outcome = validate_scene(text, mode)
+                    outcome["state"] = "PASS"
+                except Exception as error:
+                    failed_modes.append(mode)
+                    outcome = {"mode": mode, "state": "FAIL", "error": repr(error),
+                               "originalCommandError": repr(deferred) if deferred else None,
+                               "nativeExit": record["exit"], "expected": len(SCENE_ASSERTIONS[mode]),
+                               "observedAssertLabels": re.findall(r"^ASSERT (.+)$", text, re.MULTILINE),
+                               "countsQualified": "Prefixes are not a complete PASS; actual failure/notRun require raw case classification"}
+                outcomes.append(outcome)
+                result["sceneModes"] = outcomes
+                write_json(diagnostics / "actual-original-assertions.json", outcomes)
+            require(not failed_modes, "Actual completed native modes failed: " + ", ".join(failed_modes))
+            result.update(executed=60, passed=60, failed=0)
         else:
             data = output / "durable-fixture"
             data.mkdir()

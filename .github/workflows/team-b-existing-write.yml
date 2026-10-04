@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [space15, durable65, scene-focus58]
+        suite: [space15, durable65, scene-focus60]
     steps:
       - uses: actions/checkout@v4
         with:

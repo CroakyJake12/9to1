@@ -77,7 +77,8 @@ var checks = await headless.Dispatch(async () =>
             focusWindow.KeyTextInput(" ignored");
             Check(Text(firstDocument) == "Alpha beta gamma",
                 "initial-focus toolbar-focused text does not mutate original document");
-            var secondEditor = new WriteDocumentEditor(NotesDocument.Create("Replacement focus owner"));
+            var secondDocument = NotesDocument.Create("Replacement focus owner");
+            var secondEditor = new WriteDocumentEditor(secondDocument);
             focusHost.SetInputAllowed(false); focusHost.SetEditor(secondEditor); focusHost.SetEditor(null);
             focusHost.SetInputAllowed(true);
             Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), sentinel) && nativeScene.Root is null,
@@ -85,6 +86,12 @@ var checks = await headless.Dispatch(async () =>
             focusHost.SetEditor(secondEditor);
             Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), nativeScene),
                 "initial-focus enabled non-null replacement uses actual owner focus");
+            focusHost.SetInputAllowed(false); focusHost.SetInputAllowed(true);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), nativeScene),
+                "initial-focus actual busy router renewal preserves already-native-focused scene");
+            focusWindow.KeyTextInput("Delta echo");
+            Check(Text(secondDocument) == "Delta echo",
+                "initial-focus renewed actual owner router accepts native text after busy roundtrip");
             sentinel.Focus(); focusHost.SetInputAllowed(false);
             focusHost.SetEditor(new WriteDocumentEditor(NotesDocument.Create("Disposed pending focus")));
             focusHost.Dispose();

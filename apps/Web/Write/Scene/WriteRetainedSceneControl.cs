@@ -78,12 +78,13 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
             _scene.Root = null;
             _scene.Root = _surface;
         }
-        else if (_focusInitialEditorOnEnable)
+        else if (_focusInitialEditorOnEnable || _scene.IsFocused)
         {
-            // An initial attach may happen while Create/import is busy. Consume
-            // that single real owner focus request when input first becomes legal.
-            // An unchanged editor during later Save has no pending request, so
-            // re-enabling it preserves the current toolbar focus and viewport.
+            // Consume one pending initial attach, or restore the renewed owner's
+            // router only when this actual native scene already has focus.
+            // The owner's same-element Avalonia Focus has no focus-change event.
+            // A toolbar-focused Save never enters this branch, preserving its
+            // real focus and viewport without a competing input implementation.
             _focusInitialEditorOnEnable = false;
             _scene.FocusElement(_surface);
         }
