@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_PREINVOCATION_ORIGINAL_PACKAGE_WORKFLOW_WITH_GENUINE_TYPED_PROVIDER_CLIENT",
+  "sourceCommit": "9bbebc244ab19dcda28148f6bb11275279467f3e",
+  "parentActualSetupSource": "257596c3dee1dff1d99410de373eb30b8c5dc4ed",
+  "changes": [
+    ".github/workflows/team-c-canvas-packaged-ui-controls.yml",
+    "eng/release-validation/canvas-packaged-ui/README.md"
+  ],
+  "outsideFourAllowedHarnessPathsModeBlobConserved": 9478,
+  "wholeScriptAndCatalogByteExactActualReviewed257": true,
+  "scriptSHA256": "1afecef7bc92638d89b287770f4385f9315873c3e0d6a4b65bf92f0f9e8da643",
+  "workflowInverseExactReviewedF5ExceptPrivateBranchTrigger": true,
+  "review": "Restores the original fully reviewed contents:read Windows2022 immutable-package workflow. Original artifact/run/head/hash custody,package verification,PID/foreground/geometry/native Edit/Value and Button/Invoke requirements,one-request Home approval,Canvas stroke/durable Files commit/normal close/reopen and failure cleanup/drain guards are unchanged. It uses the exact typed-provider script that completed genuine sameAPI setup in Windows; no setup or prior65 controls are repeated here.",
+  "actualPreviousSetup": "Run37226194641/artifact11311649142 genuine registration28/28PASS independently verified; native workflow unexecuted.",
+  "sourceControls": "C3 exact three workflow run blocks parser0/YAML parse; entire workflow inverse and source/catalog/pins conservation independently verified.",
+  "execution": "Root may invoke this one exact new native workflow. Genuine OS/native capability remains a receiving gate; no Pane role fallback,repeated input,manual state,provider substitution or original oracle weakening. Earlier failures remain retained.",
+  "acceptance": "No actual folder choice/Home approval/Canvas model operation/native workflow/full app/installedHome/cleanPC acceptance inferred from provider setup."
+}

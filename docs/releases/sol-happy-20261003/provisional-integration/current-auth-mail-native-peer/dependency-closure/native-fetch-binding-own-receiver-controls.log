@@ -1,0 +1,19 @@
+✔ broker omitted default fetch uses Window receiver and preserves denial/policy (23.944724ms)
+✔ account API omitted default fetch uses Window receiver and preserves exact wire/policy (1.698582ms)
+✔ broker explicit current global fetch uses Window receiver and preserves denial/policy (2.721485ms)
+✔ account API explicit current global fetch uses Window receiver and preserves exact wire/policy (0.638324ms)
+✔ configured composition forwards its native default without changing cleanup or granting identity (2.530703ms)
+✔ broker captures native transport and receiver before later global replacement (1.04144ms)
+✔ broker preserves injected non-global transport receiver and policy (1.173146ms)
+✔ broker native-default receiver binding preserves caller cancellation (1.287774ms)
+✔ account API captures native transport and receiver before later global replacement (0.501992ms)
+✔ account API preserves injected non-global transport receiver and policy (0.349347ms)
+✔ account API native-default receiver binding preserves caller cancellation (0.58836ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 102.480147

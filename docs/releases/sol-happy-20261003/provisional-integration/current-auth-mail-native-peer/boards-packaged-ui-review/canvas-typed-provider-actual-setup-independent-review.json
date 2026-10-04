@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_ACTUAL_GENUINE_TYPED_PUBLIC_PROVIDER_SETUP_COMPLETED_ONLY",
+  "sourceCommit": "257596c3dee1dff1d99410de373eb30b8c5dc4ed",
+  "runId": 37226194641,
+  "jobId": 111506230231,
+  "artifactId": 11311649142,
+  "artifactBytes": 1794,
+  "artifactSHA256": "e52d72fb0244c07fcf54d62fcc7f6cf79b7e431b91f016535df03e6182bb9542",
+  "officialRunAndArtifactReadbackVerified": true,
+  "fullOneMemberZipCRCOriginalBodyVerified": true,
+  "actualChecksPassed": 28,
+  "actualChecksFailed": 0,
+  "registrationCompleted": true,
+  "typedCallerNoInlining": true,
+  "genuineClientProviderSnapshotsIdenticalToFailed986": true,
+  "review": "Ordinary noninlined C# caller to the same genuine installed Microsoft public provider API completes in a fresh Windows process, while prior PowerShell caller failed with NRE. This receiving evidence supports the narrow caller-shape correction. The exact old internal thrown method remains unobserved.",
+  "scope": "Setup only: no package download/extraction,app/profile/input/picker/request/approval/Canvas model state or cleanup operation. Managed Legacy type remains unavailable. Genuine native Edit/Value,Button/Invoke,folder selection,Home approval,stroke and durable reopen are still NOT_RUN and require original strict controls.",
+  "originalNegativesPreserved": true,
+  "acceptance": "No native workflow,installedHome,cleanPC,full app or global release acceptance."
+}

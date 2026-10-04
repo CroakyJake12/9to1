@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "status": "ACTUAL_TYPED_PUBLIC_PROVIDER_SETUP_COMPLETED_NATIVE_NOT_RUN",
+  "sourceCommit": "257596c3dee1dff1d99410de373eb30b8c5dc4ed",
+  "qualification": "Only public standard framework setup completed once. No package/app/profile/input/picker/fixture/request/Canvas/save/reopen or forced cleanup. Actual restored Edit/Value/Button/Invoke/native workflow remain NOT_RUN. Originalbytes exact; C6actualACK3575d9cd; previousallindices/negatives unchanged. No private profile/provider/model/fixture/cache/package/credential/signedURL data.",
+  "payloadCount": 6,
+  "payloadBytes": 17232,
+  "files": [
+    {
+      "path": "actual-typed-setup-completion-assessment.json",
+      "bytes": 997,
+      "sha256": "174df82a164bfe26a33789902f73e235a4b6ac6642a8edd47ce0035fd507582f"
+    },
+    {
+      "path": "canvas-typed-provider-actual-setup-independent-review.json",
+      "bytes": 1426,
+      "sha256": "3575d9cd5d444ada8e336636bbd9e725b484f981902aaedb8616238e316640f8"
+    },
+    {
+      "path": "local-original-custody-receipt.json",
+      "bytes": 785,
+      "sha256": "b7ed3deab6ed45b3481d2ef7f32241e058b88f9ba571a4ae4e497d0271133e8b"
+    },
+    {
+      "path": "members/result.json",
+      "bytes": 11303,
+      "sha256": "4d906c0264d6ddddd9dd752bc1efce9ad80fb2f9ab78fdd7a8e4a095b0e166c6"
+    },
+    {
+      "path": "official-artifacts.json",
+      "bytes": 927,
+      "sha256": "3ff6c2177bfc8b5f79ae0aeaa4cbe5f49c905178eee2b3344b28a7aadd9afa33"
+    },
+    {
+      "path": "original-observations.zip",
+      "bytes": 1794,
+      "sha256": "e52d72fb0244c07fcf54d62fcc7f6cf79b7e431b91f016535df03e6182bb9542"
+    }
+  ]
+}

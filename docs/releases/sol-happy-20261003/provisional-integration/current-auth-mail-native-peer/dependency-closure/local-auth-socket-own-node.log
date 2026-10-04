@@ -1,0 +1,34 @@
+✔ public preflight accepts exact inventories only; no browser or issuer execution (325.028737ms)
+✔ credential-bearing PW debug/preload inheritance is disabled before browser launch (0.171875ms)
+✔ invalid explicit candidate refuses before even reading public binding (0.364269ms)
+✔ actual CLI invalid candidate redacts errors and precedes private read/PW import/listener (38.811654ms)
+✔ mismatched candidate and publication receipt hash refuse (268.552672ms)
+✔ unreviewed runner or source contract refuses (0.648519ms)
+✔ separate actual test and fixture HEADs refuse a caller-invented label (74.070965ms)
+✔ all exact105 source bodies remain required despite separate source identities (1.334853ms)
+✔ actual Git body check refuses rehashed working-tree edits (5.319243ms)
+✔ redirected selected source refuses before any target contents are read (3.124859ms)
+✔ form errors produce fixed categories only, even with credential-bearing text or getters (0.240846ms)
+✔ actual canonical Chromium TMPDIR accepts62 UTF8 bytes and refuses63 before spawn (0.397658ms)
+✔ actual Unicode TMPDIR is measured by UTF8 bytes rather than character count (0.233736ms)
+✔ only exact singleton launch marker survives otherwise private error output (0.167638ms)
+✔ fetch receiver probe uses only an invalid absolute URL and redacts both error boundaries (2.061447ms)
+✔ fetch receiver probe refuses a supposedly parseable URL before calling any fetch (0.599336ms)
+✔ read-only public status observer excludes unknown text and bounds its history (1.262667ms)
+✔ changed receiving critical source refuses even if caller rehashes both catalogs (0.665414ms)
+✔ before/after source mismatch and recorded source mutation refuse (0.842215ms)
+✔ actual full asset body mutation and unlisted asset refuse (596.455662ms)
+✔ public asset symlink refuses even if its target bytes match (296.509643ms)
+✔ fixture source missing body or caller-rehashed alternate implementation refuses (129.886506ms)
+✔ owned private-file contract reads only exact restrictive run, without authenticating (1.534959ms)
+✔ foreign path and permissive private mode refuse (0.429465ms)
+✔ wrong port, external discovery and non-fictional account refuse (1.011264ms)
+✔ private mutation remains an observable failure after read (0.490675ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2016.550084

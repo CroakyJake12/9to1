@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_PREINVOCATION_SOURCE_CUSTODY_AND_CRITERIA_WITH_GRAPH_PEER_REQUIRED",
+  "sourceCommit": "ebdcf7644849acf01be7f64c7ac818bdb195d3e3",
+  "nativeProposalBasis": "93d8e5dfd786e9cd2c1cdc9013dbce60b8a22ec8",
+  "initialHarness": "95ba3c49e814da81260b263b8e207aa164421bdb",
+  "changedPathsFromNativeProposal": 6,
+  "outsideOldEntriesModeBlobConserved": 16504,
+  "all113ActualSourcePinsModeBlobSizeShaExact": true,
+  "nativeFourProductionBodiesExactlyOriginal93d": true,
+  "newTestSelectorInverseExact": true,
+  "allOriginalOwn13AndShared7BodiesUnchanged": true,
+  "nativeUIScriptBytes": 35482,
+  "nativeUIScriptSHA256": "2a430807f56e5a314fac918d014d5604e132304de12dfff01ae206b4a13eb10e",
+  "wholeOriginal1eNativeCriterionBlockByteExact": true,
+  "ownPowerShellASTErrors": 0,
+  "review": [
+    "CanonicalWorkspace resolves the unique actual Present.Stage parent and asserts its canonical workspace name; reversing only the new helper and four call sites recovers the entire original test body. Existing visibility,persistence,refusal assertions are preserved.",
+    "Real maintained Avalonia task project is evaluated and source-built in the owned Release artifacts tree, then hashed and supplied through its original public override alongside separate Cui task override. No copied binary or alternative assets.",
+    "Normal original owning fifteen and unchanged shared seven require exact discovery,execution,all-pass and no skips. Cohort failure is retained while an actual current-source package may still diagnose UI; final pass requires both cohorts plus two native processes exiting naturally at zero.",
+    "New package is sealed to actual same commit/run/attempt with full runtime catalog and extraction verification. Whole sealed archive readiness precedes bounded sixteen original raw parts; old fd5 package is never relabeled or overlaid.",
+    "Unchanged native UI checks fresh default profile,File/New,title and notes keyboard edits,Add slide,Save,picker Cancel,normal close/reopen,library title search and Open. Owned focus,geometry,streams,cleanup and final evidence-write refusal criteria are preserved."
+  ],
+  "privacy": "Controlled type/stage/line only; raw external exceptions withheld. Original native seven privacy/finalization refusal controls remain applicable to byte-identical script. Producer two privacy catch controls retained.",
+  "remainingChecks": "C4 independently reviews actual project/framework dependency closure and workflow pins. Actual Windows compilation,own15/shared7,OS picker capability and mounted native UI remain NOT_RUN; any legacy pointer-test or genuine dependency/OS failure must be retained without weakening assertions.",
+  "acceptance": "Provisional UNACCEPTED source; no installed Home,SDK-free PC,signing,full app or global release acceptance."
+}
