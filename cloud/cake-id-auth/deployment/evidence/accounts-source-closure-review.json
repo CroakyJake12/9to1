@@ -1,0 +1,26 @@
+{
+  "proposal": "7e23d604f43ecd016180105bc11eeab4098440f8",
+  "base": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
+  "ownerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "scope": "Independent identity/authority subset source review; no runtime rerun or provider acceptance",
+  "result": "BOUNDED_IDENTITY_SOURCE_ACK",
+  "byteComparison": "All 31 proposed paths byte-identical to owner delivery; git show comparison exit0",
+  "completeReads": ["Authentication.cs", "Profiles.cs", "AccountContractJson.cs", "DurableState.cs", "OrganisationAdminOperationContracts.cs", "OrganisationOwningOperation.cs", "OrganisationService.cs", "OrganisationAdministration.cs", "OrganisationContracts.cs", "NineToOne.Accounts.csproj", "Tests/Accounts.Specs.csproj", "Tests/OrgPools.Specs.csproj"],
+  "authority": [
+    "Legacy CakeIdentityService is library source only; proposal introduces no Web host, dependency registration or Remote entry point",
+    "CurrentAdminSession construction is issuer-private and re-enters original session authority; account and SessionID binding checked",
+    "Session then organisation leases protect synchronous admission; Save rechecks current session before durable commit",
+    "Current membership Active state and role/policy denials evaluated from canonical organisation state",
+    "Owning-resource callback must be trusted, synchronous and recheck after resource lock; callback is not a sandbox or reusable bearer grant",
+    "Reserved CroakyJake/free Business mapping depends on explicit trusted canonical Guid, never mutable handle equality"
+  ],
+  "sharedCompatibility": "Standalone Accounts project has no shared/Avalonia ProjectReference. No pre-existing Accounts interface references discovered in root shared source; this does not create or validate a remote adapter.",
+  "held": [
+    "Worker account/session UUID claims are not a CurrentAdminSession; legacy opaque-token authentication cannot validate actual Worker bearer tokens",
+    "Owner-approved remote actor/session authority and registered-client provenance mapping required before server organisation bridge",
+    "Native RSA/auth_revision agreement remains unresolved",
+    "DurableState OS mutex and atomic files apply to one host; this is not a multi-host D1 transactional implementation",
+    "Source-only adoption does not register a second issuer or prove HTTPS account/organisation journeys"
+  ],
+  "noEdits": "No C3/A/shared/library source edited; root alone adopts proposal. Owner-cleared key patch must be reviewed separately against exact parent."
+}
