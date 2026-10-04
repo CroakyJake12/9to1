@@ -3776,7 +3776,7 @@
     },
     "ownership": "Root sole B source/artifact/coordination integrator. A native/shared/canonical authority; C sole main/release/acceptedHead/index/combined WorkerLogs integrator. This commit changes only B JSON and preserves every existing checkpoint. No full app/31/LE/platform/provider/release acceptance."
   },
-  "currentBOnlyCheckpointRef": "actualTerminalResponsiveFailureRootReceiveRequest_20261004T213536.729548+0000",
+  "currentBOnlyCheckpointRef": "actualResponsiveSetupRawCorrection_2026-10-04T21:57:10.059827+00:00",
   "engineeringRecoveryRequest_20261004T205121.948495+0000": {
     "UTC": "2026-10-04T20:51:21.948495+00:00",
     "authority": "Actual latest receiving-root user messages read: stop routine questions to Jacob, coordinate engineering decisions with receiving root, pre-empt blockers; corrected deadline 10:30 interpreted by explicit current delegation as22:30 Europe/London4October. Full acceptance/security/donor scope preserved.",
@@ -4188,5 +4188,52 @@
     "safeLocalDrain": "AllBlocalprocesses/readers/ownedsourcecontrolfixturesclosed; idlewatcher17020recordedcontrolledHOLD/exit2zeroAPI/zeroFragments/noRestart. Sourcefreezeprotecteddirtysaved; noJacobPC dependency here. Thisbrowsercloudjobterminal; preserveotherhealthyautoCI to normalterminal.",
     "stillRequired": "Responsive3 actualcause/repair/unchangedrerun; fullrawsource/runtime/familyproof; A/C receivingNotesRepositorycrossprocessCAS repair+original65+two-processregression; sharedSpaceadoption; full31/LE/installed/signing/cleanPC/provideracceptance remainsopen. No fullacceptanceclaim."
   },
-  "currentResponsiveFailureRootReceiveRequestRef": "actualTerminalResponsiveFailureRootReceiveRequest_20261004T213536.729548+0000"
+  "currentResponsiveFailureRootReceiveRequestRef": "actualResponsiveSetupRawCorrection_2026-10-04T21:57:10.059827+00:00",
+  "actualResponsiveSetupRawCorrection_2026-10-04T21:57:10.059827+00:00": {
+    "recordedAtUTC": "2026-10-04T21:57:10.059827+00:00",
+    "currentProductSource": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "actualRun": 37235516659,
+    "original14": "14PASS",
+    "responsiveCounts": {
+      "discovered": 3,
+      "executed": 0,
+      "passed": 0,
+      "failed": 0,
+      "notRun": 3
+    },
+    "actualFailure": {
+      "active": "setup",
+      "step": "setup",
+      "type": "Error",
+      "messageAndStack": "ABSENT",
+      "rawLogBytes": 0
+    },
+    "cause": "UNESTABLISHED",
+    "naturalExit": 1,
+    "normalEOF": true,
+    "finalECHILD": true,
+    "all12BirthsGone": true,
+    "familyClosed": true,
+    "signals": [],
+    "portRebind": true,
+    "selectedRawCustody": {
+      "branch": "artifact/team-b-original-transport-diagnostics-20261004",
+      "head": "c72d8dd12c885e25679b4aa239a66f3401242db1",
+      "zipBytes": 7358,
+      "zipSHA256": "06db567517128086adc1cf9296fb3634a1c0074f128263ae987cd21878cfe21c",
+      "rootFullReview": "COMPLETE",
+      "independentReview": "PENDING",
+      "fullOriginal2MReceivedLocally": false
+    },
+    "boundedNextRepair": {
+      "status": "B3_SOURCE02_FROZEN_B4_FULL_PEER_CLEAR_ROOT_AND_B6_REVIEW_PENDING",
+      "scope": "Native Create project attachment before direct snapshot within SAME45s deadline; bounded actual setup phase/message/stack; all3 whole cases unchanged; no launch flags/oracles/threshold changes",
+      "originalCauseClaim": false
+    },
+    "rootReceivingRequestedAction": "Receive complete original failed archive if independent fullarchive custody remains required; resume exact affected acceptance after reviewed setup repair. Existing bounded NotesRepository and session error bridge handoff remains assigned A/C/root; reject stale revision before atomic publication across independent processes. B does not duplicate shared writer. PR11 B native ownership ACK remains scope-limited, A/C adoption and browser acceptance unresolved.",
+    "deadline": "22:30 Europe/London 2026-10-04 MISSED; no verification waiver",
+    "localDrain": "All B owned runtime/watchers and actual readers closed; frozen saved sources only; cloud jobs PC independent. No poweroff performed by B.",
+    "resourceObservation": "B3 observed transient TMP255942656 while131072B anonymous heredoc held; after normalexit0 TMP256073728. WS later268439552. Do not claim uninterrupted resource floor.",
+    "acceptance": "FAIL_OR_INCOMPLETE"
+  }
 }
