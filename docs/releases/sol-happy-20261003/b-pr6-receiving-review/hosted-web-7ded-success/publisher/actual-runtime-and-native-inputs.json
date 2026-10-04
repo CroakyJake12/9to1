@@ -1,0 +1,21 @@
+{
+  "runtimePack": "/usr/share/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12",
+  "runtimeVersion": "10.0.12",
+  "runtimeLoader": {
+    "path": "/usr/share/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12/runtimes/browser-wasm/native/dotnet.js",
+    "bytes": 37898,
+    "sha256": "ba72088a45591210f9a08fec223b0f848a0a4d3245026ae9479353596c7fa89d"
+  },
+  "nativeLibraries": [
+    {
+      "path": "/home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+      "bytes": 15270536,
+      "sha256": "9d44db6960c0ab9c14323585dc6d552c12c3edf24a475614be74120a71f76d6c"
+    },
+    {
+      "path": "/home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+      "bytes": 3343154,
+      "sha256": "865f1ac8e246bda1ad88ffbb499a71c56fb24557d6f23717cf34666fd9dbc24e"
+    }
+  ]
+}

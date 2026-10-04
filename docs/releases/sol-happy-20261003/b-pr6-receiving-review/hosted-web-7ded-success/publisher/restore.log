@@ -1,0 +1,50 @@
+  Determining projects to restore...
+  Restored /home/runner/work/9to1/9to1/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 121 ms).
+  Restored /home/runner/work/9to1/9to1/apps/Web/Wave/Engine/NineToOne.Wave.BrowserEngine.csproj (in 139 ms).
+  Restored /home/runner/work/9to1/9to1/apps/Web/Write/Packages/NineToOne.Write.Packages.csproj (in 138 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj (in 2 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 2 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 4 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Workspace/Home/HavenOS.Home.csproj (in 11 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 5 ms).
+  Restored /home/runner/work/9to1/9to1/9to1 Models/Dulche Alpha/Den.csproj (in 1 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj (in 1.68 sec).
+  Restored /home/runner/work/9to1/9to1/apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj (in 2.87 sec).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj (in 1.12 sec).
+  Restored /home/runner/work/9to1/9to1/apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj (in 3.03 sec).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj (in 11 ms).
+  Restored /home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj (in 2.88 sec).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj (in 19 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj (in 12 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj (in 18 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj (in 11 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj (in 114 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj (in 24 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj (in 11 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj (in 183 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj (in 13 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.DesignerSupport/Avalonia.DesignerSupport.csproj (in 26 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj (in 14 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj (in 159 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj (in 64 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj (in 7 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/Themes/CakeOS.Cui.Themes.csproj (in 21 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj (in 74 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 1 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 2 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj (in 70 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj (in 501 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj (in 870 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj (in 630 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj (in 753 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj (in 679 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj (in 25 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj (in 2 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj (in 7 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj (in 19 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj (in 5 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj (in 14 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj (in 53 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj (in 451 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj (in 449 ms).
+  Restored /home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj (in 842 ms).

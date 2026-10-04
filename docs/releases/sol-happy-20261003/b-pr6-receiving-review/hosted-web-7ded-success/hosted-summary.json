@@ -1,0 +1,47 @@
+{
+  "state": "HOSTED_NORMAL_SOURCE_BUILD_AND_NINE_ACTUAL_BROWSER_GROUPS_PASS_SCOPED",
+  "sourceCommit": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+  "runId": 37214417698,
+  "url": "https://github.com/CroakyJake12/9to1/actions/runs/37214417698",
+  "originalPublisherArtifactId": 11307853142,
+  "originalBrowserArtifactId": 11308306040,
+  "sourceInputs": 4537,
+  "sourceBeforeAfterFinalExact": true,
+  "sdk": "10.0.401",
+  "runtime": "10.0.12",
+  "publicFiles": 285,
+  "publicBytes": 59201672,
+  "reportedPublicZipBytes": 36039006,
+  "browserCounts": {
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "actualChromiumVersion": "151.0.7922.34",
+  "sequentialClosedBrowserProcesses": 2,
+  "commandFamilies": 26,
+  "custodianNormalEOF_ECHILD_Closed_NoSignals": true,
+  "unchangedOriginalEvidencePayloads": 234,
+  "originalHostedFailure": {
+    "sourceCommit": "ce50dacc7189a91ad6c589904610a0cfcd0445e5",
+    "runId": 37211850761,
+    "state": "FAIL_BEFORE_WEB_BUILD_OR_BROWSER",
+    "cause": "Original linked owner source custody is incomplete",
+    "preserved": "continuation/global-web-ce50-first-failure"
+  },
+  "qualifications": [
+    "Reported seal and actual original browser consumer bind the real source-built publication on runner; this workflow did not upload the sealed publish ZIP/manifest/seal, so their downloaded body custody is NOT_RUN here.",
+    "Both uploaded original controlled traces are verified verbatim and contain controlled loopback requests without Authorization/Cookie headers; no actual user profile, provider or authenticated session is included.",
+    "Ordinary Web build IL2026/WASM0001 and publication IL2026/IL2104 warnings are retained; no zero-warning or complete trimming safety claim.",
+    "Browser PASS covers the nine original local Picture groups only. Permission/Files/provider/native metadata/GPS/accessibility/hardware/full app and whole release acceptance remain qualified.",
+    "Final output resource receipt does not prove transient or deleted-byte peak bounds.",
+    "Write styled-layout, native metadata fixture/GPS, hosted actor bridge, Boards/Math strict-ledger and separate owner-adoption gates remain distinct."
+  ],
+  "verificationOrchestration": {
+    "initialVerifierCheck": "Compared raw/picture-original.png screenshot with the 8x6 picker fixture and stopped; no product or browser test rerun.",
+    "correction": "Inspected unchanged original runner: raw/picture-original.png is a screenshot. Verified original source-bound fixture metadata SHA/667 bytes against actual Git fixture instead.",
+    "productSourceOrOracleChanged": false
+  }
+}
