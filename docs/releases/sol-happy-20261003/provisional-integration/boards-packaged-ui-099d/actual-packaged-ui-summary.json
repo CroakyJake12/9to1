@@ -1,0 +1,42 @@
+{
+  "harnessCommit": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+  "producerCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "runId": 37210601635,
+  "jobId": 111460831796,
+  "runUrl": "https://github.com/CroakyJake12/9to1/actions/runs/37210601635",
+  "status": "BOUNDED_PACKAGED_NATIVE_UI_CONTROLS_PASS_UNACCEPTED",
+  "actualMaintainedControls": {
+    "passed": 67,
+    "failed": 0,
+    "appLaunches": 2,
+    "accessibility": "Actual UIAutomation named editable Board title, Paragraph editor and Search sections and pages; enabled/visible/keyboard-focusable/process-bound. Reopened title and paragraph also observed.",
+    "keyboard": "Actual process/control-focus-guarded Ctrl+A, Unicode title/paragraph input and Ctrl+S were admitted.",
+    "persistence": "Actual app created canonical schema3, durable file contained native edits, close/reopen restored same values and identity; reopen preserved prior bytes before close.",
+    "close": "Both real package processes closed gracefully with exit0, no forced cleanup, four bounded stream drains complete and stderr empty.",
+    "visualReview": "Both original screenshots inspected: actual Board title and paragraph match controlled edited values before and after reopen. Visible clipped app rectangle includes taskbar; no full-window layout/visual-donor/theme acceptance inferred.",
+    "saveCausality": "Existing autosave remains enabled; this does not isolate Ctrl+S as sole cause of persistence."
+  },
+  "custody": {
+    "packageVerified": true,
+    "manifestVerified": true,
+    "all282ExtractedFilesVerified": true,
+    "observationArtifactId": 11306820670,
+    "observationArtifactBytes": 75321,
+    "observationArtifactSha256": "ade12be5b63c5b9d893a4a4d1949b8aced7583bd99e85944f05f31207da0d971",
+    "resultSha256": "dbc214a0980166d770ea195d9451132add56a7eac9bf5885aaff512153d007e0"
+  },
+  "qualification": {
+    "runner": "Windows2022 10.0.20348, PowerShell5.1, image20260927.320.1, actualinteractiveDesktop",
+    "SDKsPresent": true,
+    "cleanPcDelivery": "NOT_RUN",
+    "installedHomeTuple": "NOT_RUN",
+    "fullAppAcceptance": "NOT_RUN",
+    "signing": "NOT_RUN",
+    "donorThemeMatrix": "NOT_RUN",
+    "ownerAdoption": "UNACCEPTED",
+    "originalFailureAndApprovals": "PRESERVED"
+  },
+  "independentRuntimeReview": "C6_ACTUAL_WINDOWS_BOUNDED_RESULT_ACK_099d7ee",
+  "independentRuntimeReceipt": "/workspace/team-c-c6-durable-validation-20261004/boards-packaged-ui-review/actual-windows-ui-independent-readback.json",
+  "independentRuntimeReceiptSha256": "8b8aeb7d6f60a9ced96aff221262b3ac9ebd4dca61f896dea5591c1fcd896ed2"
+}
