@@ -53,8 +53,17 @@ public sealed class MicrosoftMailProvider(
     public async Task<MailPage> GetMessagesAsync(MailQuery query, CancellationToken cancellationToken)
     {
         Uri uri;
-        if (!string.IsNullOrWhiteSpace(query.ContinuationToken) && Uri.TryCreate(query.ContinuationToken, UriKind.Absolute, out var continuation))
+        if (!string.IsNullOrWhiteSpace(query.ContinuationToken))
         {
+            // Continuations cross the credential boundary; validate before requesting a token.
+            if (!Uri.TryCreate(query.ContinuationToken, UriKind.Absolute, out var continuation)
+                || continuation.Scheme != Uri.UriSchemeHttps
+                || continuation.Port != BaseUri.Port
+                || !string.IsNullOrEmpty(continuation.UserInfo)
+                || !string.IsNullOrEmpty(continuation.Fragment)
+                || !BaseUri.IsBaseOf(continuation))
+                throw new MailProviderException(MailFailureKind.InvalidRequest, "The Mail continuation is not a valid mailbox request.");
+
             uri = continuation;
         }
         else

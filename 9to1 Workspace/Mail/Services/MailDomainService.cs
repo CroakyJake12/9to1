@@ -309,20 +309,20 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
             {
                 if (state.Accounts.All(account => account.AccountId != draft.AccountId))
                     throw new MailStoreException(MailErrorCode.AccountNotFound, "The sending account was not found.");
-                if (!state.Drafts.Any(item => item.DraftId == draft.DraftId && item.AccountId == draft.AccountId))
-                    throw new MailStoreException(MailErrorCode.DraftNotFound, "The draft was not found.");
+                var storedDraft = state.Drafts.FirstOrDefault(item => item.DraftId == draft.DraftId && item.AccountId == draft.AccountId && !item.IsDeleted)
+                    ?? throw new MailStoreException(MailErrorCode.DraftNotFound, "The draft was not found.");
+                RequireResolvedDraft(storedDraft);
                 var existingOp = state.PendingOperations.FirstOrDefault(item => item.AccountId == draft.AccountId && item.IdempotencyKey == idempotencyKey);
                 if (existingOp is not null)
                 {
-                    outgoing = state.Outgoing.FirstOrDefault(item => item.DraftId == draft.DraftId);
-                    if (outgoing is not null) return state;
+                    outgoing = ResolveExistingSend(state, existingOp, storedDraft, null, null);
+                    return state;
                 }
                 var account = state.Accounts.Single(item => item.AccountId == draft.AccountId);
-                var storedDraft = state.Drafts.Single(item => item.DraftId == draft.DraftId && item.AccountId == draft.AccountId);
                 RequireAttachmentCapability(account, storedDraft);
                 var sendAt = now + account.Sending.UndoSendDelay;
                 outgoing = new OutgoingMessage(Guid.NewGuid(), draft.DraftId, draft.AccountId,
-                    isOnline ? MailMessageState.Queued : MailMessageState.Queued, now, sendAt, null, null, 0, null, null, true);
+                    MailMessageState.Queued, now, sendAt, null, null, 0, null, null, account.Sending.UndoSendDelay > TimeSpan.Zero);
                 var operation = new MailPendingOperation(Guid.NewGuid(), draft.AccountId, MailOperationKind.Send,
                     outgoing.MessageId, null, idempotencyKey, now, MailOperationState.Pending, null, null,
                     new Dictionary<string, string> { ["draftId"] = draft.DraftId.ToString("D"), ["holdUntil"] = sendAt.ToString("O"), ["onlineAtQueue"] = isOnline.ToString() });
@@ -356,10 +356,11 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
             {
                 var draft = state.Drafts.FirstOrDefault(item => item.DraftId == draftId && !item.IsDeleted)
                     ?? throw new MailStoreException(MailErrorCode.DraftNotFound, "The draft was not found.");
+                RequireResolvedDraft(draft);
                 var existing = state.PendingOperations.FirstOrDefault(item => item.AccountId == draft.AccountId && item.IdempotencyKey == idempotencyKey);
                 if (existing is not null)
                 {
-                    outgoing = state.Outgoing.FirstOrDefault(item => item.MessageId == existing.TargetId);
+                    outgoing = ResolveExistingSend(state, existing, draft, sendAt, policy);
                     return state;
                 }
                 var account = state.Accounts.FirstOrDefault(item => item.AccountId == draft.AccountId)
@@ -382,6 +383,7 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                         ["scheduledAt"] = sendAt.ToUniversalTime().ToString("O"),
                         ["executionLocation"] = schedule.Location.ToString(),
                         ["executionGuarantee"] = schedule.Guarantee,
+                        ["executionPolicy"] = policy.ToString(),
                     });
                 return state with { Outgoing = [.. state.Outgoing, outgoing], PendingOperations = [.. state.PendingOperations, operation] };
             }, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -440,8 +442,12 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
             return Fail<OutgoingMessage>(MailErrorCode.SendRejected, "This message is not ready to send.", $"outgoing:{messageId}", "9to1.Mail.Send");
         var account = snapshot.Accounts.FirstOrDefault(item => item.AccountId == current.AccountId);
         if (account is null) return Fail<OutgoingMessage>(MailErrorCode.AccountNotFound, "The sending account was removed.", $"account:{current.AccountId}", "9to1.Mail.Send");
-        var draft = snapshot.Drafts.FirstOrDefault(item => item.DraftId == current.DraftId && !item.IsDeleted);
+        if (!account.IsAuthenticated)
+            return Fail<OutgoingMessage>(MailErrorCode.AuthenticationRequired, "Reconnect this account before sending. The message remains queued.", $"account:{current.AccountId}", "9to1.Mail.Send", recoverable: true);
+        var draft = snapshot.Drafts.FirstOrDefault(item => item.DraftId == current.DraftId && item.AccountId == current.AccountId && !item.IsDeleted);
         if (draft is null) return Fail<OutgoingMessage>(MailErrorCode.DraftNotFound, "The send draft is no longer available.", $"draft:{current.DraftId}", "9to1.Mail.Send");
+        if (draft.IsConflict || draft.ConflictingRevision is not null)
+            return Fail<OutgoingMessage>(MailErrorCode.DraftConflict, "Resolve both draft revisions before sending. The message remains queued.", $"draft:{current.DraftId}", "9to1.Mail.Send", recoverable: true);
         if (_authorizer is null)
             return Fail<OutgoingMessage>(MailErrorCode.PermissionRequired, "Home authorization is unavailable; the message remains queued.", $"outgoing:{messageId}", "9to1.Mail.Send", recoverable: true);
         if (!_providers.TryGetValue(account.Provider, out var provider))
@@ -465,7 +471,7 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                     throw new MailStoreException(MailErrorCode.Conflict, "The outgoing message changed before submission.");
                 sending = fresh with { State = MailMessageState.Sending, IsUndoAvailable = false, AttemptCount = fresh.AttemptCount + 1, LastError = null };
                 return state with { Outgoing = ReplaceOutgoing(state.Outgoing, sending) };
-            }, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }, expectedRevision: snapshot.Revision, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         catch (MailStoreException ex) { return Fail<OutgoingMessage>(ex.Code, ex.Message, $"outgoing:{messageId}", "9to1.Mail.Send", recoverable: true); }
 
@@ -473,7 +479,16 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
         {
             var accepted = await provider.SendAsync(account, draft, cancellationToken).ConfigureAwait(false);
             var sent = sending! with { State = MailMessageState.Sent, ProviderMessageId = accepted.ProviderMessageId, LastError = null };
-            await _store.TransactAsync(state => state with { Outgoing = ReplaceOutgoing(state.Outgoing, sent) }, cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Once the provider acknowledges acceptance, cancellation must not turn
+            // that accepted submission into a retryable interrupted send.
+            await _store.TransactAsync(state => state with
+            {
+                Outgoing = ReplaceOutgoing(state.Outgoing, sent),
+                PendingOperations = state.PendingOperations.Select(operation =>
+                    operation.AccountId == sent.AccountId && operation.TargetId == messageId && operation.Kind == MailOperationKind.Send
+                        ? operation with { State = MailOperationState.Applied, ErrorCode = null, ErrorMessage = null }
+                        : operation).ToArray(),
+            }, cancellationToken: CancellationToken.None).ConfigureAwait(false);
             return MailResult<OutgoingMessage>.Success(sent);
         }
         catch (OperationCanceledException)
@@ -513,6 +528,7 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
 
     private async Task<MailResult<MailMessage>> MutateMessageAsync(Func<MailMessage, MailMessage?> update, Guid messageId, MailOperationKind kind, string idempotencyKey, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         try
         {
             MailMessage? result = null;
@@ -521,7 +537,6 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                 var current = state.Messages.FirstOrDefault(message => message.MessageId == messageId);
                 if (current is null) throw new MailStoreException(MailErrorCode.MessageNotFound, "The message was not found.");
                 var currentOp = state.PendingOperations.FirstOrDefault(op => op.AccountId == current.AccountId && op.IdempotencyKey == idempotencyKey);
-                if (currentOp is not null) { result = current; return state; }
                 result = update(current) ?? throw new InvalidOperationException("Message update returned no message.");
                 var arguments = kind switch
                 {
@@ -530,6 +545,13 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                     MailOperationKind.Snooze => new Dictionary<string, string> { ["snoozedUntil"] = result.SnoozedUntil?.ToString("O", System.Globalization.CultureInfo.InvariantCulture) ?? "" },
                     _ => new Dictionary<string, string>(),
                 };
+                if (currentOp is not null)
+                {
+                    if (currentOp.Kind != kind || currentOp.TargetId != messageId || !SameArguments(currentOp.Arguments, arguments))
+                        throw new MailStoreException(MailErrorCode.Conflict, "The idempotency key already identifies a different Mail operation.");
+                    result = current;
+                    return state;
+                }
                 var operation = new MailPendingOperation(Guid.NewGuid(), current.AccountId, kind, messageId, current.ProviderRevision,
                     idempotencyKey, DateTimeOffset.UtcNow, MailOperationState.Pending, null, null, arguments);
                 var messages = ReplaceMessage(state.Messages, result);
@@ -548,6 +570,35 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
             return Fail<MailMessage>(ex.Code, ex.Message, $"message:{messageId}", $"9to1.Mail.{kind}", recoverable: true);
         }
     }
+
+    private static void RequireResolvedDraft(MailDraft draft)
+    {
+        if (draft.IsConflict || draft.ConflictingRevision is not null)
+            throw new MailStoreException(MailErrorCode.DraftConflict, "Resolve both draft revisions before queueing a send.");
+    }
+
+    private static OutgoingMessage ResolveExistingSend(MailState state, MailPendingOperation operation, MailDraft draft,
+        DateTimeOffset? scheduledAt, MailExecutionPolicy? policy)
+    {
+        var outgoing = state.Outgoing.FirstOrDefault(item => item.MessageId == operation.TargetId);
+        if (operation.Kind != MailOperationKind.Send || outgoing is null || outgoing.AccountId != draft.AccountId
+            || outgoing.DraftId != draft.DraftId || outgoing.ScheduledAt != scheduledAt)
+            throw new MailStoreException(MailErrorCode.Conflict, "The idempotency key already identifies a different Mail operation.");
+        if (policy is { } requestedPolicy)
+        {
+            var guarantee = requestedPolicy == MailExecutionPolicy.DeviceOnly
+                ? "Runs on this device while 9to1 Mail is available and online."
+                : "Provider scheduling is unavailable; runs on this device while 9to1 Mail is available and online.";
+            if (operation.Arguments.TryGetValue("executionPolicy", out var recordedPolicy)
+                ? recordedPolicy != requestedPolicy.ToString()
+                : outgoing.Schedule?.Guarantee != guarantee)
+                throw new MailStoreException(MailErrorCode.Conflict, "The idempotency key already identifies a different execution policy.");
+        }
+        return outgoing;
+    }
+
+    private static bool SameArguments(IReadOnlyDictionary<string, string> left, IReadOnlyDictionary<string, string> right) =>
+        left.Count == right.Count && left.All(item => right.TryGetValue(item.Key, out var value) && value == item.Value);
 
     private static IReadOnlyList<T> Replace<T>(IReadOnlyList<T> items, T replacement, Func<T, Guid> key, Guid targetId)
     {

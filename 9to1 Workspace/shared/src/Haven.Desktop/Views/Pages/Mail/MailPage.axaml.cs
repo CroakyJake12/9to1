@@ -15,6 +15,8 @@ public sealed partial class MailPage : UserControl, IDisposable
     private readonly MailPageViewModel _viewModel;
     private bool _showReadingOnNarrow;
     private bool _updatingComposeFromEditor;
+    private string[]? _messageFlagSelection;
+    private string? _messageFlagPrimary;
     private bool _disposed;
     private readonly FilesMailCanonicalAttachmentPicker? _canonicalAttachmentPicker;
     private CancellationTokenSource? _attachmentLifetime;
@@ -41,6 +43,8 @@ public sealed partial class MailPage : UserControl, IDisposable
         DataContext = _viewModel;
         _canonicalAttachmentPicker = canonicalAttachmentPicker;
         _viewModel.OriginalComposeRetired += CancelOriginalAttachmentSelection;
+        _viewModel.SelectedMessageFlagsUpdating += OnSelectedMessageFlagsUpdating;
+        _viewModel.SelectedMessageFlagsUpdated += OnSelectedMessageFlagsUpdated;
         _readingPreferences = preferences;
         PendingReadingPreference = LoadReadingPreferenceAsync();
 
@@ -108,6 +112,7 @@ public sealed partial class MailPage : UserControl, IDisposable
 
     private void OnMessageSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
+        if (_messageFlagSelection is not null) return;
         var selected = MessageList.SelectedItems?.OfType<MailMessageSummary>().ToArray() ?? [];
         _viewModel.SetMessageSelection(selected);
         _viewModel.NotifyMessageSelectionChanged();
@@ -116,6 +121,33 @@ public sealed partial class MailPage : UserControl, IDisposable
             || selected.Length != 1 || _viewModel.SelectedSummary is null) return;
         _showReadingOnNarrow = true;
         ApplyResponsiveLayout(Bounds.Width);
+    }
+
+    private void OnSelectedMessageFlagsUpdating()
+    {
+        _messageFlagPrimary = _viewModel.SelectedSummary?.Id;
+        _messageFlagSelection = MessageList.SelectedItems?.OfType<MailMessageSummary>().Select(row => row.Id).ToArray() ?? [];
+    }
+
+    private void OnSelectedMessageFlagsUpdated(bool current)
+    {
+        try
+        {
+            if (_disposed || !current || _messageFlagSelection is null || MessageList.SelectedItems is null) return;
+            // Replacing immutable summary rows removes native selection. Restore the primary first,
+            // then the other selected IDs, without treating intermediate binding values as a new thread.
+            var ids = _messageFlagSelection.OrderBy(id => id == _messageFlagPrimary ? 0 : 1).ToArray();
+            MessageList.SelectedItems.Clear();
+            foreach (var id in ids)
+                if (_viewModel.Messages.FirstOrDefault(row => row.Id == id) is { } row) MessageList.SelectedItems.Add(row);
+        }
+        finally
+        {
+            _messageFlagSelection = null;
+            _messageFlagPrimary = null;
+            if (!_disposed && current)
+                _viewModel.SetMessageSelection(MessageList.SelectedItems?.OfType<MailMessageSummary>() ?? []);
+        }
     }
 
     private void OnFolderSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -254,6 +286,8 @@ public sealed partial class MailPage : UserControl, IDisposable
         _disposed = true;
         CancelOriginalAttachmentSelection();
         _viewModel.OriginalComposeRetired -= CancelOriginalAttachmentSelection;
+        _viewModel.SelectedMessageFlagsUpdating -= OnSelectedMessageFlagsUpdating;
+        _viewModel.SelectedMessageFlagsUpdated -= OnSelectedMessageFlagsUpdated;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         ComposeEditor.ContentChanged -= OnComposeEditorContentChanged;
         ComposeEditor.Dispose();
