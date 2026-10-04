@@ -1,3 +1,4 @@
+using Haven.Application;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using HavenOS.Home.Core;
@@ -154,6 +155,9 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
     private readonly IHomeCoreStateStore _store = store ?? throw new ArgumentNullException(nameof(store));
     private readonly SemaphoreSlim _writeGate = new(1, 1);
 
+    // Object binding only; trusted device scope, ACL and root commit authority remain external prerequisites.
+    internal bool IsBoundToStore(IHomeCoreStateStore original) => ReferenceEquals(_store, original);
+
     public async Task<HomePackageDatabaseReadResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         var read = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
@@ -195,10 +199,24 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
             : new(null, validation);
     }
 
-    public async Task<HomePackageDatabaseWriteResult> SaveAsync(
-        HomePackageDatabaseSnapshot snapshot,
-        long expectedRevision,
+    public Task<HomePackageDatabaseWriteResult> SaveAsync(HomePackageDatabaseSnapshot snapshot,
+        long expectedRevision, CancellationToken cancellationToken = default) =>
+        SaveCoreAsync(snapshot, expectedRevision, null, null, cancellationToken);
+
+    /// <summary>Same canonical write, with a genuinely supplied non-reentrant owner guard under the store writer.</summary>
+    internal Task<HomePackageDatabaseWriteResult> SaveGuardedAsync(HomePackageDatabaseSnapshot snapshot,
+        long expectedRevision, AuthenticatedResourceActor originalActor, IHomeStateCommitActorGuard originalGuard,
         CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(originalActor);
+        ArgumentNullException.ThrowIfNull(originalGuard);
+        var captured = CaptureGuardedSnapshot(snapshot);
+        return SaveCoreAsync(captured, expectedRevision, originalActor, originalGuard, cancellationToken);
+    }
+
+    private async Task<HomePackageDatabaseWriteResult> SaveCoreAsync(HomePackageDatabaseSnapshot snapshot,
+        long expectedRevision, AuthenticatedResourceActor? originalActor, IHomeStateCommitActorGuard? originalGuard,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         if (expectedRevision < 0)
@@ -231,7 +249,10 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
                 HomeRecordAuthority.LocalCanonical,
                 next.Revision,
                 JsonSerializer.SerializeToElement(next, JsonOptions));
-            var written = await _store.WriteAsync(record, expectedRevision, cancellationToken).ConfigureAwait(false);
+            var written = originalGuard is null
+                ? await _store.WriteAsync(record, expectedRevision, cancellationToken).ConfigureAwait(false)
+                : await _store.WriteGuardedAsync(record, expectedRevision, originalActor!, originalGuard,
+                    cancellationToken).ConfigureAwait(false);
             if (!written.IsSuccess)
                 return WriteFailure(written.Failure!);
 
@@ -297,6 +318,78 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
         }
 
         return null;
+    }
+
+    // New owning guarded path only. Legacy SaveAsync validation/collection behavior remains exact.
+    internal static HomePackageDatabaseSnapshot CaptureGuardedSnapshot(HomePackageDatabaseSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        static T[] Capture<T>(IReadOnlyList<T>? source, int maximum)
+        {
+            if (source is null) throw new InvalidDataException("Original guarded package collection missing.");
+            var result = new List<T>();
+            foreach (var item in source)
+            {
+                if (result.Count == maximum) throw new InvalidDataException("Original guarded package collection exceeds its bound.");
+                result.Add(item);
+            }
+            return result.ToArray();
+        }
+        static Dictionary<string, JsonElement>? Fields(Dictionary<string, JsonElement>? original)
+        {
+            if (original is null) return null;
+            var result = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+            foreach (var item in original)
+            {
+                if (result.Count == 64 || item.Key.Length is < 1 or > 128)
+                    throw new InvalidDataException("Original package extension metadata exceeds its bound.");
+                result.Add(item.Key, item.Value);
+            }
+            return result;
+        }
+        var packages = Capture(snapshot.Packages, 4096).Select(item => item is null
+            ? throw new InvalidDataException("Original package missing.")
+            : item with {
+                Dependencies = Array.AsReadOnly(Capture(item.Dependencies, 128)),
+                IntegrityEvidence = Array.AsReadOnly(Capture(item.IntegrityEvidence, 128)),
+                RetainedRollbackVersions = Array.AsReadOnly(Capture(item.RetainedRollbackVersions, 100)),
+                UnknownFields = Fields(item.UnknownFields)
+            }).ToArray();
+        var journal = Capture(snapshot.RecentOperations, MaximumJournalEntries).Select(item => item is null
+            ? throw new InvalidDataException("Original package journal entry missing.")
+            : item with {
+                SucceededSteps = Array.AsReadOnly(Capture(item.SucceededSteps, 1000)),
+                FailedSteps = Array.AsReadOnly(Capture(item.FailedSteps, 1000)),
+                SkippedSteps = Array.AsReadOnly(Capture(item.SkippedSteps, 1000)),
+                RolledBackSteps = Array.AsReadOnly(Capture(item.RolledBackSteps, 1000)),
+                UnknownFields = Fields(item.UnknownFields)
+            }).ToArray();
+        var detached = snapshot with {
+            Packages = Array.AsReadOnly(packages), RecentOperations = Array.AsReadOnly(journal),
+            UnknownFields = Fields(snapshot.UnknownFields)
+        };
+        using var stream = new GuardedSnapshotCaptureStream();
+        // Serialization completes synchronously before publishing the first owning async task.
+        // Its running cap bounds stream allocation/write; private parse detaches ALL nested JSON.
+        // Serializer temporary buffers are not a whole-process memory bound.
+        JsonSerializer.Serialize(stream, detached, JsonOptions);
+        return JsonSerializer.Deserialize<HomePackageDatabaseSnapshot>(stream.ToArray(), JsonOptions)
+            ?? throw new InvalidDataException("Original guarded package snapshot is empty.");
+    }
+    private sealed class GuardedSnapshotCaptureStream : MemoryStream
+    {
+        private const long MaximumBytes = 8L * 1024 * 1024;
+        private void Demand(int bytes)
+        {
+            if (bytes < 0 || Position > MaximumBytes - bytes)
+                throw new InvalidDataException("Original guarded package snapshot exceeds 8 MiB.");
+        }
+        public override void Write(byte[] buffer, int offset, int count)
+        { Demand(count); base.Write(buffer, offset, count); }
+        public override void Write(ReadOnlySpan<byte> buffer)
+        { Demand(buffer.Length); base.Write(buffer); }
+        public override void WriteByte(byte value)
+        { Demand(1); base.WriteByte(value); }
     }
 
     private static HomePackageDatabaseReadResult ReadFailure(HomeCoreFailure failure) => new(null,
