@@ -48,6 +48,8 @@ public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
         ArgumentNullException.ThrowIfNull(rasterDecoder);
         _rasterDecoder = rasterDecoder;
         _services = services; _den = Get<StudioDenLifetime>();
+        // Retain this exact acquired native owner before constructor/native callbacks.
+        _den.BindOriginalNativePresentation(this);
         Title = "AI Studio"; Width = 1100; Height = 850;
         _approvals = new(Get<HomeCoreRuntime>(), Get<HomeLocalProfileIdentity>(), Get<HomePermissionTrustService>());
         var registry = new CuiControlRegistry();

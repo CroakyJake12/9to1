@@ -13,6 +13,7 @@ public sealed class StudioDenLifetime(
     private readonly SemaphoreSlim _changes = new(1, 1);
     private readonly SemaphoreSlim _evidence = new(1, 1);
     private HomeDenStoreEvidenceProvider? _provider;
+    private StudioNativeWindow? _originalNativePresentation;
     private readonly StudioOriginalCallbackLifetime _originals = new();
     private readonly object _closeSync = new();
     private readonly List<ProviderOriginal> _acquiredProviders = [];
@@ -22,6 +23,27 @@ public sealed class StudioDenLifetime(
     private string? _pendingImport;
     private string? _pendingImportAudit;
     public string ResourceKind => "den";
+
+    internal void BindOriginalNativePresentation(StudioNativeWindow actualWindow)
+    {
+        ArgumentNullException.ThrowIfNull(actualWindow);
+        lock (_closeSync)
+        {
+            ObjectDisposedException.ThrowIf(_closing, this);
+            if (_originalNativePresentation is not null && !ReferenceEquals(_originalNativePresentation, actualWindow))
+                throw new InvalidOperationException("The original native Den presentation is already bound.");
+            _originalNativePresentation = actualWindow;
+        }
+    }
+
+    private Task RetireOriginalPresentationAsync(CancellationToken token)
+    {
+        StudioNativeWindow? actualWindow;
+        lock (_closeSync) actualWindow = _originalNativePresentation;
+        // A native acquisition binds the exact Window, including a partial constructor.
+        // Pure nonnative owners retain their existing supplied presentation callback.
+        return actualWindow is null ? retirePresentation(token) : actualWindow.RetireWorkspaceAsync(token);
+    }
 
     public Task<string> SelectAsync(string nativeSelectedRoot, bool createNew, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
     {
@@ -52,7 +74,7 @@ public sealed class StudioDenLifetime(
             try
             {
                 // The old bitmap/decoder/agent lease must retire before a replacement is visible.
-                var actualRetirement = retirePresentation(ct)
+                var actualRetirement = RetireOriginalPresentationAsync(ct)
                     ?? throw new InvalidOperationException("The original presentation supplied no retirement task.");
                 await actualRetirement;
                 ObjectDisposedException.ThrowIf(_closing, this);
@@ -210,7 +232,7 @@ public sealed class StudioDenLifetime(
         catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
         try
         {
-            actualRetirement = retirePresentation(CancellationToken.None)
+            actualRetirement = RetireOriginalPresentationAsync(CancellationToken.None)
                 ?? throw new InvalidOperationException("The original presentation supplied no close task.");
         }
         catch (Exception error) { StudioOriginalCallbackLifetime.Add(errors, error); }
