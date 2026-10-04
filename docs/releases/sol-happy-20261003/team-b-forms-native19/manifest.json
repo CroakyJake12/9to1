@@ -1,0 +1,69 @@
+{
+  "classification": "SOURCE_PROPOSAL_FOR_LATER_ROOT_REVIEW_NOT_APPLIED_NOT_INTEGRATED_COMPILED",
+  "changes": [
+    {
+      "target": "apps/Web/Forms/FormsBrowserRoute.cs",
+      "action": "replace",
+      "originalSHA256": "20543ec0557eac26b37b8a78577f19be182334f4bbab1e43f2d7f10a6e54b7d2",
+      "proposedSHA256": "50e161170594d39e275266d12a4fb8f029aa5c5fd76a2f3e4471eb02ec967965",
+      "testedSourceSHA256": "50e161170594d39e275266d12a4fb8f029aa5c5fd76a2f3e4471eb02ec967965"
+    },
+    {
+      "target": "apps/Web/Forms/FormsBrowserSession.cs",
+      "action": "replace",
+      "originalSHA256": "4c3ce6c0f255ed16c0a102ea5e1490c12d8781c60ca281bd2b25cfb2548a2e3e",
+      "proposedSHA256": "2f2b92ad398f57a385bc333f8157aeb306fbb823e780e868f63ee71e434e9665",
+      "testedSourceSHA256": "2f2b92ad398f57a385bc333f8157aeb306fbb823e780e868f63ee71e434e9665"
+    },
+    {
+      "target": "apps/Web/Forms/FormsOperationLedger.cs",
+      "action": "add",
+      "originalSHA256": null,
+      "proposedSHA256": "a4142665b06341a0f8db6592c22d34a78d5cc1aeb8bf19f1087e68df5989b36a",
+      "testedSourceSHA256": "a4142665b06341a0f8db6592c22d34a78d5cc1aeb8bf19f1087e68df5989b36a"
+    },
+    {
+      "target": "apps/Web/Forms/Tests/NativeFormsFixture.cs",
+      "action": "replace",
+      "originalSHA256": "f06954ace5d757254b00523a2f710640aef90d226523507a04594956c9c2f6ab",
+      "proposedSHA256": "744c85375c6f1494bf53ae4a1eccd0361a7d257f5f0ea7163967cec4c2b151dc",
+      "testedSourceSHA256": "744c85375c6f1494bf53ae4a1eccd0361a7d257f5f0ea7163967cec4c2b151dc"
+    },
+    {
+      "target": "apps/Web/Forms/Tests/NativeFormIssuerGroup.cs",
+      "action": "add",
+      "originalSHA256": null,
+      "proposedSHA256": "e86bef05eb99466ebcbdb70546fdcae623477021c3148104db45b36ef972b579",
+      "testedSourceSHA256": "e86bef05eb99466ebcbdb70546fdcae623477021c3148104db45b36ef972b579"
+    },
+    {
+      "target": "apps/Web/Forms/Tests/Program.cs",
+      "action": "replace",
+      "originalSHA256": "1e01504c78f9f7d492eeb621bcacd7655ee7479b674d6bf5e42d75603561563f",
+      "proposedSHA256": "6520e3c969bd9c4d33c8ec2e0bf29e56fbbbd69756c278e93c054a986da10279",
+      "testedSourceSHA256": "6520e3c969bd9c4d33c8ec2e0bf29e56fbbbd69756c278e93c054a986da10279"
+    },
+    {
+      "target": "apps/Web/Forms/OWNER-CONTRACT-REQUEST.json",
+      "action": "replace",
+      "originalSHA256": "b09e274aa471d78da134f9aedf615025093f47524ef3e96f8dd88aafefe9f392",
+      "proposedSHA256": "e4ad9e567b392a1dbfed2e3c218351ab9b1a0f74672ee06fcaa15a20da90b140",
+      "testedSourceSHA256": null
+    },
+    {
+      "target": "apps/Web/Forms/Tests/FormsBrowser.Tests.csproj",
+      "action": "replace",
+      "originalSHA256": "14dcae64683c6710e6f027aa993e603b03cc18e6d3c0927b5a15786f40bb08aa",
+      "proposedSHA256": "28bcea9bab73a9e1a6435c7038f8d5c9f9fbab2eb52a21a56aeedd707d0d2a20",
+      "testedSourceSHA256": null,
+      "difference": "Only add originalowned ledger/nativegroup compile entries. Retain real production registry and relative unchanged originalowner project/source references. Integrated project NOT_RUN; requires actualrootreviewed07 registry+SDK gate."
+    }
+  ],
+  "preserve": "Production Forms source remains f2/excluded. Actual executed version02 test project paths differ solely to consume copied pinned actual registry and actual absolute owner projects. Proposed production project retains relative actualsources; requires fresh owning SDK on integrated root.",
+  "rootGates": [
+    "Actual registrynative07 and accounttwophase reviewed+SDK",
+    "Nonoptional real issuer group + paired issuerfactory/currentauthenticated session/root maintainedACK; nativegroup cannot grant browserprivate authority",
+    "Originalactor/schema/root/recovery/publicrespondent ownerrequests remain"
+  ],
+  "noSharedSourcePatch": true
+}

@@ -1,0 +1,89 @@
+{
+  "recordedUTC": "2026-10-04T00:36:43.509382+00:00",
+  "classification": "ACTUAL_NATIVE_OWNER_PLATFORM_LIFETIME_TESTS_ONLY; BROWSER_HTTP_PUBLICRESPONDENT_MAINTAINEDISSUER_NOT_VERIFIED",
+  "original": {
+    "frozenManifestSHA256": "80df30bd59b5080ecada45360fafed25c4580226da02618b27d36c32d39b68f3",
+    "exit": 1,
+    "compileCode": "CS0103",
+    "compileErrors": 5,
+    "executed": 0,
+    "logSHA256": "e52b62b1fe9ca8bf616eec3b520ec07d3e13f30ac9a64612f6ee04b3c19d79d7"
+  },
+  "repaired": {
+    "versionManifestSHA256": "6c6cae4732e7ac2d07f664cac2e48cd630247d866b8049c11b32949e53eda6d5",
+    "exit": 0,
+    "counts": {
+      "expected": 19,
+      "executed": 19,
+      "passed": 19,
+      "failed": 0,
+      "assertions": 163
+    },
+    "logSHA256": "976dcc2b7a868cde2d89fa91a97e302ea114149651e161d6315755534a6fbc85",
+    "passes": [
+      "canonical-create-field-edit-save-close-reopen",
+      "actual-cas-conflict-retains-inspector-and-source",
+      "actual-home-revocation-clears-private-inspector",
+      "actual-store-replacement-denies-retained-session",
+      "missing-owner-and-unsupported-context-are-not-substituted",
+      "presentation-admission-and-reject-retain-original-draft",
+      "pending-navigation-cancellation-does-not-revoke-consumed-owner",
+      "canonical-choice-table-and-page-identities-survive-edits",
+      "actual-owner-preview-does-not-write-responses",
+      "typed-unknown-commit-blocks-repeat-until-explicit-recovery",
+      "unsupported-canonical-source-remains-byte-identical",
+      "presentation-failure-cannot-lock-original-workspace",
+      "independent-native-seed-and-verify-processes",
+      "busy-notification-before-first-owner-await-and-after-real-conflict",
+      "opaque-issued-factory-owner-fenced-before-return-and-drained",
+      "actual-initialising-owner-fenced-and-ignored-cancellation-drained",
+      "actual-final-commit-admission-rejects-immediate-group-revocation",
+      "all-issued-owners-fenced-before-throwing-cancellation-and-drained",
+      "unknown-native-commit-revocation-clears-private-state-without-replay"
+    ]
+  },
+  "children": [
+    {
+      "mode": "seed",
+      "exit": 0,
+      "counts": {
+        "expected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "assertions": 7
+      },
+      "logSHA256": "42ab106ab1cf4c6188c6bc5024802a65694169910f8b8e8e77ea8db864be27f6"
+    },
+    {
+      "mode": "verify",
+      "exit": 0,
+      "counts": {
+        "expected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "assertions": 7
+      },
+      "logSHA256": "294fb865945d4ddeed8baa1647a0e138939cfdfa725c4ea99b0005f9c1220ebb"
+    }
+  ],
+  "sourceComparisons": [
+    {
+      "run": 1,
+      "beforeHEAD": "94bbf443125a81be3bbd5f10d812dc6a964ebbb5",
+      "afterHEAD": "94bbf443125a81be3bbd5f10d812dc6a964ebbb5",
+      "inputCount": 4040,
+      "changes": []
+    },
+    {
+      "run": 2,
+      "beforeHEAD": "f6fea175a0002981f220a89782e3852e58e4cdf9",
+      "afterHEAD": "f6fea175a0002981f220a89782e3852e58e4cdf9",
+      "inputCount": 4053,
+      "changes": []
+    }
+  ],
+  "maintainedIssuerContract": "BLOCKED; nonoptional paired composition Action tested via new native-only group that only narrows actualOS/Home actor and actual issuer, not Apublicgroup API/browser grant.",
+  "production": "Forms unchanged/excluded; frozenold unchanged; all repairs in test source copy only."
+}

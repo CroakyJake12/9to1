@@ -1,0 +1,5 @@
+Actual native Forms19 evidence and source review package.
+
+Original frozen80df compile exits1 with fiveCS0103 missingfixture errors; separately repaired version02 suite19/19 exits0 with163assertions, seed andverify each1/1 exits0 with7assertions. Runtimeownerreceipts and all actual logs/exits/input hashes are retained. No browser/HTTP/publicrespondent/maintainedissuer acceptance.
+
+Executed owner/framework source is immutable Git f6fea175a0002981f220a89782e3852e58e4cdf9; restore full original checkout and its resources before a receiver execution. Source snapshots conservatively capture all4053 declared text inputs; they are review custody, not a substitute generated owner checkout. Test project absolute locations may be rebound only to exact captured owner/source bytes. Integration-review is proposed only: native19 executed project differs from proposed relative production project and latter has not been run. Production Forms remains unchanged/excluded pending rootprivate07/accounttwophase and actual maintainedissuer group contract.

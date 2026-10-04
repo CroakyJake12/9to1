@@ -1,0 +1,1762 @@
+{
+  "recordedUTC": "2026-10-04T00:41:33.888048+00:00",
+  "qualification": "READ_ONLY_POST_RUN_ACTUAL_NATIVE_ARTIFACT_REVIEW, NOT_INDEPENDENT_SECOND_EXECUTION; exact raw owner files retained. Account/organisation negative inputs confer no grants.",
+  "actualCases": 19,
+  "cases": [
+    {
+      "case": "canonical-create-field-edit-save-close-reopen",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/canonical-create-field-edit-save-close-reopen/home.json",
+          "bytes": 815,
+          "SHA256": "ab3c53653ebfa8f3269cfe781dcd15519f6e1c99db6e028d60c5968e424d00b6"
+        },
+        {
+          "path": "run-02-data/canonical-create-field-edit-save-close-reopen/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/canonical-create-field-edit-save-close-reopen/settings.json",
+          "bytes": 2850,
+          "SHA256": "5220af79b237ab83bdcfd747e9d9f4aa901813226e53523cc9087a3b615ea80f"
+        },
+        {
+          "path": "run-02-data/canonical-create-field-edit-save-close-reopen/settings.json.bak",
+          "bytes": 2812,
+          "SHA256": "ac083e1213b70e13d89b12c6f6a7031b2430f9f7a47d7d0edb2cf9465b653450"
+        },
+        {
+          "path": "run-02-data/canonical-create-field-edit-save-close-reopen/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/canonical-create-field-edit-save-close-reopen/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "4e5ce5cb-fe2b-4a14-b10f-40ad915c2391",
+            "CreatedAtUtc": "2026-10-04T00:36:03.2268654+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.9b08104d92dc44118ce847e8be0ff5f9",
+          "FormID": "9b08104d-92dc-4411-8ce8-47e8be0ff5f9",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "9b08104d-92dc-4411-8ce8-47e8be0ff5f9",
+          "pageIDs": [
+            "526a124f-3b4b-4b1d-8eae-6fde55130228"
+          ],
+          "fieldIDs": [
+            "f4359cdf-58fe-4f26-9fed-47a381bebf6e"
+          ],
+          "canonicalPublicationSHA256": "9e997e772f026dbf2eb2cc9a7514b772b6111df12c4d10472f05eb389219f1af",
+          "actualLabels": [
+            "Question before closing"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "84911edc-550d-40ff-8629-adf4ce832b5f",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.1577831+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:E349F3002D32E7285860F24ADDC4945E4E5FBC5B9A002E4E786F7AB577E0DA78",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "4e5ce5cb-fe2b-4a14-b10f-40ad915c2391",
+            "ProfileId": "84911edc-550d-40ff-8629-adf4ce832b5f",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "actual-cas-conflict-retains-inspector-and-source",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/actual-cas-conflict-retains-inspector-and-source/home.json",
+          "bytes": 815,
+          "SHA256": "17682404077a379a30e7d3072693840fdab77d4d52a05b6225c420a3d049e1f1"
+        },
+        {
+          "path": "run-02-data/actual-cas-conflict-retains-inspector-and-source/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/actual-cas-conflict-retains-inspector-and-source/settings.json",
+          "bytes": 2849,
+          "SHA256": "7dfffd2d262400ea8e8940963e23fea40f7d2557a90dc4fe77d9ed83f006e9f4"
+        },
+        {
+          "path": "run-02-data/actual-cas-conflict-retains-inspector-and-source/settings.json.bak",
+          "bytes": 2835,
+          "SHA256": "1b1369984582047d29762b1259dc5972868580a1f20edf13443ae53d32389c19"
+        },
+        {
+          "path": "run-02-data/actual-cas-conflict-retains-inspector-and-source/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/actual-cas-conflict-retains-inspector-and-source/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "07905f86-9baf-4549-acae-96870565027d",
+            "CreatedAtUtc": "2026-10-04T00:36:03.5660739+00:00"
+          },
+          "schema": 1,
+          "version": 5
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.b0098c0f96ef4deca99cdeaf413d4ce7",
+          "FormID": "b0098c0f-96ef-4dec-a99c-deaf413d4ce7",
+          "publicationRevision": 4,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 4,
+          "draftFormID": "b0098c0f-96ef-4dec-a99c-deaf413d4ce7",
+          "pageIDs": [
+            "0f285704-61ac-4fc7-bdb7-7feb0cf5a498"
+          ],
+          "fieldIDs": [
+            "1cde5677-fbd8-40e7-bbb8-aacd38a92c52"
+          ],
+          "canonicalPublicationSHA256": "d70b388bb218cae78290acdf14f0fc034f0e75d4fd2398871157b97e842f14c3",
+          "actualLabels": [
+            "Actual concurrent edit"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "2dd8ed39-543f-4be0-903a-1b2e6082fd64",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.5657678+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:82C8169F6EDDD88BF61E23489E1AE479AAC50A54D6EA5686C07B4E11C033A239",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "07905f86-9baf-4549-acae-96870565027d",
+            "ProfileId": "2dd8ed39-543f-4be0-903a-1b2e6082fd64",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "actual-home-revocation-clears-private-inspector",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/actual-home-revocation-clears-private-inspector/home.json",
+          "bytes": 812,
+          "SHA256": "a9eb0d606b13afa39ca31d39aef232722c34acbee9c6f3e3d0846bed84ff8f8e"
+        },
+        {
+          "path": "run-02-data/actual-home-revocation-clears-private-inspector/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/actual-home-revocation-clears-private-inspector/settings.json",
+          "bytes": 2841,
+          "SHA256": "270b1e435488d7db48ba6c559746c55ceaf490422e74c3ee0c805d9a52265d91"
+        },
+        {
+          "path": "run-02-data/actual-home-revocation-clears-private-inspector/settings.json.bak",
+          "bytes": 2811,
+          "SHA256": "02a677d4b0f49631382edea71ff2d58d6cc37d5903e671565eab89726fdfdb93"
+        },
+        {
+          "path": "run-02-data/actual-home-revocation-clears-private-inspector/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/actual-home-revocation-clears-private-inspector/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "74380bc1-666d-416e-88ca-f0a80087cca7",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6267933+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.91aab7bb7d3b416489719b059a1bd5d9",
+          "FormID": "91aab7bb-7d3b-4164-8971-9b059a1bd5d9",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "91aab7bb-7d3b-4164-8971-9b059a1bd5d9",
+          "pageIDs": [
+            "9b3802fc-3008-4eda-949a-3c122851c2b4"
+          ],
+          "fieldIDs": [
+            "979afea7-97b5-4a66-9878-e5241f739bb4"
+          ],
+          "canonicalPublicationSHA256": "f25ea171f67d7434a19493177bb68f248e04e3417e96cb060e83d49856e22780",
+          "actualLabels": [
+            "Private source"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "138477d3-35a7-4a3e-94c7-00d33c2bd063",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6265794+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:C21D397850E35DB66018F5EDA48D9440F35246670F0BA8646E90EC54ABEB78AF",
+          "schema": 1,
+          "revision": 2,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "74380bc1-666d-416e-88ca-f0a80087cca7",
+            "ProfileId": "explicit-negative-foreign-profile",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "actual-store-replacement-denies-retained-session",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/actual-store-replacement-denies-retained-session/home.json",
+          "bytes": 815,
+          "SHA256": "f899bdff09c7e2c329ce0a2f70c294896a955d7352723be3314b84709752fa26"
+        },
+        {
+          "path": "run-02-data/actual-store-replacement-denies-retained-session/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/actual-store-replacement-denies-retained-session/settings.json",
+          "bytes": 2841,
+          "SHA256": "406f6db42daa0a73d9a0aee7d09b5b64a9b0da41db4b7b7c559ea7da90dc216d"
+        },
+        {
+          "path": "run-02-data/actual-store-replacement-denies-retained-session/settings.json.bak",
+          "bytes": 2812,
+          "SHA256": "2352d0dec131346af71e2510068bdca38d655b10e5c0eb54fcbb9880e26fd844"
+        },
+        {
+          "path": "run-02-data/actual-store-replacement-denies-retained-session/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/actual-store-replacement-denies-retained-session/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "93024aed-b28c-4f88-8f9e-ffdcf5a80b1b",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6590834+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.c6305179483a458c9736289361df63aa",
+          "FormID": "c6305179-483a-458c-9736-289361df63aa",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "c6305179-483a-458c-9736-289361df63aa",
+          "pageIDs": [
+            "baf2d090-c0ce-4437-ad80-7b236f55cf35"
+          ],
+          "fieldIDs": [
+            "89c09f03-9a51-4544-aca7-cb886c418717"
+          ],
+          "canonicalPublicationSHA256": "22d35d4b3e32287328355b1b5949162839e9a68f206ff89ad9e9b008c0a13008",
+          "actualLabels": [
+            "Original store"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "e200e2bf-a916-4975-b856-84b1239f5403",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6589262+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:FC8E906A374C0521DCAD5C484A5F4D4A01A6352948984B7CF75238A73A05F8A7",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "6ee76bc4-bfe6-4ec1-8cba-ec1df07e0e59",
+            "ProfileId": "e200e2bf-a916-4975-b856-84b1239f5403",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "missing-owner-and-unsupported-context-are-not-substituted",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/actual-owned-negative-control/home.json",
+          "bytes": 815,
+          "SHA256": "0b4ebccfc20dc99a81bd6dbb220f144e7612fcc7095cb072cbf7ea5387d8b878"
+        },
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/actual-owned-negative-control/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/actual-owned-negative-control/settings.json",
+          "bytes": 235,
+          "SHA256": "bb0019d1ac62034b880ea02ec33b404245d12ae3239c1d842b29d12aabbb20d6"
+        },
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/actual-owned-negative-control/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/home.json",
+          "bytes": 371,
+          "SHA256": "54321d5c13ca3351bfd1830a36a80e3dc8dee8c3bc3817c0850e39756774d73f"
+        },
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/settings.json",
+          "bytes": 235,
+          "SHA256": "34884af52de92fea7580e75f56f52917eee75c47f7f43979f5248e1145a89479"
+        },
+        {
+          "path": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/actual-owned-negative-control/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "c484dfde-bb9c-4822-b695-23565ee809f2",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6947466+00:00"
+          },
+          "schema": 1,
+          "version": 1
+        },
+        {
+          "file": "run-02-data/missing-owner-and-unsupported-context-are-not-substituted/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "ed66ef4d-32f1-4c27-81e3-c3e2c5577ceb",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6888254+00:00"
+          },
+          "schema": 1,
+          "version": 1
+        }
+      ],
+      "actualPublications": [],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "fba92e3f-c2f1-47ab-9481-a49783479abb",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6946434+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:25764B2EFBE9AC2D5632A2AA66E4B2108057EC12C5F151197FDD84941B8627A1",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "c484dfde-bb9c-4822-b695-23565ee809f2",
+            "ProfileId": "fba92e3f-c2f1-47ab-9481-a49783479abb",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        },
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "65921c50-3953-48f7-975c-6f9569f2c85f",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.6886049+00:00"
+          }
+        }
+      ]
+    },
+    {
+      "case": "presentation-admission-and-reject-retain-original-draft",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/presentation-admission-and-reject-retain-original-draft/home.json",
+          "bytes": 815,
+          "SHA256": "957a6336fc25a4a5938b947252f99620b52e5f4b752e3b78d8c1ee7ef01e3e38"
+        },
+        {
+          "path": "run-02-data/presentation-admission-and-reject-retain-original-draft/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/presentation-admission-and-reject-retain-original-draft/settings.json",
+          "bytes": 2833,
+          "SHA256": "3d84d1e02fda8611d309481a6e5ca10f18893a330cc0f5f3e3f33ae3c8d9be76"
+        },
+        {
+          "path": "run-02-data/presentation-admission-and-reject-retain-original-draft/settings.json.bak",
+          "bytes": 2812,
+          "SHA256": "7202d11bcb0c7d8fa5ba5d24bc18ae8bbcd1fe7087a95e7a36264e50f95fde26"
+        },
+        {
+          "path": "run-02-data/presentation-admission-and-reject-retain-original-draft/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/presentation-admission-and-reject-retain-original-draft/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "8ad73461-90de-4e77-be75-b475de8ed6cd",
+            "CreatedAtUtc": "2026-10-04T00:36:03.7014836+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.c618cec61d584fe0ab5cb60cd1c6caa8",
+          "FormID": "c618cec6-1d58-4fe0-ab5c-b60cd1c6caa8",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "c618cec6-1d58-4fe0-ab5c-b60cd1c6caa8",
+          "pageIDs": [
+            "3ecaef8f-442b-4e89-86a2-06803eb1b0ad"
+          ],
+          "fieldIDs": [
+            "ed2e56ce-6a4f-492c-9544-86f45c16c3c5"
+          ],
+          "canonicalPublicationSHA256": "6e3268bd1d8b8502f44f2c5efd26071ab54c41af6142c8896917e4159119a96f",
+          "actualLabels": [
+            "Source"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "4f596f6e-e675-4b06-9f33-fa1cc1aca64a",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.7012881+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:6D0A33ABA60D7E18900B2E516E5F171EA9B7F57F3982D3FCAD5753570F084CDF",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "8ad73461-90de-4e77-be75-b475de8ed6cd",
+            "ProfileId": "4f596f6e-e675-4b06-9f33-fa1cc1aca64a",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "pending-navigation-cancellation-does-not-revoke-consumed-owner",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/pending-navigation-cancellation-does-not-revoke-consumed-owner/home.json",
+          "bytes": 815,
+          "SHA256": "43c72cfcb8e2dd180a94912525e0a58de3bca5579f9dfb0ef32558eb1da1dde7"
+        },
+        {
+          "path": "run-02-data/pending-navigation-cancellation-does-not-revoke-consumed-owner/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/pending-navigation-cancellation-does-not-revoke-consumed-owner/settings.json",
+          "bytes": 2165,
+          "SHA256": "1bd5acad07cd9cd732f3f8806656c43ae6e976abfd927e3cce5e3e1c03d8ae43"
+        },
+        {
+          "path": "run-02-data/pending-navigation-cancellation-does-not-revoke-consumed-owner/settings.json.bak",
+          "bytes": 234,
+          "SHA256": "5247d2bc859b32033dd9f95bd93a7e1061f2d119943530948164c059e3ec5c88"
+        },
+        {
+          "path": "run-02-data/pending-navigation-cancellation-does-not-revoke-consumed-owner/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/pending-navigation-cancellation-does-not-revoke-consumed-owner/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "aa09c1c2-5bc9-4031-97a4-ee615f7e2d28",
+            "CreatedAtUtc": "2026-10-04T00:36:03.737267+00:00"
+          },
+          "schema": 1,
+          "version": 2
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.57241dad86b345328492a3e30b0f673f",
+          "FormID": "57241dad-86b3-4532-8492-a3e30b0f673f",
+          "publicationRevision": 1,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 1,
+          "draftFormID": "57241dad-86b3-4532-8492-a3e30b0f673f",
+          "pageIDs": [
+            "2b6be8a3-f6a4-4178-ad98-17f9d6ca7bd4"
+          ],
+          "fieldIDs": [],
+          "canonicalPublicationSHA256": "66639132df2bae21a5773b2ee478ed012c14189d6f516340184935f0b8e72742",
+          "actualLabels": [],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "1e411940-e2a2-4fa3-82a3-ca79afbbb7f7",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.7370684+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:DCB0B5A336DDE56B1D75EDC30E2C8DFAC9AD7548AD44B2DFA51D9797A5E787DF",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "aa09c1c2-5bc9-4031-97a4-ee615f7e2d28",
+            "ProfileId": "1e411940-e2a2-4fa3-82a3-ca79afbbb7f7",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "canonical-choice-table-and-page-identities-survive-edits",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/canonical-choice-table-and-page-identities-survive-edits/home.json",
+          "bytes": 815,
+          "SHA256": "c51b3981da41717d2d09b281527965c10ab3916a1d90040fc437a58902a590da"
+        },
+        {
+          "path": "run-02-data/canonical-choice-table-and-page-identities-survive-edits/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/canonical-choice-table-and-page-identities-survive-edits/settings.json",
+          "bytes": 4964,
+          "SHA256": "d2ce442f2c5a18155f8484295261296a425d64ab3a7191c6ac0ca409c4870bd2"
+        },
+        {
+          "path": "run-02-data/canonical-choice-table-and-page-identities-survive-edits/settings.json.bak",
+          "bytes": 4655,
+          "SHA256": "e9375256d7af13dc3b5e7aacc7aeece8ce01d840097d918b7a3e59ff457e6986"
+        },
+        {
+          "path": "run-02-data/canonical-choice-table-and-page-identities-survive-edits/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/canonical-choice-table-and-page-identities-survive-edits/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "945eab3a-0300-447a-b866-eee40105fcf1",
+            "CreatedAtUtc": "2026-10-04T00:36:03.7563637+00:00"
+          },
+          "schema": 1,
+          "version": 9
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.a84cc5c051f14709a179bcfc81ffc5f0",
+          "FormID": "a84cc5c0-51f1-4709-a179-bcfc81ffc5f0",
+          "publicationRevision": 8,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 8,
+          "draftFormID": "a84cc5c0-51f1-4709-a179-bcfc81ffc5f0",
+          "pageIDs": [
+            "f7c08ab3-bd44-4b5b-8e58-4307d57c9e00",
+            "fd07be1d-547b-4bdf-af21-5d7ecb98fbed"
+          ],
+          "fieldIDs": [
+            "d2263d47-8182-41be-bd4b-eaa2c1e67ad2",
+            "6a96b176-3db5-46d4-bf7a-7794d39f1954"
+          ],
+          "canonicalPublicationSHA256": "0face691e38e74b629c12c2273c77880ffd15252f3514a96d4b11a48a0449765",
+          "actualLabels": [
+            "Question",
+            "Question"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "ef0a2f4e-d1bb-440a-8158-3851da140109",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.7562194+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:FF03EF0111E4C3544E52674FA79DF1C38A95A1802CD151B4F2A664090D8B08E4",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "945eab3a-0300-447a-b866-eee40105fcf1",
+            "ProfileId": "ef0a2f4e-d1bb-440a-8158-3851da140109",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "actual-owner-preview-does-not-write-responses",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/actual-owner-preview-does-not-write-responses/home.json",
+          "bytes": 815,
+          "SHA256": "44061b7a02d2cad7a3b5477bb0e720e2561d661aa8e9409214faddb56a348ced"
+        },
+        {
+          "path": "run-02-data/actual-owner-preview-does-not-write-responses/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/actual-owner-preview-does-not-write-responses/settings.json",
+          "bytes": 2841,
+          "SHA256": "5a21968bf493a9c6248756281db994dc5c01c6a98f4fd1423690ec099987b3d8"
+        },
+        {
+          "path": "run-02-data/actual-owner-preview-does-not-write-responses/settings.json.bak",
+          "bytes": 2812,
+          "SHA256": "7f9d30479f1453bcfb25c72e09ac487c74d118e43e8df1c7cf4e615c45229803"
+        },
+        {
+          "path": "run-02-data/actual-owner-preview-does-not-write-responses/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/actual-owner-preview-does-not-write-responses/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "b7b02daa-892a-4f1a-9a72-ecaff537b15f",
+            "CreatedAtUtc": "2026-10-04T00:36:03.8558635+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.e3ff281f33154834b309b1dee5bc198e",
+          "FormID": "e3ff281f-3315-4834-b309-b1dee5bc198e",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "e3ff281f-3315-4834-b309-b1dee5bc198e",
+          "pageIDs": [
+            "8d467215-4cdb-459b-8b39-69e8c496d293"
+          ],
+          "fieldIDs": [
+            "b1466eb9-58e1-4752-8edc-fd00f0a66057"
+          ],
+          "canonicalPublicationSHA256": "e733a2481dc0dc5bfbeb1e14382058ad6d4854344a6b55463b4d14a44f715051",
+          "actualLabels": [
+            "Preview source"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "b12482c6-a1db-4ebd-8b62-fb6eea0381cd",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.8556895+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:6EAF722BAD46C3DE66C957CCE9EAE6EB6E5B6A5FF3F7F0E6C3767E30FC861BE1",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "b7b02daa-892a-4f1a-9a72-ecaff537b15f",
+            "ProfileId": "b12482c6-a1db-4ebd-8b62-fb6eea0381cd",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "typed-unknown-commit-blocks-repeat-until-explicit-recovery",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/typed-unknown-commit-blocks-repeat-until-explicit-recovery/home.json",
+          "bytes": 815,
+          "SHA256": "b4ead9c9ac2f382876f140b855cd74a89b504edcc9f25b42a1b0ed4e6fcdc60b"
+        },
+        {
+          "path": "run-02-data/typed-unknown-commit-blocks-repeat-until-explicit-recovery/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/typed-unknown-commit-blocks-repeat-until-explicit-recovery/settings.json",
+          "bytes": 2846,
+          "SHA256": "4293423ae9e954491737601b9bc638e41bd0d372d8d89f4f3c6dc8f5974c2ae1"
+        },
+        {
+          "path": "run-02-data/typed-unknown-commit-blocks-repeat-until-explicit-recovery/settings.json.bak",
+          "bytes": 2844,
+          "SHA256": "71efa6f8c34b4ddb8962385dbc5b3b2d43b5e1705c13c2e6a891381718e3ce44"
+        },
+        {
+          "path": "run-02-data/typed-unknown-commit-blocks-repeat-until-explicit-recovery/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/typed-unknown-commit-blocks-repeat-until-explicit-recovery/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "b5b4f7ed-db95-414a-b6a1-fa1537fc72a8",
+            "CreatedAtUtc": "2026-10-04T00:36:03.9038195+00:00"
+          },
+          "schema": 1,
+          "version": 5
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.3c6f955e77f84eb999f9b7f55771aab4",
+          "FormID": "3c6f955e-77f8-4eb9-99f9-b7f55771aab4",
+          "publicationRevision": 4,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 4,
+          "draftFormID": "3c6f955e-77f8-4eb9-99f9-b7f55771aab4",
+          "pageIDs": [
+            "64e6c68d-e455-40ae-bba1-6b1b649364c5"
+          ],
+          "fieldIDs": [
+            "e08cdb71-d210-4901-ace6-900a43ea964b"
+          ],
+          "canonicalPublicationSHA256": "18cb5fe582152ee66798a644b3bacb64fee7c819cb2400862c81b46deb583d28",
+          "actualLabels": [
+            "After actual commit"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "0d60ab20-88fc-426c-af7c-2e8c15c46a04",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.9034716+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:371A5D9381F9953D872EBCB6066325F15369EC86CB4A36352E58E68A0A55DC8A",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "b5b4f7ed-db95-414a-b6a1-fa1537fc72a8",
+            "ProfileId": "0d60ab20-88fc-426c-af7c-2e8c15c46a04",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "unsupported-canonical-source-remains-byte-identical",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/unsupported-canonical-source-remains-byte-identical/home.json",
+          "bytes": 815,
+          "SHA256": "c3fc7a736aa467ebc2137b544aecf2d752fdd47d0648894050395f3969e31df5"
+        },
+        {
+          "path": "run-02-data/unsupported-canonical-source-remains-byte-identical/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/unsupported-canonical-source-remains-byte-identical/settings.json",
+          "bytes": 2228,
+          "SHA256": "7810401958daab66c937ef45b9b35f1e20c1d6dfa26245e6cefd0160317e60b0"
+        },
+        {
+          "path": "run-02-data/unsupported-canonical-source-remains-byte-identical/settings.json.bak",
+          "bytes": 2165,
+          "SHA256": "1ce5bf4135075e27fff87870a27d111867c82ba267e161ad994e1833cf09d7c6"
+        },
+        {
+          "path": "run-02-data/unsupported-canonical-source-remains-byte-identical/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/unsupported-canonical-source-remains-byte-identical/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "808bffc8-84a1-4823-a79d-e136bea9b270",
+            "CreatedAtUtc": "2026-10-04T00:36:03.952066+00:00"
+          },
+          "schema": 1,
+          "version": 3
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.74411a8a8b414c15962199c2fe311897",
+          "FormID": "74411a8a-8b41-4c15-9621-99c2fe311897",
+          "publicationRevision": 1,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 1,
+          "draftFormID": "74411a8a-8b41-4c15-9621-99c2fe311897",
+          "pageIDs": [
+            "837f3751-6752-4088-9d58-795cfd4707ee"
+          ],
+          "fieldIDs": [],
+          "canonicalPublicationSHA256": "320f1b2dfcfdf5440cc4063c48acf9c491b6000f7512aa7629e759e20bde25cc",
+          "actualLabels": [],
+          "futureRequiredContentPreserved": {
+            "DoNotDrop": true
+          }
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "19e5af98-f6ac-4b0e-8d1c-d36c2e407290",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.9518011+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:30FFBE9C83E5A177199913405BC529BBFBAE8D2741726E05AC2E22257F19FFE6",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "808bffc8-84a1-4823-a79d-e136bea9b270",
+            "ProfileId": "19e5af98-f6ac-4b0e-8d1c-d36c2e407290",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "presentation-failure-cannot-lock-original-workspace",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/presentation-failure-cannot-lock-original-workspace/home.json",
+          "bytes": 815,
+          "SHA256": "2bf1f3ab417ef947edec91cf3742a391c0b8c4dcf204030c5987e2852e9786df"
+        },
+        {
+          "path": "run-02-data/presentation-failure-cannot-lock-original-workspace/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/presentation-failure-cannot-lock-original-workspace/settings.json",
+          "bytes": 2850,
+          "SHA256": "49b91b97e8dae17db3c7d326adff66eab027c81b226d4def3cfbb09346aeb83b"
+        },
+        {
+          "path": "run-02-data/presentation-failure-cannot-lock-original-workspace/settings.json.bak",
+          "bytes": 2812,
+          "SHA256": "59b375b769668d8cd9874b98cfe7fdb59f37c43ff8a1e554507d7149425b41fc"
+        },
+        {
+          "path": "run-02-data/presentation-failure-cannot-lock-original-workspace/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/presentation-failure-cannot-lock-original-workspace/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "c7d2a82d-5857-4ac6-9374-edb6dfded372",
+            "CreatedAtUtc": "2026-10-04T00:36:03.9698701+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.6b6e987d9cd7445ea33490454c3619c7",
+          "FormID": "6b6e987d-9cd7-445e-a334-90454c3619c7",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "6b6e987d-9cd7-445e-a334-90454c3619c7",
+          "pageIDs": [
+            "7c599d3f-7373-41c1-b689-f7140c87b68f"
+          ],
+          "fieldIDs": [
+            "41551dbc-a262-4c6c-a2cc-d11259a2061e"
+          ],
+          "canonicalPublicationSHA256": "2ff3c1b8b58420f02492131a5854add38264a424ed44628e88934cec2ba421ae",
+          "actualLabels": [
+            "After observer failures"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "d6b6fd56-930a-4b26-9dd6-3b82817aa768",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:03.9696902+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:BDCD4245DF2AA580D1E559721F0DB9960A492186615F2FFC0CDFA9030E9B2A72",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "c7d2a82d-5857-4ac6-9374-edb6dfded372",
+            "ProfileId": "d6b6fd56-930a-4b26-9dd6-3b82817aa768",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "independent-native-seed-and-verify-processes",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/canonical-oracle.json",
+          "bytes": 1860,
+          "SHA256": "b0bf2e63dadd3f5bc746f9cacca61bd90ac40cc12b8d63fcaf09c6bd248f3115"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/home.json",
+          "bytes": 815,
+          "SHA256": "6d715a459290d207c3e8b624499704167c9b10a990f2f757513e2fb6370d553b"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/seed.exit",
+          "bytes": 1,
+          "SHA256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/seed.log",
+          "bytes": 152,
+          "SHA256": "42ab106ab1cf4c6188c6bc5024802a65694169910f8b8e8e77ea8db864be27f6"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/settings.json",
+          "bytes": 2890,
+          "SHA256": "f7f5af30d3d8e55d560fd243db12bc64aa2a1450341d1cc7703efa7b67abe8db"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/settings.json.bak",
+          "bytes": 2812,
+          "SHA256": "5dd3c572d74cea4e3dd275a96496c7ca8f543015890450f44011bfb978a954cd"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/verify.exit",
+          "bytes": 1,
+          "SHA256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "run-02-data/independent-native-seed-and-verify-processes/verify.log",
+          "bytes": 156,
+          "SHA256": "294fb865945d4ddeed8baa1647a0e138939cfdfa725c4ea99b0005f9c1220ebb"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/independent-native-seed-and-verify-processes/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "e91bad21-cc99-4bb0-8ac8-efa4dd1405df",
+            "CreatedAtUtc": "2026-10-04T00:36:04.1255359+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.1401c9c110e3400b966dd4862094f3f8",
+          "FormID": "1401c9c1-10e3-400b-966d-d4862094f3f8",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "1401c9c1-10e3-400b-966d-d4862094f3f8",
+          "pageIDs": [
+            "e442aa4d-2fda-4b31-95e4-2e71856cf6e9"
+          ],
+          "fieldIDs": [
+            "eb30a2ef-eef0-4e08-8b7c-89e5fdc89bc8"
+          ],
+          "canonicalPublicationSHA256": "b2c901a904500725bc3ac4e9647acbb9c753de9c83eb224d2c4a7e78da9f866e",
+          "actualLabels": [
+            "Independent native restart <oracle> & content"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "3d1ea2e2-f983-4088-b7ce-61f878e570d5",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:04.0536756+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:27483407E5E3CE3B17A71A3BBD5AB8FFE4598712921F6160BE905B8471339CBB",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "e91bad21-cc99-4bb0-8ac8-efa4dd1405df",
+            "ProfileId": "3d1ea2e2-f983-4088-b7ce-61f878e570d5",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "busy-notification-before-first-owner-await-and-after-real-conflict",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/busy-notification-before-first-owner-await-and-after-real-conflict/home.json",
+          "bytes": 815,
+          "SHA256": "7876db23b13416d3d632284dbc14cad8313ba06fb7fcdcd91fc7ceb1597afbec"
+        },
+        {
+          "path": "run-02-data/busy-notification-before-first-owner-await-and-after-real-conflict/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/busy-notification-before-first-owner-await-and-after-real-conflict/settings.json",
+          "bytes": 2849,
+          "SHA256": "a6c89bc108f2893bd1c6df186bbaa630c6ab80a3d2f9e62e79168903a2066797"
+        },
+        {
+          "path": "run-02-data/busy-notification-before-first-owner-await-and-after-real-conflict/settings.json.bak",
+          "bytes": 2842,
+          "SHA256": "23a5a3dcbc59da1c2bedf7c3b25be9ebccedbdffed05b3bba43c42a8d7719a5d"
+        },
+        {
+          "path": "run-02-data/busy-notification-before-first-owner-await-and-after-real-conflict/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/busy-notification-before-first-owner-await-and-after-real-conflict/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "e8410830-36bf-4167-ad44-a6b5465deb46",
+            "CreatedAtUtc": "2026-10-04T00:36:04.7627795+00:00"
+          },
+          "schema": 1,
+          "version": 5
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.4d10ff01c41b421183a313f2d41b8d96",
+          "FormID": "4d10ff01-c41b-4211-83a3-13f2d41b8d96",
+          "publicationRevision": 4,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 4,
+          "draftFormID": "4d10ff01-c41b-4211-83a3-13f2d41b8d96",
+          "pageIDs": [
+            "8827c879-f1f4-48fa-9aa7-0e0d77eee7a0"
+          ],
+          "fieldIDs": [
+            "e753cdf0-b9e5-431f-9f17-e1fb1e3bbe14"
+          ],
+          "canonicalPublicationSHA256": "c92ce16d87670a7a84abc735c08b8d7d0d4853ca01c6baf96d267ffda69cf596",
+          "actualLabels": [
+            "Actual concurrent edit"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "6d21c136-37bb-4127-8dcc-432554166a15",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:04.7624888+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:A0263D74CD3FFE67EB2D0428A6B8B66C617749F7D69FCABBD97DA3D1E3FA583F",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "e8410830-36bf-4167-ad44-a6b5465deb46",
+            "ProfileId": "6d21c136-37bb-4127-8dcc-432554166a15",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "opaque-issued-factory-owner-fenced-before-return-and-drained",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/opaque-issued-factory-owner-fenced-before-return-and-drained/home.json",
+          "bytes": 815,
+          "SHA256": "6f919786fee9a1d22668142c72f3f7ebb3729236747025ae60d90ddfb78825ae"
+        },
+        {
+          "path": "run-02-data/opaque-issued-factory-owner-fenced-before-return-and-drained/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/opaque-issued-factory-owner-fenced-before-return-and-drained/settings.json",
+          "bytes": 235,
+          "SHA256": "7745f3590be295c065871f96fb855ef64daf8f8058409b94fe075e2514662cb6"
+        },
+        {
+          "path": "run-02-data/opaque-issued-factory-owner-fenced-before-return-and-drained/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/opaque-issued-factory-owner-fenced-before-return-and-drained/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "fe4fe332-c9b0-4a3f-96ee-a5c5bff02931",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8150164+00:00"
+          },
+          "schema": 1,
+          "version": 1
+        }
+      ],
+      "actualPublications": [],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "9107eb04-b1f4-49ce-b4a2-bcbbe900bf61",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8147925+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:1EFB9379ECDE825F7EAE0F7E9F6D6B3238E92AEB8236208DE7E992B0FAFC26CB",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "fe4fe332-c9b0-4a3f-96ee-a5c5bff02931",
+            "ProfileId": "9107eb04-b1f4-49ce-b4a2-bcbbe900bf61",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "actual-initialising-owner-fenced-and-ignored-cancellation-drained",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/actual-initialising-owner-fenced-and-ignored-cancellation-drained/home.json",
+          "bytes": 815,
+          "SHA256": "2ae9a938625b8ee3ac0427146eb5c067985b49b2bd04e33c78f7bed712efcb4f"
+        },
+        {
+          "path": "run-02-data/actual-initialising-owner-fenced-and-ignored-cancellation-drained/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/actual-initialising-owner-fenced-and-ignored-cancellation-drained/settings.json",
+          "bytes": 235,
+          "SHA256": "6eae7ee67f2e9ea159ca815569f06f6e8b0429dca6ea6f039a3ee78bce808d57"
+        },
+        {
+          "path": "run-02-data/actual-initialising-owner-fenced-and-ignored-cancellation-drained/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/actual-initialising-owner-fenced-and-ignored-cancellation-drained/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "c6db9e2b-0811-4313-8fbe-25bac8ff32aa",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8192395+00:00"
+          },
+          "schema": 1,
+          "version": 1
+        }
+      ],
+      "actualPublications": [],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "77ec9357-ac4c-45a6-a30e-72c34108b2a0",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8191022+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:398838102183370F140E45828BBBFE7CE7C3B2A2815A42DF95A605579B8C2F63",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "c6db9e2b-0811-4313-8fbe-25bac8ff32aa",
+            "ProfileId": "77ec9357-ac4c-45a6-a30e-72c34108b2a0",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "actual-final-commit-admission-rejects-immediate-group-revocation",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/actual-final-commit-admission-rejects-immediate-group-revocation/home.json",
+          "bytes": 815,
+          "SHA256": "9b677775cf279a4744d590d0d266832e682fa041bd4a3a4855da6a3a8718cee1"
+        },
+        {
+          "path": "run-02-data/actual-final-commit-admission-rejects-immediate-group-revocation/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/actual-final-commit-admission-rejects-immediate-group-revocation/settings.json",
+          "bytes": 2851,
+          "SHA256": "b15c20a29074e2932ee568fe753b12115945baddfeef1ed5b4ee1ea2ab07b80f"
+        },
+        {
+          "path": "run-02-data/actual-final-commit-admission-rejects-immediate-group-revocation/settings.json.bak",
+          "bytes": 2812,
+          "SHA256": "13c8166c40a6c8c7f2c02e77510d67e9b189f58a4f8fffaed7c970b0fb75d1e5"
+        },
+        {
+          "path": "run-02-data/actual-final-commit-admission-rejects-immediate-group-revocation/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/actual-final-commit-admission-rejects-immediate-group-revocation/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "f5fb6923-912a-4f50-a427-a0d49e9334aa",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8226739+00:00"
+          },
+          "schema": 1,
+          "version": 4
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.ebe716f3d3a84f3b96232756881bd66b",
+          "FormID": "ebe716f3-d3a8-4f3b-9623-2756881bd66b",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "ebe716f3-d3a8-4f3b-9623-2756881bd66b",
+          "pageIDs": [
+            "0280ca1f-4b85-45ff-9e4f-b1ab434a034c"
+          ],
+          "fieldIDs": [
+            "02523f54-6ec1-4017-8893-b3f451d2eaf1"
+          ],
+          "canonicalPublicationSHA256": "58eb8a89c8715f72ff8293354a0f7ca1090f58d881d4e4d95fc4d8a36d799734",
+          "actualLabels": [
+            "Actual previous revision"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "bf47eb96-09fc-4a41-ad52-318ccc883d54",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8225303+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:3C9B2C9B273318D7B39FDD9069C067C00B22F40526EE14B64F27D72384B03094",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "f5fb6923-912a-4f50-a427-a0d49e9334aa",
+            "ProfileId": "bf47eb96-09fc-4a41-ad52-318ccc883d54",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "all-issued-owners-fenced-before-throwing-cancellation-and-drained",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/all-issued-owners-fenced-before-throwing-cancellation-and-drained/home.json",
+          "bytes": 815,
+          "SHA256": "a7f3c68f6a3070882ee398ac87204d4b7c79ba7d7828fba35a34d348d62edc7b"
+        },
+        {
+          "path": "run-02-data/all-issued-owners-fenced-before-throwing-cancellation-and-drained/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/all-issued-owners-fenced-before-throwing-cancellation-and-drained/settings.json",
+          "bytes": 4763,
+          "SHA256": "e7d1ca405970c481f3efb9b363e080666cc7ead88b46a9ca431c1b98dd4a5a44"
+        },
+        {
+          "path": "run-02-data/all-issued-owners-fenced-before-throwing-cancellation-and-drained/settings.json.bak",
+          "bytes": 2840,
+          "SHA256": "91d308d431ad5349d7970c804526d7e0947c44049871d18829732a1c834de8b1"
+        },
+        {
+          "path": "run-02-data/all-issued-owners-fenced-before-throwing-cancellation-and-drained/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/all-issued-owners-fenced-before-throwing-cancellation-and-drained/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "58d26149-93ef-495c-887f-7da6e74a5d86",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8665563+00:00"
+          },
+          "schema": 1,
+          "version": 5
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.5c05e32ad211404da90f1adc671b04af",
+          "FormID": "5c05e32a-d211-404d-a90f-1adc671b04af",
+          "publicationRevision": 3,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 3,
+          "draftFormID": "5c05e32a-d211-404d-a90f-1adc671b04af",
+          "pageIDs": [
+            "c9eb8def-1b90-4723-9b6f-a029e80eaceb"
+          ],
+          "fieldIDs": [
+            "8114ff83-1363-4241-840d-7290d08b1356"
+          ],
+          "canonicalPublicationSHA256": "cf1d4dbe8b42fb9c8622c336e661aaca5f36cab6aaf67f4738b912db02a50f5b",
+          "actualLabels": [
+            "Before revoke"
+          ],
+          "futureRequiredContentPreserved": null
+        },
+        {
+          "key": "forms.publication.v1.189e48f5fc55478a8d5bbe9bc990d647",
+          "FormID": "189e48f5-fc55-478a-8d5b-be9bc990d647",
+          "publicationRevision": 1,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 1,
+          "draftFormID": "189e48f5-fc55-478a-8d5b-be9bc990d647",
+          "pageIDs": [
+            "006f3d97-df5b-4bc4-ae27-095a2a2e8a12"
+          ],
+          "fieldIDs": [],
+          "canonicalPublicationSHA256": "ab0d16a73f935b7ea4ce2173c3cc71ad6bd85bb1aa3bae8ec03cc49665f05858",
+          "actualLabels": [],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "401f5c8e-b869-421f-ae47-60d173b62d7d",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:04.8663901+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:89C4CF087F261395F6FC515451ABCC392420B9632F6F92ACD8BEA94DF788D0B0",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "58d26149-93ef-495c-887f-7da6e74a5d86",
+            "ProfileId": "401f5c8e-b869-421f-ae47-60d173b62d7d",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    },
+    {
+      "case": "unknown-native-commit-revocation-clears-private-state-without-replay",
+      "actualResult": "PASS",
+      "runtimeFiles": [
+        {
+          "path": "run-02-data/unknown-native-commit-revocation-clears-private-state-without-replay/home.json",
+          "bytes": 815,
+          "SHA256": "b55bf9e33d6ae7fc3bbfe58bcd32f4ddfb03b05918019ae43f0369c44a560c5f"
+        },
+        {
+          "path": "run-02-data/unknown-native-commit-revocation-clears-private-state-without-replay/home.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run-02-data/unknown-native-commit-revocation-clears-private-state-without-replay/settings.json",
+          "bytes": 2853,
+          "SHA256": "387b6c371fd2f7112d6ce0a6cce90d3845f3edeb73953776069d3a47e790d164"
+        },
+        {
+          "path": "run-02-data/unknown-native-commit-revocation-clears-private-state-without-replay/settings.json.bak",
+          "bytes": 2846,
+          "SHA256": "57da5bf1c9aadee449767d1872b4450e4445c6cc24d436d06f44dc3686e5be67"
+        },
+        {
+          "path": "run-02-data/unknown-native-commit-revocation-clears-private-state-without-replay/settings.json.lock",
+          "bytes": 0,
+          "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "actualStores": [
+        {
+          "file": "run-02-data/unknown-native-commit-revocation-clears-private-state-without-replay/settings.json",
+          "identity": {
+            "SchemaVersion": 1,
+            "StoreId": "4d9fc6ce-49ef-4022-94d7-899261e3e82c",
+            "CreatedAtUtc": "2026-10-04T00:36:04.9507918+00:00"
+          },
+          "schema": 1,
+          "version": 5
+        }
+      ],
+      "actualPublications": [
+        {
+          "key": "forms.publication.v1.9ab849a03afb4781bba999f0b0fadf8c",
+          "FormID": "9ab849a0-3afb-4781-bba9-99f0b0fadf8c",
+          "publicationRevision": 4,
+          "publicationSchema": 1,
+          "state": 0,
+          "draftSchema": 1,
+          "draftRevision": 4,
+          "draftFormID": "9ab849a0-3afb-4781-bba9-99f0b0fadf8c",
+          "pageIDs": [
+            "84389c40-eb12-40a0-a524-e72ae6cb8f2b"
+          ],
+          "fieldIDs": [
+            "e608bc9b-24c7-4ee0-a9c3-29940d3305e8"
+          ],
+          "canonicalPublicationSHA256": "7420d0a76e3084cecd97911110673c9b476a40e136e9fc9b99c6a632d1fe8b9e",
+          "actualLabels": [
+            "Committed with lost receipt"
+          ],
+          "futureRequiredContentPreserved": null
+        }
+      ],
+      "actualHomeBindings": [
+        {
+          "recordType": "home.local-profile",
+          "recordID": "home.local-profile",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ProfileId": "d943fbf6-955b-4659-9f4b-bf0843a160c0",
+            "PrincipalDigest": "D3675B65F86D84DCA94D5C4FE7467624C651DBD9435578C5DE8D1CEDD00E088B",
+            "CreatedAtUtc": "2026-10-04T00:36:04.9505266+00:00"
+          }
+        },
+        {
+          "recordType": "home.local-store-ownership",
+          "recordID": "home.local-store:8998C47E2B4933CB1319B63AFE4FC652C736DCCBEB7DE3DD04C25506BBB1B08A",
+          "schema": 1,
+          "revision": 1,
+          "actualOwnerPayload": {
+            "ResourceKind": "forms",
+            "StoreId": "4d9fc6ce-49ef-4022-94d7-899261e3e82c",
+            "ProfileId": "d943fbf6-955b-4659-9f4b-bf0843a160c0",
+            "ObservedStoreRevision": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+            "ImportApprovalId": null
+          }
+        }
+      ]
+    }
+  ],
+  "specificControls": {
+    "opaqueFactory": "Actual FormHostSession.RequireCurrentAsync denial awaited BEFORE heldfactoryrelease; source Program255–270 and actualPASS, no publication keys left.",
+    "initialisation": "Actual returnedowner denied while actualprovideridentityawait blocked; disposal waited until released.",
+    "finalCommit": "Actual guarded compare/exchange paused, group fence first; save PermissionDenied and before/after realsettingsbytes equality asserted WITHOUT calling DisposeAsync or cancelling first.",
+    "throwingCancellation": "Actual registry detaches routes+two issuerowners (active+unadmittedpending), actualraw publications deny BEFORE throwing registeredtoken callback; ignoredcancellation command drains; explicit AggregateException remains.",
+    "unknownReply": "Actual previous ownercommit then lostreceipt, revocation neither replays nor undoes effect; canonical saved label/revision retained."
+  },
+  "maintainedBrowserIssuer": "BLOCKED; paired new nativeonlygroup can withdraw actual OS authority, not grant web/private actor or substitute owner public group API."
+}
