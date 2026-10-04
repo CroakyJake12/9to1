@@ -73,10 +73,9 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
         lock (_taskGate)
         {
             if (_retiring) throw new ObjectDisposedException(nameof(RevisionBankPage));
-            generation = ++_activationGeneration;
-            _active = true; // Admission owns this state; a deferred body never reactivates it.
+            generation = _activationGeneration + 1;
+            return RunOriginal(() => RefreshCoreAsync(cancellationToken, generation), generation, activate: true);
         }
-        return RunOriginal(() => RefreshCoreAsync(cancellationToken, generation), generation);
     }
 
     public void Deactivate()
@@ -134,7 +133,7 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
         await PublishOriginalAsync(() => _scene.Render(space, bank), generation).ConfigureAwait(false);
     }
 
-    private Task RunOriginal(Func<Task> body, long generation)
+    private Task RunOriginal(Func<Task> body, long generation, bool activate = false)
     {
         ArgumentNullException.ThrowIfNull(body);
         Task original;
@@ -148,6 +147,12 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
             original = RunCoreAsync(start.Task, body, generation);
             _originalTasks.Add(original);
             LastOriginalTask = original;
+            if (activate)
+            {
+                // Publish the original before admitting active state, while the same gate is held.
+                _activationGeneration = generation;
+                _active = true;
+            }
         }
         start.SetResult();
         return original;

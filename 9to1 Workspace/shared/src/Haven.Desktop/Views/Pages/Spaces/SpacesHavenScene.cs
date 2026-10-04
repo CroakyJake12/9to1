@@ -360,6 +360,175 @@ internal sealed class SpacesHavenScene : IDisposable
         _ = originalCurrent();
     }
 
+    // Used only by the retained selected delete refresh. Legacy callers keep their
+    // existing methods; each attached native write here fences the captured cohort.
+    internal bool SetOriginalSpaces(IReadOnlyList<SpaceDefinition> spaces, Guid? selectedId, Func<bool> current)
+    {
+        foreach (var child in SpaceRows.Children.ToArray())
+            if (!OriginalWrite(() => SpaceRows.Remove(child), current)) return false;
+        if (spaces.Count == 0)
+            return OriginalWrite(() => SpaceRows.Add(Muted("No Spaces yet. Create one to get started.")), current);
+        foreach (var space in spaces)
+        {
+            if (!current()) return false;
+            var selected = space.Id == selectedId;
+            var card = new Container { Layout = HavenLayout.Vertical };
+            card.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+            card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(8)));
+            card.SetValue(HavenProperties.Gap, HavenLength.Px(3));
+            card.SetValue(HavenProperties.Background, selected ? "AccentSoft" : "SurfaceRaised");
+            card.SetValue(HavenProperties.BorderColor, selected ? "AccentSecondary" : "Border");
+            card.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1));
+            card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(14)));
+            var open = new HavenButton
+            {
+                Content = space.Name,
+                IconKey = string.IsNullOrWhiteSpace(space.IconKey) ? "sparkles" : space.IconKey,
+                Variant = ButtonVariant.Navigation
+            };
+            open.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+            open.SetValue(HavenProperties.MinHeight, HavenLength.Px(38));
+            open.Accessibility.AccessibleName = $"Open Space {space.Name}";
+            var id = space.Id;
+            open.Invoked += (_, _) => SpaceSelected?.Invoke(this, id);
+            card.Add(open);
+            var flags = new List<string>();
+            if (space.IsBuiltIn) flags.Add("Built-in");
+            if (space.IsArchived) flags.Add("Archived");
+            flags.Add(space.Kind.ToString());
+            card.Add(Muted(string.Join(" · ", flags)));
+            if (!OriginalWrite(() => SpaceRows.Add(card), current)) return false;
+        }
+        return current();
+    }
+
+    internal bool SetOriginalConversations(IReadOnlyList<Conversation> rows, Func<bool> current)
+    {
+        foreach (var child in Conversations.Children.ToArray())
+            if (!OriginalWrite(() => Conversations.Remove(child), current)) return false;
+        if (rows.Count == 0)
+            return OriginalWrite(() => Conversations.Add(Muted("No chats in this Space yet.")), current);
+        foreach (var row in rows)
+        {
+            if (!current()) return false;
+            var id = row.Id;
+            var open = new HavenButton { Content = row.Title, IconKey = "chat", Variant = ButtonVariant.Navigation };
+            open.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+            open.SetValue(HavenProperties.MinHeight, HavenLength.Px(38));
+            open.Accessibility.AccessibleName = $"Open chat {row.Title}";
+            open.Invoked += (_, _) => ConversationSelected?.Invoke(this, id);
+            if (!OriginalWrite(() => Conversations.Add(open), current)) return false;
+        }
+        return current();
+    }
+
+    internal bool SetOriginalSpace(SpaceDefinition? space, Func<bool> current)
+    {
+        if (!current()) return false;
+        _selected = space;
+        if (!OriginalWrite(() => RevisionBank.SetValue(HavenProperties.Enabled,
+            _revisionBankAvailable && space is { IsArchived: false }), current)) return false;
+        if (space is null)
+        {
+            if (!OriginalWrite(() => EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Visible), current)) return false;
+            if (!OriginalWrite(() => Editor.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed), current)) return false;
+            if (!OriginalWrite(() => NewConversation.SetValue(HavenProperties.Enabled, false), current)) return false;
+            return SetOriginalConversations([], current);
+        }
+        if (!OriginalWrite(() => EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed), current)) return false;
+        if (!OriginalWrite(() => Editor.SetValue(HavenProperties.Visibility, HavenVisibility.Visible), current)) return false;
+        if (!OriginalWrite(() => SelectedName.Content = space.Name, current)) return false;
+        if (!OriginalWrite(() => SelectedMeta.Content = $"{space.Kind} Space{(space.IsBuiltIn ? " · Built-in" : string.Empty)}{(space.IsArchived ? " · Archived" : string.Empty)}", current)) return false;
+        if (!OriginalWrite(() => Name.Text = space.Name, current)) return false;
+        if (!OriginalWrite(() => Description.Text = space.Description, current)) return false;
+        if (!OriginalWrite(() => Model.Text = space.ModelName ?? string.Empty, current)) return false;
+        if (!OriginalWrite(() => Instructions.Text = space.Instructions, current)) return false;
+        if (!OriginalWrite(() => Thinking.SelectedIndex = Math.Clamp((int)space.ThinkingMode, 0, ThinkingChoices.Count - 1), current)) return false;
+        _examples.Clear();
+        _examples.AddRange(space.ExamplePairs);
+        if (!RenderOriginalExamples(current)) return false;
+        if (!OriginalWrite(() => SurfaceTemplate.SelectedIndex = SurfaceIndex(space.GeneratedSurface?.TemplateKey), current)) return false;
+        if (!OriginalWrite(() => SurfaceInputs.Text = space.GeneratedSurface?.InputsJson ?? "{}", current)) return false;
+        if (!RenderOriginalFiles(space.Files, current)) return false;
+        if (!OriginalWrite(() => Launch.Content = space.Kind == SpaceKind.Study ? "Open Study" : "Open Space", current)) return false;
+        if (!OriginalWrite(() => Archive.Content = space.IsArchived ? "Restore" : "Archive", current)) return false;
+        if (!OriginalWrite(() => Delete.SetValue(HavenProperties.Enabled, !space.IsBuiltIn), current)) return false;
+        if (!OriginalWrite(() => Delete.Content = space.IsBuiltIn ? "Built-in Space" : "Delete", current)) return false;
+        if (!OriginalWrite(() => NewConversation.SetValue(HavenProperties.Enabled, !space.IsArchived), current)) return false;
+        if (!OriginalWrite(() => ApplySuggestedEdit.SetValue(HavenProperties.Enabled,
+            _editWithHavenAvailable && _selected is not null), current)) return false;
+        return OriginalWrite(() => ApplySuggestedEdit.Content = _editWithHavenAvailable
+            ? "Suggest changes" : "Suggest changes · model unavailable", current);
+    }
+
+    private bool RenderOriginalExamples(Func<bool> current)
+    {
+        foreach (var child in Examples.Children.ToArray())
+            if (!OriginalWrite(() => Examples.Remove(child), current)) return false;
+        if (_examples.Count == 0)
+            return OriginalWrite(() => Examples.Add(Muted("No example pairs yet.")), current);
+        for (var index = 0; index < _examples.Count; index++)
+        {
+            if (!current()) return false;
+            var pair = _examples[index];
+            var row = Card();
+            row.Add(new HavenText { Content = $"You: {pair.User}" });
+            row.Add(Muted($"Haven: {pair.Assistant}"));
+            var remove = new HavenButton { Content = "Remove example", Variant = ButtonVariant.Text };
+            remove.Accessibility.AccessibleName = $"Remove example {index + 1}";
+            var removeIndex = index;
+            remove.Invoked += (_, _) => { _examples.RemoveAt(removeIndex); RenderExamples(); };
+            row.Add(remove);
+            if (!OriginalWrite(() => Examples.Add(row), current)) return false;
+        }
+        return current();
+    }
+
+    private bool RenderOriginalFiles(IReadOnlyList<SpaceFileReference> files, Func<bool> current)
+    {
+        foreach (var child in Files.Children.ToArray())
+            if (!OriginalWrite(() => Files.Remove(child), current)) return false;
+        if (files.Count == 0)
+            return OriginalWrite(() => Files.Add(Muted("No files connected to this Space.")), current);
+        foreach (var file in files)
+        {
+            if (!current()) return false;
+            var row = Card();
+            row.Add(new HavenText { Content = file.DisplayName });
+            row.Add(Muted(file.Permission == SpaceFilePermission.ReadWrite ? "Read & write" : "Read-only"));
+            var remove = new HavenButton { Content = "Remove", Variant = ButtonVariant.Text };
+            remove.Accessibility.AccessibleName = $"Remove {file.DisplayName} from Space";
+            var path = file.Path;
+            remove.Invoked += (_, _) => RemoveFileRequested?.Invoke(this, path);
+            row.Add(remove);
+            if (!OriginalWrite(() => Files.Add(row), current)) return false;
+        }
+        return current();
+    }
+
+    internal bool SetOriginalGeneratedPreview(HavenElement? preview, string? status, Func<bool> current)
+    {
+        foreach (var child in GeneratedPreview.Children.ToArray())
+            if (!OriginalWrite(() => GeneratedPreview.Remove(child), current)) return false;
+        if (preview is not null)
+        {
+            if (!OriginalWrite(() => preview.SetValue(HavenProperties.Width, HavenLength.Percent(100)), current)) return false;
+            if (!OriginalWrite(() => GeneratedPreview.Add(preview), current)) return false;
+            if (!OriginalWrite(() => GeneratedPreview.SetValue(HavenProperties.Visibility, HavenVisibility.Visible), current)) return false;
+        }
+        else if (!OriginalWrite(() => GeneratedPreview.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed), current)) return false;
+        if (!OriginalWrite(() => GeneratedPreviewState.Content = status ?? string.Empty, current)) return false;
+        return OriginalWrite(() => GeneratedPreviewState.SetValue(HavenProperties.Visibility,
+            string.IsNullOrWhiteSpace(status) ? HavenVisibility.Collapsed : HavenVisibility.Visible), current);
+    }
+
+    private bool OriginalWrite(Action write, Func<bool> current)
+    {
+        if (_disposed || !current()) return false;
+        write();
+        return !_disposed && current();
+    }
+
     public void SetStatus(string? value)
     {
         Status.Content = value ?? string.Empty;

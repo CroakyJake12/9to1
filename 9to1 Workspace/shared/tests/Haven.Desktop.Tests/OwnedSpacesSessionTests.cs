@@ -84,6 +84,7 @@ public sealed class OwnedSpacesSessionTests
 internal sealed class RevisionBankOriginalFixture : IAppPaths
 {
     private readonly List<RevisionBankPage> _pages = [];
+    private readonly List<NativeSpacesPage> _nativePages = [];
     private readonly List<Window> _windows = [];
     private readonly HashSet<Exception> _observed = new(ReferenceEqualityComparer.Instance);
     public string DataDirectory { get; } = Path.Combine(Path.GetTempPath(), "haven-native-bank-fresh-" + Guid.NewGuid().ToString("N"));
@@ -141,6 +142,19 @@ internal sealed class RevisionBankOriginalFixture : IAppPaths
         return page;
     }
 
+    public NativeSpacesPage CreateNativePage(Func<Guid, Task> deleteSpace)
+    {
+        var page = new NativeSpacesPage(Owner.Registry, null, null, deleteSpace: deleteSpace);
+        _nativePages.Add(page);
+        var window = new Window();
+        _windows.Add(window);
+        window.Width = 960;
+        window.Height = 720;
+        window.Content = page;
+        window.Show();
+        return page;
+    }
+
     public void ReplaceWithSameGuardedOwnerSession() => Owner = OwnedSpacesSession.AttachOriginal(Provider, Store);
     public SpaceRegistry Reopen() => new(new VersionedAtomicSettingsStore(this));
     public Task<byte[]> ReadBytesAsync() => File.ReadAllBytesAsync(Path.Combine(DataDirectory, "settings.json"), TestContext.Current.CancellationToken);
@@ -157,6 +171,13 @@ internal sealed class RevisionBankOriginalFixture : IAppPaths
         {
             try { await page.CloseAndDrainAsync(); }
             catch (Exception error) { if (!profile._observed.Contains(error)) Add(error); }
+        }
+        foreach (var page in profile._nativePages)
+        {
+            try { await page.CloseOriginalBankAndDeleteActionsAsync(); }
+            catch (Exception error) { if (!profile._observed.Contains(error)) Add(error); }
+            try { page.Dispose(); }
+            catch (Exception error) { Add(error); }
         }
         foreach (var window in profile._windows)
         {
@@ -218,11 +239,32 @@ internal sealed class RevisionBankOriginalFixture : IAppPaths
         public SettingsGuardedCompareExchangeResult? OriginalAcknowledgedResult { get; internal set; }
     }
 
+    internal sealed class ReadHold
+    {
+        public TaskCompletionSource<object?> Entered { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task? OriginalOwnerTask { get; internal set; }
+        public object? OriginalValue { get; internal set; }
+    }
+
     internal sealed class HoldingSettingsStore(VersionedAtomicSettingsStore inner) :
         IVersionedSettingsStore, IResourceStoreIdentitySource, IVersionedSettingsGuardedCompareExchange
     {
         private readonly List<Hold> _holds = [];
+        private readonly List<ReadHold> _readHolds = [];
         private Hold? _next;
+        private ReadHold? _nextRead;
+        private int _registryReadCalls;
+        public int RegistryReadCalls => Volatile.Read(ref _registryReadCalls);
+        public ReadHold HoldNextOriginalRegistryReadReturn()
+        {
+            if (_nextRead is not null) throw new InvalidOperationException("An original registry read is already held.");
+            var hold = new ReadHold();
+            _readHolds.Add(hold);
+            _nextRead = hold;
+            return hold;
+        }
         public Hold HoldNextOriginalReturn()
         {
             if (_next is not null) throw new InvalidOperationException("Release the original hold before admitting another.");
@@ -231,9 +273,33 @@ internal sealed class RevisionBankOriginalFixture : IAppPaths
             _next = hold;
             return hold;
         }
-        public void ReleaseAllHolds() { foreach (var hold in _holds) hold.Release.TrySetResult(); }
+        public void ReleaseAllHolds()
+        {
+            foreach (var hold in _holds) hold.Release.TrySetResult();
+            foreach (var hold in _readHolds) hold.Release.TrySetResult();
+        }
         public ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken token) => inner.GetStoreIdentityAsync(token);
-        public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class => inner.GetAsync<T>(key, token);
+        public async Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class
+        {
+            ReadHold? hold = null;
+            if (key == "spaces.registry")
+            {
+                Interlocked.Increment(ref _registryReadCalls);
+                hold = Interlocked.Exchange(ref _nextRead, null);
+            }
+            var original = inner.GetAsync<T>(key, token);
+            if (hold is not null) hold.OriginalOwnerTask = original;
+            T? actual;
+            try { actual = await original.ConfigureAwait(false); }
+            catch (Exception error) { hold?.Entered.TrySetException(error); throw; }
+            if (hold is not null)
+            {
+                hold.OriginalValue = actual;
+                hold.Entered.TrySetResult(actual);
+                await hold.Release.Task.ConfigureAwait(false);
+            }
+            return actual;
+        }
         public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class => inner.SetAsync(key, value, token);
         public Task RemoveAsync(string key, CancellationToken token) => inner.RemoveAsync(key, token);
         public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => inner.ExportAsync(token);

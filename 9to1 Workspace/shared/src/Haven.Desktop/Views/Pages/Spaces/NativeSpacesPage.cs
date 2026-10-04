@@ -24,6 +24,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     private readonly object _originalActionGate = new();
     private readonly List<Task> _originalBankAndDeleteTasks = [];
     private volatile bool _originalActionsRetiring;
+    private long _originalPublicationGeneration;
     private Task? _originalActionsClose;
     private readonly SpaceGeneratedSurfaceRenderer? _generatedSurfaceRenderer;
     private readonly SpaceEditPlanner? _editPlanner;
@@ -98,10 +99,15 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     public HavenSceneControl Scene { get; }
     public Task? LastOriginalBankOrDeleteTask { get; private set; }
     public Task? LastOriginalDeleteOwnerTask { get; private set; }
+    internal SpacesHavenScene OriginalScene => _scene;
 
     public Task ActivateAsync(CancellationToken cancellationToken) => RefreshAsync(cancellationToken);
 
-    public void Deactivate() => Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
+    public void Deactivate()
+    {
+        Interlocked.Increment(ref _originalPublicationGeneration);
+        Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
+    }
 
     internal Task RefreshNowAsync(CancellationToken cancellationToken = default) => RefreshAsync(cancellationToken);
 
@@ -178,6 +184,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private async void OnSpaceSelected(object? sender, Guid id)
     {
+        Interlocked.Increment(ref _originalPublicationGeneration);
         _selectedId = id;
         _scene.SetSpaces(_spaces, id);
         var current = CurrentSpace();
@@ -275,7 +282,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private void OnDeleteRequested(object? sender, Guid id) => _ = DeleteOriginalSpaceAsync(id);
 
-    internal Task DeleteOriginalSpaceAsync(Guid id) => RunOriginalBankOrDeleteAsync(async () =>
+    internal Task DeleteOriginalSpaceAsync(Guid id) => RunOriginalBankOrDeleteAsync(async generation =>
     {
         if (_deleteSpace is not null)
         {
@@ -290,14 +297,73 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
             LastOriginalDeleteOwnerTask = originalOwnerTask;
             await originalOwnerTask.ConfigureAwait(true);
         }
-        if (_disposed || _originalActionsRetiring) return;
+        if (!IsOriginalPublicationCurrent(generation)) return;
         if (_selectedId == id) _selectedId = null;
-        await RefreshAsync().ConfigureAwait(true);
+        await RefreshOriginalDeletionAsync(generation).ConfigureAwait(true);
     });
+
+    private bool IsOriginalPublicationCurrent(long generation) =>
+        !_disposed && !_originalActionsRetiring &&
+        generation == Interlocked.Read(ref _originalPublicationGeneration);
+
+    private async Task RefreshOriginalDeletionAsync(long generation)
+    {
+        if (!IsOriginalPublicationCurrent(generation)) return;
+        var includeArchived = _scene.IncludeArchived;
+        var spaces = await _registry.GetAllAsync(includeArchived, CancellationToken.None).ConfigureAwait(false);
+        if (!IsOriginalPublicationCurrent(generation)) return;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            bool Current() => IsOriginalPublicationCurrent(generation) && _scene.IncludeArchived == includeArchived;
+            if (!Current()) return;
+            _spaces = spaces;
+            if (_selectedId is not { } selected || spaces.All(space => space.Id != selected))
+                _selectedId = spaces.FirstOrDefault(space => !space.IsArchived)?.Id ?? spaces.FirstOrDefault()?.Id;
+            if (!_scene.SetOriginalSpaces(spaces, _selectedId, Current)) return;
+            var current = CurrentSpace();
+            if (!_scene.SetOriginalSpace(current, Current)) return;
+            RefreshOriginalGeneratedPreview(current, Current);
+            if (!Current()) return;
+            _scene.SetOriginalActionStatus(null, Current);
+        });
+        if (!IsOriginalPublicationCurrent(generation) || _scene.IncludeArchived != includeArchived) return;
+        var selectedId = _selectedId;
+        IReadOnlyList<Conversation> conversations = [];
+        if (_conversations is not null && selectedId is { } spaceId)
+            conversations = await _conversations.GetBySpaceAsync(spaceId, 500, CancellationToken.None).ConfigureAwait(false);
+        if (!IsOriginalPublicationCurrent(generation)) return;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            bool Current() => IsOriginalPublicationCurrent(generation) && _selectedId == selectedId &&
+                _scene.IncludeArchived == includeArchived;
+            if (Current()) _scene.SetOriginalConversations(conversations, Current);
+        });
+    }
+
+    private void RefreshOriginalGeneratedPreview(SpaceDefinition? space, Func<bool> current)
+    {
+        if (!_scene.SetOriginalGeneratedPreview(null, null, current)) return;
+        var previous = _generatedSurfaceMount;
+        previous?.Dispose();
+        if (ReferenceEquals(_generatedSurfaceMount, previous)) _generatedSurfaceMount = null;
+        if (!current() || space?.GeneratedSurface is null) return;
+        if (_generatedSurfaceRenderer is null)
+        {
+            _scene.SetOriginalGeneratedPreview(null,
+                "Live preview will appear when Spaces is connected to Haven's trusted GenUI runtime.", current);
+            return;
+        }
+        // Preserve the same legacy mount owner; selected action close does not claim
+        // generated-surface or provider retirement. Capture before any attached publication.
+        var acquired = _generatedSurfaceRenderer.Render(space);
+        _generatedSurfaceMount = acquired;
+        if (!current()) return;
+        _scene.SetOriginalGeneratedPreview(acquired.Root, $"Live {space.GeneratedSurface.TemplateKey} surface", current);
+    }
 
     private void OnRevisionBankRequested(object? sender, Guid id) => _ = OpenOriginalRevisionBankAsync(id);
 
-    internal Task OpenOriginalRevisionBankAsync(Guid id) => RunOriginalBankOrDeleteAsync(async () =>
+    internal Task OpenOriginalRevisionBankAsync(Guid id) => RunOriginalBankOrDeleteAsync(async generation =>
     {
         var space = _spaces.SingleOrDefault(item => item.Id == id)
             ?? throw new KeyNotFoundException("The selected canonical Space is unavailable.");
@@ -308,16 +374,18 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     // This is the selected Bank/delete cohort only; it is not a full lifetime port for the
     // unchanged legacy async handlers, generated surface or shared provider.
-    private Task RunOriginalBankOrDeleteAsync(Func<Task> body)
+    private Task RunOriginalBankOrDeleteAsync(Func<long, Task> body)
     {
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Task original;
+        long generation;
         lock (_originalActionGate)
         {
             if (_disposed || _originalActionsRetiring) throw new ObjectDisposedException(nameof(NativeSpacesPage));
             _originalBankAndDeleteTasks.RemoveAll(task => task.IsCompletedSuccessfully);
             if (_originalBankAndDeleteTasks.Count >= 64)
                 throw new InvalidOperationException("Original Spaces action capacity is full; all failed or pending tasks remain retained.");
+            generation = Interlocked.Increment(ref _originalPublicationGeneration);
             original = Core(start.Task);
             _originalBankAndDeleteTasks.Add(original);
             LastOriginalBankOrDeleteTask = original;
@@ -331,13 +399,13 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
             try
             {
                 if (_disposed || _originalActionsRetiring) throw new ObjectDisposedException(nameof(NativeSpacesPage));
-                await body().ConfigureAwait(true);
+                await body(generation).ConfigureAwait(true);
             }
             catch (Exception primary)
             {
                 try
                 {
-                    void Show() => _scene.SetOriginalActionStatus(primary.Message, () => !_disposed && !_originalActionsRetiring);
+                    void Show() => _scene.SetOriginalActionStatus(primary.Message, () => IsOriginalPublicationCurrent(generation));
                     if (Dispatcher.UIThread.CheckAccess()) Show();
                     else await Dispatcher.UIThread.InvokeAsync(Show);
                 }
@@ -360,6 +428,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
             original = Drain(start.Task);
             _originalActionsClose = original;
             _originalActionsRetiring = true;
+            Interlocked.Increment(ref _originalPublicationGeneration);
         }
         start.SetResult();
         return original;

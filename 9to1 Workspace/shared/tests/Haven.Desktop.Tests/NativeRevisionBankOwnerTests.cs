@@ -293,6 +293,178 @@ public sealed class NativeRevisionBankOwnerTests
         });
     }
 
+    [AvaloniaFact]
+    public Task Earlier_admitted_activation_cannot_reattach_after_synchronous_deactivation() =>
+        RevisionBankOriginalFixture.RunAsync(async profile =>
+        {
+            Assert.True(Avalonia.Threading.Dispatcher.UIThread.CheckAccess());
+            var page = profile.CreatePage();
+            var content = page.OriginalScene.OriginalContent;
+            var before = await profile.ReadBytesAsync();
+            var reads = profile.Store.RegistryReadCalls;
+            var earlier = page.ActivateAsync(TestContext.Current.CancellationToken);
+            Assert.Same(earlier, page.LastOriginalTask);
+            Assert.False(earlier.IsCompleted); // The real RunOriginal start gate posts its UI continuation.
+            page.Deactivate();
+            await earlier;
+            Assert.True(earlier.IsCompletedSuccessfully);
+            Assert.Empty(content.Children);
+            Assert.Null(page.OriginalSnapshot);
+            Assert.Equal(reads, profile.Store.RegistryReadCalls);
+            Assert.Equal(before, await profile.ReadBytesAsync());
+
+            var later = page.ActivateAsync(TestContext.Current.CancellationToken);
+            Assert.NotSame(earlier, later);
+            await later;
+            Assert.NotEmpty(content.Children);
+            Assert.Equal(profile.Space.Id, page.OriginalSnapshot!.SpaceId);
+            Assert.Equal(before, await profile.ReadBytesAsync());
+        });
+
+    [AvaloniaFact]
+    public Task Selected_delete_refresh_keeps_the_actual_pending_read_and_stops_publication_after_close() =>
+        RevisionBankOriginalFixture.RunAsync(async profile =>
+        {
+            var holdReady = new TaskCompletionSource<RevisionBankOriginalFixture.ReadHold>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            Task? actualDelete = null;
+            var calls = 0;
+            async Task DeleteOnce(Guid id)
+            {
+                calls++;
+                actualDelete = profile.Owner.Registry.DeleteAsync(id, TestContext.Current.CancellationToken);
+                await actualDelete;
+                // Only the selected refresh AFTER the actual canonical archival is held.
+                holdReady.TrySetResult(profile.Store.HoldNextOriginalRegistryReadReturn());
+            }
+            var native = profile.CreateNativePage(DeleteOnce);
+            await native.ActivateAsync(TestContext.Current.CancellationToken);
+            InvokeDelete(native, profile.Space);
+            var original = Assert.IsAssignableFrom<Task>(native.LastOriginalBankOrDeleteTask);
+            // This gate reports only the hold installed after the actual owner task succeeded.
+            var hold = await holdReady.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+            var value = await hold.Entered.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+            Assert.NotNull(value);
+            Assert.Same(value, hold.OriginalValue);
+            Assert.True(Assert.IsAssignableFrom<Task>(hold.OriginalOwnerTask).IsCompletedSuccessfully);
+            Assert.True(Assert.IsAssignableFrom<Task>(actualDelete).IsCompletedSuccessfully);
+            Assert.Equal(1, calls);
+            Assert.False(original.IsCompleted);
+            var rows = native.OriginalScene.SpaceRows.Children.ToArray();
+            var conversations = native.OriginalScene.Conversations.Children.ToArray();
+            var name = native.OriginalScene.SelectedName.Content;
+            var status = native.OriginalScene.Status.Content;
+            var before = await profile.ReadBytesAsync();
+            var close = native.CloseOriginalBankAndDeleteActionsAsync();
+            Assert.Same(close, native.CloseOriginalBankAndDeleteActionsAsync());
+            Assert.False(close.IsCompleted);
+            hold.Release.TrySetResult();
+            await original;
+            await close;
+            Assert.Equal(rows, native.OriginalScene.SpaceRows.Children);
+            Assert.Equal(conversations, native.OriginalScene.Conversations.Children);
+            Assert.Equal(name, native.OriginalScene.SelectedName.Content);
+            Assert.Equal(status, native.OriginalScene.Status.Content);
+            Assert.Equal(before, await profile.ReadBytesAsync());
+            var archived = Assert.IsType<SpaceDefinition>(await profile.Reopen().ReadExistingAsync(
+                profile.Space.Id, TestContext.Current.CancellationToken));
+            Assert.Equal(profile.Space.Id, archived.Id);
+            Assert.True(archived.IsArchived);
+            Assert.Equal(profile.Space.Revision + 1, archived.Revision);
+            Assert.Equal(1, calls);
+            Assert.True(close.IsCompletedSuccessfully);
+        });
+
+    [AvaloniaFact]
+    public async Task Selected_delete_native_reentry_withdraws_picker_status_and_conversation_tails()
+    {
+        await RevisionBankOriginalFixture.RunAsync(async profile =>
+        {
+            var calls = 0;
+            async Task DeleteOnce(Guid id)
+            {
+                calls++;
+                await profile.Owner.Registry.DeleteAsync(id, TestContext.Current.CancellationToken);
+            }
+            var native = profile.CreateNativePage(DeleteOnce);
+            await native.ActivateAsync(TestContext.Current.CancellationToken);
+            Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(),
+                button => button.Accessibility.AccessibleName == "Open Space " + profile.Space.Name));
+            var rows = native.OriginalScene.SpaceRows;
+            var count = rows.Children.Count;
+            var conversations = native.OriginalScene.Conversations.Children.ToArray();
+            var selectedName = native.OriginalScene.SelectedName.Content;
+            var notifications = 0;
+            Task? close = null;
+            rows.Invalidated += (_, _) =>
+            {
+                if (++notifications != 1) return;
+                close = native.CloseOriginalBankAndDeleteActionsAsync();
+            };
+            Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(), button => button.Name == "Delete"));
+            Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(), button => button.Content == "Delete permanently"));
+            var original = Assert.IsAssignableFrom<Task>(native.LastOriginalBankOrDeleteTask);
+            await original;
+            await Assert.IsAssignableFrom<Task>(close);
+            Assert.Equal(1, notifications);
+            Assert.Equal(count - 1, rows.Children.Count);
+            Assert.Equal(conversations, native.OriginalScene.Conversations.Children);
+            Assert.Equal(selectedName, native.OriginalScene.SelectedName.Content);
+            Assert.Equal(1, calls);
+            var archived = Assert.IsType<SpaceDefinition>(await profile.Reopen().ReadExistingAsync(
+                profile.Space.Id, TestContext.Current.CancellationToken));
+            Assert.True(archived.IsArchived);
+            Assert.Equal(profile.Space.Revision + 1, archived.Revision);
+        });
+
+        await RevisionBankOriginalFixture.RunAsync(async profile =>
+        {
+            var calls = 0;
+            async Task DeleteOnce(Guid id)
+            {
+                calls++;
+                await profile.Owner.Registry.DeleteAsync(id, TestContext.Current.CancellationToken);
+            }
+            var native = profile.CreateNativePage(DeleteOnce);
+            await native.ActivateAsync(TestContext.Current.CancellationToken);
+            Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(),
+                button => button.Accessibility.AccessibleName == "Open Space " + profile.Space.Name));
+            var status = native.OriginalScene.Status;
+            status.Content = "retained status";
+            status.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+            var conversations = native.OriginalScene.Conversations.Children.ToArray();
+            var notifications = 0;
+            Task? close = null;
+            status.Invalidated += (_, _) =>
+            {
+                if (++notifications != 1) return;
+                close = native.CloseOriginalBankAndDeleteActionsAsync();
+            };
+            Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(), button => button.Name == "Delete"));
+            Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(), button => button.Content == "Delete permanently"));
+            var original = Assert.IsAssignableFrom<Task>(native.LastOriginalBankOrDeleteTask);
+            await original;
+            await Assert.IsAssignableFrom<Task>(close);
+            Assert.Equal(1, notifications);
+            Assert.Equal(string.Empty, status.Content);
+            Assert.Equal(HavenVisibility.Visible, status.GetValue(HavenProperties.Visibility));
+            Assert.Equal(conversations, native.OriginalScene.Conversations.Children);
+            Assert.Equal(1, calls);
+            var archived = Assert.IsType<SpaceDefinition>(await profile.Reopen().ReadExistingAsync(
+                profile.Space.Id, TestContext.Current.CancellationToken));
+            Assert.True(archived.IsArchived);
+            Assert.Equal(profile.Space.Revision + 1, archived.Revision);
+        });
+    }
+
+    private static void InvokeDelete(NativeSpacesPage native, SpaceDefinition space)
+    {
+        Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(),
+            button => button.Accessibility.AccessibleName == "Open Space " + space.Name));
+        Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(), button => button.Name == "Delete"));
+        Invoke(Assert.Single(native.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(), button => button.Content == "Delete permanently"));
+    }
+
     private static HavenButton Find(RevisionBankPage page, string accessibleName) =>
         Assert.Single(page.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(),
             button => button.Accessibility.AccessibleName == accessibleName);
