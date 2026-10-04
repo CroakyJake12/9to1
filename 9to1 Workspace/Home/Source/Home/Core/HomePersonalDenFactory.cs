@@ -57,18 +57,26 @@ public sealed record HomePersonalDenSession(AuthenticatedResourceActor Actor, st
 
 /// <summary>Uses an existing canonical Home binding; never grants ownership, approves import, creates an
 /// independent store, or grants Execute/Admin. The host owns/disposes the supplied provider lifetime.</summary>
-public sealed class HomePersonalDenFactory(HomeDenStoreEvidenceProvider provider,
+public sealed partial class HomePersonalDenFactory(HomeDenStoreEvidenceProvider provider,
     IResourceStoreOwnershipReceiptAuthority ownership, IAuthenticatedResourceActorSource actors)
 {
-    public async Task<HomePersonalDenSession> OpenAsync(CancellationToken ct = default)
+    public Task<HomePersonalDenSession> OpenAsync(CancellationToken ct = default)
     {
-        var actor = await actors.GetCurrentAsync(ct) ?? throw new UnauthorizedAccessException("A current Home actor is required.");
-        if (actor.AccountId is not null || actor.OrganisationId is not null) throw new UnauthorizedAccessException("Personal Den access cannot infer account or organisation permissions.");
+        var invocation = new OriginalDenInvocation();
+        var original = OpenOriginalCoreAsync(invocation, ct);
+        _originalDenInvocations.Add(original, invocation);
+        return original;
+    }
+
+    private async Task<HomePersonalDenSession> OpenOriginalCoreAsync(OriginalDenInvocation invocation, CancellationToken ct)
+    {
+        var actor = await actors.GetCurrentAsync(ct) ?? throw RetainOriginalPreEffectRefusal(invocation, "A current Home actor is required.");
+        if (actor.AccountId is not null || actor.OrganisationId is not null) throw RetainOriginalPreEffectRefusal(invocation, "Personal Den access cannot infer account or organisation permissions.");
         var current = await provider.Store.ReadAuthoritySnapshotAsync(ct);
         var binding = await ownership.GetVerifiedAsync("den", current.DenId, ct);
         if (binding is null || binding.Receipt is null || binding.ResourceKind != "den" || binding.StoreId != current.DenId ||
             binding.ProfileId != actor.ProfileId || !await ownership.IsCurrentAsync(binding, actor, ct))
-            throw new UnauthorizedAccessException("This Den requires a current verified Home ownership binding.");
+            throw RetainOriginalPreEffectRefusal(invocation, "This Den requires a current verified Home ownership binding.");
         var policy = new PersonalPolicy(provider.Store, ownership, actor, binding);
         return new(actor, current.DenId, new DulcheDen(provider.Store, policy, actor.ActorId));
     }
