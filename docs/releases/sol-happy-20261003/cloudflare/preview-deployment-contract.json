@@ -1,0 +1,73 @@
+{
+  "status": "PREPARED_READ_ONLY_NOT_DEPLOYED",
+  "observedUTC": "2026-10-04",
+  "accountId": "8aea00ca3c4635410861efcc6a5f593b",
+  "worker": "cakemods-migration-preview",
+  "publicUrl": "https://cakemods-migration-preview.jcbailey008.workers.dev",
+  "observed": {
+    "workersDevEnabled": true,
+    "previewUrlsEnabled": false,
+    "compatibilityDate": "2026-10-01",
+    "handlers": [
+      "fetch"
+    ],
+    "hasAssets": true,
+    "hasModules": false,
+    "bindings": [],
+    "customDomains": [],
+    "activeDeployment": "aa72a820-67f1-40d7-becc-6ee0ad11fdfa",
+    "activeVersion": "967782fb-0c10-4f58-95a9-6f9cb0f1af51"
+  },
+  "candidate": {
+    "mode": "STATIC_ASSETS_ONLY_NO_WORKER_SCRIPT",
+    "assetArtifact": "REQUIRED_EXACT_REVIEWED_PUBLIC_SITE_DIRECTORY",
+    "maximumFileCount": 20000,
+    "maximumIndividualBytes": 26214400,
+    "noBindings": true,
+    "noRoutesOrCustomDomains": true,
+    "preserveCompatibilityDate": true
+  },
+  "rollback": {
+    "method": "POST",
+    "path": "/accounts/8aea00ca3c4635410861efcc6a5f593b/workers/scripts/cakemods-migration-preview/deployments",
+    "body": {
+      "strategy": "percentage",
+      "versions": [
+        {
+          "version_id": "967782fb-0c10-4f58-95a9-6f9cb0f1af51",
+          "percentage": 100
+        }
+      ],
+      "annotations": {
+        "workers/message": "Restore pre-pass migration preview version"
+      }
+    },
+    "requires": "Root explicit deployment action and fresh pre-write version/target recheck; no database/schema rollback implied"
+  },
+  "preserve": {
+    "worker": "cake",
+    "handlers": [
+      "email"
+    ],
+    "activeVersion": "a580dd1b-59ce-4099-b436-ef195f55c7ac",
+    "bindings": [],
+    "workersDevEnabled": false
+  },
+  "accountEvidence": {
+    "defaultUsageModel": "standard",
+    "plan": "UNVERIFIED_subscription_endpoint_10000_permission_error",
+    "d1Databases": [],
+    "subscriptionReadIsNotOAuthGlobalFailure": true
+  },
+  "publicProbe": {
+    "tool": "curl",
+    "result": "CONNECT tunnel failed response403 at workspace proxy; origin response unobserved"
+  },
+  "gates": [
+    "Exact reviewed public-only asset directory and source/hash inventory",
+    "Root-only upload/deployment; recheck old version still available",
+    "Static asset request free allowance documentation; no Worker code/service invocation",
+    "No production DNS/cutover or email Worker replacement",
+    "Supported external endpoint read after deploy; account settings alone are not HTTP success"
+  ]
+}

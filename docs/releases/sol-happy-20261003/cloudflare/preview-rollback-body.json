@@ -1,0 +1,12 @@
+{
+  "strategy": "percentage",
+  "versions": [
+    {
+      "version_id": "967782fb-0c10-4f58-95a9-6f9cb0f1af51",
+      "percentage": 100
+    }
+  ],
+  "annotations": {
+    "workers/message": "Restore pre-pass migration preview version"
+  }
+}
