@@ -3,7 +3,7 @@
 Three structural browser groups + real Chrome zoom; rendered PNG visual review
 remains explicit. No mock provider, alternate CUI/engine or deployment.
 """
-import argparse, hashlib, importlib.util, json, os, re, shutil, stat
+import argparse, hashlib, importlib.util, json, os, re, shutil
 from pathlib import Path
 COMMON_SHA="a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 LEDGER="apps/Web/Tests/WaveResponsiveBrowser/source-pins.json"
@@ -32,67 +32,11 @@ def source_check(root):
   if Path(rel).is_absolute() or ".." in Path(rel).parts or f.is_symlink() or not f.is_file() or not f.resolve().is_relative_to(root):raise RuntimeError("Invalid source path")
   if f.stat().st_size!=pin["bytes"] or sha(f)!=pin["sha256"]:raise RuntimeError("Actual source body differs: "+rel)
  return rows
-
-OWNER_ASSET_PREFIX="framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets/"
-OWNER_ASSET_NAMES=("avalonia.js","avalonia.js.map","storage.js","storage.js.map","sw.js","sw.js.map")
-def owned_regular(root,rel):
- if not isinstance(rel,str) or Path(rel).is_absolute() or Path(rel).as_posix()!=rel or ".." in Path(rel).parts or "." in Path(rel).parts:
-  raise RuntimeError("Noncanonical producer output path")
- path=root/rel
- for part in (path,*path.parents):
-  if part==root:break
-  if part.is_symlink():raise RuntimeError("Symlink producer output or ancestor")
- if not path.is_file() or not stat.S_ISREG(path.stat().st_mode) or not path.resolve().is_relative_to(root):
-  raise RuntimeError("Producer output is not a contained regular file")
- return path
-def owner_output_guard(root,publication,rv,cmd,status_name,expected_before=None):
- # This is a same-job producer receipt, not an arbitrary untracked allowlist.
- ledger=publication/"diagnostics/owner-built-assets.json"
- records=json.loads((publication/"diagnostics/commands.json").read_text())
- if not isinstance(records,list) or not records or not all(
-  x.get("error") is None and x.get("exit")==0 and x.get("normalEOF") is True
-  and x.get("familyClosed") is True and x.get("finalECHILD") is True
-  and x.get("signals")==[] and isinstance(x.get("births"),list) and x["births"]
-  and all(b.get("gone") is True for b in x["births"]) for x in records):
-  raise RuntimeError("Producer command families incomplete")
- builds=[x for x in records if x.get("name")=="owner-assets-build"]
- if len(builds)!=1 or builds[0]["argv"]!=[str(publication/"tools/bun"),"build.js"]:
-  raise RuntimeError("Exact owner producer command absent")
- rows=json.loads(ledger.read_text())
- expected={OWNER_ASSET_PREFIX+x for x in OWNER_ASSET_NAMES}
- if not isinstance(rows,list) or len(rows)!=len(expected):raise RuntimeError("Exact six producer output rows required")
- pins={}
- for row in rows:
-  if not isinstance(row,dict) or set(row)!={"path","bytes","sha256"}:
-   raise RuntimeError("Invalid producer row")
-  rel=row["path"]
-  if not isinstance(rel,str) or rel not in expected or rel in pins or type(row["bytes"]) is not int or row["bytes"]<0 or not isinstance(row["sha256"],str) or not re.fullmatch("[0-9a-f]{64}",row["sha256"]):
-   raise RuntimeError("Producer output identity/schema differs")
-  path=owned_regular(root,rel)
-  if path.stat().st_size!=row["bytes"] or sha(path)!=row["sha256"]:
-   raise RuntimeError("Current producer output body differs")
-  pins[rel]=row
- if set(pins)!=expected:raise RuntimeError("Incomplete producer output set")
- published={x["path"]:x for x in rv["publishFiles"]}
- for name in ("avalonia.js","storage.js"):
-  actual=pins[OWNER_ASSET_PREFIX+name];sealed=published["_framework/"+name]
-  if any(actual[k]!=sealed[k] for k in ("bytes","sha256")):raise RuntimeError("Actual producer module differs from sealed runtime")
- raw=cmd.run(status_name,["git","status","--porcelain=v1","-z","--untracked-files=all"],15)
- if raw and not raw.endswith("\0"):raise RuntimeError("Incomplete porcelain status")
- seen=set()
- for entry in raw.split("\0")[:-1]:
-  if not entry.startswith("?? ") or entry[3:] not in expected or entry[3:] in seen:
-   raise RuntimeError("Source graph gained unknown or changed inputs")
-  seen.add(entry[3:])
- if seen!=expected:raise RuntimeError("Exact producer untracked status set differs")
- if expected_before is not None and pins!=expected_before:raise RuntimeError("Producer output changed across browser run")
- return pins
-
 def main():
  a=argparse.ArgumentParser();a.add_argument("--expected-commit",required=True);a.add_argument("--publication",required=True,type=Path);a.add_argument("--output",required=True,type=Path);args=a.parse_args()
  root=Path.cwd().resolve();publication=args.publication.resolve();out=args.output.resolve()
  if not re.fullmatch(r"[0-9a-f]{40}",args.expected_commit) or out.exists() or out.is_relative_to(root) or not publication.is_dir() or publication.is_relative_to(root):raise RuntimeError("Exact commit/completed publisher/fresh external output required")
- out.mkdir(parents=True);d=out/"diagnostics";d.mkdir();cmd=None;before=None;assets=None;publication_pins=None;tool_pins=None;owner_assets=None;rv=None
+ out.mkdir(parents=True);d=out/"diagnostics";d.mkdir();cmd=None;before=None;assets=None;publication_pins=None;tool_pins=None
  result={"state":"NOT_RUN","sourceCommit":args.expected_commit,"scope":"NEW production Wave responsive structural browser3, genuine zoom2; native glyph CI and PNG visual review separate; no full parity/AT/hardware/provider acceptance","resourceScope":"192MiB final positive output+tmp/cache sample, not transient/deleted-peak hard quota","original14":"Immutable original14 runs serially before additional3; independent counts never folded into responsive criteria"}
  env=os.environ.copy()
  for var,name in {"TMPDIR":"tmp","TMP":"tmp","TEMP":"tmp","XDG_CACHE_HOME":"cache"}.items():p=out/name;p.mkdir(exist_ok=True);env[var]=str(p)
@@ -103,6 +47,7 @@ def main():
   cmd=module.Commands(d,env,root)
   if cmd.run("git-head",["git","rev-parse","HEAD"],15).strip()!=args.expected_commit:raise RuntimeError("Actual checkout differs")
   cmd.run("clean-before",["git","diff","--exit-code","HEAD","--"],15)
+  if cmd.run("status-before",["git","status","--porcelain","--untracked-files=all"],15).strip():raise RuntimeError("Fresh source graph required")
   cmd.run("tree",["git","ls-tree","-r","HEAD"],15);before=source_check(root);write(d/"source-before.json",before)
   receipt=publication/"public-artifact/publish-manifest.json";seal=publication/"public-artifact/seal.json";bundle=publication/"sdk-publish/wwwroot"
   rv=json.loads(receipt.read_text());sv=json.loads(seal.read_text());pr=json.loads((publication/"diagnostics/result.json").read_text())
@@ -110,7 +55,6 @@ def main():
   if pr["status"]!="PASS" or rv["sourceCommit"]!=args.expected_commit or rv["sourceCommitAfter"]!=args.expected_commit or rv["exitCode"]!=0 or sv["sourceCommit"]!=args.expected_commit or sv["receiptSha256"]!=sha(receipt):raise RuntimeError("Prior actual source publisher/seal incomplete")
   assets=inventory(bundle);expected=sorted([{k:x[k] for k in ("path","bytes","sha256")} for x in rv["publishFiles"]],key=lambda x:x["path"])
   if assets!=expected or len(assets)!=rv["fileCount"] or len({x["path"] for x in expected})!=len(expected):raise RuntimeError("Actual full public inventory differs")
-  owner_assets=owner_output_guard(root,publication,rv,cmd,"status-before");write(d/"owner-built-assets-before.json",owner_assets)
   write(d/"assets-before.json",assets);write(d/"publication-binding.json",{"receiptSha256":sha(receipt),"sealSha256":sha(seal),"fileCount":len(assets),"sourceBeforeSha256":sha(publication/"diagnostics/source-before.json"),"sourceAfterSha256":sha(publication/"diagnostics/source-after.json")})
   version=cmd.run("playwright-version",["node","-e","console.log(require(require('node:path').join(process.env.PLAYWRIGHT_MODULE,'package.json')).version)"],15).strip()
   if version!="1.62.0":raise RuntimeError("Pinned Playwright1.62.0 required")
@@ -149,9 +93,7 @@ def main():
    if cmd:
     if cmd.run("head-after",["git","rev-parse","HEAD"],15).strip()!=args.expected_commit:raise RuntimeError("Actual source HEAD changed")
     cmd.run("clean-after",["git","diff","--exit-code","HEAD","--"],15)
-    if owner_assets is not None:
-     after_owner_assets=owner_output_guard(root,publication,rv,cmd,"status-after",owner_assets);write(d/"owner-built-assets-after.json",after_owner_assets)
-    elif cmd.run("status-after",["git","status","--porcelain","--untracked-files=all"],15).strip():raise RuntimeError("Source graph gained unknown inputs")
+    if cmd.run("status-after",["git","status","--porcelain","--untracked-files=all"],15).strip():raise RuntimeError("Source graph gained unknown inputs")
    records=[] if cmd is None else cmd.records
    closed=bool(records) and all(x["error"] is None and x["exit"]==0 and x["normalEOF"] and x["familyClosed"] and x["finalECHILD"] and not x["signals"] and all(b["gone"] for b in x["births"]) for x in records)
    result["allCommandFamiliesNormalClosed"]=closed

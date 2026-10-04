@@ -88,6 +88,10 @@ jobs:
           python3 apps/Web/Tests/ci/run-ordinary-web-publish.py
           --expected-commit '${{ github.sha }}'
           --output "$RUNNER_TEMP/wr-publish"
+      - name: Create fresh consumer checkout of exact published source
+        run: |
+          test ! -e "$RUNNER_TEMP/wr-consumer"
+          git worktree add --detach "$RUNNER_TEMP/wr-consumer" '${{ github.sha }}'
       - name: Install exact Playwright and real Chromium
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/wr-tools/node_modules/playwright
@@ -96,6 +100,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/wr-tools" --ignore-scripts --no-package-lock --no-audit --no-fund playwright@1.62.0
           node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium
       - name: Run additional actual390 touch keyboard and genuine200% browser criteria
+        working-directory: ${{ runner.temp }}/wr-consumer
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/wr-tools/node_modules/playwright
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/wr-tools/browsers
