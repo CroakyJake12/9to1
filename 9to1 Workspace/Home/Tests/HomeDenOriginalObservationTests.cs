@@ -73,6 +73,8 @@ public sealed class HomeDenOriginalObservationTests
             rig.Home.FailNextAudit = true;
             var original = rig.Retain(rig.Ownership.CompleteImportAsync(review.RequestId));
             var pending = await Assert.ThrowsAsync<HomeStoreImportAuditPendingException>(() => original);
+            Assert.Equal(afterCommit, rig.Home.OriginalAuditWrite is not null);
+            if (afterCommit) Assert.True(rig.Home.OriginalAuditWrite!.IsSuccess);
             rig.Expect(original, pending);
             Assert.False(rig.Ownership.TryObserveOriginalPreEffectRefusal(original, pending));
             Assert.Equal(1, rig.Home.BindingWrites);
@@ -122,6 +124,7 @@ public sealed class HomeDenOriginalObservationTests
                 rig.Actors.NextFailure = null;
                 rig.Home.NextReadFailure = null;
                 rig.Home.FailNextAudit = false;
+                if (rig.Home.OriginalAuditWriteFailure is { } originalWriteFailure) Add(originalWriteFailure);
                 foreach (var original in rig.Originals)
                 {
                     try { await original; }
@@ -202,6 +205,8 @@ public sealed class HomeDenOriginalObservationTests
     {
         public Exception? NextReadFailure;
         public bool FailNextAudit;
+        public HomeStateWriteResult? OriginalAuditWrite { get; private set; }
+        public IOException? OriginalAuditWriteFailure { get; private set; }
         public int BindingWrites;
         public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default)
         {
@@ -215,7 +220,18 @@ public sealed class HomeDenOriginalObservationTests
                 record.Payload.GetRawText().Contains("HOME_STORE_IMPORTED", StringComparison.Ordinal))
             {
                 FailNextAudit = false;
-                if (afterCommit) _ = await original.WriteAsync(record, expected, ct);
+                if (afterCommit)
+                {
+                    var acknowledged = await original.WriteAsync(record, expected, ct);
+                    OriginalAuditWrite = acknowledged;
+                    if (!acknowledged.IsSuccess)
+                    {
+                        var refusal = new IOException("The actual original audit write did not acknowledge a successful commit.");
+                        refusal.Data["OriginalHomeStateWriteResult"] = acknowledged;
+                        OriginalAuditWriteFailure = refusal;
+                        throw refusal;
+                    }
+                }
                 throw new IOException("Injected original audit acknowledgement failure.");
             }
             return await original.WriteAsync(record, expected, ct);
