@@ -39,7 +39,6 @@ try {
  assert.ok(receipt.reaped.length>=1);
  const original=receipt.reaped.find(row=>row.pid===result.pid);
  assert.ok(original && original.code===1 && original.status===0,'Actual workload must exit normally; strict receipt covers every descendant');
- console.log(JSON.stringify({passed:true,checks:result.checks,evidence:dir,strictReaped:true}));
 } catch(error){primary=error;}
 let cleanup;
 try {await finishFixtureRelease(stop,dispose);}catch(error){cleanup=error;}
@@ -49,3 +48,4 @@ for(const [name,bytes]of [['stdout.log',output],['stderr.log',errors]]) {
  try{writeFileSync(join(dir,name),bytes,{flag:'wx',mode:0o600});}catch(error){recording.push(error);}
 }
 if(primary||cleanup||recording.length)throw new AggregateError([primary,cleanup,...recording].filter(Boolean),`Billing fixture refused; evidence retained ${dir}`);
+console.log(JSON.stringify({passed:true,checks:result.checks,evidence:dir,strictReaped:true}));
