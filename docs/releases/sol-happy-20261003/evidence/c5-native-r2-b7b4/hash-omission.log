@@ -1,0 +1,40 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/hash-omission/ActualNativeR2.Tests.csproj (in 265 ms).
+  ActualNativeR2.Tests -> /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/hash-omission/bin/Debug/net10.0/ActualNativeR2.Tests.dll
+Test run for /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/hash-omission/bin/Debug/net10.0/ActualNativeR2.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.24]     HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: "corrupt-output") [FAIL]
+  Failed HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: "corrupt-output") [36 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(String mode) in /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/hash-omission/R2NativeSiteArtifactReaderTests.cs:line 52
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:00.27]     HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: "corrupt-manifest") [FAIL]
+  Failed HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: "corrupt-manifest") [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.InvalidDataException)
+Actual:   typeof(System.Text.Json.JsonException)
+---- System.Text.Json.JsonException : '0x00' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0.
+-------- System.Text.Json.JsonReaderException : '0x00' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.
+  Stack Trace:
+     at HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(String mode) in /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/hash-omission/R2NativeSiteArtifactReaderTests.cs:line 52
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader& reader, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+   at HavenOS.Apps.Sites.Hosting.R2NativeSiteArtifactReader.VerifyAsync(SiteBuildArtifact artifact, Guid siteId, Guid projectId, Int64 projectRevision, CancellationToken cancellationToken) in /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/hash-omission/R2NativeSiteArtifactReader.cs:line 44
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader& json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+Results File: /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/hash-omission/results/hash-omission.trx
+
+Failed!  - Failed:     2, Passed:    19, Skipped:     0, Total:    21, Duration: 103 ms - ActualNativeR2.Tests.dll (net10.0)
