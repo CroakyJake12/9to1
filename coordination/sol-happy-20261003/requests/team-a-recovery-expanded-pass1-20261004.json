@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "runId": "sol-happy-20261003",
+  "team": "A",
+  "ownerIdentity": "Project Astra existing root integrator",
+  "recordedUTC": "2026-10-04T17:23:14Z",
+  "purpose": "User-authorized recovery, public-source handover and single-writer canonical specification consolidation",
+  "publicationAuthorization": {
+    "explicitUserRequest": "TEAM A — RECOVER THE FAILED WORKER ROLLOUT AND FOLD PASS 4 INTO PASS 1",
+    "authorizedDestination": "Existing 9to1 repository coordination handoff process",
+    "verifiedConfiguredOrigin": "https://github.com/CroakyJake12/9to1.git",
+    "authenticatedGitHubLogin": "CroakyJake12",
+    "repositoryOwner": "CroakyJake12",
+    "repositoryVisibility": "public",
+    "repositoryPushPermission": true,
+    "safety": "This bounded new request contains only public repository/source identities and user-authorized scope/amendment text. Prior large internal record is excluded and is not uploaded."
+  },
+  "scope": {
+    "uploadedRequestId": "file_000000005d7481f4b783b0c2c196fcb6",
+    "bytes": 9410,
+    "sha256": "17b80e99d883c1dae6b64c8b8071c8bfafa0f1894bc459abc6743b693bf0d237",
+    "entireLunarEclipseNowPass1": true,
+    "independentLaterPass4": false,
+    "pass2And3Intact": true,
+    "stopFurtherPerAppChats": true,
+    "deadlineInThisChat": "2026-10-04T20:00:00+01:00",
+    "allApplicableLEWindowsCriteriaMandatory": true,
+    "noDeadlineOrAcceptanceNarrowing": true
+  },
+  "windows": {
+    "appGroups": 30,
+    "basis": "Original29 plus first-partyCards exactlyonce. Study+RevisionBank withinSpaces; BurrowswithinPlanner; Vision&Voiceonegroup; no duplicate modules.",
+    "verified": 0,
+    "delivered": 0,
+    "acceptanceVerifiedPercent": 0,
+    "implementationPercent": "UNMEASURED_PENDING_DEDUPLICATED_EXPANDED_REQUIREMENT_MAP_OLD_PERCENT_INVALID",
+    "oldBoundedResultsPreserved": true,
+    "oldPackagesDoNotVerifyNewLECriteria": true
+  },
+  "currentProvisionalSource": {
+    "repository": "https://github.com/CroakyJake12/9to1",
+    "branch": "integration/team-c-unaccepted-20261004",
+    "revision": "42a88df12835924166d6aa7a9924770eaddc6d8b",
+    "selectionWithC": "Please confirm this actual current source or exact successor and coherent supported Windows restore/build/test recipe; main is not selected.",
+    "acceptedHead": null,
+    "mainPromoted": false
+  },
+  "recovery": {
+    "furtherPerAppChatsStopped": true,
+    "existingWorkingSixRetained": true,
+    "actualRelayAndWorkerReports": "READONLY_INVENTORY_IN_PROGRESS_NO_RECOVERY_OR_SHUTDOWN_CLAIM",
+    "requestToRelayOwner": "Publish each existing app owner, exact fetchable source branch/commit or full patch/artifact, real source/build access, pending original work and failures. Productive owners may finish bounded assignments. Explicit handover is required before reclaiming blocked or duplicate assignments; preserve all branches/uncommitted work/packages/tests/failures."
+  },
+  "homeReviewedSource": {
+    "branch": "team-a/home-windows-original-shutdown-20261004",
+    "commit": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+    "parent": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+    "url": "https://github.com/CroakyJake12/9to1/tree/team-a/home-windows-original-shutdown-20261004",
+    "productPaths": [
+      "apps/Home/src/AvaloniaHome/Program.cs",
+      "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs"
+    ],
+    "productSha256": [
+      "bd1c87199689d36f43020830cad93001bd613b0347c1c015fc7384db93723b38",
+      "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72",
+      "cf95cd6e90782ba9c2371d07e1376bab9a84c72158e694c9cf163821711726e9",
+      "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+    ],
+    "provenanceDirectory": "docs/releases/sol-happy-20261003/team-a-home-shutdown-source03",
+    "whole10RemoteContentAndGitBlobReadback": "PASS",
+    "entireTreeAudit": "Exactly4product+6docs changed;16011other leaves unchanged;2gitlinks preserved;no workflow changes",
+    "sourcePeers": "Root+A5+A6_FULL_SOURCE_CLEAR",
+    "testCases": 5,
+    "testMethods": 4,
+    "assertionCallSites": 54,
+    "tests": "UNRUN_NO_NATIVE_BUILD_CLAIM",
+    "originalWindowsFailure": "7e3/run37205981853/job111447135076 forcedcleanup exit-1 retained; rendering not established",
+    "requestToC": "Adopt exact reviewed4 source bodies under actualcurrent CAS, retain all original Home Fact and execute all5 original-task cases, then actual Windows originaldispatcher keyboard Ctrl+Shift+Q/coalescedshutdown/defaultwindowclose/cause-exit/persistence/nativepackage controls. No forced kill or oldpackage substitution."
+  },
+  "liveSpecification": {
+    "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "state": "NOT_CHANGED_PENDING_SINGLE_WRITER_AND_RICH_SAFE_APPLICATION",
+    "singleWriterProposed": "Team C",
+    "request": "Please explicitly ACK sole canonical spec writer or delegate that role to Root before any concurrent edits. User authorizes consolidation now. A6 readonly preparation complete; directGoogleDocs requiredRevisionId supported; no connected native document sessions or established lossless rich move.",
+    "losslessPendingAmendment": {
+      "tab": "t.0",
+      "sourceRange": [
+        1342106,
+        1383597
+      ],
+      "destinationBeforeUniquePass2Index": 1238694,
+      "sourceTitle": "Pass 4: Lunar Eclipse",
+      "replacementTitle": "Lunar Eclipse requirements — incorporated into Pass 1",
+      "wholeParagraphs": 269,
+      "nonemptyTextParagraphs": 192,
+      "listParagraphs": 3,
+      "requirementIds": "LE-01 through LE-15",
+      "imageObjectIds": [
+        "kix.17ywj8xx0oii",
+        "kix.kl5nueped4f3",
+        "kix.i94b25xmjnrv",
+        "kix.mw5g37a76o2b"
+      ],
+      "preserve": "All15heading identifiers, image identities/sizes/crops/margins, lists/body styles, all LE technical obligations/exceptions/examples/tests and both actualPass3 tables. PostReleaseDroid unchanged.",
+      "sourceEndAnchor": "Pass 4 (Post-Release): Droid",
+      "limitation": "No supported batch rich cut/paste found; delete/reinsert text or recreate images cannot be claimed identity-preserving. In-place membership edits are PARTIAL physical consolidation; exact full move remains pending."
+    },
+    "revisionLockedSupportedEdits": [
+      {
+        "anchor": "Original Pass 1: Astra la Vista title",
+        "operation": "Insert immediately after title",
+        "text": "Pass 1 comprises all original Astra la Vista requirements and the complete Lunar Eclipse requirements (LE-01–LE-15). All applicable integration, platform, UI/API parity, privacy, recovery, performance, donor and acceptance obligations remain mandatory. This changes pass membership, not technical ownership: Team A owns native/shared work, Team B browser work, and Team C hosted services and sole global integration. The existing protected Windows deadline now includes incorporated Lunar Eclipse. Pass 2 Terra-form and Pass 3 Sol Happy remain intact; post-release Droid and out-of-scope Training Lab are not absorbed."
+      },
+      {
+        "anchor": "Pass 4: Lunar Eclipse title",
+        "operation": "Rename only",
+        "text": "Lunar Eclipse requirements — incorporated into Pass 1"
+      },
+      {
+        "anchor": "LE introductory paragraph formerly1342128",
+        "operation": "Replace introduction only",
+        "text": "The complete Lunar Eclipse requirements below are mandatory Pass 1 shipping scope, incorporated into Astra la Vista. They are not an independent Pass 4 or a later optional tranche. Detailed requirements, references and acceptance tests remain active, and LE identifiers retain implementation and historical-evidence traceability."
+      },
+      {
+        "anchor": "LE01 formerly1342327",
+        "operation": "Replace first sentence only",
+        "text": "Lunar Eclipse is incorporated into Pass 1: Astra la Vista as mandatory feature-completion, integration and polish scope before release."
+      },
+      {
+        "anchor": "LE01 formerly1344495",
+        "operation": "Replace conflicting deadline sentence only",
+        "text": "The existing Pass 1 protected Windows deadline applies to these incorporated requirements; Pass 2/3 deadlines, models, temporary platform limitations and production-release permissions are not imported."
+      },
+      {
+        "anchor": "LE14 heading formerly1380198",
+        "operation": "Rename only",
+        "text": "LE-14 — Expanded Pass 1 acceptance and release exit gate"
+      },
+      {
+        "anchor": "LE14 completion paragraph formerly1382594",
+        "operation": "Replace completion rule",
+        "text": "Expanded Pass 1 is complete only when every original Astra la Vista requirement and every incorporated Lunar Eclipse requirement is integrated and verified, required inherited suites pass, artifacts install/run cleanly, and no unresolved mandatory failure is concealed. A remaining genuine external gate or approved scoped exception must identify the affected requirement/platform, impact and evidence; it does not count as verified functionality. A worker may not mark expanded Pass 1 complete merely because its allocated task list ended."
+      },
+      {
+        "anchor": "Existing Terra-form reference formerly1239718",
+        "operation": "Add after unchanged paragraph",
+        "text": "The final accepted Astra la Vista head includes all incorporated Lunar Eclipse requirements; this clarification does not change the remaining Terra-form operating contract."
+      }
+    ],
+    "writeRules": "Fresh full native read/control inventory and exact anchor re-resolution, requiredRevisionId; preserve concurrent work; final full native content/LE/image/table/outline verification. A6 source locators are not post-edit indexes."
+  },
+  "actions": [
+    {
+      "owner": "A1",
+      "scope": "HomeWindows/bootstrap/runtime",
+      "action": "Deliver genuine canonical Windows session/client/startup and matched DI/installed-host identity union; reviewedHome shutdown source nowrealb9. Derive narrow candidate-only configs; do not stop at missingtuple or fabricate installedtrust/grants."
+    },
+    {
+      "owner": "A4",
+      "scope": "FilesWindows/entrypoints/packaging",
+      "action": "Deliver concrete MainView/WindowSession/route/fullsource and wire SAME A1 originalbootstrap/provider; no Files package activation before actual entrypoint wiring. Publish exact missingdonor/buildrecipe evidence to C."
+    },
+    {
+      "owner": "A3",
+      "scope": "Windows Picture/Studio provider",
+      "action": "Exact12target maintainedSkia decoder/fullsource14-file delivery freeze released underunchangedcapacity/protection. Root/A6 fullpeer thenpublish to C; run actual maintainedWindowsGIF controls and originalfailures."
+    },
+    {
+      "owner": "A2",
+      "scope": "Study/RevisionBank/Cards/Planner and sharedtext/input",
+      "action": "Verify current42a88 originalStudy4bodies; deliver concrete falseproficiency UI fix+two actualCUIcontrols; implement RevisionBank metadata in canonical SpaceRegistry settings CAS. Notes/Forms wholecode retained. Sharedtext layout owner task remains active, no C MaxWidth workaround."
+    },
+    {
+      "owner": "A5",
+      "scope": "ExpandedPass1 LE02 modularOS/install lifecycle",
+      "action": "Implement canonical signeddescriptor/dependencyplanner on sameDatabase/originalsession, per-step approval/rootcustody, originalfailure/update/rollback/in-use controls; actualWindows adapter/package gates explicit."
+    },
+    {
+      "owner": "A6",
+      "scope": "Recovery/source custody/acceptance/spec",
+      "action": "Read actual relay roster/reports/branches through supported readonly mechanisms, preserve unmerged source and assign ownership only afterexplicit handover. Maintain exact rich amendment and30app deduplicated map."
+    },
+    {
+      "owner": "C",
+      "scope": "Sole global integration/currentnativeWindowsrecipe",
+      "action": "Confirm42a88 or actualsuccessor as selected provisionalbaseline, reconcile actual maintained donor/helper/entrypoint recipe, receive b9Home4 reviewedsource and forthcomingStudio/Study/Files closures; reuse existingWindows2022capacity; independentcritical reproduction; preserve cleanPC/signing/fullacceptance gates."
+    }
+  ],
+  "qualification": "No new paid service, production/WP/DNS/account transfer, permission grant, deadline move, accepted-head/main promotion or full-app/LE acceptance. Existing qualified package results keep their original scope.",
+  "requestedCResponse": "Confirm current source baseline and existing Windows capacity; receive reviewed Home4 bodies; ACK sole live-spec writer or explicitly delegate to Root; apply supported revision-safe membership amendments and coordinate the complete lossless rich relocation or exact pending amendment. Rebaseline original29 plus first-partyCards=30;0fullverified/0delivered."
+}
