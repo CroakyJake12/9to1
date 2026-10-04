@@ -107,6 +107,54 @@ function installPublicStatusObserver({ origin }) {
   capture();
 }
 
+function createPublicNetworkDiagnostics(endpoints) {
+  // These observers never retain URLs, queries, bodies, headers or raw errors.
+  const state = { boundaries: {}, consoleCodes: {}, consoleBoundaries: {}, saturated: false };
+  const bump = (counts, key) => { const old = counts[key] || 0; if (old < 10000) counts[key] = old + 1; else state.saturated = true; };
+  const classify = raw => {
+    try {
+      const url = new URL(raw);
+      if (url.username || url.password) return 'OTHER';
+      if (url.origin === origin) return url.pathname === '/callback' ? 'CALLBACK' : url.pathname === '/' ? 'CLIENT_DOCUMENT' : 'CLIENT_ASSET';
+      if (url.origin !== issuerOrigin) return 'OTHER';
+      const exact = [[endpoints.issuer + '/.well-known/openid-configuration', 'DISCOVERY'], [endpoints.jwks, 'JWKS'], [endpoints.authorize, 'AUTHORIZE'], [endpoints.token, 'TOKEN']];
+      for (const [endpoint, code] of exact) if (url.href.split('?')[0] === endpoint) return code;
+      const account = { '/api/account/current': 'CURRENT', '/api/account/profile': 'PROFILE', '/api/account/sessions': 'SESSIONS', '/api/account/signout': 'SIGNOUT' };
+      return account[url.pathname] || (['/sign-in', '/consent', '/account'].includes(url.pathname) ? 'ISSUER_DOCUMENT' : url.pathname === '/assets/auth-ui.js' ? 'ISSUER_UI' : 'ISSUER_OTHER');
+    } catch { return 'OTHER'; }
+  };
+  const methodCodes = new Set(['GET', 'POST', 'OPTIONS', 'HEAD', 'PATCH', 'DELETE']);
+  const resourceCodes = new Set(['document', 'stylesheet', 'image', 'media', 'font', 'script', 'texttrack', 'xhr', 'fetch', 'eventsource', 'websocket', 'manifest', 'other']);
+  const failureCodes = new Set(['net::ERR_ABORTED', 'net::ERR_FAILED', 'net::ERR_BLOCKED_BY_CLIENT', 'net::ERR_CONNECTION_REFUSED', 'net::ERR_CERT_AUTHORITY_INVALID', 'net::ERR_NAME_NOT_RESOLVED']);
+  const phaseCodes = new Set(['SETUP', 'NATIVE_READY', 'PKCE', 'PRIVATE_READS', 'SIGNOUT', 'TOKENLESS', 'NATIVE_CLOSE', 'BROWSER_CLOSE']);
+  const record = (event, request, detail, phase) => {
+    if (!['request', 'response', 'finished', 'failed'].includes(event)) throw new Error('Unknown public network event refused.');
+    let boundary = 'OTHER', method = 'OTHER', resource = 'OTHER', failure = 'OTHER';
+    try { boundary = classify(request.url()); } catch {}
+    try { const value = request.method(); if (methodCodes.has(value)) method = value; } catch {}
+    try { const value = request.resourceType(); if (resourceCodes.has(value)) resource = value; } catch {}
+    if (!Object.hasOwn(state.boundaries, boundary)) state.boundaries[boundary] = { events: {}, methods: {}, resources: {}, statuses: {}, failures: {}, failedPhases: {} };
+    const counts = state.boundaries[boundary]; bump(counts.events, event);
+    if (event === 'request') { bump(counts.methods, method); bump(counts.resources, resource); }
+    if (event === 'response') bump(counts.statuses, Number.isInteger(detail) && detail >= 100 && detail <= 599 ? String(detail) : 'OTHER');
+    if (event === 'failed') {
+      try { const value = request.failure()?.errorText; if (failureCodes.has(value)) failure = value.slice(5); } catch {}
+      bump(counts.failures, failure); bump(counts.failedPhases, phaseCodes.has(phase) ? phase : 'OTHER');
+    }
+  };
+  const consoleError = message => {
+    let code = 'OTHER', boundary = 'OTHER';
+    try {
+      const text = message.text();
+      if (text.startsWith('9to1 browser startup failed.')) code = 'CLIENT_STARTUP_FAILED';
+      else if (text.startsWith('Failed to load resource:')) code = 'RESOURCE_LOAD_FAILED';
+    } catch {}
+    try { boundary = classify(message.location().url); } catch {}
+    bump(state.consoleCodes, code); bump(state.consoleBoundaries, boundary);
+  };
+  return { state, classify, record, consoleError };
+}
+
 function verifyPublicBinding(bindingPath, expectedCommit) {
   // These complete public gates precede private-file reads, Playwright import, listeners and network.
   fixed(validCommit(expectedCommit));
@@ -219,7 +267,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
   const mark = stage => { substep = stage; };
   const safeError = error => ({ stage: active, substep, type: ['Error', 'TypeError', 'AssertionError', 'TimeoutError'].includes(error?.name) ? error.name : 'Error', elapsedMs: Math.min(240000, Math.max(0, Date.now() - started)) });
   const observed = { discovery: 0, jwks: 0, authorize: 0, callback: 0, token: 0, current: 0, profile: 0, sessions: 0, signout: 0, apiRequests: 0, protocolValid: true, sameSubject: true };
-  const diagnostic = { socketTempRoot: null, launchError: null, formError: null, fetchReceiver: null, popupOpened: false, popupClosed: false, popupClosePhase: 'NOT_OBSERVED', popupNavigations: { blank: 0, issuer: 0, client: 0, other: 0 }, discoveryRequests: 0, discoveryResponses: 0, discoveryStatusCounts: {}, discoveryFinished: 0, discoveryFailed: 0, publicStatusCodes: [], publicStatusTruncated: false, publicStatusReadFailed: false };
+  const diagnostic = { socketTempRoot: null, launchError: null, formError: null, fetchReceiver: null, popupOpened: false, popupClosed: false, popupClosePhase: 'NOT_OBSERVED', popupNavigations: { blank: 0, issuer: 0, client: 0, other: 0 }, discoveryRequests: 0, discoveryResponses: 0, discoveryStatusCounts: {}, discoveryFinished: 0, discoveryFailed: 0, publicStatusCodes: [], publicStatusTruncated: false, publicStatusReadFailed: false, network: null };
   const popupPhases = new Set(['actual-issuer-signin-form', 'actual-issuer-consent', 'actual-callback-exchange-and-broker-close']);
   async function capturePublicStatus() {
     if (!page || page.isClosed()) { diagnostic.publicStatusReadFailed = true; return; }
@@ -270,6 +318,9 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     diagnostic.socketTempRoot = verifyChromiumSocketTempRoot(process.env.TMPDIR);
     mark('owned-fixture-contract-read'); owned = readOwnedFixture(manifestPath, runRoot, gate);
     const fixture = owned.fixture;
+    const network = createPublicNetworkDiagnostics({ issuer: fixture.issuer, jwks: fixture.discovery.jwks_uri, authorize: fixture.discovery.authorization_endpoint, token: fixture.discovery.token_endpoint });
+    diagnostic.network = network.state;
+    const networkPhase = () => ['NATIVE_READY', 'PKCE', 'PRIVATE_READS', 'SIGNOUT', 'TOKENLESS', 'NATIVE_CLOSE', 'BROWSER_CLOSE'][names.indexOf(active)] || 'SETUP';
     report.sourceCommit = expectedCommit; report.testSourceCommit = gate.binding.testSourceCommit; report.fixtureSourceCommit = gate.binding.fixtureSourceCommit; report.bindingSha256 = gate.bindingSha256;
     report.seal = { sourceCommit: gate.seal.sourceCommit, manifestSha256: gate.seal.manifestSha256, fileCount: gate.seal.fileCount };
     const configuration = { issuer: fixture.issuer, apiResource: fixture.apiResource, clientId: fixture.clientId, redirectUri: fixture.redirectUri, scopes: fixture.scopes, allowLoopbackForIsolatedTests: true };
@@ -295,11 +346,12 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     mark('local-origin-network-route');
     await context.route('**/*', async route => { let allowed = false; try { allowed = [origin, issuerOrigin].includes(new URL(route.request().url()).origin); } catch {} if (allowed) await route.continue(); else { report.unexpected.foreignRequest++; await route.abort('blockedbyclient'); } });
     mark('network-observers');
-    context.on('page', opened => { opened.on('pageerror', () => report.unexpected.pageError++); opened.on('console', message => { if (message.type() === 'error') report.unexpected.consoleError++; }); });
+    context.on('page', opened => { opened.on('pageerror', () => report.unexpected.pageError++); opened.on('console', message => { if (message.type() === 'error') { report.unexpected.consoleError++; network.consoleError(message); } }); });
     const discoveryRequest = request => request.method() === 'GET' && request.url() === fixture.issuer + '/.well-known/openid-configuration';
-    context.on('requestfailed', request => { report.unexpected.requestFailed++; if (discoveryRequest(request)) diagnostic.discoveryFailed++; });
-    context.on('requestfinished', request => { if (discoveryRequest(request)) diagnostic.discoveryFinished++; });
+    context.on('requestfailed', request => { report.unexpected.requestFailed++; network.record('failed', request, null, networkPhase()); if (discoveryRequest(request)) diagnostic.discoveryFailed++; });
+    context.on('requestfinished', request => { network.record('finished', request, null, networkPhase()); if (discoveryRequest(request)) diagnostic.discoveryFinished++; });
     context.on('request', request => {
+      network.record('request', request, null, networkPhase());
       try {
         const url = new URL(request.url());
         if (discoveryRequest(request)) diagnostic.discoveryRequests++;
@@ -327,6 +379,7 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
       } catch { report.unexpected.observationFailure++; }
     });
     context.on('response', response => {
+      network.record('response', response.request(), response.status(), networkPhase());
       const observation = (async () => {
         const url = new URL(response.url()), method = response.request().method();
         if (discoveryRequest(response.request())) {
@@ -437,5 +490,5 @@ async function run(bindingPath, output, expectedCommit, manifestPath, runRoot) {
     state = nonce = challenge = callbackCode = null;
   }
 }
-module.exports = { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver };
+module.exports = { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, privateAbsent, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver, createPublicNetworkDiagnostics };
 if (require.main === module) run(...process.argv.slice(2)).catch(() => { console.log(JSON.stringify({ status: 'FAIL', stage: 'bounded-runner' })); process.exitCode = 1; });

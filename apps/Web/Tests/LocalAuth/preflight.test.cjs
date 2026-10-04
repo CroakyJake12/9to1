@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
-const { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver } = require('./run-local-auth-current.cjs');
+const { verifyPublicBinding, verifyCheckoutSource, readOwnedFixture, withoutCredentialDiagnostics, classifyFormError, classifyLaunchError, verifyChromiumSocketTempRoot, probeNativeFetchReceiver, installPublicStatusObserver, createPublicNetworkDiagnostics } = require('./run-local-auth-current.cjs');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const contract = JSON.parse(fs.readFileSync(path.join(__dirname, 'source-contract.json')));
 const repo = path.resolve(__dirname, '../../../..');
@@ -230,4 +230,60 @@ test('wrong port, external discovery and non-fictional account refuse', () => {
 });
 test('private mutation remains an observable failure after read', () => {
   writePrivate(); const owned = readOwnedFixture(privateManifest, runRoot, { fixtureRoot }); fs.appendFileSync(privateManifest, ' '); assert.throws(() => owned.unchanged());
+});
+
+const publicEndpoints = { issuer: 'http://127.0.0.1:8799/api/auth', jwks: 'http://127.0.0.1:8799/api/auth/jwks', authorize: 'http://127.0.0.1:8799/api/auth/oauth2/authorize', token: 'http://127.0.0.1:8799/api/auth/oauth2/token' };
+const privateTripwire = 'PRIVATE_TRIPWIRE_NOT_FOR_OUTPUT';
+const syntheticRequest = (url, method = 'GET', resource = 'document', failure = 'net::ERR_ABORTED') => ({ url: () => url, method: () => method, resourceType: () => resource, failure: () => ({ errorText: failure }) });
+test('public boundary diagnostics classify callback and each current public endpoint without query retention', () => {
+  const observer = createPublicNetworkDiagnostics(publicEndpoints);
+  const paths = [['https://client.example.test:5096/callback', 'CALLBACK'], [publicEndpoints.issuer + '/.well-known/openid-configuration', 'DISCOVERY'], [publicEndpoints.jwks, 'JWKS'], [publicEndpoints.authorize, 'AUTHORIZE'], [publicEndpoints.token, 'TOKEN'], ['http://127.0.0.1:8799/api/account/current', 'CURRENT'], ['http://127.0.0.1:8799/api/account/profile', 'PROFILE'], ['http://127.0.0.1:8799/api/account/sessions', 'SESSIONS'], ['http://127.0.0.1:8799/api/account/signout', 'SIGNOUT'], ['http://127.0.0.1:8799/assets/auth-ui.js', 'ISSUER_UI']];
+  for (const [url, expected] of paths) assert.equal(observer.classify(url + '?code=' + privateTripwire + '&state=' + privateTripwire), expected);
+  assert.equal(observer.classify('https://foreign.example/' + privateTripwire), 'OTHER');
+  assert.equal(observer.classify('https://user:' + privateTripwire + '@client.example.test:5096/callback'), 'OTHER');
+  assert(!JSON.stringify(observer.state).includes(privateTripwire));
+});
+test('callback diagnostics distinguish document/fetch methods, HTTP statuses and exact fixed cancellation phase', () => {
+  const observer = createPublicNetworkDiagnostics(publicEndpoints), url = 'https://client.example.test:5096/callback?code=' + privateTripwire;
+  observer.record('request', syntheticRequest(url), null, 'PKCE');
+  observer.record('request', syntheticRequest(url, 'OPTIONS', 'fetch'), null, 'PKCE');
+  observer.record('response', syntheticRequest(url), 200, 'PKCE');
+  observer.record('response', syntheticRequest(url), 307, 'PKCE');
+  observer.record('finished', syntheticRequest(url), null, 'PKCE');
+  observer.record('failed', syntheticRequest(url), null, 'PKCE');
+  assert.deepEqual(observer.state.boundaries.CALLBACK, { events: { request: 2, response: 2, finished: 1, failed: 1 }, methods: { GET: 1, OPTIONS: 1 }, resources: { document: 1, fetch: 1 }, statuses: { 200: 1, 307: 1 }, failures: { ERR_ABORTED: 1 }, failedPhases: { PKCE: 1 } });
+  assert(!JSON.stringify(observer.state).includes(privateTripwire));
+});
+test('unknown network fields and throwing getters cannot print private errors, URL or failure text', () => {
+  const observer = createPublicNetworkDiagnostics(publicEndpoints);
+  const request = syntheticRequest('https://foreign.example/' + privateTripwire, privateTripwire, privateTripwire, privateTripwire);
+  observer.record('request', request, null, privateTripwire); observer.record('failed', request, null, privateTripwire); observer.record('response', request, privateTripwire, privateTripwire);
+  const throws = () => { throw new Error(privateTripwire); };
+  observer.record('failed', { url: throws, method: throws, resourceType: throws, failure: throws }, null, privateTripwire);
+  const other = observer.state.boundaries.OTHER;
+  assert.equal(other.methods.OTHER, 1); assert.equal(other.resources.OTHER, 1); assert.equal(other.statuses.OTHER, 1); assert.equal(other.failures.OTHER, 2); assert.equal(other.failedPhases.OTHER, 2);
+  assert(!JSON.stringify(observer.state).includes(privateTripwire));
+});
+test('console diagnostics retain only fixed startup/resource codes and known origin categories', () => {
+  const observer = createPublicNetworkDiagnostics(publicEndpoints);
+  for (const text of ['9to1 browser startup failed. ' + privateTripwire, 'Failed to load resource: ' + privateTripwire, privateTripwire]) observer.consoleError({ text: () => text, location: () => ({ url: 'https://client.example.test:5096/main.js?token=' + privateTripwire }) });
+  observer.consoleError({ text() { throw new Error(privateTripwire); }, location() { throw new Error(privateTripwire); } });
+  assert.deepEqual(observer.state.consoleCodes, { CLIENT_STARTUP_FAILED: 1, RESOURCE_LOAD_FAILED: 1, OTHER: 2 });
+  assert.deepEqual(observer.state.consoleBoundaries, { CLIENT_ASSET: 3, OTHER: 1 });
+  assert(!JSON.stringify(observer.state).includes(privateTripwire));
+});
+test('network diagnostics refuse unknown events and bound repeated counts', () => {
+  const observer = createPublicNetworkDiagnostics(publicEndpoints), request = syntheticRequest('https://client.example.test:5096/callback');
+  assert.throws(() => observer.record(privateTripwire, request, null, 'PKCE'));
+  for (let count = 0; count < 10002; count++) observer.record('failed', request, null, 'PKCE');
+  assert.equal(observer.state.boundaries.CALLBACK.events.failed, 10000); assert.equal(observer.state.saturated, true);
+  assert(!JSON.stringify(observer.state).includes(privateTripwire));
+});
+test('both revised issuer bodies refuse an alternate caller-rehashed fixture implementation', () => {
+  for (const ending of ['/src/browser.ts', '/public/auth-ui.txt']) {
+    const row = fixtures.find(item => item.path.endsWith(ending)), bytes = fs.readFileSync(row.path);
+    fs.appendFileSync(row.path, '\n// alternate source ' + privateTripwire + '\n');
+    try { assert.throws(() => gate({ fixtureSourcePins: fixtures.map(item => item === row ? { ...item, bytes: fs.statSync(row.path).size, sha256: sha(fs.readFileSync(row.path)) } : item) })); }
+    finally { fs.writeFileSync(row.path, bytes); }
+  }
 });

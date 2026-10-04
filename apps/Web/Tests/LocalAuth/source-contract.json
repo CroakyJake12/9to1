@@ -1,5 +1,5 @@
 {
-  "sourceBasis": "45522d633a363586618888273e4a3cd605395521",
+  "sourceBasis": "ff453ff9d294d5c4812c9308217cd04be0a88e4d",
   "scope": "Existing current public browser broker and genuine native CUI owner/consumer contract; no authority substitution.",
   "requiredSource": [
     {
@@ -316,8 +316,8 @@
     },
     {
       "path": "public/auth-ui.txt",
-      "bytes": 39127,
-      "sha256": "b1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e"
+      "bytes": 39083,
+      "sha256": "9e20353726f09806954e5e0159ffc49a6e224554683e96917f729b682e8cbe8d"
     },
     {
       "path": "scripts/build-ui.mjs",
@@ -351,8 +351,8 @@
     },
     {
       "path": "src/browser.ts",
-      "bytes": 4507,
-      "sha256": "34d6f759e43dbedb2b9858c7065f16008c833fb2a8680b01ef43f3cfe5641916"
+      "bytes": 4599,
+      "sha256": "afe535aa3f742319c2ebd805d97d1ffcc069199f9f446316be62824852f9048f"
     },
     {
       "path": "src/contract.ts",
