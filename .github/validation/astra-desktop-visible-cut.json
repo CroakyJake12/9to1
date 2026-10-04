@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e6ee0cb3af68ad508f8b53b46fa9135a977a4419",
-  "programTree": "f4f1afd937f7c6f0e7e3ad961356b986d28b86cc",
+  "baselineCommit": "7c8c2e4a2692c4e662da4dfd021cf330aff0ea93",
+  "programTree": "539fdac9e67c7159c126eb432fdac8298e7839c7",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -2696,9 +2696,9 @@
     {
       "path": "9to1 OS/apps/9to1-shell/Program.cs",
       "mode": "100644",
-      "object": "945b23fd8548aff149686cf9b39a13008d15cec6",
-      "bytes": 17292,
-      "sha256": "30f5b4882d3a4bc9bd192bd442dcd67c96cfe9da2b7bbe39650bf55ca45c9ec0"
+      "object": "dcf0e993d1a67a3a115ad590e488897cbd702a5d",
+      "bytes": 19430,
+      "sha256": "51989b5a728d1305a308b5843f7860ee542cb9a88cc5bd23fecad8c89d6df04e"
     },
     {
       "path": "9to1 OS/apps/9to1-shell/Properties/AssemblyInfo.SupervisorRootOwning.cs",
@@ -66764,7 +66764,8 @@
     "Actual14 part1 complete failure original verifies ExistingInstallParentNotRootProtected. Two isolated TEST sources select already-supported /usr/lib/9to1/apps and clean only exact issued packages, with empty rmdir for canonical parent containers. Production UID/mode/no-follow/all-ancestor refusal and /opt support unchanged. All103 other overlay bodies, whole112/Home62+12/36, native16/signed triple/native5/oldProcess3/65s/helperdeath and original drains remain exact14. Current30 accepted Android dependency plus prior Math23/IMAP4/Mail/Shelf/Writer are preserved; complete owning/native runtime acceptance is pending.",
     "Actual15 existing-directory protection refusal remains opaque about which phase/ancestor. Sole additive TEST observation records exact fixed three phases and original descriptor/path identities, flags/statx/UID/mode/type. No trust/permission/location/assertion changes or observer acceptance. Other104 overlays and all112/Home62+12/36/native16/signed/native5/oldProcess3/65s/PDB/task/restore/drain/workflow bytes remain exact15; current30 accepted union exact. Full native/signed runtime remains mandatory.",
     "Actual16 records root-owned /usr/share and /usr/share/applications mode0777, correctly refused by unchanged production ancestor protection. Sole TEST setup protects the SAME exact directory FDs to0755, preserves immutable original modes before changes, holds protection through genuine native work, and restores only after fresh authentication of ALL current original setup/root/cleanup sessions. Missing marker status is truthful, unproved restoration refuses, original causes retained. All other104 overlay bytes,84 product bindings/exact83 changes,112 Home62+12/36 classes/native16/signed triple/native5/oldProcess3/65s/helperdeath/source/PDB/task/restore/drain/workflow/constructor remain exact16. Bundle00/original native/whole signed acceptance remains mandatory and unreviewed; no authority from diagnostics.",
-    "Actual17 completed the unchanged three signed first enrollments, then the same target-user fixture apphost exec was refused with EACCES. This bounded TEST successor stages the SAME complete source-built published payload under fresh unique root-owned0755 /run, verifies complete original and copied apphost/DLL/PDB/table bytes before-after and before both target-user invocations, and binds the exact protected manifest through the original setup/caller/wrapper environment. Cleanup removes only exact issued files after current original setup/root/userdel seals, retaining changed/incomplete payloads. No workspace ancestor chmod or inferred cause/trust relaxation. Original four Root facts and all positive trust/body/cleanup semantics survive whole inverses. Whole112 Home62+12/36/native16/signed triple/native5/oldProcess3/65s/helperdeath/receivedFD/source/PDB/task/restore/drain remain mandatory and unverified."
+    "Actual17 completed the unchanged three signed first enrollments, then the same target-user fixture apphost exec was refused with EACCES. This bounded TEST successor stages the SAME complete source-built published payload under fresh unique root-owned0755 /run, verifies complete original and copied apphost/DLL/PDB/table bytes before-after and before both target-user invocations, and binds the exact protected manifest through the original setup/caller/wrapper environment. Cleanup removes only exact issued files after current original setup/root/userdel seals, retaining changed/incomplete payloads. No workspace ancestor chmod or inferred cause/trust relaxation. Original four Root facts and all positive trust/body/cleanup semantics survive whole inverses. Whole112 Home62+12/36/native16/signed triple/native5/oldProcess3/65s/helperdeath/receivedFD/source/PDB/task/restore/drain remain mandatory and unverified.",
+    "The complete Linux19 original root32 run built with zero warnings/errors and executed20PASS12FAIL. All12 paired/supervised failures are canceled socket accepts; original TRX reports the generic early administrator Home startup refusal. Complete newly published root-test.log/pending/expected/receipt originals preserve the missing exact predicate. This sole Program diagnostic emits fixed type/reason labels at the original catch, preserving every protection predicate, caught type, generic line, order and return1. No kernel policy, path, permission, syscall or thread cause is inferred. Whole112/Home62+12/36/native16/signed/nativepair5/oldProcess3/65s/caller/task/PDB/restore/strict drains remain unchanged; Supervisor02, shutdown02 and OS222 SDK union are unselected. Full signed/native/installed/runtime acceptance remains mandatory."
   ],
   "inputManifests": [
     {
@@ -67478,6 +67479,11 @@
       "path": "/workspace/astra-source/worker5-linux-native-signed-current30-full-caller-package19-metadata02-final-inventory/assembly-inputs.json",
       "bytes": 37844,
       "sha256": "404fe5780588a54e4192e7a7a5f102b625e04359dfe7de169d9e9cc46c0bf2ce"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-linux19-fixed-controlled-startup-refusal-diagnostic-source01/manifest.json",
+      "bytes": 3373,
+      "sha256": "a3dda54c1ac9388bc8ec6d4092300426319c7d2b149c88696c712bbc6a90fd1a"
     }
   ],
   "sharedCakeIdContract": null

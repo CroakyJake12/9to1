@@ -26,6 +26,7 @@ internal static class Program
                 System.ComponentModel.Win32Exception or EntryPointNotFoundException or DllNotFoundException)
             {
                 Console.Error.WriteLine("The required administrator Home startup boundary is unavailable.");
+                WriteControlledStartupRefusal(error);
                 return 1;
             }
             var paired = Authority.LinuxRootPairedInstalledRuntimeCommand.TryRunAsync(args, CancellationToken.None).GetAwaiter().GetResult();
@@ -47,6 +48,36 @@ internal static class Program
         using var reader = new StreamReader(stream);
         return CuiNativeHost.Run(new("os.shell", "9to1 OS", "os.shell", new CuiRichParser().Parse(reader.ReadToEnd()), model, model, home) { ControlRegistry = TaskbarLayerSurface.CreateRegistry(model) }, args);
     }
+    private static void WriteControlledStartupRefusal(Exception error)
+    {
+        // Fixed source-reviewed labels only: no path, credential, arbitrary Message or stack output.
+        var type = error switch
+        {
+            UnauthorizedAccessException => "UnauthorizedAccessException",
+            IOException => "IOException",
+            System.ComponentModel.Win32Exception => "Win32Exception",
+            EntryPointNotFoundException => "EntryPointNotFoundException",
+            DllNotFoundException => "DllNotFoundException",
+            _ => "UnknownException"
+        };
+        var reason = error is UnauthorizedAccessException ? error.Message switch
+        {
+            "The administrator Home child requires exact non-root UID and GID arguments." => "ExactNonRootIdsRequired",
+            "Protected original supervisor socket required." => "ProtectedOriginalSocketRequired",
+            "A genuine administrator child with safe pre-exec inherited controls and non-root target IDs is required." => "OriginalAdministratorControlsRequired",
+            "Actual non-dumpable credential-transition policy is required." => "NonDumpableCredentialPolicyRequired",
+            "The child privilege transition could not be confirmed." => "ChildCredentialTransitionUnconfirmed",
+            "Bounded actual runtime thread observations required." => "BoundedRuntimeThreadsRequired",
+            "Actual kernel thread identity required." => "KernelThreadIdentityRequired",
+            "Kernel thread status exceeded its bound." => "KernelThreadStatusTooLarge",
+            "An actual runtime thread retained privileges or mismatched credentials." => "RuntimeThreadCredentialsMismatch",
+            "The runtime thread cohort changed during privilege observation." => "RuntimeThreadCohortChanged",
+            "The required early child privilege transition failed." => "EarlyCredentialSyscallRefused",
+            _ => "UnknownStartupRefusal"
+        } : "UnknownStartupRefusal";
+        Console.Error.WriteLine("ControlledHomeStartupRefusal:" + type + ":" + reason);
+    }
+
 }
 
 /// <summary>Designated central OS-session host. Child apps must attach through Home's authenticated transport.</summary>
