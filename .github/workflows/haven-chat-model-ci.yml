@@ -221,3 +221,17 @@ jobs:
           compression-level: 6
           if-no-files-found: error
           retention-days: 14
+      - name: Retain complete Forms17 original control reports for bounded local admission
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-forms17-dual-original-control-reports-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/forms17-dual-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/derived-forms-owning-member-inventory.json
+            ${{ runner.temp }}/forms17-dual-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/derived-forms-resource-member-inventory.json
+            ${{ runner.temp }}/forms17-dual-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/replay-report.json
+            ${{ runner.temp }}/forms17-dual-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/diagnostic.json
+          include-hidden-files: true
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
