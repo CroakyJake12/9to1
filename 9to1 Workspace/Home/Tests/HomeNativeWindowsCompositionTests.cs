@@ -63,11 +63,17 @@ public sealed class HomeNativeWindowsCompositionTests
             rig.Compose(source);
             var original = rig.Composition ?? throw new InvalidOperationException("The original Home producer was not acquired.");
             Task? reentered = null;
-            source.OnCancellation = () => reentered = original.CloseAndDrainAsync();
+            var cancellationCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            source.OnCancellation = () =>
+            {
+                reentered = original.CloseAndDrainAsync();
+                cancellationCompleted.TrySetResult();
+            };
             var start = rig.Start = original.StartOriginalAsync();
             await source.Entered.Task.WaitAsync(rig.Token);
             var close = rig.Close = original.CloseAndDrainAsync();
             await source.FinallyEntered.Task.WaitAsync(rig.Token);
+            await cancellationCompleted.Task.WaitAsync(rig.Token);
             Assert.Same(close, reentered);
             Assert.Same(close, original.OriginalCloseTask);
             Assert.False(start.IsCompleted);
