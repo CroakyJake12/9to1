@@ -1,7 +1,7 @@
 name: Team C installed UI Automation setup diagnostic (unaccepted)
 on:
   push:
-    branches: [team-c/sol-happy-c3-canvas-uia-provider-diagnostic-20261004]
+    branches: [team-c/sol-happy-c3-canvas-uia-typed-client-20261004]
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,7 +37,7 @@ jobs:
           $tokens=$null;$errors=$null
           $ast=[System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $source).Path,[ref]$tokens,[ref]$errors)
           if($errors.Count){throw 'Actual source parser errors.'}
-          foreach($name in @('Write-Result','Check','Test-GenuineUiAutomationAssembly','Read-UiAutomationAssembly','Read-BoundedProviderExceptionTypes','Record-StandardProviderRefusalWitness','Initialize-StandardUiAutomationProviders')){
+          foreach($name in @('Write-Result','Check','Test-GenuineUiAutomationAssembly','Read-UiAutomationAssembly','Read-BoundedProviderExceptionTypes','Read-KnownProviderThrowFrames','Record-StandardProviderRefusalWitness','Initialize-StandardUiAutomationProviders')){
             $definitions=@($ast.FindAll({param($node)$node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name},$true))
             if($definitions.Count -ne 1){throw 'Exact source function is absent or ambiguous.'}
             Invoke-Expression $definitions[0].Extent.Text

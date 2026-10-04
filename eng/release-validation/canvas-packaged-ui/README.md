@@ -130,3 +130,22 @@ read/written. Diagnostic capability/output failure preserves the original setup
 exception. A three-minute Windows job bound remains; registration/field static
 initialization are genuine framework calls, not independently cancellable APIs.
 Setup success would still establish no app or native workflow acceptance.
+
+
+Original986 setup-only run37224970058 preserves27PASS and an actual inner
+NullReferenceException/HRESULT-2147467261. Both matching genuine installed GAC
+assemblies and the canonical public type/expected40-entry nonnull table are
+available, so the table/assembly is not missing. Official ProxyManager default-
+proxy source walks StackFrame.Method.ReflectedType.Assembly without a null guard;
+PowerShell dynamic caller methods can have no reflected type. This successor
+calls the SAME public registration API once through an ordinary C# method marked
+NoInlining and compiled against the actual validated GAC client location. It
+retains every genuine assembly/API requirement and performs no retry, manual
+provider injection, private reflection, table export or role downgrade. Actual
+compiled NoInlining metadata must be observed. If registration refuses, at most
+16 retained frames across8exceptions record only fixed known-method/null-type
+booleans; source paths/raw stack/arbitrary method names are withheld. Frame
+capture and framework calls remain under the existing3minutejob bound. The same
+setup-only route extracts eight exact source functions; package/app/profile/
+input/state operations remain absent. A successful setup still does not prove
+restored Edit/Button capability or native workflow/full-app acceptance.

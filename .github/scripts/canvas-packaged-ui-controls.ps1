@@ -282,9 +282,28 @@ function Read-BoundedProviderExceptionTypes([Exception]$Failure) {
     }
     return [ordered]@{chain=$chain;truncated=$null -ne $current;maximumEntries=8;rawMessage='WITHHELD';rawToString='WITHHELD'}
 }
+function Read-KnownProviderThrowFrames([Exception]$Failure) {
+    $rows=@();$current=$Failure;$exceptionIndex=0;$truncated=$false
+    while($null -ne $current -and $exceptionIndex -lt 8 -and $rows.Count -lt 16){
+        # false excludes file/source paths. Only fixed known-method booleans are
+        # retained, never arbitrary names, signatures, stack text or locations.
+        $trace=New-Object -TypeName System.Diagnostics.StackTrace -ArgumentList $current,$false
+        for($i=0;$i -lt $trace.FrameCount -and $rows.Count -lt 16;$i++){
+            $method=$trace.GetFrame($i).GetMethod();$reflected=$null;$declaring=$null;$methodName=$null
+            if($null -ne $method){$reflected=$method.ReflectedType;$declaring=$method.DeclaringType;$methodName=$method.Name}
+            $proxy=$null -ne $declaring -and $declaring.FullName -ceq 'MS.Internal.Automation.ProxyManager'
+            $clientSettings=$null -ne $declaring -and $declaring.FullName -ceq 'System.Windows.Automation.ClientSettings'
+            $rows+=[ordered]@{exceptionIndex=$exceptionIndex;methodIsNull=$null -eq $method;reflectedTypeIsNull=$null -eq $reflected;declaringTypeIsNull=$null -eq $declaring;isProxyManager=$proxy;isLoadDefaultProxies=$proxy -and $methodName -ceq 'LoadDefaultProxies';isRegisterWindowHandlers=$proxy -and $methodName -ceq 'RegisterWindowHandlers';isRegisterProxyAssembly=$proxy -and $methodName -ceq 'RegisterProxyAssembly';isPublicClientSettingsRegisterAssembly=$clientSettings -and $methodName -ceq 'RegisterClientSideProviderAssembly';isTypedHarnessClient=$null -ne $declaring -and $declaring.FullName -ceq 'CanvasStandardUiAutomationProviderClient'}
+        }
+        if($i -lt $trace.FrameCount){$truncated=$true}
+        $current=$current.InnerException;$exceptionIndex++
+    }
+    return [ordered]@{frames=$rows;maximumFrames=16;maximumExceptions=8;truncated=$truncated -or $null -ne $current;rawStack='WITHHELD';sourcePaths='WITHHELD'}
+}
 function Record-StandardProviderRefusalWitness($Provider,[Exception]$Failure) {
-    $w=[ordered]@{registrationException=Read-BoundedProviderExceptionTypes $Failure;canonicalTypePresent=$false;canonicalTypeIsPublic=$false;publicStaticTablePresent=$false;publicStaticTableExpectedType=$false;tableReadAttempted=$false;tableReadCompleted=$false;tableIsNull=$null;tableCount=$null;publicTableReadFailure=$null}
+    $w=[ordered]@{registrationException=Read-BoundedProviderExceptionTypes $Failure;canonicalTypePresent=$false;canonicalTypeIsPublic=$false;publicStaticTablePresent=$false;publicStaticTableExpectedType=$false;tableReadAttempted=$false;tableReadCompleted=$false;tableIsNull=$null;tableCount=$null;publicTableReadFailure=$null;knownThrowFrames=$null;throwFrameReadFailure=$null}
     $result.uiaProviderSetup.registrationFailureWitness=$w
+    try{$w.knownThrowFrames=Read-KnownProviderThrowFrames $Failure}catch{$w.throwFrameReadFailure=Read-BoundedProviderExceptionTypes $_.Exception}
     try{
         # These are the exact canonical type/field used by the public framework
         # registration implementation. No private members/table bodies are read.
@@ -317,7 +336,23 @@ function Initialize-StandardUiAutomationProviders {
     Check (Test-GenuineUiAutomationAssembly $providerSnapshot $requested.Name $clientName.Version.ToString() $clientName.CultureName) 'Actual standard UIAutomation provider is genuine installed Microsoft assembly matching loaded client'
     # Public framework API registers only the genuine installed OS client-side proxies.
     # Existing Edit/Value, Button/Invoke, PID, ownership and geometry criteria remain required.
-    try{[System.Windows.Automation.ClientSettings]::RegisterClientSideProviderAssembly($requested)}
+    # The framework default-proxy loader walks caller ReflectedType metadata.
+    # A genuine ordinary C# caller avoids a null PowerShell dynamic-method type,
+    # without retrying, replacing providers or bypassing the public framework API.
+    Add-Type -ReferencedAssemblies $client.Location -TypeDefinition @'
+using System.Reflection;
+using System.Runtime.CompilerServices;
+public static class CanvasStandardUiAutomationProviderClient {
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void Register(AssemblyName assemblyName) {
+        System.Windows.Automation.ClientSettings.RegisterClientSideProviderAssembly(assemblyName);
+    }
+}
+'@
+    $method=[CanvasStandardUiAutomationProviderClient].GetMethod('Register')
+    $result.uiaProviderSetup.typedCallerNoInlining=($method.GetMethodImplementationFlags() -band [Reflection.MethodImplAttributes]::NoInlining)-ne 0
+    Check $result.uiaProviderSetup.typedCallerNoInlining 'Actual standard provider client uses ordinary non-inlined typed public API caller'
+    try{[CanvasStandardUiAutomationProviderClient]::Register($requested)}
     catch{
         $originalRegistrationFailure=$_
         try{Record-StandardProviderRefusalWitness $provider $originalRegistrationFailure.Exception}
