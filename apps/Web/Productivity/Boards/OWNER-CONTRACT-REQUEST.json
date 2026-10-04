@@ -1,0 +1,83 @@
+{
+  "status": "FOCUSED_LOCAL_OWNER_TESTS_EXECUTED_BROWSER_OWNER_SEAMS_PENDING_NO_PARENT_REGISTRATION",
+  "baseline": {
+    "HEAD": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
+    "scope": "Current existing source; ask newer maintained delivery before treating this as latest canonical implementation"
+  },
+  "ownerSources": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.cs",
+      "sha256": "dfd7c06bafecbe30d301511d4afa76d8b67c3dc0459e7644cc5d4524219b9303"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsWorkspaceService.Recovery.cs",
+      "sha256": "df448a7172b37e1786a5884a990f5c60fde13ead0588649238e4b24b6f927dba"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Boards/BoardsOperations.cs",
+      "sha256": "43a38677fb29208f5eec2e99f7c801ba7c4b5ac5ef6e15027593e8e1373cd59d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/NotesAbstractions.cs",
+      "sha256": "72d70b50c9c6a09ecd53e1faf18c0069b8a6f7c7409ad0c78980b0d64868bd0b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.cs",
+      "sha256": "11bd101621c8a5bb2b79cb456ed3b6dbde434d65bbf50ec665f6de5edff6156e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Editor.cs",
+      "sha256": "6a5e8a2902a5b5768e9ceeebd5cd9bfea3c8ea2f935fb8b8e7f75abaf4be71db"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Freeform.cs",
+      "sha256": "f99560018c7057a0674932de29ebcd3d495fd5c1e144466bef6b57d1e960665b"
+    }
+  ],
+  "actualCore": "BoardsWorkspaceService(INotesRepository,INotesAttachmentStore?) retains existing owner canonical notebook model; actual save passes original expected Version to real backend, owner-generated IDs and authoritative NotesSaveResult observed transparently",
+  "requests": [
+    {
+      "contract": "Portable retained real Boards renderer/lifecycle",
+      "source": "BoardsPage.cs private _document,_documentEditor and public constructor only bus/service; private loaded/editor lifecycle and internal document getters; native handlers save through service internally",
+      "request": "Maintained original renderer assembly/source/resource closure with public canonical document snapshot/admission/dirty/busy/read-only/input/async-close seam that can consume this exact real owner core. Do not load a second independently mutable document behind it."
+    },
+    {
+      "contract": "Canonical shared rich Board model/current maintained delivery",
+      "source": "Existing notebook service uses original NotesDocument with Boards product metadata; other maintained rich Board engines may be newer",
+      "request": "If newer maintained canonical Board schema/editor/store/renderer delivery exists, provide exact source/ref/public APIs and tests; prefer it rather than assuming this existing notebook path supplies all rich Board requirements."
+    },
+    {
+      "contract": "Durable attachments and rich shared components",
+      "source": "IBoardsWorkspaceService AttachAsync/ResolveAttachmentAsync and GetComponents/GetPlacements owner APIs",
+      "request": "Existing actual Files/media/component contract with canonical IDs, authorization, exact byte/lifecycle resource resolution and supported portable rendering. No invented FileID or ephemeral filesystem persistence claims."
+    }
+  ],
+  "unverified": [
+    "All SDK/native/browser execution",
+    "Full donor/shared Board schemas and accessibility",
+    "Original renderer closure and input/lifecycle integration",
+    "Canonical hierarchy gaps previously retained",
+    "Hosted ACL/collaboration/history/platform parity"
+  ],
+  "testProcedures": {
+    "file": "apps/Web/Productivity/Boards/Tests/Program.cs",
+    "modes": [
+      "seed",
+      "verify",
+      "unknown"
+    ],
+    "oracles": [
+      "whole canonical content and all object IDs fresh-process stable",
+      "owner Edit/View independently of Locked/Unlocked geometry/content behavior",
+      "unadmitted direct authoring effects denied",
+      "stale actual backend CAS preserves winner bytes and dirty draft",
+      "real commit receipt loss blocks replay until exact durable inspection"
+    ]
+  },
+  "focusedExecution": {
+    "evidence": "continuation/b2/productivity-gates/handoff.json",
+    "scope": "Actual existing local owner path only; no durable browser repository, real referenced-assets renderer, full requirements or ACL acceptance",
+    "assertions": 44,
+    "assertionCountMeaning": "Executed focused oracles; not requirements total or completion ratio"
+  }
+}
