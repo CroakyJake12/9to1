@@ -9,7 +9,7 @@ export function deploymentConfig(input) {
   if (input.cpuMs > 300000) throw new TypeError('CPU limit exceeds documented Paid maximum');
   return {
     name: input.workerName, account_id: input.accountId, main: 'worker.mjs',
-    compatibility_date: '2026-10-01', workers_dev: input.workersDev,
+    compatibility_date: '2026-10-01', workers_dev: input.workersDev, preview_urls: false,
     limits: {cpu_ms: input.cpuMs}, observability: {enabled:false},
     vars: {STRIPE_MODE:input.stripeMode,SIGNATURE_TOLERANCE_SECONDS:input.signatureToleranceSeconds,MAX_WEBHOOK_BYTES:input.maxWebhookBytes},
     secrets: {required:['STRIPE_WEBHOOK_SECRET']},
