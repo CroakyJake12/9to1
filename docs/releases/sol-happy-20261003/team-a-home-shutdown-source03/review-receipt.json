@@ -1,0 +1,83 @@
+{
+  "status": "ROOT_AND_TWO_INDEPENDENT_SOURCE_REVIEWS_CLEAR_RUNTIME_UNRUN",
+  "parentCommit": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+  "parentTree": "a7fca40dc31e6cd61108e1a2f97a982ceef89de5",
+  "sourceBranch": "team-a/home-windows-original-shutdown-20261004",
+  "productFiles": [
+    {
+      "target": "apps/Home/src/AvaloniaHome/Program.cs",
+      "bytes": 13702,
+      "sha256": "bd1c87199689d36f43020830cad93001bd613b0347c1c015fc7384db93723b38",
+      "gitBlob": "09f4d6e17f68a4f532a4974c7632ebb53d1612e8"
+    },
+    {
+      "target": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "bytes": 4607,
+      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72",
+      "gitBlob": "cf80699cbebefed7452a39b77dd537e350790081"
+    },
+    {
+      "target": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "bytes": 12748,
+      "sha256": "cf95cd6e90782ba9c2371d07e1376bab9a84c72158e694c9cf163821711726e9",
+      "gitBlob": "103ea358357b14cd8ffca3a5f1a1ad4c95cef7c0"
+    },
+    {
+      "target": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "bytes": 26062,
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1",
+      "gitBlob": "df29084cc4e7ef680d7a19cd1009ccde250a77d7"
+    }
+  ],
+  "wholeCurrentApiPinsChecked": 18,
+  "allEighteenExactOnParent": true,
+  "reviews": [
+    {
+      "owner": "Root",
+      "scope": "Whole Program, helper, Runtime, source03 fixture and metadata; complete 11 Program/12 Runtime/3 fixture inverses and actual current tree/API pins",
+      "status": "SOURCE_ONLY_CLEAR"
+    },
+    {
+      "owner": "A5",
+      "attribution": "a5WindowsHomeShutdown03CompleteWholeCorrectiveSourceApiFixtureInversePeerRam01",
+      "status": "COMPLETE_SOURCE_ONLY_CLEAR"
+    },
+    {
+      "owner": "A6",
+      "scope": "Independent complete source03 fixture, inverse, manifest, same original task cleanup and all 54 assertion names/order",
+      "status": "COMPLETE_SOURCE_ONLY_CLEAR"
+    }
+  ],
+  "newOwningTests": {
+    "methods": 4,
+    "cases": 5,
+    "assertCallsPreserved": 54,
+    "status": "AUTHORED_UNRUN"
+  },
+  "currentRemoteTargetClassification": {
+    "Program": "REPLACE_EXACT_10783_BYTE_CURRENT_BODY",
+    "helper": "NEW_ABSENT_TARGET",
+    "fixture": "NEW_ABSENT_TARGET",
+    "Runtime": "REPLACE_EXACT_21849_BYTE_CURRENT_BODY"
+  },
+  "source03Freeze": {
+    "logicalBytes": 70887,
+    "allocatedBytes": 81920,
+    "files": 3,
+    "status": "ACTUAL_SOURCE_ONLY_FREEZE_COMPLETED_ONCE"
+  },
+  "historicalManifestLabels": "The manifest/inverses retain proposal-time RAM labels and original source lineage. This receipt records subsequent source-only freeze and review. No runtime execution is implied.",
+  "runtimeInverseSelection": "Only the HomeCoreRuntime.cs row of runtime-owner-whole-inverse.json applies. Other Linux owner rows are outside this change.",
+  "fixtureInverseSelection": "fixture-corrective-inverse.json restores source03 to frozen source02. Current remote parent has no fixture. Rollback of the new destination must verify the final cf95/103ea body, not the historical source02 fixture pin in program-inverse.json.",
+  "requiredReceivingWork": "Team C alone selects its coherent Windows carrier and integrates the four owner-approved product bodies; run unchanged native Home tests plus five new cases, publish the actual package, exercise ordinary visible-window close and explicit Ctrl+Shift+Q shutdown, retain failures and all process results. Do not force-kill to certify shutdown.",
+  "remainingGates": [
+    "Actual Windows compile and all owning tests",
+    "Native keyboard/dispatcher/Main exit and content rendering",
+    "Installed Home identity, version/ABI, publisher, bootstrap and current authority",
+    "Clean no-SDK installation, donor/full-app acceptance and delivery"
+  ],
+  "releaseIntegrationOwner": "Team C",
+  "mainOrAcceptedHeadChanged": false,
+  "noWorkflowEdited": true,
+  "noTestsOrNativeRunsPerformed": true
+}

@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 1,
+  "status": "PRIVATE_WHOLE_ACTUAL21_SOURCE_INVERSE_WITNESS; NO_SOURCE_HELPER_OR_RUNTIME_INVOCATION",
+  "basis": {
+    "commit": "5b62ae68469459d88f16360233768058346d5695",
+    "tree": "3592a15b899c89d0a44b98ea3b2dd983e5f0c57b"
+  },
+  "algorithm": "For each target, apply reverseOperations in declared order to the exact selected UTF-8 source. exact-offset requires whole after literal at byte-character offset (all ASCII offsets were authored with JavaScript UTF-16; these bodies are ASCII); unique-literal requires exactly one entire after literal. Each complete result must equal the actual pinned Git before bytes and SHA. No production inverse is claimed for absent new fixture/helper.",
+  "rows": [
+    {
+      "target": "9to1 OS/apps/9to1-shell/Program.cs",
+      "after": {
+        "bytes": 27269,
+        "sha256": "224a89941cc7cea6e64a8f106b90c1eec210ec3c93334cd2a923c82eb2e7fe1b"
+      },
+      "before": {
+        "bytes": 19430,
+        "sha256": "51989b5a728d1305a308b5843f7860ee542cb9a88cc5bd23fecad8c89d6df04e"
+      },
+      "reverseOperations": [
+        {
+          "before": "            _hostFailureStage = result.ObserveOriginalFailureStage();\n        }",
+          "after": "            _hostFailureStage = result.ObserveOriginalFailureStage();\n            _originalHostFailureRecorded = true;\n            }\n        }",
+          "offset": 7702,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            _hostFailureCode = result.Code switch",
+          "after": "            if (!_originalHostFailureRecorded)\n            {\n            _hostFailureCode = result.Code switch",
+          "offset": 7045,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    private string _hostFailureCode = \"UnknownHostResult\";",
+          "after": "    private string _hostFailureCode = \"UnknownHostResult\";\n    private bool _originalHostFailureRecorded;",
+          "offset": 6319,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        foreach (IDisposable? endpoint in new IDisposable?[] { _widgetRegistrationServer, _discoveryServer })\n            try { endpoint?.Dispose(); } catch (Exception original) { failures.Retain(original); }",
+          "after": "        foreach (IAsyncDisposable? endpoint in new IAsyncDisposable?[] { _widgetRegistrationServer, _discoveryServer })\n            try { if (endpoint is not null) await endpoint.DisposeAsync().ConfigureAwait(false); }\n            catch (Exception original) { failures.Retain(original); }",
+          "offset": 26113,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        if (primary is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();\n    }\n    public void Dispose()\n    {\n        Exception? first = null;\n        try { _lifetime.Cancel(); } catch (Exception error) { first = error; }\n        try { if (OperatingSystem.IsLinux()) _originalHomeAuthority?.DisposeAsync().AsTask().GetAwaiter().GetResult(); } catch (Exception error) { first ??= error; }\n        foreach (IDisposable? owned in new IDisposable?[] { _widgetRegistrationServer, _discoveryServer, _services, _lease, _lifetime, _endpointGate })\n            try { owned?.Dispose(); } catch (Exception error) { first ??= error; }\n        if (first is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(first).Throw();\n    }",
+          "after": "        failures.ThrowIfAny(\"Original canonical Home body and channel-close failures are retained.\");\n    }\n    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();\n    public ValueTask DisposeAsync() => _originalWork.DisposeAsync();\n    private async Task CloseOwnedResourcesAsync()\n    {\n        // SAME coalesced work owner has drained all original tasks/finally before this cleanup.\n        var failures = new OsOriginalFailures();\n        if (OperatingSystem.IsLinux() && _originalHomeAuthority is not null)\n            try { await _originalHomeAuthority.DisposeAsync().ConfigureAwait(false); }\n            catch (Exception original) { failures.Retain(original); }\n        foreach (IDisposable? endpoint in new IDisposable?[] { _widgetRegistrationServer, _discoveryServer })\n            try { endpoint?.Dispose(); } catch (Exception original) { failures.Retain(original); }\n        if (_services is not null)\n            try\n            {\n                _originalProviderClose = _services.DisposeAsync().AsTask();\n                await _originalProviderClose.ConfigureAwait(false);\n            }\n            catch (Exception original) { failures.Retain(original); }\n        // Retire the real held lease/lifetime only after actual async provider cleanup settles.\n        foreach (IDisposable? owned in new IDisposable?[] { _lease, _lifetime, _endpointGate })\n            try { owned?.Dispose(); } catch (Exception original) { failures.Retain(original); }\n        failures.ThrowIfAny(\"Original Home provider, endpoint and lease cleanup failures are retained.\");\n    }",
+          "offset": 25421,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "                try { await _originalHomeAuthority.DisposeAsync(); } catch (Exception error) { primary ??= error; }",
+          "after": "                try { await _originalHomeAuthority.DisposeAsync(); } catch (Exception error) { failures.Retain(error); }",
+          "offset": 25290,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "                catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }\n                catch (Exception error) { primary ??= error; }",
+          "after": "                catch (OperationCanceledException error) when (error.CancellationToken == lifetime.Token &&\n                    lifetime.IsCancellationRequested && !originalCaller.IsCancellationRequested) { }\n                catch (Exception error) { failures.Retain(error); }",
+          "offset": 24947,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        catch (Exception error) { primary = error; }\n        finally\n        {\n            try { lifetime.Cancel(); } catch (Exception error) { primary ??= error; }",
+          "after": "        catch (Exception error) { failures.Retain(error); }\n        finally\n        {\n            try { lifetime.Cancel(); } catch (Exception error) { failures.Retain(error); }",
+          "offset": 24551,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            var ready = await CheckAsync(lifetime.Token);\n            if (ready.State != CuiSceneAvailabilityState.Ready)\n                throw new InvalidOperationException(\"Actual maintained Home services unavailable.\");",
+          "after": "            var ready = await CheckAsync(originalCaller);\n            if (ready.State != CuiSceneAvailabilityState.Ready)\n            {\n                RethrowOriginalFailureIfPresent();\n                throw new InvalidOperationException(\"Actual maintained Home services unavailable.\");\n            }",
+          "offset": 23889,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        Exception? primary = null;\n        try",
+          "after": "        var failures = new OsOriginalFailures();\n        try",
+          "offset": 23558,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        if (graph.State != HomeNativeHostState.Ready || _services is null || _lease is null || !_lease.IsHeld)\n            throw new InvalidOperationException(\"Actual original Home graph/lease unavailable.\");",
+          "after": "        if (graph.State != HomeNativeHostState.Ready || _services is null || _lease is null || !_lease.IsHeld)\n        {\n            RetainHostFailure(graph); RethrowOriginalFailureIfPresent();\n            throw new InvalidOperationException(\"Actual original Home graph/lease unavailable.\");\n        }",
+          "offset": 22777,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            _services.GetRequiredService<IAppPaths>(), ct);\n    }\n    private async Task RunCanonicalSupervisedServiceAsync(string leaseSocket, string canonicalSocket, CancellationToken ct)",
+          "after": "            _services.GetRequiredService<IAppPaths>(), ct);\n        return 0;\n        }\n        catch (Exception original) { RetainOriginalFailure(\"SupervisedServiceBody\", original); throw; }\n    }\n    private async Task RunCanonicalSupervisedServiceAsync(string leaseSocket, string canonicalSocket, CancellationToken ct, CancellationToken originalCaller)",
+          "offset": 21925,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        var ready = await CheckAsync(ct);\n        if (ready.State != CuiSceneAvailabilityState.Ready || _services is null || _lease is null || !_lease.IsHeld)\n            throw new InvalidOperationException(\"The actual maintained Home graph was not ready.\");",
+          "after": "        var ready = await CheckAsync(originalCaller);\n        if (ready.State != CuiSceneAvailabilityState.Ready || _services is null || _lease is null || !_lease.IsHeld)\n        {\n            RethrowOriginalFailureIfPresent();\n            throw new InvalidOperationException(\"The actual maintained Home graph was not ready.\");\n        }",
+          "offset": 21417,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            await RunCanonicalSupervisedServiceAsync(socket, canonicalSocket, ct);\n            return;",
+          "after": "            await RunCanonicalSupervisedServiceAsync(socket, canonicalSocket, ct, originalCaller);\n            return 0;",
+          "offset": 21286,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        return new(_services, _services.GetRequiredService<HomeCoreRuntime>(), actors);\n    }\n    internal async Task RunSupervisedServiceAsync(CancellationToken ct)\n    {",
+          "after": "        compositionStage = \"ComposeResolveRuntime\";\n        return new(_services, _services.GetRequiredService<HomeCoreRuntime>(), actors);\n        }\n        catch (Exception original) { RetainOriginalFailure(compositionStage, original); throw; }\n    }\n    internal Task RunSupervisedServiceAsync(CancellationToken ct) =>\n        _originalWork.RunAsync(token => RunSupervisedOriginalAsync(token, ct), ct);\n    private async Task<int> RunSupervisedOriginalAsync(CancellationToken ct, CancellationToken originalCaller)\n    {\n        try\n        {",
+          "offset": 20314,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            if (!_originalHomeAuthority.BindOriginal(authority))",
+          "after": "            compositionStage = \"ComposeBindAdministrator\";\n            if (!_originalHomeAuthority.BindOriginal(authority))",
+          "offset": 20049,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            var authority = await Authority.LinuxAdministratorOriginalHomeLaunchClient.CaptureAsync",
+          "after": "            compositionStage = \"ComposeCaptureAdministrator\";\n            var authority = await Authority.LinuxAdministratorOriginalHomeLaunchClient.CaptureAsync",
+          "offset": 19555,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        _services.GetRequiredService<Authority.LinuxControlledLaunchGate>().BindHeldLease(_lease);",
+          "after": "        compositionStage = \"ComposeBindHeldLease\";\n        _services.GetRequiredService<Authority.LinuxControlledLaunchGate>().BindHeldLease(_lease);",
+          "offset": 19347,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        _lease = await HomeNativeSessionLease.TryAcquireAsync",
+          "after": "        compositionStage = \"ComposeAcquireLease\";\n        _lease = await HomeNativeSessionLease.TryAcquireAsync",
+          "offset": 18997,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        _services = services.BuildServiceProvider();\n        var actors",
+          "after": "        compositionStage = \"ComposeBuildProvider\";\n        _services = services.BuildServiceProvider();\n        compositionStage = \"ComposeResolveActor\";\n        var actors",
+          "offset": 18647,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    private async Task<HomeNativeServiceSession> ComposeAsync(CancellationToken ct)\n    {",
+          "after": "    private Task<HomeNativeServiceSession> ComposeAsync(CancellationToken ct) =>\n        _originalWork.RunAsync(ComposeOriginalAsync, ct);\n    private async Task<HomeNativeServiceSession> ComposeOriginalAsync(CancellationToken ct)\n    {\n        var compositionStage = \"ComposeRegisterServices\";\n        try\n        {",
+          "offset": 15540,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        { return new(CuiSceneAvailabilityState.Unavailable, \"HomeDiscoveryEndpointUnavailable\", \"The native Home endpoint could not be published safely. Existing Home data was preserved; repair the installed runtime location.\"); }",
+          "after": "        {\n            RetainOriginalFailure(endpointStage, ex);\n            return new(CuiSceneAvailabilityState.Unavailable, \"HomeDiscoveryEndpointUnavailable\", \"The native Home endpoint could not be published safely. Existing Home data was preserved; repair the installed runtime location.\");\n        }",
+          "offset": 14398,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            if (Authority.LinuxControlledHomeChildStartup.OriginalWidgetObservationSocket",
+          "after": "            endpointStage = \"StartWidgetObservationChannel\";\n            if (Authority.LinuxControlledHomeChildStartup.OriginalWidgetObservationSocket",
+          "offset": 13421,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            if (Authority.LinuxControlledHomeChildStartup.OriginalCanonicalSocket",
+          "after": "            endpointStage = \"StartCanonicalChannel\";\n            if (Authority.LinuxControlledHomeChildStartup.OriginalCanonicalSocket",
+          "offset": 12658,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "            _widgetRegistrationServer ??= await",
+          "after": "            endpointStage = \"PublishWidgetEndpoint\";\n            _widgetRegistrationServer ??= await",
+          "offset": 12116,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        await _endpointGate.WaitAsync(ct);\n        try\n        {\n            _discoveryServer",
+          "after": "        await _endpointGate.WaitAsync(ct);\n        var endpointStage = \"PublishDiscoveryEndpoint\";\n        try\n        {\n            _discoveryServer",
+          "offset": 11538,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        if (result.State != HomeNativeHostState.Ready || result.Services is null)\n            return new(CuiSceneAvailabilityState.Unavailable, result.Code, result.Message);",
+          "after": "        if (result.State != HomeNativeHostState.Ready || result.Services is null)\n        {\n            RetainHostFailure(result);\n            return new(CuiSceneAvailabilityState.Unavailable, result.Code, result.Message);\n        }",
+          "offset": 11305,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    public async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken ct)\n    {",
+          "after": "    public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken ct) =>\n        new(_originalWork.RunAsync(CheckOriginalAsync, ct));\n    private async Task<CuiSceneAvailability> CheckOriginalAsync(CancellationToken ct)\n    {",
+          "offset": 10726,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, IDisposable\n{",
+          "after": "internal sealed class OsSessionHome : ICuiSceneReadiness, IDisposable, IAsyncDisposable\n{\n    private readonly ShellViewModel model;\n    private readonly OsSessionOriginalWork _originalWork;\n    private readonly object _originalFailureGate = new();\n    private Exception? _firstOriginalFailure;\n    private string _firstOriginalStage = \"NoOriginalExceptionObserved\";\n    private string _hostFailureCode = \"UnknownHostResult\";\n    private HomeNativeOriginalFailureStage _hostFailureStage;\n    private Task? _originalProviderClose;\n    internal OsSessionHome(ShellViewModel model)\n    {\n        this.model = model;\n        _originalWork = new(_lifetime, CloseOwnedResourcesAsync);\n    }\n    private void RetainOriginalFailure(string fixedStage, Exception original)\n    {\n        lock (_originalFailureGate)\n            if (_firstOriginalFailure is null) { _firstOriginalFailure = original; _firstOriginalStage = fixedStage; }\n    }\n    private void RetainHostFailure(HomeNativeHostResult result)\n    {\n        lock (_originalFailureGate)\n        {\n            _hostFailureCode = result.Code switch\n            {\n                \"HomeBootstrapFailed\" => \"HomeBootstrapFailed\",\n                \"HomeCompositionInvalid\" => \"HomeCompositionInvalid\",\n                \"HomeCompositionConflict\" => \"HomeCompositionConflict\",\n                \"HomeIdentityUnavailable\" => \"HomeIdentityUnavailable\",\n                \"HomeServiceUnavailable\" => \"HomeServiceUnavailable\",\n                \"HomeProfileChanged\" => \"HomeProfileChanged\",\n                \"HomeRecoveryRequired\" => \"HomeRecoveryRequired\",\n                _ => \"UnknownHostResult\"\n            };\n            _hostFailureStage = result.ObserveOriginalFailureStage();\n        }\n        try { result.RethrowOriginalFailureIfPresent(); }\n        catch (Exception original) { RetainOriginalFailure(\"RetainedHomeHostResult\", original); }\n    }\n    private void RethrowOriginalFailureIfPresent()\n    {\n        Exception? original;\n        lock (_originalFailureGate) original = _firstOriginalFailure;\n        if (original is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original).Throw();\n    }\n    internal void WriteOriginalSupervisedFailure(Exception original)\n    {\n        // Fixed labels only. Original objects stay private; no Message/stack/path output is added.\n        string stage, code; HomeNativeOriginalFailureStage hostStage; Exception? first;\n        lock (_originalFailureGate)\n        { stage = _firstOriginalStage; code = _hostFailureCode; hostStage = _hostFailureStage; first = _firstOriginalFailure; }\n        var hostLabel = hostStage switch\n        {\n            HomeNativeOriginalFailureStage.Composition => \"Composition\",\n            HomeNativeOriginalFailureStage.RuntimeStartup => \"RuntimeStartup\",\n            HomeNativeOriginalFailureStage.RequiredServiceStartup => \"RequiredServiceStartup\",\n            _ => \"None\"\n        };\n        Console.Error.WriteLine(\"OriginalHomeServiceRefusal:\" + stage + \":\" + code + \":\" + hostLabel + \":\" + FixedOriginalExceptionType(first ?? original));\n        IEnumerable<Exception> retained = original is AggregateException aggregate ? aggregate.Flatten().InnerExceptions : new[] { original };\n        foreach (var error in retained)\n            Console.Error.WriteLine(\"OriginalHomeServiceRetainedFailure:\" + FixedOriginalExceptionType(error));\n    }\n    internal static string FixedOriginalExceptionType(Exception original) => original switch\n    {\n        UnauthorizedAccessException => \"UnauthorizedAccessException\",\n        System.Net.Sockets.SocketException => \"SocketException\",\n        IOException => \"IOException\",\n        OperationCanceledException => \"OperationCanceledException\",\n        ObjectDisposedException => \"ObjectDisposedException\",\n        InvalidOperationException => \"InvalidOperationException\",\n        AggregateException => \"AggregateException\",\n        ArgumentException => \"ArgumentException\",\n        System.ComponentModel.Win32Exception => \"Win32Exception\",\n        EntryPointNotFoundException => \"EntryPointNotFoundException\",\n        DllNotFoundException => \"DllNotFoundException\",\n        _ => \"UnknownException\"\n    };",
+          "offset": 5952,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    private static void WriteControlledStartupRefusal(Exception error)",
+          "after": "    internal static async Task RunOriginalBodyAndCloseAsync(Func<Task> originalBody, Func<ValueTask> originalClose)\n    {\n        var failures = new OsOriginalFailures();\n        try { await originalBody().ConfigureAwait(false); }\n        catch (Exception original) { failures.Retain(original); }\n        try { await originalClose().ConfigureAwait(false); }\n        catch (Exception original) { failures.Retain(original); }\n        failures.ThrowIfAny(\"Original supervised Home body and async close failures are retained.\");\n    }\n    private static void WriteControlledStartupRefusal(Exception error)",
+          "offset": 3212,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        using var home = new OsSessionHome(model);\n        if (OperatingSystem.IsLinux() && Authority.LinuxControlledHomeChildStartup.ServiceOnly)\n        {\n            try { home.RunSupervisedServiceAsync(CancellationToken.None).GetAwaiter().GetResult(); return 0; }\n            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or System.Net.Sockets.SocketException)\n            { Console.Error.WriteLine(\"The original supervised Home service retired or could not start.\"); return 1; }\n        }\n        using var stream",
+          "after": "        var home = new OsSessionHome(model);\n        if (OperatingSystem.IsLinux() && Authority.LinuxControlledHomeChildStartup.ServiceOnly)\n        {\n            try\n            {\n                RunOriginalBodyAndCloseAsync(() => home.RunSupervisedServiceAsync(CancellationToken.None),\n                    home.DisposeAsync).GetAwaiter().GetResult();\n                return 0;\n            }\n            catch (Exception original)\n            {\n                Console.Error.WriteLine(\"The original supervised Home service retired or could not start.\");\n                home.WriteOriginalSupervisedFailure(original);\n                return 1;\n            }\n        }\n        using var originalHome = home;\n        using var stream",
+          "offset": 2039,
+          "kind": "exact-offset"
+        }
+      ],
+      "wholeBeforeBytesMatched": true
+    },
+    {
+      "target": "9to1 Workspace/Home/Source/Home/Core/HomeNativeServiceHost.cs",
+      "after": {
+        "bytes": 8534,
+        "sha256": "9c4ed359b98e928cfd0c86490396ca35256e1d21b8ada6f3913934f88c3f30c4"
+      },
+      "before": {
+        "bytes": 6504,
+        "sha256": "bedfe3a73a5cd8f9feb8df0a5402c1316903421a9ff24a78698de501c1413343"
+      },
+      "reverseOperations": [
+        {
+          "before": "HomeNativeOriginalFailureStage.RuntimeStartup, original);",
+          "after": "HomeNativeOriginalFailureStage.RuntimeStartup, original, originalRuntimeStart);",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "            var snapshot = await session.Runtime.StartAsync(cancellationToken).ConfigureAwait(false);",
+          "after": "            originalRuntimeStart = session.Runtime.StartAsync(cancellationToken);\n            var snapshot = await originalRuntimeStart.ConfigureAwait(false);",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "        try\n        {\n            var actor = await session.Actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false);",
+          "after": "        Task<HomeCoreStateSnapshot>? originalRuntimeStart = null;\n        try\n        {\n            var actor = await session.Actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false);",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "        catch { return Repair(\"HomeRecoveryRequired\", \"Home state or profile authority requires recovery. Existing data was preserved.\"); }",
+          "after": "        catch (Exception original) { return Repair(\"HomeRecoveryRequired\", \"Home state or profile authority requires recovery. Existing data was preserved.\")\n            .RetainOriginalFailure(HomeNativeOriginalFailureStage.RuntimeStartup, original); }",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "                return new(HomeNativeHostState.RequiresHomeRepair, \"HomeServiceUnavailable\", \"Required Home services are unavailable or incompatible: \" + string.Join(\", \", missing), null, snapshot);",
+          "after": "                return new HomeNativeHostResult(HomeNativeHostState.RequiresHomeRepair, \"HomeServiceUnavailable\", \"Required Home services are unavailable or incompatible: \" + string.Join(\", \", missing), null, snapshot)\n                    .RetainOriginalFailure(HomeNativeOriginalFailureStage.RequiredServiceStartup,\n                        session.Runtime.CaptureOriginalStartFailures(missing));",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "        catch { return Repair(\"HomeBootstrapFailed\", \"Home could not start safely. Open Home to repair its installation or recover its preserved state.\"); }",
+          "after": "        catch (Exception original) { return Repair(\"HomeBootstrapFailed\", \"Home could not start safely. Open Home to repair its installation or recover its preserved state.\")\n            .RetainOriginalFailure(HomeNativeOriginalFailureStage.Composition, original, start); }",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "public sealed record HomeNativeHostResult(HomeNativeHostState State, string Code, string Message,\n    IServiceProvider? Services, HomeCoreStateSnapshot? Snapshot);",
+          "after": "public enum HomeNativeOriginalFailureStage { None, Composition, RuntimeStartup, RequiredServiceStartup }\npublic sealed record HomeNativeHostResult(HomeNativeHostState State, string Code, string Message,\n    IServiceProvider? Services, HomeCoreStateSnapshot? Snapshot)\n{\n    // Method-only same-process observation. No serialized exception, stack, message, authority or\n    // Ready fallback is added to the maintained public repair envelope.\n    private Exception? _originalFailure;\n    private HomeNativeOriginalFailureStage _originalStage;\n    private Task? _originalFailureTask;\n    internal HomeNativeHostResult RetainOriginalFailure(HomeNativeOriginalFailureStage stage, Exception? original, Task? originalTask = null)\n    {\n        if (original is null) return this;\n        if (_originalFailure is not null && !ReferenceEquals(_originalFailure, original))\n            throw new InvalidOperationException(\"The first original Home startup failure cannot be replaced.\");\n        if (_originalFailure is null) { _originalFailure = original; _originalStage = stage; _originalFailureTask = originalTask; }\n        return this;\n    }\n    public HomeNativeOriginalFailureStage ObserveOriginalFailureStage() => _originalStage;\n    public void RethrowOriginalFailureIfPresent()\n    {\n        if (_originalFailure is { } original)\n        {\n            if (_originalFailureTask is { IsCompleted: false })\n                throw new InvalidOperationException(\"The retained original startup task has not settled.\");\n            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original).Throw();\n        }\n    }\n}",
+          "kind": "unique-literal"
+        }
+      ],
+      "wholeBeforeBytesMatched": true
+    },
+    {
+      "target": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "after": {
+        "bytes": 26062,
+        "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+      },
+      "before": {
+        "bytes": 21849,
+        "sha256": "fd3cf639b5b92bea5cda526610e0bf0f40b7c018e08ac4e943fcf26820f22444"
+      },
+      "reverseOperations": [
+        {
+          "before": "                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)\n                {\n                    UpdateService(descriptor with",
+          "after": "                catch (OperationCanceledException original) when (cancellationToken.IsCancellationRequested)\n                {\n                    lock (_sync) _originalStartFailures.TryAdd(serviceId, new(serviceId, originalStart, original));\n                    UpdateService(descriptor with",
+          "offset": 6617,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        try { await StopAsync(explicitlyRequested: true).ConfigureAwait(false); }",
+          "after": "        try { await StopOriginalAsync(explicitlyRequested: true, CancellationToken.None,\n            drainingOriginalClose: true).ConfigureAwait(false); }",
+          "offset": 19318,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "                        Diagnostic = $\"HomeServiceStopFailed: {exception.GetType().Name}: {exception.Message}\",",
+          "after": "                        Diagnostic = exception is OperationCanceledException ?\n                            \"HomeServiceStopFailed: unexpected original cancellation during owned close.\" :\n                            $\"HomeServiceStopFailed: {exception.GetType().Name}: {exception.Message}\",",
+          "offset": 17214,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "                catch (Exception exception) when (exception is not OperationCanceledException)\n                {\n                    lock (_sync) _originalStopFailures.TryAdd(serviceId, new(serviceId, originalStop, exception));\n                    UpdateService(_services[serviceId] with",
+          "after": "                catch (Exception exception)\n                {\n                    lock (_sync) _originalStopFailures.TryAdd(serviceId, new(serviceId, originalStop, exception));\n                    if (!drainingOriginalClose && exception is OperationCanceledException) throw;\n                    UpdateService(_services[serviceId] with",
+          "offset": 16744,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    public async Task<HomeCoreFailure?> StopAsync(bool explicitlyRequested, CancellationToken cancellationToken = default)\n    {",
+          "after": "    public Task<HomeCoreFailure?> StopAsync(bool explicitlyRequested, CancellationToken cancellationToken = default) =>\n        StopOriginalAsync(explicitlyRequested, cancellationToken, drainingOriginalClose: false);\n    private async Task<HomeCoreFailure?> StopOriginalAsync(bool explicitlyRequested, CancellationToken cancellationToken,\n        bool drainingOriginalClose)\n    {",
+          "offset": 14999,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    public async ValueTask DisposeAsync()\n    {\n        await StopAsync(explicitlyRequested: true).ConfigureAwait(false);\n        _lifecycleGate.Dispose();\n    }",
+          "after": "    // Method-only observation of the first actual required-service startup causes.\n    // An observed historical error is never a replacement current decision or grant.\n    internal Exception? CaptureOriginalStartFailures(IReadOnlyList<string> requiredServices)\n    {\n        Exception[] originals;\n        lock (_sync) originals = requiredServices.Distinct(StringComparer.Ordinal)\n            .Where(_originalStartFailures.ContainsKey).Select(id => _originalStartFailures[id].Cause)\n            .Distinct<Exception>(ReferenceEqualityComparer.Instance).ToArray();\n        return originals.Length == 0 ? null : originals.Length == 1 ? originals[0] :\n            new AggregateException(\"Original required Home service startup failures retained.\", originals);\n    }\n\n    public ValueTask DisposeAsync()\n    {\n        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);\n        Task original;\n        lock (_originalDisposeGate)\n        {\n            if (_originalDispose is not null) return new(_originalDispose);\n            original = _originalDispose = DisposeOriginalAsync(start.Task);\n        }\n        start.SetResult(); // Publish SAME original close before Stop callbacks can reenter.\n        return new(original);\n    }\n    private async Task DisposeOriginalAsync(Task start)\n    {\n        await start.ConfigureAwait(false);\n        Exception? primary = null; List<Exception> failures = [];\n        try { await StopAsync(explicitlyRequested: true).ConfigureAwait(false); }\n        catch (Exception error) { primary = error; }\n        finally\n        {\n            lock (_sync)\n                foreach (var failure in _originalStopFailures.Values)\n                    if (!ReferenceEquals(failure.Cause, primary) &&\n                        !failures.Any(item => ReferenceEquals(item, failure.Cause))) failures.Add(failure.Cause);\n            try { _lifecycleGate.Dispose(); }\n            catch (Exception error)\n            { if (!ReferenceEquals(error, primary) && !failures.Any(item => ReferenceEquals(item, error))) failures.Add(error); }\n        }\n        if (primary is null && failures.Count == 1)\n            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();\n        if (failures.Count != 0) throw new AggregateException(\"Original Home runtime stop/disposal failures retained.\",\n            primary is null ? failures : new[] { primary }.Concat(failures));\n        if (primary is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();\n    }",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "                catch (Exception exception) when (exception is not OperationCanceledException)\n                {\n                    UpdateService(_services[serviceId] with",
+          "after": "                catch (Exception exception) when (exception is not OperationCanceledException)\n                {\n                    lock (_sync) _originalStopFailures.TryAdd(serviceId, new(serviceId, originalStop, exception));\n                    UpdateService(_services[serviceId] with",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "                try\n                {\n                    await service.StopAsync(cancellationToken).ConfigureAwait(false);\n                }",
+          "after": "                Task? originalStop = null;\n                try\n                {\n                    originalStop = service.StopAsync(cancellationToken);\n                    await originalStop.ConfigureAwait(false);\n                }",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "                try { await service.StopAsync(CancellationToken.None).ConfigureAwait(false); }\n                catch { /* Startup cancellation must still release every service that may have started. */ }",
+          "after": "                Task? originalStop = null;\n                try { originalStop = service.StopAsync(CancellationToken.None); await originalStop.ConfigureAwait(false); }\n                catch (Exception original)\n                { lock (_sync) _originalStopFailures.TryAdd(serviceId, new(serviceId, originalStop, original)); }",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "                catch (Exception exception)\n                {\n                    UpdateService(descriptor with",
+          "after": "                catch (Exception exception)\n                {\n                    lock (_sync) _originalStartFailures.TryAdd(serviceId, new(serviceId, originalStart, exception));\n                    UpdateService(descriptor with",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "                try\n                {\n                    await service.StartAsync(cancellationToken).ConfigureAwait(false);",
+          "after": "                Task? originalStart = null;\n                try\n                {\n                    originalStart = service.StartAsync(cancellationToken);\n                    await originalStart.ConfigureAwait(false);",
+          "kind": "unique-literal"
+        },
+        {
+          "before": "    private bool _stopped;\n",
+          "after": "    private bool _stopped;\n    // First original failures remain bound to their actual service invocation/task.\n    // Storage is bounded by the registered implementations; later attempts cannot replace a cause.\n    private sealed record OriginalFailure(string ServiceId, Task? OriginalTask, Exception Cause);\n    private readonly Dictionary<string, OriginalFailure> _originalStartFailures = new(StringComparer.Ordinal);\n    private readonly Dictionary<string, OriginalFailure> _originalStopFailures = new(StringComparer.Ordinal);\n    private readonly object _originalDisposeGate = new();\n    private Task? _originalDispose;\n",
+          "kind": "unique-literal"
+        }
+      ],
+      "wholeBeforeBytesMatched": true
+    },
+    {
+      "target": "9to1 OS/apps/9to1-shell/Authority/LinuxSessionDiscoveryServer.cs",
+      "after": {
+        "bytes": 7258,
+        "sha256": "37e5d3bd241ab13c6dfae0a5d6e7f009de88a0f673e7bce87dc3e9298f1cb046"
+      },
+      "before": {
+        "bytes": 5877,
+        "sha256": "4eb7afe0c5e84fa8ff56f34ebe87b4fa0e1832ec4101f09c3d0714d232c0a7bd"
+      },
+      "reverseOperations": [
+        {
+          "before": "        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { }\n        try { TryDelete(Location.SocketPath);",
+          "after": "        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { }\n        catch (Exception original) { failures.Retain(original); }\n        try { TryDelete(Location.SocketPath);",
+          "offset": 6608,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        TryDelete(Location.SocketPath); _shutdown.Dispose();\n    }",
+          "after": "        try { TryDelete(Location.SocketPath); } catch (Exception original) { failures.Retain(original); }\n        try { _shutdown.Dispose(); } catch (Exception original) { failures.Retain(original); }\n        failures.ThrowIfAny(\"Original leased listener cancellation and worker-close failures retained.\");\n    }",
+          "offset": 6714,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    public void Dispose()\n    {\n        if (_shutdown.IsCancellationRequested) return;\n        _shutdown.Cancel(); _listener.Dispose();\n        Task.WhenAll(_workers).GetAwaiter().GetResult();",
+          "after": "    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();\n    public ValueTask DisposeAsync()\n    {\n        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);\n        Task close;\n        lock (_originalCloseGate)\n        {\n            if (_originalClose is not null) return new(_originalClose);\n            close = _originalClose = CloseOriginalAsync(start.Task);\n        }\n        start.SetResult(); // Publish SAME close before cancellation callbacks can reenter.\n        return new(close);\n    }\n    private async Task CloseOriginalAsync(Task start)\n    {\n        await start.ConfigureAwait(false);\n        var failures = new OsOriginalFailures();\n        try { _shutdown.Cancel(); } catch (Exception original) { failures.Retain(original); }\n        try { _listener.Dispose(); } catch (Exception original) { failures.Retain(original); }\n        // Independently join all four original workers, including held finally after Cancel throws.\n        foreach (var original in _workers)\n            try { await original.ConfigureAwait(false); } catch (Exception error) { failures.Retain(error); }",
+          "offset": 5077,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    private readonly Task[] _workers;",
+          "after": "    private readonly Task[] _workers;\n    private readonly object _originalCloseGate = new();\n    private Task? _originalClose;",
+          "offset": 673,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "public sealed class LinuxSessionDiscoveryServer : IDisposable",
+          "after": "public sealed class LinuxSessionDiscoveryServer : IDisposable, IAsyncDisposable",
+          "offset": 265,
+          "kind": "exact-offset"
+        }
+      ],
+      "wholeBeforeBytesMatched": true
+    },
+    {
+      "target": "9to1 OS/apps/9to1-shell/Authority/LinuxNativeWidgetRegistrationServer.cs",
+      "after": {
+        "bytes": 7970,
+        "sha256": "731c77742b19c9763600c74fdcab3dd38664136b81dfa36569332c63576add22"
+      },
+      "before": {
+        "bytes": 6589,
+        "sha256": "ad8f77a84fd7de41b45814152daf72dd7fa37c9f3608411507a4ab2f86c6b229"
+      },
+      "reverseOperations": [
+        {
+          "before": "        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException) { }\n        try { TryDelete(Location.SocketPath);",
+          "after": "        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException) { }\n        catch (Exception original) { failures.Retain(original); }\n        try { TryDelete(Location.SocketPath);",
+          "offset": 7296,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "        TryDelete(Location.SocketPath); _shutdown.Dispose();\n    }",
+          "after": "        try { TryDelete(Location.SocketPath); } catch (Exception original) { failures.Retain(original); }\n        try { _shutdown.Dispose(); } catch (Exception original) { failures.Retain(original); }\n        failures.ThrowIfAny(\"Original leased listener cancellation and worker-close failures retained.\");\n    }",
+          "offset": 7426,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    public void Dispose()\n    {\n        if (_shutdown.IsCancellationRequested) return;\n        _shutdown.Cancel(); _listener.Dispose();\n        Task.WhenAll(_workers).GetAwaiter().GetResult();",
+          "after": "    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();\n    public ValueTask DisposeAsync()\n    {\n        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);\n        Task close;\n        lock (_originalCloseGate)\n        {\n            if (_originalClose is not null) return new(_originalClose);\n            close = _originalClose = CloseOriginalAsync(start.Task);\n        }\n        start.SetResult(); // Publish SAME close before cancellation callbacks can reenter.\n        return new(close);\n    }\n    private async Task CloseOriginalAsync(Task start)\n    {\n        await start.ConfigureAwait(false);\n        var failures = new OsOriginalFailures();\n        try { _shutdown.Cancel(); } catch (Exception original) { failures.Retain(original); }\n        try { _listener.Dispose(); } catch (Exception original) { failures.Retain(original); }\n        // Independently join all four original workers, including held finally after Cancel throws.\n        foreach (var original in _workers)\n            try { await original.ConfigureAwait(false); } catch (Exception error) { failures.Retain(error); }",
+          "offset": 5765,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "    private readonly Task[] _workers;",
+          "after": "    private readonly Task[] _workers;\n    private readonly object _originalCloseGate = new();\n    private Task? _originalClose;",
+          "offset": 800,
+          "kind": "exact-offset"
+        },
+        {
+          "before": "public sealed class LinuxNativeWidgetRegistrationServer : IDisposable",
+          "after": "public sealed class LinuxNativeWidgetRegistrationServer : IDisposable, IAsyncDisposable",
+          "offset": 387,
+          "kind": "exact-offset"
+        }
+      ],
+      "wholeBeforeBytesMatched": true
+    }
+  ]
+}

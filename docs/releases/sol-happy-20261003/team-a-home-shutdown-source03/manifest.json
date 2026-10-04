@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 1,
+  "status": "RAM_ONLY_FIXTURE_CORRECTION_SOURCE_PROPOSAL_UNWRITTEN_UNRUN",
+  "owner": "Team A Home/CUI/bootstrap/runtime foundation A1 with A5-owned exact Core close body by reference",
+  "root": "/workspace/astra-source/worker1-home-windows-source03-original-Core-fixture-acquisition-and-final-drain",
+  "basis": {
+    "currentCCommit": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+    "currentCRun": "37205981853",
+    "currentCJob": "111447135076",
+    "sourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "actualA63": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "currentProgramBytes": 10783,
+    "currentProgramSha256": "702aec57d7f3f1881e4d9a458459ba21fd052cdf720084a88a70e3164a7359b5",
+    "currentProgramGitBlob": "ab1d0884fd33165e4a5ce707cf515d64c81725a2",
+    "entireCurrentProgramEqualsFrozenNamespaceRepair": true,
+    "namespaceRepairExactDeltaBytes": 58,
+    "namespaceRepairWholeInverse": {
+      "path": "/workspace/astra-source/worker1-home-windows-source01-actual-e2eff-missing-explicit-namespace-imports/whole-source-inverse.json",
+      "bytes": 906,
+      "sha256": "09882d8856b2c5a339395f128f70b1c9efed7210953becdfdf1befdda15a32bc"
+    },
+    "currentCoreWholeEqualsA63AndA5Predecessor": true
+  },
+  "actualCause": {
+    "decodedCompleteJobLog": {
+      "bytes": 184880,
+      "sha256": "4d1b2a08dd7c260d8ab9488eb67df40d8f7b4ec903c411201b264033e48d3384",
+      "lines": 2359
+    },
+    "embeddedCompleteResult": {
+      "bytes": 53668,
+      "sha256": "f7ce426f02499beb18a4b373484fb76059d4dae26d536040708f6244f79a2fc7"
+    },
+    "publishExitCode": 0,
+    "extractionVerified": true,
+    "nativeWindowObserved": true,
+    "nativeWindowTitle": "9-1 Home",
+    "closeRequested": true,
+    "forcedCleanup": true,
+    "processExitCode": -1,
+    "acceptanceVerified": false,
+    "originalFailure": "Window was observed, but graceful test shutdown is unverified; forced cleanup is retained.",
+    "sourceCausalBoundary": "OnExplicitShutdown deliberately keeps Core after ordinary window close; the current async-void Exit handler cannot delay the concrete synchronous desktop Exit/dispatcher shutdown. Exact successful CUI content render is not established by window presence: stdout has one diagnostic and no successful Root message.",
+    "noArtifactOrPublishedBinaryDownload": true
+  },
+  "selectedSources": [
+    {
+      "target": "apps/Home/src/AvaloniaHome/Program.cs",
+      "path": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/Program.cs",
+      "bytes": 13702,
+      "sha256": "bd1c87199689d36f43020830cad93001bd613b0347c1c015fc7384db93723b38",
+      "gitBlob": "09f4d6e17f68a4f532a4974c7632ebb53d1612e8",
+      "operation": "replace-exact-current-C7e3"
+    },
+    {
+      "target": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "path": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/HomeHostOriginalLifetime.cs",
+      "bytes": 4607,
+      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72",
+      "gitBlob": "cf80699cbebefed7452a39b77dd537e350790081",
+      "operation": "new-exact-absent-current-C7e3"
+    },
+    {
+      "target": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "path": "/workspace/astra-source/worker1-home-windows-source03-original-Core-fixture-acquisition-and-final-drain/HomeHostOriginalLifetimeTests.cs",
+      "bytes": 12748,
+      "sha256": "cf95cd6e90782ba9c2371d07e1376bab9a84c72158e694c9cf163821711726e9",
+      "gitBlob": "103ea358357b14cd8ffca3a5f1a1ad4c95cef7c0",
+      "operation": "replace-exact-frozen-source02-fixture"
+    }
+  ],
+  "selectedByReference": [
+    {
+      "target": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/HomeCoreRuntime.cs",
+      "bytes": 26062,
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1",
+      "wholeOriginalBytes": 21849,
+      "wholeOriginalSha256": "fd3cf639b5b92bea5cda526610e0bf0f40b7c018e08ac4e943fcf26820f22444",
+      "wholeOriginalGitBlob": "e2e3205a7f69fcd6ebf7d203b5f709d7b50b89a1",
+      "ownerManifest": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/manifest.json",
+      "ownerManifestSha256": "dcc27128d58ee5b655aaec306b0fbbc905e9c87e3bbfb7778ff158d76f141f92",
+      "wholeInversePath": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/whole-actual21-inverses.json",
+      "qualification": "Use only the already-selected HomeCoreRuntime target inverse from the existing owner's whole inverse; other Linux platform targets are outside this Windows package. Entire current C7e3 original matches actual A63 and owner's predecessor.",
+      "wholeInverseBytes": 44764,
+      "wholeInverseSha256": "028ce22992623bf3d941c8fdfa649f4dda9a0a42335cf4dfb7ca679d97703d89"
+    }
+  ],
+  "wholeProgramInverse": {
+    "path": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/whole-current-source-inverse.json",
+    "bytes": 10360,
+    "sha256": "183ca4b9371c4a3c8421ec9b519af0fb18c1820c67deef27f0a86bafac2e155c",
+    "exactUniqueStatementEdits": 11,
+    "arities": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      1,
+      1,
+      1
+    ],
+    "bothDirectionsRecoverEntireCurrentProgram": true
+  },
+  "actualApiPins": [
+    {
+      "path": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 2315,
+      "sha256": "ab1a0ab1fa185d4b66ef6f75d66546be457481947cc655cb164a9842a6b5344c",
+      "gitBlob": "8c2170917986fddc4160e5d3a388e4b7d196f3b8"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 580,
+      "sha256": "c982787059aa506a2ff687ce1a178d6e6212d158e410408a2839a09392a7fdba",
+      "gitBlob": "24b2af3d77b741ffc64ffe7e499e05ec85dd6d46"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 10552,
+      "sha256": "6e869188bf9bcf85834c03bbfe4227e6e2040717ac69ef6f244d57f63c83d99c",
+      "gitBlob": "a06a94050d7be19f45019ce2a62fa8770361f1e0"
+    },
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 1745,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8",
+      "gitBlob": "5253f562466c16ec93933e620789a15d554a6207"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 7402,
+      "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3",
+      "gitBlob": "e96d5d09d8262e08cc0db9b43e1a9326015105a6"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreStateService.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 1340,
+      "sha256": "8b12dc8cb184428442e2990b1c3a0c57f39d5c9437a2d5ce76094aec526faebb",
+      "gitBlob": "08d7ceb0e89ebf6a39ef3c452207f3fcef5ba59a"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeProductivityEngine.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 36577,
+      "sha256": "b137ac2a2e6594aa3c7a5dcd3562ebf8f685a9b7487231ae60fbda4e37f3311a",
+      "gitBlob": "8dc1fc4123e9d7ba4578c51d8a676d83ec4b377b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeCuiScene.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 35989,
+      "sha256": "8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806",
+      "gitBlob": "8e2a8b696d14da024e88c3cc4187295ee9dd585f"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ClassicDesktopStyleApplicationLifetime.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 10518,
+      "sha256": "09c0afba6fe4004c671217ac430e86c0ea0d8dace1e722cb6a83a83c56b8225a",
+      "gitBlob": "8d509832fa2f2246e026a5a0478104de3a649e38"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IClassicDesktopStyleApplicationLifetime.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 2930,
+      "sha256": "b9ff25759fe821bf96bb1ae2d149fea132295173967fbd12a07094124cb68408",
+      "gitBlob": "b9a372f93563591778262808add057f0f956213f"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IControlledApplicationLifetime.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 902,
+      "sha256": "de3778330edc8556c40429a559b93f95d2d7a4e380852a8b747ae2d447acff10",
+      "gitBlob": "d7eda790df84967311a11137d790aee968138c9f"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ShutdownRequestedEventArgs.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 305,
+      "sha256": "ae9ec93a6a6544121eb17eea013c2146cf011510c282eec538afeb7d2a533768",
+      "gitBlob": "4dd62936dfa0cc998fda443e61fa2094ed20383c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.Invoke.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 31379,
+      "sha256": "7a0d50b80f261a3779363b5b57164792ca620f3ffdbe45b50175d9c0ccd22d29",
+      "gitBlob": "90167fa8a1f9703e0d4b2da4086ab359169518f3"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/DispatcherOperation.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 14393,
+      "sha256": "cfcff802dec0a4dbf673503f1bd02c30b30f2a3129e609e9453425588823c6cf",
+      "gitBlob": "ea48fa31b03e2476b1eddbd820a69cd18be56ef8"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 5568,
+      "sha256": "4ebf10c67ec14c51c1efe2401965288cb935651924f5772b5172665f5d7e8602",
+      "gitBlob": "100df0acbc986962d731d52d293803c47d66133d"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Input/IKeyboardDevice.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 888,
+      "sha256": "e44fde43fde5eb018eb16ea20ca5602627017bff0760ec0bc235dec464905c99",
+      "gitBlob": "dfab1cc83dfa615b5290651ce393594cc1e72f1c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/FileHomeCoreStateStore.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 17413,
+      "sha256": "7477d619f22c350cdd15ddfa732ba56b259f9a27f42266d82b4b3c1d483ced35",
+      "gitBlob": "7ce410f3ffc5dfbe2241d4b2d7039cf34fb69437"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.MainLoop.cs",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "bytes": 6839,
+      "sha256": "d8efc8770c0afa72c207debf6aee54b0cad86d36cc135fbb17475c9d87e25c30",
+      "gitBlob": "fa2b842f9c870419783176c2ba1e42faeeaaed9b"
+    }
+  ],
+  "sourceBoundBehavior": {
+    "explicitNativeRequest": "Ctrl+Shift+Q at the current native window or actual cancellable desktop ShutdownRequested. Ordinary Close is unchanged and never requests full process shutdown.",
+    "sameTaskCustody": "The internal owner publishes exact full work/close tasks before callbacks; returns the same coalesced close; retains actual callback/Core/desktop tasks; Main awaits that original close after the real dispatcher loop returns.",
+    "admission": "Seal further work before draining. UI-caller synchronous fast path retains original publication order; background notifications use exact awaitable native Dispatcher.InvokeAsync, replacing discarded Post refresh callbacks.",
+    "drain": "Full admitted F5 refresh/install/status/Core-signal callbacks settle independently before disposing the original subscription and awaiting exact SAME Core.DisposeAsync. The supplied existing A5 runtime attempts all registered service Stop tasks and preserves foreign cancellation/original faults.",
+    "exit": "Only after work and Core cleanup tasks settle, request actual desktop.Shutdown with exit0 or1. Preserve every original work/Core/exit cause independently. Main returnsnonzero if explicit shutdown was missing or its original task failed. No forced kill or timeout-success waiver.",
+    "storage": "Actual public FileHomeCoreStateStore.WriteAsync awaits Serialize/FlushAsync/Flush(true), same-volume atomic publication and handle/lock settlement. This proposal invokes no nonexistent global Flush API; completion comes from draining owning original operations. Current standalone host has no configured package/update writer.",
+    "bounds": "At most128 retained work records; settled successful records prune only before new admission, every unsettled/faulted original remains. Full ledger refuses new work before callback acquisition. No quota/entitlement added.",
+    "mainAbiDelta": "Internal Program's actual CLI entry return changes void to int to retain nonzero cleanup outcomes; service contract versions, Home public authorization API and all DenyAll method bytes are unchanged.",
+    "desktopApiObservation": "Concrete Dispatcher InvokeShutdown exits frames and aborts queued operations, not the already-executing shutdown callback; its DispatcherOperation sets its actual task result after the callback returns. Main awaits the owning close on the returned desktop loop thread only after all pending host UI work was drained."
+  },
+  "proposedTests": {
+    "target": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+    "assembly": "AvaloniaHome.Tests",
+    "framework": "existing net10.0-windows/xUnit2 project, unchanged",
+    "newMethods": 4,
+    "newCases": 5,
+    "status": "AUTHORED_UNRUN",
+    "unchangedExistingNativeFact": {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "bytes": 10552,
+      "sha256": "6e869188bf9bcf85834c03bbfe4227e6e2040717ac69ef6f244d57f63c83d99c",
+      "wholeCurrentC7e3EqualsA63": true
+    },
+    "cases": [
+      "Held original real FileHomeCoreStateStore write then actual registered HomeCoreRuntime Stop: known persisted bytes and all tasks settle before desktop exit; independent release/drain/temp-file retirement.",
+      "Original work failure plus actual service IOException/foreign OCE plus independent exit failure: exact three references retained and remaining real registered service stops.",
+      "Close callback reentry observes same already-published original close; exactly one Core callback.",
+      "512 successful operations prove safe retirement; all128 distinct faulted originals remain and block129th acquisition, then survive close."
+    ]
+  },
+  "preservation": {
+    "allDenyAllAndUnavailablePoliciesUnchanged": true,
+    "findCuiFileAndCanonicalLoadBodyUnchanged": true,
+    "allHomeDataModelsAndStoreBodiesUnchanged": true,
+    "homeStateServiceAndProductivityBodiesUnchanged": true,
+    "oldNativeRenderFactAndAssertionsWholeExact": true,
+    "importsRepairAlreadyPresentNoDuplicateFix": true,
+    "coreNewBodyExactlyExistingA5ReferenceNoCompetingEdit": true,
+    "projectAndPackageReferencesUnchanged": true,
+    "noCWorkflowPackagingProbeCatalogueEdit": true,
+    "noSharedDesktopStudioNotesBoardsOrDenEdit": true,
+    "noNativeRootPackageActivationOrBrokerRegistration": true
+  },
+  "qualifications": [
+    "Source-only proposed implementation and authored managed cases, not compiled or run. Genuine Windows/native keyboard delivery, dispatcher/Main exit, current CUI rendering, service/file drain and all process receipts still need original current Windows evidence.",
+    "Managed fixture uses real FileHomeCoreStateStore and HomeCoreRuntime with controlled registered service callbacks; it grants no installed caller, publisher, root mutation or private platform authority.",
+    "Startup/constructor failures before the owned explicit shutdown remains a separate inherited host boundary. An outside force-Shutdown/kill or irrevocable OS termination is not certified by this path and cannot pass as graceful shutdown.",
+    "No cancellation is invented for admitted consequential work: close waits for exact owning tasks; a genuinely hung provider remains an honest blocked shutdown, not timeout/kill success.",
+    "Existing Core service public Stop/runtime publication semantics carry the exact independently peered A5 source qualifications; Windows adoption/runtime acceptance is not inferred from Linux selection.",
+    "No standalone Home installed Windows AppID/package version/publisher/ABI/bootstrap/donor tuple or provider availability is supplied. Current DenyAll and absent registered providers remain unchanged.",
+    "C alone owns coherent sourceBasis/whitelist/catalog repins, packaging controller changes, fresh original publish/native probe and acceptance records. Home4f/b48 fixtures/cohorts are independent.",
+    "Source03 changes only actual-Core fixture acquisition/drain and its owning source metadata/inverse; source02 production Program/helper and A5 Runtime are exact by reference. Existing four methods/five outcomes remain authored and UNRUN. Descriptive RAM labels do not imply execution or installed acceptance."
+  ],
+  "requiredReviews": [
+    "Root full coherent currentC/A63 basis, complete proposed sources and whole inverses before any source freeze/adoption.",
+    "Independent full source/API/task/currentness/fixture preservation peers on exact frozen proposal.",
+    "C current full native process-shutdown probe after owner-approved coherent source integration; no kill-to-pass or installed acceptance extrapolation."
+  ],
+  "operationsNotPerformed": [
+    "No filesystem materialization",
+    "No source adoption",
+    "No C source/workflow/package-controller edit",
+    "No original artifact/published binary download",
+    "No SDK/build/test/control/probe/native/helper/payload invocation",
+    "No process launch/kill or cloud compute",
+    "No publish/dispatch"
+  ],
+  "correctiveSource03": {
+    "predecessorManifest": {
+      "path": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/manifest.json",
+      "bytes": 18127,
+      "sha256": "5d66bd94d6c2151c0e600d1250debb0f27a03fa68f967f039bd8a055d594e786"
+    },
+    "predecessorFixture": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/HomeHostOriginalLifetimeTests.cs",
+    "category": "Both actual-Core fixture acquisition intervals and independent same-original cleanup",
+    "wholeCorrectiveInverse": {
+      "path": "/workspace/astra-source/worker1-home-windows-source03-original-Core-fixture-acquisition-and-final-drain/whole-source02-corrective-inverse.json",
+      "bytes": 37821,
+      "sha256": "8b59b37848331b2fc5804182ab1c6a43028689b7434756e46225373542b9f336",
+      "fixtureExactEdits": 3,
+      "arities": [
+        1,
+        1,
+        1
+      ],
+      "entireSource02FixtureAndManifestRecover": true
+    },
+    "bothActualCoreMethods": "Actual Runtime.Start task, actual returned work and actual coalesced shutdown are retained immediately within owning try; finally releases held signals and independently settles each same start/work/close and exact runtime close. Only exact already-asserted work/close/Core exception references are recognized as expected; primary and distinct cleanup failures remain.",
+    "existingFourMethodsFiveCasesAndAllAssertionsPreserved": true,
+    "unchangedOtherTwoWholeMethods": true,
+    "allThreeProductionBodiesByReferenceWholeExact": true,
+    "newNativeRuntimeAcceptance": false,
+    "actualWholeAssertionCensus": {
+      "oldLexicalCallStarts": 54,
+      "newLexicalCallStarts": 54,
+      "allNameOrderPreserved": true,
+      "historicalNonGenericRegex45OmittedNineGenericCalls": true
+    }
+  }
+}

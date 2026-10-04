@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "status": "RAM_ONLY_UNINVOKED",
+  "basis": {
+    "commit": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+    "path": "apps/Home/src/AvaloniaHome/Program.cs",
+    "beforeBytes": 10783,
+    "beforeSha256": "702aec57d7f3f1881e4d9a458459ba21fd052cdf720084a88a70e3164a7359b5",
+    "beforeGitBlob": "ab1d0884fd33165e4a5ce707cf515d64c81725a2",
+    "after": {
+      "target": "apps/Home/src/AvaloniaHome/Program.cs",
+      "path": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/Program.cs",
+      "bytes": 13702,
+      "sha256": "bd1c87199689d36f43020830cad93001bd613b0347c1c015fc7384db93723b38",
+      "gitBlob": "09f4d6e17f68a4f532a4974c7632ebb53d1612e8",
+      "operation": "replace-exact-current-C7e3"
+    }
+  },
+  "recipe": "For Program, process the declared edits in reverse array order. For each, require current str.count(after)==occurrences, replace ALL exact after occurrences with before, then require ENTIRE UTF8 beforeBytes and beforeSha256. Forward likewise requires declared before arity and ENTIRE after pin. New files may only be removed after entire candidate pin checks. This is an inert inverse description, not an executed source helper.",
+  "reverseOrderExactArityEdits": [
+    {
+      "before": "    public static void Main(string[] args)",
+      "after": "    public static int Main(string[] args)",
+      "occurrences": 1
+    },
+    {
+      "before": "        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);",
+      "after": "        var exitCode = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);\n        if (Application.Current is not HomeApp app || app.OriginalProcessShutdown is not { } original)\n        {\n            Console.Error.WriteLine(\"[9-1 Home] The desktop exited without an original explicit Home shutdown.\");\n            return 1;\n        }\n        try { original.GetAwaiter().GetResult(); }\n        catch (Exception error)\n        {\n            Console.Error.WriteLine($\"[9-1 Home] Original shutdown failed: {error.GetType().Name}\");\n            return 1;\n        }\n        return exitCode;",
+      "occurrences": 1
+    },
+    {
+      "before": "    private CuiControlLoader? _loader;",
+      "after": "    private CuiControlLoader? _loader;\n    private readonly HomeHostOriginalLifetime _originalLifetime;\n    private IClassicDesktopStyleApplicationLifetime? _desktop;",
+      "occurrences": 1
+    },
+    {
+      "before": "        _controller = new HomeCuiController(_dashboard);",
+      "after": "        _controller = new HomeCuiController(_dashboard);\n        _originalLifetime = new HomeHostOriginalLifetime(CloseOriginalCoreAsync, ExitOriginalDesktopAsync);",
+      "occurrences": 1
+    },
+    {
+      "before": "        _viewModel.On(\"InstallAllUpdates\", _ => _ = InstallAllAsync());",
+      "after": "        _viewModel.On(\"InstallAllUpdates\", _ => _ = RunOriginalNativeWork(InstallAllAsync));",
+      "occurrences": 1
+    },
+    {
+      "before": "            desktop.Exit += async (_, _) =>\n            {\n                _homeCoreSubscription?.Dispose();\n                _homeCoreSubscription = null;\n                await _homeCore.StopAsync(explicitlyRequested: true);\n            };",
+      "after": "            _desktop = desktop;\n            desktop.ShutdownRequested += (_, request) =>\n            {\n                request.Cancel = true;\n                _ = RequestProcessShutdownAsync();\n            };",
+      "occurrences": 1
+    },
+    {
+      "before": "            if (e.Key == Key.F5)\n                _ = RefreshAsync();",
+      "after": "            if (e.Key == Key.Q && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift))\n            {\n                e.Handled = true;\n                _ = RequestProcessShutdownAsync();\n            }\n            else if (e.Key == Key.F5)\n                _ = RunOriginalNativeWork(RefreshAsync);",
+      "occurrences": 1
+    },
+    {
+      "before": "        Avalonia.Threading.Dispatcher.UIThread.Post(() => _loader?.RefreshBindings());",
+      "after": "        _loader?.RefreshBindings();",
+      "occurrences": 3
+    },
+    {
+      "before": "    private void ReportUnavailable(string message)\n    {\n        _viewModel.Set(\"OperationSummary\", message);\n        _loader?.RefreshBindings();\n    }",
+      "after": "    private void ReportUnavailable(string message) => _ = RunOriginalNativeWork(() =>\n    {\n        _viewModel.Set(\"OperationSummary\", message);\n        _loader?.RefreshBindings();\n        return Task.CompletedTask;\n    });",
+      "occurrences": 1
+    },
+    {
+      "before": "    private void OnHomeCoreChanged(HomeCoreDependencySignal signal)\n    {\n        var ready = signal.Services.Count(service => service.IsAvailable);\n        var unavailable = signal.Services.Count - ready;\n        _viewModel.Set(\"HomeCoreSummary\", $\"Home Core {ready} services available; {unavailable} unavailable.\");\n        _loader?.RefreshBindings();\n    }",
+      "after": "    private void OnHomeCoreChanged(HomeCoreDependencySignal signal) => _ = RunOriginalNativeWork(() =>\n    {\n        var ready = signal.Services.Count(service => service.IsAvailable);\n        var unavailable = signal.Services.Count - ready;\n        _viewModel.Set(\"HomeCoreSummary\", $\"Home Core {ready} services available; {unavailable} unavailable.\");\n        _loader?.RefreshBindings();\n        return Task.CompletedTask;\n    });",
+      "occurrences": 1
+    },
+    {
+      "before": "    internal HomeCoreRuntime HomeCore => _homeCore;",
+      "after": "    private Task? RunOriginalNativeWork(Func<Task> callback) =>\n        _originalLifetime.TryRunOriginal(() => Avalonia.Threading.Dispatcher.UIThread.CheckAccess()\n            ? callback()\n            : Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(callback));\n\n    internal Task? OriginalProcessShutdown => _originalLifetime.OriginalShutdown;\n\n    /// <summary>Explicit Quit Home (Ctrl+Shift+Q), distinct from closing the visible window.</summary>\n    internal Task RequestProcessShutdownAsync()\n    {\n        if (_desktop is null)\n            throw new InvalidOperationException(\"The original native desktop lifetime is not registered.\");\n        return _originalLifetime.RequestShutdownAsync();\n    }\n\n    private async Task CloseOriginalCoreAsync()\n    {\n        Exception? subscriptionFailure = null;\n        try { _homeCoreSubscription?.Dispose(); }\n        catch (Exception error) { subscriptionFailure = error; }\n        finally { _homeCoreSubscription = null; }\n\n        Exception? coreFailure = null;\n        try\n        {\n            var original = _homeCore.DisposeAsync().AsTask();\n            await original.ConfigureAwait(false);\n        }\n        catch (Exception error) { coreFailure = error; }\n\n        if (subscriptionFailure is not null && coreFailure is not null &&\n            !ReferenceEquals(subscriptionFailure, coreFailure))\n            throw new AggregateException(\"Original Home subscription and Core close failed.\", subscriptionFailure, coreFailure);\n        if (subscriptionFailure is not null)\n            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(subscriptionFailure).Throw();\n        if (coreFailure is not null)\n            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(coreFailure).Throw();\n    }\n\n    private Task ExitOriginalDesktopAsync(int exitCode) =>\n        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => _desktop!.Shutdown(exitCode)).GetTask();\n\n    internal HomeCoreRuntime HomeCore => _homeCore;",
+      "occurrences": 1
+    }
+  ],
+  "newTargetAbsences": [
+    {
+      "target": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "actualA63GitAbsent": true,
+      "currentC7e3AuthenticatedContents404": true,
+      "removeOnlyExactAfter": {
+        "target": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+        "path": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/HomeHostOriginalLifetime.cs",
+        "bytes": 4607,
+        "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72",
+        "gitBlob": "cf80699cbebefed7452a39b77dd537e350790081",
+        "operation": "new-exact-absent-current-C7e3"
+      }
+    },
+    {
+      "target": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "actualA63GitAbsent": true,
+      "currentC7e3AuthenticatedContents404": true,
+      "removeOnlyExactAfter": {
+        "target": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+        "path": "/workspace/astra-source/worker1-home-windows-source02-original-process-shutdown-and-retained-core-work/HomeHostOriginalLifetimeTests.cs",
+        "bytes": 10769,
+        "sha256": "cdf527ad70b9833ef2510b2fdf6567a1633569e1baeb6c2bf9cd196fabd433dc",
+        "gitBlob": "90eb1db58e3c6d1273b5d2fdd9cb915f8774b03e",
+        "operation": "new-exact-absent-current-C7e3"
+      }
+    }
+  ],
+  "runtimeByReference": {
+    "target": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+    "path": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/HomeCoreRuntime.cs",
+    "bytes": 26062,
+    "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1",
+    "wholeOriginalBytes": 21849,
+    "wholeOriginalSha256": "fd3cf639b5b92bea5cda526610e0bf0f40b7c018e08ac4e943fcf26820f22444",
+    "wholeOriginalGitBlob": "e2e3205a7f69fcd6ebf7d203b5f709d7b50b89a1",
+    "ownerManifest": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/manifest.json",
+    "ownerManifestSha256": "dcc27128d58ee5b655aaec306b0fbbc905e9c87e3bbfb7778ff158d76f141f92",
+    "wholeInversePath": "/workspace/astra-source/worker5-linux21-original-home-startup-and-async-cleanup-source01/whole-actual21-inverses.json",
+    "qualification": "Use only the already-selected HomeCoreRuntime target inverse from the existing owner's whole inverse; other Linux platform targets are outside this Windows package. Entire current C7e3 original matches actual A63 and owner's predecessor.",
+    "wholeInverseBytes": 44764,
+    "wholeInverseSha256": "028ce22992623bf3d941c8fdfa649f4dda9a0a42335cf4dfb7ca679d97703d89"
+  }
+}
