@@ -108,8 +108,8 @@
       "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
     },
     "apps/Web/Wave/Wave.cui": {
-      "bytes": 14523,
-      "sha256": "bec928a6a3e5ee2ae9f1edcbd2765ea01952718b362f5e5de4600889ea1cac59"
+      "bytes": 14496,
+      "sha256": "92336061a95e2d622a3243395fc28a8a9c19ed8738e3de87be6417f9dbe625b4"
     },
     "apps/Web/Wave/WaveBrowserFeature.cs": {
       "bytes": 4898,
@@ -152,12 +152,12 @@
       "sha256": "a914e3675d49a0e6293ed2ca8904231cc19c5044312d09037a8304be9034ac10"
     },
     "apps/Web/Wave/Tests/WaveNativePaintCriterionControls.cs": {
-      "bytes": 6779,
-      "sha256": "0138f59a6b84fa22ff1a6e8ceaa3977d9b27b4af3e4354557bba522caa4dfe95"
+      "bytes": 9750,
+      "sha256": "8ad43255d3fe7bfc0d70e8b78d4844fed97c82d509838815e1197cfe6d6a1a78"
     },
     "apps/Web/Wave/WaveNativePresentation.cs": {
-      "bytes": 980,
-      "sha256": "cc3ce88eb1b4847f149b2fcf2633011fb897d92745027d7bafc8908dc44f96f3"
+      "bytes": 1393,
+      "sha256": "2c9871d0426ed2fd04c3737bf6b86bc3e1f511514dcac5e1429d785942a96a7a"
     },
     "apps/Web/Wave/Tests/Fixtures/D93Unrepaired/BrowserApplication.cs": {
       "bytes": 18796,
