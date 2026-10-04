@@ -140,10 +140,9 @@ static async Task CancelledAuthoritiesPreserveState(string root,CakeIdentityServ
     string token,Organisation org,Guid owner,DateTimeOffset now)
 {
     var failures=new List<string>();
-    foreach(var waitForPool in new[]{false,true})
-    foreach(var operation in new[]{"fund","reserve"})
+    foreach(var (waitForPool,operation,injectFailure) in new[]{(false,"fund",false),(false,"reserve",false),(true,"fund",false),(true,"reserve",false),(false,"fund",true)})
     {
-        var path=Path.Combine(root,"cancel-"+operation+"-"+waitForPool+".json");
+        var path=Path.Combine(root,"cancel-"+operation+"-"+waitForPool+"-"+injectFailure+".json");
         var funding=new FixtureFunding();var quotes=new FixtureQuotes();
         var original=new OrganisationDustPools(path,identity,orgs,funding,quotes);
         var pool=original.Create(token,org.OrgID,org.Policy.Revision,"explicit-fictional-cancellation-period");
@@ -157,7 +156,9 @@ static async Task CancelledAuthoritiesPreserveState(string root,CakeIdentityServ
         using var poolMutex=new Mutex(false,CancellationMutexName(path));
         using var identityMutex=new Mutex(false,CancellationMutexName(Path.Combine(root,"identity.json")));
         if(waitForPool)poolMutex.WaitOne();
-        Task<bool>? pending=null;
+        Task<bool>? pending=null;var errors=new List<Exception>();
+        var injected=new InvalidOperationException("explicit gated fixture body failure");
+        var refused=false;
         try
         {
             pending=Task.Run(async()=>
@@ -182,20 +183,37 @@ static async Task CancelledAuthoritiesPreserveState(string root,CakeIdentityServ
             else
             {
                 await gate.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                if(injectFailure)throw injected;
                 cancellation.Cancel();gate.Release.TrySetResult();
             }
         }
+        catch(Exception error){errors.Add(error);}
         finally
         {
-            gate.Release.TrySetResult();
-            if(waitForPool)poolMutex.ReleaseMutex();
+            // Independent collectors retain original failures while always unblocking/draining work.
+            if(errors.Count!=0)try{cancellation.Cancel();}catch(Exception error){errors.Add(error);}
+            try{gate.Release.TrySetResult();}catch(Exception error){errors.Add(error);}
+            if(waitForPool)try{poolMutex.ReleaseMutex();}catch(Exception error){errors.Add(error);}
         }
-        var refused=await pending!;
+        if(pending is not null)try{refused=await pending;}catch(Exception error){errors.Add(error);}
+        if(!injectFailure&&errors.Count!=0)throw new AggregateException("cancellation fixture body/release/pending failures",errors);
+        try
+        {
         var unchanged=File.ReadAllBytes(path).SequenceEqual(before);
         var restarted=new OrganisationDustPools(path,identity,orgs,funding,quotes).GetBalance(token,org.OrgID,org.Policy.Revision,pool.PoolID);
         var preserved=unchanged&&File.ReadAllBytes(path).SequenceEqual(before)&&restarted.FundedDust==1000&&restarted.ReservedDust==0;
+        if(injectFailure)
+        {
+            Check(errors.Count==1&&ReferenceEquals(errors[0],injected)&&pending is {IsCompleted:true}&&refused&&preserved,
+                "gated fixture retains exact original failure after pending drains without state writes");
+            Console.WriteLine("PASS: injected gated fixture body failure retained after original pending operation drained with unchanged state");
+            continue;
+        }
         Console.WriteLine($"Cancellation control {operation} waitForPool={waitForPool}: cancelled={refused}, unchanged={preserved}");
         if(!refused||!preserved)failures.Add(operation+"/"+waitForPool);
+        }
+        catch(Exception error)when(errors.Count!=0)
+        {errors.Add(error);throw new AggregateException("cancellation fixture original and verification failures",errors);}
     }
     Check(failures.Count==0,"cancelled authority/pool-wait operations must preserve original bytes and restart: "+string.Join(",",failures));
     Console.WriteLine("PASS: four original funding/reservation cancellation controls preserve canonical bytes and restart");
