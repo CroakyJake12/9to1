@@ -115,7 +115,7 @@
   "evidenceLocation": "Remote release 7fc259f1b3aaa02952e2d32a8316fd9d0650a814: exact adopted public OAuth and raw identity failures, SDK6 original refusal, source-owned Sites/persistence controls, SDK7 external issuance, new source-only CUI owner receipt and original native custody.",
   "deploymentStatus": "Isolated identity Worker+D1 actually created/migrated/uploaded and closed rollback/restoration verified; HTTPS journeys NOT_RUN; no production routing/cutover",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
+  "candidateCommit": "c33b60f48ae67ec97acd8246f5c85f9542d17653",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -205,7 +205,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-04T09:18:27.819450+00:00",
+  "updatedUTC": "2026-10-04T09:29:24.889687+00:00",
   "candidateStatus": "REVIEWABLE_SOURCE_PLUS_ACTUAL_ISOLATED_CLOSED_IDENTITY_DEPLOYMENT_NOT_FULL_ACCEPTANCE",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -521,7 +521,7 @@
     "currentDelivery": "C6acd9acb7/root1b9e105a; actual7829/9964B adapter bodies read and independently pinned; prior0dce/f8de missingbody history preserved"
   },
   "finalEvidenceHandoff": {
-    "releaseHead": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
+    "releaseHead": "c33b60f48ae67ec97acd8246f5c85f9542d17653",
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
     "state": "OPEN_DRAFT_ACTIVE_PROVIDER_PASS_FULL_ACCEPTANCE_PENDING",
     "acceptedHead": null,
@@ -644,5 +644,30 @@
     "state": "UNAVAILABLE",
     "error": "MCP SSE probe returned HTTP429",
     "qualification": "Actual retry, no browser DOM read/control. Earlier HTTP404 retained as history; no authentication or underlying-cause inference."
+  },
+  "currentSitesArtifactIsolationSourceAck": {
+    "ownerRequest": "Team A exact SitesArtifactIsolationOwnerReviewRequest",
+    "state": "EXACT_663_BYTE_SOURCE_ADOPTED_PROPERTY_CHECKS_VERIFIED_WHOLE_SDK_ACCEPTANCE_PENDING",
+    "sourceCommit": "fb4358cf",
+    "sourceProposal": "cb2a76c99bdcb68cc1e3f0f5fcaef9b7bf794cf2",
+    "sourceBytes": 663,
+    "sourceSHA256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c",
+    "gitBlob": "56f3d4ce2cc317e46a3d6914c98609b076226d02",
+    "sourceReceipt": "release c33b60f48ae67ec97acd8246f5c85f9542d17653:docs/releases/sol-happy-20261003/sites-props-owner-source-ack.json",
+    "sourceCut": "4f6cf679 (exact registered Git tree in receipt); source only, no frozen validation issuance",
+    "validation": "C6 53561501/root4f6cf679: eight actual Sites/Tests SDK10.0.401 property evals exit0; explicit earlytrue SDKroots, unset/false legacy unchanged. ArtifactsPath-only late auto-opt-in outside ACK.",
+    "request": "Use exact adopted C-owned props for the next private owning validation cut. Retain all original producers/source/PDB/metadata/custody/strict drains; no relaxation or fullSDK claim."
+  },
+  "currentLiveSpecRecheck": {
+    "evidence": "release c33b60f48ae67ec97acd8246f5c85f9542d17653:docs/releases/sol-happy-20261003/current-live-spec-continuity.json",
+    "paragraphs": 8534,
+    "contentUnchanged": true,
+    "sourceSHA256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c",
+    "qualification": "Fresh atomic current live read equals previous text/index paragraph objects; canonical requirements/exclusions retained. No finalrelease acceptance."
+  },
+  "currentIndependentWork": {
+    "accounts": "C3 preparing narrow standalone31Accounts core/spec source integration from actual ownerdelivery; C2 identity/authority peer, C6 test peer. No Remote/secondissuer activation or invented ledger.",
+    "nativeArtifactReader": "C4 additive original manifest/perfile adapter12localpass; independent C5 blankprovenance negatives found2fail, correction pending. No adoption/remoteactivation.",
+    "coverage": "C6 five manually assigned current-index gap candidates retained; complete semantic/platform denominator still unresolved."
   }
 }

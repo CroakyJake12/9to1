@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
+  "candidateHead": "c33b60f48ae67ec97acd8246f5c85f9542d17653",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -152,7 +152,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T09:18:27.819450+00:00",
+  "updatedUTC": "2026-10-04T09:29:24.889687+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
@@ -188,5 +188,18 @@
       "evidence": "ActualsevenpublishedWPpageHTML inputs andtheme styles captured readonly; root hashpackager7/7; no CSS/media/editor/fullparity/canonicalauthoring acceptance",
       "remaining": "MCP request toolcannotcustomJWTAuthorization assetsupload; official authenticatedtransport readiness needed; no credentialexport/networkbypass/partialpreview overwrite"
     }
+  },
+  "currentSitesArtifactIsolationSourceAck": {
+    "ownerRequest": "Team A exact SitesArtifactIsolationOwnerReviewRequest",
+    "state": "EXACT_663_BYTE_SOURCE_ADOPTED_PROPERTY_CHECKS_VERIFIED_WHOLE_SDK_ACCEPTANCE_PENDING",
+    "sourceCommit": "fb4358cf",
+    "sourceProposal": "cb2a76c99bdcb68cc1e3f0f5fcaef9b7bf794cf2",
+    "sourceBytes": 663,
+    "sourceSHA256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c",
+    "gitBlob": "56f3d4ce2cc317e46a3d6914c98609b076226d02",
+    "sourceReceipt": "release c33b60f48ae67ec97acd8246f5c85f9542d17653:docs/releases/sol-happy-20261003/sites-props-owner-source-ack.json",
+    "sourceCut": "4f6cf679 (exact registered Git tree in receipt); source only, no frozen validation issuance",
+    "validation": "C6 53561501/root4f6cf679: eight actual Sites/Tests SDK10.0.401 property evals exit0; explicit earlytrue SDKroots, unset/false legacy unchanged. ArtifactsPath-only late auto-opt-in outside ACK.",
+    "request": "Use exact adopted C-owned props for the next private owning validation cut. Retain all original producers/source/PDB/metadata/custody/strict drains; no relaxation or fullSDK claim."
   }
 }
