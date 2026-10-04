@@ -153,13 +153,13 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T02:26:19.339515+00:00",
+  "updatedUTC": "2026-10-04T03:02:38.618302+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "fe3dbaef2629e2e556ab478e5dd42059e3e6ade7",
+  "candidateCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
   "candidateStatus": "CONTINUING_FULL_ACTIVE_SCOPE_NO_GLOBAL_ACCEPTANCE",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -414,7 +414,7 @@
     "archiveSha256": "0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b",
     "verification": "All180 original ZIP members reverified against exact publish manifest35339902 bytes; unchanged independent pointer runner and command/runtime/viewport included",
     "request": "C6 fetch immutable original compiled bytes and independently replay; no rebuilt substitution, deployed/provider/full acceptance inferred",
-    "currentArtifactBranchHead": "0163bbd41c067e6c6daf55b226398d18f9c84540"
+    "currentArtifactBranchHead": "ffdf22e8"
   },
   "homeReproductionDelivery": {
     "branch": "artifact/team-b-browser-83c24b2",
@@ -902,11 +902,12 @@
   "accountFieldsNative08Progress": {
     "actual": "Same original1 actualFAILexit1 retained privatefields at cancellation callback, samecandidate1PASSexit0 cleared. Broader12 restore failed ENOSPC beforecompile/discovery: ALL12NOT_RUN. Failed newlygenerated unused Nuget/HTTP caches inventoried and reclaimed with executed36outputs preserved; no shared/source/logs deleted. Sharedcache/tmp-budget retry queued.",
     "qualification": "No12/nativeprivatebrowser acceptance or provider acceptance.",
-    "latestRetry": "Native12 shared-cache TMP retry currently RUNNING after GUI released. Previously failed12 ENOSPC remains NOT_RUN, same original1RED/candidate1GREEN preserved;10frozeninputs/3418source-superset and120 existing package identities verified before new SDK."
+    "latestRetry": "Actualnative12PASS, own10/source3418 unchanged; all1563 generatedfilehashes independently reviewed. Physicalallocated653.58MB/logicalhardlinksum873023179B; estimated300MB budget FAIL retained, no outputs deleted. Original1RED/candidate1GREEN/first12ENOSPC NOT_RUN preserved."
   },
   "formsRespond8Progress": {
-    "actual": "Original native respondent fixture compile failed CS4007 at Program114 beforediscovery;ALL8+childseed/verifyNOT_RUN;4029sourceinputs unchanged. Separate ownedharnessawaitbyteslocal revision02 preservesexactbyte equality/rootreplacementfirstcall oracles, sourcepeer/retry queued.",
-    "gate": "Prediction actualnative rootUUIDreplacement retainsresponse onfirstsave remainsSOURCE_ONLYuntiloriginalcompiled run. No browserpublicrespondent authority."
+    "actual": "Respond01 compileCS4007line114, Respond02 nextcompileCS4007line126 exit1/0runtime/all8+childNOT_RUN preserved. Original4029 and new4037 inputs unchanged, noWeb root inputs. Conservativefirst+second159043584B under300MiB.",
+    "repaired03": "All remaining5 awaitbytes hoists preserve byte equality and firstSave Response-null sampled before any awaitedread/cleanup. Only126 actualnewfailure; other4 source-inspection findings. B2peer2f8c6decd542b65ac7315f3fe017acbfbce79a62a683bef40b222acde6ba9e66, ready03manifest71e608/retryNOT_RUN.",
+    "gate": "Native firstcall rootUUIDreplacement prediction not runtime failure yet. No browser publicrespondent authority."
   },
   "quotaColdNative05": {
     "actual": "Three actual native IndexedDB write attempts with active quota1 before first cold context access:3 genuine DOMException QuotaExceededError code22 transaction ABORT; both projects/summaries retained exact revision0/64B/hash. Six distinct recorded/reaped browser PIDs, port rebind PASS. No Wave product acceptance inferred.",
@@ -933,5 +934,89 @@
     "proposalManifestSha256": "a30ea6fce8321d7912b38a75c01bcbd42b6aaed4ef0e9b30999c1ad57ad408a0",
     "sourcePeerSha256": "d6a4829eb46124e65a4b8b3b5d5941d65e11224785403631d2f1e1a0fb13fe80",
     "scope": "Original13 plus five independent genuine native commit then tampered receipt controls; B-owned captured unique component/type/exact text/successor guard. No hosted provider acceptance."
+  },
+  "rootAccountLifetimeRepairDelivery": {
+    "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+    "files": 15,
+    "ownership": "Only B-owned apps/Web source, generated maintained bundle, original-root17 test and documentation. No shared/native/CUI files changed.",
+    "actualFullWebCompile": {
+      "exitCode": 0,
+      "sourceInputs": 4617,
+      "changedInputs": [],
+      "warnings": 22,
+      "errors": 0,
+      "logSha256": "75fc5f2ae90b8f306f8bef612efcfc080712207e2bf4eab4e72968bdacf93760"
+    },
+    "actualAdoptedRegressions": {
+      "JavaScript": {
+        "api": 28,
+        "publicClient": 11,
+        "services": 5,
+        "rootOrdering": 17,
+        "total": 61
+      },
+      "originalNative": {
+        "navigation": 37,
+        "accountBindings": 15,
+        "accountFactory": 6,
+        "total": 58
+      },
+      "firstNoRestoreFailure": "Navigation compilation used actual cached HomeGlyphLayout assets;CS0436 retained. Fresh per-project restore then all original criteria pass without source/assertion changes."
+    },
+    "independentRecordedReviewSha256": "557e070264b3b398da5104faea3a1d1a71a734c8438e611c5a7c8e4bd3c740a6",
+    "independentActualNodeReplaySha256": "8b2efc88daba69445f0c88181bbc734e828686a23c1dda58b4e6fbfb738846bc",
+    "qualification": "Program09/Main09 full signatures compiled, fresh immutable8041 publication/browserinterop/genuine provider/private lifecycle not yet executed. Actual CUIcaller token still owner dependency; oldfe actualWave cannot be relabelled8041 acceptance."
+  },
+  "accountCuiLifetimeExactOwnerRequest": {
+    "owner": "Team A A1 canonical CUI Core/Runtime",
+    "state": "EXACT_TWO_FILE_SOURCE_ACK_OR_MAINTAINED_OWNER_SUCCESSOR_REQUESTED_SHARED_SOURCE_UNCHANGED",
+    "artifactBranch": "artifact/team-b-browser-83c24b2",
+    "artifactCommit": "ffdf22e8a05ad3973e328d7ef038b0bc77fb304e",
+    "path": "docs/releases/sol-happy-20261003/team-b-cui-account-lifetime-owner-request",
+    "zipSha256": "8a1c5e1f18fc3563ce1720ed40029149201fb30ad70b50037a22e3ec4ee67078",
+    "zipBytes": 99777,
+    "verifiedMembers": 33,
+    "allMembersManifestSha256": "1cce5942114df57a490492c56d5e1d77cc7d3a9c828ac155d84e3f67e4c7e0b3",
+    "patchSha256": "193cd9e6693ab11db10f077623aaf7b526a08d464ae53aa4476c29e38cd1557d",
+    "originalCoreSha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4",
+    "originalLoaderSha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
+    "proposedCoreSha256": "91ab48bed44e0b933a7aa7166c7e0afdd9df5a7f61afd318ec65996aaf4fe805",
+    "proposedLoaderSha256": "aabc12960e3bbc7579da6c840cefa45dff5bee0b397dde7279e34df96a6ed157",
+    "independentWholeSourceReviewSha256": "04ef3f17844922f4fecfef10fb3757a558b94d94b04e41804edc5cfc524ffcc9",
+    "independentConsumerReviewSha256": "a289454d1f16ccf4746918b1b3c58e1d510a44cae626ade8e98f5ecd467ea8dc",
+    "actualFailure": "Immutable219 actual native SignIn button opens popup then closes before anyissuer requests. Native loader passes view lifetime as caller token; private reset disposes loader/cancels token -> original BrowserAccountSignIn Cancel -> broker abort before metadata. Source causality independently confirmed; original browser1PASS1FAIL8NOT_RUN retained.",
+    "requestedChange": "ACK exact193c two-file optional lifetime-aware dispatcher API/acceptedButton branch, or deliver canonical successor. Separate view token from true external caller token; shared loader must contain no account names/policy. B-owned consumer transfers only already admitted sign-in/confirmed mutation at the existing broker boundary, retaining all actual caller cancellation and ordinary read/profile view cancellation.",
+    "acceptanceGates": "Actual original Button baseline3 NOT_RUN, expected meaningful1FAIL2PASS; proposed canonical/consumer compile and same controls plus prehandoff cancel/truecaller/terminaldrain/genuineissuer journeys pending. No private CUI fork/actor/default grant.",
+    "priorRequests": "Hero one-wrap9247, Space35c, glyph metric/native editor AX and PictureGPS remain separate exact pending owner requests. Latest A02:39 contains no new exactACK for these."
+  },
+  "sealedMediaRepairBrowserCandidate": {
+    "sourceCommit": "fe3dbaef2629e2e556ab478e5dd42059e3e6ade7",
+    "manifestSha256": "d985cbfc154ca295dc816ee7ff3e07a1676bb75b0cea54b3344393025d8852f8",
+    "sourceInputs": 4615,
+    "assets": 267,
+    "assetBytes": 56962891,
+    "exitCode": 0,
+    "changedSourceInputs": [],
+    "mediaPublishedSha256": "3bae37f83369874c0ca278518bcb1c459a2cf4447fc4e248d99d6a138af8069c",
+    "actualWave14": {
+      "executed": 14,
+      "pass": 14,
+      "fail": 0,
+      "notRun": 0,
+      "runnerSha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f",
+      "resultsSha256": "b113e42150788fbe1ebeaa88cea432af6414353d82ed0551f8abd015662c1ec9",
+      "manifestSha256": "c5782b5ec41b26d36d47bdb5fabaabef100e350e484f70c7a51bd34d9e4ee1ce",
+      "cleanupSha256": "fbff548e78ba8261c1b5f018203336bd5cef627ef938808e9921adb47344bd6e",
+      "genuineQuotaAtomicity": "Actual cold quota1 StorageFull, original two stores remain revision6, pendingedit7/timeline16800 remains visible; resetquota samependingSave commits once7.",
+      "diagnostics": 0,
+      "cleanup": "Actual owned browser PIDs gone,18761listener absent, reuseaddrbindPASS.",
+      "preservedPriorFailures": "Cold04 restoredinitial app page rejected beforequota+trace-stop-before-start;14discovered8PASS2FAIL4NOT_RUN retained. Cold05 deliberately blanks actualclean pages, so automatic URL/tab restoration is not accepted. Earlierhotquota/native03/04 failures retained.",
+      "independentReplay": "B6 actualcritical independent same14 running/queued on fresh ownprofile, exactfe bytes.",
+      "fullAcceptance": "Donor/fullWave/allplatform/provider/Files/crossdevice/automaticURLrestore/IME/physicalaudibility still outstanding; no8041 runtime acceptance fromfe."
+    }
+  },
+  "resourceRecoveryProgress": {
+    "actual": "New original account-regression generated bin/obj increased workspace use to565MBfree. SDK paused while root inventories/archives/verifies exact new generatedoutputs for reversible duplicate cleanup. Allsource/rawfailures/actualruntimecustody preserved; B5native12 runtime and CUIprobe DLLs stay untouched.",
+    "notGlobalBlock": "Independent WaveGUI replay and source/artifact/coord work continue."
   }
 }
