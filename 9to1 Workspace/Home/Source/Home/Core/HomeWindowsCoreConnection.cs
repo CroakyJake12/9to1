@@ -53,6 +53,8 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
         Task<HomeNativeCoreApiSessions.Session?>? originalAdmission = null;
         Task? originalReader = null;
         Task? originalPublication = null;
+        Task<HomeNativeFilesReply>? originalFilesInvocation = null;
+        var originalFilesBody = false;
         CancellationTokenSource? firstDeadline = null;
         CancellationTokenSource? firstActive = null;
         List<Exception> failures = [];
@@ -77,8 +79,9 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
             {
                 if (filesRequest is { } originalFilesRequest)
                 {
-                    var originalFilesReply = await session.InvokeOriginalFilesAsync(originalFilesRequest.Request,
-                        _lifetime.Token).ConfigureAwait(false);
+                    originalFilesBody = true;
+                    originalFilesInvocation = session.InvokeOriginalFilesAsync(originalFilesRequest.Request, _lifetime.Token);
+                    var originalFilesReply = await originalFilesInvocation.ConfigureAwait(false);
                     var payload = HomeNativeFilesProtocol.Payload(originalFilesRequest, originalFilesReply);
                     originalPublication = PublishOriginalFilesAsync(_pipe, session, originalFilesReply, payload, _lifetime.Token);
                 }
@@ -88,6 +91,7 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
                     originalPublication = HomeUnixCoreTransport.PublishOriginalAsync(_pipe, session, payload, _lifetime.Token);
                 }
                 await originalPublication.ConfigureAwait(false);
+                originalFilesBody = false;
                 if (!await frames.Reader.WaitToReadAsync(_lifetime.Token).ConfigureAwait(false)) break;
                 var nextFrame = await frames.Reader.ReadAsync(_lifetime.Token).ConfigureAwait(false);
                 if (HomeNativeFilesProtocol.IsFilesFrame(nextFrame))
@@ -98,6 +102,8 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
         }
         // The actual first-frame deadline remains a timeout even if an owner close arrives
         // while its continuation is held; late cancellation flags do not prove first cause.
+        catch (OperationCanceledException error) when (originalFilesBody)
+        { HomeUnixCoreTransport.Add(failures, error); } // Retain the directly captured Files body cause, regardless of later close flags.
         catch (OperationCanceledException error) when (firstDeadline is { IsCancellationRequested: true } &&
             firstActive is not null && error.CancellationToken == firstActive.Token)
         { HomeUnixCoreTransport.Add(failures, new TimeoutException("Windows Home first-frame deadline exceeded.", error)); }
@@ -121,6 +127,8 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
             try { if (originalReader is not null) await originalReader.ConfigureAwait(false); }
             catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
             try { if (sessionDrain is not null) await sessionDrain.ConfigureAwait(false); }
+            catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
+            try { if (originalFilesInvocation is not null) await originalFilesInvocation.ConfigureAwait(false); }
             catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
             try { if (originalPublication is not null) await originalPublication.ConfigureAwait(false); }
             catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }

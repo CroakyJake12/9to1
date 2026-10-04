@@ -351,45 +351,102 @@ public sealed class FilesNativeHomeDomainOwner : IHomeNativeFilesPublicationOwne
         return reply;
     }
 
-    public async Task DemandOriginalReplyCurrentAsync(HomeNativeFilesOriginalConnection connection,
+    public Task DemandOriginalReplyCurrentAsync(HomeNativeFilesOriginalConnection connection,
         HomeNativeFilesReply originalReply, CancellationToken token)
     {
         DemandConnection(connection);
         if (!_connections.TryGetValue(connection, out var state) ||
-            !state.Replies.TryGetValue(originalReply, out var original))
+            !state.Replies.TryGetValue(originalReply, out var read))
             throw new UnauthorizedAccessException("Retain the SAME owner-issued original Files reply.");
-        if (!await original.Current(token).ConfigureAwait(false))
-            throw new UnauthorizedAccessException("The original Files reply binding retired.");
-        DemandAlive(state);
+        lock (state.Sync)
+        {
+            DemandAlive(state);
+            if (state.Originals.Count == 64)
+                throw new InvalidOperationException("The bounded original Files task custody is full.");
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var original = DemandOriginalReplyCoreAsync(start.Task, state, read, token);
+            state.Originals.Add(original);
+            start.SetResult(); // Separate owner close joins this SAME raw read-check task.
+            return original;
+        }
     }
 
-    public async ValueTask<IHomeNativeFilesPublicationGuard?> AcquireOriginalReplyPublicationAsync(
-        HomeNativeFilesOriginalConnection connection, HomeNativeFilesReply originalReply,
+    private static async Task DemandOriginalReplyCoreAsync(Task start, State state, ReplyRead read,
         CancellationToken token)
     {
-        DemandConnection(connection);
-        if (_originalPublicationSource is null) return null;
-        if (!_connections.TryGetValue(connection, out var state) ||
-            !state.Replies.TryGetValue(originalReply, out var read))
-            throw new UnauthorizedAccessException("Retain the SAME privately issued Files read before publication.");
-        DemandAlive(state);
-        // The issuer already retains its guard. No ordinary Home/provider current reads here.
-        IHomeNativeFilesPublicationGuard? retained = null;
+        await start.ConfigureAwait(false);
+        CancellationTokenSource? active = null;
         Exception? primary = null;
         List<Exception> cleanup = [];
         try
         {
+            active = CancellationTokenSource.CreateLinkedTokenSource(token, state.Lifetime.Token);
+            DemandAlive(state);
+            if (!await read.Current(active.Token).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("The original Files reply binding retired.");
+            DemandAlive(state);
+            active.Token.ThrowIfCancellationRequested();
+        }
+        catch (Exception error) { primary = error; }
+        finally
+        {
+            if (active is not null)
+                try { active.Dispose(); } catch (Exception error) { Add(cleanup, error, primary); }
+        }
+        Throw(primary, cleanup);
+    }
+
+    public ValueTask<IHomeNativeFilesPublicationGuard?> AcquireOriginalReplyPublicationAsync(
+        HomeNativeFilesOriginalConnection connection, HomeNativeFilesReply originalReply,
+        CancellationToken token)
+    {
+        DemandConnection(connection);
+        if (_originalPublicationSource is null) return ValueTask.FromResult<IHomeNativeFilesPublicationGuard?>(null);
+        if (!_connections.TryGetValue(connection, out var state) ||
+            !state.Replies.TryGetValue(originalReply, out var read))
+            throw new UnauthorizedAccessException("Retain the SAME privately issued Files read before publication.");
+        lock (state.Sync)
+        {
+            DemandAlive(state);
+            if (state.Originals.Count == 64)
+                throw new InvalidOperationException("The bounded original Files task custody is full.");
             var originalRead = new FilesNativeOriginalPublicationRead(connection, originalReply,
                 read.Workspace, read.Page, read.StoreRevision, state.Lifetime.Token);
-            retained = await _originalPublicationSource.AcquireOriginalAsync(originalRead, token).ConfigureAwait(false);
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var original = AcquireOriginalPublicationCoreAsync(start.Task, state, originalRead, token);
+            state.Originals.Add(original);
+            start.SetResult(); // Publish this SAME source acquisition before any callback.
+            return new(original);
+        }
+    }
+
+    private async Task<IHomeNativeFilesPublicationGuard?> AcquireOriginalPublicationCoreAsync(Task start,
+        State state, FilesNativeOriginalPublicationRead originalRead, CancellationToken token)
+    {
+        await start.ConfigureAwait(false);
+        IHomeNativeFilesPublicationGuard? retained = null;
+        CancellationTokenSource? active = null;
+        Exception? primary = null;
+        List<Exception> cleanup = [];
+        try
+        {
+            // The issuer already retains its guard. No ordinary Home/provider current reads here.
+            active = CancellationTokenSource.CreateLinkedTokenSource(token, state.Lifetime.Token);
             DemandAlive(state);
-            token.ThrowIfCancellationRequested();
+            retained = await _originalPublicationSource!.AcquireOriginalAsync(originalRead, active.Token).ConfigureAwait(false);
+            DemandAlive(state);
+            active.Token.ThrowIfCancellationRequested();
             if (retained is not null && !retained.IsHeld)
                 throw new UnauthorizedAccessException("The original Files transaction was not retained.");
         }
         catch (Exception error) { primary = error; }
-        if (primary is not null && retained is not null)
-            try { await retained.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
+        finally
+        {
+            if (active is not null)
+                try { active.Dispose(); } catch (Exception error) { Add(cleanup, error, primary); }
+            if ((primary is not null || cleanup.Count != 0) && retained is not null)
+                try { await retained.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(cleanup, error, primary); }
+        }
         Throw(primary, cleanup);
         return retained;
     }

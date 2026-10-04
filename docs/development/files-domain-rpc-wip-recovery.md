@@ -1,6 +1,6 @@
-# Files domain RPC recovery checkpoint 04
+# Files domain RPC recovery checkpoint 05
 
-This isolated code-only checkpoint is UNSELECTED, UNREVIEWED, UNCOMPILED and UNRUN. It is based on `024ebce3abc57cebc71ffae68c88f683309e4868`; no global branch or installed package is updated.
+This isolated code-only checkpoint is UNSELECTED, UNREVIEWED, UNCOMPILED and UNRUN. It is based on `31a7705d490b85bea09b59ef8984318fd3dcef79`; no global branch or installed package is updated.
 
 ## Publication refusal and retained write
 
@@ -21,9 +21,18 @@ The HOME-only staged helper remains default unconfigured and adds no store fallb
 Home owns canonical actor/profile/permissions, accepted private Session, installed peer/lease, Core server and publication port. Files owns canonical read plan, provider/metadata and native consumer. The app provider and dispatcher initializer are distinct from the Home provider. Installed Windows package selection remains unavailable until real domain ports, canonical store, protected receipt authority and the executable entrypoint are supplied.
 
 Relevant projects:
-- `9to1 Workspace/Home/Source/Home/Home.csproj`
+- `9to1 Workspace/Home/HavenOS.Home.csproj`
 - `9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj`
 - `9to1 Workspace/Files/NativeUI/HavenOS.Files.NativeUI.csproj`
 - `9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj`
 
-The full Windows Desktop build/test graph and existing seven native cases remain unrun. New missing-guard, retained-write/close, cancellation and independent error-provenance cases are still being authored against the actual protocol. No runtime, installed package, signing, protected receipt or global adoption acceptance is inferred from source publication.
+The full Windows Desktop build/test graph and existing seven native cases remain unrun. This checkpoint adds four authored Windows protocol methods/seven outcomes in `Home/Tests/HomeNativeFilesRpcPublicationTests.cs`: three missing-guard combinations, real canonical profile or controlled installed-tuple retirement while an owner check is held, actual frame-header/payload writer cancellation with guards and Session close held until finally settles, and exact independent two-check/two-close failures. The fixture uses actual Windows pipes/kernel credentials, canonical FileHome profile state and its physical publication lease. Its installed receipt and Files transaction are controlled fixture inputs, explicitly not protected installed or canonical Files metadata acceptance.
+
+The owner now publishes and retains its exact source-acquisition and public raw current-check Tasks before callbacks. Owner close joins both Tasks independently even when reached outside the normal Session close path. The Windows server also captures the actual Files invocation Task and preserves a Files invocation/publication body cancellation before the legacy late-close transport waiver; context and server cancellation tokens are not presumed equal. The original broker/plan/current read paths remain unchanged.
+
+Run the owning suite on the Windows receiver with:
+```powershell
+dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" --configuration Debug
+dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" --configuration Release
+```
+All four methods/seven outcomes are UNCOMPILED/UNRUN. No runtime, installed package, signing, protected receipt or global adoption acceptance is inferred from source publication.
