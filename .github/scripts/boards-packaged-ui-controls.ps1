@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory = $true)][string]$PackageInput,
     [Parameter(Mandatory = $true)][string]$ObservationInput,
     [Parameter(Mandatory = $true)][string]$OutputDirectory,
-    [ValidateSet('edit-save', 'rich-history')][string]$Scenario = 'edit-save'
+    [ValidateSet('edit-save', 'rich-history', 'storage-retry')][string]$Scenario = 'edit-save'
 )
 
 # Windows PowerShell 5.1 / standard Windows UIAutomation and keyboard input.
@@ -27,6 +27,8 @@ $result = [ordered]@{
 }
 $process = $null
 $exitCode = 1
+$restoreOwnedPrimaryAttributes = $false
+$originalPrimaryAttributes = $null
 
 function Write-Result { $result | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'result.json') -Encoding UTF8 }
 function Check([bool]$Condition, [string]$Name) {
@@ -145,6 +147,52 @@ function Invoke-NativeHistory([string]$Name) {
     Check (-not $process.HasExited -and [BoardsPackageInput]::OwnsForeground($process.Id)) "Native $Name invocation belongs to the exact foreground app"
     $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     Check $true "Actual native $Name InvokePattern admitted the app command"
+}
+function Find-SaveLabel([string]$StatusPrefix, [bool]$Exact) {
+    $work = [Windows.Forms.Screen]::FromHandle($process.MainWindowHandle).WorkingArea
+    foreach ($regionId in @('TopBarRight', 'FooterBar')) {
+        $region = Find-Control $window $regionId
+        if ($null -eq $region) { continue }
+        $condition = New-Object System.Windows.Automation.AndCondition(
+            (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.Id)),
+            (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Text)))
+        foreach ($text in $region.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)) {
+            $c = $text.Current; $r = $c.BoundingRectangle
+            $matchesStatus = if ($Exact) { $c.Name -ceq $StatusPrefix } else { $c.Name.StartsWith($StatusPrefix, [StringComparison]::Ordinal) }
+            if ($matchesStatus -and $c.IsEnabled -and -not $c.IsOffscreen -and $r.Width -gt 0 -and $r.Height -gt 0 -and
+                $r.Left -ge $work.Left -and $r.Top -ge $work.Top -and $r.Right -le $work.Right -and $r.Bottom -le $work.Bottom) {
+                return @{ element = $text; region = $regionId }
+            }
+        }
+    }
+    return $null
+}
+function Observe-SaveLabel([string]$StatusPrefix, [bool]$Exact = $true) {
+    $observed = Wait-Observed { Find-SaveLabel $StatusPrefix $Exact } "Visible native save text: $StatusPrefix"
+    Check (-not $process.HasExited -and $observed.element.Current.ProcessId -eq $process.Id) 'Observed save-state text belongs to the exact live packaged app'
+    $result.storageStatusObservations += [ordered]@{ text = $observed.element.Current.Name; region = $observed.region; processId = $process.Id; controlType = 'Text'; observedAtUtc = [DateTimeOffset]::UtcNow.ToString('o') }
+    Write-Result
+}
+function Position-OwnedWindow([System.Windows.Automation.AutomationElement]$Editor) {
+    Focus-Edit $Editor
+    Assert-OwnedFocus $Editor; [BoardsPackageInput]::Chord(0x5B, 0x26) # Standard OS Win+Up
+    Check $true 'Standard Win+Up admitted only to the exact focused native app'
+    [void](Wait-Observed {
+        $r = $window.Current.BoundingRectangle
+        $work = [Windows.Forms.Screen]::FromHandle($process.MainWindowHandle).WorkingArea
+        $visibleWidth = [Math]::Max(0, [Math]::Min($r.Right, $work.Right) - [Math]::Max($r.Left, $work.Left))
+        $visibleHeight = [Math]::Max(0, [Math]::Min($r.Bottom, $work.Bottom) - [Math]::Max($r.Top, $work.Top))
+        $r.Width -gt 0 -and $r.Height -gt 0 -and $visibleWidth * $visibleHeight -ge 0.95 * $r.Width * $r.Height
+    } 'Actual native window geometry inside the real monitor work area')
+    Check ([BoardsPackageInput]::OwnsForeground($process.Id)) 'Actual OS-positioned window retains exact process foreground'
+}
+function Restore-OwnedPrimaryAttributes {
+    if (-not $restoreOwnedPrimaryAttributes) { return }
+    $full = [IO.Path]::GetFullPath($boardPath)
+    if (-not $full.StartsWith($fixture + '\', [StringComparison]::OrdinalIgnoreCase) -or
+        ([IO.File]::GetAttributes($full) -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Own primary attribute restoration refused outside the genuine fixture.' }
+    [IO.File]::SetAttributes($full, $originalPrimaryAttributes)
+    Check ([IO.File]::GetAttributes($full) -eq $originalPrimaryAttributes) 'Exact original own-primary NTFS attributes restored'
 }
 function Start-Board([string]$Label) {
     $start = New-Object Diagnostics.ProcessStartInfo
@@ -275,7 +323,7 @@ public static class BoardsPackageInput {
     public static void TypeText(string text) { var input=new INPUT[text.Length*2]; for(int i=0;i<text.Length;i++) { input[i*2]=Key(0,text[i],4); input[i*2+1]=Key(0,text[i],6); } Send(input); }
 }
 '@
-    $result.stage = if ($Scenario -ceq 'rich-history') { 'actual-native-rich-history' } else { 'actual-native-edit-save-reopen' }
+    $result.stage = if ($Scenario -ceq 'rich-history') { 'actual-native-rich-history' } elseif ($Scenario -ceq 'storage-retry') { 'actual-native-storage-failure' } else { 'actual-native-edit-save-reopen' }
     $exe = Join-Path $install $catalog.executable
     $fixture = Join-Path $output 'runtime-fixture'; [void][IO.Directory]::CreateDirectory($fixture)
     $boardPath = Join-Path $fixture 'Packaged UI board.9to1board'
@@ -324,6 +372,58 @@ public static class BoardsPackageInput {
         Capture-Window 'rich-history-reopened-window.png'
         Close-Board
         Check (Durable-BoldIs $true) 'Final native close retains actual formatted paragraph and canonical identities'
+    } elseif ($Scenario -ceq 'storage-retry') {
+        $result.stage = 'actual-native-storage-failure'
+        $result.storageStatusObservations = @()
+        $pendingText = 'Retried after a real Windows read-only storage failure'
+        $result.expectedStorageRetry = [ordered]@{ paragraph = $pendingText; fault = 'Own app-created NTFS primary ReadOnly file attribute'; qualification = 'OS storage behavior only, not account authority or ACL policy. Autosave may also contribute.' }
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Actual native paragraph for protected storage fixture'
+        [void](Observe-Edit $paragraph 'Paragraph editor')
+        Position-OwnedWindow $paragraph
+        Observe-SaveLabel 'Saved' $false
+        $initial = Read-Board
+        Check ($initial.documentId -ceq $identity) 'Saved baseline retains the app-created canonical identity'
+        $savedHash = (Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $drive = New-Object IO.DriveInfo([IO.Path]::GetPathRoot($boardPath))
+        Check ($drive.DriveFormat -ceq 'NTFS') 'Actual owned Windows fixture resides on NTFS'
+        $originalPrimaryAttributes = [IO.File]::GetAttributes($boardPath)
+        Check (($originalPrimaryAttributes -band ([IO.FileAttributes]::ReadOnly -bor [IO.FileAttributes]::ReparsePoint)) -eq 0) 'Actual app-created primary is writable and not a reparse point before fault'
+        $restoreOwnedPrimaryAttributes = $true
+        [IO.File]::SetAttributes($boardPath, $originalPrimaryAttributes -bor [IO.FileAttributes]::ReadOnly)
+        Check (([IO.File]::GetAttributes($boardPath) -band [IO.FileAttributes]::ReadOnly) -ne 0) 'Real own-primary ReadOnly attribute is asserted'
+        $result.storageFixture = [ordered]@{ fileSystem = $drive.DriveFormat; originalAttributes = $originalPrimaryAttributes.ToString(); originalAttributeBits = [int]$originalPrimaryAttributes; baselineSha256 = $savedHash; documentId = $identity; paragraphId = $paragraphs[0].id }
+        Write-Result
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Current real editor before unsaved storage-failure edit'
+        Type-Text $paragraph $pendingText
+        Assert-OwnedFocus $paragraph; [BoardsPackageInput]::Chord(0x11, 0x53)
+        Check $true 'Actual focused user save attempted while the genuine primary is read-only'
+        Observe-SaveLabel 'Save failed'
+        Check (([IO.File]::GetAttributes($boardPath) -band [IO.FileAttributes]::ReadOnly) -ne 0 -and (Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $savedHash) 'Real storage failure preserves exact saved primary bytes while ReadOnly remains asserted'
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Current native pending editor after actual save failure'
+        $value = $paragraph.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+        Check ($value.Current.Value -ceq $pendingText -and (Read-Board).documentId -ceq $identity) 'Actual save failure retains pending native text and existing durable identity'
+        Capture-Window 'storage-failed-window.png'
+        Restore-OwnedPrimaryAttributes
+        $result.stage = 'actual-native-storage-retry'
+        Focus-Edit $paragraph
+        Assert-OwnedFocus $paragraph; [BoardsPackageInput]::Chord(0x11, 0x53)
+        Check $true 'Actual focused user retry admitted only after restoring own-primary attributes'
+        [void](Wait-Observed {
+            try { $doc = Read-Board; $blocks = @($doc.richNotes.sections[0].pages[0].blocks | Where-Object { $_.id -ceq $paragraphs[0].id }); $doc.documentId -ceq $identity -and $blocks.Count -eq 1 -and $blocks[0].plainText -ceq $pendingText } catch { $false }
+        } 'Actual user retry durably persists pending text with the same document/block identities')
+        Observe-SaveLabel 'Saved' $false
+        Check ((Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $savedHash) 'Actual successful retry updates saved primary bytes'
+        Capture-Window 'storage-retried-window.png'
+        Close-Board
+        $beforeReopen = (Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $result.stage = 'actual-native-storage-reopen'
+        $window = Start-Board 'reopen'
+        $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Actual reopened storage-retry paragraph'
+        $value = Observe-Edit $paragraph 'Paragraph editor'
+        Check ($value.Current.Value -ceq $pendingText -and (Read-Board).documentId -ceq $identity -and (Get-FileHash -LiteralPath $boardPath -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $beforeReopen) 'Actual native reopen restores retry text and preserves existing identities/file bytes before close'
+        Position-OwnedWindow $paragraph
+        Capture-Window 'storage-reopened-window.png'
+        Close-Board
     } else {
     $title = Wait-Observed { Find-Control $window 'BoardTitleBox' } 'Actual native board title editor'
     $paragraph = Wait-Observed { Find-Control $window $paragraphId } 'Actual native paragraph editor derived from real document identity'
@@ -360,6 +460,10 @@ public static class BoardsPackageInput {
     $result.status = 'FAILED_OR_BLOCKED_UNACCEPTED'
     $result.failure = [ordered]@{ type = $_.Exception.GetType().FullName; message = $_.Exception.Message }
 } finally {
+    if ($restoreOwnedPrimaryAttributes) {
+        try { Restore-OwnedPrimaryAttributes }
+        catch { $result.attributeRestorationFailure = [ordered]@{ type = $_.Exception.GetType().FullName; message = $_.Exception.Message }; $result.status = 'FAILED_OR_BLOCKED_UNACCEPTED'; $exitCode = 1 }
+    }
     if ($null -ne $process) {
         try {
             if (-not $process.HasExited) {
@@ -371,6 +475,7 @@ public static class BoardsPackageInput {
             }
         } catch { $result.cleanupFailure = $_.Exception.GetType().FullName } finally { $process.Dispose() }
     }
+    if ($Scenario -ceq 'storage-retry' -and ($result.forcedCleanup -or $result.Contains('cleanupDrainFailure') -or $result.Contains('cleanupFailure'))) { $result.status = 'FAILED_OR_BLOCKED_UNACCEPTED'; $exitCode = 1 }
     Write-Result
 }
 exit $exitCode

@@ -51,3 +51,27 @@ capability. Lack of an interactive desktop or native automation/focus remains
 The hosted runner contains SDKs; no clean-PC, installed Home tuple, signing,
 donor breadth, all themes/devices or full-app acceptance is claimed. C6 review
 and root invocation are required before executing this new workflow.
+
+The `storage-retry` continuation dispatches only a new physical storage control.
+The actual application creates the exclusive fixture, whose real NTFS primary
+file attributes and saved bytes are recorded. The harness changes only that
+file's ReadOnly attribute; no document JSON, model, fake store, account authority
+or ACL is changed. Native paragraph input and focused Ctrl+S must be followed by
+visible native `Save failed` text in the existing TopBarRight/FooterBar regions.
+The primary must retain its exact saved bytes while ReadOnly remains asserted,
+and the current native paragraph must retain the pending edit.
+
+Restoring the exact original attributes and issuing a native user save retry
+must produce `Saved` text and the expected durable paragraph with the same
+canonical document/block identities. A normal close and actual package reopen
+must restore that edit. Autosave may also contribute, so no exclusive shortcut
+causality is claimed. Original attributes are restored again in finally before
+own-process cleanup. Restoration, forced cleanup or stream-drain failures block
+success. Failure observations and the exact status text/process/region are kept.
+
+The existing foreground/control-focus guard admits the standard OS Win+Up chord
+before observing real window geometry: at least 95% of its rectangle must fit
+inside the actual monitor work area; observed save text must fit completely.
+No unobserved UIA Window/Transform provider is assumed. Missing OS geometry or
+native status peers remains an actual failure. The completed 67/85 workflows
+and indices remain unchanged; only this new scenario is dispatched.

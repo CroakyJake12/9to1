@@ -90,6 +90,26 @@
     {
       "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs",
       "sha256": "2cf3aa4d9b42dcefac0a033b71b055daa79811b2ae8b675ea4a4e58e26e32f5b"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBlockAutomationPeer.cs",
+      "sha256": "be0f1e249ec2f12a8174fce36fd970f1d7f9f0ff99ebd5d7208861e4f52ba090"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/AutomationPeer.cs",
+      "sha256": "23df5c0d8e5c20d137e17202f78361bc4a210cbe1e4f3e51412c7d9ffc3078ca"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/AutomationNode.cs",
+      "sha256": "8aa197686196f37e538e4ac08f887f2a31dce838ce6bd8083029532d6c9a3405"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowAutomationPeer.cs",
+      "sha256": "96161e0ce0e01b7176bbccb881155b32885a94e739c54e32f2474d0355a3d500"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowBaseAutomationPeer.cs",
+      "sha256": "39406bd281c8b98ebe8f0d36352d4c706dc731782f7fb5518962893b88a9d2ea"
     }
   ]
 }
