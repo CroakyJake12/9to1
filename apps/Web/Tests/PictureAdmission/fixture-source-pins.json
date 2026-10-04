@@ -38,8 +38,8 @@
   },
   "currentActualSource": {
     "PictureBrowserFeature.cs": {
-      "bytes": 13101,
-      "sha256": "c121a52e322dc589ebe6cc9ecd0bf8738fa13b99085704eb9f629a46a6610f4c"
+      "bytes": 13171,
+      "sha256": "86cc1c751e0217daa204c05fa57a1b7f7865a9b412e23c217b67373ec1726eec"
     },
     "PictureBrowserSession.cs": {
       "bytes": 31704,
