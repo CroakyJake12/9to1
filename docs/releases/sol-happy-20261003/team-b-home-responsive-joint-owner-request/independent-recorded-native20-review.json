@@ -1,0 +1,88 @@
+{
+  "verdict": "ACTUAL_NATIVE20_JOINT_CAUSAL_LEAD_VERIFIED_PRODUCTION_NARROW_HOME_REMAINS_RED",
+  "recordedResultsSHA256": "39c7a2aae80be0359280e6e8d051fe63da832795b1aa9741f9e48714d16de203",
+  "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "trackedSourceBeforeAfterVerified": 7791,
+  "explicitSourceBeforeAfterVerified": 23,
+  "nativeWitnessFilesVerified": 11,
+  "buildExit": 0,
+  "cohorts": [
+    {
+      "name": "canonical-auto-360",
+      "passed": 15,
+      "failed": 5,
+      "exit": -6,
+      "rootWidth": 1031,
+      "viewportWidth": 360,
+      "diagnostic": false
+    },
+    {
+      "name": "one-wrap-auto-360",
+      "passed": 18,
+      "failed": 2,
+      "exit": -6,
+      "rootWidth": 1031,
+      "viewportWidth": 360,
+      "diagnostic": false
+    },
+    {
+      "name": "intrinsic-auto-360",
+      "passed": 18,
+      "failed": 2,
+      "exit": -6,
+      "rootWidth": 988,
+      "viewportWidth": 360,
+      "diagnostic": false
+    },
+    {
+      "name": "canonical-disabled-360",
+      "passed": 14,
+      "failed": 6,
+      "exit": -6,
+      "rootWidth": 360,
+      "viewportWidth": 360,
+      "diagnostic": true
+    },
+    {
+      "name": "one-wrap-disabled-360",
+      "passed": 17,
+      "failed": 3,
+      "exit": -6,
+      "rootWidth": 360,
+      "viewportWidth": 360,
+      "diagnostic": true
+    },
+    {
+      "name": "intrinsic-disabled-360",
+      "passed": 20,
+      "failed": 0,
+      "exit": 0,
+      "rootWidth": 360,
+      "viewportWidth": 360,
+      "diagnostic": true
+    },
+    {
+      "name": "intrinsic-disabled-1440",
+      "passed": 20,
+      "failed": 0,
+      "exit": 0,
+      "rootWidth": 1440,
+      "viewportWidth": 1440,
+      "diagnostic": true
+    }
+  ],
+  "uniqueCriteria": 20,
+  "actualRepeatedChecks": 140,
+  "noOwnedProcessesRemain": true,
+  "causalInterpretation": [
+    "ProductionAuto has canonical1031px and intrinsic988px extent at360viewport; intrinsicmarkup alone does not satisfy narrowwidth.",
+    "Finitewidth diagnostic alone keeps canonical6failure and onewrap3failure; global scrolling removal alone is insufficient.",
+    "Joint intrinsic ownerlayout plus finitewidth diagnostic passes same20 at360 and1440. This is a bounded causal source lead, not approved ownermarkup or per-surface host policy."
+  ],
+  "limits": [
+    "Actual native Render/CUI/TextLayout logical geometry, no browser/physicalink/AT/touch/200%scale/platformacceptance.",
+    "No owner ACK or shipped Home finiteconstraint adoption established.",
+    "Seven repeated cohorts do not form seven independent canonical obligation totals.",
+    "No rerun/SDK/GUI executed in this independent recorded review."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "recordedUTC": "2026-10-04T03:44:53.501739+00:00",
+  "zipSha256": "e27025c269a160dc3f36eaf79506275e60f7176f53309d496511e0ac9ba126d8",
+  "zipBytes": 5192627,
+  "members": 72,
+  "allMemberHashesBytesCRCVerified": true,
+  "manifestSha256": "bff8456ea4775ee46a6973a156f94ccfe0cc4c67b15b42ffb57b850ea111eee0",
+  "actual": "All7diagnosticnativecohorts140checks; canonicalAuto36015PASS5FAIL, jointintrinsicDisabled360/1440each20PASS. ProposedpublicperHomesourcepathNOT_RUN. No sharedsourceedit/ownerACK/browser/ATacceptance."
+}

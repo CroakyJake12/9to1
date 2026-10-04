@@ -1,0 +1,19 @@
+This is an exact joint source ACK request, not an adopted or runnable app release.
+
+Actual shared Home base SHA00589 becomes proposed SHA74298 through the included full patch. The proposal retains all104 nodes, IDs, actions, bindings, labels and nonlayout attributes. Horizontal native stacks become already-supported WrapPanels, fixed search/hero widths become maximum widths, and native text wraps. It includes the earlier oneWrap attribute directly against the current shared base.
+
+The browser proposal appends optional `ConstrainHorizontalLayout=false` to its existing platform surface record. Only the existing Home fallback opts in. Render maps an opted-in surface to actual native ScrollViewer horizontal Disabled, preserving default Auto for other surfaces. A registered owner can explicitly supply this platform presentation choice. This grants no route, service, account or domain authority.
+
+Neither part is proposed for adoption alone. Actual production Auto at360px failed20criteria: canonical15PASS/5FAIL, oneWrap18/2, intrinsic18/2. Diagnostic Disabled worsened canonical to14/6, oneWrap17/3. Only joint intrinsic+finite-width diagnostic passed20/20 at360px and1440px. Raw all7 results, first failures, before/after7791 selected source/font witnesses and selected compiled binary hashes are included. These are native positional text-range results, not glyph ink/readability, browser, AT, touch or zoom acceptance.
+
+Reproduce historical runs using the exact8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8 repository plus the preserved B-owned fixture/project/shims in `repro` and `HomeResponsiveLayoutRegression.original.cs`. Place those original files at their manifest paths in an isolated checkout, verifying hashes. The original project uses genuine repository scene/Home/CUI/Avalonia dependencies. Source paths in historical logs identify that original execution environment; relocation requires explicit source custody rather than reinterpreting them as a new run. Do not alter original assertions or map known failures to success.
+
+The proposed host graph has NOT BEEN BUILT OR RUN. To test actual public opt-in rather than the old post-installation diagnostic, use the separate `HomeResponsiveJointProposal.Tests.csproj`, with an explicit verified repository root:
+
+    dotnet build HomeResponsiveJointProposal.Tests.csproj -c Release -m:1 -p:NativeRepositoryRoot=/absolute/verified8041checkout --disable-build-servers -nodeReuse:false
+    dotnet bin/Release/net10.0/HomeResponsiveJointProposal.Tests.dll /absolute/Home.cui.proposed /absolute/new/narrow.json 360 800 home-constrained-proposal
+    dotnet bin/Release/net10.0/HomeResponsiveJointProposal.Tests.dll /absolute/Home.cui.proposed /absolute/new/wide.json 1440 954 home-constrained-proposal
+
+Use an isolated writable CLI home/NuGet cache and fresh HAVEN_DATA_DIR; reuse actual owner fonts/theme. The proposed fixture preserves the complete20 assertion block, reports the declared surface flag, and leaves `diagnosticPropertyMutation=false`. Its source-only results remain NOT_RUN. The project explicitly links only the reviewed proposed B-owned App/Registry/fixture and authentic owner dependencies; no shared source or emitted DLL needs replacement. The selected compiled witnesses are forensic inputs, not a standalone runtime distribution.
+
+A1 exact shared source ACK and B6 host source review are required before root integrates both changes. After that, run unchanged native geometry and lifecycle controls, publish fresh sealed output, and exercise real browser narrow/touch, keyboard, accessibility and200% zoom gates. Existing service/provider/package/default-profile gaps remain separate. The first source-authoring parenthesis error is retained only as historical evidence and is not compiled by the explicit proposal project.

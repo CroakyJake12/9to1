@@ -1,0 +1,331 @@
+{
+  "recordedUTC": "2026-10-04T03:31:30.073193+00:00",
+  "status": "EXACT_JOINT_OWNER_SOURCE_ACK_REQUEST_NO_ADOPTION_NO_BROWSER_ACCEPTANCE",
+  "owner": "Team A A1 shared Home authoring; Team B browser presentation metadata",
+  "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "target": "9to1 Workspace/Home/UI/Home.cui",
+  "exactActualSharedBase": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.original",
+    "bytes": 11955,
+    "sha256": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571"
+  },
+  "exactRequestedSharedProposal": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/Home.cui.proposed",
+    "bytes": 12268,
+    "sha256": "74298cc25b631bb3a63902767abe6d17cbfc4aa4e134a65ec571762cba7dfb69"
+  },
+  "requestedSharedPatch": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/home-current-to-intrinsic.patch",
+    "bytes": 16094,
+    "sha256": "e861e042048a53b162f2716f88de086591edb1421cdd5a0b69a50a992d15dbe0"
+  },
+  "ownerACKRequiredBeforeAdoption": true,
+  "jointMeaning": "Opt-in B-owned surface flag ConstrainHorizontalLayout(false default) uses actual unchanged ScrollViewer Disabled horizontal measure constraint; only explicit Home fallback declarestrue, registered authenticated owner surfaces can choose existing browser metadata at composition. Pair with owner native WrapPanel/maxwidth/textwrapping proposal. No global policy, secondDOMHome, CUI schema/fakeauthority change.",
+  "hostSourceProposal": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserSurfaceRegistry.cs.original",
+      "bytes": 14479,
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserSurfaceRegistry.cs.proposed",
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserSurfaceRegistry.cs.patch",
+      "bytes": 701,
+      "sha256": "789ca9f9c496fb21f097330b0501075392e753aede78e9cd98052bcd4bb758c7"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserApplication.cs.original",
+      "bytes": 18174,
+      "sha256": "1be15d72354c29ef04e1bac80d4fd8fd5b0c342123415489e028c115d7c0e140"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserApplication.cs.proposed",
+      "bytes": 18319,
+      "sha256": "2faa6d6c30bca3fabccd6189b01b45bbd6a19c281cdbed891a0945d5e07e1959"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/BrowserApplication.cs.patch",
+      "bytes": 1453,
+      "sha256": "ca8cfafb6ad0c8b50116f5f88e87b979c9f467ce823c24fd8c091a25b943d722"
+    }
+  ],
+  "currentCanonicalMarkup104NodePreservation": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/home-responsive-layout/joint-owner-request/markup-preservation-current00589.json",
+    "bytes": 862,
+    "sha256": "30ff02a40f1a4a6b0dcc26fb7687a9320e08b21cbd4eb7999a4749a904c01bb8"
+  },
+  "actualObservedAll7": [
+    {
+      "name": "canonical-auto-360",
+      "passed": 15,
+      "failed": 5,
+      "exit": -6,
+      "failedAssertions": [
+        "Hero full text range fits its assigned native width",
+        "Hero explanatory glyph ranges do not intersect observed-status column",
+        "Home native horizontal extent fits the scroll viewport",
+        "Home root fits the native scroll viewport width",
+        "Every actual Home full text range fits its assigned width"
+      ],
+      "rootWidth": 1031,
+      "viewportWidth": 360,
+      "extentWidth": 1031,
+      "diagnosticPropertyMutation": false
+    },
+    {
+      "name": "one-wrap-auto-360",
+      "passed": 18,
+      "failed": 2,
+      "exit": -6,
+      "failedAssertions": [
+        "Home native horizontal extent fits the scroll viewport",
+        "Home root fits the native scroll viewport width"
+      ],
+      "rootWidth": 1031,
+      "viewportWidth": 360,
+      "extentWidth": 1031,
+      "diagnosticPropertyMutation": false
+    },
+    {
+      "name": "intrinsic-auto-360",
+      "passed": 18,
+      "failed": 2,
+      "exit": -6,
+      "failedAssertions": [
+        "Home native horizontal extent fits the scroll viewport",
+        "Home root fits the native scroll viewport width"
+      ],
+      "rootWidth": 988,
+      "viewportWidth": 360,
+      "extentWidth": 988,
+      "diagnosticPropertyMutation": false
+    },
+    {
+      "name": "canonical-disabled-360",
+      "passed": 14,
+      "failed": 6,
+      "exit": -6,
+      "failedAssertions": [
+        "Hero full text range fits its assigned native width",
+        "Hero explanatory glyph ranges do not intersect observed-status column",
+        "Actual hero text remains within measured Home root width",
+        "Actual Home text inputs fit root horizontal bounds",
+        "Actual Home buttons fit root horizontal bounds",
+        "Every actual Home full text range fits its assigned width"
+      ],
+      "rootWidth": 360,
+      "viewportWidth": 360,
+      "extentWidth": 360,
+      "diagnosticPropertyMutation": true
+    },
+    {
+      "name": "one-wrap-disabled-360",
+      "passed": 17,
+      "failed": 3,
+      "exit": -6,
+      "failedAssertions": [
+        "Actual hero text remains within measured Home root width",
+        "Actual Home text inputs fit root horizontal bounds",
+        "Actual Home buttons fit root horizontal bounds"
+      ],
+      "rootWidth": 360,
+      "viewportWidth": 360,
+      "extentWidth": 360,
+      "diagnosticPropertyMutation": true
+    },
+    {
+      "name": "intrinsic-disabled-360",
+      "passed": 20,
+      "failed": 0,
+      "exit": 0,
+      "failedAssertions": [],
+      "rootWidth": 360,
+      "viewportWidth": 360,
+      "extentWidth": 360,
+      "diagnosticPropertyMutation": true
+    },
+    {
+      "name": "intrinsic-disabled-1440",
+      "passed": 20,
+      "failed": 0,
+      "exit": 0,
+      "failedAssertions": [],
+      "rootWidth": 1440,
+      "viewportWidth": 1440,
+      "extentWidth": 1440,
+      "diagnosticPropertyMutation": true
+    }
+  ],
+  "observedCause": "Production Auto gives root1031px canonical and988px intrinsic at360viewport. Canonical Disabled growsfailures5\u21926; oneWrap Disabled17/20. Intrinsic Disabledactual360+1440same20/20. Both genuine owner intrinsic flow and finite measure constraint are necessary in this bounded native graph; production source proposal itself not executed.",
+  "nativeProposalHostPath": "Separate proposed-source graph/fixture passes public flag to actual Render rather than post-assignment diagnostic mutation. ALL20 source assertion block exact, diagnosticPropertyMutation false, declaredSurfaceConstraint true. Proposed compiled/runtime result NOT_RUN; required future same20narrow/wide + native lifecycle + realsealedbrowser narrow/touch/keyboard/200%zoom/ARIA remain.",
+  "canonicalCaptureRevision": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+  "canonicalCaptureSHA256": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+  "completeRelevantCanonicalParagraphs": [
+    {
+      "text": "Typography, text alignment/wrapping, layout sizing/alignment, scrolling, cursor/input/focus and accessibility properties.",
+      "startIndex": 86975,
+      "endIndex": 87096,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": true
+    },
+    {
+      "text": "Focus order follows semantic/tree/layout order unless explicitly overridden. Inactive elements cannot receive user focus. Hidden-but-interactive controls are technically representable under CUI's Hidden semantics, but first-party accessibility lint MUST reject invisible focusable/interactive constructs unless an explicit justified accessibility contract is supplied.",
+      "startIndex": 92975,
+      "endIndex": 93343,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "Reduced motion, high contrast, scaling/zoom and non-colour-only state communication MUST be framework-level capabilities rather than app-specific reinventions.",
+      "startIndex": 93344,
+      "endIndex": 93503,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "The test harness MUST be able to render a CUI Page/Prefab at declared dimensions, Theme, scale, accessibility/reduced-motion settings and platform capability profile; interact through semantic input; inspect resulting state; and capture deterministic visual evidence where applicable.",
+      "startIndex": 96114,
+      "endIndex": 96398,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "Web CUI MAY use a browser-specific implementation/runtime, but it MUST preserve the same public CUI semantics, component contracts, state identities and supported action/property behaviour except for explicitly declared platform capability differences.",
+      "startIndex": 97581,
+      "endIndex": 97833,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "Platform differences such as unsupported backdrop effects, specialised renderer capabilities or input hardware MUST be capability-negotiated explicitly. The runtime MUST NOT silently reinterpret unsupported CUI into materially different behaviour.",
+      "startIndex": 97834,
+      "endIndex": 98081,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    },
+    {
+      "text": "The acceptance ledger MUST cover every LE group and its inherited requirements with actual UI and API journeys, persistence/restart, permission denial/revocation, interruption/retry/recovery and platform/package evidence. Run populated desktop, narrow/touch, keyboard-only, screen-reader, 200% scaling, theme/contrast and reduced-motion checks. Inspect rendered interfaces, including selected/loading/empty/error/overflow states, not just source code.",
+      "startIndex": 1380244,
+      "endIndex": 1380695,
+      "tabId": "t.0",
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false
+    }
+  ],
+  "rawAll7AndSourceCustody": "all7-executed includes exact commands, original firstfailures,20each rawtext ranges/layout/visibility,7791 before/after selectedsource+font pins and explicit externalinputs. No PNG/glyphink/readability assertion.",
+  "compiledWitnesses": [
+    {
+      "path": "compiled-witnesses/HomeResponsiveLayout.Tests.dll",
+      "bytes": 150528,
+      "sha256": "a928d47e429a7804a52fb37e4fb2f692b290ec9825e072914109a84fe46502af"
+    },
+    {
+      "path": "compiled-witnesses/HomeResponsiveLayout.Tests.deps.json",
+      "bytes": 30490,
+      "sha256": "ea6fc3e153670db90ca032ab737d3ce2ea45ea3ad16c886cbedaf4b7989a397a"
+    },
+    {
+      "path": "compiled-witnesses/HomeResponsiveLayout.Tests.runtimeconfig.json",
+      "bytes": 330,
+      "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+    },
+    {
+      "path": "compiled-witnesses/HavenOS.Home.dll",
+      "bytes": 1296896,
+      "sha256": "73289aec61b358f3012bf2d0ecfece4df2bdb3b2d9c130ff672693bd2b9ba7e1"
+    },
+    {
+      "path": "compiled-witnesses/Haven.dll",
+      "bytes": 5169152,
+      "sha256": "5156b2b4401d7b3cf53c3c24799799ab84849311f3c016f7fbcb284191245dfe"
+    },
+    {
+      "path": "compiled-witnesses/CakeOS.Cui.Runtime.dll",
+      "bytes": 151040,
+      "sha256": "a59cee3089b5d8a22965177a13d2c32b2c67e2d94637e3ec5b39d367dd524220"
+    },
+    {
+      "path": "compiled-witnesses/CakeOS.Cui.Core.dll",
+      "bytes": 76800,
+      "sha256": "abaa4d5519a3efb34229d6e97c11b0a61e3bfe81181b94b7d39076c60cadb0cf"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.Base.dll",
+      "bytes": 2259456,
+      "sha256": "104b07f62c34a2e1d4848daef4d44605f943e79f725a4c1472bb8fa2ba2278c0"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.Controls.dll",
+      "bytes": 1299456,
+      "sha256": "8d8c0a6bd17d96dd2abc633fc2fd19a1a7fc9429c2506309f8ce76b08098d3b9"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.Skia.dll",
+      "bytes": 123392,
+      "sha256": "2d7d76cb69cd51c9b729574a9bfb6584ba6d59ab503f2d60b697801e7afd4082"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.HarfBuzz.dll",
+      "bytes": 22016,
+      "sha256": "42ac862f59c801bdcd3f6ade1008cc53f98cfc9b18361df10e849628364f519d"
+    }
+  ],
+  "compiledWitnessLimit": "Selected actual compiled assemblies/SDKdeps witness, not a complete runnable native/Web distribution or selfcontainedsource/frameworkarchive. Fullrepo8041 source graph remains prerequisite; sources referenced by manifests independently verified.",
+  "ownerApiSourceWitnesses": [
+    {
+      "repositoryPath": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    },
+    {
+      "repositoryPath": "framework/CUI/Runtime/CuiControlRegistry.cs",
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Runtime/CuiControlRegistry.cs",
+      "bytes": 27472,
+      "sha256": "0e9d88c9e0f6d158ade46f05b25cf06b96cbff4816601cfc39f3ce158cddda8b"
+    },
+    {
+      "repositoryPath": "framework/CUI/Runtime/CuiNativeHost.cs",
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/Runtime/CuiNativeHost.cs",
+      "bytes": 4202,
+      "sha256": "fe6b426a09c72f3ffe59ea6e1225d10b077da0f6869701dbe323e81f17d47b0c"
+    },
+    {
+      "repositoryPath": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/WrapPanel.cs",
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/WrapPanel.cs",
+      "bytes": 14755,
+      "sha256": "59a9dd4b4ef942c937a2c2eec641916c7baed23e721c696e35384b0fa674eff6"
+    },
+    {
+      "repositoryPath": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Presenters/ScrollContentPresenter.cs",
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Presenters/ScrollContentPresenter.cs",
+      "bytes": 44679,
+      "sha256": "3967b62e867bfde0799660c610ae96bd7246196cd67a89612a2f0a30312737af"
+    },
+    {
+      "repositoryPath": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TextBlock.cs",
+      "path": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TextBlock.cs",
+      "bytes": 34179,
+      "sha256": "408cd0ef2f97ff51c7b4901f42c63ad73f767373dc030016887d722da5ee0dd7"
+    }
+  ],
+  "remainingRequired": [
+    "A1 exact00589\u2192742 source ACK and B6 joint hostproposal peer before anyproductionchange.",
+    "Owner/host matching proposal compiled via actual maintained graph then identical native20cohort at360/1440; no diagnosticproperty override.",
+    "Fresh immutable rootpublish afteracceptedjointsource then realHome layout/touch/keyboard/AT/200%zoom checks; currentnativegeometrygreen alone insufficient.",
+    "Registered actualHome service/auth/catalog/manifest/runtime readiness still absent unless delivered by owning port."
+  ],
+  "sdkStartedForProposal": false,
+  "guiStarted": false,
+  "productionOrSharedEdited": false
+}

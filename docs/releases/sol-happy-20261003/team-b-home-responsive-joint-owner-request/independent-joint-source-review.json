@@ -1,0 +1,32 @@
+{
+  "verdict": "EXACT_JOINT_HOME_LAYOUT_AND_OPT_IN_HOST_SOURCE_PROPOSAL_CLEAR_NATIVE_EXECUTION_PENDING",
+  "archiveSHA256": "e27025c269a160dc3f36eaf79506275e60f7176f53309d496511e0ac9ba126d8",
+  "manifestSHA256": "bff8456ea4775ee46a6973a156f94ccfe0cc4c67b15b42ffb57b850ea111eee0",
+  "zipMembersVerified": 72,
+  "selectedFilesVerified": 71,
+  "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "actualSharedBase": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571",
+  "proposedSharedMarkup": "74298cc25b631bb3a63902767abe6d17cbfc4aa4e134a65ec571762cba7dfb69",
+  "xmlNodes": 104,
+  "horizontalStackToRegisteredWrapChanges": 10,
+  "nonLayoutAttributesIDsActionsBindingsTextChildrenOrderingPreserved": true,
+  "native20CompleteAssertionBlockUnchanged": true,
+  "hostReview": [
+    "New optional BrowserCuiSurface bool defaultsfalse and affects only that surface native horizontal measuring policy; all unspecified surfaces retain Auto.",
+    "Only existing local Home fallback explicitlytrue; registered service-owner surfaces must optin separately.",
+    "Render retains admission/rollback/AX/lifetime flow; change only ScrollViewer initialvisibility construction.",
+    "Separate proposed fixture passes actualpublicflag beforeRender; no postassignment property override in constrainedmode.",
+    "Explicit NativeRepositoryRoot prevents implicit alternateownergraph; no CUI schema/defaultprofile/authority mutation."
+  ],
+  "requiredNext": [
+    "Root gated same20publicflag native360+1440 actualruns, retained firstfailures; proposal currently NOT_BUILT_NOT_RUN.",
+    "Exact A1 sharedmarkup ACK/delivery beforeadoption, then matching Bownedhostsource review/commit.",
+    "Fresh sealed actualbrowser narrow/wide/touch/keyboard/AT/200%scale/theme/contrast/motion workflows required; native rangebounds are not ink/readability acceptance."
+  ],
+  "notClaimed": [
+    "Existing diagnostic20greens do not become proposedhost runtimeproof.",
+    "No globalscrolling removal or shippedsharedmarkup.",
+    "No registeredservice Homeprovider/readiness acceptance."
+  ],
+  "sdkOrGuiExecuted": false
+}

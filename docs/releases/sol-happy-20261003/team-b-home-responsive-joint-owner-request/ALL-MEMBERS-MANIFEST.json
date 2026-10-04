@@ -1,0 +1,364 @@
+{
+  "recordedUTC": "2026-10-04T03:32:34.350783+00:00",
+  "classification": "PORTABLE_EXACT_JOINT_SOURCE_ACK_REQUEST_NATIVE140_EXECUTED_PROPOSED_HOST_NOT_RUN",
+  "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+  "files": [
+    {
+      "path": "BrowserApplication.cs.first-authoring-invalid.cs",
+      "bytes": 18320,
+      "sha256": "77ce2c26edb61f3c85712b652a172bde50b7f2e292924ade2f8d3b52ece76f75"
+    },
+    {
+      "path": "BrowserApplication.cs.original",
+      "bytes": 18174,
+      "sha256": "1be15d72354c29ef04e1bac80d4fd8fd5b0c342123415489e028c115d7c0e140"
+    },
+    {
+      "path": "BrowserApplication.cs.patch",
+      "bytes": 1453,
+      "sha256": "ca8cfafb6ad0c8b50116f5f88e87b979c9f467ce823c24fd8c091a25b943d722"
+    },
+    {
+      "path": "BrowserApplication.cs.proposed",
+      "bytes": 18319,
+      "sha256": "2faa6d6c30bca3fabccd6189b01b45bbd6a19c281cdbed891a0945d5e07e1959"
+    },
+    {
+      "path": "BrowserSurfaceRegistry.cs.original",
+      "bytes": 14479,
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94"
+    },
+    {
+      "path": "BrowserSurfaceRegistry.cs.patch",
+      "bytes": 701,
+      "sha256": "789ca9f9c496fb21f097330b0501075392e753aede78e9cd98052bcd4bb758c7"
+    },
+    {
+      "path": "BrowserSurfaceRegistry.cs.proposed",
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    {
+      "path": "Home.cui.original",
+      "bytes": 11955,
+      "sha256": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571"
+    },
+    {
+      "path": "Home.cui.proposed",
+      "bytes": 12268,
+      "sha256": "74298cc25b631bb3a63902767abe6d17cbfc4aa4e134a65ec571762cba7dfb69"
+    },
+    {
+      "path": "HomeResponsiveJointProposal.Tests.csproj",
+      "bytes": 1832,
+      "sha256": "2a2672b66d8eb9812e6d93c5bc29eeee51a4ce85aac18f576786d0251cca1286"
+    },
+    {
+      "path": "HomeResponsiveLayoutRegression.original.cs",
+      "bytes": 10945,
+      "sha256": "c54d326ad86d11b951e3cc70bcdfec81a8797224bd7c4ea53bc5f0e70db38473"
+    },
+    {
+      "path": "HomeResponsiveLayoutRegression.with-host-policy.proposed.cs",
+      "bytes": 11100,
+      "sha256": "319eaa42bb0db399a9efcb9875c632f7eefdf87fd6f605696e8c4da16b464f4e"
+    },
+    {
+      "path": "OWNER-REQUEST.json",
+      "bytes": 15924,
+      "sha256": "82e3ae969432a7b72008f2fc39c715b3ee8156a72d888a6793b315578deee9a8"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3812,
+      "sha256": "8f682635aba38a737e589eff5ee0b26434fb932cecf5d58d2ff61fe584101504"
+    },
+    {
+      "path": "actual-font-source-witnesses.json",
+      "bytes": 4488,
+      "sha256": "9857ee62182a7a12cc7182b8de13c708599f405158b8334aaeb86f1fdd4840de"
+    },
+    {
+      "path": "all7-executed/build-process.json",
+      "bytes": 699,
+      "sha256": "b93f450749f2031d5d2c66311812b45d36a62cdbaff276227a34c12a945bff23"
+    },
+    {
+      "path": "all7-executed/build.log",
+      "bytes": 7365,
+      "sha256": "db42518f9fa91188dab991088222e24cbba496c228839bf7c2a668a59d2c600e"
+    },
+    {
+      "path": "all7-executed/canonical-auto-360-process.json",
+      "bytes": 905,
+      "sha256": "a2073172d5d31cabaf9990a69f80170960d0e1c7bd35a9a3b3129aada6a3fd86"
+    },
+    {
+      "path": "all7-executed/canonical-auto-360.json",
+      "bytes": 154987,
+      "sha256": "1f270abc5a16271fdf06e91e5e1f65a00fa274bb1c4a8bb282eb13af4f035e58"
+    },
+    {
+      "path": "all7-executed/canonical-auto-360.log",
+      "bytes": 1516,
+      "sha256": "0ec75783ec0a0900c22b06fc38edd666d25a8e1191c107f16b5d6e20178bd386"
+    },
+    {
+      "path": "all7-executed/canonical-disabled-360-process.json",
+      "bytes": 937,
+      "sha256": "2988520a61dda02e13a8ddd90a6013172316fc6f9991315d7e27a19f0b6deceb"
+    },
+    {
+      "path": "all7-executed/canonical-disabled-360.json",
+      "bytes": 154977,
+      "sha256": "13df988db871432f992c7dfa5bd3414204a0650da9841581a67989aec771d6b2"
+    },
+    {
+      "path": "all7-executed/canonical-disabled-360.log",
+      "bytes": 1516,
+      "sha256": "25919b08be093bb3428b57ad158ebbb20e1cecbbbe28ecb5cc1ca2188741e0e3"
+    },
+    {
+      "path": "all7-executed/commands-results.json",
+      "bytes": 9032,
+      "sha256": "5ff87ba97fdf40d102453135c43417214e01f47989b475d673b8587e6fa1ae7e"
+    },
+    {
+      "path": "all7-executed/final.json",
+      "bytes": 11242,
+      "sha256": "c6e4843f682668c725fff701dbeb3d08304eb8af28c26434f122e84a3720fe59"
+    },
+    {
+      "path": "all7-executed/intrinsic-auto-360-process.json",
+      "bytes": 949,
+      "sha256": "b32683430bc8a4d0aa6481ba2e25280f96a09368b37ee9e41e5d1f2df095c26b"
+    },
+    {
+      "path": "all7-executed/intrinsic-auto-360.json",
+      "bytes": 157899,
+      "sha256": "530c6278b7009f28ff7fed8ad3ecba84eb482d65a0d94c6d6c27901377e040b7"
+    },
+    {
+      "path": "all7-executed/intrinsic-auto-360.log",
+      "bytes": 1516,
+      "sha256": "3d2d31c436b7cebe17d4adbd222a88607eaa34e040ceed4300caa398642ac394"
+    },
+    {
+      "path": "all7-executed/intrinsic-disabled-1440-process.json",
+      "bytes": 982,
+      "sha256": "2a19c791360ace28d320da7717843309e3eaa19c1fd29d76871713dface62ba1"
+    },
+    {
+      "path": "all7-executed/intrinsic-disabled-1440.json",
+      "bytes": 157959,
+      "sha256": "beca792af4fc889b44691c3e66f6b7adebd09efe4569bb4990a432eafe059f3a"
+    },
+    {
+      "path": "all7-executed/intrinsic-disabled-1440.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "all7-executed/intrinsic-disabled-360-process.json",
+      "bytes": 979,
+      "sha256": "784df5ea1b568c7c13db7c94b0adf67430bd216786f016afc4feaf1bfa1fc095"
+    },
+    {
+      "path": "all7-executed/intrinsic-disabled-360.json",
+      "bytes": 163259,
+      "sha256": "27ead5c71e493459d1e384ccd4d6390b046b37b4806b85dd9ba2bfb063e60724"
+    },
+    {
+      "path": "all7-executed/intrinsic-disabled-360.log",
+      "bytes": 1097,
+      "sha256": "5e8cef8197efa944d634f5dbcbebfd85f0ece528c6a47133635839afb731f1fa"
+    },
+    {
+      "path": "all7-executed/one-wrap-auto-360-process.json",
+      "bytes": 935,
+      "sha256": "0c4c0b8381e56f2e4369344352eaadf618aa10e718d291ec4111d687ed095dba"
+    },
+    {
+      "path": "all7-executed/one-wrap-auto-360.json",
+      "bytes": 158012,
+      "sha256": "935d6956079e0885fa54832b20fd6b96f7a728d208bd640b3ff6647c8008e486"
+    },
+    {
+      "path": "all7-executed/one-wrap-auto-360.log",
+      "bytes": 1516,
+      "sha256": "3d2d31c436b7cebe17d4adbd222a88607eaa34e040ceed4300caa398642ac394"
+    },
+    {
+      "path": "all7-executed/one-wrap-disabled-360-process.json",
+      "bytes": 967,
+      "sha256": "d5c473b959c2fae2bf081b9886164a99c22e1d33cf9e3e5a49ee8cc73963e5cc"
+    },
+    {
+      "path": "all7-executed/one-wrap-disabled-360.json",
+      "bytes": 158002,
+      "sha256": "f89050bd2c0004200c2e025279f3ccf67937c2970187fd0ca2b48cb53625b76d"
+    },
+    {
+      "path": "all7-executed/one-wrap-disabled-360.log",
+      "bytes": 1516,
+      "sha256": "7bd2ca3f1bf8e36f19aed474a9c6262bf137f120b948a5c22ace8bb8d3091bd2"
+    },
+    {
+      "path": "all7-executed/selected-inputs-after.json",
+      "bytes": 7950,
+      "sha256": "775465bd49e523db79416d25d40f82a886b9794ee8991bc25682c40233856c70"
+    },
+    {
+      "path": "all7-executed/selected-inputs-before.json",
+      "bytes": 7950,
+      "sha256": "775465bd49e523db79416d25d40f82a886b9794ee8991bc25682c40233856c70"
+    },
+    {
+      "path": "all7-executed/source-after.json",
+      "bytes": 1591276,
+      "sha256": "ab07cbe6c240cfe4955a64a42740d5ec088a4b233346686c2488b93c4e9101e5"
+    },
+    {
+      "path": "all7-executed/source-before.json",
+      "bytes": 1591276,
+      "sha256": "ab07cbe6c240cfe4955a64a42740d5ec088a4b233346686c2488b93c4e9101e5"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.Base.dll",
+      "bytes": 2259456,
+      "sha256": "104b07f62c34a2e1d4848daef4d44605f943e79f725a4c1472bb8fa2ba2278c0"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.Controls.dll",
+      "bytes": 1299456,
+      "sha256": "8d8c0a6bd17d96dd2abc633fc2fd19a1a7fc9429c2506309f8ce76b08098d3b9"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.HarfBuzz.dll",
+      "bytes": 22016,
+      "sha256": "42ac862f59c801bdcd3f6ade1008cc53f98cfc9b18361df10e849628364f519d"
+    },
+    {
+      "path": "compiled-witnesses/Avalonia.Skia.dll",
+      "bytes": 123392,
+      "sha256": "2d7d76cb69cd51c9b729574a9bfb6584ba6d59ab503f2d60b697801e7afd4082"
+    },
+    {
+      "path": "compiled-witnesses/CakeOS.Cui.Core.dll",
+      "bytes": 76800,
+      "sha256": "abaa4d5519a3efb34229d6e97c11b0a61e3bfe81181b94b7d39076c60cadb0cf"
+    },
+    {
+      "path": "compiled-witnesses/CakeOS.Cui.Runtime.dll",
+      "bytes": 151040,
+      "sha256": "a59cee3089b5d8a22965177a13d2c32b2c67e2d94637e3ec5b39d367dd524220"
+    },
+    {
+      "path": "compiled-witnesses/Haven.dll",
+      "bytes": 5169152,
+      "sha256": "5156b2b4401d7b3cf53c3c24799799ab84849311f3c016f7fbcb284191245dfe"
+    },
+    {
+      "path": "compiled-witnesses/HavenOS.Home.dll",
+      "bytes": 1296896,
+      "sha256": "73289aec61b358f3012bf2d0ecfece4df2bdb3b2d9c130ff672693bd2b9ba7e1"
+    },
+    {
+      "path": "compiled-witnesses/HomeResponsiveLayout.Tests.deps.json",
+      "bytes": 30490,
+      "sha256": "ea6fc3e153670db90ca032ab737d3ce2ea45ea3ad16c886cbedaf4b7989a397a"
+    },
+    {
+      "path": "compiled-witnesses/HomeResponsiveLayout.Tests.dll",
+      "bytes": 150528,
+      "sha256": "a928d47e429a7804a52fb37e4fb2f692b290ec9825e072914109a84fe46502af"
+    },
+    {
+      "path": "compiled-witnesses/HomeResponsiveLayout.Tests.runtimeconfig.json",
+      "bytes": 330,
+      "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+    },
+    {
+      "path": "first-authoring-correction.json",
+      "bytes": 318,
+      "sha256": "3a0afbef3c76bfa3760310f81a5c5c361ae1aae0d2b05d57b33fd0917f3b52b9"
+    },
+    {
+      "path": "fixture-host-policy-only.patch",
+      "bytes": 2499,
+      "sha256": "394bc4c83336f4cfabd194d8730dacbbfa9a2a504bfff70da343fd1fe7540705"
+    },
+    {
+      "path": "home-current-to-intrinsic.patch",
+      "bytes": 16094,
+      "sha256": "e861e042048a53b162f2716f88de086591edb1421cdd5a0b69a50a992d15dbe0"
+    },
+    {
+      "path": "markup-preservation-current00589.json",
+      "bytes": 862,
+      "sha256": "30ff02a40f1a4a6b0dcc26fb7687a9320e08b21cbd4eb7999a4749a904c01bb8"
+    },
+    {
+      "path": "owner-source/framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    },
+    {
+      "path": "owner-source/framework/CUI/Runtime/CuiControlRegistry.cs",
+      "bytes": 27472,
+      "sha256": "0e9d88c9e0f6d158ade46f05b25cf06b96cbff4816601cfc39f3ce158cddda8b"
+    },
+    {
+      "path": "owner-source/framework/CUI/Runtime/CuiNativeHost.cs",
+      "bytes": 4202,
+      "sha256": "fe6b426a09c72f3ffe59ea6e1225d10b077da0f6869701dbe323e81f17d47b0c"
+    },
+    {
+      "path": "owner-source/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Presenters/ScrollContentPresenter.cs",
+      "bytes": 44679,
+      "sha256": "3967b62e867bfde0799660c610ae96bd7246196cd67a89612a2f0a30312737af"
+    },
+    {
+      "path": "owner-source/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TextBlock.cs",
+      "bytes": 34179,
+      "sha256": "408cd0ef2f97ff51c7b4901f42c63ad73f767373dc030016887d722da5ee0dd7"
+    },
+    {
+      "path": "owner-source/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/WrapPanel.cs",
+      "bytes": 14755,
+      "sha256": "59a9dd4b4ef942c937a2c2eec641916c7baed23e721c696e35384b0fa674eff6"
+    },
+    {
+      "path": "repro/BrowserRenderPlatformShims.cs",
+      "bytes": 1183,
+      "sha256": "d261718ea1a2a991c29afe9736c4e247a57d4ed045ea331ef7eedd37dd26347d"
+    },
+    {
+      "path": "repro/HomeResponsiveLayout.Tests.csproj",
+      "bytes": 1158,
+      "sha256": "fb55beb8222c2df3d256cff3502da6449434b339c61eee244c4220905c81cba5"
+    },
+    {
+      "path": "repro/authored-native20-source-freeze-root09-final.json",
+      "bytes": 21769,
+      "sha256": "1c6ebb0bad8067e3e9b8f30130ed1f40695602bf4f3ac821be6274126e8b5efc"
+    },
+    {
+      "path": "repro/executed-native20-root09-results.json",
+      "bytes": 6668,
+      "sha256": "39c7a2aae80be0359280e6e8d051fe63da832795b1aa9741f9e48714d16de203"
+    },
+    {
+      "path": "repro/run-native20-cohorts.py",
+      "bytes": 7947,
+      "sha256": "11964712f31865135025ba918a48db29671e1139245515425bb21b9152f4f349"
+    },
+    {
+      "path": "repro/run-pinned-native20-cohort.py",
+      "bytes": 1475,
+      "sha256": "b0a32bb7eccf815cb0beb9f0748f939b30f44577ad039be38167a7325fa0f359"
+    }
+  ],
+  "uncompressedBytes": 15361741,
+  "claims": "Joint finitewidth+intrinsic diagnostic same20narrow/wide only; no adoption/actualproposedhost/browserAT/fullHome. Current00589\u2192742exactsharedsource ACK required."
+}
