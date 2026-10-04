@@ -75,7 +75,10 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
             _scene.Root = null;
             _scene.Root = _surface;
         }
-        else _scene.FocusElement(_surface);
+        // Re-enabling input must not steal the current toolbar focus. Initial
+        // editor attachment still focuses the real owner in SetEditor; explicit
+        // native pointer/tab focus remains available. Busy release alone is not
+        // a request to scroll the whole presentation to the retained editor.
     }
 
     private void GateKey(object? sender, KeyEventArgs args) { if (!_inputAllowed) args.Handled = true; }
