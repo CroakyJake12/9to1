@@ -1,0 +1,147 @@
+{
+  "rootHead": "d7cf5d48",
+  "captureRows": [
+    {
+      "id": 1332,
+      "route": "/ai/",
+      "htmlSha256": "fdd8638d1db5ad5dda2cd90637880323f896fbc3a4e31482e5d8f5b9880b53d1"
+    },
+    {
+      "id": 831,
+      "route": "/maths-revision/",
+      "htmlSha256": "b59e72fa9137dbe82bf96815b23a6cfc174aabebcf37fb52cf715f59dc4ab65b"
+    },
+    {
+      "id": 527,
+      "route": "/advertising-rules/",
+      "htmlSha256": "af26b9d1eaf3d06580637af46fcd69f5af4c4ebfe2fcc181b2f57b7fb75f0945"
+    },
+    {
+      "id": 231,
+      "route": "/rules/",
+      "htmlSha256": "61e2cbddaa0547cb145b296858bc470089e7d57b64182c41d702fe2ff5012343"
+    },
+    {
+      "id": 96,
+      "route": "/communities/",
+      "htmlSha256": "fd3756d69b78d249447a889700958a5f7dcd0bb354a9664203646ef6af988dba"
+    },
+    {
+      "id": 100,
+      "route": "/advertise/",
+      "htmlSha256": "7373bf7362033a2c3c01b67323f9180a76de9e77b87c03047866b5fbf35dce0b"
+    },
+    {
+      "id": 18,
+      "route": "/",
+      "htmlSha256": "d353aa2144863e49f647899b84d79772da21120d6f4383ff19f0e81bce13a704"
+    }
+  ],
+  "consumerPins": [
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteHtmlContentImporter.cs",
+      "gitBlob": "0ffac3ec070aac4d188ccea2f053815901267095",
+      "sha256": "ee22b4337a263952694848c5d53964aa9a5e6454ca575c6e02491d6f930e8c73",
+      "bytes": 6789
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeAuthoringSession.cs",
+      "gitBlob": "be504d44accd943bc082aef71944ad2926a77371",
+      "sha256": "64e64a14201795994360c7d27934a62f5fb1c9702b3cded280d72d12deeb218a",
+      "bytes": 15477
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeWorkspaceAuthority.cs",
+      "gitBlob": "e847c786dd751a68769aff82dee354dd8febfc2d",
+      "sha256": "4a9824534d37503d5c370c8824d90b231af340a80ab833e70150c338148f2b66",
+      "bytes": 880
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeWriteCoordinator.cs",
+      "gitBlob": "88acc0ae300bad2415866e1b50952547114f5df1",
+      "sha256": "e1fe109c3217f25f3f4f7072d9d881e76addfdaebeee9a9964efac78aed829c0",
+      "bytes": 18076
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "gitBlob": "90de2fd3bc79a3543d8dd57eb4c5d748281e2c29",
+      "sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+      "bytes": 7715
+    },
+    {
+      "path": "9to1 Workspace/Sites/Runtime/SiteDocumentRenderer.cs",
+      "gitBlob": "b9632443e1a6a55fb510f80d4fc85d8162ff4bb7",
+      "sha256": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8",
+      "bytes": 13403
+    },
+    {
+      "path": "9to1 Workspace/Sites/Projects/cakemods.com/Source/published-wordpress-pages.json",
+      "gitBlob": "ee819b598d0410528288e0bba9dd77ef566eb54f",
+      "sha256": "6e2cfe67bef3d0bfa39c40a8a78a86ff68c95f74dd192d11f3e3bbae567d5cef",
+      "bytes": 70197
+    }
+  ],
+  "positiveExit": 0,
+  "tamperExit": 1,
+  "tamperCreatesOutput": false,
+  "review": "Complete19-line packager read. Actual7 captured ID/route/content/hash match public source;7 consumer Gitblob/size/SHA exacte0c source. Normal python3 replay succeeds, singleHTMLtamper rejects before output creation.",
+  "limits": [
+    "Fixed trusted capture preparation only, not canonical Sites/Files/project/session authority or replacement-ready deployment.",
+    "Uses Python assertions; -O/PYTHONOPTIMIZE disables safeguards. Invocation must use ordinary python3 without optimization; not security boundary for arbitrary/untrusted input.",
+    "No duplicate ID guard (routes only); exact admitted7IDs unique, no general importer admission inferred.",
+    "Theme/editor/asset/runtime parity and original owner session/binding/manifest ports remain held."
+  ],
+  "evidence": {
+    "packager.py": {
+      "bytes": 1192,
+      "sha256": "37d8138ca1ccbdfc883e75ff5cc9c8714a5a67b1540b7c1aed8a43330e4363a8"
+    },
+    "positive.log": {
+      "bytes": 56,
+      "sha256": "4b45c03b1c7b17517bdd7f7bc1ed46948ecf03c608f6367e5c5c0a8a3eb8c648"
+    },
+    "negative.log": {
+      "bytes": 361,
+      "sha256": "5c41ac875c363d4cfbcc898310bb388f7e1c8b6b1b3ec70a40d0fea96d294c78"
+    }
+  },
+  "c4OwnerRequestCommit": "c503f02f934ab7ac77f0f3e02c8dd89f33ab622b",
+  "c4SourcePinsVerified": [
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesWorkspaceDirectoryResolver.cs",
+      "bytes": 18773,
+      "sha256": "672ff9f1497e364774393eb0929998b30d35741cbb8fe35ec8293e75362e782f"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/NativeFilesWorkspaceService.cs",
+      "bytes": 21972,
+      "sha256": "57248c980869fda95aaa6a5b9d85bc49346d45d4e1cb4088a5a6591091f47295"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteHtmlContentImporter.cs",
+      "bytes": 6789,
+      "sha256": "ee22b4337a263952694848c5d53964aa9a5e6454ca575c6e02491d6f930e8c73"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "bytes": 7715,
+      "sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Infrastructure/FileSiteWorkspaceStore.cs",
+      "bytes": 10005,
+      "sha256": "e3ec22beb78ca0240c317b9e30db2fceeb2a3cd928ff27a051a2a666a1dc876c"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteProjectService.cs",
+      "bytes": 9018,
+      "sha256": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Projects/cakemods.com/Source/published-wordpress-pages.json",
+      "bytes": 70197,
+      "sha256": "6e2cfe67bef3d0bfa39c40a8a78a86ff68c95f74dd192d11f3e3bbae567d5cef"
+    }
+  ],
+  "reviewAttemptFailure": "Initial C6 comparison incorrectly derived home route from WordPress slug. Corrected to actual captured link path; root home slug deliberately routes /. No package mutation."
+}
