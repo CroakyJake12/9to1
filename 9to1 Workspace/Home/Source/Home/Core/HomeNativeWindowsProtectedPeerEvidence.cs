@@ -376,7 +376,7 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
     private struct TrustFile
     {
         public uint Size; public string FilePath;
-        public IntPtr File, KnownSubject;
+        public IntPtr File;
     }
     [StructLayout(LayoutKind.Sequential, Pack = 8)] private struct NativeTrustFile
     {
@@ -394,27 +394,43 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
     [StructLayout(LayoutKind.Sequential)] private struct CertificateContext
     { public uint Encoding; public IntPtr Encoded; public uint Bytes; public IntPtr Info, Store; }
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", SetLastError = true)] private static extern SafeProcessHandle OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint pid);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll")] private static extern int GetProcessId(SafeProcessHandle process);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll")] private static extern uint WaitForSingleObject(SafeProcessHandle process, uint milliseconds);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetProcessTimes(SafeProcessHandle process, out Time creation, out Time exit, out Time kernel, out Time user);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool QueryFullProcessImageName(SafeProcessHandle process, uint flags, System.Text.StringBuilder name, ref uint length);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool OpenProcessToken(SafeProcessHandle process, uint access, out SafeAccessTokenHandle token);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", EntryPoint = "CreateFileW", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern SafeFileHandle CreateFile(string path, uint access, uint share, IntPtr security, uint disposition, uint flags, IntPtr template);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetFileInformationByHandle(SafeFileHandle file, out FileInfo info);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll")] private static extern uint GetSecurityInfo(SafeFileHandle handle, uint type, uint requested,
         out IntPtr owner, out IntPtr group, out IntPtr dacl, out IntPtr sacl, out IntPtr descriptor);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll")] private static extern uint GetSecurityDescriptorLength(IntPtr descriptor);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll")] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsValidSecurityDescriptor(IntPtr descriptor);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr handle);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern int WinVerifyTrust(IntPtr window, ref Guid action, ref TrustData data);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern IntPtr WTHelperProvDataFromStateData(IntPtr state);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern IntPtr WTHelperGetProvSignerFromChain(IntPtr provider, uint signer, [MarshalAs(UnmanagedType.Bool)] bool counterSigner, uint counterSignerIndex);
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern IntPtr WTHelperGetProvCertFromChain(IntPtr signer, uint certificate);
 }

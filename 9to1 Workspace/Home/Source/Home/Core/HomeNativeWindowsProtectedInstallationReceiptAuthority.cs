@@ -10,6 +10,7 @@ namespace HavenOS.Home.Core;
 /// verify its accepted receipt issuer/format/current protected installation state; neither
 /// this observation nor successful descriptor/image signature checks issue a grant.
 /// No default registration, parallel registry or authoring fallback is provided.
+/// The callback must not reenter the caller's original native Context gate or Home writer.
 /// </summary>
 public interface IHomeNativeWindowsProtectedInstallationReceiptAuthority
 {
@@ -56,6 +57,10 @@ public sealed class HomeNativeWindowsProtectedInstallationReceiptObservation
         long registryRevision, Guid leaseIdentity, AuthenticatedResourceActor actor,
         HomeNativeInstalledPeer installed)
     {
+        if (signedDescriptor.Length is < 1 or > 1024 * 1024 ||
+            signedReceipt.Length is < 1 or > 2 * 1024 * 1024 ||
+            canonicalEntry.Length is < 1 or > 8 * 1024 * 1024)
+            throw new InvalidDataException("Original receipt-owner evidence exceeds its bound.");
         _signedDescriptor = signedDescriptor.ToArray();
         _signedReceipt = signedReceipt.ToArray();
         _canonicalEntry = canonicalEntry.ToArray();

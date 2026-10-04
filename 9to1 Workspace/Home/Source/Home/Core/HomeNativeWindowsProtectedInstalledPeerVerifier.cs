@@ -81,6 +81,7 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
         return await HomeNativeWindowsOriginalEvidenceLifetime.VerifyAsync(
             ReadOriginalAsync, () => original?.Dispose()).ConfigureAwait(false);
 
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
         async ValueTask<HomeNativeInstalledPeer?> ReadOriginalAsync()
         {
             var actor = await _profiles.GetCurrentAsync(ct).ConfigureAwait(false);
@@ -423,6 +424,8 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
                 !HomePackageArtifactSelection.Identifier(original.AppId) ||
                 !Text(original.OsApplicationId, 1024) || !HomePackageArtifactSelection.Identifier(original.Platform) ||
                 !HomePackageArtifactSelection.Identifier(original.Abi) || !Path.IsPathFullyQualified(original.ProtectedRoot) ||
+                original.ProtectedRoot.Length < 4 || !char.IsAsciiLetter(original.ProtectedRoot[0]) ||
+                original.ProtectedRoot[1] != ':' || original.ProtectedRoot[2] != '\\' ||
                 !SafeRelative(original.DescriptorRelativePath) || !SafeRelative(original.ReceiptRelativePath) ||
                 original.DescriptorRelativePath == original.ReceiptRelativePath)
                 throw new ArgumentException("Exact configured protected installation identities are required.");
