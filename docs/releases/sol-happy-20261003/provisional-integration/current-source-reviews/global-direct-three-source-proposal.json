@@ -1,0 +1,216 @@
+{
+  "schema": "team-c-global-direct-three-reviewed-source-proposal/v1",
+  "baseGlobalCommit": "c9df45b0ebbe3b37f7fa8e2858567b95cfa3b895",
+  "baseProductSourceCommit": "0ca6b27641ac8341444e3d9149b3525465accc51",
+  "proposalCommit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+  "branch": "team-c/sol-happy-c1-global-reviewed-windows-fixes-20261004",
+  "worktree": "/workspace/c1-global-reviewed-windows-fixes",
+  "status": "FROZEN_PROPOSAL_NOT_ADOPTED_PENDING_ROOT_C6_COMPOSITION_REVIEW",
+  "changedPaths": [
+    "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+    "9to1 Workspace/Present/PresentApplication.cs",
+    "9to1 Workspace/Present/Tests/PresentThemeBootstrapTests.cs",
+    "9to1 Workspace/Present/Tests/TestAppBuilder.cs",
+    "apps/Home/src/AvaloniaHome/Program.cs",
+    "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+    "eng/release-validation/boards-startup/Program.cs",
+    "eng/release-validation/boards-startup/README.md"
+  ],
+  "files": [
+    {
+      "product": "Boards",
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "base": {
+        "commit": "c9df45b0ebbe3b37f7fa8e2858567b95cfa3b895",
+        "bytes": 40985,
+        "sha256": "0c42bb60ad89b6bab827ef39420bcc33766a63171efca34fb94d7b94ff874de7",
+        "gitBlob": "5d065c22ac7a71396d89405e6dfb8faa6472ccbc"
+      },
+      "reviewedOwnerBasis": {
+        "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+        "bytes": 40985,
+        "sha256": "0c42bb60ad89b6bab827ef39420bcc33766a63171efca34fb94d7b94ff874de7",
+        "gitBlob": "5d065c22ac7a71396d89405e6dfb8faa6472ccbc"
+      },
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 41060,
+        "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145",
+        "gitBlob": "5068f35d120c528c90671804f34b9f2a61075067"
+      },
+      "reviewedSourceCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedSourceCommit": "89c2128b43d74764d7f9cb6232dcece4943b030e"
+    },
+    {
+      "product": "Present",
+      "path": "9to1 Workspace/Present/PresentApplication.cs",
+      "base": {
+        "commit": "c9df45b0ebbe3b37f7fa8e2858567b95cfa3b895",
+        "bytes": 1870,
+        "sha256": "97cdc60168d9dfbfe563f63988153edb3a92ce59715cf5c0de0ff9c4aa7786cc",
+        "gitBlob": "8b168e23b5afbd89f9c4e95fcb7f41145b5b5667"
+      },
+      "reviewedOwnerBasis": {
+        "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+        "bytes": 1870,
+        "sha256": "97cdc60168d9dfbfe563f63988153edb3a92ce59715cf5c0de0ff9c4aa7786cc",
+        "gitBlob": "8b168e23b5afbd89f9c4e95fcb7f41145b5b5667"
+      },
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 2043,
+        "sha256": "3fbaa1362401b866a8120e2809c1570d64438570a2716561cc1224a6cbd56c09",
+        "gitBlob": "8c883b1d3c5628597bf55570a454fe505b4b80b5"
+      },
+      "reviewedSourceCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+      "appliedSourceCommit": "3301c8afcd66b18202c073e4562f798e7d57f8de"
+    },
+    {
+      "product": "Present",
+      "path": "9to1 Workspace/Present/Tests/PresentThemeBootstrapTests.cs",
+      "base": null,
+      "reviewedOwnerBasis": null,
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 5950,
+        "sha256": "800f809d3fcde9d36d8e88824794a0dc852fb6c8de015f44f50efc28318707a4",
+        "gitBlob": "cb1c4603fa8aadaa415ed6f4cc45d354e4464ec0"
+      },
+      "reviewedSourceCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+      "appliedSourceCommit": "3301c8afcd66b18202c073e4562f798e7d57f8de"
+    },
+    {
+      "product": "Present",
+      "path": "9to1 Workspace/Present/Tests/TestAppBuilder.cs",
+      "base": {
+        "commit": "c9df45b0ebbe3b37f7fa8e2858567b95cfa3b895",
+        "bytes": 406,
+        "sha256": "0ee1856a4e908fbb15ce043805efa18a194791250f8c3d00241ceecf012b676f",
+        "gitBlob": "eeb2e570445bc27bb92255a2f2d4650e80dd5f91"
+      },
+      "reviewedOwnerBasis": {
+        "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+        "bytes": 406,
+        "sha256": "0ee1856a4e908fbb15ce043805efa18a194791250f8c3d00241ceecf012b676f",
+        "gitBlob": "eeb2e570445bc27bb92255a2f2d4650e80dd5f91"
+      },
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 479,
+        "sha256": "c5f2b22249b501edddb03b40d4a89692e69af61f613453df292a02c1ede51080",
+        "gitBlob": "69afa9c2be8c0b16524fe8204fd51508da1810eb"
+      },
+      "reviewedSourceCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+      "appliedSourceCommit": "3301c8afcd66b18202c073e4562f798e7d57f8de"
+    },
+    {
+      "product": "Home",
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "base": {
+        "commit": "c9df45b0ebbe3b37f7fa8e2858567b95cfa3b895",
+        "bytes": 10725,
+        "sha256": "808580096627894af27d5a6f52ed6d41ee2b3385885159ea053de0f9f59ed9cc",
+        "gitBlob": "bfc82f6f825fe282f35485e29f935824dfa115a2"
+      },
+      "reviewedOwnerBasis": {
+        "commit": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+        "bytes": 10725,
+        "sha256": "808580096627894af27d5a6f52ed6d41ee2b3385885159ea053de0f9f59ed9cc",
+        "gitBlob": "bfc82f6f825fe282f35485e29f935824dfa115a2"
+      },
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 10783,
+        "sha256": "702aec57d7f3f1881e4d9a458459ba21fd052cdf720084a88a70e3164a7359b5",
+        "gitBlob": "ab1d0884fd33165e4a5ce707cf515d64c81725a2"
+      },
+      "reviewedSourceCommit": "88049b2f9f25977f732c881aa893cfd3081ef0a9",
+      "appliedSourceCommit": "91e55b58b8e8508c4ed8257f6ab03e68f87dd783"
+    },
+    {
+      "product": "Boards",
+      "path": "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+      "base": null,
+      "reviewedOwnerBasis": null,
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 835,
+        "sha256": "5c516cf8d8a197823bae8213ab3676b445b4a8096f614019969af8c446cf0dba",
+        "gitBlob": "b9a77117d08bcb8bcac41fd46ce5d5c1c53adff7"
+      },
+      "reviewedSourceCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedSourceCommit": "89c2128b43d74764d7f9cb6232dcece4943b030e"
+    },
+    {
+      "product": "Boards",
+      "path": "eng/release-validation/boards-startup/Program.cs",
+      "base": null,
+      "reviewedOwnerBasis": null,
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 11140,
+        "sha256": "ade449b48deec78348591c1080452574e46fd23b453f450c9f5780ffccb13e03",
+        "gitBlob": "c0fd2b7e6173b8029d92e5379c26b03702410fdd"
+      },
+      "reviewedSourceCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedSourceCommit": "89c2128b43d74764d7f9cb6232dcece4943b030e"
+    },
+    {
+      "product": "Boards",
+      "path": "eng/release-validation/boards-startup/README.md",
+      "base": null,
+      "reviewedOwnerBasis": null,
+      "proposal": {
+        "commit": "3301c8afcd66b18202c073e4562f798e7d57f8de",
+        "bytes": 2609,
+        "sha256": "9d60a9e406a43c8b3179e67e8544ab9e893272fb88b29c397ee4d3e1f50a0053",
+        "gitBlob": "3e165a7531d1fc23174ebfddc43e491d09c161d0"
+      },
+      "reviewedSourceCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedSourceCommit": "89c2128b43d74764d7f9cb6232dcece4943b030e"
+    }
+  ],
+  "conservation": {
+    "outsideChangedPathsIdentical": true,
+    "preservedTrackedEntries": 15628,
+    "outsidePathTreeProjectionSHA256": "25d83b005fe1af76e7a3ede917b9c6cf4ce8e411b85d44c281952583b15cdd38",
+    "existingGlobalTests": "All original test bodies preserved; sole existing test-helper modification is exact previously reviewed Present TestAppBuilder renderer setup. New Present tests and Boards canonical controls are additive.",
+    "noChangesToStudioOrSharedNativePolicies": true,
+    "allSourceProjectAndPackageDefinitionsOutsideExactEightPathsUnchanged": true
+  },
+  "sourceOwnerRecord": {
+    "coordinationCommit": "5068d17027ecefaf9c0dfead85c56f5d4082af5f",
+    "field": "currentExecution1041.Windows1040",
+    "ack": "EEC source-only seven exploratory GUI targets; legacy shared desktop dependency, not29 accepted packages",
+    "installedHomeOrSourceFixAdoption": false
+  },
+  "priorActualWindowsProof": {
+    "Home": {
+      "commit": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+      "run": 37205981853,
+      "qualification": "Compiled two imports, package/extraction/window observed; forced cleanup retained, no explicit authorized shutdown/installed Home proof."
+    },
+    "BoardsPresent": {
+      "commit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+      "run": 37208129079,
+      "tests": [
+        54,
+        13
+      ],
+      "qualification": "Exact reviewed app source changes match whole bytes; original producer uses EEC graph, not this different global source graph. No automatic global build/runtime acceptance."
+    },
+    "packagedBoardsUI": {
+      "run": 37210601635,
+      "checks": 67,
+      "qualification": "C3 independently immutable fd5 package controls; original producer unaffected; global composition and installed Home/noSDK/full app gates separate."
+    }
+  },
+  "currentProposalBuildRuntime": "NOT_RUN; user/root requested source inventory/proposal only, no new package or54/13/3 rerun",
+  "fullWindowsAppAccepted": 0,
+  "delivered": 0,
+  "limitations": [
+    "Global dependency graph remains conserved and differs from exact EEC Windows producer; runtime outcomes are prior source-specific evidence, not global candidate acceptance.",
+    "Studio native/bootstrap graph intentionally excluded pending owner supplied bounded authoritative global composition.",
+    "Owner Windows1040 acknowledges source-only EEC targets and explicitly leaves canonical installed identity/Home authenticated Windows transport/publisher/29 product routes/donor/cleanPC/delivery unresolved."
+  ]
+}

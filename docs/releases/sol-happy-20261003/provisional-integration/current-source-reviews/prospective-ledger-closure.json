@@ -1,0 +1,300 @@
+{
+  "rootHead": "da5466c5a4b37268d841a50120e4838170416dbd",
+  "scope": "Read-only prospective28path composition; no build",
+  "ledgers": [
+    {
+      "ledger": "apps/Web/Productivity/Boards/Tests/ci/boards-notebook-source-pins.json",
+      "rows": 53,
+      "mismatches": [
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Editor.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": true
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.NotebookNavigation.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": true
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": true
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": true
+        },
+        {
+          "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": true
+        }
+      ]
+    },
+    {
+      "ledger": "apps/Web/Mathematics/Tests/ci/math-native-four-source-pins.json",
+      "rows": 73,
+      "mismatches": [
+        {
+          "path": "9to1 Workspace/Forms/CUI/FormNativePreview.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Forms/CUI/FormNativePublicationValidator.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Forms/CUI/FormNativeResponseSurface.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/Controls/HomeApprovalCuiSurface.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerBindings.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerCuiSurface.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/Controls/HomeNotesObjectRenderer.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/Controls/HomeProductivityCuiSurface.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/HomeEquationObjectRenderer.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/HomeLocalStoreSetupCuiSurface.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/HomeProfileCuiReadiness.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/HomeResourceCuiReadiness.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/HomeVectorObjectRenderer.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/HomeApprovals.cui",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/Models.cui",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-MIT.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-upstream-license-declarations.md",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Font-copyright-notices.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/FreeType-FTL.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/GUST-FONT-LICENSE.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/ICU60-LICENSE.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LPPL-1.3c.tex",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-MANIFEST.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-README.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/NOTICE.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/SIL-Open-Font-License-1.1.md",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-Apache-2.0.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-MIT.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-attributions.md",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-source-headers.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/provenance.json",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": true
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/LICENSE.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/NOTICES.txt",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": false
+        },
+        {
+          "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+          "Bmatches": true,
+          "prospectiveRootMatches": false,
+          "rootExists": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+diff --git a/framework/CUI/Runtime/CuiControlLoader.cs b/framework/CUI/Runtime/CuiControlLoader.cs
+index 86351ccd..0af4ee18 100644
+--- a/framework/CUI/Runtime/CuiControlLoader.cs
++++ b/framework/CUI/Runtime/CuiControlLoader.cs
+@@ -953,7 +953,7 @@ public sealed class CuiControlLoader : IDisposable
+         switch (control)
+         {
+             case TextBox textBox:
+-                textBox.TextChanged += (_, _) => Update(textBox.Text);
++                textBox.TextChanging += (_, _) => Update(textBox.Text);
+                 break;
+             case CheckBox checkBox:
+                 checkBox.IsCheckedChanged += (_, _) => Update(checkBox.IsChecked);
