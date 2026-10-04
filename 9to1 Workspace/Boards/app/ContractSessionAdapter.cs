@@ -37,8 +37,9 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         if (string.IsNullOrWhiteSpace(path))
         {
             var fallback = DefaultBoardPath();
-            real = await RichBoardSession.OpenAtPathAsync(store, fallback, cancellationToken).ConfigureAwait(false)
-                ?? await CreateAtAsync(store, fallback, "My Board", cancellationToken).ConfigureAwait(false);
+            if (!File.Exists(fallback) && !File.Exists(fallback + ".bak"))
+                return await CreateNewAtPathAsync(store, fallback, cancellationToken).ConfigureAwait(false);
+            real = await RichBoardSession.OpenAtPathAsync(store, fallback, cancellationToken).ConfigureAwait(false);
         }
         else if (IsMemoryPath(path))
         {
