@@ -176,6 +176,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
         var committed = result.Value;
         if (committed is null || committed.State != FilesOperationState.Committed || committed.ResultRevisionId is null || committed.ResultRevisionId.Value.Value == Guid.Empty ||
             committed.Id != _pending.Id || committed.ItemId != _pending.ItemId || committed.Operation != _pending.Operation ||
+            committed.ActorId != _pending.ActorId || committed.Payload?.NewName != _pending.Payload?.NewName || committed.Error is not null ||
             committed.BaseRevisionId != _pending.BaseRevisionId || committed.DestinationParentId != _pending.DestinationParentId)
             throw new InvalidOperationException("Provider did not acknowledge a committed revision.");
         var id = committed.ItemId;

@@ -140,6 +140,9 @@ public sealed class SitesBrowserController(SitesBrowserOperations owner) : ICuiW
         // Do not repeat an unknown creation/edit or invent a transport idempotency key.
         _uncertain = true;
         var basis = _editProject;
+        // Capture the actual typed edit before owner awaits; receipt checks grant no authority.
+        (Guid Id, long Revision, string Type, string Text)? textIntent = _edit == Edit.Text
+            ? (_component!.ComponentId, _component.Revision, _component.ComponentType, _text) : null;
         var result = _edit switch
         {
             Edit.Project => await owner.Create(_name, ct),
@@ -162,10 +165,21 @@ public sealed class SitesBrowserController(SitesBrowserOperations owner) : ICuiW
             saved.SchemaVersion != SiteProjectFormat.CurrentSchemaVersion || (_edit == Edit.Project ? saved.Revision != 1 :
                 basis is null || saved.SiteId != basis.SiteId || saved.ProjectId != basis.ProjectId || saved.Source != basis.Source || saved.Revision != basis.Revision + 1))
             throw new InvalidOperationException("Sites owner returned an incompatible revision receipt.");
+        if (textIntent is { } intent && !CompatibleTextReceipt(saved, intent))
+            throw new InvalidOperationException("Sites owner returned an incompatible text-edit receipt.");
         _project = saved; _projects = _projects.Where(row => row.Project.SiteId != saved.SiteId).Append(new(saved)).Take(200).ToArray();
         _page = _page is null ? saved.Pages.FirstOrDefault() : saved.Pages.FirstOrDefault(page => page.PageId == _page.PageId);
         _component = _component is null ? null : saved.Components.FirstOrDefault(component => component.ComponentId == _component.ComponentId);
         EndEdit(); _status = "Saved.";
+    }
+
+    private static bool CompatibleTextReceipt(SiteProject saved, (Guid Id, long Revision, string Type, string Text) intent)
+    {
+        var matches = saved.Components.Where(component => component.ComponentId == intent.Id).Take(2).ToArray();
+        return matches.Length == 1 && intent.Revision > 0 && matches[0].Revision == checked(intent.Revision + 1)
+            && matches[0].ComponentType == intent.Type
+            && matches[0].Properties.TryGetValue("text", out var text)
+            && text.ValueKind == System.Text.Json.JsonValueKind.String && text.GetString() == intent.Text;
     }
 
     private async Task ListAsync(CancellationToken ct)

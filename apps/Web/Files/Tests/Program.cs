@@ -138,7 +138,7 @@ static async Task TypedLostReply(string directory)
 }
 static async Task ForeignReceipt(string directory)
 {
-    foreach (var variant in new[] { "operationID", "itemID", "operation", "pending", "nullRevision", "emptyRevision" })
+    foreach (var variant in new[] { "operationID", "itemID", "operation", "pending", "nullRevision", "emptyRevision", "actor", "intentName", "contradictoryError" })
     {
         var s = Store(Path.Combine(directory, variant)); using var view = new FilesBrowserController(new ForeignMutationReceipt(s.Provider, variant), s.Owner);
         await view.InitializeAsync(null, default); await view.DispatchAsync("NewFolder", null); view.TrySetValue("Name", "Original intent");
@@ -335,6 +335,9 @@ sealed class ForeignMutationReceipt(IFilesProvider real, string variant) : RealP
                 "pending" => committed with { State = FilesOperationState.Pending },
                 "nullRevision" => committed with { ResultRevisionId = null },
                 "emptyRevision" => committed with { ResultRevisionId = new(Guid.Empty) },
+                "actor" => committed with { ActorId = "negative-foreign-receipt-principal" },
+                "intentName" => committed with { Payload = committed.Payload! with { NewName = "Negative altered receipt intent" } },
+                "contradictoryError" => committed with { Error = new(FilesErrorCode.ProviderUnavailable, "Induced contradictory committed operation reply.", committed.Operation, committed.ItemId.ToString(), true, true) },
                 _ => throw new InvalidOperationException("Unknown negative receipt control.")
             });
         }
