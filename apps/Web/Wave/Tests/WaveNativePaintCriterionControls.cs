@@ -104,11 +104,15 @@ public static class WaveNativePaintCriterionControls
             Record("real-native-font1-padding0-nonblank-clip-rejected", caption.ClipToBounds
                 && noPadding.Supported && noPadding.SourceComplete && !noPadding.OwnPaintFits
                 && noPadding.InkInText.Any(ink => ink.Right > caption.Bounds.Width + WaveNativePaintCriteria.Tolerance), noPadding);
-            caption.Padding = captionPadding;
+            // Keep a positive native text-layout height for this paint-clip
+            // negative: Height1 minus production vertical Padding2 becomes zero
+            // and the owner legitimately substitutes an empty line instead.
+            caption.Padding = new Thickness(captionPadding.Left, 0, captionPadding.Right, 0);
             caption.Height = 1;
             Capture();
             var tooShort = WaveNativePaintCriteria.Inspect(caption, root);
             caption.ClearValue(Control.HeightProperty);
+            caption.Padding = captionPadding;
             // Preserve horizontal allocation while removing ONLY the actual vertical
             // allocation; this exercises the recorded Toggle track solo bottom clip.
             vertical.Padding = new Thickness(verticalPadding.Left, 0, verticalPadding.Right, 0);

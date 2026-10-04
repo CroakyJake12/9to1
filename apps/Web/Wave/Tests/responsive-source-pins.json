@@ -152,8 +152,8 @@
       "sha256": "a914e3675d49a0e6293ed2ca8904231cc19c5044312d09037a8304be9034ac10"
     },
     "apps/Web/Wave/Tests/WaveNativePaintCriterionControls.cs": {
-      "bytes": 9750,
-      "sha256": "8ad43255d3fe7bfc0d70e8b78d4844fed97c82d509838815e1197cfe6d6a1a78"
+      "bytes": 10079,
+      "sha256": "ef210eeec40a04238cbae4323cd76846c5d42b7f6add17b187005de700e4c322"
     },
     "apps/Web/Wave/WaveNativePresentation.cs": {
       "bytes": 1393,
