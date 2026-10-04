@@ -1,16 +1,29 @@
 {
   "schemaVersion": 1,
-  "recordedUTC": "2026-10-04T19:54:29.662506+00:00",
+  "recordedUTC": "2026-10-04T20:19:23.067379+00:00",
   "owner": "Existing authorized Windows recovery chat01a1082b-e5ba-70c2-bc49-4999a5934643",
   "rootIntegrator": "Team C sole global/source/push and combined Worker Logs writer",
-  "state": "ISOLATED_WINDOWS_RECEIVING_SOURCE_PROPOSAL_ACTIVE_UNADOPTED",
+  "state": "EXACT_TWO_GUARD_PROPOSAL_OWNER_ACK_PENDING_RAW_PRIVATE_ACQUIRED",
   "receivingBasis": "73aa39a39bbde7ae56d1ea8548ba1db5926e618c",
-  "currentRoot": "2e48d31da2e9c13a54d4a6dc3d12561d41debf87",
+  "currentRoot": "96009c11804e2cbe114eba16a00c4843a2a3cf8e",
   "path": "9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs",
   "historicalProposal": "68b1b73998e556d198e7271138dc2d5ce952a614:docs/releases/sol-happy-20261003/team-b-write-space-owner-proposal/router-space-ownership.patch",
   "boundedScope": "Original maintainedSpace15 whitespace journey and available broad original router regressions; onlytwo historical Space+IHavenTextInputTarget dispatch guards; no measuredlayout/caret/Bfocus/Wave/sourceOSvendor/default permissions changes.",
-  "actualReported": "Windows exact-byte checkout originalfixture0warnings/errors10PASS then whitespaceFAIL Alphabetagamma; sameoriginal15 aftertwo guards15PASS Alpha beta gamma. Broad regressions and independent publishedwholebody pending.",
+  "actualReported": "Original15baseline10PASSthenwhitespaceFAIL; corrected15PASS; unchanged163Debug/163Release and16focusedDebugPASS. Rawprivate89,173B22a7 acquired; C4independent identities pending.",
   "preservedFailure": "InitialWindowsCRLFphysicalhash mismatch beforeexecution kept; separate task-local core.autocrlf=false checkout retains original pinned hashes.",
   "ownership": "A/B sharedowner review stillrequired before globaladoption; currentrootrouter preimageunchanged. Preserve all activeC5Home/C1Present/C3Canvas/C4Mail/C2issuer lanes.",
-  "installedAcceptance": "Privateunverifiedcandidate transport verified. CanonicalWindowsinstalledidentity/ABI/approvedpublisher/currentauthority andcleanSDKfree testmachine route absent; A5 owns existing OS/bootstrap implementation. No fabricatedsigneddeclaration/keys/Ready."
+  "installedAcceptance": "Privateunverifiedcandidate transport verified. CanonicalWindowsinstalledidentity/ABI/approvedpublisher/currentauthority andcleanSDKfree testmachine route absent; A5 owns existing OS/bootstrap implementation. No fabricatedsigneddeclaration/keys/Ready.",
+  "proposalPR": "https://github.com/CroakyJake12/9to1/pull/11",
+  "proposalSource": "50c9419f91743bf83fbfbbbd5cf15376317991a4",
+  "ownerRequest": "PR11 comment5983928515 correctedpublicsource/testonly; no privateartifactlinks or chatIDs.",
+  "externalHomeExport": "Raworiginal13,418B37a8 nowprivateacquired; previousexportblockerRESOLVED.",
+  "sharedHomeHandoff": {
+    "PR": "https://github.com/CroakyJake12/9to1/pull/12",
+    "source": "0c014b5a0f552911ebd834c3fac78e0f3966bdc0",
+    "parent": "2e48d31da2e9c13a54d4a6dc3d12561d41debf87",
+    "actualSource": "25 product/test/project +README; Core alreadyequal; A peersclear",
+    "owning": "12originalcasesUNCOMPILED_UNRUN; C4 independent source/compilerproducer preparing",
+    "remainingHandoff": "A1 nativeProgram/composition3wholebodies and A5 installer/currentfoundation union exactfetchablerefs requested on PR12 comment5983961411",
+    "missingInstalled": "Protected installedAppID/ABI/approvedpublisher/signing/currentWindowsauthority/machine receipts not supplied; no inventedtrust."
+  }
 }
