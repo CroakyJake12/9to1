@@ -1,0 +1,131 @@
+{
+  "schema": 1,
+  "repository": "CroakyJake12/9to1",
+  "head": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+  "tree": "de2e74830fe71ac2af4858a4551c4ee89f0bf1b6",
+  "runId": 37169483364,
+  "runAttempt": 1,
+  "sourceBranch": "validation/astra-desktop-visible-joint05-root30-native01",
+  "artifacts": [
+    {
+      "lane": "joint",
+      "role": "index",
+      "id": 11290996681,
+      "name": "astra-joint-native-sdk-manifest-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 22238,
+      "sha256": "0a8cb57c5050f68176834fa38a77a19b5b09ab0cdcb05b70c7aac237b9c5d078",
+      "member": "manifest.json",
+      "innerBytes": 195255,
+      "innerSha256": "6399ba8f3543460107d368edbba9e2403cb855b37606f385a9bab1d692cc2e7d"
+    },
+    {
+      "lane": "joint",
+      "role": "part",
+      "part": 0,
+      "id": 11291390940,
+      "name": "astra-joint-native-sdk-bundle-00-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 27272598,
+      "sha256": "0ffd96945703b008e96fb9ba6f624385f16bdc6044769bb0b2bf0273ad552fa6",
+      "member": "bundle-00.zip",
+      "innerBytes": 27272458,
+      "innerSha256": "206d065e440d82544af936a47139cb3a84d6207edb7378c56f443e31c5ce3e29"
+    },
+    {
+      "lane": "joint",
+      "role": "part",
+      "part": 1,
+      "id": 11291420852,
+      "name": "astra-joint-native-sdk-bundle-01-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 21874210,
+      "sha256": "e3d2a2e08e516d52205f74b6063d5583f04a5baf5ee70c30d3e2b5eacee44001",
+      "member": "bundle-01.zip",
+      "innerBytes": 21874070,
+      "innerSha256": "9cc75322bd67541273ad2bfa9b7b8df28c76fee22ce01e68c426746654e193d9"
+    }
+  ],
+  "expectedCounts": {
+    "joint": {
+      "files": 384,
+      "pieces": 343,
+      "nonempty": 342,
+      "bytes": 49108754
+    }
+  },
+  "required": {
+    "joint": [
+      "joint-sdk/commands.json",
+      "joint-sdk/receipt.json",
+      "joint-sdk/logs/debug-build-entry-00.log",
+      "joint-sdk/logs/debug-build-entry-01.log",
+      "joint-sdk/logs/debug-build-source-tasks.log",
+      "joint-sdk/logs/debug-evaluate-source-tasks.log",
+      "profile-correction/original-sdk-caller.log",
+      "profile-correction/original-sdk-caller-custody.json",
+      "profile-correction/original-native-session-drain/expected-managed-launch.json",
+      "profile-correction/original-native-session-drain/inner-native-delegation.json",
+      "joint-sdk/logs/debug-build-entry-02.log",
+      "joint-sdk/logs/debug-build-entry-03.log",
+      "joint-sdk/logs/debug-build-entry-04.log",
+      "joint-sdk/logs/debug-build-entry-05.log"
+    ]
+  },
+  "taskPe": {
+    "lane": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "bytes": 826880,
+    "sha256": "796d156edfdfdef7c76448bcc30d43337b4538d09419cf4cb4e9f8783c226233"
+  },
+  "limits": {
+    "archiveAttemptBytes": 134217728,
+    "expandedAttemptBytes": 402653184,
+    "ramWorkingSetBytes": 536870912,
+    "ramAvailableFloorBytes": 536870912,
+    "filesystemFreeFloorBytes": 943718400,
+    "outputAttemptBytes": 25165824,
+    "outputAllocationReservationBytes": 41943040,
+    "maxOutputFiles": 768,
+    "apiBodyBytes": 131072,
+    "apiAttempts": 16,
+    "pdbExpandedBytes": 16777216,
+    "reportSlotBytes": 2097152,
+    "diagnosticSlotBytes": 262144
+  },
+  "downloadHosts": {
+    "regex": "^productionresultssa[0-9]{1,3}\\.blob\\.core\\.windows\\.net$",
+    "pathPrefix": "/actions-results/",
+    "redirectsAllowed": 1,
+    "authorizationForwarded": false
+  },
+  "selection": {
+    "wholeSuffixes": [
+      ".log",
+      ".json",
+      ".stdout",
+      ".stderr",
+      ".txt",
+      ".xml",
+      ".trx",
+      ".py",
+      ".cs",
+      ".props",
+      ".targets",
+      ".yml",
+      ".yaml",
+      ".pem"
+    ],
+    "wholePrefixes": [
+      "profile-correction/",
+      "mail-maintained-configuration-source/"
+    ],
+    "binarySuffixesNotPublished": [
+      ".dll",
+      ".pdb",
+      ".so",
+      ".a",
+      ".der",
+      ".exe",
+      ".zip"
+    ],
+    "qualification": "All384 exact joint full files must replay before text publication; every unselected binary remains fully hashed and represented. No original body is executed. Missing required whole original text or invalid UTF-8 refuses publication instead of a prefix."
+  }
+}

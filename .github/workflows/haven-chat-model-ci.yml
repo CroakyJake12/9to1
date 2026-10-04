@@ -353,3 +353,585 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           retention-days: 14
+
+  sdk08-original-custody:
+    name: SDK08 original evidence custody only
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/validation/sol-happy-sdk08-original-custody-20261004' && inputs.expected_commit == github.sha && inputs.cut_manifest_sha256 == 'f920c8ca3adebafc5f7fa201a5e0b006f1a535ec55429bcfaa20b2a66bd667b3'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Verify root-owned reader source and replay only six pinned original artifacts
+        timeout-minutes: 20
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import base64, hashlib, json, os, re, sys, urllib.request
+          class Refusal(Exception):
+              pass
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, message, headers, newurl):
+                  return None
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def settle(errors):
+              if len(errors) == 1:
+                  raise errors[0]
+              if errors:
+                  raise BaseExceptionGroup('Trusted reader bootstrap and independent IO failures.', errors)
+          def safe(errors):
+              result=[]
+              for error in errors:
+                  row={'type':type(error).__name__,'code':'BOOTSTRAP_OR_FINAL_IO_FAILURE'}
+                  if isinstance(error, BaseExceptionGroup):
+                      row['causes']=safe(error.exceptions)
+                  result.append(row)
+              return result
+          def unique(pairs):
+              output={}
+              for key,value in pairs:
+                  require(key not in output,'BOOTSTRAP_DUPLICATE_JSON')
+                  output[key]=value
+              return output
+          requests_attempted=0
+          bytes_reserved=0
+          def source(path, expected_bytes, expected_sha):
+              global requests_attempted,bytes_reserved
+              require(requests_attempted<2,'BOOTSTRAP_REQUEST_CAP')
+              requests_attempted+=1
+              bytes_reserved+=131072
+              require(bytes_reserved<=262144,'BOOTSTRAP_ATTEMPT_BYTES_CAP')
+              require(os.environ.get('GITHUB_REPOSITORY')=='CroakyJake12/9to1' and os.environ.get('GITHUB_REF')=='refs/heads/validation/sol-happy-sdk08-original-custody-20261004' and os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch','BOOTSTRAP_CONTEXT_REFUSED')
+              revision=os.environ['GITHUB_SHA']
+              require(re.fullmatch('[0-9a-f]{40}',revision) is not None,'BOOTSTRAP_OWN_COMMIT_REFUSED')
+              token=os.environ.get('GH_TOKEN','')
+              require(token and '\n' not in token and '\r' not in token,'BOOTSTRAP_API_TOKEN_REFUSED')
+              url='https://api.github.com/repos/CroakyJake12/9to1/contents/'+path+'?ref='+revision
+              request=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'sol-happy-sdk08-trusted-reader-bootstrap','Accept-Encoding':'identity'})
+              opener=urllib.request.build_opener(NoRedirect())
+              response=None;errors=[];raw=None
+              try:
+                  response=opener.open(request,timeout=60)
+                  require(response.status==200 and response.headers.get('Content-Encoding','identity').lower()=='identity','BOOTSTRAP_API_RESPONSE_REFUSED')
+                  held=bytearray()
+                  while True:
+                      part=response.read(min(65536,131072-len(held)+1))
+                      if not part:
+                          break
+                      held.extend(part)
+                      require(len(held)<=131072,'BOOTSTRAP_SOURCE_JSON_CAP')
+                  value=json.loads(bytes(held).decode('utf-8',errors='strict'),object_pairs_hook=unique)
+                  require(value['type']=='file' and value['path']==path and value['size']==expected_bytes and value['encoding']=='base64','BOOTSTRAP_SOURCE_DESCRIPTOR_REFUSED')
+                  encoded=''.join(value['content'].split())
+                  raw=base64.b64decode(encoded,validate=True)
+                  require(len(raw)==expected_bytes and hashlib.sha256(raw).hexdigest()==expected_sha,'BOOTSTRAP_SOURCE_WHOLE_HASH_REFUSED')
+                  require(hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==value['sha'],'BOOTSTRAP_SOURCE_GIT_BLOB_REFUSED')
+              except BaseException as error:
+                  if response is None and isinstance(error,urllib.error.HTTPError):
+                      response=error
+                  add(errors,error)
+              if response is not None:
+                  try:
+                      response.close()
+                  except BaseException as error:
+                      add(errors,error)
+              settle(errors)
+              return raw
+          errors=[]
+          namespace=None
+          try:
+              require(sys.version_info>=(3,11) and sys.flags.optimize==0,'BOOTSTRAP_PYTHON_REFUSED')
+              code=source('.github/scripts/sol-happy-sdk08-original-custody.py',54086,'b3e683ff06a2481ba28b3daf5290df23e912e9805ee295675aadc95860c45212')
+              configuration=source('.github/validation/sol-happy-sdk08-original-custody.json',4318,'f920c8ca3adebafc5f7fa201a5e0b006f1a535ec55429bcfaa20b2a66bd667b3')
+              namespace={'__name__':'sol_happy_owned_original_custody_reader'}
+              # Only exact root-owned reader source is executed; original artifact payloads are data.
+              exec(compile(code,'root-owned-sdk08-original-custody-reader','exec'),namespace)
+              namespace['main'](json.loads(configuration.decode('utf-8',errors='strict'),object_pairs_hook=unique))
+          except BaseException as error:
+              add(errors,error)
+          if errors:
+              try:
+                  project=namespace['projections'](errors) if namespace is not None and 'projections' in namespace else safe(errors)
+                  print(json.dumps({'status':'SDK08_ORIGINAL_CUSTODY_REFUSED','originalCauses':project,'bootstrapRequestsAttempted':requests_attempted,'bootstrapBytesReserved':bytes_reserved},ensure_ascii=True,sort_keys=True),flush=True)
+              except BaseException as error:
+                  add(errors,error)
+              # Never allow Python to print raw network exceptions, tracebacks or temporary signed URLs.
+              sys.exit(1)
+          PY
+      - name: Retain complete original causal text and replay diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-sdk08-original-custody-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/sdk08-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish bounded exact complete causal upload paths
+        id: causal_paths
+        if: ${{ always() }}
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import hashlib, json, os, re, stat, sys
+          class Refusal(Exception):
+              pass
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def project(errors):
+              return [{'type':type(error).__name__, 'code':str(error) if isinstance(error, Refusal) else 'SELECTOR_METADATA_IO_FAILURE'} for error in errors]
+          relative_paths = [
+              "diagnostic.json",
+              "replay-report.json",
+              "originals/joint/manifest.json",
+              "originals/joint/joint-sdk/commands.json",
+              "originals/joint/joint-sdk/logs/before-dependency-0.log",
+              "originals/joint/joint-sdk/logs/before-dependency-1.log",
+              "originals/joint/joint-sdk/logs/before-dependency-2.log",
+              "originals/joint/joint-sdk/logs/before-dependency-clean-0.log",
+              "originals/joint/joint-sdk/logs/before-dependency-clean-1.log",
+              "originals/joint/joint-sdk/logs/before-dependency-clean-2.log",
+              "originals/joint/joint-sdk/logs/before-head.log",
+              "originals/joint/joint-sdk/logs/before-source-preparation-check.log",
+              "originals/joint/joint-sdk/logs/before-tree.log",
+              "originals/joint/joint-sdk/logs/debug-build-entry-00.log",
+              "originals/joint/joint-sdk/logs/debug-build-entry-01.log",
+              "originals/joint/joint-sdk/logs/debug-build-entry-02.log",
+              "originals/joint/joint-sdk/logs/debug-build-entry-03.log",
+              "originals/joint/joint-sdk/logs/debug-build-entry-04.log",
+              "originals/joint/joint-sdk/logs/debug-build-entry-05.log",
+              "originals/joint/joint-sdk/logs/debug-build-source-tasks.log",
+              "originals/joint/joint-sdk/logs/debug-evaluate-source-tasks.log",
+              "originals/joint/joint-sdk/logs/debug-restore-analyzer-0.log",
+              "originals/joint/joint-sdk/logs/debug-restore-analyzer-1.log",
+              "originals/joint/joint-sdk/logs/debug-restore-analyzer-2.log",
+              "originals/joint/joint-sdk/logs/debug-restore-analyzer-3.log",
+              "originals/joint/joint-sdk/logs/debug-restore-analyzer-4.log",
+              "originals/joint/joint-sdk/logs/debug-restore-analyzer-5.log",
+              "originals/joint/joint-sdk/logs/debug-restore-analyzer-6.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-00.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-01.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-02.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-03.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-04.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-05.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-06.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-07.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-08.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-09.log",
+              "originals/joint/joint-sdk/logs/debug-restore-entry-10.log",
+              "originals/joint/joint-sdk/logs/debug-restore-source-tasks.log",
+              "originals/joint/joint-sdk/logs/native-after-1-dependency-0.log",
+              "originals/joint/joint-sdk/logs/native-after-1-dependency-1.log",
+              "originals/joint/joint-sdk/logs/native-after-1-dependency-2.log",
+              "originals/joint/joint-sdk/logs/native-after-1-dependency-clean-0.log",
+              "originals/joint/joint-sdk/logs/native-after-1-dependency-clean-1.log",
+              "originals/joint/joint-sdk/logs/native-after-1-dependency-clean-2.log",
+              "originals/joint/joint-sdk/logs/native-after-1-head.log",
+              "originals/joint/joint-sdk/logs/native-after-1-source-preparation-check.log",
+              "originals/joint/joint-sdk/logs/native-after-1-tree.log",
+              "originals/joint/joint-sdk/logs/native-after-2-dependency-0.log",
+              "originals/joint/joint-sdk/logs/native-after-2-dependency-1.log",
+              "originals/joint/joint-sdk/logs/native-after-2-dependency-2.log",
+              "originals/joint/joint-sdk/logs/native-after-2-dependency-clean-0.log",
+              "originals/joint/joint-sdk/logs/native-after-2-dependency-clean-1.log",
+              "originals/joint/joint-sdk/logs/native-after-2-dependency-clean-2.log",
+              "originals/joint/joint-sdk/logs/native-after-2-head.log",
+              "originals/joint/joint-sdk/logs/native-after-2-source-preparation-check.log",
+              "originals/joint/joint-sdk/logs/native-after-2-tree.log",
+              "originals/joint/joint-sdk/logs/native-after-3-dependency-0.log",
+              "originals/joint/joint-sdk/logs/native-after-3-dependency-1.log",
+              "originals/joint/joint-sdk/logs/native-after-3-dependency-2.log",
+              "originals/joint/joint-sdk/logs/native-after-3-dependency-clean-0.log",
+              "originals/joint/joint-sdk/logs/native-after-3-dependency-clean-1.log",
+              "originals/joint/joint-sdk/logs/native-after-3-dependency-clean-2.log",
+              "originals/joint/joint-sdk/logs/native-after-3-head.log",
+              "originals/joint/joint-sdk/logs/native-after-3-source-preparation-check.log",
+              "originals/joint/joint-sdk/logs/native-after-3-tree.log",
+              "originals/joint/joint-sdk/logs/native-after-4-dependency-0.log",
+              "originals/joint/joint-sdk/logs/native-after-4-dependency-1.log",
+              "originals/joint/joint-sdk/logs/native-after-4-dependency-2.log",
+              "originals/joint/joint-sdk/logs/native-after-4-dependency-clean-0.log",
+              "originals/joint/joint-sdk/logs/native-after-4-dependency-clean-1.log",
+              "originals/joint/joint-sdk/logs/native-after-4-dependency-clean-2.log",
+              "originals/joint/joint-sdk/logs/native-after-4-head.log",
+              "originals/joint/joint-sdk/logs/native-after-4-source-preparation-check.log",
+              "originals/joint/joint-sdk/logs/native-after-4-tree.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-1.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-2.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-3.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-4.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-5.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-6.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-7.log",
+              "originals/joint/joint-sdk/logs/native-original-metadata-8.log",
+              "originals/joint/joint-sdk/logs/native-state-clean-1.log",
+              "originals/joint/joint-sdk/logs/native-state-clean-2.log",
+              "originals/joint/joint-sdk/logs/native-state-head-1.log",
+              "originals/joint/joint-sdk/logs/native-state-head-2.log",
+              "originals/joint/joint-sdk/logs/original-font-packages.log",
+              "originals/joint/joint-sdk/logs/original-fontconfig.log",
+              "originals/joint/joint-sdk/logs/toolchain.log",
+              "originals/joint/joint-sdk/logs/workloads.log",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-0/6113-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-1/6115-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-2/6117-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-clean-0/6114-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-clean-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-clean-1/6116-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-clean-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-clean-2/6118-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-dependency-clean-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-head/6110-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-head/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-source-preparation-check/6119-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-source-preparation-check/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/before-tree/6111-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/before-tree/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-00/15739-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-00/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-01/16069-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-01/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-02/16198-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-02/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-03/16241-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-03/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-04/17322-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-04/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-05/17792-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-entry-05/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-source-tasks/15647-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-build-source-tasks/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-evaluate-source-tasks/15728-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-evaluate-source-tasks/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-0/15503-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-1/15523-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-2/15544-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-3/15567-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-3/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-4/15587-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-4/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-5/15607-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-5/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-6/15627-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-analyzer-6/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-00/15199-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-00/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-01/15236-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-01/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-02/15256-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-02/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-03/15285-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-03/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-04/15313-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-04/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-05/15343-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-05/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-06/15364-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-06/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-07/15385-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-07/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-08/15405-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-08/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-09/15435-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-09/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-10/15461-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-entry-10/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-source-tasks/15480-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/debug-restore-source-tasks/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-actual-native-loaded/15194-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-actual-native-loaded/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-0/6192-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-1/6194-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-2/6196-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-0/6193-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-1/6195-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-2/6197-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-head/6190-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-head/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-source-preparation-check/6198-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-source-preparation-check/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-tree/6191-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-1-tree/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-0/12330-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-1/12332-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-2/12334-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-0/12331-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-1/12333-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-2/12335-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-head/12328-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-head/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-source-preparation-check/12336-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-source-preparation-check/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-tree/12329-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-2-tree/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-0/12446-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-1/12448-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-2/12450-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-0/12447-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-1/12449-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-2/12451-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-head/12444-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-head/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-source-preparation-check/12452-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-source-preparation-check/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-tree/12445-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-3-tree/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-0/15153-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-1/15155-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-2/15157-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-0/15154-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-0/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-1/15156-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-2/15158-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-head/15151-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-head/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-source-preparation-check/15159-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-source-preparation-check/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-tree/15152-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-after-4-tree/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-cargo-build/6209-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-cargo-build/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-cargo-test/12347-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-cargo-test/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-cargo-tree/6171-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-cargo-tree/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-glycin-build/12489-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-glycin-build/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-ldd-glycin-image-rs/15184-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-ldd-glycin-image-rs/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-ldd-libglycin.so/15172-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-ldd-libglycin.so/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-native-loaded-identity/12475-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-native-loaded-identity/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-native-needed/12465-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-native-needed/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-nm-glycin-image-rs/15183-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-nm-glycin-image-rs/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-nm-libglycin.so/15171-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-nm-libglycin.so/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-1/6157-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-2/6159-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-3/6160-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-3/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-4/6166-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-4/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-5/12476-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-5/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-6/12477-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-6/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-7/12478-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-7/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-8/12484-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-original-metadata-8/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-dynamic/12463-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-dynamic/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-glycin-image-rs/15182-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-glycin-image-rs/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-libglycin.so/15170-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-libglycin.so/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-symbols/12464-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-readelf-symbols/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-clean-1/15196-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-clean-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-clean-2/15198-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-clean-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-head-1/15195-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-head-1/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-head-2/15197-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/native-state-head-2/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/original-font-packages/6156-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/original-font-packages/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/original-fontconfig/6155-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/original-fontconfig/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/toolchain/6130-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/toolchain/expected-managed-launch.json",
+              "originals/joint/joint-sdk/original-process-drains/workloads/6138-pending.json",
+              "originals/joint/joint-sdk/original-process-drains/workloads/expected-managed-launch.json",
+              "originals/joint/joint-sdk/receipt.json",
+              "originals/joint/profile-correction/actual-bwrap-version.stderr",
+              "originals/joint/profile-correction/actual-bwrap-version.stdout",
+              "originals/joint/profile-correction/actual-kernel.stderr",
+              "originals/joint/profile-correction/actual-kernel.stdout",
+              "originals/joint/profile-correction/actual-packages.stderr",
+              "originals/joint/profile-correction/actual-packages.stdout",
+              "originals/joint/profile-correction/actual-parser-version.stderr",
+              "originals/joint/profile-correction/actual-parser-version.stdout",
+              "originals/joint/profile-correction/actual-restricted-child.stderr",
+              "originals/joint/profile-correction/actual-restricted-child.stdout",
+              "originals/joint/profile-correction/cleanup-receipt.json",
+              "originals/joint/profile-correction/commands.json",
+              "originals/joint/profile-correction/exact-abi4-dry-parse.stderr",
+              "originals/joint/profile-correction/exact-abi4-dry-parse.stdout",
+              "originals/joint/profile-correction/exact-profile-preprocessed.stderr",
+              "originals/joint/profile-correction/exact-profile-preprocessed.stdout",
+              "originals/joint/profile-correction/load-exact-two-profiles.stderr",
+              "originals/joint/profile-correction/load-exact-two-profiles.stdout",
+              "originals/joint/profile-correction/original-native-session-drain/6109-pending.json",
+              "originals/joint/profile-correction/original-native-session-drain/expected-managed-launch.json",
+              "originals/joint/profile-correction/original-native-session-drain/inner-native-delegation.json",
+              "originals/joint/profile-correction/original-sdk-caller-custody.json",
+              "originals/joint/profile-correction/original-sdk-caller.log",
+              "originals/joint/profile-correction/policy-precondition-receipt.json",
+              "originals/joint/profile-correction/profiles-after-cleanup.stderr",
+              "originals/joint/profile-correction/profiles-after-cleanup.stdout",
+              "originals/joint/profile-correction/profiles-after-load.stderr",
+              "originals/joint/profile-correction/profiles-after-load.stdout",
+              "originals/joint/profile-correction/profiles-before.stderr",
+              "originals/joint/profile-correction/profiles-before.stdout",
+              "originals/joint/profile-correction/remove-only-introduced-profiles.stderr",
+              "originals/joint/profile-correction/remove-only-introduced-profiles.stdout",
+              "originals/joint/profile-correction/same-genuine-true-probe.stderr",
+              "originals/joint/profile-correction/same-genuine-true-probe.stdout"
+          ]
+          expected_count = 333
+          expected_sha = 'eee62a15374cab433c5836382f6d68b81d6b1b99e30bbcf42fe42ea50407dece'
+          lane = 'sdk08'
+          branch = 'validation/sol-happy-sdk08-original-custody-20261004'
+          errors = []
+          handles = []
+          reserved_bytes = 0
+          write_attempts = 0
+          payload = None
+          try:
+              require(sys.version_info >= (3, 11) and sys.flags.optimize == 0, 'SELECTOR_PYTHON_REFUSED')
+              require(len(relative_paths) == expected_count and len(set(relative_paths)) == expected_count, 'SELECTOR_COUNT_REFUSED')
+              require(hashlib.sha256(('\n'.join(relative_paths)+'\n').encode()).hexdigest() == expected_sha, 'SELECTOR_WHOLE_LIST_REFUSED')
+              require(all(p and not p.startswith('/') and '\\' not in p and '\x00' not in p and all(x not in ('', '.', '..') for x in p.split('/')) for p in relative_paths), 'SELECTOR_PATH_REFUSED')
+              require(os.environ.get('GITHUB_REPOSITORY') == 'CroakyJake12/9to1' and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch' and os.environ.get('GITHUB_REF') == 'refs/heads/'+branch, 'SELECTOR_CONTEXT_REFUSED')
+              require(re.fullmatch('[0-9a-f]{40}', os.environ.get('GITHUB_SHA', '')) is not None, 'SELECTOR_COMMIT_REFUSED')
+              run_id = os.environ.get('GITHUB_RUN_ID', '')
+              attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '')
+              require(re.fullmatch('[1-9][0-9]{0,19}', run_id) is not None and re.fullmatch('[1-9][0-9]{0,9}', attempt) is not None, 'SELECTOR_RUN_REFUSED')
+              root = os.environ.get('RUNNER_TEMP', '')
+              output = os.environ.get('GITHUB_OUTPUT', '')
+              require(root and len(root) <= 4096 and os.path.isabs(root) and os.path.normpath(root) == root and '\x00' not in root, 'SELECTOR_ROOT_REFUSED')
+              require(output and len(output) <= 4096 and os.path.isabs(output) and os.path.normpath(output) == output and os.path.commonpath([root, output]) == root and output != root, 'SELECTOR_OUTPUT_LOCATION_REFUSED')
+              parts = os.path.relpath(output, root).split(os.sep)
+              require(1 <= len(parts) <= 8 and all(x not in ('', '.', '..') and '\\' not in x for x in parts), 'SELECTOR_PARENT_REFUSED')
+              prefix = root+'/'+lane+'-original-custody-'+run_id+'-'+attempt+'/'
+              require('\n' not in prefix and '\r' not in prefix, 'SELECTOR_LINE_REFUSED')
+              delimiter = 'SOL_HAPPY_EXACT_CAUSAL_PATHS_V1'
+              payload_size = len(('paths<<'+delimiter+'\n'+delimiter+'\n').encode())+len(prefix.encode())*expected_count+sum(len(p.encode())+1 for p in relative_paths)
+              require(payload_size <= 65536, 'SELECTOR_METADATA_CAP_REFUSED')
+              payload = ('paths<<'+delimiter+'\n'+'\n'.join(prefix+p for p in relative_paths)+'\n'+delimiter+'\n').encode()
+              require(len(payload) == payload_size, 'SELECTOR_METADATA_SIZE_REFUSED')
+              # Single complete metadata-write reservation before any opening/writing; no refund/retry.
+              # Separate from unchanged original-evidence writer budgets; no originals are copied/read.
+              reserved_bytes = 65536
+              write_attempts = 1
+              print(json.dumps({'status':'SELECTOR_METADATA_WRITE_ATTEMPT','reservedBytes':reserved_bytes,'writeAttempts':write_attempts,'payloadBytes':payload_size,'completePaths':expected_count}), flush=True)
+              require(all(hasattr(os, option) for option in ('O_NOFOLLOW', 'O_DIRECTORY', 'O_CLOEXEC')), 'SELECTOR_NOFOLLOW_UNAVAILABLE')
+              root_fd = os.open(root, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+              handles.append((root_fd, None, root, True))
+              observed = os.fstat(root_fd)
+              require(stat.S_ISDIR(observed.st_mode) and observed.st_uid == os.geteuid(), 'SELECTOR_ROOT_OWNER_REFUSED')
+              free = os.fstatvfs(root_fd)
+              require(free.f_bavail*free.f_frsize >= 943718400+reserved_bytes, 'SELECTOR_FIXED_FLOOR_REFUSED')
+              parent = root_fd
+              for part in parts[:-1]:
+                  fd = os.open(part, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC, dir_fd=parent)
+                  handles.append((fd, parent, part, True))
+                  observed = os.fstat(fd)
+                  require(stat.S_ISDIR(observed.st_mode) and observed.st_uid == os.geteuid(), 'SELECTOR_PARENT_OWNER_REFUSED')
+                  parent = fd
+              fd = os.open(parts[-1], os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC, dir_fd=parent)
+              handles.append((fd, parent, parts[-1], False))
+              observed = os.fstat(fd)
+              require(stat.S_ISREG(observed.st_mode) and observed.st_uid == os.geteuid() and observed.st_nlink == 1 and observed.st_size == 0, 'SELECTOR_FRESH_CONTROL_FILE_REFUSED')
+              offset = 0
+              while offset < len(payload):
+                  n = os.write(fd, payload[offset:])
+                  require(n > 0, 'SELECTOR_CONTROL_WRITE_REFUSED')
+                  offset += n
+              os.fsync(fd)
+              os.lseek(fd, 0, os.SEEK_SET)
+              readback = bytearray()
+              while len(readback) <= len(payload):
+                  chunk = os.read(fd, min(65536, len(payload)+1-len(readback)))
+                  if not chunk:
+                      break
+                  readback.extend(chunk)
+              require(bytes(readback) == payload and os.fstat(fd).st_size == len(payload), 'SELECTOR_SAME_FD_READBACK_REFUSED')
+          except BaseException as error:
+              add(errors, error)
+          finally:
+              for fd, parent, leaf, directory in handles:
+                  try:
+                      held = os.fstat(fd)
+                      linked = os.stat(leaf, dir_fd=parent, follow_symlinks=False) if parent is not None else os.stat(leaf, follow_symlinks=False)
+                      require((held.st_dev, held.st_ino, held.st_uid, stat.S_IFMT(held.st_mode)) == (linked.st_dev, linked.st_ino, linked.st_uid, stat.S_IFMT(linked.st_mode)), 'SELECTOR_CURRENT_LINK_REFUSED')
+                  except BaseException as error:
+                      add(errors, error)
+                  if directory:
+                      try:
+                          os.fsync(fd)
+                      except BaseException as error:
+                          add(errors, error)
+              for fd, _, _, _ in reversed(handles):
+                  try:
+                      os.close(fd)
+                  except BaseException as error:
+                      add(errors, error)
+          try:
+              print(json.dumps({'status':'SELECTOR_METADATA_REFUSED' if errors else 'SELECTOR_METADATA_PUBLISHED','reservedBytes':reserved_bytes,'writeAttempts':write_attempts,'payloadBytes':len(payload) if payload is not None else None,'completePaths':expected_count,'originalsReadCopiedReplayed':0,'originalCauses':project(errors)}), flush=True)
+          except BaseException as error:
+              add(errors, error)
+          if errors:
+              sys.exit(1)
+          PY
+      - name: Retain complete SDK08 causal originals for separate bounded admission
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-sdk08-complete-causal-originals-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.causal_paths.outputs.paths }}
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
