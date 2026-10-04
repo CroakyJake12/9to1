@@ -71,8 +71,9 @@ public sealed class HomeNativeFilesOriginalPublicationContext
 }
 
 /// <summary>Trusted installed verifier extension, never supplied by a wire frame.
-/// Acquire follows the SAME retained Files owner transaction: Files then profile/device,
-/// then authentic receipt/launch/native transactions. It must consume genuinely held raw
+/// Acquire follows the SAME retained owner transaction: Files, claimed completion gate if
+/// applicable, then profile/device state and authentic receipt/launch/native transactions.
+/// It must consume genuinely held raw
 /// state through a supported owner-issued capability rather than reacquire Home/Files.
 /// Unsupported aliases, writer order or physical installation/launch authority return null.</summary>
 public interface IHomeNativeFilesInstalledPublicationVerifier : IHomeNativeInstalledPeerOriginalActorVerifier
@@ -83,7 +84,8 @@ public interface IHomeNativeFilesInstalledPublicationVerifier : IHomeNativeInsta
 
 /// <summary>The SAME registered Home-only Files owner, with a genuine retained read transaction.
 /// Missing actual transactions must remain unavailable. Presence of this interface is no grant.
-/// Acquire Files first, then the supported original profile/device state in established writer
+/// Acquire Files first, then any original claimed-resource completion gate BEFORE the
+/// supported original profile/device state in established writer
 /// order. Aliased stores require genuine owner identity/deduplication or refusal. A guard may not
 /// borrow a mutable snapshot as installed authority. Installed guard releases before this guard.</summary>
 public interface IHomeNativeFilesPublicationOwner : IHomeNativeFilesDomainOwner

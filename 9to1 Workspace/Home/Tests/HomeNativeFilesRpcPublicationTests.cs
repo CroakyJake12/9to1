@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IO.Pipes;
 using System.Runtime.ExceptionServices;
 using System.Security.Principal;
@@ -149,6 +150,148 @@ public sealed class HomeNativeFilesRpcPublicationTests
             Assert.False(rig.Owner.Guard.IsHeld);
         });
 
+    [WindowsFact]
+    public Task Original_owner_transaction_precedes_installed_state_and_releases_in_reverse_order() =>
+        WithRigAsync(true, true, async rig =>
+        {
+            var writer = new HeldCompletedFrameStream(rig.Server!);
+            Task? publication = null;
+            Task<HomeStateWriteResult>? waitingWrite = null;
+            Exception? primary = null; List<Exception> cleanup = [];
+            try
+            {
+                var reply = await rig.Session!.InvokeOriginalFilesAsync(new("BrowseRoot"), rig.Token);
+                publication = rig.PublishAsync(reply, writer);
+                await writer.Entered.Task.WaitAsync(rig.Token);
+                var frame = await HomeUnixDiscoveryTransport.ReadFrameAsync(rig.Client!, rig.Token);
+                var received = HomeNativeFilesProtocol.ReadResponse(frame, rig.OriginalFrame!);
+                Assert.Equal(JsonSerializer.Serialize(reply, HomeNativeFilesProtocol.Json),
+                    JsonSerializer.Serialize(received, HomeNativeFilesProtocol.Json));
+                Assert.Equal(new[] { "owner.acquire", "installed.acquire" }, rig.GuardOrder.ToArray());
+                Assert.Same(rig.Owner.Guard, rig.Verifier.LastContext!.OriginalOwnerGuard);
+                Assert.Same(reply, rig.Verifier.LastContext.OriginalReply);
+                Assert.True(rig.Owner.Guard.IsHeld);
+                Assert.True(rig.Verifier.LastGuard!.IsHeld);
+                waitingWrite = rig.RewriteActualProfileAsync(changeIdentity: false);
+                Assert.False(waitingWrite.IsCompleted);
+                Assert.False(publication.IsCompleted);
+                writer.Release.TrySetResult();
+                await publication;
+                Assert.Equal(new[] { "owner.acquire", "installed.acquire", "installed.release", "owner.release" },
+                    rig.GuardOrder.ToArray());
+                Assert.True((await waitingWrite).IsSuccess);
+                Assert.Equal(1, rig.PhysicalWrites);
+                Assert.Throws<UnauthorizedAccessException>(() => rig.Verifier.LastContext.DemandOriginalOwnerTransaction());
+            }
+            catch (Exception error) { primary = error; }
+            finally
+            {
+                writer.Release.TrySetResult();
+                foreach (var original in new Task?[] { publication, waitingWrite })
+                    try { if (original is not null) await original; }
+                    catch (Exception error) { if (!rig.IsObserved(error)) Add(cleanup, error); }
+            }
+            Throw(primary, cleanup);
+        });
+
+    [WindowsTheory]
+    [InlineData("owner")]
+    [InlineData("installed")]
+    public Task Acquisition_refusal_retains_original_cause_and_independent_release_without_frame(string failingOwner) =>
+        WithRigAsync(true, true, async rig =>
+        {
+            var acquisition = new IOException("exact " + failingOwner + " acquisition failure");
+            var installedRelease = new IOException("exact acquired physical lease release failure");
+            var ownerRelease = new IOException("exact owner transaction release failure");
+            if (failingOwner == "owner") rig.Owner.AcquisitionFailure = acquisition;
+            else
+            {
+                rig.Verifier.AcquisitionFailure = acquisition;
+                rig.Verifier.CloseFailure = installedRelease;
+                rig.Owner.Guard.CloseFailure = ownerRelease;
+            }
+            var reply = await rig.Session!.InvokeOriginalFilesAsync(new("BrowseRoot"), rig.Token);
+            var failure = await Record.ExceptionAsync(() => rig.PublishAsync(reply, rig.Server!));
+            Assert.NotNull(failure);
+            Assert.Contains(Flatten(failure!), error => ReferenceEquals(acquisition, error));
+            rig.Observe(failure!);
+            Assert.Equal(0, rig.PhysicalWrites);
+            Assert.False(rig.Owner.Guard.IsHeld);
+            if (failingOwner == "owner")
+            {
+                Assert.Equal(new[] { "owner.acquire" }, rig.GuardOrder.ToArray());
+                Assert.Equal(0, rig.Verifier.InstalledAcquisitions);
+                Assert.Equal(0, rig.Owner.Guard.Disposals);
+                Assert.Null(rig.Verifier.LastGuard);
+            }
+            else
+            {
+                foreach (var expected in new Exception[] { installedRelease, ownerRelease })
+                    Assert.Contains(Flatten(failure!), error => ReferenceEquals(expected, error));
+                Assert.Equal(new[] { "owner.acquire", "installed.acquire", "installed.release", "owner.release" },
+                    rig.GuardOrder.ToArray());
+                Assert.False(rig.Verifier.LastGuard!.IsHeld);
+                Assert.Equal(1, rig.Verifier.LastGuard.Disposals);
+                Assert.Equal(1, rig.Owner.Guard.Disposals);
+                Assert.Throws<UnauthorizedAccessException>(() => rig.Verifier.LastContext!.DemandOriginalOwnerTransaction());
+                // The genuine FileHome physical state gate was acquired then released by the failed port.
+                Assert.True((await rig.RewriteActualProfileAsync(changeIdentity: false)).IsSuccess);
+            }
+        });
+
+    [WindowsFact]
+    public Task Known_complete_original_frame_survives_later_check_and_close_failures_without_retry() =>
+        WithRigAsync(true, true, async rig =>
+        {
+            var writer = new HeldCompletedFrameStream(rig.Server!);
+            Task? publication = null;
+            Task<HomeStateWriteResult>? waitingWrite = null;
+            Exception? primary = null; List<Exception> cleanup = [];
+            try
+            {
+                var reply = await rig.Session!.InvokeOriginalFilesAsync(new("BrowseRoot"), rig.Token);
+                publication = rig.PublishAsync(reply, writer);
+                await writer.Entered.Task.WaitAsync(rig.Token);
+                var frame = await HomeUnixDiscoveryTransport.ReadFrameAsync(rig.Client!, rig.Token);
+                var received = HomeNativeFilesProtocol.ReadResponse(frame, rig.OriginalFrame!);
+                Assert.Equal(JsonSerializer.Serialize(reply, HomeNativeFilesProtocol.Json),
+                    JsonSerializer.Serialize(received, HomeNativeFilesProtocol.Json));
+                var installedCheck = new IOException("exact post-frame installed check");
+                var ownerCheck = new IOException("exact post-frame owner check");
+                var installedClose = new IOException("exact post-frame installed release");
+                var ownerClose = new IOException("exact post-frame owner release");
+                rig.Verifier.LastGuard!.AfterFrameCheckFailure = installedCheck;
+                rig.Owner.Guard.CheckFailure = ownerCheck;
+                rig.Owner.Guard.CloseFailure = ownerClose;
+                // Inject an exact late close failure through the SAME retained original guard.
+                rig.Verifier.LastGuard.AfterFrameCloseFailure = installedClose;
+                waitingWrite = rig.RewriteActualProfileAsync(changeIdentity: false);
+                Assert.False(waitingWrite.IsCompleted);
+                writer.Release.TrySetResult();
+                var failure = await Record.ExceptionAsync(() => publication);
+                Assert.NotNull(failure);
+                foreach (var expected in new Exception[] { installedCheck, ownerCheck, installedClose, ownerClose })
+                    Assert.Contains(Flatten(failure!), error => ReferenceEquals(expected, error));
+                rig.Observe(failure!);
+                Assert.Equal(1, rig.PhysicalWrites);
+                Assert.True((await waitingWrite).IsSuccess);
+                Assert.Equal(new[] { "owner.acquire", "installed.acquire", "installed.release", "owner.release" },
+                    rig.GuardOrder.ToArray());
+                Assert.False(rig.Owner.Guard.IsHeld);
+                Assert.False(rig.Verifier.LastGuard.IsHeld);
+                Assert.Throws<UnauthorizedAccessException>(() => rig.Verifier.LastContext!.DemandOriginalOwnerTransaction());
+            }
+            catch (Exception error) { primary = error; }
+            finally
+            {
+                writer.Release.TrySetResult();
+                foreach (var original in new Task?[] { publication, waitingWrite })
+                    try { if (original is not null) await original; }
+                    catch (Exception error) { if (!rig.IsObserved(error)) Add(cleanup, error); }
+            }
+            Throw(primary, cleanup);
+        });
+
     private static TaskCompletionSource Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private static IEnumerable<Exception> Flatten(Exception error)
     {
@@ -191,6 +334,7 @@ public sealed class HomeNativeFilesRpcPublicationTests
         internal HomeNativeCoreApiSessions.Session? Session;
         internal HomeCoreRuntime? Runtime;
         internal readonly ControlledOwner Owner = new(owner);
+        internal readonly ConcurrentQueue<string> GuardOrder = new();
         internal GuardedVerifier Verifier = null!;
         internal HomeNativeFilesFrame? OriginalFrame;
         internal int PhysicalWrites;
@@ -206,6 +350,10 @@ public sealed class HomeNativeFilesRpcPublicationTests
             using var identity = WindowsIdentity.GetCurrent();
             var principal = "windows-sid:" + (identity.User?.Value ?? throw new InvalidOperationException("Actual SID unavailable."));
             Verifier = new(Profiles, Store, principal);
+            Owner.Guard.Events = GuardOrder;
+            Owner.Events = GuardOrder;
+            Verifier.Events = GuardOrder;
+            Verifier.ExpectedOwnerGuard = Owner.Guard;
             IHomeNativeInstalledPeerVerifier originalVerifier = installed ? Verifier : new PlainVerifier(Verifier);
             var policy = new HomeCoreServiceReadActionPolicies();
             Permissions = new(Store, policy.TryGet);
@@ -284,6 +432,8 @@ public sealed class HomeNativeFilesRpcPublicationTests
     {
         internal AuthenticatedResourceActor? ExpectedActor;
         internal int Invocations, PublicationAcquisitions, Closes;
+        internal ConcurrentQueue<string>? Events;
+        internal Exception? AcquisitionFailure;
         internal Func<CancellationToken, Task>? BeforePublication;
         internal readonly OwnerGuard Guard = new();
         private HomeNativeFilesOriginalConnection? _connection;
@@ -311,7 +461,9 @@ public sealed class HomeNativeFilesRpcPublicationTests
             HomeNativeFilesOriginalConnection connection, HomeNativeFilesReply reply, CancellationToken token)
         {
             token.ThrowIfCancellationRequested(); Assert.Same(_connection, connection); Assert.Same(_reply, reply);
-            PublicationAcquisitions++; Guard.Held = true;
+            PublicationAcquisitions++; Events?.Enqueue("owner.acquire");
+            if (AcquisitionFailure is { } failure) throw failure;
+            Guard.Held = true;
             return ValueTask.FromResult<IHomeNativeFilesPublicationGuard?>(Guard);
         }
         public Task CloseOriginalConnectionAsync(HomeNativeFilesOriginalConnection connection)
@@ -322,11 +474,12 @@ public sealed class HomeNativeFilesRpcPublicationTests
         internal bool Held;
         internal Exception? CheckFailure, CloseFailure;
         internal int Disposals;
+        internal ConcurrentQueue<string>? Events;
         public bool IsHeld => Held;
         public ValueTask DemandOriginalCurrentAsync(CancellationToken token)
         { token.ThrowIfCancellationRequested(); if (CheckFailure is { } error) throw error; return ValueTask.CompletedTask; }
         public ValueTask DisposeAsync()
-        { Held = false; Disposals++; if (CloseFailure is { } error) throw error; return ValueTask.CompletedTask; }
+        { Events?.Enqueue("owner.release"); Held = false; Disposals++; if (CloseFailure is { } error) throw error; return ValueTask.CompletedTask; }
     }
     private sealed class PlainVerifier(GuardedVerifier original) : IHomeNativeInstalledPeerOriginalActorVerifier
     {
@@ -342,7 +495,10 @@ public sealed class HomeNativeFilesRpcPublicationTests
             "SYNTHETIC_INSTALLED_FIXTURE_NO_PROTECTED_PACKAGE", new HashSet<string> { "home.core", "home.state", "files.native" });
         internal int InstalledAcquisitions;
         internal InstalledGuard? LastGuard;
-        internal Exception? CheckFailure, CloseFailure;
+        internal Exception? CheckFailure, CloseFailure, AcquisitionFailure;
+        internal ConcurrentQueue<string>? Events;
+        internal IHomeNativeFilesPublicationGuard? ExpectedOwnerGuard;
+        internal HomeNativeFilesOriginalPublicationContext? LastContext;
         private bool Actual(HomeNativeObservedPeer observed) => observed.ProcessId == Environment.ProcessId &&
             observed.OperatingSystemPrincipalId == principal;
         private bool Same(HomeNativeInstalledPeer expected) => Peer.AppId == expected.AppId &&
@@ -359,6 +515,9 @@ public sealed class HomeNativeFilesRpcPublicationTests
             // Controlled fixture port: actual Home state gate, not a protected installed implementation.
             originalContext.DemandOriginalOwnerTransaction();
             Assert.True(originalContext.OriginalOwnerGuard.IsHeld);
+            Assert.Same(ExpectedOwnerGuard, originalContext.OriginalOwnerGuard);
+            LastContext = originalContext;
+            Events?.Enqueue("installed.acquire");
             var observed = originalContext.OriginalObservedPeer;
             var actor = originalContext.OriginalActor;
             var installed = originalContext.OriginalInstalledPeer;
@@ -369,32 +528,42 @@ public sealed class HomeNativeFilesRpcPublicationTests
             if (held is null) return null;
             LastGuard = new(held, () => Actual(observed) && Same(installed) &&
                 originalContext.OriginalOwnerGuard.IsHeld && !originalLifetime.IsCancellationRequested,
-                CheckFailure, CloseFailure);
+                CheckFailure, CloseFailure, Events);
+            if (AcquisitionFailure is { } failure)
+            {
+                // This fixture port owns a real lease even if acquisition cannot return a guard.
+                // Its own exact body and physical-release failures must reach the Session together.
+                List<Exception> cleanup = [];
+                try { await LastGuard.DisposeAsync(); } catch (Exception error) { Add(cleanup, error); }
+                Throw(failure, cleanup);
+            }
             return LastGuard;
         }
     }
     private sealed class InstalledGuard(IHomeLocalOperationLease originalLease, Func<bool> originalCurrent,
-        Exception? checkFailure, Exception? closeFailure) : IHomeNativeFilesPublicationGuard
+        Exception? checkFailure, Exception? closeFailure, ConcurrentQueue<string>? events) : IHomeNativeFilesPublicationGuard
     {
         private bool _held = true;
         internal int Disposals;
+        internal Exception? AfterFrameCheckFailure, AfterFrameCloseFailure;
         public bool IsHeld => _held;
         public async ValueTask DemandOriginalCurrentAsync(CancellationToken token)
         {
             if (checkFailure is not null) throw checkFailure;
+            if (AfterFrameCheckFailure is { } afterFrameFailure) throw afterFrameFailure;
             token.ThrowIfCancellationRequested();
             if (!_held || !originalCurrent() || !await originalLease.IsCurrentAsync(token))
                 throw new UnauthorizedAccessException("The actual profile or controlled installed tuple retired.");
         }
         public async ValueTask DisposeAsync()
         {
+            events?.Enqueue("installed.release");
             _held = false; Disposals++;
-            Exception? primary = null;
-            try { await originalLease.DisposeAsync(); } catch (Exception error) { primary = error; }
-            if (primary is not null && closeFailure is not null)
-                throw new AggregateException("Actual lease close and controlled close failure.", primary, closeFailure);
-            if (primary is not null) ExceptionDispatchInfo.Capture(primary).Throw();
-            if (closeFailure is not null) throw closeFailure;
+            List<Exception> cleanup = [];
+            try { await originalLease.DisposeAsync(); } catch (Exception error) { Add(cleanup, error); }
+            if (closeFailure is not null) Add(cleanup, closeFailure);
+            if (AfterFrameCloseFailure is { } afterFrameCloseFailure) Add(cleanup, afterFrameCloseFailure);
+            Throw(null, cleanup);
         }
     }
 
@@ -426,6 +595,33 @@ public sealed class HomeNativeFilesRpcPublicationTests
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
         public override void SetLength(long value) => throw new NotSupportedException();
         // Borrowed pipe is disposed only by Rig after the SAME original publication/Session drains.
+    }
+    // The complete original header+payload reaches the real borrowed pipe before its SAME
+    // frame Task settles. This gate exercises final publication ownership, not a fake receipt.
+    private sealed class HeldCompletedFrameStream(Stream originalPipe) : Stream
+    {
+        internal readonly TaskCompletionSource Entered = Signal(), Release = Signal();
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override async Task FlushAsync(CancellationToken token)
+        {
+            await originalPipe.FlushAsync(token);
+            Entered.TrySetResult();
+            await Release.Task.WaitAsync(token);
+        }
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken token = default) =>
+            originalPipe.WriteAsync(buffer, token);
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken token) =>
+            originalPipe.WriteAsync(buffer, offset, count, token);
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        // The original pipe remains Rig-owned until the actual frame and Session drain.
     }
     private sealed class Paths(string root) : IAppPaths
     {
