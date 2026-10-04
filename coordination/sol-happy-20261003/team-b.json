@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T20:56:11.491508+00:00",
+  "updatedUTC": "2026-10-04T21:09:49.417757+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -3886,5 +3886,66 @@
     "deadlineUTC": "2026-10-04T21:30:00Z"
   },
   "currentSharedSpaceBOwnerAckRef": "sharedSpaceBOwnerAck_20261004T205611.491508+0000",
-  "currentDurableCASHandoffRef": "durableOriginalCASHandoff_20261004T205611.491508+0000"
+  "currentDurableCASHandoffRef": "durableOriginalCASHandoff_20261004T205611.491508+0000",
+  "criticalCASAndSafeDrainHandoff_20261004T210949.417757+0000": {
+    "UTC": "2026-10-04T21:09:49.417757+00:00",
+    "decision": "EXPLICIT_B_HANDOFF_TO_RECEIVING_ROOT_A_C_SHARED_PERSISTENCE_OWNER_NO_B_PARALLEL_WRITER",
+    "confirmedFailure": "Receiving73aa repository SaveAsync107-147 uses perinstance_gate/increment/unconditionalFile.Replace; originalfiles show seedv2, backupv3winner, currentv3stale afterstaleSave. OriginalProgram126 iscorrect. Metric6filesoutsidegraph; buildisolationcannotfixoldunconditionalsource.",
+    "oldRepository": {
+      "ref": "73aa39a39bbde7ae56d1ea8548ba1db5926e618c",
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+      "blob": "242809b676dc3d3fa5e474d9740c1c8a3555443f"
+    },
+    "sourceHandoffRef": "44a6403cf1683e8b54105d053a29cb15872a0b9f",
+    "sourceBodies": [
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+        "blob": "3768f23d1d6635d12dbfd9ae9eaf36245ec010a7",
+        "bytes": 40838,
+        "sha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesRevisionConflictException.cs",
+        "blob": "627a500941a48e0a003ed9eea496afb4d3b14596",
+        "bytes": 577,
+        "sha256": "bb270c681eb82a1ad4e5ab461e3ee8fd2ab5e49e2465020fb698792d2f2ee34f"
+      },
+      {
+        "path": "apps/Web/Write/WriteBrowserSession.cs",
+        "blob": "3623aa769fbbdd466a23134ddd2cab5f986d0c91",
+        "bytes": 31701,
+        "sha256": "741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f"
+      }
+    ],
+    "boundedRepair": "Under serialization read+validate physicalcurrent canonicalGUID BEFORE increment/temp/history. Reject unrecoverable existingcurrent/identitymismatch usingownerrecovery rules. Compare persistedVersion(or0) to expecteddocument.Version; throw exactHaven.Application.NotesRevisionConflictException(DocumentId,ExpectedVersion,ActualVersion). SaveCore snapshot.Version=_durableVersion; mapthat exception toCodeRevisionConflict preservingdraft/durablebase/dirty. NevereditProgram126 orfakeoracle.",
+    "criticalCrossProcessGap": "Our22da staticnormalized-root semaphore is SAMEPROCESS ONLY; it fixes twoinstances sequentialstaleCAS but doesnot serializeOSprocesses. File.Replace atomicity doesnot implementrevisionCAS. Receiver/A/C owner must add one maintainedinterprocess lock/transaction spanning read-current/check+durablepublication, sharedbyallmutators includingdelete/recovery. Do notlockonlyreplaceablecurrentfile. NoBsharedsourceedit.",
+    "dependencyCaution": "Do notblindlytransplant40KBrepo; italso contains knowncommit/historywarning/Core receipt andlegacy/recovery changes requiringownerdependencyreview. UseminimalCAS+exception+existingSessionbridge underA/Cownerreview.",
+    "requiredVerification": "Unchanged65: seed23/freshverify40/subscriber2; winnerv3 exactSHA survivesstaleexpectedv2 refusal/draftintact. Separateactualtwoapphostprocess regression: bothloadbase2confirmedbybarrier; releasebothsaves; exactlyonecommitsv3, otherexpected2/actual3RevisionConflict/draftintact; nosecondv3overwrite. Laterstaleprocessrejectsv2. Lockholdercancel/exitmustreleasewithoutstrandingorrewritingcommittedstate; noexecutedclaimhere.",
+    "safeDrain": {
+      "environment": "CloudLinux workspace/GitHub; noJacobPCdependency identified inBownedagents orjobs.",
+      "rootSource": "Remoteprimary+PR6e90c6fab21aebd27cb7d8f330022414a889be8df; locallag44a preserved due1478219Bindex vsheadroom; rootremoteonlyintegrator.",
+      "localDirty": "One existingREADME modification and protecteduntrackedAI/Cards/PictureOwnerEvidence/Canvas/Data/TerraForm/HomeGlyph/HomeResponsive/generatedvendorstaticwebassets untouched; noreset/indexmutation/deletion.",
+      "B1_B2_B3_B4_B5": "NoactiveLOCALprocess/browser/FD/unsavedfileedit; B3conditionalbrowserdraft retainedRAMonly, notadopted.",
+      "B6Watcher": {
+        "session": 17020,
+        "state": "TERMINAL_AUTHORIZED_IDLE_WATCHER_SCHEMA_REFUSAL",
+        "actualExit": 2,
+        "output": "HOLD REQUEST_SCHEMA",
+        "requestBytes": 291,
+        "requestSHA256": "e427d6a2b2b9369680eae2a7c0fe1c08a9eb1282e854bdf655096a826605e905",
+        "ackBytes": 173,
+        "ackSHA256": "1f3a5c1fcc4c120fab957b7e132baa0004e7aba3b35a91153065304cad5ccd7f",
+        "processedFragments": 0,
+        "watcherAPICalls": 0,
+        "allReadersClosed": true,
+        "noSignalsNoSourceChangeNoRestart": true,
+        "noRetirementAuthority": true
+      },
+      "cloudJob": "Boundedselectedexistingraw run37234753520/job111531522358SUCCESS onfca8c373d4eaeb732cbbe20d7e86072ca42d667c; originalfullSHA/all36CRC beforefivepinneddiagnostics. Officialartifact11314748325/8599/SHA91f3eb8c7756ccf4c47bc2941634d647dd1cdc8d99129231283e32b0409291e2; rawreceivepending.",
+      "shutdownAuthority": "ReceivingrootWindows onlyonceuserconditioncompletion+safe save/drain; deadline21:30UTC isnotacceptancewaiver. BwillnotpoweroffJacobPC orcancelhealthycloudjobs."
+    },
+    "deadlineUTC": "2026-10-04T21:30:00Z",
+    "allPreviousFailuresHistoryAndPrivatePrivacyPreserved": true
+  },
+  "currentCriticalCASHandoffRef": "criticalCASAndSafeDrainHandoff_20261004T210949.417757+0000"
 }
