@@ -17,6 +17,7 @@ try
     await service.FundAsync(token,org.OrgID,org.Policy.Revision,pool.PoolID,"fictional-paid-allocation");
     await Service().FundAsync(token,org.OrgID,org.Policy.Revision,pool.PoolID,"fictional-paid-allocation");
     Check(service.GetBalance(token,org.OrgID,org.Policy.Revision,pool.PoolID).FundedDust==1000,"source funding retry creates no duplicate credits");
+    await CancelledAuthoritiesPreserveState(root,identity,orgs,token,org,owner,now);
     var noMetadataQuote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,pool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10),"fixture");quoted.Quotes[noMetadataQuote.QuoteID]=noMetadataQuote;
     try{await service.ReserveAsync(token,new(org.OrgID,org.Policy.Revision,noMetadataQuote.ModelRouteID,noMetadataQuote.QuoteID,"missing-attribution"),CancellationToken.None);throw new Exception("unattributed quote admitted");}catch(InvalidOperationException error)when(error.Message=="organisation_quote_usage_attribution_unconfigured"){}
     var wrongClientQuote=noMetadataQuote with{QuoteID=Guid.NewGuid(),RegisteredClientID="different-client",Attribution=new("fixture.app","fixture.model",null,null)};quoted.Quotes[wrongClientQuote.QuoteID]=wrongClientQuote;
@@ -135,6 +136,90 @@ try
     Console.WriteLine("PASS fictional funded-org ledger: single-source funding, parallel total ceiling, partition/role plan, actual observed settlement, restart/replay, unsafe transfer denial, session revocation");
 }
 finally{Directory.Delete(root,true);}
+static async Task CancelledAuthoritiesPreserveState(string root,CakeIdentityService identity,OrganisationService orgs,
+    string token,Organisation org,Guid owner,DateTimeOffset now)
+{
+    var failures=new List<string>();
+    foreach(var waitForPool in new[]{false,true})
+    foreach(var operation in new[]{"fund","reserve"})
+    {
+        var path=Path.Combine(root,"cancel-"+operation+"-"+waitForPool+".json");
+        var funding=new FixtureFunding();var quotes=new FixtureQuotes();
+        var original=new OrganisationDustPools(path,identity,orgs,funding,quotes);
+        var pool=original.Create(token,org.OrgID,org.Policy.Revision,"explicit-fictional-cancellation-period");
+        funding.Lot=new(Guid.NewGuid(),org.OrgID,pool.PeriodID,1000,now,now.AddHours(1),"fictional-cancellation-seed");
+        await original.FundAsync(token,org.OrgID,org.Policy.Revision,pool.PoolID,funding.Lot.FundingReference);
+        var gate=new CancellationAuthorityGate();
+        var lot=new VerifiedOrganisationAllocation(Guid.NewGuid(),org.OrgID,pool.PeriodID,37,now,now.AddHours(1),"fictional-cancelled-funding");
+        var quote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,pool.PoolID,"fictional-model-route",org.Policy.Revision,23,now.AddMinutes(10),"fixture",new("fixture.app","fixture.model",null,null));
+        var delayed=new OrganisationDustPools(path,identity,orgs,new GatedFunding(lot,gate),new GatedQuotes(quote,gate));
+        var before=File.ReadAllBytes(path);using var cancellation=new CancellationTokenSource();
+        using var poolMutex=new Mutex(false,CancellationMutexName(path));
+        using var identityMutex=new Mutex(false,CancellationMutexName(Path.Combine(root,"identity.json")));
+        if(waitForPool)poolMutex.WaitOne();
+        Task<bool>? pending=null;
+        try
+        {
+            pending=Task.Run(async()=>
+            {
+                try
+                {
+                    if(operation=="fund")await delayed.FundAsync(token,org.OrgID,org.Policy.Revision,pool.PoolID,lot.FundingReference,cancellation.Token);
+                    else await delayed.ReserveAsync(token,new(org.OrgID,org.Policy.Revision,quote.ModelRouteID,quote.QuoteID,"fictional-cancelled-operation"),cancellation.Token);
+                    return false;
+                }
+                catch(OperationCanceledException error)when(error.CancellationToken==cancellation.Token){return true;}
+            });
+            if(waitForPool)
+            {
+                // Keep the native mutex on this same thread until release; no await while held.
+                gate.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+                gate.Release.TrySetResult();
+                Check(SpinWait.SpinUntil(()=>{if(!identityMutex.WaitOne(0))return true;identityMutex.ReleaseMutex();return false;},5000),
+                    "actual current identity lease acquired while waiting for canonical pool lease");
+                cancellation.Cancel();
+            }
+            else
+            {
+                await gate.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                cancellation.Cancel();gate.Release.TrySetResult();
+            }
+        }
+        finally
+        {
+            gate.Release.TrySetResult();
+            if(waitForPool)poolMutex.ReleaseMutex();
+        }
+        var refused=await pending!;
+        var unchanged=File.ReadAllBytes(path).SequenceEqual(before);
+        var restarted=new OrganisationDustPools(path,identity,orgs,funding,quotes).GetBalance(token,org.OrgID,org.Policy.Revision,pool.PoolID);
+        var preserved=unchanged&&File.ReadAllBytes(path).SequenceEqual(before)&&restarted.FundedDust==1000&&restarted.ReservedDust==0;
+        Console.WriteLine($"Cancellation control {operation} waitForPool={waitForPool}: cancelled={refused}, unchanged={preserved}");
+        if(!refused||!preserved)failures.Add(operation+"/"+waitForPool);
+    }
+    Check(failures.Count==0,"cancelled authority/pool-wait operations must preserve original bytes and restart: "+string.Join(",",failures));
+    Console.WriteLine("PASS: four original funding/reservation cancellation controls preserve canonical bytes and restart");
+}
+static string CancellationMutexName(string file)
+{
+    var canonical=Path.GetFullPath(file);if(OperatingSystem.IsWindows())canonical=canonical.ToUpperInvariant();
+    return "9to1-state-"+Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(canonical)));
+}
+sealed class CancellationAuthorityGate
+{
+    public TaskCompletionSource Entered{get;}=new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource Release{get;}=new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public async ValueTask<T> ResolveAsync<T>(T value)
+    {Entered.TrySetResult();await Release.Task;return value;} // Deliberately valid non-cooperative authority.
+}
+sealed class GatedFunding(VerifiedOrganisationAllocation lot,CancellationAuthorityGate gate):IOrganisationAllocationFundingAuthority
+{
+    public async ValueTask<VerifiedOrganisationAllocation?> ResolveAsync(string reference,CancellationToken ct)=>await gate.ResolveAsync(lot);
+}
+sealed class GatedQuotes(VerifiedOrganisationCostQuote quote,CancellationAuthorityGate gate):IOrganisationCostQuoteAuthority
+{
+    public async ValueTask<VerifiedOrganisationCostQuote?> ResolveAsync(Guid id,CancellationToken ct)=>await gate.ResolveAsync(quote);
+}
 sealed class FixtureFunding:IOrganisationAllocationFundingAuthority
 {
     public VerifiedOrganisationAllocation? Lot{get;set;}
