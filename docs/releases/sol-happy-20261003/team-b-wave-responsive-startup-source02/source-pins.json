@@ -1,0 +1,78 @@
+{
+  "state": "SOURCE_ONLY_FUTURE_ADOPTION_REQUIREMENTS",
+  "sourceFiles": {
+    "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs": {
+      "bytes": 21923,
+      "sha256": "3b051a4a997f9b54d295df26818110cad212d7b6d65501c8f81823edc89b3c07"
+    },
+    "apps/Web/Tests/WaveResponsiveBrowser/zoom-extension/manifest.json": {
+      "bytes": 164,
+      "sha256": "e15b232243d76ace50bea5c1cf7cba4101ccd520bea7d6210055ae4a82d4ff8e"
+    },
+    "apps/Web/Tests/WaveResponsiveBrowser/zoom-extension/background.js": {
+      "bytes": 878,
+      "sha256": "0789830b495da46a6c0405c1da89848438b91afd8424489aa0b8bb8842aafa06"
+    },
+    "apps/Web/BrowserApplication.cs": {
+      "bytes": 18796,
+      "sha256": "786242db9e6c2b8b44c03d47d669afa14e1a989ad2b892795544fe01ac1c5143"
+    },
+    "apps/Web/BrowserSurfaceRegistry.cs": {
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    "apps/Web/Wave/WaveBrowserFeature.cs": {
+      "bytes": 4898,
+      "sha256": "23cc46b999b2acd4e45f320d3d20f043f8e82a4d6b9eb01aaf5d182b3f76400d"
+    },
+    "apps/Web/Wave/Wave.cui": {
+      "bytes": 14496,
+      "sha256": "92336061a95e2d622a3243395fc28a8a9c19ed8738e3de87be6417f9dbe625b4"
+    },
+    "apps/Web/Tests/ci/run-ordinary-native.py": {
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    "apps/Web/Tests/ci/run-ordinary-web-publish.py": {
+      "bytes": 17775,
+      "sha256": "ced8679e0c587a3e0077d84db084ec171af12fc40b63ffd1ff5fa7303241dabb"
+    },
+    "apps/Web/Tests/PictureBrowser/png-oracle.cjs": {
+      "bytes": 3573,
+      "sha256": "9c78229fc21b55e68c32a0f77fd9b8431866e5895a258906ac895d0059552909"
+    },
+    "apps/Web/Tests/ci/sealed-browser-replay/run-wave-browser-cold-quota.cjs": {
+      "bytes": 35538,
+      "sha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f"
+    },
+    "apps/Web/Wave/WaveBrowserSession.cs": {
+      "bytes": 34166,
+      "sha256": "467d0667ef7df79722f424acb7465161beb89366c0b2bd1f8a34528f6713abcd"
+    },
+    "apps/Web/Media/wave-browser.js": {
+      "bytes": 11896,
+      "sha256": "33661bb83b3fbf2b965b2c4b37c0f20924e5c49428808463da446286712b491a"
+    },
+    "apps/Web/NineToOne.Web.csproj": {
+      "bytes": 4978,
+      "sha256": "0152d45e23a0ef467fe32ab1be1c9cfb0772b628ad69afec426746ac364e0803"
+    },
+    "apps/Web/wwwroot/main.js": {
+      "bytes": 6312,
+      "sha256": "f1811d2d58f97583c5ec92514cf898549a09040453cb886f384d2bbc0d710847"
+    },
+    "apps/Web/wwwroot/browser-accessibility.js": {
+      "bytes": 8891,
+      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9"
+    },
+    "apps/Web/BrowserAccessibilityBridge.cs": {
+      "bytes": 6998,
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+    },
+    "apps/Web/Wave/WaveNativePresentation.cs": {
+      "bytes": 1393,
+      "sha256": "2c9871d0426ed2fd04c3737bf6b86bc3e1f511514dcac5e1429d785942a96a7a"
+    }
+  },
+  "qualification": "Whole fresh git HEAD/tree/clean plus maintained publisher full source-beforeafter and full asset inventory required. Pins include exact proposed production bodies, not current adoption claim."
+}

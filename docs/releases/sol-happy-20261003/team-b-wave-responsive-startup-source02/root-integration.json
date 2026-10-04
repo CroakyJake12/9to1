@@ -1,0 +1,60 @@
+{
+  "schema": "TEAM_B_BOUNDED_STARTUP_SOURCE_CUSTODY_1",
+  "UTC": "2026-10-04T22:05:56.282239+00:00",
+  "productSource": "ab1217e2e61a35bcb67648dcf1e1bf4982c28a33",
+  "parent": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+  "onlyProductChanges": [
+    "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs",
+    "apps/Web/Tests/WaveResponsiveBrowser/source-pins.json",
+    "apps/Web/Tests/ci/run-wave-responsive-browser.py"
+  ],
+  "productLeavesConserved": 9749,
+  "wholeThreeCasesBytes": 4841,
+  "wholeThreeCasesSHA256": "093530240e556fbe7d4eb858dc6a1c8ecb552966b846a71f0a8b9d89147545f2",
+  "rootFullBasePinsSixForwardPatchHunksAndCaseByteEquality": "CLEAR",
+  "B4FullSourcePeer": "CLEAR_ALL_READERS_CLOSED",
+  "B6FullSourcePeer": "CLEAR_ALL18_BINDINGS_AND_ALL_READERS_CLOSED",
+  "files": {
+    "run-wave-responsive-browser.cjs": {
+      "bytes": 21923,
+      "sha256": "3b051a4a997f9b54d295df26818110cad212d7b6d65501c8f81823edc89b3c07",
+      "gitBlob": "0232b6fefc9120d30e3943022e96447f72207797"
+    },
+    "source-pins.json": {
+      "bytes": 3235,
+      "sha256": "fdca8e5a1bdf10b08f89b772b030478620036ac91be472cbdf269404bba874d8",
+      "gitBlob": "2ae5d31f01e368c51a4bc2f463e4a180a8869091"
+    },
+    "run-wave-responsive-browser.py": {
+      "bytes": 14913,
+      "sha256": "d84657b17d67215a594f28744e1c920823c14bd97fbbd3311e4beaf2f58947fa",
+      "gitBlob": "325f04f16353388491d381f4542ef43b7ec36221"
+    },
+    "proposal.patch": {
+      "bytes": 6692,
+      "sha256": "fc4d2c225781ef207a446cc673d69b34738927f4796d03495551133ab1525c62",
+      "gitBlob": "dae0400b9a845d2b3d48eec29f782d0b1774c60d"
+    },
+    "manifest.json": {
+      "bytes": 3588,
+      "sha256": "6e94500c39f05c4ca62d27f51c2500108d45b95f22f50a1c0d35cb5629239b9e",
+      "gitBlob": "883a7273f688a15f8b345381928446c2141af345"
+    }
+  },
+  "runtimeAcceptance": "PENDING_ACTUAL_CHANGED_SOURCE_RUN",
+  "originalSetupCause": "UNESTABLISHED",
+  "originalCounts": {
+    "discovered": 3,
+    "executed": 0,
+    "passed": 0,
+    "failed": 0,
+    "notRun": 3
+  },
+  "resourceRecovery": {
+    "scope": "Only these five newly generated source02 duplicate files and then-empty new directory; exclude production checkout and all previous source/control/archive files",
+    "ownerCustodianB3": "EXPLICIT_RELEASE_AFTER_FULL_PERMANENT_ROOT_B6_PROOF_ALL_READERS_CLOSED",
+    "localDirectory": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/wave-responsive-startup-source02",
+    "state": "HELD_PENDING_REMOTE_FULL_B6_ACK_AND_DURABLE_RECORD"
+  },
+  "coordinatorCorrection": "First marker search and advertised case-slice boundary check stopped before any source mutations; exact marker boundaries resolved4841B. Read-only custody comparison interrupted SIGINTexit130 before ref mutation and replaced with one cached tree; no cloud job signalled."
+}

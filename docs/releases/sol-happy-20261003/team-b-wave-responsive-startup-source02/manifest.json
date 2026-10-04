@@ -1,0 +1,73 @@
+{
+  "state": "SOURCE_ONLY_SETUP_PREREQUISITE_REPAIR_NO_ORIGINAL_CAUSE_CLAIM",
+  "baseCommit": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+  "destinations": {
+    "run-wave-responsive-browser.cjs": {
+      "path": "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs",
+      "baseBytes": 21283,
+      "baseSHA256": "6486db3408b2a0f65281c5d345a380a3c951e873f32bdf97493825d847e8d926",
+      "bytes": 21923,
+      "sha256": "3b051a4a997f9b54d295df26818110cad212d7b6d65501c8f81823edc89b3c07"
+    },
+    "source-pins.json": {
+      "path": "apps/Web/Tests/WaveResponsiveBrowser/source-pins.json",
+      "baseBytes": 3235,
+      "baseSHA256": "5bebc9c784ae6b3e4ad53d1a8add26e51ba8ff86772dc51411c9a7e90ef3dee6",
+      "bytes": 3235,
+      "sha256": "fdca8e5a1bdf10b08f89b772b030478620036ac91be472cbdf269404bba874d8"
+    },
+    "run-wave-responsive-browser.py": {
+      "path": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+      "baseBytes": 14913,
+      "baseSHA256": "6dd63065defe9a421de080198e2029266501f6a03d4d41dc23e5ad292250c026",
+      "bytes": 14913,
+      "sha256": "d84657b17d67215a594f28744e1c920823c14bd97fbbd3311e4beaf2f58947fa"
+    }
+  },
+  "patch": {
+    "path": "proposal.patch",
+    "bytes": 6692,
+    "sha256": "fc4d2c225781ef207a446cc673d69b34738927f4796d03495551133ab1525c62"
+  },
+  "wholeThreeCaseBlocksUnchanged": true,
+  "wholeThreeCaseBlocksSHA256": "093530240e556fbe7d4eb858dc6a1c8ecb552966b846a71f0a8b9d89147545f2",
+  "threeCriteria": "All names/fit/touch/keyboard/CAS/zoom/pan assertions and thresholds unchanged. Original14 8c8 and native49 untouched.",
+  "setup": "Actual original14 Create project native semantic button attachment precedes direct runtime read. Single absolute45s deadline is shared across attachment and existing snapshot/documentReady loop; exceptions still propagate. No fake readiness flag or fixed sleep.",
+  "diagnostics": "Actual setup phases; message capped2048 characters and stack4096. Same unconfigured local public fixture only. No DISPLAY/Xvfb or launch option change; launch remains headless:true.",
+  "originalOutcome": {
+    "run": 37235516659,
+    "artifact": 11315935797,
+    "sha256": "9a2ca854cc3370e00b8410e238c4e378230962d7bc3dfd3ad4a304af46abde55",
+    "responsive3": {
+      "discovered": 3,
+      "executed": 0,
+      "passed": 0,
+      "failed": 0,
+      "notRun": 3
+    },
+    "failure": "setup/Error with no stored message; exact recorded cause remains unresolved",
+    "original14": "14PASS",
+    "normalResponsiveExit": 1,
+    "normalFamily": true
+  },
+  "reconstruction": "Require exact base hashes for all3 destinations. Full adjacent bodies are authoritative; or root alone apply full proposal.patch (git apply --check then apply). Reverse patch restores all3 exact base hashes. Root sole adopter.",
+  "validation": "Python driver AST parse only. No Node/helper imports/SDK/GUI/CI executed for this proposal. Full case block equality and one-row ledger/one-literal driver changes source-verified.",
+  "files": {
+    "run-wave-responsive-browser.cjs": {
+      "bytes": 21923,
+      "sha256": "3b051a4a997f9b54d295df26818110cad212d7b6d65501c8f81823edc89b3c07"
+    },
+    "source-pins.json": {
+      "bytes": 3235,
+      "sha256": "fdca8e5a1bdf10b08f89b772b030478620036ac91be472cbdf269404bba874d8"
+    },
+    "run-wave-responsive-browser.py": {
+      "bytes": 14913,
+      "sha256": "d84657b17d67215a594f28744e1c920823c14bd97fbbd3311e4beaf2f58947fa"
+    },
+    "proposal.patch": {
+      "bytes": 6692,
+      "sha256": "fc4d2c225781ef207a446cc673d69b34738927f4796d03495551133ab1525c62"
+    }
+  }
+}
