@@ -184,9 +184,12 @@ public sealed class RevisionBankOwnerTests
     {
         var before = await profile.ReadCurrentBytes();
         var unguarded = new SpaceRegistry(profile.Store);
-        Assert.Throws<UnauthorizedAccessException>(() => unguarded.MutateRevisionBankAsync(
-            new(profile.Space.Id, profile.Space.Revision, Guid.NewGuid(), RevisionBankMutationKind.Add,
-                profile.Reference.ContextId), CancellationToken.None));
+        Assert.Throws<UnauthorizedAccessException>(() =>
+        {
+            _ = unguarded.MutateRevisionBankAsync(
+                new(profile.Space.Id, profile.Space.Revision, Guid.NewGuid(), RevisionBankMutationKind.Add,
+                    profile.Reference.ContextId), CancellationToken.None);
+        });
         Assert.Equal(before, await profile.ReadCurrentBytes());
     });
 
