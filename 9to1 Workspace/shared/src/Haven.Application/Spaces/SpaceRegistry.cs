@@ -6,7 +6,7 @@ public sealed partial class SpaceRegistry
 {
     private const string SettingsKey = "spaces.registry";
     private const string CurrentSpaceSettingsKey = "spaces.current";
-    private const int CurrentVersion = 3;
+    private const int CurrentVersion = 4;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -177,7 +177,8 @@ public sealed partial class SpaceRegistry
                 Files = updated.Files?.ToArray() ?? [],
                 CapabilityBindings = updated.CapabilityBindings?.ToArray() ?? [],
                 ContextReferences = updated.ContextReferences?.ToArray() ?? [],
-                Shares = updated.Shares?.ToArray() ?? []
+                Shares = updated.Shares?.ToArray() ?? [],
+                RevisionBank = CloneRevisionBank(existing.RevisionBank)
             };
         }, cancellationToken);
     }
@@ -293,6 +294,8 @@ public sealed partial class SpaceRegistry
                 ExamplePairs = source.ExamplePairs.ToArray(),
                 LayoutDocument = CloneLayout(source.LayoutDocument),
                 Shares = [],
+                RevisionBank = CloneRevisionBank(source.RevisionBank) is { } copiedBank
+                    ? copiedBank with { Operations = [] } : null,
                 Revision = 1,
                 CreatedAt = now,
                 UpdatedAt = now
@@ -575,6 +578,7 @@ public sealed partial class SpaceRegistry
         Inheritance = space.Inheritance ?? DefaultInheritance,
         ContextReferences = space.ContextReferences?.ToArray() ?? [],
         Shares = space.Shares?.ToArray() ?? [],
+        RevisionBank = CloneRevisionBank(space.RevisionBank),
         Files = space.Files?.ToArray() ?? [],
         ExamplePairs = space.ExamplePairs?.ToArray() ?? [],
         LayoutDocument = CloneLayout(space.LayoutDocument),
@@ -675,6 +679,7 @@ public sealed partial class SpaceRegistry
             throw new ArgumentException("Space share grants must be valid and unique.");
         if (space.Inheritance is null || space.ExamplePairs is null || space.Files is null)
             throw new ArgumentException("Space configuration collections and inheritance policy are required.");
+        ValidateRevisionBank(space.RevisionBank, space.ContextReferences, space.Id, space.Revision);
         if (space.LayoutDocument is { } layout) ValidateLayout(layout);
         if (space.ParentSpaceId is { } parent) ValidateParent(peers.Append(space).ToArray(), space.Id, parent);
     }
