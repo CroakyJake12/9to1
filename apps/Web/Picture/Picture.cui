@@ -27,14 +27,14 @@
       <WrapPanel>
         <StackPanel margin="0 0 12 8"><TextBlock text="X" /><TextBox text="{Binding CropX, mode=TwoWay, type=string}" accessible-name="Crop left pixel" width="100" /></StackPanel>
         <StackPanel margin="0 0 12 8"><TextBlock text="Y" /><TextBox text="{Binding CropY, mode=TwoWay, type=string}" accessible-name="Crop top pixel" width="100" /></StackPanel>
-        <StackPanel margin="0 0 12 8"><TextBlock text="Width" /><TextBox text="{Binding CropWidth, mode=TwoWay, type=string}" accessible-name="Crop width pixels" width="100" /></StackPanel>
-        <StackPanel margin="0 0 12 8"><TextBlock text="Height" /><TextBox text="{Binding CropHeight, mode=TwoWay, type=string}" accessible-name="Crop height pixels" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock id="picture-crop-width-label" text="Width" /><TextBox text="{Binding CropWidth, mode=TwoWay, type=string}" accessible-name="Crop width pixels" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock id="picture-crop-height-label" text="Height" /><TextBox text="{Binding CropHeight, mode=TwoWay, type=string}" accessible-name="Crop height pixels" width="100" /></StackPanel>
         <Button action="Crop" content="Apply crop" IsEnabled="{Binding CanEdit}" margin="0 20 8 8" />
       </WrapPanel>
       <TextBlock text="Resize with the canonical high-quality raster renderer" font-size="18" />
       <WrapPanel>
-        <StackPanel margin="0 0 12 8"><TextBlock text="Width" /><TextBox text="{Binding ResizeWidth, mode=TwoWay, type=string}" accessible-name="Resize width pixels" width="100" /></StackPanel>
-        <StackPanel margin="0 0 12 8"><TextBlock text="Height" /><TextBox text="{Binding ResizeHeight, mode=TwoWay, type=string}" accessible-name="Resize height pixels" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock id="picture-resize-width-label" text="Width" /><TextBox text="{Binding ResizeWidth, mode=TwoWay, type=string}" accessible-name="Resize width pixels" width="100" /></StackPanel>
+        <StackPanel margin="0 0 12 8"><TextBlock id="picture-resize-height-label" text="Height" /><TextBox text="{Binding ResizeHeight, mode=TwoWay, type=string}" accessible-name="Resize height pixels" width="100" /></StackPanel>
         <Button action="Resize" content="Apply resize" IsEnabled="{Binding CanEdit}" margin="0 20 8 8" />
       </WrapPanel>
       <TextBlock text="PNG export · the flattened output is separate from the saved editable document" text-wrapping="Wrap" max-width="760" />

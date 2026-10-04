@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   production-original:
-    if: startsWith(github.ref, 'refs/heads/team-b/')
+    if: always() && !cancelled() && startsWith(github.ref, 'refs/heads/team-b/')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -50,7 +50,7 @@ jobs:
           retention-days: 7
   admission01:
     needs: production-original
-    if: startsWith(github.ref, 'refs/heads/team-b/')
+    if: always() && !cancelled() && startsWith(github.ref, 'refs/heads/team-b/')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -90,7 +90,7 @@ jobs:
           retention-days: 7
   current:
     needs: admission01
-    if: startsWith(github.ref, 'refs/heads/team-b/')
+    if: always() && !cancelled() && startsWith(github.ref, 'refs/heads/team-b/')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -126,5 +126,50 @@ jobs:
         with:
           name: team-b-picture-current-${{ github.sha }}
           path: ${{ runner.temp }}/team-b-picture-current/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
+
+  repaired-markup-controls:
+    needs: current
+    if: always() && !cancelled() && startsWith(github.ref, 'refs/heads/team-b/')
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [production-original-repaired-markup, admission01-repaired-markup]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+    steps:
+      - name: Check out exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Initialize pinned native build submodules
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - name: Set up maintained SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - name: Build and run actual native source criteria
+        run: >-
+          python3 apps/Web/Tests/ci/run-picture-native.py
+          --variant '${{ matrix.variant }}'
+          --expected-commit '${{ github.sha }}'
+          --output "$RUNNER_TEMP/team-b-picture-${{ matrix.variant }}"
+      - name: Upload bounded diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-picture-${{ matrix.variant }}-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-picture-${{ matrix.variant }}/diagnostics
           if-no-files-found: warn
           retention-days: 7

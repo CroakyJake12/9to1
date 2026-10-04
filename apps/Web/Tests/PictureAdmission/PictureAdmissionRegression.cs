@@ -31,6 +31,10 @@ using var markupResource = typeof(ControlledMedia).Assembly.GetManifestResourceS
     ?? throw new InvalidDataException("The actual Picture CUI resource is unavailable.");
 using var markupReader = new StreamReader(markupResource);
 var markup = args.Length > 2 ? File.ReadAllText(args[2]) : markupReader.ReadToEnd();
+var actualMarkupParser = new CuiRichParser();
+_ = actualMarkupParser.Parse(markup, "SelectedActualPicture.cui");
+var actualMarkupDiagnostics = actualMarkupParser.Diagnostics.Diagnostics.Select(d => d.ToString()).ToArray();
+var actualMarkupSHA256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(markup)));
 var tests = new List<(string Name, Func<Task> Run)>(); var results = new List<object>(); var receipts = new List<object>();
 var assertions = 0; var failed = false; var passedCount = 0; var failedCount = 0; var executedCount = 0; var timedOut = false; string? prerequisite = null;
 void Check(bool condition, string message) { assertions++; if (!condition) throw new InvalidOperationException(message); }
@@ -286,7 +290,7 @@ catch (Exception e) { failed = true; prerequisite = e.ToString(); }
 finally
 {
     foreach (var test in tests.Skip(executedCount)) results.Add(new { test.Name, state = "NOT_RUN", reason = timedOut ? "Prior operation timed out; original task not cancelled by WaitAsync" : prerequisite ?? "Native prerequisite did not complete" });
-    File.WriteAllText(Path.Combine(output, "results.json"), JsonSerializer.Serialize(new { scope = "Controlled native feature/CUI/codec/raster admission and fault boundary only; no browser IDB/provider/permission/Files/complete Picture acceptance", discovered = tests.Count, executed = executedCount, passed = passedCount, failed = failedCount, notRun = tests.Count - executedCount, timedOut, prerequisite, assertions, results, receipts, exitCode = exit }, new JsonSerializerOptions { WriteIndented = true }));
+    File.WriteAllText(Path.Combine(output, "results.json"), JsonSerializer.Serialize(new { scope = "Controlled native feature/CUI/codec/raster admission and fault boundary only; no browser IDB/provider/permission/Files/complete Picture acceptance", discovered = tests.Count, executed = executedCount, passed = passedCount, failed = failedCount, notRun = tests.Count - executedCount, timedOut, prerequisite, actualMarkupSHA256, actualMarkupDiagnostics, assertions, results, receipts, exitCode = exit }, new JsonSerializerOptions { WriteIndented = true }));
 }
 return exit;
 
