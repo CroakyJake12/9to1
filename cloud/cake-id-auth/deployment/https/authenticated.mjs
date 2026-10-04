@@ -123,10 +123,20 @@ export async function authenticated(fixture,{request=fetch}={}) {
     return {result:'passed',assertions:count,observations,operatorPinnedDeploymentVersion:'713c1695-7e21-489b-bc97-906450972cfa',qualification:'Actual Node HTTPS transport with maintained client hooks and real library tokens; seeded fictional identities/client are preconditions. No browser UI/native/registration/mail/admin provisioning acceptance.'};
   } finally {globalThis.fetch=savedFetch;globalThis.window=savedWindow;cookies.clear();}
 }
+export async function runAuthenticated(fixturePath,resultPath,{journey=authenticated}={}) {
+  // Acquire the new evidence file before any authenticated request/mutation.
+  const file=await open(resultPath,'wx',0o600);let primary,result;
+  try {const fixture=await privateFixture(fixturePath);result=await journey(fixture);await file.writeFile(JSON.stringify(result,null,2)+'\n');await file.sync();}catch(error){primary=error;}
+  let closing;try{await file.close();}catch(error){closing=error;}
+  if(primary&&closing)throw new AggregateError([primary,closing],'Journey/evidence and close failed');if(primary)throw primary;if(closing)throw closing;return result;
+}
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url) {
   if(process.argv.length!==4)throw new Error('Usage: node deployment/https/authenticated.mjs PRIVATE_FIXTURE.json NEW_PUBLIC_RESULT.json');
-  const fixture=await privateFixture(process.argv[2]);
-  const writeExclusive=async(path,value)=>{const f=await open(path,'wx',0o600);let primary;try{await f.writeFile(value);await f.sync();}catch(error){primary=error;}let closing;try{await f.close();}catch(error){closing=error;}if(primary&&closing)throw new AggregateError([primary,closing],'Evidence write and close failed');if(primary)throw primary;if(closing)throw closing;};
-  try {const result=await authenticated(fixture);await writeExclusive(process.argv[3],JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify({result:result.result,assertions:result.assertions}));}
-  catch(error){let evidenceError;try{await writeExclusive(join(dirname(process.argv[2]),'private-run-error.json'),JSON.stringify({name:error.name,message:error.message,stack:error.stack},null,2)+'\n');}catch(failure){evidenceError=failure;}console.error(JSON.stringify({result:'failed',name:error.name,evidenceFailure:evidenceError?.name??null,qualification:'Original diagnostics in private-run-error.json; never publish it, credentials or response bodies'}));process.exitCode=1;}
+  try {const result=await runAuthenticated(process.argv[2],process.argv[3]);console.log(JSON.stringify({result:result.result,assertions:result.assertions}));}
+  catch(error){
+    let evidenceError;const filename=`private-run-error-${randomBytes(8).toString('hex')}.json`;
+    const describe=e=>({name:e.name,message:e.message,stack:e.stack,...(e instanceof AggregateError?{errors:e.errors.map(describe)}:{})});
+    try {const f=await open(join(dirname(process.argv[2]),filename),'wx',0o600);let primary;try{await f.writeFile(JSON.stringify(describe(error),null,2)+'\n');await f.sync();}catch(failure){primary=failure;}let closing;try{await f.close();}catch(failure){closing=failure;}if(primary&&closing)throw new AggregateError([primary,closing],'Private diagnostics write and close failed');if(primary)throw primary;if(closing)throw closing;}catch(failure){evidenceError=failure;}
+    console.error(JSON.stringify({result:'failed',name:error.name,privateDiagnosticFile:evidenceError?null:filename,evidenceFailure:evidenceError?.name??null,qualification:'Private original/independent-error diagnostics must never be published'}));process.exitCode=1;
+  }
 }

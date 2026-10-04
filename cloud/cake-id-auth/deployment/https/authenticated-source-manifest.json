@@ -3,9 +3,9 @@
   "producer": "d643d723d15ec20d70263a408b0cfefbd5be69ae",
   "sha256": {
     "deployment/https/prepare-fixture.mjs": "4c410a07f34a9d77d5e93f217ac0ed6c172335118f210a3d37d8b5522a21e343",
-    "deployment/https/authenticated.mjs": "630e5a0948fdfbe53444c5c4fc9a82f27569994e98c934dd85960103d67b0034",
-    "deployment/https/authenticated.test.mjs": "d68a06eb030ef02d6f09588b1d41d491568e2ebcdf6deaa0e519d44b73ddb570",
-    "deployment/https/AUTHENTICATED.md": "238dbf1a74ff28f6e206502c70b72c96d6600d6bff1f4bc4e27c3dbef4e996dc",
+    "deployment/https/authenticated.mjs": "660b8e0c77a605035ffb58dc5de14548e7b2271c612be168cf4e1c4bee8a24ac",
+    "deployment/https/authenticated.test.mjs": "8ac9e057c5ea13cc7da2ed119b391af8755b20e50bf5c0d0cae171c2d5f1fa1f",
+    "deployment/https/AUTHENTICATED.md": "cbcac83414eea0f3107249655821a1e6ba8f02c3a300cc4eb69f7c0318c840dd",
     "src/index.ts": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
     "src/auth.ts": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
     "src/resource-api.ts": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
@@ -23,5 +23,6 @@
   ],
   "cwd": "/workspace/team-c/c2-https-validation/cloud/cake-id-auth",
   "offlineExitCode": 0,
-  "actualRemoteMutationOrJourney": "NOT_RUN"
+  "actualRemoteMutationOrJourney": "NOT_RUN",
+  "lifecycleCorrection": "Exclusive result acquisition before requests; original+close exception objects preserved; fresh private diagnostic filenames"
 }

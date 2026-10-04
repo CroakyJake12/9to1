@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {prepare,resourcePrecondition} from './prepare-fixture.mjs';
-import {privateFixture,authenticated} from './authenticated.mjs';
+import {privateFixture,authenticated,runAuthenticated} from './authenticated.mjs';
 import {origin} from './validate.mjs';
 const receipt={databaseId:'fb094287-efab-4d3c-b9d5-c588a83d6f42',response:{status:200,success:true,result:[{success:true,results:[{identifier:origin}]}]}};
 // This synthetic readback is an offline structural control, never provider evidence.
@@ -16,6 +16,8 @@ try {
   const path=join(directory,'fixture.json');const fixture=await privateFixture(path);assert.equal(fixture.accounts.length,2);
   await chmod(path,0o644);await assert.rejects(privateFixture(path),/private bounded/);await chmod(path,0o600);
   const alias=join(owned,'alias');await symlink(path,alias);await assert.rejects(privateFixture(alias),error=>error.code==='ELOOP');
+  const existingOutput=join(owned,'existing-result.json');await writeFile(existingOutput,'preserved');let journeys=0;await assert.rejects(runAuthenticated(path,existingOutput,{journey:async()=>{journeys++;}}),error=>error.code==='EEXIST');assert.equal(journeys,0);assert.equal(await readFile(existingOutput,'utf8'),'preserved');
+  const journeyFailure=new Error('Controlled original journey failure');await assert.rejects(runAuthenticated(path,join(owned,'failed-result.json'),{journey:async()=>{throw journeyFailure;}}),error=>error===journeyFailure);
   const savedFetch=globalThis.fetch,savedWindow=globalThis.window;const original=new Error('Controlled offline HTTPS transport loss');
   await assert.rejects(authenticated(fixture,{request:async()=>{throw original;}}),error=>error===original);
   assert.equal(globalThis.fetch,savedFetch);assert.equal(globalThis.window,savedWindow);
