@@ -1,0 +1,37 @@
+{
+  "schema": "TEAM_B_FRESH_CONSUMER_FULL_SOURCE_HANDOFF_1",
+  "UTC": "2026-10-04T22:13:54.779181+00:00",
+  "productSource": "0dde967d9266b483f6d91483f0573c25497762fe",
+  "parent": "ab1217e2e61a35bcb67648dcf1e1bf4982c28a33",
+  "files": [
+    {
+      "sourcePath": "apps/Web/Tests/ci/run-wave-responsive-browser.py",
+      "bytes": 11179,
+      "sha256": "f95f34fc57299cc9149b09a592732b6262330bb83de354785e4348b06fb88b15",
+      "blob": "86e773c10e8d43efc9cc2a7f341bf5cbb428c8b2"
+    },
+    {
+      "sourcePath": ".github/workflows/team-b-wave-responsive-browser.yml",
+      "bytes": 5588,
+      "sha256": "fa2f6bdf8da6c9b008e230ee79a88a99a31c26e866d743d6d3bb540571c60e78",
+      "blob": "87143b95e6f5425e38868f495c7ee94a3c61c8c6"
+    }
+  ],
+  "sourceProof": "Root+B1+B5 wholebody/inverse/fourhelperAST/full9749tree clear; exactly two product paths changed",
+  "behavior": "Publisher stays in original checkout. Consumer worktree is absent sibling RUNNER_TEMP/wr-consumer, detached at same immutable github.sha; wr-publish andwr-run outsideconsumer. Original strict empty before/after consumer Gitstatus restored. Seven publisher diagnostic/receipt bodies hashed before/after. No cleanup or ignored producer inputs.",
+  "originalStrictDriver": {
+    "blob": "0b55f55eb3afaf25683d0fe4742023f172392449",
+    "bytes": 11089,
+    "sha256": "20fc542341b8d88ad1b2b96094dbbe33ecc6a0567378cbef7f3b0b3b5c3ba0ca"
+  },
+  "onlyOriginalDriverDifferences": "fdca source ledger binding; include exact owner-built-assets.json and commands.json body pins alongside originalfive",
+  "setupFixture": "SOURCE02 preserved21923B/3b051a4a997f9b54d295df26818110cad212d7b6d65501c8f81823edc89b3c07; unchanged4841B threecase block093530240e556fbe7d4eb858dc6a1c8ecb552966b846a71f0a8b9d89147545f2",
+  "native49Original14AllThreeOraclesTimeoutBoundsInputsZoom": "UNCHANGED",
+  "earlier0c4e": "original14PASS responsive0executed3NOT_RUN setupError causeUNESTABLISHED; original failureraw retained",
+  "earlierAb1217HealthyRun": 37238572213,
+  "currentActualAcceptance": "PENDING_NEW_SOURCE_RUN",
+  "healthyJobs": "PRESERVED_NO_CANCELLATION",
+  "localSourceCopies": "NONE_CREATED",
+  "allReadersClosed": true,
+  "privateDriveOrChatPointers": "NONE_DISCLOSED"
+}
