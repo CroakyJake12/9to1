@@ -170,7 +170,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T17:01:00.916306+00:00",
+  "updatedUTC": "2026-10-04T18:16:10.541739+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
@@ -179,7 +179,7 @@
     "browser": "Post-restart available connector MCP SSE HTTP404; no DOM control",
     "qualification": "No write/CLI/deployment/paid entitlement/allocation/quota/service journey/fullrelease acceptance; resources unchanged"
   },
-  "executionStatus": "ACTIVE_IMPLEMENTATION_INTEGRATION_AND_REAL_WINDOWS_VALIDATION",
+  "executionStatus": "ACTIVE_REVIEWED_PROVISIONAL_SOURCE_FIXES_WINDOWS_AND_LOCAL_ACCOUNT_DIAGNOSTICS",
   "currentOwnerRequests": {
     "workersAiMetadata": {
       "owner": "Team A maintained provider and current test-project closure",
@@ -516,14 +516,14 @@
     "qualification": "No CLIcredential/currentpaidusageheadroom/nativeproviderjourney/fullrelease acceptance inferred"
   },
   "currentImplementation20261004": {
-    "status": "ACTIVE_SUCCESSOR_REVIEWED_UNACCEPTED_NATIVE_SOURCE_AND_ACTUAL_WINDOWS_WEB_VALIDATION",
-    "recordedUTC": "2026-10-04T17:01:00.916306+00:00",
+    "status": "ACTIVE_REVIEWED_PROVISIONAL_SOURCE_FIXES_WINDOWS_AND_LOCAL_ACCOUNT_DIAGNOSTICS",
+    "recordedUTC": "2026-10-04T18:16:10.541739+00:00",
     "userRequest": "Direct pasted implementation request received in successor chat; supersedes prior stop at hosted-identity blocker.",
     "provisionalCandidate": {
       "branch": "integration/team-c-unaccepted-20261004",
-      "head": "42a88df12835924166d6aa7a9924770eaddc6d8b",
+      "head": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
       "base": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
-      "state": "REVIEWED_UNACCEPTED_PR5_ACTUAL_WEB9_WINDOWS_STORAGE83_MAIL_MAPS_PASS_CURRENT_AUTH_PENDING",
+      "state": "UNACCEPTED_NORMAL434_PEER_GREEN_HOME4_AUTH_DIAGNOSTIC_COMPOSED_WINDOWS_SOURCE_FIXES_ACTIVE",
       "contents": [
         "31 exact reviewed Accounts core/spec bodies from f7b65b8c",
         "Durable cancellation CAS source/test a4be0cd0 plus retained 67636bb0 evidence",
@@ -550,11 +550,15 @@
         "Whole Motion8 actualEEC+B sourceclosure composed27dd: nativeprotectedProgram/projects/media/Home/CUI unchanged; actualone originalRun and nativeReleasebuild/selftestPASS, no render/decoder/export claims",
         "SealedWebretention+2raw19MiBpart transport reviewedandcomposed6d3; newauth6 final73 sourceproposal composed89d2 with debugprivacyclosure; nextactualdf pipeline37217686116SUCCESS currentoriginal9 and realtupleacquisition pending",
         "ExactnormalMail89 originalFact1+3seed/3fresh scenarios and normalMapsef1 original6PASS independentlyreviewed; public354 cumulativepayloads48,382,060B/index1d315623 Gitblobs verified",
-        "ActualimmutableBoards storage83PASS/C6e608 run37217380035/70a8; original88/f46 lookupfailures and original67/85 preserved; public76/indexdae4bcf9 Gitblobsverified"
+        "ActualimmutableBoards storage83PASS/C6e608 run37217380035/70a8; original88/f46 lookupfailures and original67/85 preserved; public76/indexdae4bcf9 Gitblobsverified",
+        "Unix child TMPDIR4544 composed5ec2965e; original plugin Debug4/Release4 and actual full normal434/434 peer green; original27dd433/434 failure retained",
+        "Public cumulative receiving549 payloads84,054,416 bytes/index1413f28f remotely published and Gitblob verified with C6 publication3a58929d",
+        "Whole public Team A Home4 b9f30 received93293 and composed323ccff8; all other Git mode/blob entries conserved; normal six/Windows package quit execution being prepared",
+        "Whole final account diagnostic five-body dde012fa composed2a01054b;105 source-contract bodies unchanged,32 preparation controls pass; original7 retained"
       ],
       "qualification": "No active Team A/B files edited; no main promotion; no acceptance inferred from composition.",
       "pullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
-      "remoteVerifiedHead": "42a88df12835924166d6aa7a9924770eaddc6d8b"
+      "remoteVerifiedHead": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd"
     },
     "windows": {
       "requiredProductGroups": 29,
@@ -673,7 +677,7 @@
         "manifestUnchanged": true,
         "delta": "Bounded Boards actual package67 and rich/history85 now PASS; original frozen480368 historical GUI_NOT_RUN retained. All29 mandatory fullApp/home/cleanPC/signing/provider/delivery gates remain visible0verified0delivered."
       },
-      "nextPackageCriterion": "C3preparing separateimmutablee2 CanvasactualnativeFilesfolderpicker/localOSprincipalHomeone-requestAccept/create/mousestrokeapproval/durablecommit/normalclose/reopen harness. Existingactualports only,noCtrlS/fakeactor/model/config. Peerbeforeinvocation.",
+      "nextPackageCriterion": "Reviewed Home normal six/native release/package true quit; Canvas genuine UIA provider registration; Present coherent existing typed workspace startup wiring; independent Mail whole normal closure.",
       "packagedBoardsStorageRecovery": {
         "source": "70a8a556487d801c005020cbd732fb32ec83685c",
         "run": 37217380035,
@@ -700,6 +704,51 @@
           }
         ],
         "qualification": "ActualOSstoragefixtureonly; fullpermissions/accountACL/installedHome/donor/cleanPC/signing/fullApp/delivery remainopen."
+      },
+      "homeOriginalShutdown": {
+        "ownerSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+        "receiver": "93293d26cf24e1d4b4639f475ca91fec1c5d7888",
+        "composed": "323ccff8c9cc9b020d511379388bd57a569a138b",
+        "wholeProductFiles": 4,
+        "sourcePeerC4": "7ff3964f7c35e6ea25ac5f9964a751e887480828737cef580526045d3c91185e",
+        "sourcePeerC6": "70fc94f9c3e6c3ad3e4985817943ff5f67e8c9be8d5648466f3409a35809acc6",
+        "status": "NORMAL_SIX_AND_WINDOWS_PACKAGE_REAL_CTRL_SHIFT_Q_QUIT_PROBE_BEING_PREPARED",
+        "genuineGate": "Default window close intentionally keeps Core alive. No existing external reopen/tray/IPC quit port after HWND gone; do not invent one or count forced cleanup."
+      },
+      "canvasCurrent": {
+        "immutablePackageSha256": "dd24a1082fa6ac571068d3b0bcf941bbb497c4d7f07a67eb78752a15f711ef0a",
+        "runs": [
+          {
+            "source": "1541f8e4",
+            "run": 37219806215,
+            "pass": 48,
+            "failure": "Owned folder-picker root topology lookup20s"
+          },
+          {
+            "source": "63f99960",
+            "run": 37221336623,
+            "pass": 58,
+            "failure": "Original focused OS address Edit20s"
+          },
+          {
+            "source": "eb46585a",
+            "run": 37222459785,
+            "pass": 58,
+            "failure": "Original focused OS address Edit20s",
+            "peerSha256": "3552b1f676c9e8d483b422cc29141ed091ced1b8562321e9ed0d1781c4644378"
+          }
+        ],
+        "actualWitness": "True native ownPID/IsChild Edit and Buttons expose UIA Pane without Value/Invoke patterns. Standard Windows client-side provider setup correction is being prepared; preserve original Edit/Button criteria.",
+        "qualification": "No folder selected/request/stroke/reopen/full acceptance; original forced-1 failures/two drains retained."
+      },
+      "presentCurrent": {
+        "source": "1e1e4ade8611aac03c2187b674c70e7cb0cd501c",
+        "run": 37222461709,
+        "passed": 44,
+        "failure": "Native File-menu control20s timeout",
+        "peerSha256": "5c420749553109a7395513e0f55929c7389c662aab76a0aa428c171e71753b5e",
+        "sourceWitness": "Ctor mounts Phase2 only; BuildWorkspace lazy SetLibrary/SetWorkspaceDocument normal startup wiring absent. Existing typed repository/editor ports available; minimal provisional startup fix being prepared.",
+        "qualification": "No menu edit/save/reopen. No forced cleanup and two drains; receipt does not certify cleanup exit0. No legacy toolbar substitution."
       }
     },
     "functionalResults": {
@@ -708,7 +757,7 @@
       "recovery": "C4 and independent C6 each14 original/new controls PASS; original equal-count main and WAL drift false successes retained. No provider restore acceptance.",
       "billing": "Correctedf352 independent21PASS+original4 diagnostic probes pass; actual entire receivinga095 billing npm37PASS0FAIL0skip. Original external diagnostic leak and expected guard-omission failures retained; no live requests/effects.",
       "browser": "c878five unchangednormalreceivingsuites93/93PASS; sourceclosure3b Nav5/5 actualnormalPASS+C6custodyACK, originalcompile/diskfailuresretained. Actual canonicalemojiFact1/1 onsourcebuiltWriteScene ownresourcePASS independentruntimeauditpending. ExistingWriteScene fourmodes117assertionsPASS; layoutfailsafter12assertions, boldbeta34.132height>23.625 at31.36width. C2trace actualAownedWriteDocumentSurface approximates.56/char but backendweightedMontserratrealmetricswrap; genuine sharedmeasure/layout/caret/hit ownerport needed. No MaxWidth wrapper/oracle/font fallback. New PR6 receiving actual Lifecycle14/Chat10/Files17/Sites18 allPASS at1a; expected negativecontrols Original01 6PASS8FAIL/Original02 12PASS2FAIL retained. Picture15 onadd2 actual14PASS1FAIL0notrun, 128assertions, canonicalcrop input/history acknowledgement failure; normaloldnative23 21PASS2FAIL metadata-policy/LinuxInter typeface. Exact C4 product/CI ACK48926d68. Native full Picture adoption/browser/provider acceptance remain open. ExactdeliveredB7f repair onreceivinga0de5ad5 noworiginal15/15PASS/138assertions; originalold14/15withsourcebounddiagnosis pendingretirement kept. CurrentunfilteredmaintainedCUI Runtime.Tests90/90Release+originalsameTurn8/8 nativeexit0, originalorchestrationNOT_RUN retained. Fullbrowser/Wave/owneradoption remainopen. Current reviewed f7 delta28 and completeWave10 now composed; see exact currentWebExecution, cuiLifetime and waveClosure fields. Old source results retain their historical scope.",
-      "normal": "Exactcombined5110 actualunfilteredmaintainedInfrastructureRelease428/428PASS0FAIL0skip/zero compilerwarnings/errors. IndependentC6 rawTRX/Git/API/conservation audit: alloriginal415 identities+13 reviewedMesh additions andall33criticalregressionidentitiesPASS; source6receivingbodiesexact reviewedc996/71f/40cd. Old8f/10eff/c996/40cdfailures preservedatownsource/environment; no native/provider/fullpassacceptance inferred.",
+      "normal": "Actual ordinary complete normal Infrastructure434/434 on5ec, zero skips/warnings/errors; all old428 identities plus six Maps preserved. C6 independently verifies raw TRX, seven-project/source/runtime conservation and twelve natural closures. Earlier historical428 and original433/434 retained.",
       "nativeR2": "Sourcece7 exact2historicalb7fullbodies composedasd511 againstactualEECtypes; actualnormalSitesownerRelease76/76PASS includingall21readercontrols, sourcebuiltmodule/whole-sourcepins/custody/C6runtimeandpublicsafe28ACK. FourprotectedSitesbodies/projects unchanged. NoauthenticatedR2/import/currentSession/scanner/deployment/Files12HTTPacceptance.",
       "cuiLifetime": {
         "source": "fe64ee093177fe359efabf69bd748e967f99caa6",
@@ -731,7 +780,7 @@
         "source": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
         "run": 37217686116,
         "url": "https://github.com/CroakyJake12/9to1/actions/runs/37217686116",
-        "status": "ACTUAL_SOURCE_PUBLISH_RETAINED_WHOLE_TWO_RAWPARTS_AND_ORIGINAL9_WORKFLOW_SUCCESS_BODY_ACQUISITION_PENDING",
+        "status": "ACTUAL_WHOLE_ORIGINAL_DF_PUBLICATION_AND_BROWSER9_PASS_BODY_ACQUIRED_C6_ACK",
         "previousVerifiedActual": {
           "source": "7ded080066ec4b066519c2fb1848fec5c66fba06",
           "run": 37214417698,
@@ -745,12 +794,14 @@
           "peerSha256": "84f428f83adf9b7c6e43e1ac9fb7523f6a45946a7b41d0f199c3360aa847f1ac",
           "qualification": "OriginalwholeZIP36,039,006B notuploaded/readback on7ded. ActualWASM/ILwarnings retained. Nativeoriginalcrop15pixels independentlyequal; localofflinePictureonly."
         },
-        "retention": "Reviewed originalZIP/manifest/seal plus2separate<=19MiBrawpartartifacts; actualnewtupleexactreassembly/sourcecatalog bodyproof pendingC5/C6, no oldcompiledsubstitution.",
+        "retention": "Original36,039,134-byte inner ZIP SHA443ff207 reassembled only from official raw-part containers;285 files59,201,582 bytes and actual4548 source input catalog verified.",
         "firstActualFailure": {
           "source": "ce50dacc",
           "run": 37211850761,
           "status": "OriginalmissingWavecustodyFAILbrowserNOTRUN_preserved"
-        }
+        },
+        "peerSha256": "31f86da99bdc426ffc8216dc0d00a3f64e2c0bcff97a9539a112bc79184c38a8",
+        "qualification": "Actual9/9 unchanged; WASM/IL warnings retained. Root Home4 changes a genuine Web HomeCore input, so this compiled df tuple is historical producer-scoped, not relabelled current2a."
       },
       "writeFormats": "Actual current28 normal original maintained Write formats7/7 PASS0skip/native0 strictTRX, raw public234 index; unrelated layout/Space owner failures preserved.",
       "mailOriginalLocal": {
@@ -778,7 +829,7 @@
       "motionOriginal": {
         "source": "a975e539fa5e8bf045104e6931f5e5e15d3c8695",
         "composed": "27dd12f72cbf42d992a18765a933584b346d05d7",
-        "status": "ACTUAL_ONE_ORIGINAL_WORKFLOW_PASS_AND_NORMAL_NATIVE_RELEASE_BUILD_SELFTEST_PASS_INDEPENDENT_RUNTIME_REVIEW_PENDING",
+        "status": "ACTUAL_ONE_ORIGINAL_WORKFLOW_AND_NORMAL_NATIVE_BUILD_SELFTEST_PASS_C6_RUNTIME_ACK",
         "discovered": 1,
         "executed": 1,
         "passed": 1,
@@ -787,21 +838,67 @@
         "nativeScope": "ActualunchangednativeProgram/project fiveproject653source Release0warnings/errors; selftestreturn0; Timeline/Persistence true, Engine/Render/Export false.",
         "C4SourceSha256": "e6fbc4291b3d66bcab093e30dd25840637bacb0e9317dc0752624ad83d616771",
         "C6SourceSha256": "50afb46f2494583742a6a6a964b5865f372d8b6a9b196bdd6f78353053e94ab2",
-        "qualification": "Sourcecallsitecheckpoints notmeasuredassertiontotal; no Filesresolver/decoder/donor/browser/nativepackage/fullMotion acceptance."
+        "qualification": "Sourcecallsitecheckpoints notmeasuredassertiontotal; no Filesresolver/decoder/donor/browser/nativepackage/fullMotion acceptance.",
+        "runtimePeerSha256": "6653560925a41d529c7d227fd948dd528bae3ef6d9fd34e81b2c7b830a52b235"
       },
       "localAccountBrowser": {
         "source": "73b0b8c5147cfc801fc30db24ec28d81d5888d38",
         "composed": "89d2f254a676866a46eba5b6850d94591e2bc813",
-        "status": "REVIEWED_SOURCE_COMPOSED_PREFLIGHT22_PASS_ACTUAL7_NOT_RUN_PENDING_NEW_DF_TUPLE_AND_ROOT_FRESH_OWN8799_TTY",
+        "status": "FIRST_ACTUAL_FORM_NEGATIVE_AND_SECOND_CHROMIUM_STARTUP_NEGATIVE_BOTH_OWNED_FAMILIES_CLOSED",
         "peerSha256": "ede9791e0c17f3b2fe759d8ebd1b9f3689ffc9edd1e50be86594150bf8d1d3e4",
         "fixturePrepPeer": "474b815ed83c18fde158e0edb173399ec6355c50716c375b4120b0a15ed14383",
         "rootAuthorityCheck": "Actualfork/setsid/exec+pidfd/subreaper/reapcheckexit0; issuer/browser notlaunched and no credentials read.",
-        "qualification": "ExistingJOSE/S256/actualnativeCUIsurface, noBmissingauth07 reconstruction, no.NETRSA/auth_revision workaround or newhostedidentity activation. Existingdependencylinknotreadonlymount; originalbeforeafterhashes required."
+        "qualification": "ExistingJOSE/S256/actualnativeCUIsurface, noBmissingauth07 reconstruction, no.NETRSA/auth_revision workaround or newhostedidentity activation. Existingdependencylinknotreadonlymount; originalbeforeafterhashes required.",
+        "firstActual": {
+          "producer": "df547b5c",
+          "test": "73b0b8c",
+          "pass": 2,
+          "fail": 1,
+          "notRun": 4,
+          "stage": "actual-issuer-signin-form",
+          "browserClosure": "CLOSED/no browser signals/forcedfalse/ECHILD/pins unchanged",
+          "issuerOriginalSession": 88463,
+          "issuerFinalExit": 0,
+          "counterQualification": "Discovery/JWKS/token counters count successful200 responses; zero cannot exclude rejected attempts. Default protocolValid/sameSubject flags prove nothing."
+        },
+        "diagnosticActual": {
+          "producer": "df547b5c",
+          "test": "dde012fa",
+          "fixture": "df547b5c",
+          "composed": "2a01054b",
+          "pass": 0,
+          "fail": 1,
+          "notRun": 6,
+          "stage": "Owned fixture read and sealed server creation succeeded; failure before Chromium launch resolved/browser.version returned. Fetch/popup/status probes unobserved.",
+          "browserPeerSha256": "d52fc3356b1538a7090eb0023a3e05561ee6d0e24d6d9615e167b791bf3fa965",
+          "browserClosure": "Five kernel identities including Chromium launcher gone/ECHILD; no signals/forced/deadline/budget/identity failure; pins unchanged",
+          "issuerOriginalSession": 7148,
+          "issuerFinalExit": 0,
+          "issuerCloseReceiptSha256": "1bfa38520ce5b8e6a20bd785ac56f52a912607fa76714d6435c0842f18ebc702",
+          "qualification": "No issuer/broker/fetch cause inferred; second original maintained issuer shutdown signals preserved separately."
+        }
       },
       "finalNormalPersistenceGate": {
-        "source": "27dd12f72cbf42d992a18765a933584b346d05d7",
-        "status": "STABLE_PRODUCT_PIN_PROVIDED_TO_C5_NORMAL434_NEXT",
-        "basis": "Historical5110normal428 allverified unchanged; neworiginalMaps6 nowincluded inordinaryrootInfrastructuretests so final434 onceactualstablecandidate. No zero-skip/434PASS claimed beforeexecution."
+        "source": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2",
+        "status": "ACTUAL_UNFILTERED_NORMAL434_PASS_C6_INDEPENDENT_ACK",
+        "passed": 434,
+        "failed": 0,
+        "skipped": 0,
+        "owningProjects": 7,
+        "sourceInputs": 762,
+        "runtimeFiles": 213,
+        "peerSha256": "dbbfff4152893bd3ff77c50b84a9a235e8d1a4badf385419959fa9315d13169e",
+        "originalFailure": "27dd original433PASS1FAIL ExtensionPluginE2E successMarker preserved; child Unix TMPDIR propagation fixes concrete parent/private temp boundary",
+        "qualification": "Home4 and diagnostic five files are outside this ordinary graph. Incoming Mail Graph composition will change relevant source and require new whole444 run."
+      },
+      "publicMailNine": {
+        "source": "a431e3ca9d3002c74fc90f98377253120d0dfd48",
+        "proposal": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+        "status": "NINE_WHOLE_BODIES_SOURCE_RECIPE_PEER_ACK_PREPARING_CAPACITY_SAFE_NORMAL72_AND_GRAPH10",
+        "peerSha256": "49da3b8cf45d3bffbad916bdb318d49fb2391910edfdc152245825da159d876a",
+        "fullNativeCases": 72,
+        "knownMissingTlsFixtures": 3,
+        "qualification": "Native UI/body/project closure remains open; no private findings or broad Desktop import; no actual Mail72/Graph10 test result yet."
       }
     },
     "workerLogs": {
@@ -809,19 +906,19 @@
       "url": "https://docs.google.com/document/d/1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
       "writer": "Team C sole successor integrator",
       "directUserWriteAuthorization": true,
-      "checkpoints": "13:56,14:33,15:00,15:30,16:00,16:44,17:14,17:46London; latestall3exactH1/boldMontserrat400/18ptprogress/semicolons/BLOCKEDreadbackPASS.",
+      "checkpoints": "13:56,14:33,15:00,15:30,16:00,16:44,17:14,17:46,18:19,19:13 Europe/London; latest all three exact paragraphs, H1 heading, bold Montserrat400 body,18pt progress, semicolons and BLOCKED verified.",
       "formatQualification": "13:56formatcorrectionretainedin14:33; nohistoryrewritten.",
-      "lastCheckpointReceipt": "docs/releases/sol-happy-20261003/provisional-integration/checkpoint-1746.json"
+      "lastCheckpointReceipt": "docs/releases/sol-happy-20261003/provisional-integration/checkpoint-1913.json"
     },
-    "next": "Continue actualCanvasimmutablepackage setup/approval/edit/reopen; acquireexactdf newsealedWebtuple/two rawparts forrootfreshOWN8799/currentlocalPKCE7; C5finalordinary434 onstableglobal27dd andMotioncriticalruntimepeer. All29visible0fullverified0delivered. Currentnativeauthority/Home/signing/cleanPC/delivery/provider/policy requests remainnotACK; no newspending/liveactivation/mainpromotion.",
+    "next": "Continue grounded source fixes and actual Windows Home/Canvas/Present execution, exact local-account startup diagnosis, and public Mail72/Graph10. Do not stop solely for missing adoption; full acceptance, provider/installed/PC delivery gates remain.",
     "acceptedHead": null,
     "mainMerged": false,
     "preservedReleaseHead": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
     "priorImplementationRecord": {
-      "commit": "a7fed780d8fd8b3b6087d29bb0636d831deca42b",
+      "commit": "51c3ffc3ffe082faad7e3c7883fcfb273af93ef0",
       "path": "coordination/sol-happy-20261003/team-c.json",
       "field": "currentImplementation20261004",
-      "qualification": "Entire original source/evidence/failure approvals retained; this update advances executable receiving work."
+      "qualification": "Earlier source, failures and approvals remain in immutable Git history."
     },
     "forecast": {
       "recordedLondon": "2026-10-04T17:46:00+01:00",
@@ -840,7 +937,7 @@
     "firstActualCombinedCheckpoint": "13:56 Europe/London",
     "documentReadback": "Three H1 checkpoints; NORMAL_TEXT bold bodies and separate18pt-indented progress paragraphs verified; original templates preserved."
   },
-  "provisionalCandidateHead": "42a88df12835924166d6aa7a9924770eaddc6d8b",
+  "provisionalCandidateHead": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
   "provisionalCandidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
   "currentBrowserSuccessorReview": {
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/6",
@@ -854,5 +951,28 @@
     "nativePictureClosure": "Exact2availableEEC=A63=Bbase=B22d Document/CropService composedadd2=>root0ca, C4/C6sourceACK; alloldnative tests unchanged. Older native23 21PASS2FAIL metadata-policy and LinuxInter; canonical PreserveGPS remains separately open. Exact coherentnativeowner request c4c76cf0 published e4f; no oracle waiver.",
     "sourceComposition": "Reviewed22d66+2EECsource+3Browserbuildcontracts+exactB7fsame-session fix+approvedCUIone-line nowce50 globalremote; PR6newf7 expanded28 deltaunderC4review",
     "buildContinuation": "LocalNETSDK1147 genuinewasm-tools prerequisite. Reviewedexact82lineCIclone/root9pin applicability matchedce50; existingdisposablerunner sourcebuiltpublishthenactualbrowser9 invoked viaexplicitTeamCbranch, no expectedresult yet."
+  },
+  "teamARecoveryResponse20261004": {
+    "recordedUTC": "2026-10-04T18:16:10.541739+00:00",
+    "request": "requests/team-a-recovery-expanded-pass1-20261004.json",
+    "actualCurrentGlobal": "2a01054bfaf2a3547fcf23481ce61e6b9455ecfd",
+    "baseline": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+    "homeReceived": "All four public b9f30 bodies reviewed and composed323ccff8; original native render plus five new cases retained, current six-case Windows recipe imminent.",
+    "nativeBuildRecipe": "Actual two gitlinks XamlX009d186 and DBus864a416; SDK10.0.401/source-built CUI.Tasks; normal original project graph. No stale three-link Terminal/libvterm helper or project/package policy replacement. Existing authorized Windows2022 Actions runner available.",
+    "canonicalSpecificationWriter": "Team C delegates canonical specification consolidation to Team A existing root/A6 under their recorded direct-user authorization. Team C will not concurrently edit canonical specification. Preserve rich identities/requirements and label unsupported physical moves; Team C remains sole global integration and combined Worker Logs writer.",
+    "reportedExpandedScope": {
+      "groups": 30,
+      "cardsAdded": true,
+      "verified": 0,
+      "delivered": 0,
+      "implementation": "UNMEASURED_NEW_SCOPE",
+      "previousOriginal29Manifest": "Frozen unchanged and historical results preserved"
+    },
+    "reportedRevisedTargets": {
+      "morningWindows": "2026-10-05T07:00:00+01:00",
+      "fullPasses": "2026-10-05T19:00:00+01:00",
+      "assignmentState": "Reported by repository handoff; direct current-chat clarification asked and pending. Continue current implementation/Windows work; no approval/scope/acceptance waiver."
+    },
+    "remainingExactARequests": "HomeAppID/package ABI/publisher/bootstrap tuple and signed descriptor dependency activation; canonical current actor/session/account revision bridge; Files ownership/session/read/import/scanner ports; Windows decoder; Write measured layout/caret/input. Productive original owners retain ownership."
   }
 }
