@@ -153,7 +153,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T03:47:52.238389+00:00",
+  "updatedUTC": "2026-10-04T04:08:08.908695+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -1080,11 +1080,12 @@
     "archiveSha256": "29e65b0cf0b2c8fc3685cb0190ff6c48ce5cff736aa443838738a1e5708bd95f",
     "inventorySha256": "3194cfa58f7fbc8716727c0daa5a83e506be2822f76141fafdbf836389237525",
     "freedWorkspaceBytes": 575799296,
-    "scope": "Only freshlygenerated untracked Accounts/Tests bin/obj174 exactverifiedarchivedduplicates removed. Source/rawfailures/actualreports/B5native12+loaderprobe/rootTestsbin untouched; archive+permissions/mtimeinventory enablesrestore. Perprojectrestore neededbeforeSDK."
+    "scope": "Only freshlygenerated untracked Accounts/Tests bin/obj174 exactverifiedarchivedduplicates removed. Source/rawfailures/actualreports/B5native12+loaderprobe/rootTestsbin untouched; archive+permissions/mtimeinventory enablesrestore. Perprojectrestore neededbeforeSDK.",
+    "formsGeneratedOutputs": "InterruptedRespond03neutral-nativecopy allocated~599MB with1817paths/765unique470MBlogical blobs,90hardlinkgroups. FailedplainZIP200MiB retainedbyteexact/incomplete. Complete content-addressedarchivewriter765fullblobs measuredDEFLATE156713857B preservesall1817path/stat/hash/links; writerheldwhileGUI192MBresourcecap. No Forms generated output/source/rawfailuresdeleted."
   },
   "currentExecutableQueue": {
-    "actual": "B6portableoriginalCUI3 replaycompleted/released. B5Status3originalandcandidateallPASS/released. RootsoleSDKpublishingexact8041 expandedtrackedWave/Write ownercuts; independentbrowserInterop7/Wave14 audits followsealedreceipt. Homepublicflag2 nativeboundedexistingDLL cohort preparation; Respond04/Data17/Planner1+Schedule3/Games4/Files17/Sites18/originalSpaceguardedreference/maintainedreadHTTP6 queuedactualresourcegates.",
-    "owners": "LatestA02:39/C23:48 have no newexact193c/742/35c/Glyph/PictureACK/serviceports. No allbrowserblocked/main/index/acceptedHead/release/deployclaim."
+    "actual": "Rootactual8041fullpublish0sealed270assets/4676selectedinputs stable/releasedSDK. ProposedHomepublicflagnative20x2actualallPASS/releasedSDK. B5soleGUIactualunconfiguredinterop7watchdog03nowstarting; SDKexclusivewait. B4generatedFormsarchivewriterheldtoavoidGUIheadroombreach. Thenfresh8041Wave14, independentcriticalreplays, contentarchive/resourcecleanup, Data17/Planner1+Schedule3/Games4/Respond04/Files17/Sites18/originalSpaceguardedreference/maintainedreadHTTP6 gates.",
+    "owners": "LatestA03:40 record815a13bf preserves historicalACKfields byimmutable5e153eb; no newexact193c/742/35c/Glyph/PictureACK. C23:48 no newhostedports. NewA CardsStudy32/sourcecontracts remainunrun/unpublished; no fabricatedfrontendBank/Burrows. RootsoleBwriter Csoleglobalrelease unchanged."
   },
   "specificationMetadataRecheck": {
     "readUTC": "2026-10-04T03:18:45.199283+00:00",
@@ -1109,7 +1110,41 @@
     "independentJointSourceReviewSha256": "981fd2e1d7e178da1ca027d45020d81f43607fc4ecb1806a3193d9dff27f006a",
     "actual": "7791sourceinputs+23explicitpinsunchanged, nativebuild0/all7cohorts140checks. Currentcanonical36015PASS5FAIL/root1031. IntrinsicAuto18PASS2FAIL/root988; finitehostalonecanonical14PASS6FAIL. JointintrinsicDisabled360+1440same20eachPASS. Allfirstreds retained.",
     "requestedChange": "ACK exact00589to742104nodes/layout-only10already-supportedWrapPanels+maxwidth/wrapping, ormaintainedsuccessor. B-ownedoptionalConstrainHorizontalLayout defaultfalse optsHomefallbackonly intoexistingfiniteScrollViewermeasure; no globalreinterpretation/secondHome/authbypass.",
-    "pending": "Proposedpublichostflag fixture same20wide/narrow AUTHORED_NOT_RUN; originalgreen usedexplicitdiagnosticmutation. ExactownerACKneededbeforejointadoption; realbrowser/touch/keyboard/AT/200percent/themestillpending."
+    "pending": "Exact A1 ACK00589to742104nodes/layout-only ormaintainedsuccessor beforejointproductionadoption. Proposedpublichostnative20wide+narrow nowactualPASS; independentactualreplay and realbrowser/touch/keyboard/AT/200percent/theme/fullHome stillpending.",
+    "publicFlagNativeActual": {
+      "sameChecksPerViewport": 20,
+      "widths": [
+        360,
+        1440
+      ],
+      "passPerWidth": [
+        20,
+        20
+      ],
+      "failPerWidth": [
+        0,
+        0
+      ],
+      "exitCode": 0,
+      "buildWarnings": 0,
+      "buildErrors": 0,
+      "diagnosticPropertyMutation": false,
+      "actualResultSha256": "b55676d9fda621d86d3a21135fd5a23b0220260d2ca4b7bdc2c32b6032222ed4",
+      "recordedIndependentReviewSha256": "5c521d2e458a7eb9eaad90c3614d2d579961b61534871bd5a8bb05a69dff183d",
+      "allocationPeakBytes": 48939008,
+      "pinnedInputsUnchanged": 142,
+      "actual": "ProposedB-ownedApp/Registry compiledagainst40pinnedrealmaintainedproductionDLLs+2Linuxnatives, identical20originaloracles20PASS at360+1440; publicflagdeclaredBEFORERender, no post-renderoverride.",
+      "portableAddendum": {
+        "artifactCommit": "c72da8aa0badbb8b766528d36487f3af443c47fe",
+        "path": "docs/releases/sol-happy-20261003/team-b-home-responsive-joint-owner-request/public-flag-executed-addendum",
+        "zipSha256": "27bcc6a21af153a3b172dfbc76011cb0ed36a15d0e573721a3e5290ac6da8abd",
+        "members": 26,
+        "bytes": 148312,
+        "manifestSha256": "31acaf5d0b458a2caefda543a619a7ae130155b99229dc0e4c361d96fa3494cb",
+        "rootVerifiedAllMembers": true,
+        "runtimeQualifier": "Compiledfixture+40inputDLLpins;notcomplete standalone distribution."
+      }
+    }
   },
   "accountStatusCaptionNativeComparison": {
     "executedManifestSha256": "ae68ccbc27b576605761e69aff67c52948b8aa96989fdc7f49b79df659fc8dc2",
@@ -1119,5 +1154,21 @@
     "changedInputs": [],
     "classification": "SOURCE_HYPOTHESIS_REJECTED_NO_PRODUCT_EDIT",
     "actual": "OriginalrealTextBlock nativepeerGetName exposesactualboundText initially+Refresh. FixedAccessibleName literal didnot reproduciblyhidecaption. ProposedoneattributeNOTadopted; no redtogreen repairclaimed. FreshrealbrowserInterop7stillpending."
+  },
+  "sealedRootLifetimeBrowserCandidate": {
+    "sourceCommit": "8041a70b4d2a8635c9add48ab1cf6d82cb26d4b8",
+    "manifestSha256": "f57d6fc7205633db8e01bef2186114cf723aca3269b0477d1dabf6b5ea71be70",
+    "sourceInputs": 4676,
+    "sourceInputsAfter": 4676,
+    "changedInputs": [],
+    "addedInputs": [],
+    "removedInputs": [],
+    "actualExitCode": 0,
+    "assets": 270,
+    "assetBytes": 57029420,
+    "rootVerifiedAll270AssetBytes": true,
+    "sourceCustody": "ExpandedselectedtrackedWave/Write ownerroots; fiveWaveowner.cs+generator required. NativeTS/generatedAvaloniaassets supplemental separatefreshcustody, selected4676 inventory isNOT exhaustive transitiveclosure. Originalfe sourceomission retainedqualified.",
+    "actualInterop7": "B5 soleGUI exactwatchdog03 sourcepeer61fd5f1e/current13 sourcepins/actual270 immutablebinding71dff. Freshunconfigured realnativebrowser7 run commencing; no PASS before actual results.",
+    "qualification": "FreshWASM compilation notprovider/full31apps/platform/crossclient/releaseacceptance."
   }
 }
