@@ -1,0 +1,18 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/evidence/c6/r2-reader-review/Negative.csproj (in 206 ms).
+  1 of 2 projects are up-to-date for restore.
+  Haven.Core -> /workspace/team-c/c4/9to1 Workspace/shared/src/Haven.Core/bin/Debug/net10.0/Haven.Core.dll
+  Negative -> /workspace/team-c/evidence/c6/r2-reader-review/bin/Debug/net10.0/Negative.dll
+Test run for /workspace/team-c/evidence/c6/r2-reader-review/bin/Debug/net10.0/Negative.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.44]     HavenOS.Apps.Sites.Tests.R2SiteArtifactReaderTests.CorruptedSameLengthContentFails [FAIL]
+  Failed HavenOS.Apps.Sites.Tests.R2SiteArtifactReaderTests.CorruptedSameLengthContentFails [46 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at HavenOS.Apps.Sites.Tests.R2SiteArtifactReaderTests.CorruptedSameLengthContentFails() in /workspace/team-c/evidence/c6/r2-reader-review/Tests.cs:line 56
+--- End of stack trace from previous location ---
+Results File: /workspace/team-c/evidence/c6/r2-reader-review/TestResults/negative.trx
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 71 ms - Negative.dll (net10.0)

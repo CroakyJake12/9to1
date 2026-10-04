@@ -1,0 +1,88 @@
+{
+  "sourceCommit": "c996885e6fa0f832416bdfb84729bd2383b6d4e0",
+  "reviewAgainst": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+  "results": {
+    "unchangedTests": {
+      "executed": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0
+    },
+    "independentChallengesPlusUnchanged": {
+      "executed": 19,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0
+    },
+    "hashCheckRemovedNegative": {
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "exit": 1
+    }
+  },
+  "initialAttempt": "Wrong tool cwd caused git-show failures and empty reader/test copies; preserved run.log; corrected immutable copies and reran. No positive claim from initial attempt.",
+  "review": "HEAD only validates metadata and deliberately accepts same-length corrupt content; GET independently fails corruption. Foreign final URI and content encoding rejected. Safe configured key grammar forbids traversal/query/foreign URLs. Default SocketsHttpHandler redirects disabled. No credential values in reader or diagnostics. Injected handler must independently forbid redirects BEFORE follow; final URI check is not a substitute for that trust requirement. No actual signed/private R2 credential transport or provider deployment is supplied by this reader.",
+  "claims": "Bounded configured artifact-reader local source ACK only; no R2 provider/session/quota/paid entitlement/Sites deployment/content verification from HEAD/full acceptance.",
+  "sourceChanges": "New reader/test only, no existing contracts/deployment modifications. No broad Sites build rerun.",
+  "evidence": {
+    "Reader.cs": {
+      "bytes": 5577,
+      "sha256": "473c544eab3fbc3c40772ee5455c2151f4b18e913fe31cc3b9ff0adf2c2a0135"
+    },
+    "Tests.cs": {
+      "bytes": 4791,
+      "sha256": "9e7c3f4afa0f6f382944443ff2bd445f57a40a16403715da40c2f6eb4ff6fb2d"
+    },
+    "Challenge.cs": {
+      "bytes": 1454,
+      "sha256": "d292cc420f2b575c41468032ac62a12d53beadbe8519056cc3a06140dd301f04"
+    },
+    "Review.csproj": {
+      "bytes": 1508,
+      "sha256": "46990c970e403c410d3defef10ef2b0f3bae5c9ed0bd057faa9771302aeebd93"
+    },
+    "Challenge.csproj": {
+      "bytes": 1589,
+      "sha256": "2d2df396b15e7a03cab7afbe03a868214711ac503d548cc4253e6eb1c35ffe18"
+    },
+    "Negative.csproj": {
+      "bytes": 1516,
+      "sha256": "1e80991b921a2914aea640d43f135ade7587a668e3f6e366aeb70b74a45dc5eb"
+    },
+    "NegativeReader.cs": {
+      "bytes": 5472,
+      "sha256": "5b909bc062ebe9d5f9f139e33a80efa76faada0283392e1ffea58a4664684152"
+    },
+    "run.log": {
+      "bytes": 2087,
+      "sha256": "bebe4dcb40af06c558c8ed4c0bbe56bce1a5e10b702affe23a63c63e25a1cf7e"
+    },
+    "run-corrected.log": {
+      "bytes": 747,
+      "sha256": "10209020176ce2ec9b4c7db737c593bf349898f1307194794d41675b21cbe597"
+    },
+    "negative.log": {
+      "bytes": 1303,
+      "sha256": "57620462914a5f40337417b3e66a8aaaaa799413ae1caaada105ea301bcf010f"
+    },
+    "challenge.log": {
+      "bytes": 748,
+      "sha256": "6db5f9e9312c282d5f30ff32b57c8e3e2127e329399a7bdc2e39e6d54c21191f"
+    },
+    "TestResults-review.trx": {
+      "bytes": 22578,
+      "sha256": "c280a0d87b3e4d7d26a989b4f860c862fc60bc9391599177b236b40b3dc223a6"
+    },
+    "TestResults-negative.trx": {
+      "bytes": 3994,
+      "sha256": "9d89826668b611ab4c46fc30d66fd16d808fdd1bc9e2c21c7313128ae23430e1"
+    },
+    "TestResults-challenge.trx": {
+      "bytes": 26169,
+      "sha256": "d7e4c385aba66d6b328f00e36a343da3918cc9d1019b62d0d6584b7c5c002953"
+    }
+  }
+}
