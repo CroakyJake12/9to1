@@ -484,7 +484,7 @@ public sealed class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePack
             // The prior original write can persist and then lose its acknowledgement. A complete
             // exact terminal read is revalidated under the SAME audit-only guard; this performs
             // another canonical CAS, never another package effect or cached-authority acceptance.
-            var package = current.Packages.SingleOrDefault(item => item.PackageId == record.Request.Action.PackageId);
+            var terminalPackage = current.Packages.SingleOrDefault(item => item.PackageId == record.Request.Action.PackageId);
             if (journal.State != expectedState || journal.CompletedAtUtc is null ||
                 journal.ResultCode != result.Code || journal.Retryable ||
                 journal.PreviousKnownGoodVersionRetained != result.PreviousKnownGoodVersionRetained ||
@@ -492,8 +492,8 @@ public sealed class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePack
                 !journal.FailedSteps.SequenceEqual(result.FailedSteps) ||
                 !journal.SkippedSteps.SequenceEqual(result.SkippedSteps) ||
                 !journal.RolledBackSteps.SequenceEqual(result.RolledBackSteps) ||
-                record.CapturedPackage is not null && (package is null ||
-                    HomePackageArtifactSelection.Digest(JsonSerializer.SerializeToUtf8Bytes(package)) !=
+                record.CapturedPackage is not null && (terminalPackage is null ||
+                    HomePackageArtifactSelection.Digest(JsonSerializer.SerializeToUtf8Bytes(terminalPackage)) !=
                     HomePackageArtifactSelection.Digest(JsonSerializer.SerializeToUtf8Bytes(record.CapturedPackage))))
                 throw new UnauthorizedAccessException("Current terminal canonical observation does not match the original known root outcome.");
             var recheck = mutation.OriginalSettlementGuard(outcome)
