@@ -1,0 +1,431 @@
+{
+  "payloads": [
+    {
+      "path": "README.md",
+      "bytes": 1690,
+      "sha256": "236e5d2d40f11169534615b32b9e7d916f2c9091ea27f78f5257d0544fdc2b8b"
+    },
+    {
+      "path": "external-state-index.json",
+      "bytes": 21633,
+      "sha256": "f701dbf31c18f939810c16e527b43ee712d9ae0f50ed26fa72595abe496ad7e7"
+    },
+    {
+      "path": "raw/billing-bundle-missing-input-negative.log",
+      "bytes": 420,
+      "sha256": "6f5a3f41bfcdcb0a46412532ea0176e181f75bbb3d55d0d146ee85f62514948d"
+    },
+    {
+      "path": "raw/billing-hosted-node-attempt1.log",
+      "bytes": 1526,
+      "sha256": "905605f2be794632945377b01e804d694da3dfb2429a997960da872ac64d15bc"
+    },
+    {
+      "path": "raw/billing-hosted-node-attempt2.log",
+      "bytes": 1518,
+      "sha256": "5615470d24bcea207927d4572ce29449f8bcf4bc89d00573e2714821191ddcea"
+    },
+    {
+      "path": "raw/billing-hosted-node-attempt3.log",
+      "bytes": 1525,
+      "sha256": "890eb0c545b6420e6e2f2658816dc740292dd2b410c8d8e88723800fc7806939"
+    },
+    {
+      "path": "raw/billing-hosted-node-exact-01c18.log",
+      "bytes": 1526,
+      "sha256": "7e3563bdb155d7029d1f8a46caf1004a50e00e1d2edf59049b73c7cc1a44672d"
+    },
+    {
+      "path": "raw/billing-hosted-node-final-correct-cwd.log",
+      "bytes": 1525,
+      "sha256": "ad394db0926f70f52e9b80c4c2a2e5c52f763ad3f9b213054a9809e9f2034f7e"
+    },
+    {
+      "path": "raw/billing-hosted-node-final.log",
+      "bytes": 113,
+      "sha256": "f89198d63f5f9c96df0cdd775f779cd6eedcfbe4264c446eea9d0e279066c9c8"
+    },
+    {
+      "path": "raw/billing-hosted-npm-lock-pinned.log",
+      "bytes": 18,
+      "sha256": "4c2a0edc189edd72682ff8adda87e72f27972256071a3d6d6047b99e6aa11b40"
+    },
+    {
+      "path": "raw/billing-hosted-npm-lock.log",
+      "bytes": 21,
+      "sha256": "b538d74b0ca12cf0ac5df8e26f3002b4b8767de960275015d49505deb451a763"
+    },
+    {
+      "path": "raw/billing-package-synthetic-attempt1/manifest.json",
+      "bytes": 748,
+      "sha256": "bbb0edef61c0db1190244cdffce465d631ca796cc92dbac33f44bb580a3ac39e"
+    },
+    {
+      "path": "raw/billing-package-synthetic-attempt1/wrangler.json",
+      "bytes": 660,
+      "sha256": "9e059e28c4121d8c59aa9b14f438c25f763dc41592bacc70d9497b364375bb82"
+    },
+    {
+      "path": "raw/billing-package-synthetic-attempt1.log",
+      "bytes": 442,
+      "sha256": "692803e397ebfff369b26d9f12e5a991e363aed437242b781d7aa144c0bd4734"
+    },
+    {
+      "path": "raw/billing-package-synthetic-input.json",
+      "bytes": 285,
+      "sha256": "cfbfc9c47057f17c88b61356167e622efad21d721b4b52635f58191cba8e7388"
+    },
+    {
+      "path": "raw/billing-recording-before-2ecd.log",
+      "bytes": 1002,
+      "sha256": "13a9c7284a8ba14846fb00058e1321a4922082930ef617c5686b8872d869669d"
+    },
+    {
+      "path": "raw/billing-recording-control-1xWjsi/billing-workerd-UigMRX/custody.json",
+      "bytes": 139,
+      "sha256": "259e296d6fd25de0b0cce15d07b71ce84be3b393b109d28dbaf55045534049dd"
+    },
+    {
+      "path": "raw/billing-recording-control-1xWjsi/billing-workerd-UigMRX/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-recording-control-1xWjsi/billing-workerd-UigMRX/stdout.log",
+      "bytes": 27,
+      "sha256": "ef8682ad27447fafae789ad70952cfed48eb5d9273f6b8dce6be419a35af4265"
+    },
+    {
+      "path": "raw/billing-recording-control-1xWjsi/outer-stderr.log",
+      "bytes": 1245,
+      "sha256": "099f304eb7411b065c083d3a28b09e8fc5a884f5169274a556b606b25bf2c0fd"
+    },
+    {
+      "path": "raw/billing-recording-control-1xWjsi/outer-stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-recording-control-QOiun4/billing-workerd-GlykpG/custody.json",
+      "bytes": 139,
+      "sha256": "56de5254cd03b48a3db1381224075f2f025aca869933c23894fcdafb881c95d7"
+    },
+    {
+      "path": "raw/billing-recording-control-QOiun4/billing-workerd-GlykpG/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-recording-control-QOiun4/billing-workerd-GlykpG/stdout.log",
+      "bytes": 27,
+      "sha256": "ef8682ad27447fafae789ad70952cfed48eb5d9273f6b8dce6be419a35af4265"
+    },
+    {
+      "path": "raw/billing-recording-control-QOiun4/outer-stderr.log",
+      "bytes": 1245,
+      "sha256": "fcc5460305abe7b21b6e1af964d7f75405670bb382ce031c02efe9066b7bbe79"
+    },
+    {
+      "path": "raw/billing-recording-control-QOiun4/outer-stdout.log",
+      "bytes": 147,
+      "sha256": "a139a45f335e7c54cd9823b4dff5a41d06eb091d7a4c5a5f38aeaf67f49be002"
+    },
+    {
+      "path": "raw/billing-recording-fixed-attempt1.log",
+      "bytes": 109,
+      "sha256": "a6995979b70fd5f0e8d4a459c2d6cf985932792b6c2ca9d567451438b9d57287"
+    },
+    {
+      "path": "raw/billing-workerd-0N80vd/custody.json",
+      "bytes": 139,
+      "sha256": "2e11a57763a721268548ec3ed18a8e5a6744a19e7c6448e83145beb8b530bca9"
+    },
+    {
+      "path": "raw/billing-workerd-0N80vd/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-workerd-0N80vd/stdout.log",
+      "bytes": 63,
+      "sha256": "5b209c929272a4c6d9a3360e91aea16472d54a035ad97e806515d8fadb0b7a44"
+    },
+    {
+      "path": "raw/billing-workerd-9CUakp/custody.json",
+      "bytes": 296,
+      "sha256": "ddf8c7be752f9fcd03ca789a57831e50ee8a27df46d731e23f77fb88f25ec476"
+    },
+    {
+      "path": "raw/billing-workerd-9CUakp/stderr.log",
+      "bytes": 504,
+      "sha256": "ad86e061a09614a78e556a1dc154192e39d72bc84807c84c86300abf104f2a72"
+    },
+    {
+      "path": "raw/billing-workerd-9CUakp/stdout.log",
+      "bytes": 50,
+      "sha256": "61e1104253e9ebe200bf3a6d4e18f3bd11f6141fe61bf20ed3065607183c84dc"
+    },
+    {
+      "path": "raw/billing-workerd-Dym0Z5/custody.json",
+      "bytes": 139,
+      "sha256": "2607b706a0d9f5f768a40f32f1f32a9ef7d9ad9ec90560877645e84c9aed5ae0"
+    },
+    {
+      "path": "raw/billing-workerd-Dym0Z5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-workerd-Dym0Z5/stdout.log",
+      "bytes": 63,
+      "sha256": "5d9f17d89e2a5eaf5455fe3e4cb512367e5bc1c09fd057a0234438e83e693e27"
+    },
+    {
+      "path": "raw/billing-workerd-GBaKbf/custody.json",
+      "bytes": 198,
+      "sha256": "a803dec29ff81f87b1374e31230a5f1d17ebe938cb25a858462fa8abe6d959a4"
+    },
+    {
+      "path": "raw/billing-workerd-GBaKbf/stderr.log",
+      "bytes": 592,
+      "sha256": "2b839aec5daa6e8f489a5f50aec2220410bbfbaac496bbc872ecd921b609576d"
+    },
+    {
+      "path": "raw/billing-workerd-GBaKbf/stdout.log",
+      "bytes": 63,
+      "sha256": "0ec32de0914eebfc649ad7c033f16db82214d2c1009c7dea17a39408467d20b1"
+    },
+    {
+      "path": "raw/billing-workerd-Hlnzu6/custody.json",
+      "bytes": 139,
+      "sha256": "cf32d61d9cc94bbc46d89bb5538e93f73f861a51f8b1c2561cd9f6f07a05b664"
+    },
+    {
+      "path": "raw/billing-workerd-Hlnzu6/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-workerd-Hlnzu6/stdout.log",
+      "bytes": 63,
+      "sha256": "c4c3bc7f65621f7fbe01b9b7a57f7285578491cbbe4c511de7509bedd48157c1"
+    },
+    {
+      "path": "raw/billing-workerd-IINz57/custody.json",
+      "bytes": 198,
+      "sha256": "6a107cc63d7ca12c4cf92185dc5630bc8962b1c854f4bc753c8cc0ad27d5dc3c"
+    },
+    {
+      "path": "raw/billing-workerd-IINz57/stderr.log",
+      "bytes": 584,
+      "sha256": "ef4e6a0269046ce1d438a179c35a11d07af1cf62e57a6906dd8b1c36f54379a7"
+    },
+    {
+      "path": "raw/billing-workerd-IINz57/stdout.log",
+      "bytes": 50,
+      "sha256": "793e0b6f389007b586efccaa66a2ffb2eac7c03c2e889efb408efbe056704845"
+    },
+    {
+      "path": "raw/billing-workerd-OoHcPT/custody.json",
+      "bytes": 139,
+      "sha256": "ad804b4f4d20dd927046c6c5d9ea67d7925552f1b55b2412b5e6403e9743ca84"
+    },
+    {
+      "path": "raw/billing-workerd-OoHcPT/stderr.log",
+      "bytes": 256,
+      "sha256": "3f68b564ee1239578fa03a3686111f606e6725731529ab5ab014bb2956091459"
+    },
+    {
+      "path": "raw/billing-workerd-OoHcPT/stdout.log",
+      "bytes": 63,
+      "sha256": "b03bfc63e7439d0f8fd6c9f9abbae07b6737584b926bf52c0c126de0131cee5d"
+    },
+    {
+      "path": "raw/billing-workerd-Zeqq2W/custody.json",
+      "bytes": 139,
+      "sha256": "bec3f0d6e3c8a2b909c2fea2f15db9871f05471ab8f92e155906fd6e650e716b"
+    },
+    {
+      "path": "raw/billing-workerd-Zeqq2W/stderr.log",
+      "bytes": 3489,
+      "sha256": "908e36a1304ac6fa3dbd27320a90e8ac81c52abcb1c81b02c9073910da36bdfb"
+    },
+    {
+      "path": "raw/billing-workerd-Zeqq2W/stdout.log",
+      "bytes": 50,
+      "sha256": "d7e3e0bcddac1ce202981905eae241690ea96f6542345ebf8677aee177e74142"
+    },
+    {
+      "path": "raw/billing-workerd-attempt1.log",
+      "bytes": 1051,
+      "sha256": "6ce101dc16839c0d9d0879997cd9f6ce28160ff5cc188ed5d1d56a9a1e7bc660"
+    },
+    {
+      "path": "raw/billing-workerd-attempt2.log",
+      "bytes": 1015,
+      "sha256": "e7f44552d498221dcb860fce696f5f1f882010dd7a71502ce0069cbff262c1af"
+    },
+    {
+      "path": "raw/billing-workerd-attempt3.log",
+      "bytes": 1015,
+      "sha256": "9407d8860f7f49887db396dcdbe07f869708d1d9eb042c18e3e6da6dcfc6f35f"
+    },
+    {
+      "path": "raw/billing-workerd-attempt4.log",
+      "bytes": 1015,
+      "sha256": "b36192d42f6e0c0a4c02e38c3c7b567aa5ce429490782f7486f1929d7a8245ae"
+    },
+    {
+      "path": "raw/billing-workerd-attempt5.log",
+      "bytes": 1015,
+      "sha256": "0ec4475ed5dc18fa21910001b8e7c26c7969a54f366e0a6720a4bcf621ec97a7"
+    },
+    {
+      "path": "raw/billing-workerd-attempt6.log",
+      "bytes": 1015,
+      "sha256": "32d2c244d1b099022199f01e28a63075ede3823f0a94d4533a03b9f5009aaa77"
+    },
+    {
+      "path": "raw/billing-workerd-attempt7.log",
+      "bytes": 114,
+      "sha256": "0ac584a73b744182738fc44de0284a3b1737ce73ead92e602737a732cf5dd46e"
+    },
+    {
+      "path": "raw/billing-workerd-attempt8.log",
+      "bytes": 1015,
+      "sha256": "cff08b6047aef5e8253a13ffaa6519a4d2c22aedf7d853392c67ff0ba02b049b"
+    },
+    {
+      "path": "raw/billing-workerd-attempt9.log",
+      "bytes": 114,
+      "sha256": "561092ea930026cd510e4b9ba359b3caf1e49ad50859215f51cc4a7e854e63e4"
+    },
+    {
+      "path": "raw/billing-workerd-eR2X7W/custody.json",
+      "bytes": 139,
+      "sha256": "e7b6772fb29defccd2949ec90c153d7c09f526491f4a97e507392c712e4da568"
+    },
+    {
+      "path": "raw/billing-workerd-eR2X7W/stderr.log",
+      "bytes": 256,
+      "sha256": "3f68b564ee1239578fa03a3686111f606e6725731529ab5ab014bb2956091459"
+    },
+    {
+      "path": "raw/billing-workerd-eR2X7W/stdout.log",
+      "bytes": 63,
+      "sha256": "3d76066e77b99cfaae2378153e7de91b34b3b9bafac1ab84da2e8060e63d41e9"
+    },
+    {
+      "path": "raw/billing-workerd-exact-01c18-positive.log",
+      "bytes": 114,
+      "sha256": "282a52de8b48c831a882f409bbb74d125b38411bee767e834df53cd6b4cf7487"
+    },
+    {
+      "path": "raw/billing-workerd-exact-2ecd-negative.log",
+      "bytes": 1064,
+      "sha256": "ccb6611329d5ca5d324694d4103bcf967373a925be38586e72dd1293dc878acd"
+    },
+    {
+      "path": "raw/billing-workerd-exact-2ecd-positive.log",
+      "bytes": 114,
+      "sha256": "9686e9f8064bbfb8f05959e06f03e0c20e01439057ffb9d9369dd4b7aa6baa37"
+    },
+    {
+      "path": "raw/billing-workerd-lZhDym/custody.json",
+      "bytes": 187,
+      "sha256": "3d4a71cb847f9d68223d1874e440699064ed2568660c29634fc35f5724878640"
+    },
+    {
+      "path": "raw/billing-workerd-lZhDym/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-workerd-lZhDym/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-workerd-negative-attempt1.log",
+      "bytes": 1015,
+      "sha256": "d76a5b823717db1e4973c487592d9b3fc948ae88fbbc9b691dbd6a8fa19dc211"
+    },
+    {
+      "path": "raw/billing-workerd-negative-attempt2.log",
+      "bytes": 1015,
+      "sha256": "8fbe42049942cdc9a6efae8513b8fb26374dd7205e02f710fa992a1cc31f38eb"
+    },
+    {
+      "path": "raw/billing-workerd-tz3LbD/custody.json",
+      "bytes": 187,
+      "sha256": "89610e843c0f0d80bf4b1a78580eb09cbb9c6cee7e68d57aeb882b19e5884480"
+    },
+    {
+      "path": "raw/billing-workerd-tz3LbD/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-workerd-tz3LbD/stdout.log",
+      "bytes": 63,
+      "sha256": "e18f7532da13789ccb52b5b86275b34400b6e6a24dfb6e47efbd5f51d029b77d"
+    },
+    {
+      "path": "raw/billing-workerd-vjgGTq/custody.json",
+      "bytes": 139,
+      "sha256": "4e38676516ec01549b225d3ffe75c7fe954832df62bec75af5f3ddd298551a9e"
+    },
+    {
+      "path": "raw/billing-workerd-vjgGTq/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/billing-workerd-vjgGTq/stdout.log",
+      "bytes": 63,
+      "sha256": "c7d1a8c6577bdc525837bfd90019e055f04792ed3934e3a8602a8bcc27ba3b24"
+    },
+    {
+      "path": "raw/billing-workerd-wrAALY/custody.json",
+      "bytes": 198,
+      "sha256": "d34a7964a4504b6aa6d185c7c8966a8afcdc54b4738ebba972860e29794d3dd8"
+    },
+    {
+      "path": "raw/billing-workerd-wrAALY/stderr.log",
+      "bytes": 592,
+      "sha256": "2b839aec5daa6e8f489a5f50aec2220410bbfbaac496bbc872ecd921b609576d"
+    },
+    {
+      "path": "raw/billing-workerd-wrAALY/stdout.log",
+      "bytes": 63,
+      "sha256": "3b18e4fe1a4a105faa2e331289332028767e38ccaf3c5b4d2c4106d27a293c47"
+    },
+    {
+      "path": "raw/billing-workerd-xNxZ5T/custody.json",
+      "bytes": 139,
+      "sha256": "33019ce2078045a262c1001af76f35d2aff153553208de095e912bc9b351d2ec"
+    },
+    {
+      "path": "raw/billing-workerd-xNxZ5T/stderr.log",
+      "bytes": 959,
+      "sha256": "638712cde8ead4261e1c5b333473a9b0525b3c69d78937267975876b7f545406"
+    },
+    {
+      "path": "raw/billing-workerd-xNxZ5T/stdout.log",
+      "bytes": 50,
+      "sha256": "d7e3e0bcddac1ce202981905eae241690ea96f6542345ebf8677aee177e74142"
+    },
+    {
+      "path": "result.json",
+      "bytes": 2821,
+      "sha256": "6f4d45fb5aa1b7c9bcff8b24bc7ba115468f3a34694333ae78a0e3871b522904"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 2781,
+      "sha256": "374dcd6f936f91f334e644b06affef84bfd7fe9a2bce0875e1dd0002c8e6a4ff"
+    }
+  ],
+  "binaryScan": "All recursive payloads UTF-8 and no PE/ELF/PDB/ZIP/SQLite magic",
+  "excludedNativeStateFiles": 63
+}

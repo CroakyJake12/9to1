@@ -1,0 +1,82 @@
+{
+  "candidate": "01c18d82908232669d3258aa1e2d568451451376",
+  "parentProposal": "2ecd9d80ba6d36ea5c7467d60b446a93cbc2aa48",
+  "baseline": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+  "productionReceiptAndSchemaDiff": "empty",
+  "source": [
+    {
+      "path": "cloud/billing/DEPLOYMENT.md",
+      "bytes": 2812,
+      "sha256": "a95e181babcdaaeef5d92234e351bc37f6f61d4126293c9aeead2b26780e27fd"
+    },
+    {
+      "path": "cloud/billing/package-lock.json",
+      "bytes": 49541,
+      "sha256": "38de8a06f05e299962197f72f82b9dbfc4407b66dfec90454c0ac45c8a21c69c"
+    },
+    {
+      "path": "cloud/billing/package.json",
+      "bytes": 279,
+      "sha256": "3625267282555e7618b0296f7d45bb3ac386265822883d40572fcd24985e23f2"
+    },
+    {
+      "path": "cloud/billing/scripts/deployment-config.mjs",
+      "bytes": 2016,
+      "sha256": "2e506c77fc0685fe7c1d48560345626560466d340d8869c067a1fbe498b888e9"
+    },
+    {
+      "path": "cloud/billing/scripts/prepare-deployment.mjs",
+      "bytes": 2469,
+      "sha256": "d7fe06125a7eb7711e1aa3d0c0efabe8bfe6ca53eaa136187afbc28f2d4009bc"
+    },
+    {
+      "path": "cloud/billing/test/deployment-config.test.mjs",
+      "bytes": 1347,
+      "sha256": "f6c1bc3987778e20e99d69f7ce2d721536473238128c8d6b302199a0b08e1734"
+    },
+    {
+      "path": "cloud/billing/test/recording-control.mjs",
+      "bytes": 2164,
+      "sha256": "b34104ac010411641b42a98a49139efb006835244a68a3b59658a56e95de09a6"
+    },
+    {
+      "path": "cloud/billing/test/run-workerd.mjs",
+      "bytes": 2931,
+      "sha256": "ff0b317af737fe46513fd4e3c169c258c9992bc93c21a46fc382f98a0dd846a4"
+    },
+    {
+      "path": "cloud/billing/test/workerd-control.mjs",
+      "bytes": 479,
+      "sha256": "4186c886371760f44f687ea3bbd8f1abef8f8e20ca0718011e5b125acadaad51"
+    },
+    {
+      "path": "cloud/billing/test/workerd-d1.mjs",
+      "bytes": 5336,
+      "sha256": "2bdf27820e31dc4ddc301f73021fa7b4a2a31ed506bc8ba3685b9e7b84902d32"
+    },
+    {
+      "path": "cloud/billing/src/stripe-webhook.mjs",
+      "bytes": 4730,
+      "sha256": "bd0e3eab1a62efefee08b578f6985a4ed817c72f9fc06dd785d9020084a3325f"
+    },
+    {
+      "path": "cloud/billing/src/inbox-processing.mjs",
+      "bytes": 1837,
+      "sha256": "772b6902b6ca53c0107fe019d791e089181b441dc98d18f9724c0cc7799cff63"
+    },
+    {
+      "path": "cloud/billing/schema/0001-stripe-inbox.sql",
+      "bytes": 572,
+      "sha256": "6cefdd1d93f66439d3041cd02d31eb0e3a622027149de416441bc74ad84ff95e"
+    }
+  ],
+  "acknowledgedCustodian": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+  "toolchainRoot": "/workspace/team-c/c2-auth/cloud/cake-id-auth",
+  "toolchain": {
+    "node": "24.19.0",
+    "wrangler": "4.146.0",
+    "esbuild": "0.28.1",
+    "miniflare": "5.20261001.0-alpha",
+    "workerd": "1.20261001.1"
+  }
+}
