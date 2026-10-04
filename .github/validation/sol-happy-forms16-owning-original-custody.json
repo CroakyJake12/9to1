@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "repository": "CroakyJake12/9to1",
+  "head": "68009a23e765adee47e99d89ee6868ed2618fdc1",
+  "tree": "7930f990940b0cf3b5bb3b1bbe428d0e927b6f2f",
+  "runId": 37185344170,
+  "runAttempt": 1,
+  "sourceBranch": "validation/astra-forms-math01-24531d46",
+  "artifacts": [
+    {
+      "lane": "forms-owning",
+      "role": "direct-zip",
+      "id": 11297500385,
+      "name": "astra-forms-math01-owning-68009a23e765adee47e99d89ee6868ed2618fdc1",
+      "bytes": 28494725,
+      "sha256": "36e8c5e6f7cd06ec7a1a6a7eaccfaca1edfea52ad97bd725ba46d3b0e6e88036"
+    }
+  ],
+  "limits": {
+    "archiveAttemptBytes": 28494725,
+    "expandedAttemptBytes": 134217728,
+    "ramWorkingSetBytes": 536870912,
+    "ramAvailableFloorBytes": 536870912,
+    "filesystemFreeFloorBytes": 943718400,
+    "outputAttemptBytes": 67108864,
+    "outputAllocationReservationBytes": 83886080,
+    "maxOutputFiles": 768,
+    "apiBodyBytes": 131072,
+    "apiAttempts": 16,
+    "pdbExpandedBytes": 16777216,
+    "reportSlotBytes": 2097152,
+    "diagnosticSlotBytes": 262144,
+    "maxArchiveMembers": 768,
+    "maxMemberBytes": 67108864,
+    "inventorySlotBytes": 524288
+  },
+  "downloadHosts": {
+    "regex": "^productionresultssa[0-9]{1,3}\\.blob\\.core\\.windows\\.net$",
+    "pathPrefix": "/actions-results/",
+    "redirectsAllowed": 1,
+    "authorizationForwarded": false
+  },
+  "selection": {
+    "wholeSuffixes": [
+      ".log",
+      ".json",
+      ".stdout",
+      ".stderr",
+      ".txt",
+      ".xml",
+      ".trx",
+      ".py",
+      ".cs",
+      ".props",
+      ".targets",
+      ".yml",
+      ".yaml",
+      ".pem",
+      ".metadata"
+    ],
+    "wholePrefixes": [
+      "forms-original-native-process-drain/",
+      "ordinary-process-drain/",
+      "sites-isolated-added-query-process-drain/",
+      "forms-original-native-sites-metadata/",
+      "sites-isolated-after-original-query-evidence/"
+    ],
+    "binarySuffixesNotPublished": [
+      ".dll",
+      ".pdb",
+      ".so",
+      ".a",
+      ".der",
+      ".exe",
+      ".zip"
+    ],
+    "qualification": "Every authenticated Forms16 owning monolithic archive member is fully read and CRC/SHA hashed. Whole selected UTF-8 text includes exact ordinary dgspec/cache .metadata bytes from original and after-original producer contexts. Layout/member/index/count/selected-byte sizes are unknown until complete original admission. Unselected binary bodies remain remote with complete derived hashes; no invented original index/task/Compile/native witness."
+  },
+  "taskEvidence": {
+    "project": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+    "beforeSnapshot": "avalonia-build-tasks-compiled-before.json",
+    "retainedPe": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "retainedPdb": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.pdb"
+  }
+}
