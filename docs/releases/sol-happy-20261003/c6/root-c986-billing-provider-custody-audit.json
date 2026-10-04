@@ -1,0 +1,325 @@
+{
+  "rootHead": "c986e5b0",
+  "method": "Immutable Git blob/index SHA256/size/tracking and source/module pin comparisons; read raw original receipts. No native rerun, credentials or private state read.",
+  "indexes": {
+    "docs/releases/sol-happy-20261003/evidence/c3-billing-hosted-local/": {
+      "payloads": 88,
+      "bytes": 69023
+    },
+    "docs/releases/sol-happy-20261003/cloudflare-provider-pass/": {
+      "payloads": 11,
+      "bytes": 48334
+    }
+  },
+  "errors": [],
+  "sourcePinsVerified": 13,
+  "sourceOverrides": "Only two declared0cdb preview-closure source rows replace01c historical hashes. Original source-pins remain historical.",
+  "providerModulesVerified": 2,
+  "strictReceipts": [
+    {
+      "path": "raw/billing-recording-control-1xWjsi/billing-workerd-UigMRX/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 138908,
+            "birth": 5677951,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-recording-control-QOiun4/billing-workerd-GlykpG/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 138660,
+            "birth": 5674442,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-0N80vd/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137770,
+            "birth": 5636027,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-9CUakp/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137148,
+            "birth": 5618589,
+            "code": 2,
+            "status": 15
+          },
+          {
+            "pid": 137156,
+            "birth": 5618618,
+            "code": 2,
+            "status": 15
+          }
+        ],
+        "signals": [
+          {
+            "pid": 137148,
+            "birth": 5618589,
+            "signal": 15
+          },
+          {
+            "pid": 137156,
+            "birth": 5618618,
+            "signal": 15
+          }
+        ]
+      }
+    },
+    {
+      "path": "raw/billing-workerd-Dym0Z5/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 139504,
+            "birth": 5684620,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-GBaKbf/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137636,
+            "birth": 5630938,
+            "code": 1,
+            "status": 1
+          },
+          {
+            "pid": 137644,
+            "birth": 5630965,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-Hlnzu6/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 138235,
+            "birth": 5660966,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-IINz57/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137006,
+            "birth": 5615619,
+            "code": 1,
+            "status": 1
+          },
+          {
+            "pid": 137014,
+            "birth": 5615648,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-OoHcPT/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137852,
+            "birth": 5639195,
+            "code": 1,
+            "status": 1
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-Zeqq2W/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 136929,
+            "birth": 5612863,
+            "code": 1,
+            "status": 1
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-eR2X7W/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 138323,
+            "birth": 5663525,
+            "code": 1,
+            "status": 1
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-lZhDym/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 136714,
+            "birth": 5604732,
+            "code": 2,
+            "status": 15
+          }
+        ],
+        "signals": [
+          {
+            "pid": 136714,
+            "birth": 5604732,
+            "signal": 15
+          }
+        ]
+      }
+    },
+    {
+      "path": "raw/billing-workerd-tz3LbD/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137372,
+            "birth": 5624105,
+            "code": 2,
+            "status": 15
+          }
+        ],
+        "signals": [
+          {
+            "pid": 137372,
+            "birth": 5624105,
+            "signal": 15
+          }
+        ]
+      }
+    },
+    {
+      "path": "raw/billing-workerd-vjgGTq/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137462,
+            "birth": 5628073,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-wrAALY/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 137703,
+            "birth": 5633159,
+            "code": 1,
+            "status": 1
+          },
+          {
+            "pid": 137711,
+            "birth": 5633187,
+            "code": 1,
+            "status": 0
+          }
+        ],
+        "signals": []
+      }
+    },
+    {
+      "path": "raw/billing-workerd-xNxZ5T/custody.json",
+      "receipt": {
+        "strictReaped": true,
+        "originalsDisappeared": true,
+        "reaped": [
+          {
+            "pid": 136799,
+            "birth": 5606035,
+            "code": 1,
+            "status": 1
+          }
+        ],
+        "signals": []
+      }
+    }
+  ],
+  "observed": "Actual local43-positive strict receipt normalexit0/no signals; collision before/fixed originals and limitations retained. Root integrated14unitpass is separate bounded cohort. Provider2f2e restored713c matches independent44d7 readback; closed exposure, no HTTPSjourney.",
+  "qualification": "No billingconsumer/reconciliation/business effects/remoteStripe acceptance, no general loggingfailureaggregation proof. Provider upload/rollback metadata does not establish serviceoperability/paidentitlements/fullrelease. No new payload/runtime execution."
+}
