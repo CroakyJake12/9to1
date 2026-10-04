@@ -33,12 +33,14 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
 
     public HomeNativeCoreApiSessions(HomePermissionTrustService permissions,
         IAuthenticatedResourceActorSource actors, IHomeNativeInstalledPeerVerifier verifier,
-        Func<IHomeCoreApi> canonicalApi)
+        Func<IHomeCoreApi> canonicalApi,
+        Func<HomeNativeCoreApiSessions, IHomeNativeFilesDomainOwner?>? originalFilesOwnerFactory = null)
     {
         _permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _verifier = verifier ?? throw new ArgumentNullException(nameof(verifier));
         _api = canonicalApi ?? throw new ArgumentNullException(nameof(canonicalApi));
+        _originalFilesOwner = new(() => originalFilesOwnerFactory?.Invoke(this), LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     /// <summary>Trusted accepting-server composition only. A copied observed-peer DTO is never input.</summary>
@@ -353,6 +355,9 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
         private readonly CancellationTokenSource _lifetime = CancellationTokenSource.CreateLinkedTokenSource(originalLifetime);
         private readonly object _closeGate = new();
         private Task? _close;
+        internal IHomeNativeFilesDomainOwner? OriginalFilesOwner;
+        internal HomeNativeFilesOriginalConnection? OriginalFilesConnection;
+        internal HomeNativeFilesReply? OriginalFilesReply;
         private int _closed;
         internal bool Closed => Volatile.Read(ref _closed) != 0;
         internal CancellationToken Lifetime => _lifetime.Token;
@@ -380,6 +385,12 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
             List<Exception> failures = [];
             try { _lifetime.Cancel(); } catch (Exception error) { failures.Add(error); }
             try { await Gate.WaitAsync().ConfigureAwait(false); Gate.Release(); }
+            catch (Exception error) { Add(failures, error, null); }
+            try
+            {
+                if (OriginalFilesOwner is { } owner && OriginalFilesConnection is { } connection)
+                    await owner.CloseOriginalConnectionAsync(connection).ConfigureAwait(false);
+            }
             catch (Exception error) { Add(failures, error, null); }
             try { _lifetime.Dispose(); } catch (Exception error) { Add(failures, error, null); }
             Throw(null, failures);

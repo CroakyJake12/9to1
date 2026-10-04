@@ -71,14 +71,29 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
                 SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.Wait
             });
             originalReader = ReadOriginalAsync(frames.Writer);
-            var request = initial;
+            HomeUnixCoreRequest? request = initial;
+            HomeNativeFilesFrame? filesRequest = null;
             while (true)
             {
-                var payload = await DispatchOriginalAsync(session, request, _lifetime.Token).ConfigureAwait(false);
-                originalPublication = HomeUnixCoreTransport.PublishOriginalAsync(_pipe, session, payload, _lifetime.Token);
+                if (filesRequest is { } originalFilesRequest)
+                {
+                    var originalFilesReply = await session.InvokeOriginalFilesAsync(originalFilesRequest.Request,
+                        _lifetime.Token).ConfigureAwait(false);
+                    var payload = HomeNativeFilesProtocol.Payload(originalFilesRequest, originalFilesReply);
+                    originalPublication = PublishOriginalFilesAsync(_pipe, session, originalFilesReply, payload, _lifetime.Token);
+                }
+                else
+                {
+                    var payload = await DispatchOriginalAsync(session, request!, _lifetime.Token).ConfigureAwait(false);
+                    originalPublication = HomeUnixCoreTransport.PublishOriginalAsync(_pipe, session, payload, _lifetime.Token);
+                }
                 await originalPublication.ConfigureAwait(false);
                 if (!await frames.Reader.WaitToReadAsync(_lifetime.Token).ConfigureAwait(false)) break;
-                request = HomeUnixCoreProtocol.ReadRequest(await frames.Reader.ReadAsync(_lifetime.Token).ConfigureAwait(false));
+                var nextFrame = await frames.Reader.ReadAsync(_lifetime.Token).ConfigureAwait(false);
+                if (HomeNativeFilesProtocol.IsFilesFrame(nextFrame))
+                { filesRequest = HomeNativeFilesProtocol.ReadRequest(nextFrame); request = null; }
+                else
+                { request = HomeUnixCoreProtocol.ReadRequest(nextFrame); filesRequest = null; }
             }
         }
         // The actual first-frame deadline remains a timeout even if an owner close arrives
@@ -125,6 +140,15 @@ public sealed class HomeWindowsCoreConnection : IAsyncDisposable
         "GetCompatibility" => HomeUnixCoreProtocol.Payload(request, await session.GetCompatibilityAsync(request.Compatibility!, token).ConfigureAwait(false)),
         _ => throw new InvalidDataException("Unsupported Windows Home Core operation.")
     };
+
+    private static async Task PublishOriginalFilesAsync(NamedPipeServerStream pipe,
+        HomeNativeCoreApiSessions.Session session, HomeNativeFilesReply originalReply,
+        byte[] originalPayload, CancellationToken token)
+    {
+        await session.DemandOriginalFilesReplyCurrentAsync(originalReply, token).ConfigureAwait(false);
+        token.ThrowIfCancellationRequested();
+        await HomeUnixDiscoveryTransport.WriteFrameAsync(pipe, originalPayload, token).ConfigureAwait(false);
+    }
 
     private async Task ReadOriginalAsync(ChannelWriter<byte[]> frames)
     {
