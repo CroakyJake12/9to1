@@ -1,6 +1,6 @@
 {
   "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_2",
-  "recordedAtUTC": "2026-10-04 23:06 UTC",
+  "recordedAtUTC": "2026-10-04 23:12 UTC",
   "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
   "run": 37241408354,
   "browserJob": 111551453106,
@@ -83,6 +83,15 @@
       "responsiveExit": 1,
       "original14Exit": 0,
       "portRebind": true
+    },
+    "independentSelectedStdoutReview": {
+      "state": "ROOT_AND_INDEPENDENT_REVIEW_CLEAR",
+      "members": 52,
+      "completeSelectedRecords": 3,
+      "selectedBytes": 11000,
+      "wholeOriginalLocallyReceived": false,
+      "individualOriginal14CasesSelected": false,
+      "native49BodiesSelected": false
     }
   },
   "nextAction": "Read fixed-tuple, unchanged-cap diagnostic export of the current original artifact. Repair only the demonstrated cause; preserve failures and original assertions.",
@@ -93,5 +102,49 @@
   ],
   "acceptance": "INCOMPLETE",
   "deadline": "22:30 Europe/London 2026-10-04 MISSED; no verification waiver",
-  "installedSigningCleanWindowsAcceptance": "NOT_ESTABLISHED"
+  "installedSigningCleanWindowsAcceptance": "NOT_ESTABLISHED",
+  "readOnlyDiagnosticExport": {
+    "source": "cba114b1521e745a28748be6a28fc0619b6ae82a",
+    "branch": "custody/team-b-wave-browser-c49eec-responsive-diagnostics-20261004",
+    "state": "PUBLISHED_PENDING_RUN",
+    "pythonBytes": 12509,
+    "pythonSHA256": "6851c80af32233a7a1f706a71c9b146ff4807ddc542a27d610d71ba11e092816",
+    "workflowBytes": 1502,
+    "workflowSHA256": "ef4cd4e38e5aa6e025462dbf197340caf8105aaf05e25534c68b05e0962fd294",
+    "all9749ExistingLeavesPreserved": true,
+    "newFiles": 2,
+    "inheritedHelpersUnchanged": 12,
+    "decodedCapBytes": 32768,
+    "wireCapBytes": 65536,
+    "applicationExecution": false
+  },
+  "writeUnknownComposition": {
+    "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
+    "currentBrowserFactory": "apps/Web/BrowserFeatureComposition.cs",
+    "currentBrowserFactorySHA256": "f782aef40e605c07d76a7a3218b12e0b8cc0980d1b10b8056a60ef41ca32f671",
+    "currentBrowserTypedClassifier": "NineToOne.Web.Write.Storage.NotesCommitOutcomeUnknownException",
+    "session": "apps/Web/Write/WriteBrowserSession.cs",
+    "sessionSHA256": "741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f",
+    "existingSeam": "Func<Exception,bool> third constructor argument; feature forwards it to every session",
+    "filesystemMapping": "HELD_FOR_ACTUAL_RECEIVER_TYPED_CONTRACT",
+    "requiredHandoff": [
+      "Published exception namespace/type or typed transport code",
+      "Owning assembly/project, source path/ref/full SHA",
+      "Indeterminate publication throw phase distinguished from known rejection and known commit with ancillary warning",
+      "Receiver-owned authorised session/feature constructor call-site",
+      "Authorised LoadAsync must settle or safely refuse unresolved journal before returning a revision that could allow another effect retry"
+    ],
+    "minimumChange": "Inject predicate matching only the actual published receiver fault at its owned composition call-site. No default change, all-IOException classification, name/message matching, domain type invention or backend writer.",
+    "inspection": "Use the same grant-bearing repository and preserve pending GUID/base/content until explicit settled inspection; fresh reopen grants no new authority.",
+    "receiverContractCurrentlyPublished": false,
+    "verification": "Full current browser composition, feature, session and transport bodies remotely checked; no indeterminate filesystem fixture was executed."
+  },
+  "ownedProcessCheckpoint": {
+    "localJobs": "NONE",
+    "localReaders": "CLOSED",
+    "cloudProductJob": "TERMINAL",
+    "cloudReadOnlyExport": "PENDING_SEPARATE_RUNNER",
+    "userComputerDependency": false,
+    "shutdownOwner": "EXISTING_RECEIVING_OWNER_ONLY_AFTER_CONDITION_COMPLETION_AND_SAFE_DRAIN"
+  }
 }
