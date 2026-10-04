@@ -145,8 +145,58 @@ def write_exact(path, raw):
         settle(failures)
     return through_direct_parent(path, write_leaf)
 
+# Exact original Forms16 restored project/context shapes. A changed graph refuses;
+# these stages do not grant restore/build/native success or reset any baseline.
+REVIEWED_DESKTOP_CONTEXT = (65, '9233bf11ef65af5fd5c74678f524b1f75036754dfbca17233480d824f99eade6')
+REVIEWED_NATIVE_CONTEXT = (63, 'b9cd2d6b6c497b958760c425eb7e911e244053a3172a35ef65c8a8ef297cbbb2')
+ORIGINAL_NATIVE_LABEL_LIMITS = {
+    'forms-original-native-restore': 1,
+    'forms-original-native-tool-DevAnalyzers': 1,
+    'forms-original-native-tool-Avalonia.Analyzers.CSharp': 1,
+    'forms-original-native-tool-Avalonia.Analyzers.CodeFixes.CSharp': 1,
+    'forms-original-native-tool-Avalonia.Analyzers.VisualBasic': 1,
+    'forms-original-native-tool-DevGenerators': 1,
+    'forms-original-native-tool-Avalonia.DBus.Generators': 1,
+    'forms-original-native-tool-Avalonia.Generators': 1,
+    'native-direct-property-query': 8,
+    'native-restore-before-snapshot': 1,
+    'native-restore-property-query': 126,
+    'native-original-task-guard': 1,
+    'native-original-desktop-positive-guard': 1,
+    'canonical-restore-property-query': 130,
+    'forms-original-native-build': 1,
+    'native-restore-after-snapshot': 1,
+    'native-original-post-launch-assert_task_unchanged': 1,
+    'native-original-post-launch-assert_native_unchanged': 1,
+    'native-original-post-launch-verify': 1,
+}
+AFTER_ORIGINAL_LABEL_LIMITS = {
+    'sites-isolated-current-managed': 1,
+    'sites-isolated-current-native': 1,
+    'canonical-restore-property-query': REVIEWED_DESKTOP_CONTEXT[0],
+    'native-restore-property-query': REVIEWED_NATIVE_CONTEXT[0],
+}
+
+def require_reviewed_graph_context(snapshot, expected):
+    rows = [{key: row[key] for key in ('path', 'hostContext', 'restoreOutputPath', 'sourceSha256')}
+            for row in snapshot['projects']]
+    encoded = (json.dumps(rows, sort_keys=True, separators=(',', ':')) + '\n').encode()
+    if (len(rows), hashlib.sha256(encoded).hexdigest()) != expected:
+        raise ValueError('Exact reviewed Forms restored project/context shape changed')
+
 class ExactSitesMetadata:
-    def __init__(self, root, out, desktop_baseline):
+    def __init__(self, root, out, desktop_baseline, *, operation_plan=None, native_baseline=None):
+        if operation_plan not in (None, 'original-native', 'after-original'):
+            raise ValueError('Unknown complete Forms metadata stage plan')
+        self.operation_plan = operation_plan
+        self.operation_counts = {}
+        self.operation_limits = None
+        if operation_plan is not None:
+            require_reviewed_graph_context(desktop_baseline, REVIEWED_DESKTOP_CONTEXT)
+            if operation_plan == 'after-original':
+                require_reviewed_graph_context(native_baseline, REVIEWED_NATIVE_CONTEXT)
+            self.operation_limits = dict(ORIGINAL_NATIVE_LABEL_LIMITS if operation_plan == 'original-native'
+                                         else AFTER_ORIGINAL_LABEL_LIMITS)
         self.root = Path(root).resolve()
         if Path.cwd().resolve() != self.root:
             raise ValueError('Metadata producer cwd does not match original source root')
@@ -261,7 +311,8 @@ class ExactSitesMetadata:
         return result
 
     def persist(self, name, value):
-        raw = (json.dumps(value, indent=2, sort_keys=True) + '\n').encode()
+        # Lossless complete fields/argv; retain the SAME aggregate attempted-byte refusal.
+        raw = (json.dumps(value, sort_keys=True, separators=(',', ':')) + '\n').encode()
         if self.record_bytes + len(raw) > RECORD_CAP:
             raise ValueError('Complete diagnostic operation record cap exceeded')
         # Preserve the charge even if creation/write/close/readback/fsync refuses.
@@ -269,8 +320,16 @@ class ExactSitesMetadata:
         write_exact(self.output / (name + '.json'), raw)
 
     def operation(self, label, argv, callback):
-        if self.sequence >= MAX_OPERATIONS:
-            raise ValueError('Complete metadata operation bracket cap exceeded')
+        limits = getattr(self, 'operation_limits', None)
+        if limits is None:
+            if self.sequence >= MAX_OPERATIONS:
+                raise ValueError('Complete metadata operation bracket cap exceeded')
+        else:
+            maximum = sum(limits.values())
+            count = self.operation_counts.get(label, 0)
+            if label not in limits or count >= limits[label] or self.sequence >= maximum:
+                raise ValueError('Exact complete metadata stage operation budget exceeded')
+            self.operation_counts[label] = count + 1
         self.sequence += 1
         number = self.sequence
         record = {'operationId': number, 'label': label, 'argv': list(argv) if argv is not None else None,
@@ -285,6 +344,9 @@ class ExactSitesMetadata:
             record['before'] = self.capture()
             admitted = True
             returned = callback()
+            if getattr(self, 'operation_plan', None) == 'original-native' and label in (
+                    'native-restore-before-snapshot', 'native-restore-after-snapshot'):
+                require_reviewed_graph_context(returned, REVIEWED_NATIVE_CONTEXT)
             record['exitCode'] = returned if type(returned) is int else getattr(returned, 'returncode', None)
         except BaseException as error:
             add_failure(failures, error)

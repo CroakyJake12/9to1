@@ -280,5 +280,5 @@ def assert_native_unchanged():
  assert_compiled_target_unchanged('desktop')
 metadataSpec=importlib.util.spec_from_file_location('forms_original_native_exact_metadata',root/'.github/scripts/astra-forms-native-restore-metadata-diagnostic.py')
 metadataModule=importlib.util.module_from_spec(metadataSpec);metadataSpec.loader.exec_module(metadataModule)
-native_metadata_diagnostic=metadataModule.ExactSitesMetadata(root,out,restoredProjects['desktop'][1])
+native_metadata_diagnostic=metadataModule.ExactSitesMetadata(root,out,restoredProjects['desktop'][1],operation_plan='original-native')
 formsNative.run(root,out,cutPaths,digest,command,verify,taskTarget,assert_task_unchanged,assert_native_unchanged,metadata_diagnostic=native_metadata_diagnostic)

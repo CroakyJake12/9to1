@@ -168,9 +168,8 @@ internal static class FormsMathematicsNativeActivationProbe
             Text(responding, "math-answer-number").Text = "1.50";
             Text(responding, "math-answer-units").Text = "kg";
             var graph = responding.GetVisualDescendants().OfType<SharedGraphEditorControl>().Single();
-            responding.UpdateLayout();
-            await Task.Delay(50, token);
             var actualPlot = graph.GetVisualDescendants().OfType<ScottPlot.Avalonia.AvaPlot>().Single();
+            await RequireNativeGraphReadyAsync(responding, actualPlot, originalHostAction, token);
             Require(actualPlot.IsEffectivelyVisible && actualPlot.Bounds.Width > 0 && actualPlot.Bounds.Height > 0 &&
                 actualPlot.Plot.LastRender.DataRect.HasArea, "Actual maintained native graph has no rendered coordinate area.");
             Text(graph, "math-graph-x").Text = "1"; Text(graph, "math-graph-y").Text = "1";
@@ -274,6 +273,85 @@ internal static class FormsMathematicsNativeActivationProbe
             }
             catch (Exception error) { cleanup.Add(error); }
             if (cleanup.Count != 0) throw new AggregateException("Original Forms native cleanup failed.", primary is null ? cleanup : new[] { primary }.Concat(cleanup));
+        }
+    }
+
+    private static async Task RequireNativeGraphReadyAsync(Window responding,
+        ScottPlot.Avalonia.AvaPlot actualPlot, Task originalHostAction, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var started = Environment.TickCount64;
+        var polls = 0;
+        try
+        {
+            // Enter the SAME mounted control's actual scroll viewport. Refresh only requests
+            // its maintained native draw; no offscreen Plot.Render or substitute bitmap is used.
+            responding.UpdateLayout();
+            actualPlot.BringIntoView();
+            responding.UpdateLayout();
+            actualPlot.Refresh();
+            while (!(actualPlot.IsEffectivelyVisible && actualPlot.Bounds.Width > 0 &&
+                actualPlot.Bounds.Height > 0 && actualPlot.Plot.LastRender.DataRect.HasArea))
+            {
+                token.ThrowIfCancellationRequested();
+                Require(responding.IsVisible && TopLevel.GetTopLevel(actualPlot) == responding,
+                    "The SAME original native graph is no longer mounted in its response dialog.");
+                if (originalHostAction.IsCompleted)
+                {
+                    await originalHostAction;
+                    throw new InvalidOperationException("The original response action ended before its native graph became ready.");
+                }
+                actualPlot.BringIntoView();
+                responding.UpdateLayout();
+                actualPlot.Refresh();
+                polls++;
+                // Poll actual state within the existing whole-observer deadline; elapsed time
+                // alone is never an acceptance condition or native render-completion witness.
+                await Task.Delay(25, token);
+            }
+            token.ThrowIfCancellationRequested();
+            Require(responding.IsVisible && TopLevel.GetTopLevel(actualPlot) == responding &&
+                !originalHostAction.IsCompleted, "The original native response lifetime changed at graph readiness.");
+        }
+        catch (Exception original)
+        {
+            try
+            {
+                var bounds = actualPlot.Bounds;
+                var data = actualPlot.Plot.LastRender.DataRect;
+                var scrolls = responding.GetVisualDescendants().OfType<ScrollViewer>().Select(scroll => new
+                {
+                    bounds = new[] { scroll.Bounds.X, scroll.Bounds.Y, scroll.Bounds.Width, scroll.Bounds.Height },
+                    viewport = new[] { scroll.Viewport.Width, scroll.Viewport.Height },
+                    extent = new[] { scroll.Extent.Width, scroll.Extent.Height },
+                    offset = new[] { scroll.Offset.X, scroll.Offset.Y }
+                }).ToArray();
+                var record = JsonSerializer.Serialize(new
+                {
+                    observation = "OriginalNativeGraphReadinessRefused",
+                    originalResponseActionCompleted = originalHostAction.IsCompleted,
+                    sameResponseRoot = TopLevel.GetTopLevel(actualPlot) == responding,
+                    responseVisible = responding.IsVisible,
+                    plotVisible = actualPlot.IsVisible,
+                    plotEffectivelyVisible = actualPlot.IsEffectivelyVisible,
+                    plotBounds = new[] { bounds.X, bounds.Y, bounds.Width, bounds.Height },
+                    dataRect = new[] { data.Left, data.Right, data.Top, data.Bottom },
+                    dataRectHasArea = data.HasArea,
+                    scrolls,
+                    polls,
+                    managedElapsedMilliseconds = Environment.TickCount64 - started,
+                    qualification = "Actual current predicate/viewport values; no render callback, previous-run predicate, donor or writer attribution."
+                });
+                Require(Encoding.UTF8.GetByteCount(record) <= 65536,
+                    "Complete native graph refusal observation exceeds its bound; no prefix retained.");
+                Console.Error.WriteLine(record);
+            }
+            catch (Exception diagnostic)
+            {
+                throw new AggregateException("Original native graph readiness and its refusal observation failed.",
+                    original, diagnostic);
+            }
+            throw;
         }
     }
 

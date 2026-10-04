@@ -4,7 +4,7 @@ import argparse, hashlib, json, os, pathlib, shutil, signal, subprocess, sys, ti
 SITES = '9to1 Workspace/Sites/HavenOS.Sites.csproj'
 PROPS = '9to1 Workspace/Sites/Directory.Build.props'
 ORIGINAL = '.github/scripts/astra-forms-math01-owning.py'
-ORIGINAL_SHA = '8c8df8a95bb74317ffa977ad9b7af7b1aa01d2b60741c5c1208e47ad7cc94fc2'
+ORIGINAL_SHA = 'b3a186e1d5663398bc1d97cdbd2df79e8d2f04df649eb7049000c6f9b9650329'
 PROPOSED_SHA = '7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c'
 LEGACY_SHA = '98b0e8bb4707c63edf213c7c3219c10a1efccc6862075b785bc54b0bac2e0814'
 FIELDS = ('MSBuildProjectFullPath','MSBuildProjectName','ArtifactsProjectName','UseArtifactsOutput',
@@ -520,7 +520,8 @@ def main():
             # SAME original Desktop baseline; original receipts/caps stay exact.
             diagnostic = namespace['metadataModule'].ExactSitesMetadata.__new__(
                 namespace['metadataModule'].ExactSitesMetadata)
-            diagnostic.__init__(namespace['root'], evidence, namespace['restoredProjects']['desktop'][1])
+            diagnostic.__init__(namespace['root'], evidence, namespace['restoredProjects']['desktop'][1],
+                                operation_plan='after-original', native_baseline=witness['restore'])
             diagnostic.query = lambda label, argv: diagnostic.operation(label, argv, lambda: added.query(argv))
             namespace['native_metadata_diagnostic'] = diagnostic
             namespace['addedQueryScope'] = added
