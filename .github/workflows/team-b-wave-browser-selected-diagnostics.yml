@@ -1,0 +1,40 @@
+name: Team B exact failed Wave source diagnostic selection
+
+on:
+  push:
+    branches: [custody/team-b-wave-browser-e90-selected-diagnostics-20261004]
+    paths:
+      - .github/workflows/team-b-wave-browser-selected-diagnostics.yml
+      - apps/Web/Wave/Tests/ci/export-existing-wave-browser-selected-diagnostics.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-selected-diagnostics:
+    if: github.ref == 'refs/heads/custody/team-b-wave-browser-e90-selected-diagnostics-20261004' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact diagnostic source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify whole original and select five exact members
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Wave/Tests/ci/export-existing-wave-browser-selected-diagnostics.py
+          --output "$RUNNER_TEMP/team-b-wave-selected-diagnostics"
+      - name: Upload bounded selected custody diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-selected-source-diagnostics-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-wave-selected-diagnostics/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
