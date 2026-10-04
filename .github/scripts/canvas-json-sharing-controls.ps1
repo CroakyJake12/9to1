@@ -45,6 +45,12 @@ function Test-ControlledMoveRefusal($Move){
     if($Move.moveCompleted -or -not $Move.overwriteTrue){return $false}
     return (($Move.errorType -ceq 'System.IO.IOException' -and $Move.hresult -eq -2147024864 -and $Move.win32Code -eq 32) -or ($Move.errorType -ceq 'System.UnauthorizedAccessException' -and $Move.hresult -eq -2147024891 -and $Move.win32Code -eq 5))
 }
+function Test-HeldDeleteShareObservation($Observation){
+    if(-not $Observation.access.readAccessAllowed -or $Observation.access.readError -ne 0 -or -not $Observation.access.deleteAccessAllowed -or $Observation.access.deleteError -ne 0){return $false}
+    $move=$Observation.move
+    if($move.moveCompleted){return $move.overwriteTrue -and $move.errorType -ceq 'NONE' -and $move.hresult -eq 0 -and $move.win32Code -eq 0}
+    return Test-ControlledMoveRefusal $move
+}
 function Test-OriginalSharingObservation($Observation){
     if(-not $Observation.access.readAccessAllowed -or $Observation.access.readError -ne 0){return $false}
     if($Observation.access.deleteAccessAllowed){return $Observation.access.deleteError -eq 0 -and $Observation.move.moveCompleted}
@@ -121,9 +127,17 @@ try{
     $stream=New-Object IO.FileStream($target,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
     $textReader=New-Object IO.StreamReader($stream,[Text.Encoding]::UTF8,$true)
     try{$access=Read-NativeAccess $target;$move=Invoke-FixtureMove $replacement $target;$oldText=$textReader.ReadToEnd();$result.deleteShareControl=[ordered]@{access=$access;move=$move}}finally{$textReader.Dispose();$stream.Dispose()}
-    Check (-not $stream.CanRead -and $access.deleteAccessAllowed -and $move.moveCompleted) 'Explicit ReadWrite Delete sharing permits actual overwrite and stream closes before JSON parse'
+    Check (-not $stream.CanRead -and (Test-HeldDeleteShareObservation $result.deleteShareControl)) 'Explicit ReadWrite Delete sharing outcome is exact and stream closes before JSON parse'
     $parsed=Microsoft.PowerShell.Utility\ConvertFrom-Json -InputObject $oldText
-    Check ($parsed.control -eq 1 -and [IO.File]::ReadAllText($target) -ceq $newJson) 'Closed retained old stream parses old complete JSON while new primary is committed'
+    $expectedPrimary=if($move.moveCompleted){$newJson}else{$oldJson}
+    Check ($parsed.control -eq 1 -and [IO.File]::ReadAllText($target) -ceq $expectedPrimary -and [IO.File]::Exists($replacement) -eq (-not $move.moveCompleted)) 'Closed retained old stream parses old complete JSON and exact observed source and primary are preserved'
+    $result.heldDeleteShareOverwriteObstructionObserved=-not $move.moveCompleted
+    # A consumed fictional source is recreated only if the held overwrite already succeeded.
+    # A refused source is retained unchanged for the same API after the handle closes.
+    if($move.moveCompleted){[IO.File]::WriteAllText($replacement,$newJson,$utf8)}
+    $closedAccess=Read-NativeAccess $target;$closedMove=Invoke-FixtureMove $replacement $target
+    $result.deleteShareAfterClose=[ordered]@{access=$closedAccess;move=$closedMove;sourceRecreatedBecauseConsumed=$move.moveCompleted}
+    Check ($closedAccess.readAccessAllowed -and $closedAccess.readError -eq 0 -and $closedAccess.deleteAccessAllowed -and $closedAccess.deleteError -eq 0 -and $closedMove.moveCompleted -and $closedMove.overwriteTrue -and $closedMove.errorType -ceq 'NONE' -and $closedMove.hresult -eq 0 -and $closedMove.win32Code -eq 0 -and [IO.File]::ReadAllText($target) -ceq $newJson -and -not [IO.File]::Exists($replacement)) 'Same genuine overwrite completes after controlled reader closes with complete expected primary and consumed source'
     $result.stage='actual-original-get-content-pipeline'
     $script:pipelineTarget=Join-Path $output 'original-pipeline.json';$script:pipelineSource=Join-Path $output 'original-pipeline-new.json'
     [IO.File]::WriteAllText($script:pipelineTarget,$oldJson,$utf8);[IO.File]::WriteAllText($script:pipelineSource,$newJson,$utf8);$script:pipelineCalls=0
