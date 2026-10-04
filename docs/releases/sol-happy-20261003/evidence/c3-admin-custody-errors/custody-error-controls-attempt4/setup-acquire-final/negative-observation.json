@@ -1,9 +1,0 @@
-{
-  "scenario": "setup-acquire",
-  "launcherReleased": false,
-  "creatorWaitProven": true,
-  "primary": "RuntimeError('Injected setup failure after actual Popen before creator pidfd')",
-  "cleanup": [],
-  "retainedData": "/tmp/original-custody-ddxh8akl",
-  "sessionInitialized": false
-}

@@ -1,6 +1,0 @@
-# Preserve original runtime output bytes, including empty fragment fields and HTML EOF.
-attempt1.log whitespace=-blank-at-eol
-attempt1/cold-home.html whitespace=-blank-at-eof
-attempt1/pointer-disabled-open-studio.html whitespace=-blank-at-eof
-attempt1/pointer-enabled-events.html whitespace=-blank-at-eof
-attempt1/pointer-enabled-library.html whitespace=-blank-at-eof

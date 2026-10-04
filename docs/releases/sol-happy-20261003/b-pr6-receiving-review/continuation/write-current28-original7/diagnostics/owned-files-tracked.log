@@ -1,4 +1,0 @@
-apps/Web/Tests/ci/run-ordinary-native.py
-apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj
-apps/Web/Write/Tests/ci/original-format-acceptance.py
-apps/Web/Write/Tests/ci/run-original-write-formats.py

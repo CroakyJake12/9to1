@@ -1,7 +1,0 @@
-{
-  "TargetPath": "/tmp/team-c-c5-mail-original-89cd-20261004/artifacts/bin/Mail.LocalDurable.Tests/release_linux-x64/NineToOne.Mail.LocalDurable.Tests.dll",
-  "TargetDir": "/tmp/team-c-c5-mail-original-89cd-20261004/artifacts/bin/Mail.LocalDurable.Tests/release_linux-x64/",
-  "TargetFramework": "net10.0",
-  "RuntimeIdentifier": "linux-x64",
-  "UseAppHost": "true"
-}

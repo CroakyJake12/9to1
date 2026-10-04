@@ -1,8 +1,0 @@
-  Determining projects to restore...
-  Restored /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/positive/ActualNativeR2.Tests.csproj (in 204 ms).
-  ActualNativeR2.Tests -> /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/positive/bin/Debug/net10.0/ActualNativeR2.Tests.dll
-Test run for /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/positive/bin/Debug/net10.0/ActualNativeR2.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /workspace/team-c/evidence/c5/native-r2-peer/successor-b7b4/positive/results/positive.trx
-
-Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21, Duration: 87 ms - ActualNativeR2.Tests.dll (net10.0)

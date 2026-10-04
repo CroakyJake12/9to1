@@ -1,8 +1,0 @@
-{
-  "Properties": {
-    "TargetPath": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/PictureAdmission.Diagnostics/release_linux-x64/NineToOne.Picture.Admission.Tests.dll",
-    "TargetFramework": "net10.0",
-    "RuntimeIdentifier": "linux-x64",
-    "UseAppHost": "true"
-  }
-}

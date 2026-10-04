@@ -46,6 +46,20 @@ await session.Dispatch(() =>
     Check("Actual typed alias command determines availability", alias.IsEnabled && (string?)alias.Tag == "Alias");
     stack.Children.Add(new CheckBox { Content = "Unsupported toggle" });
     stack.Children.Add(new TextBox { Text = "private-password", PasswordChar = '*' });
+    using var namedLoader = new CuiControlLoader();
+    var namedDocument = new CuiRichParser().Parse("""
+        <Cui><StackPanel>
+          <TextBlock id="authored-account" text="synthetic-account-value" accessible-name="Canonical account ID" />
+          <TextBlock id="authored-session" text="synthetic-session-value" accessible-name="Canonical session ID" />
+          <TextBlock id="authored-revision" text="7" accessible-name="Current profile revision" />
+          <TextBlock id="blank-authored" text="Native text fallback" />
+        </StackPanel></Cui>
+        """);
+    var (namedRoot, namedDiagnostics) = namedLoader.TryLoad(namedDocument);
+    if (namedRoot is not StackPanel namedStack || namedDiagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
+        throw new InvalidOperationException("Named native CUI fixture failed to lower.");
+    Avalonia.Automation.AutomationProperties.SetName(namedStack.Children[3], " ");
+    stack.Children.Add(namedRoot);
     var window = new Window { Content = root, Width = 400, Height = 300 };
     window.Show();
     try
@@ -76,6 +90,16 @@ await session.Dispatch(() =>
             && !unsupportedToggle.TryGetProperty("role", out _) && !unsupportedToggle.TryGetProperty("enabled", out _));
         Check("Names and roles come from real native automation peers", action.GetProperty("name").GetString() == "Native action" && action.GetProperty("role").GetString() == "button" && edit.GetProperty("name").GetString() == "Native value");
         Check("Actual native text is projected", elements.Any(e => e.GetProperty("name").GetString() == "Actual native text"));
+        JsonElement Named(string id) => elements.Single(e => e.GetProperty("automationId").GetString() == id);
+        Check("Actual CUI TextBlock authored account name overrides displayed private value", Named("authored-account").GetProperty("name").GetString() == "Canonical account ID"
+            && ((TextBlock)namedStack.Children[0]).Text == "synthetic-account-value");
+        Check("Actual CUI TextBlock authored session name is retained", Named("authored-session").GetProperty("name").GetString() == "Canonical session ID");
+        Check("Actual CUI TextBlock authored revision name is retained", Named("authored-revision").GetProperty("name").GetString() == "Current profile revision");
+        Check("Whitespace authored name falls back to actual native text peer", Named("blank-authored").GetProperty("name").GetString() == "Native text fallback");
+        Check("Named text still exposes only native text semantics", Named("authored-account").GetProperty("role").GetString() == "text"
+            && Named("authored-account").GetProperty("value").ValueKind == JsonValueKind.Null
+            && !bridge.Perform(Named("authored-account").GetProperty("id").GetString()!, "invoke", null)
+            && !bridge.Perform(Named("authored-account").GetProperty("id").GetString()!, "value", "not-written"));
         Check("Invoke calls actual button provider and wired CUI action once", bridge.Perform(actionId, "invoke", null) && invokes == 1);
         button.IsEnabled = false;
         Check("Changed native disabled state rejects previously enabled ID", !bridge.Perform(actionId, "invoke", null) && invokes == 1);

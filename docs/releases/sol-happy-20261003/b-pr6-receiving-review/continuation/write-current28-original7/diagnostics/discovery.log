@@ -1,9 +1,0 @@
-Test run for /workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll (.NETCoreApp,Version=v10.0)
-The following Tests are available:
-    Haven.Infrastructure.Tests.WriteDocxFidelityTests.Rich_docx_export_emits_word_formatting_and_round_trips_supported_features
-    Haven.Infrastructure.Tests.WriteDocxFidelityTests.Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata
-    Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Save_and_open_preserve_structured_document_identity_and_content
-    Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_changed_document_bytes_without_returning_a_partial_document
-    Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_unsupported_manifest_version
-    Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Failed_save_keeps_existing_destination_intact
-    Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_traversal_entries

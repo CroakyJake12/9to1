@@ -1,9 +1,0 @@
-{
-  "sourceCommit": "95aa972e77cd75d5fdd058349a3339ae72fa983d",
-  "status": "EXPECTED_FAILURE_REPRODUCED",
-  "actualCommandExitCode": 1,
-  "cause": "Actual original Observe-SaveLabel called diagnostic Write-Result outside protected try before rethrow; controlled output failure replaced original timeout.",
-  "expectedFailedControl": "Diagnostic output refusal replaced original lookup refusal.",
-  "logSha256": "c14bc04e94a8284352148e9be1dc33a57f866f27000c9232a321f78b54cf6414",
-  "qualification": "Actual original function, controlled capability and output refusals only; no native runtime acceptance."
-}

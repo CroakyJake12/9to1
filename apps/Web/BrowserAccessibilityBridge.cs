@@ -76,7 +76,12 @@ internal sealed class BrowserAccessibilityBridge
                 }
                 current.Add(id);
                 var value = peer as IValueProvider;
-                elements.Add(new(id, role, peer.GetName(), peer.GetAutomationId(), peer.IsEnabled(),
+                // Match the maintained CUI inspector for the actual control peer.
+                // Virtual child peers share an owner and retain their own names.
+                var authoredName = ReferenceEquals(peer, ControlAutomationPeer.FromElement(controlPeer.Owner))
+                    ? Avalonia.Automation.AutomationProperties.GetName(controlPeer.Owner) : null;
+                var name = string.IsNullOrWhiteSpace(authoredName) ? peer.GetName() : authoredName;
+                elements.Add(new(id, role, name, peer.GetAutomationId(), peer.IsEnabled(),
                     peer.IsKeyboardFocusable(), value?.Value, value?.IsReadOnly ?? true, peer.GetHelpText(), peer.HasKeyboardFocus(), ReadBounds(controlPeer)));
                 // Names and values already belong to the actual parent provider;
                 // projecting template children would duplicate its semantics.

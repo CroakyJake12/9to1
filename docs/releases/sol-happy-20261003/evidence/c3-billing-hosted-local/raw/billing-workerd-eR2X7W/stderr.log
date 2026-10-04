@@ -1,4 +1,0 @@
-Error: Intentional actual Worker fixture refusal; must never report PASS
-    at file:///workspace/team-c/c3-billing-hosted/cloud/billing/test/workerd-d1.mjs:41:50
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-undefined

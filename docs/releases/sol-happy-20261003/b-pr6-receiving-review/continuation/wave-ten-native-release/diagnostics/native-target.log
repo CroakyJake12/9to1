@@ -1,8 +1,0 @@
-{
-  "Properties": {
-    "TargetPath": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave.dll",
-    "TargetFramework": "net10.0",
-    "RuntimeIdentifier": "linux-x64",
-    "UseAppHost": "true"
-  }
-}

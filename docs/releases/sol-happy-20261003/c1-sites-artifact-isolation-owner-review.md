@@ -1,9 +1,0 @@
-# Sites artifact isolation: bounded source ACK
-
-Proposal received through exact coordination a3535c87d64a3ea08dbdc04815f303af6d54e4bc SitesArtifactIsolationOwnerReviewRequest:663bytes SHA2567708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c, computed Gitblob56f3d4ce2cc317e46a3d6914c98609b076226d02. Independently verified exact transformation: only BaseIntermediateOutputPath, MSBuildProjectExtensionsPath and BaseOutputPath opening elements gain Condition UseArtifactsOutput != true. Shared import/excludes/legacy path values unchanged.
-
-Original tracked source read wholly at d30253dd94c1d9978367adb80acfd4c4f74c2931:525bytes SHA98b0e8bb4707c63edf213c7c3219c10a1efccc6862075b785bc54b0bac2e0814 Gitblob68a23bba84e57508d35578ffc3597570d5aa3cf3, mode100644. Current previously verified cut9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d still pins ORIGINAL source, not proposal. Whole Sites project/shared props/targets read; source references/dependencies unchanged.
-
-Source ACK only for explicit early UseArtifactsOutput=true callers and preserved false/unset legacy branch. Installed SDK10.0.401 DefaultOutputPaths fills empty artifact base paths, Common.props derives project extensions from base; proposal lets those existing SDK rules own output when explicitly opted in. No arbitrary roots, new authority or outputguard waiver. ArtifactsPath-only SDK auto-opt-in/import timing is outside ACK and unverified; SDK10.0.401 vs workflow10.0.301 variance remains.
-
-Before any owning execution, bind changed source into fresh complete cut/fingerprint and verify actual evaluated owner roots/configuration plus unchanged positive metadata equality, full PE/PDB/document/task proofs, original17 alternate-owner controls and strict drains. No production source changed, MSBuild query/fullSDK/test executed, source acceptance/global adoption inferred. Root alone integrates; broader A3 tooling hold and historical failures remain separate.

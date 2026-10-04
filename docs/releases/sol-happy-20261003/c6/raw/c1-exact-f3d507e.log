@@ -1,9 +1,0 @@
-{"id": "c1-exact-f3d507e", "tested_commit": "f3d507e62507cc67b7218949f9fb057042c00d3e", "worktree_status": "", "command": ["/workspace/.tools/dotnet/dotnet", "test", "/tmp/c6-c1-harness/SitesSafety.csproj", "--logger", "trx", "--results-directory", "/tmp/c6-c1-results"], "cwd": "/workspace/team-c/c1", "expected": "30 source-linked local tests pass; controlled provider fakes remain partial", "started": "2026-10-03T17:05:59.821541+00:00"}
-  Determining projects to restore...
-  Restored /tmp/c6-c1-harness/SitesSafety.csproj (in 589 ms).
-  SitesSafety -> /tmp/c6-c1-harness/bin/Debug/net10.0/SitesSafety.dll
-Test run for /tmp/c6-c1-harness/bin/Debug/net10.0/SitesSafety.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /tmp/c6-c1-results/_5f26f397bc73_2026-10-03_17_06_02_net10.0.trx
-
-Passed!  - Failed:     0, Passed:    30, Skipped:     0, Total:    30, Duration: 252 ms - SitesSafety.dll (net10.0)

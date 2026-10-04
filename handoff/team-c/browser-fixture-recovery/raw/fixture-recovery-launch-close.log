@@ -1,1 +1,0 @@
-PASS: actual spawned handle retained and strictly drained after close error; original spawn+close objects retained

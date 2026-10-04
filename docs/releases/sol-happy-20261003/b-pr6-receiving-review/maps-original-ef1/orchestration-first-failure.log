@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/workspace/team-c-resume-evidence/run-c5-maps-original-ef1.py", line 71, in <module>
-    path.mkdir()
-  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1311, in mkdir
-    os.mkdir(self, mode)
-FileExistsError: [Errno 17] File exists: '/tmp/team-c-c5-maps-original-ef1-20261004/tmp'

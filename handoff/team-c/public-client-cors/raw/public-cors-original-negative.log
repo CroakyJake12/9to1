@@ -1,8 +1,0 @@
-{"status":"ready","fixtureOnly":true,"manifestPath":"/workspace/team-c/c2-public-cors/cloud/cake-id-auth/.local-run/3f125d66631bc683/browser-fixture-private.json","issuer":"http://127.0.0.1:8798/api/auth","apiResource":"http://127.0.0.1:8798","browserOrigin":"https://client.example.test:5096","redirectUri":"https://client.example.test:5096/callback","accounts":2,"credentials":"private file only; never print or commit","email":"local D1 capture only","port5095":"unused"}
-Local browser fixture failed: exact public allow-origin
-+ actual - expected
-
-+ null
-- 'https://client.example.test:5096'
-
-{"status":"drained","custody":{"strictReaped":true,"originalsDisappeared":true,"reaped":[{"pid":85792,"birth":1814842,"code":1,"status":143},{"pid":85808,"birth":1814923,"code":2,"status":15},{"pid":85817,"birth":1814933,"code":2,"status":15},{"pid":85825,"birth":1814942,"code":2,"status":9},{"pid":85831,"birth":1814982,"code":1,"status":0}],"signals":[{"pid":85792,"birth":1814842,"signal":15},{"pid":85799,"birth":1814846,"signal":15},{"pid":85808,"birth":1814923,"signal":15},{"pid":85817,"birth":1814933,"signal":15},{"pid":85825,"birth":1814942,"signal":15},{"pid":85831,"birth":1814982,"signal":15}]}}

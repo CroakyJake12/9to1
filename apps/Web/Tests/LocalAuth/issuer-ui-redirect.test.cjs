@@ -19,7 +19,7 @@ async function probe(kind, responseKind) {
   let href = 'http://127.0.0.1:8799/' + (kind === 'signin' ? 'sign-in' : 'consent');
   const location = { origin: 'http://127.0.0.1:8799', search: '', assign(value) { moves.push({ source: 'manualAssign', target: value === destination ? 'CALLBACK' : value === '/account' ? 'ACCOUNT' : 'OTHER' }); } };
   Object.defineProperty(location, 'href', { get() { return href; }, set(value) { moves.push({ source: 'defaultRedirectPlugin', target: value === destination ? 'CALLBACK' : 'OTHER' }); href = value; } });
-  const document = { querySelector: () => status, getElementById(id) { if (id === 'sign-in-form' && kind === 'signin') return form; if (id === 'consent' && kind === 'consent') return { dataset: { clientId: 'synthetic-client', scopes: '[]' } }; if (kind === 'consent' && buttons[id]) return buttons[id]; return null; } };
+  const document = { querySelector: () => status, getElementById(id) { if (id === 'sign-in-form' && kind === 'signin') return form; if (id === 'consent' && kind === 'consent') return { dataset: { clientId: JSON.stringify('synthetic-client'), scopes: '[]' } }; if (kind === 'consent' && buttons[id]) return buttons[id]; return null; } };
   const fetch = async (url, options = {}) => {
     const pathname = new URL(String(url)).pathname;
     assert(['/api/auth/sign-in/email', '/api/auth/oauth2/consent', '/api/auth/oauth2/public-client'].includes(pathname));

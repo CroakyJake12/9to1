@@ -1,6 +1,0 @@
-{"id": "c2-exact-53edc25-schema", "tested_commit": "53edc25e104e3c5d56d64563038f957a6b2533b1", "worktree_status": "", "command": ["npm", "--prefix", "cloud/cake-id-auth", "run", "schema:validate"], "cwd": "/workspace/team-c/c2-auth", "expected": "Canonical generated schema validation passes without schema mutation", "started": "2026-10-03T17:29:07.096518+00:00"}
-
-> @cake/cake-id-worker@0.1.0 schema:validate
-> node scripts/validate-schema.mjs
-
-Both versioned SQL migrations execute in Node's in-memory SQLite and create the required auth, OAuth, and guardrail tables.

@@ -1,4 +1,0 @@
-GetForegroundWindow
-GetClassName
-PostMessage
-VIRTUAL_KEY

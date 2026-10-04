@@ -1,7 +1,0 @@
-Unhandled exception. System.Collections.Generic.KeyNotFoundException: The given key 'resource' was not present in the dictionary.
-   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
-   at RemoteWebOidcHostSpecs.SignedHostFixture.StartAsync() in /workspace/team-c/c3-oidc-proposal/9to1 Workspace/Web/Tests/Oidc/RemoteWebOidcHostSpecs.cs:line 143
-   at RemoteWebOidcHostSpecs.SignedCallbackPrivateAccountAndReplayAsync() in /workspace/team-c/c3-oidc-proposal/9to1 Workspace/Web/Tests/Oidc/RemoteWebOidcHostSpecs.cs:line 67
-   at RemoteWebOidcHostSpecs.RunAsync() in /workspace/team-c/c3-oidc-proposal/9to1 Workspace/Web/Tests/Oidc/RemoteWebOidcHostSpecs.cs:line 23
-   at Program.<Main>$(String[] args) in /workspace/team-c/c3-oidc-proposal/9to1 Workspace/Web/Tests/Oidc/Program.cs:line 1
-   at Program.<Main>(String[] args)

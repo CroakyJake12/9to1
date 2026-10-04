@@ -1,9 +1,0 @@
-{
-  "scenario": "write-close",
-  "launcherReleased": true,
-  "creatorWaitProven": true,
-  "primary": "None",
-  "cleanup": [],
-  "retainedData": "/tmp/original-custody-avujsfjp",
-  "sessionInitialized": true
-}

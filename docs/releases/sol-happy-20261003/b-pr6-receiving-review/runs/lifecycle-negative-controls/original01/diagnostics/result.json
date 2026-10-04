@@ -1,7 +1,0 @@
-{
-  "sourceCommit": "1a0a824ad06905467c280730a85429f37feabce1",
-  "status": "FAIL",
-  "scope": "Same14 retained original route snapshots over actual owning graph; expected-red is not product acceptance; issuer authority BLOCKED",
-  "recipeDifference": "Task-owned shared artifacts and actual cached NuGet, NuGetAudit=false, private XDG config",
-  "error": "RuntimeError('native exit 1')"
-}

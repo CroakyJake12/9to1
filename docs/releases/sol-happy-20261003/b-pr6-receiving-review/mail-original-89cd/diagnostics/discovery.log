@@ -1,3 +1,0 @@
-Test run for /tmp/team-c-c5-mail-original-89cd-20261004/artifacts/bin/Mail.OriginalDraft.Tests/release_linux-x64/NineToOne.Mail.OriginalDraft.Tests.dll (.NETCoreApp,Version=v10.0)
-The following Tests are available:
-    Haven.Desktop.Tests.FileMailDraftStoreTests.UpsertAndGet_RoundTripsRichSemanticDraft

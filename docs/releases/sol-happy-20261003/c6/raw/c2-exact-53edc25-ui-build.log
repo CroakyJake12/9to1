@@ -1,5 +1,0 @@
-{"id": "c2-exact-53edc25-ui-build", "tested_commit": "53edc25e104e3c5d56d64563038f957a6b2533b1", "worktree_status": "", "command": ["npm", "--prefix", "cloud/cake-id-auth", "run", "build:ui"], "cwd": "/workspace/team-c/c2-auth", "expected": "Actual auth UI build succeeds; no visual acceptance claim", "started": "2026-10-03T17:29:07.358901+00:00"}
-
-> @cake/cake-id-worker@0.1.0 build:ui
-> node scripts/build-ui.mjs
-

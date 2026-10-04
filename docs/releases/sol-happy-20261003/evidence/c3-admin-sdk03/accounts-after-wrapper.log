@@ -1,2 +1,0 @@
-build 0 {'expectedManagedLaunch': True, 'drained': True, 'launcherPid': 48552, 'launcherStartTicks': '1164284'}
-run 0 {'expectedManagedLaunch': True, 'drained': True, 'launcherPid': 48628, 'launcherStartTicks': '1164902'}

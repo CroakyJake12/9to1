@@ -1,3 +1,0 @@
-# These retained evidence files keep their original bytes and recorded hashes.
-raw/* whitespace=-blank-at-eof
-harnesses/*.cs whitespace=-blank-at-eof

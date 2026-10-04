@@ -1,5 +1,5 @@
 {
-  "sourceBasis": "ff453ff9d294d5c4812c9308217cd04be0a88e4d",
+  "sourceBasis": "95b2e6541348221140b36a79dba7a986f502fa0d",
   "scope": "Existing current public browser broker and genuine native CUI owner/consumer contract; no authority substitution.",
   "requiredSource": [
     {
@@ -39,8 +39,8 @@
     },
     {
       "path": "apps/Web/BrowserAccessibilityBridge.cs",
-      "bytes": 6998,
-      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+      "bytes": 7462,
+      "sha256": "69089f567e015d0d684a3399b5ca5c950b0312081bdc81f444e6d4c6da7dcd5a"
     },
     {
       "path": "apps/Web/Accounts/AccountBrowserBindings.cs",
@@ -316,8 +316,8 @@
     },
     {
       "path": "public/auth-ui.txt",
-      "bytes": 39083,
-      "sha256": "9e20353726f09806954e5e0159ffc49a6e224554683e96917f729b682e8cbe8d"
+      "bytes": 39097,
+      "sha256": "d22ff31aa5426ed6fe47490a664e66fc983a4a20dd183cf95b802f882afa2f98"
     },
     {
       "path": "scripts/build-ui.mjs",
@@ -351,8 +351,8 @@
     },
     {
       "path": "src/browser.ts",
-      "bytes": 4599,
-      "sha256": "afe535aa3f742319c2ebd805d97d1ffcc069199f9f446316be62824852f9048f"
+      "bytes": 4623,
+      "sha256": "00cd30093f7f4d80b8860d53cdefec1fc3f56b1f5de3e0bbb9da2f7ec4f74000"
     },
     {
       "path": "src/contract.ts",

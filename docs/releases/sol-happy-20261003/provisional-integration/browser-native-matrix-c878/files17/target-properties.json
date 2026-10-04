@@ -1,8 +1,0 @@
-{
-  "TargetPath": "/workspace/team-c-resume-evidence/c4-browser-receiving/files17-c878/artifacts/bin/FilesBrowser.Tests/release_linux-x64/FilesBrowser.Tests.dll",
-  "TargetDir": "/workspace/team-c-resume-evidence/c4-browser-receiving/files17-c878/artifacts/bin/FilesBrowser.Tests/release_linux-x64/",
-  "TargetFramework": "net10.0",
-  "RuntimeIdentifier": "linux-x64",
-  "UseAppHost": "true",
-  "AvaloniaBuildTasksLocation": "/workspace/team-c-resume-evidence/c4-browser-receiving/files17-c878/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
-}

@@ -1,7 +1,0 @@
-PASS each unsupported target preserves original request and performs zero service calls
-PASS canonical bare Settings owner route yields truthful unavailable CUI single lease
-PASS navigation cancellation after Open invalidates pending presentation
-PASS feature disposal invalidates pending lease and denies future service reads
-PASS cancelled in-flight navigation cannot return presentation
-PASS wrong route preserves request and performs zero service calls
-Discovered=6 Executed=6 Passed=6 Failed=0 Skipped=0 Scope=UNIT real owner route/CUI lifecycle scripted unavailable service

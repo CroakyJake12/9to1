@@ -1,7 +1,0 @@
-Cancellation control fund waitForPool=False: cancelled=True, unchanged=True
-Cancellation control reserve waitForPool=False: cancelled=True, unchanged=True
-Cancellation control fund waitForPool=True: cancelled=True, unchanged=True
-Cancellation control reserve waitForPool=True: cancelled=True, unchanged=True
-PASS: injected gated fixture body failure retained after original pending operation drained with unchanged state
-PASS: four original funding/reservation cancellation controls preserve canonical bytes and restart
-PASS fictional funded-org ledger: single-source funding, parallel total ceiling, partition/role plan, actual observed settlement, restart/replay, unsafe transfer denial, session revocation

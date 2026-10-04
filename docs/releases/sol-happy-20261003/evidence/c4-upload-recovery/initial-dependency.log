@@ -1,3 +1,0 @@
-  Determining projects to restore...
-  Restored /workspace/team-c/evidence/c4/upload-recovery/ActualUpload.Tests.csproj (in 552 ms).
-/workspace/team-c/evidence/c4/upload-recovery/canonical/Services/DurableDriveProvider.cs(8,68): error CS0535: 'DurableDriveProvider' does not implement interface member 'IFilesOwningAppRevisionSink.CommitDurableRevisionAsync(FilesOwningAppRevisionCommit, CancellationToken)' [/workspace/team-c/evidence/c4/upload-recovery/ActualUpload.Tests.csproj]

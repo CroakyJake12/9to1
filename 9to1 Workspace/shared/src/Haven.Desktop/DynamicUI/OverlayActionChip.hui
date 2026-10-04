@@ -1,3 +1,0 @@
-<DynamicUI Name="OverlayActionChip">
-  <Button Name="Invoke" Variant="Ghost" Content="{{LABEL}}" MinHeight="34px" />
-</DynamicUI>

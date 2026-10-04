@@ -1,9 +1,0 @@
-  Determining projects to restore...
-  All projects are up-to-date for restore.
-  Haven.Core -> /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/src/Haven.Core/bin/Debug/net10.0/Haven.Core.dll
-  C5.Provider.Tests -> /workspace/team-c/evidence/c5/reconciled/harness/bin/Debug/net10.0/C5.Provider.Tests.dll
-Test run for /workspace/team-c/evidence/c5/reconciled/harness/bin/Debug/net10.0/C5.Provider.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /workspace/team-c/evidence/c5/reconciled/sixteen/c5-reconciled-sixteen.trx
-
-Passed!  - Failed:     0, Passed:    16, Skipped:     0, Total:    16, Duration: 75 ms - C5.Provider.Tests.dll (net10.0)

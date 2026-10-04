@@ -367,3 +367,11 @@ test('actual snapshot wrapper captures the witness only during the original priv
   }
   assert.equal(scope.diagnostic.nativePrivateProjection.fields.profileName.present, true);
 });
+
+test('historical9af bridge refuses even when caller rehashes complete current source catalogs', () => {
+  const changed = structuredClone(contract.requiredSource), row = changed.find(item => item.path === 'apps/Web/BrowserAccessibilityBridge.cs');
+  assert(row); row.bytes = 6998; row.sha256 = '619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328';
+  const bytes = JSON.stringify(changed); fs.writeFileSync(catalogPath, bytes); fs.writeFileSync(afterPath, bytes);
+  try { assert.throws(() => gate({ sourceCatalogSha256: sha(bytes), sourceCatalogAfterSha256: sha(bytes) })); }
+  finally { fs.writeFileSync(catalogPath, originalCatalog); fs.writeFileSync(afterPath, originalCatalog); }
+});

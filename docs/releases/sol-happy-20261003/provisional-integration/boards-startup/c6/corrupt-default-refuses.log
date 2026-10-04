@@ -1,1 +1,0 @@
-{"scenario":"corrupt-default-refuses","status":"PASS","assertions":4,"platform":"Unix","qualification":"Actual source-linked adapter/contract persistence; no graphical app/native Windows acceptance."}

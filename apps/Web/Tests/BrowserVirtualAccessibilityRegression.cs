@@ -28,11 +28,18 @@ await session.Dispatch(() =>
     try
     {
         window.UpdateLayout();
+        var nativeNames = ControlAutomationPeer.CreatePeerForElement(scene).GetChildren()
+            .ToDictionary(peer => peer.GetAutomationId()!, peer => peer.GetName());
+        Avalonia.Automation.AutomationProperties.SetName(scene, "Parent control label only");
         var bridge = new BrowserAccessibilityBridge(); bridge.Bind(scene);
         using var snapshot = JsonDocument.Parse(bridge.ReadSnapshot());
         string Id(string name) => snapshot.RootElement.GetProperty("elements").EnumerateArray()
             .Single(element => element.GetProperty("automationId").GetString() == name).GetProperty("id").GetString()!;
         var detachedId = Id("detachable"); var hiddenId = Id("hideable");
+        Check("Authored shared-owner name cannot replace actual virtual child names", snapshot.RootElement.GetProperty("elements").EnumerateArray()
+            .Where(element => nativeNames.ContainsKey(element.GetProperty("automationId").GetString()!))
+            .All(element => element.GetProperty("name").GetString() == nativeNames[element.GetProperty("automationId").GetString()!]
+                && element.GetProperty("name").GetString() != "Parent control label only"));
         var nativePeer = ControlAutomationPeer.CreatePeerForElement(scene).GetChildren()
             .Single(peer => peer.GetAutomationId() == "detachable");
         var bounds = nativePeer.GetBoundingRectangle();

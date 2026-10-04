@@ -1,5 +1,0 @@
-Test run for /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/NineToOne.Os.Shell.Tests/release_linux-x64/NineToOne.Os.Shell.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /home/runner/work/9to1/9to1/artifacts/desktop-visible-owning/trx/os.trx
-
-Passed!  - Failed:     0, Passed:   199, Skipped:     0, Total:   199, Duration: 9 s - NineToOne.Os.Shell.Tests.dll (net10.0)

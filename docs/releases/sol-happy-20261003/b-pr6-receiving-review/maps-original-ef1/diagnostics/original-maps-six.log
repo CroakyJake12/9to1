@@ -1,5 +1,0 @@
-Test run for /tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /tmp/team-c-c5-maps-original-ef1-20261004-setup-corrected/test-results/maps-original-six.trx
-
-Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 187 ms - Maps.OriginalAuthoring.Tests.dll (net10.0)

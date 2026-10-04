@@ -1,3 +1,0 @@
-# Preserve original reviewed runtime output and hashes.
-*.log whitespace=-blank-at-eof,-blank-at-eol
-*.trx whitespace=-blank-at-eof,-blank-at-eol

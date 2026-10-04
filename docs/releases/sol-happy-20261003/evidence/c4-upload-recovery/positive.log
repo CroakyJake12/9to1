@@ -1,8 +1,0 @@
-  Determining projects to restore...
-  All projects are up-to-date for restore.
-  ActualUpload.Tests -> /workspace/team-c/evidence/c4/upload-recovery/bin/Debug/net10.0/ActualUpload.Tests.dll
-Test run for /workspace/team-c/evidence/c4/upload-recovery/bin/Debug/net10.0/ActualUpload.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /workspace/team-c/evidence/c4/upload-recovery/TestResults/upload-final.trx
-
-Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 319 ms - ActualUpload.Tests.dll (net10.0)

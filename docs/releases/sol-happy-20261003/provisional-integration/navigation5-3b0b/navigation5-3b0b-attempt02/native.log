@@ -1,5 +1,0 @@
-PASS: Throwing cancellation callback produces current observable failure and preserves prior native view
-PASS: Reentrant newest navigation keeps its token and missing-route status
-PASS: Older callback fault cannot overwrite reentrant newest navigation status
-PASS: Ordinary cancellation retires only the prior token and preserves invalid-route view
-PASS: First invalid navigation advances its token/version and preserves native view

@@ -1,6 +1,0 @@
-{
-  "status": "FAILED_READ_ONLY_ARTIFACT_ACQUISITION",
-  "exit": 1,
-  "cause": "GitHub artifact API/storage HTTP failure; raw stderr intentionally excluded because transport embeds signed redirect URLs. Actual authoritativejob log+steps preserved.",
-  "sourceRun": 37211850761
-}

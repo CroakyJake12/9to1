@@ -1,6 +1,0 @@
-*.sh text eol=lf
-*.py text eol=lf
-
-handoff/team-c/browser-fixture-recovery/raw/original-to-final-fixture.patch -whitespace
-cloud/cake-id-auth/deployment/evidence/hosted-build.log -whitespace
-cloud/cake-id-auth/deployment/evidence/hosted-build-final.log -whitespace

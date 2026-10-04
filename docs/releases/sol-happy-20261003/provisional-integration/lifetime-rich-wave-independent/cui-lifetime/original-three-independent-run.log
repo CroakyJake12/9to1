@@ -1,5 +1,0 @@
-ResetReceipt CallbackCalls=1 CallerCancelled=False AfterResetContinuation=1 PrivateEmpty=True
-PASS actual canonical signin Button keeps selected broker caller alive across its own view reset
-PASS actual canonical Refresh Button remains view-cancellable and true drain waits ignored reply
-PASS direct explicit caller cancellation still cancels transferred selected signin
-Discovered=3 Executed=3 Passed=3 Failed=0 Skipped=0 Scope=NATIVE_UNIT_ACTUAL_LOADER_BUTTON_NO_BROWSER_PROVIDER_AUTHORITY

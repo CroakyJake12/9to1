@@ -1,6 +1,0 @@
-PASS already cancelled view cannot initiate selected sign-in
-PASS already cancelled caller cannot initiate selected sign-in
-PASS actual native view retirement during held admission has zero broker effects and true drain
-PASS typed handoff retains real caller cancellation after retiring only the view
-PASS actual generic native dispatcher retains view cancellation and waits its real ignored reply
-Discovered=5 Executed=5 Passed=5 Failed=0 Skipped=0 Scope=NATIVE_UNIT_EXISTING_PROPOSAL_PRESERVATION_NO_PROVIDER_AUTHORITY

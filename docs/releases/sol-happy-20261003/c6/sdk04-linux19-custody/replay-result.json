@@ -1,7 +1,0 @@
-{
-  "wholeFiles": 1082,
-  "pieces": 976,
-  "errors": 0,
-  "payloadExecution": false,
-  "command": "python docs/releases/sol-happy-20261003/c6/sdk04-linux19-custody/replay.py --custody /workspace/team-c/evidence/c6/sdk04-linux19-custody"
-}

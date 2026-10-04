@@ -1,7 +1,0 @@
-{
-  "suite": "cui-domain",
-  "processExit": 0,
-  "targetSha256": "147df1034f544ab9469fc27b800bbb03d416610daba271af418f8e800f1170de",
-  "acceptance": "passed-full-console-harness",
-  "qualification": "Actual full domain/interprocess console completion, no fabricated TRX test count"
-}

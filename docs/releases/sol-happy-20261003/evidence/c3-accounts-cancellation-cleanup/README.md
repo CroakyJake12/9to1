@@ -1,7 +1,0 @@
-# Cancellation fixture cleanup successor
-
-Source-only test successor `29e33a1a019f51c83ef16bb8810ad381526fb8c4` of `9991da2432ddc9d1b2d878c5ea87694c84b5f7f0`. Only existing OrgPoolsProgram.cs changes; production source is unchanged. The earlier successful four controls and original negative evidence remain valid bounded results, without a general cleanup guarantee.
-
-Independent collectors retain body, cancellation, gate release, mutex release and pending task failures as original exception objects. Original pending task is awaited after gate/mutex release on every path where created. Verification failure is aggregated with existing errors. One safe real gated-authority injected body-failure control checks the exact original exception survives, pending completed before verification, cancellation refusal and exact unchanged canonical bytes plus restarted state. Original four cancellation controls and owning harness markers remain.
-
-Actual whole maintained OrgPools Debug/Release: two builds and two runs normal exit 0, strict reaped/disappeared receipts true, no signals or primary/cleanup failures. Exact outer argv and immutable source pin are in receipts. SDK 10.0.401 variance retained. No additional Accounts rerun, whole SDK acceptance, general release-fault injection, provider acceptance or global source adoption is claimed. C6 independent delta review pending; Team A exact cancellation source acknowledgement remains required.

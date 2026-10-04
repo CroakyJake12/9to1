@@ -1,9 +1,0 @@
-{
-  "scenario": "orphan",
-  "launcherReleased": true,
-  "creatorWaitProven": true,
-  "primary": "None",
-  "cleanup": [],
-  "retainedData": "/tmp/original-custody-vg57moio",
-  "sessionInitialized": true
-}
