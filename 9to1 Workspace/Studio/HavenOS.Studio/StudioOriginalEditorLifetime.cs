@@ -11,6 +11,7 @@ internal sealed class StudioOriginalEditorLifetime
     private readonly StudioOriginalCallbackLifetime _callbacks = new();
     private readonly List<AgentAvatarPreviewControl> _controls = [];
     private readonly Func<bool> _isCurrent;
+    private readonly Action<Exception> _requestAuthorityRetirement;
     private Task? _close;
     private bool _retiring;
     internal AgentAvatarEditor Editor { get; }
@@ -19,11 +20,13 @@ internal sealed class StudioOriginalEditorLifetime
     internal bool IsExecutingOriginal => _callbacks.IsExecutingOriginal;
     internal bool IsRetiring => _retiring;
 
-    internal StudioOriginalEditorLifetime(AgentAvatarEditor editor, Func<bool> isCurrent)
+    internal StudioOriginalEditorLifetime(AgentAvatarEditor editor, Func<bool> isCurrent,
+        Action<Exception> requestAuthorityRetirement)
     {
         ArgumentNullException.ThrowIfNull(editor);
         ArgumentNullException.ThrowIfNull(isCurrent);
-        Editor = editor; _isCurrent = isCurrent;
+        ArgumentNullException.ThrowIfNull(requestAuthorityRetirement);
+        Editor = editor; _isCurrent = isCurrent; _requestAuthorityRetirement = requestAuthorityRetirement;
     }
 
     internal Task OpenAsync(string namespaceId, string agentId, CancellationToken caller) =>
@@ -125,7 +128,16 @@ internal sealed class StudioOriginalEditorLifetime
             return new(owner._callbacks.Run(async token =>
             {
                 owner.RequireCurrent(token);
-                await owner.Editor.DispatchAsync(capturedCommand, capturedParameter, token);
+                List<Exception> errors = [];
+                try { await owner.Editor.DispatchAsync(capturedCommand, capturedParameter, token); }
+                catch (Exception error)
+                {
+                    StudioOriginalCallbackLifetime.Add(errors, error);
+                    if (error is NineToOne.Dulche.Den.DenException { Code: NineToOne.Dulche.Den.DenErrorCode.Forbidden })
+                        try { owner._requestAuthorityRetirement(error); }
+                        catch (Exception retirement) { StudioOriginalCallbackLifetime.Add(errors, retirement); }
+                }
+                StudioOriginalCallbackLifetime.Throw(errors);
                 owner.RequireCurrent(token);
             }, cancellationToken));
         }
