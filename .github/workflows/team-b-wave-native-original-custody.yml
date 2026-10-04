@@ -1,0 +1,61 @@
+name: Team B exact existing proposed Wave native original ZIP custody
+
+on:
+  push:
+    branches: [custody/team-b-wave-native-e90-original-parts400k-20261004]
+    paths:
+      - .github/workflows/team-b-wave-native-original-custody.yml
+      - apps/Web/Wave/Tests/ci/export-existing-wave-native-original-parts.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-archive:
+    if: github.ref == 'refs/heads/custody/team-b-wave-native-e90-original-parts400k-20261004' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact custody source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify and split exact existing original archive
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Wave/Tests/ci/export-existing-wave-native-original-parts.py
+          --output "$RUNNER_TEMP/team-b-wave-native-original-custody"
+      - name: Upload bounded custody diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-native-original-custody-diagnostics-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-wave-native-original-custody/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload original bytes fragment01
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-native-original-outer-part01-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-wave-native-original-custody/part01/original-outer-part01.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment02
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-native-original-outer-part02-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-wave-native-original-custody/part02/original-outer-part02.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload original bytes fragment03
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-native-original-outer-part03-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-wave-native-original-custody/part03/original-outer-part03.zip
+          if-no-files-found: error
+          retention-days: 7
