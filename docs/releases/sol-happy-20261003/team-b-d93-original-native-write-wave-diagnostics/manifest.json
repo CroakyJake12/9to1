@@ -1,0 +1,2465 @@
+{
+  "state": "EXACT_SIX_ORIGINAL_ACTIONS_ARCHIVES_PRESERVED_FULL_REMOTE_BODY_READBACK",
+  "UTC": "2026-10-04T18:19:47.272841+00:00",
+  "branch": "artifact/team-b-d93-native-write-wave-original-diagnostics-20261004",
+  "base": "400ecdf1ec36a3d28e742beeba28e223f3ab0d14",
+  "sourceCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+  "runs": {
+    "write": 37222377934,
+    "wave": 37222377927,
+    "package": 37222377920
+  },
+  "archives": [
+    {
+      "kind": "write-scene-focus58",
+      "id": 11311245271,
+      "bytes": 338972,
+      "sha256": "f18ea65f930e2dd66c1cf8f199d0c1963f8a639da09d4896e247190f190f7969",
+      "name": "write-native-scene58-d93-original-failure.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-scene-focus58.zip",
+      "gitBlob": "25c3562552c375af93c4c591c466fe0ac8bce234",
+      "rootWholeRemoteBodyReadback": true,
+      "originalActionsOuterWholeBodyReadHere": true,
+      "temporarySourcePath": "/workspace/attachments/570e3898-b0e0-4823-9a1c-ba5d998cdd09/write-native-scene58-d93-original-failure.zip",
+      "temporaryRetired": false,
+      "members": [
+        {
+          "path": "build.log",
+          "bytes": 6617,
+          "sha256": "ef7fe9bceceea3e0bf8595cf9d77861d44aad6666ae585538cc5f9aaa7b02ccd",
+          "crc": 1028791798,
+          "mode": 33188
+        },
+        {
+          "path": "commands.json",
+          "bytes": 10106,
+          "sha256": "6f8d4f5ddcad74857aaec8a620bda1769c0ad5d014d8b1d592d6c0b8fc1d4fb8",
+          "crc": 4155148541,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2980,
+          "sha256": "82646e5dabfd914dea24c7e6fc466aff4c1d0a0a50375880035122abb7088100",
+          "crc": 3175825471,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "entry-identity.json",
+          "bytes": 169,
+          "sha256": "1811b071365cfb9d6677110956cd707703443d8802537fa0e14759068eeac699",
+          "crc": 1369676001,
+          "mode": 33188
+        },
+        {
+          "path": "fixture-tracked.log",
+          "bytes": 177,
+          "sha256": "54fb23159acf3cec6dea3e5003f15fdc88a3515369c774e07ec0c697b4dbf586",
+          "crc": 3332322691,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+          "crc": 707685492,
+          "mode": 33188
+        },
+        {
+          "path": "native-toolbar.log",
+          "bytes": 1700,
+          "sha256": "c8908e9f23056128e7593b4a0b931d115f68b1e5689cdd7fc52e49c0470e60a8",
+          "crc": 2280034731,
+          "mode": 33188
+        },
+        {
+          "path": "restore.log",
+          "bytes": 5377,
+          "sha256": "e78a82f7f2f99f4845f9710d522547e44180c6c344d718e543bdb70b1ab577d4",
+          "crc": 1928849794,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 1493,
+          "sha256": "6fbe0ba1c28a1756358ebff6f52c992e6a82b1683ce7262a567b43d6b6d23a56",
+          "crc": 1805209348,
+          "mode": 33188
+        },
+        {
+          "path": "source-pins-before.json",
+          "bytes": 1785,
+          "sha256": "5c0c53474e9b80e5294249222eb6b6f74be321b5a5b39a532609962ff88c1df8",
+          "crc": 2283008103,
+          "mode": 33188
+        },
+        {
+          "path": "source-tree-pins.log",
+          "bytes": 1306876,
+          "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+          "crc": 471180625,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 253,
+          "sha256": "e54854068bb761ee1b8d7e19353cba27244b8b2e711412ce546bee65ee1bf494",
+          "crc": 1667769693,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 283,
+          "sha256": "7ad2310ad938dc48e3e94c4acb24cf0f17d504f54ff8557dc77daf9a081ff8e1",
+          "crc": 1054780467,
+          "mode": 33188
+        }
+      ],
+      "actualResult": {
+        "suite": "scene-focus58",
+        "status": "FAIL",
+        "sourceCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+        "executed": null,
+        "scope": "Existing native authoring/render/local durable tests only; no WASM/browser/provider/ACL/full parity",
+        "history": "Historical f8de canonical Space10PASS1FAIL4NOTRUN and proposal15PASS unchanged; earlier local durable65 evidence remains scoped historical.",
+        "error": "RuntimeError('native-toolbar exit -6')",
+        "observedNativeLogPrefixes": [
+          {
+            "stage": "native-toolbar",
+            "logSHA": "c8908e9f23056128e7593b4a0b931d115f68b1e5689cdd7fc52e49c0470e60a8",
+            "observedPassLabels": [],
+            "observedAssertLabels": [
+              "actual packed font resolves original asset URI and matches exact owner bytes",
+              "actual owning Write.cui parses",
+              "actual registered owner surface lowers",
+              "actual native templates render before querying editor descendants",
+              "actual toolbar New enabled=True",
+              "actual toolbar Save enabled=False",
+              "actual toolbar Bold enabled=False",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False",
+              "actual toolbar Close enabled=False",
+              "actual New control permits interaction",
+              "actual toolbar Save enabled=True",
+              "actual toolbar Bold enabled=True",
+              "actual toolbar Close enabled=True",
+              "actual toolbar Undo enabled=False",
+              "actual toolbar Redo enabled=False"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "write-durable65",
+      "id": 11310826657,
+      "bytes": 340342,
+      "sha256": "42701125f2e22920aad0d104c20f0d882e829042c8c26084a1579e66db8e554b",
+      "name": "write-native-durable65-d93-original.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-durable65.zip",
+      "gitBlob": "1f4f5447e82930208382abeafabf831c6eba2a19",
+      "rootWholeRemoteBodyReadback": true,
+      "originalActionsOuterWholeBodyReadHere": true,
+      "temporarySourcePath": "/workspace/attachments/2405a443-8651-446d-8b78-9a785671bfa4/write-native-durable65-d93-original.zip",
+      "temporaryRetired": false,
+      "members": [
+        {
+          "path": "actual-original-assertions.json",
+          "bytes": 4250,
+          "sha256": "a4545dd84bf1e2faa0200bf566b07d8fb6ee4a2f0382e582220b7f2b406ce3af",
+          "crc": 462335072,
+          "mode": 33188
+        },
+        {
+          "path": "commands.json",
+          "bytes": 7995,
+          "sha256": "1a7ef65970499729adfaa4a58b886f60cda87351ed8d45cb4081b8bca601dafb",
+          "crc": 380073905,
+          "mode": 33188
+        },
+        {
+          "path": "build.log",
+          "bytes": 905,
+          "sha256": "c330cda28d42a01ff63ddfff961608e64b088d599ef9ec29834ec0a1dc237aa8",
+          "crc": 782106055,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2976,
+          "sha256": "b6b8d30f190b458d14d75d5b3a1239852c858965a16bdc8a56df49f155416e68",
+          "crc": 1267723600,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "entry-identity.json",
+          "bytes": 169,
+          "sha256": "a2fdba95a46358687c2a1d3942bdc223e1c14caa844ac45869f58a0435200e7a",
+          "crc": 1557020177,
+          "mode": 33188
+        },
+        {
+          "path": "fixture-tracked.log",
+          "bytes": 178,
+          "sha256": "6beb123632043db7341a993536e9d2c9af020804c3cc615b16526ec7f6debb93",
+          "crc": 932028850,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+          "crc": 707685492,
+          "mode": 33188
+        },
+        {
+          "path": "native-seed.log",
+          "bytes": 1180,
+          "sha256": "643db015a92caa6e2a7da9d6a8de791545e29bd49e1baa8f459d9a754abf418c",
+          "crc": 1158159854,
+          "mode": 33188
+        },
+        {
+          "path": "native-subscriber.log",
+          "bytes": 241,
+          "sha256": "3c0be8c3feeddf728524fe03251757f80434931259703dc121916dc6895ccb02",
+          "crc": 1773559391,
+          "mode": 33188
+        },
+        {
+          "path": "native-verify.log",
+          "bytes": 2299,
+          "sha256": "df542b71b096400e49bda74a0878a9901bc52e1ca726a366d0828286572bdd32",
+          "crc": 2794641382,
+          "mode": 33188
+        },
+        {
+          "path": "restore.log",
+          "bytes": 670,
+          "sha256": "88236cf972b24e5fdfcb8c23850b2aa5be4c93eb176cdbc26db97b0a06e9f9c8",
+          "crc": 2607598928,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 4771,
+          "sha256": "4ba88eaaaf88b26b0bcf941b51bfce7c884a2138e404fdfb7fbf8c1cff447205",
+          "crc": 1601043798,
+          "mode": 33188
+        },
+        {
+          "path": "source-pins-before.json",
+          "bytes": 644,
+          "sha256": "8ec4262f3d707b2c74dcd20e5b54c90d052252773f930575478b1a9c043d15a8",
+          "crc": 3009706633,
+          "mode": 33188
+        },
+        {
+          "path": "source-tree-pins.log",
+          "bytes": 1306876,
+          "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+          "crc": 471180625,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 261,
+          "sha256": "a19b65be1e66dcb0c2708c79a71062b93816a0dde7c18c5195ea7c62ae4aad21",
+          "crc": 1006103515,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 291,
+          "sha256": "2783b3c52f14e007189da7c66766ce548984541a82c16ad00f289c4eb495f17b",
+          "crc": 4215123088,
+          "mode": 33188
+        }
+      ],
+      "actualResult": {
+        "suite": "durable65",
+        "status": "PASS",
+        "sourceCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+        "executed": 65,
+        "scope": "Existing native authoring/render/local durable tests only; no WASM/browser/provider/ACL/full parity",
+        "history": "Historical f8de canonical Space10PASS1FAIL4NOTRUN and proposal15PASS unchanged; earlier local durable65 evidence remains scoped historical.",
+        "passed": 65,
+        "failed": 0,
+        "observedNativeLogPrefixes": [
+          {
+            "stage": "native-seed",
+            "logSHA": "643db015a92caa6e2a7da9d6a8de791545e29bd49e1baa8f459d9a754abf418c",
+            "observedPassLabels": [],
+            "observedAssertLabels": [
+              "fixture is fresh; never overwrite another test run",
+              "owner creates durable opaque document ID",
+              "owner selection addresses actual object ID",
+              "owner structured editor inserts text",
+              "select actual beta range",
+              "same CUI action changes actual editor and marks dirty",
+              "exact document text",
+              "range formatting preserves three text runs",
+              "only beta is bold; adjacent text remains unchanged",
+              "owner undo removes only range formatting",
+              "undo does not alter durable base revision",
+              "owner redo restores formatting",
+              "exact document text",
+              "range formatting preserves three text runs",
+              "only beta is bold; adjacent text remains unchanged",
+              "canonical save acknowledges clean state",
+              "actual native codec exports saved document",
+              "native package retains canonical identity and revision",
+              "exact document text",
+              "range formatting preserves three text runs",
+              "only beta is bold; adjacent text remains unchanged",
+              "real repository publishes create and edit history",
+              "close releases saved editor"
+            ]
+          },
+          {
+            "stage": "native-verify",
+            "logSHA": "df542b71b096400e49bda74a0878a9901bc52e1ca726a366d0828286572bdd32",
+            "observedPassLabels": [],
+            "observedAssertLabels": [
+              "fresh process opens same owner document ID",
+              "fresh process retains revision and object ID",
+              "exact document text",
+              "range formatting preserves three text runs",
+              "only beta is bold; adjacent text remains unchanged",
+              "fresh process retains entire section/page/block/run structure, IDs and attributes",
+              "open explicit read-only presentation",
+              "read-only session rejects editor mutation without dirtying",
+              "read-only formatting action disabled",
+              "read-only rejection does not change durable revision",
+              "independent repository session opens same base revision",
+              "first independent session commits next owner revision",
+              "actual repository rejects stale expected revision and preserves draft",
+              "stale save leaves committed bytes unchanged",
+              "conflicting session retains its own exact unsaved text",
+              "failed conflict save prevents close and draft loss",
+              "conflict draft can be preserved by actual native codec",
+              "undo uses owner editor after save",
+              "undo content saves against current durable revision",
+              "exact document text",
+              "range formatting preserves three text runs",
+              "only beta is bold; adjacent text remains unchanged",
+              "explicit native import creates independent durable document",
+              "exact document text",
+              "range formatting preserves three text runs",
+              "only beta is bold; adjacent text remains unchanged",
+              "independent import leaves original canonical artifact unchanged",
+              "native integrity failure preserves currently open document",
+              "independent imported document closes safely",
+              "lifetime refuses silent dirty-document disposal",
+              "create separate durable queue fixture",
+              "queued mutation completes after actual repository save",
+              "committed snapshot excludes queued later mutation",
+              "later edit remains visible and unsaved",
+              "remaining edit commits exactly next owner revision",
+              "real filesystem failure preserves unsaved draft",
+              "failed write retains durable base and exact draft text",
+              "failed save left previous real durable content recoverable",
+              "retry commits once against preserved owner revision",
+              "recovered draft safely closes"
+            ]
+          },
+          {
+            "stage": "native-subscriber",
+            "logSHA": "3c0be8c3feeddf728524fe03251757f80434931259703dc121916dc6895ccb02",
+            "observedPassLabels": [],
+            "observedAssertLabels": [
+              "presentation listener error is visible after real durable create",
+              "subscriber exception cannot strand command gate; subsequent operation completes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "write-space15",
+      "id": 11310797005,
+      "bytes": 338457,
+      "sha256": "28cbafe024680f99e7ee61101a4c5368de8cabdd5fb8ce538539dc4ef138ed4d",
+      "name": "write-native-space15-d93-original-failure.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-space15.zip",
+      "gitBlob": "7269755c4a1a2e6cd5549a200edc6298f6a42177",
+      "rootWholeRemoteBodyReadback": true,
+      "originalActionsOuterWholeBodyReadHere": true,
+      "temporarySourcePath": "/workspace/attachments/709ccccd-50e3-48fe-8ea0-ea1d7e53bdf7/write-native-space15-d93-original-failure.zip",
+      "temporaryRetired": false,
+      "members": [
+        {
+          "path": "build.log",
+          "bytes": 6362,
+          "sha256": "1294b51388e3aecd0497084690bd4cc8a6c7855b4dfd914c9afa2aa6c2307fea",
+          "crc": 2012651943,
+          "mode": 33188
+        },
+        {
+          "path": "commands.json",
+          "bytes": 10022,
+          "sha256": "f787b1703708bf3b5e20fdaec7722fedf5d94988829e92ceca8f4dd6136209b9",
+          "crc": 1396322441,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2974,
+          "sha256": "57fe32783f1629003e4a7f9a98aed79cc864c50ab09e70618d70e0c012250c51",
+          "crc": 3936218595,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "entry-identity.json",
+          "bytes": 169,
+          "sha256": "c3987e73712f79c65f53a913ea2258d7cc1977e422a997dd3f88d8a2a482d033",
+          "crc": 3056826941,
+          "mode": 33188
+        },
+        {
+          "path": "fixture-tracked.log",
+          "bytes": 179,
+          "sha256": "90c9bc741fca81c514142cc2585c59445a1acb51447c2a8ab9010c3e6c323258",
+          "crc": 3753362500,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+          "crc": 707685492,
+          "mode": 33188
+        },
+        {
+          "path": "native-space.log",
+          "bytes": 1572,
+          "sha256": "923f5fa09a819076e988f8b9138fde2f0539d8c6a1725a16abfe359630d91f82",
+          "crc": 424723634,
+          "mode": 33188
+        },
+        {
+          "path": "restore.log",
+          "bytes": 5365,
+          "sha256": "8e89d16552cf1df84573807ffdc68cf94c60987ff397ce52bb6289852c27747a",
+          "crc": 653128330,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 1304,
+          "sha256": "01a12666bb315de7bc2be1a47ed2fd45fd1ba8eaea1c3f3f334a825f9d40b1d0",
+          "crc": 3622646425,
+          "mode": 33188
+        },
+        {
+          "path": "source-pins-before.json",
+          "bytes": 645,
+          "sha256": "0447576e31c6cb2721ccf9f8fae7ce4e4325097e3f23a29ea97c633c9603c21d",
+          "crc": 4155801725,
+          "mode": 33188
+        },
+        {
+          "path": "source-tree-pins.log",
+          "bytes": 1306876,
+          "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+          "crc": 471180625,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 245,
+          "sha256": "1606afa1acb31d1949c6c430f1b98d73f85d947039a18adefbb9f5402f6325be",
+          "crc": 3283227953,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 275,
+          "sha256": "20e0db89a13850bec5b1dec7cf83c1f08c38f01cd580782d12e3e6136889c9a2",
+          "crc": 214694409,
+          "mode": 33188
+        }
+      ],
+      "actualResult": {
+        "suite": "space15",
+        "status": "FAIL",
+        "sourceCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+        "executed": null,
+        "scope": "Existing native authoring/render/local durable tests only; no WASM/browser/provider/ACL/full parity",
+        "history": "Historical f8de canonical Space10PASS1FAIL4NOTRUN and proposal15PASS unchanged; earlier local durable65 evidence remains scoped historical.",
+        "error": "RuntimeError('native-space exit -6')",
+        "observedNativeLogPrefixes": [
+          {
+            "stage": "native-space",
+            "logSHA": "923f5fa09a819076e988f8b9138fde2f0539d8c6a1725a16abfe359630d91f82",
+            "observedPassLabels": [
+              "Actual native Button receives focus",
+              "Actual Button Space invokes once and consumes key without text",
+              "Actual Button Enter invokes exactly once more",
+              "Actual Button releases pressed state",
+              "Actual ordinary Input receives native focus",
+              "Actual ordinary Input admits one Space text event",
+              "Custom owning keyboard handler receives native focus",
+              "Custom true Space handler retains ownership and receives no duplicate text",
+              "Actual owning Write scene renders with native resources",
+              "Actual owning Write surface receives native focus"
+            ],
+            "observedAssertLabels": []
+          }
+        ]
+      }
+    },
+    {
+      "kind": "wave-original",
+      "id": 11311285642,
+      "bytes": 636215,
+      "sha256": "8c053f6bd573159caf4a8b56caa5432de327aa13abba8bf4ad5bd45468c2acb8",
+      "name": "wave-native-d93-original-control.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/wave-original.zip",
+      "gitBlob": "7aac99e9670153e17a77ae9e93547fc4857d5d53",
+      "rootWholeRemoteBodyReadback": true,
+      "originalActionsOuterWholeBodyReadHere": true,
+      "temporarySourcePath": "/workspace/attachments/36a18c43-e53a-4af5-b364-d9c37d804413/wave-native-d93-original-control.zip",
+      "temporaryRetired": false,
+      "members": [
+        {
+          "path": "build.log",
+          "bytes": 6926,
+          "sha256": "6a2bb30ad1fd88004cdc0487258c0d71c3bc7fb4d88a1c74bd0c381d3c48baf8",
+          "crc": 175517996,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow-native-font2-native.json",
+          "bytes": 1204557,
+          "sha256": "d661512025e7bb9977bef27a6a79440c3393e3591d2b88bcf1990104dd0b803f",
+          "crc": 2548375912,
+          "mode": 33188
+        },
+        {
+          "path": "commands.json",
+          "bytes": 16789,
+          "sha256": "3f2a919172f75b775ca4b4f2139a0094493ec64ef84edc4a5daad4f63ec893c7",
+          "crc": 1950714753,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow-native-font2.log",
+          "bytes": 185,
+          "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+          "crc": 503723559,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow-native.json",
+          "bytes": 1180998,
+          "sha256": "7c7510073e0c0f2030a2b8bdb947cec5b0815d829e73d97d49dcb8ba798c7595",
+          "crc": 2349555453,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow.log",
+          "bytes": 185,
+          "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+          "crc": 503723559,
+          "mode": 33188
+        },
+        {
+          "path": "default-wide-native.json",
+          "bytes": 1182717,
+          "sha256": "bf27af6fc6bbf5aa07321abc19f5fedaf8288fad9e127f6083d8b07083509b54",
+          "crc": 1944158889,
+          "mode": 33188
+        },
+        {
+          "path": "default-wide.log",
+          "bytes": 185,
+          "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+          "crc": 503723559,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2979,
+          "sha256": "fcd9157f0a04570e257474028c51bab291dc6bf01f7a8dacd8319b6613a8e61c",
+          "crc": 3851183222,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "geometry-stress195-not-zoom-native.json",
+          "bytes": 1181861,
+          "sha256": "3ff3f282f89c6abee4648f92c6bf65ed107eb85de4bc71f428ef59cb5f19912a",
+          "crc": 914436213,
+          "mode": 33188
+        },
+        {
+          "path": "geometry-stress195-not-zoom.log",
+          "bytes": 641,
+          "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c",
+          "crc": 2547066988,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+          "crc": 707685492,
+          "mode": 33188
+        },
+        {
+          "path": "narrow-native-font2-native.json",
+          "bytes": 1205420,
+          "sha256": "0dac645e7e99932181d02738d7fe665f2841a6b828077547fe2cdeebf9a64fd4",
+          "crc": 206228655,
+          "mode": 33188
+        },
+        {
+          "path": "narrow-native-font2.log",
+          "bytes": 641,
+          "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c",
+          "crc": 2547066988,
+          "mode": 33188
+        },
+        {
+          "path": "narrow-native.json",
+          "bytes": 1181861,
+          "sha256": "253905ea7dee373fe2b966339c8fcac6565558900b1beb0c3dedf2e13efef2c3",
+          "crc": 4214177805,
+          "mode": 33188
+        },
+        {
+          "path": "narrow.log",
+          "bytes": 641,
+          "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c",
+          "crc": 2547066988,
+          "mode": 33188
+        },
+        {
+          "path": "native-submodule-pins.log",
+          "bytes": 202,
+          "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+          "crc": 4050951216,
+          "mode": 33188
+        },
+        {
+          "path": "restore.log",
+          "bytes": 5656,
+          "sha256": "350184a7393c3e4d2c11d5f6c2f03961d40d5cac5918d88391f581c5772efbf6",
+          "crc": 3592443632,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 17766,
+          "sha256": "ea540100158deaa34d19194346ae47bf162a1a519acfe724639e6170b6938f98",
+          "crc": 3791216018,
+          "mode": 33188
+        },
+        {
+          "path": "selected-native-binary-after.json",
+          "bytes": 141358,
+          "sha256": "87ebe514a6d5b254e67551644c0020febf3550b2d2230a2f4d60713801455388",
+          "crc": 362856925,
+          "mode": 33188
+        },
+        {
+          "path": "selected-native-binary-before.json",
+          "bytes": 141358,
+          "sha256": "87ebe514a6d5b254e67551644c0020febf3550b2d2230a2f4d60713801455388",
+          "crc": 362856925,
+          "mode": 33188
+        },
+        {
+          "path": "selected-source-after.json",
+          "bytes": 6269,
+          "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+          "crc": 701098382,
+          "mode": 33188
+        },
+        {
+          "path": "selected-source-before.json",
+          "bytes": 6269,
+          "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+          "crc": 701098382,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 661,
+          "sha256": "1717345b21ab2a714337dc4f9348462219ce0acb9b9498812407d4d164e6273e",
+          "crc": 237489695,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 697,
+          "sha256": "69118e09bbe37c0c01ad627d06e187f6548f8988073f669bd7130eed3973f3c3",
+          "crc": 2787696206,
+          "mode": 33188
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1306876,
+          "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+          "crc": 471180625,
+          "mode": 33188
+        },
+        {
+          "path": "wide-native.json",
+          "bytes": 1183579,
+          "sha256": "5d6a712e262ac8700deee5d937f2f4803442e28fdbad48b327febcd1bc944040",
+          "crc": 3673594955,
+          "mode": 33188
+        },
+        {
+          "path": "wide.log",
+          "bytes": 641,
+          "sha256": "7fab6679ac575e9808673cbc019d12ffd37a24b353b7105f361f47db135a6d5f",
+          "crc": 1146321858,
+          "mode": 33188
+        }
+      ],
+      "actualResult": {
+        "status": "ORIGINAL_LAYOUT_RED_CONTROL_OBSERVED",
+        "variant": "original",
+        "expectedGroups": 7,
+        "expectedChecks": 64,
+        "executed": 64,
+        "passed": 53,
+        "failed": 11,
+        "notRun": 0,
+        "groups": [
+          {
+            "name": "narrow",
+            "state": "FAIL",
+            "nativeResultSHA256": "253905ea7dee373fe2b966339c8fcac6565558900b1beb0c3dedf2e13efef2c3",
+            "bytes": 1181861,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": false
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "actualFailures": 3,
+            "executed": 13,
+            "passed": 10,
+            "failed": 3,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": false
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "narrow-native-font2",
+            "state": "FAIL",
+            "nativeResultSHA256": "0dac645e7e99932181d02738d7fe665f2841a6b828077547fe2cdeebf9a64fd4",
+            "bytes": 1205420,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": false
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "actualFailures": 3,
+            "executed": 13,
+            "passed": 10,
+            "failed": 3,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": false
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "geometry-stress195-not-zoom",
+            "state": "FAIL",
+            "nativeResultSHA256": "3ff3f282f89c6abee4648f92c6bf65ed107eb85de4bc71f428ef59cb5f19912a",
+            "bytes": 1181861,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": false
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "actualFailures": 3,
+            "executed": 13,
+            "passed": 10,
+            "failed": 3,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": false
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "wide",
+            "state": "FAIL",
+            "nativeResultSHA256": "5d6a712e262ac8700deee5d937f2f4803442e28fdbad48b327febcd1bc944040",
+            "bytes": 1183579,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "actualFailures": 2,
+            "executed": 13,
+            "passed": 11,
+            "failed": 2,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "default-narrow",
+            "state": "PASS",
+            "nativeResultSHA256": "7c7510073e0c0f2030a2b8bdb947cec5b0815d829e73d97d49dcb8ba798c7595",
+            "bytes": 1180998,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "actualFailures": 0,
+            "executed": 4,
+            "passed": 4,
+            "failed": 0,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "nativeExit": 0,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "default-narrow-native-font2",
+            "state": "PASS",
+            "nativeResultSHA256": "d661512025e7bb9977bef27a6a79440c3393e3591d2b88bcf1990104dd0b803f",
+            "bytes": 1204557,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "actualFailures": 0,
+            "executed": 4,
+            "passed": 4,
+            "failed": 0,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "nativeExit": 0,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "default-wide",
+            "state": "PASS",
+            "nativeResultSHA256": "bf27af6fc6bbf5aa07321abc19f5fedaf8288fad9e127f6083d8b07083509b54",
+            "bytes": 1182717,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "actualFailures": 0,
+            "executed": 4,
+            "passed": 4,
+            "failed": 0,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "nativeExit": 0,
+            "negativeIsAcceptance": false
+          }
+        ],
+        "scope": "Actual native Render/parser/font/glyph geometry with scripted bindings and availability; dispatch always throws. Native font2 and viewport195 are NOT browser zoom. No Wave model/audio/storage/action/AT/full-parity acceptance.",
+        "sourceCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+        "sourceLedgerSHA256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+        "driverSHA256": "04cabfe1c849afb3e9d9a1b2735b025d90cc7771f245403a33a8966119a9c8da",
+        "entrySHA256": "ee748e7fc6d4b38f8833e67a46c81ef919d395009237c9d08fdf5d73d8813fba",
+        "apphostSHA256": "cc960c260be0a3319be2f99714904b7548913e5da7a039371f13fa642182a680",
+        "selectedSourceAfterUnchanged": true,
+        "selectedBinaryAfterUnchanged": true
+      }
+    },
+    {
+      "kind": "wave-proposed",
+      "id": 11311061313,
+      "bytes": 750456,
+      "sha256": "23924ac6bb4588ed27b91c4e78dc99ad519271835d2b56c0f6a086f34d49e252",
+      "name": "wave-native-d93-clipping-original-failure.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/wave-proposed.zip",
+      "gitBlob": "c50c363d51360a65a7c50b35130645372ef6b913",
+      "rootWholeRemoteBodyReadback": true,
+      "originalActionsOuterWholeBodyReadHere": true,
+      "temporarySourcePath": "/workspace/attachments/c634f570-c117-4202-a40b-4417b71260f3/wave-native-d93-clipping-original-failure.zip",
+      "temporaryRetired": false,
+      "members": [
+        {
+          "path": "build.log",
+          "bytes": 6926,
+          "sha256": "5fe02fad3ef3bd933207adebc5bc085bcb642825b8021055393f42e95239d184",
+          "crc": 3833328924,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow-native-font2-native.json",
+          "bytes": 1784919,
+          "sha256": "bb916276d622c3ad9eb53ef9f79cd81451d9dc08b8554b7426a4d46098d7a934",
+          "crc": 1269013083,
+          "mode": 33188
+        },
+        {
+          "path": "commands.json",
+          "bytes": 15860,
+          "sha256": "de62f5152a72cb85fdd19ebc8f16d1b049b1bb9ce4a78244523ac85231d11041",
+          "crc": 2815089633,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow-native-font2.log",
+          "bytes": 185,
+          "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+          "crc": 503723559,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow-native.json",
+          "bytes": 1752983,
+          "sha256": "a38888627c7a94a1592b53838dec5303fbb4a6e2095bf8653ce1a88eadfe070a",
+          "crc": 1832669004,
+          "mode": 33188
+        },
+        {
+          "path": "default-narrow.log",
+          "bytes": 185,
+          "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+          "crc": 503723559,
+          "mode": 33188
+        },
+        {
+          "path": "default-wide-native.json",
+          "bytes": 1754868,
+          "sha256": "1b51129e49663bde9f6a51a6cd0b3de019a3aec2db20c240f98681e4d440b00b",
+          "crc": 2918727004,
+          "mode": 33188
+        },
+        {
+          "path": "default-wide.log",
+          "bytes": 185,
+          "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+          "crc": 503723559,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2979,
+          "sha256": "5b3a661f0c4ebac01b080ae13692e4867b02920d3973e68a5b5192f6f69ad891",
+          "crc": 2121015246,
+          "mode": 33188
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "geometry-stress195-not-zoom-native.json",
+          "bytes": 1904119,
+          "sha256": "d1e131169bca6a74723271ba44dbe2c09eec7cefd60886d7dafb1bf5b944038e",
+          "crc": 786795355,
+          "mode": 33188
+        },
+        {
+          "path": "geometry-stress195-not-zoom.log",
+          "bytes": 641,
+          "sha256": "60d346110b06d130143259ec0b9c4c2bede7059c32784aac4932b449ad31ee9e",
+          "crc": 3280280196,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+          "crc": 707685492,
+          "mode": 33188
+        },
+        {
+          "path": "narrow-native-font2-native.json",
+          "bytes": 1861140,
+          "sha256": "4c42c08ad8c34a0f8bb305dd21ae357d8af96957de17f218bbc12825d91c7c6e",
+          "crc": 3743568888,
+          "mode": 33188
+        },
+        {
+          "path": "narrow-native-font2.log",
+          "bytes": 641,
+          "sha256": "60d346110b06d130143259ec0b9c4c2bede7059c32784aac4932b449ad31ee9e",
+          "crc": 3280280196,
+          "mode": 33188
+        },
+        {
+          "path": "narrow-native.json",
+          "bytes": 1786484,
+          "sha256": "9d344f2e1e78f58cf8386b9c4dd58de57b282450c91b3d1a150847e95070ac32",
+          "crc": 2643080572,
+          "mode": 33188
+        },
+        {
+          "path": "narrow.log",
+          "bytes": 641,
+          "sha256": "60d346110b06d130143259ec0b9c4c2bede7059c32784aac4932b449ad31ee9e",
+          "crc": 3280280196,
+          "mode": 33188
+        },
+        {
+          "path": "native-submodule-pins.log",
+          "bytes": 202,
+          "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+          "crc": 4050951216,
+          "mode": 33188
+        },
+        {
+          "path": "restore.log",
+          "bytes": 5649,
+          "sha256": "5c10c720b0cc51f2a61fdd14f87eba9374fb27ca50cefc068de42b08f39f01f1",
+          "crc": 27823104,
+          "mode": 33188
+        },
+        {
+          "path": "result.json",
+          "bytes": 17813,
+          "sha256": "01d18beebbf188b8e9968a74abb8880f1b092d2a38238f1a4fd948f00bfa1ad0",
+          "crc": 1371392161,
+          "mode": 33188
+        },
+        {
+          "path": "selected-native-binary-after.json",
+          "bytes": 141358,
+          "sha256": "b70907d0015a0acc88146a4b2d609ca080018c76ba7506dc27af15e8d79af132",
+          "crc": 2751987261,
+          "mode": 33188
+        },
+        {
+          "path": "selected-native-binary-before.json",
+          "bytes": 141358,
+          "sha256": "b70907d0015a0acc88146a4b2d609ca080018c76ba7506dc27af15e8d79af132",
+          "crc": 2751987261,
+          "mode": 33188
+        },
+        {
+          "path": "selected-source-after.json",
+          "bytes": 6269,
+          "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+          "crc": 701098382,
+          "mode": 33188
+        },
+        {
+          "path": "selected-source-before.json",
+          "bytes": 6269,
+          "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+          "crc": 701098382,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 637,
+          "sha256": "dd161cd73a66f3576edbd10143b4dff758402d8688d408b788efe3bed7916241",
+          "crc": 4229989806,
+          "mode": 33188
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 673,
+          "sha256": "59f30d42ac822727a6374de082d1aab01210877776405273f54106dde52f80f8",
+          "crc": 97235448,
+          "mode": 33188
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1306876,
+          "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+          "crc": 471180625,
+          "mode": 33188
+        },
+        {
+          "path": "wide-native.json",
+          "bytes": 1755730,
+          "sha256": "7249fa09957853e7801f87168c4036e991d10a8564a9bff506284ac202916883",
+          "crc": 134029255,
+          "mode": 33188
+        },
+        {
+          "path": "wide.log",
+          "bytes": 641,
+          "sha256": "7fab6679ac575e9808673cbc019d12ffd37a24b353b7105f361f47db135a6d5f",
+          "crc": 1146321858,
+          "mode": 33188
+        }
+      ],
+      "actualResult": {
+        "status": "FAIL",
+        "variant": "proposed",
+        "expectedGroups": 7,
+        "expectedChecks": 64,
+        "executed": 64,
+        "passed": 56,
+        "failed": 8,
+        "notRun": 0,
+        "groups": [
+          {
+            "name": "narrow",
+            "state": "FAIL",
+            "nativeResultSHA256": "9d344f2e1e78f58cf8386b9c4dd58de57b282450c91b3d1a150847e95070ac32",
+            "bytes": 1786484,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": false
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": true
+              }
+            ],
+            "actualFailures": 2,
+            "executed": 13,
+            "passed": 11,
+            "failed": 2,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": false
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": true
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "narrow-native-font2",
+            "state": "FAIL",
+            "nativeResultSHA256": "4c42c08ad8c34a0f8bb305dd21ae357d8af96957de17f218bbc12825d91c7c6e",
+            "bytes": 1861140,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": false
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": true
+              }
+            ],
+            "actualFailures": 2,
+            "executed": 13,
+            "passed": 11,
+            "failed": 2,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": false
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": true
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "geometry-stress195-not-zoom",
+            "state": "FAIL",
+            "nativeResultSHA256": "d1e131169bca6a74723271ba44dbe2c09eec7cefd60886d7dafb1bf5b944038e",
+            "bytes": 1904119,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": false
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": true
+              }
+            ],
+            "actualFailures": 2,
+            "executed": 13,
+            "passed": 11,
+            "failed": 2,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": false
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": true
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "wide",
+            "state": "FAIL",
+            "nativeResultSHA256": "7249fa09957853e7801f87168c4036e991d10a8564a9bff506284ac202916883",
+            "bytes": 1755730,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "actualFailures": 2,
+            "executed": 13,
+            "passed": 11,
+            "failed": 2,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Wave native outer extent fits viewport",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave button fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every actual Wave input fits horizontally",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph range is retained",
+                "passed": true
+              },
+              {
+                "name": "Every full native Wave glyph fits assigned bounds",
+                "passed": false
+              },
+              {
+                "name": "Every full native Wave text stays inside root",
+                "passed": true
+              },
+              {
+                "name": "Actual wrapped siblings never overlap",
+                "passed": true
+              },
+              {
+                "name": "Canonical label projections are complete",
+                "passed": true
+              },
+              {
+                "name": "Native controls keep usable focus and names",
+                "passed": true
+              },
+              {
+                "name": "Deliberate waveform keeps local horizontal scrolling",
+                "passed": false
+              }
+            ],
+            "nativeExit": 1,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "default-narrow",
+            "state": "PASS",
+            "nativeResultSHA256": "a38888627c7a94a1592b53838dec5303fbb4a6e2095bf8653ce1a88eadfe070a",
+            "bytes": 1752983,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "actualFailures": 0,
+            "executed": 4,
+            "passed": 4,
+            "failed": 0,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "nativeExit": 0,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "default-narrow-native-font2",
+            "state": "PASS",
+            "nativeResultSHA256": "bb916276d622c3ad9eb53ef9f79cd81451d9dc08b8554b7426a4d46098d7a934",
+            "bytes": 1784919,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "actualFailures": 0,
+            "executed": 4,
+            "passed": 4,
+            "failed": 0,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "nativeExit": 0,
+            "negativeIsAcceptance": false
+          },
+          {
+            "name": "default-wide",
+            "state": "PASS",
+            "nativeResultSHA256": "1b51129e49663bde9f6a51a6cd0b3de019a3aec2db20c240f98681e4d440b00b",
+            "bytes": 1754868,
+            "actualChecks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "actualFailures": 0,
+            "executed": 4,
+            "passed": 4,
+            "failed": 0,
+            "checks": [
+              {
+                "name": "Actual native fonts equal requested baseline factor",
+                "passed": true
+              },
+              {
+                "name": "Actual native client is requested width",
+                "passed": true
+              },
+              {
+                "name": "Outer policy is opt-in only",
+                "passed": true
+              },
+              {
+                "name": "Default owner host behavior is unchanged",
+                "passed": true
+              }
+            ],
+            "nativeExit": 0,
+            "negativeIsAcceptance": false
+          }
+        ],
+        "scope": "Actual native Render/parser/font/glyph geometry with scripted bindings and availability; dispatch always throws. Native font2 and viewport195 are NOT browser zoom. No Wave model/audio/storage/action/AT/full-parity acceptance.",
+        "sourceCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+        "sourceLedgerSHA256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+        "driverSHA256": "04cabfe1c849afb3e9d9a1b2735b025d90cc7771f245403a33a8966119a9c8da",
+        "entrySHA256": "ead4936f62882fd2ac3f3847241a4253eba8c8bbf6c0f149eeb53c6a83f34139",
+        "apphostSHA256": "cc960c260be0a3319be2f99714904b7548913e5da7a039371f13fa642182a680",
+        "error": "RuntimeError('Proposed actual64 native geometry outcomes did not pass')",
+        "selectedSourceAfterUnchanged": true,
+        "selectedBinaryAfterUnchanged": true
+      }
+    },
+    {
+      "kind": "write-package-index-overflow",
+      "id": 11310468403,
+      "bytes": 389413,
+      "sha256": "e8e81e5b1286838dc4471edcdf355384d28a251b1a5545d330c4da7cceb1748c",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-package-index-overflow.zip",
+      "gitBlob": "485e7f7200c6fae61dd8a55347678f9e0316a051",
+      "rootWholeRemoteBodyReadback": true,
+      "originalActionsOuterWholeBodyReadHere": true,
+      "temporarySourcePath": "/workspace/attachments/0a547b16-4aff-459f-b011-86a3b108167c/write-package-d93-original-index-overflow.zip",
+      "temporaryRetired": false,
+      "members": [
+        {
+          "path": "diagnostics/commands.json",
+          "bytes": 3297,
+          "sha256": "5b66bf4c65e8414771ef6e61fef0c0a236c356cf1d932348cfe9b750ee3ce1ef",
+          "crc": 546672499,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/dotnet-info.log",
+          "bytes": 3194,
+          "sha256": "2a2f2be0512496ebcc108094c48143f8a90bcb46b78d263648449c3c481d7bba",
+          "crc": 4226940602,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/git-head.log",
+          "bytes": 41,
+          "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+          "crc": 707685492,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/resource-latest.json",
+          "bytes": 691,
+          "sha256": "4d0e084135f8e2f5849546d3edac995abb5b2a79f8a56833f5be2c75a32c308c",
+          "crc": 3816429437,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/restore-fixture.log",
+          "bytes": 568,
+          "sha256": "de6c9999a042a746b8a9e67c952b0443b7ea082c2025ca03558aa3bd22b8a831",
+          "crc": 3745027268,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/result.json",
+          "bytes": 1617,
+          "sha256": "d0ab74bbab58eb043f3eef3cf80f89058b8e0cb327799c94cc8404fd8477f17f",
+          "crc": 2065057668,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/source-after.json",
+          "bytes": 98453,
+          "sha256": "04616275242a1e6d62a6c28e9ff5e97567678b6e656996f32b60686eb6f91032",
+          "crc": 1098021696,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/source-before.json",
+          "bytes": 98453,
+          "sha256": "04616275242a1e6d62a6c28e9ff5e97567678b6e656996f32b60686eb6f91032",
+          "crc": 1098021696,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/source-tree-pins.log",
+          "bytes": 1306876,
+          "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+          "crc": 471180625,
+          "mode": 33188
+        }
+      ],
+      "actualResult": {
+        "state": "FAIL_OR_INCOMPLETE",
+        "commit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+        "browserGroupsExpected": 9,
+        "scope": "Actual native package chooser/import, physical selection + typed CUI Bold, real IDB save/history, download/readback and cold browser process reopen; NOT raw Space-input/donor/fullWrite/permissions/provider acceptance",
+        "error": "RuntimeError('Bounded selected-assets index exceeded')",
+        "normalFamilies": true,
+        "processFamiliesClosed": true,
+        "resourceBeforeFinalReceipt": {
+          "taskLogicalBytes": 1940288,
+          "taskPositivePathPeakBytes": 1940288,
+          "publisherCacheBaselineBytes": 1833156624,
+          "publisherCacheCurrentBytes": 1833156624,
+          "publisherCachePositiveGrowthPeakBytes": 0,
+          "publisherHttpBaselineBytes": 400937495,
+          "publisherHttpCurrentBytes": 400937495,
+          "publisherHttpPositiveGrowthPeakBytes": 0,
+          "combinedPositivePathPeakBytes": 1940288,
+          "taskCategories": {
+            "diagnostics": 1511582,
+            "artifacts": 428501,
+            "tmp": 0,
+            "cli": 205
+          },
+          "freeBytes": 87044837376,
+          "cap": 192000000,
+          "floor": 256000000,
+          "qualification": "Before/after command samples; deleted-history maxima retained; transient unsampled allocations not claimed"
+        },
+        "accepted": false,
+        "acceptanceAuthority": "Actual complete stdout and natural process exit only; this internal receipt is deliberately nonaccepting",
+        "custody": "Publisher all-member seal; native runtime hashes; explicit synthetic source/tampered/download packages + expected actual IDB canonical JSON are uploaded. Browser profile/cache/native binaries excluded."
+      }
+    }
+  ],
+  "predeclaredTemporaryPlans": [
+    "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/d93-five-native-original-temporary-transport-plan.json",
+    "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/d93-package-original-temporary-transport-plan.json"
+  ],
+  "scope": "Actual recorded failures retained. No all-app, responsive browser, accessibility, resource or provider acceptance inferred. Functional native results and not-run outcomes remain exact in each original result.json."
+}
