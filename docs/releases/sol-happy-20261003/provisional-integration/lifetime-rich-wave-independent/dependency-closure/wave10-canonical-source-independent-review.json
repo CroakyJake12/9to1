@@ -1,0 +1,131 @@
+{
+  "recordedUTC": "2026-10-04T15:39:27.111964+00:00",
+  "state": "ACK_PROVISIONAL_COMPLETE_CANONICAL_WAVE10_SOURCE",
+  "proposal": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "receivingBase": "28e48b64acb96763dda2bd67e9759922442a31e6",
+  "browserOnlyIntermediate": "3333749b62b2393a667f9b7f30b81be220cc8f9b",
+  "canonicalRefs": [
+    "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+    "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "f7c0473cea59fa173b79e0ecc184725db7a29fb6"
+  ],
+  "exactCompletePaths": [
+    {
+      "path": "9to1 Workspace/Wave/WaveProject.cs",
+      "bytes": 18706,
+      "sha256": "8ce0273faff2f8b47c4cf15a57838d2defeed6be115e6a3f32700132f6a44ff2",
+      "treeEntry": "100644 blob b15043b6058983db177fee8ea7d746828cf03bbd",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectEdits.cs",
+      "bytes": 8427,
+      "sha256": "ededd91053649b22ab7ed074381813ac72e9e453fbea9b7e14e119fa7201a4bf",
+      "treeEntry": "100644 blob 9c566d9dae8ef0042466f63307eb7b61d77a5029",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveTimelineAnnotations.cs",
+      "bytes": 6681,
+      "sha256": "e824f1add1da06eec8d9be15e0091f0bc7b6ac32f038de3a0154fc2dadd7841a",
+      "treeEntry": "100644 blob a69cbf47f8a3c592434997a8f428f618b96ca3c2",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
+      "bytes": 787,
+      "sha256": "a8ba16905a071620495ba18023923c31f3eb3a64b7bb8bad9908655fa1fbc2d1",
+      "treeEntry": "100644 blob b124d849d14a568c9e60552bd0de2e95d098034f",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/Program.cs",
+      "bytes": 38203,
+      "sha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f",
+      "treeEntry": "100644 blob 6f7c0b5d9275637a5f4a4de7be76ae3273eeeb9f",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMarkersRegionsWorkflowTest.cs",
+      "bytes": 11450,
+      "sha256": "cb497db3bd2fc7741e92c5391e19916ed1809278d8a55d7e9d18f17b68afd559",
+      "treeEntry": "100644 blob 8c4569987a037260dbcf3b3b6fadee5038b3720f",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WavePcmFormatsWorkflowTest.cs",
+      "bytes": 8197,
+      "sha256": "d17caa301099f48390fd0d0c42d62b6fdedd9fcd4c5307081b6e9c026baf125e",
+      "treeEntry": "100644 blob 4e7fe8164fbe093872d92acb87cf4db051d08ffe",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectWorkflowTest.cs",
+      "bytes": 5695,
+      "sha256": "2a2fd74a60ac69e728dbd3f34e18b2258ff403fd919cb4e0ddcaa3924aae9fb8",
+      "treeEntry": "100644 blob aa0d7ef294d4ea3a0576ad19cb45614d6d5b797e",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectCommands.cs",
+      "bytes": 6129,
+      "sha256": "96013882a15c7efa1ece9937b009ad62598bc274053c2d7aaa99d3305da1b8f2",
+      "treeEntry": "100644 blob 2a1be75111d988e217f7739b4d8edb065a0c2932",
+      "all5WholeCanonicalEqual": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectService.cs",
+      "bytes": 11629,
+      "sha256": "f4c01a3e576e07f5e26aa88030ded48f9f9a1fb8d8c950c40a6bda197768d13c",
+      "treeEntry": "100644 blob dd305a4b110f4ee8e83617baf1ba8af26b984850",
+      "all5WholeCanonicalEqual": true
+    }
+  ],
+  "totalSourceBytes": 115904,
+  "outside10AllTreeEntriesConserved": true,
+  "sourceCleanCurrent": true,
+  "protectedExamples": [
+    {
+      "path": "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+      "treeEntry": "100644 blob e3e78f5e14f91b78dda8d2855726cffc62600ada",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Wave/Engine/NineToOne.Wave.BrowserEngine.csproj",
+      "treeEntry": "100644 blob ccf5a0c74de8fca55333b2d8f762af8e99b20e0d",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Wave/Engine/generate-owner-decoder.py",
+      "treeEntry": "100644 blob c8b6d9a1e862b6e5ae5b2d259c7aaa77d3e0cd65",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "treeEntry": "100644 blob 5f4fdfc067396c5882c854e9240acaefc88ce1d6",
+      "unchanged": true
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "treeEntry": "100644 blob 0af4ee1802cc4ba10dafacacc4ed9c92bb9027a4",
+      "unchanged": true
+    }
+  ],
+  "originalAssertions": {
+    "oldProgramSha256": "e41337ab4f3b9346805f05cf1d67dde4359b510104c9d724c4bd695ccf480325",
+    "canonicalProgramSha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f",
+    "originalRequireCalls": 28,
+    "newRequireCalls": 42,
+    "everyOriginalCallBodyRetainedExactly": true
+  },
+  "review": "Complete canonical5 browser models/decoder source plus four referenced native Main dispatch helper bodies and transitive WaveFilesProjectService. Native project still whole Core+Infrastructure references; four required public Core.Media contracts already exact canonical. No Source/GES/GStreamer compiler trees introduced.",
+  "productionBoundary": "Files service consumes injected source/decoder only; validates file/asset/revision/SHA identities, retains leases through export, stages non-overwrite destination, disposes leases on completion and failure. No production adapter registration or provider access added by source composition.",
+  "qualification": [
+    "Whole owner bodies EEC=A63=Bbase=22d=f7 selected exactly; no reconstructed contract, prefix splice or source rehash.",
+    "Browser-only5 intermediate cannot represent complete native project and is not globally eligible; this10 closes actual dispatch compilation source.",
+    "Retained original28 expectations remain meaningful alongside canonical42; no lowering counts or oracle substitutions.",
+    "Native/source-linked local controls adjudicated in separate readback; real browser, Files authority/device/decoder/provider/full app/native owner adoption remain open."
+  ]
+}

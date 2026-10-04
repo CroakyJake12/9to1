@@ -1,0 +1,64 @@
+{
+  "recordedUTC": "2026-10-04T15:32:01.172317+00:00",
+  "sourceCommit": "aecbd3563b49a3dad4578d5ac3ab58bb7f7a013a",
+  "indexSha256": "6c7c106b1b75f4a1ad50d5519a2d37971d47d1e7fdb7d0161f8b2477f0fa3546",
+  "payloadCount": 164,
+  "totalBytes": 9563935,
+  "allModePathsAdditiveDocsOnly": true,
+  "allFilesRegularUniqueExactHashBytes": true,
+  "allGzipOriginalHashesVerified": [
+    {
+      "path": "review/receiving-before-tree.txt.gz",
+      "compressedBytes": 514462,
+      "originalBytes": 2483245,
+      "sha256": "5cb0ed0dbaea5441ab7d65a30845cd6e55573e9b34a59e51c0472e29294823d1"
+    },
+    {
+      "path": "runs/normal-release/diagnostics/source-after.json.gz",
+      "compressedBytes": 1165431,
+      "originalBytes": 4484443,
+      "sha256": "92bb6e5b0967c0cf59cad01524d6a03f7561dc5c97e0022f7ed34810ba02508e"
+    },
+    {
+      "path": "runs/normal-release/diagnostics/source-before.json.gz",
+      "compressedBytes": 1165431,
+      "originalBytes": 4484443,
+      "sha256": "92bb6e5b0967c0cf59cad01524d6a03f7561dc5c97e0022f7ed34810ba02508e"
+    },
+    {
+      "path": "runs/picture-eec-closure-release/diagnostics/source-after.json.gz",
+      "compressedBytes": 1165426,
+      "originalBytes": 4484443,
+      "sha256": "e0f4ccdc2f898eb2163cc0a05ba5c49690b794a037200a73b7811c2cd877f6e1"
+    },
+    {
+      "path": "runs/picture-eec-closure-release/diagnostics/source-before.json.gz",
+      "compressedBytes": 1165426,
+      "originalBytes": 4484443,
+      "sha256": "e0f4ccdc2f898eb2163cc0a05ba5c49690b794a037200a73b7811c2cd877f6e1"
+    },
+    {
+      "path": "runs/picture-owner-repair-release/diagnostics/source-after.json.gz",
+      "compressedBytes": 1165695,
+      "originalBytes": 4485278,
+      "sha256": "6ca11720de4076bfa3a21ce7168e1afab5766a35c41eec2c76b4d749727c3946"
+    },
+    {
+      "path": "runs/picture-owner-repair-release/diagnostics/source-before.json.gz",
+      "compressedBytes": 1165695,
+      "originalBytes": 4485278,
+      "sha256": "6ca11720de4076bfa3a21ce7168e1afab5766a35c41eec2c76b4d749727c3946"
+    }
+  ],
+  "structuredDocumentsParsed": 62,
+  "strongCredentialPatternHits": [],
+  "vocabularyReviewPaths": [
+    "review/receiving-before-tree.txt.gz",
+    "runs/normal-release/diagnostics/source-after.json.gz",
+    "runs/normal-release/diagnostics/source-before.json.gz",
+    "runs/picture-eec-closure-release/diagnostics/source-after.json.gz",
+    "runs/picture-eec-closure-release/diagnostics/source-before.json.gz",
+    "runs/picture-owner-repair-release/diagnostics/source-after.json.gz",
+    "runs/picture-owner-repair-release/diagnostics/source-before.json.gz"
+  ]
+}

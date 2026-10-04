@@ -1,0 +1,107 @@
+{
+  "status": "ACTUAL_UNCHANGED_NATIVE15_PASS_INDEPENDENT_RECEIPT_READBACK_SCOPED",
+  "sourceCommit": "a0de5ad5c2975c98140be79dfcac884dea0ef76a",
+  "normalProject": "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+  "actualCounts": {
+    "discovered": 15,
+    "executed": 15,
+    "passed": 15,
+    "failed": 0,
+    "notRun": 0,
+    "timedOut": false,
+    "prerequisite": null,
+    "assertions": 138,
+    "exitCode": 0
+  },
+  "build": {
+    "exit": 0,
+    "warnings": 2,
+    "errors": 0,
+    "retainedWarnings": [
+      "CS8602 originaltestline220",
+      "CA1416 BrowserPictureMedia native linked registration"
+    ]
+  },
+  "sourceInputs": 15383,
+  "allFrozenGitBlobsAndCurrentBodySizeShaVerified": true,
+  "beforeAfterSourcesIdentical": true,
+  "allOriginal15NamesAndAssertionsPreserved": true,
+  "criticalPassed": [
+    "Actualcrop/history/save/close/reopen/strictRGBApixelprivacyexport",
+    "Detachedoldinputcannotacceptsynchronouscandidatepublication",
+    "Reentrantnavigationawaitscoherentactualretirement"
+  ],
+  "compiledEntry": {
+    "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests.dll",
+    "bytes": 174592,
+    "sha256": "fd8ef13f33c91ab12f141d78982c1956fed0c90d4db7f29354c3fee7b360c3da"
+  },
+  "compiledApphost": {
+    "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests",
+    "bytes": 78256,
+    "sha256": "539113cd8b25b144650928f32d7f8eca555333c9081e3e25e3ebfbce3a925f07"
+  },
+  "commands": {
+    "count": 9,
+    "allNormalEofFinalEchildClosedFamiliesZeroExit": true,
+    "signals": []
+  },
+  "rawReceiptHashes": [
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/diagnostics/result.json",
+      "bytes": 3814,
+      "sha256": "a97d5b2022c9e0477da8471d8aa3df7618ea46300b8b7cf8d324333cba013e32"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/diagnostics/commands.json",
+      "bytes": 10596,
+      "sha256": "c97083ec1c1f5115e06ae15f45830b7cb65f01a58db4a6519ef16ba957f1acbb"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/diagnostics/picture15-native-results.json",
+      "bytes": 57925,
+      "sha256": "0e32521ca850dacc722e2276758dde14d6a4500739a77d24d9506bc0cb14411c"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/diagnostics/picture15-native.log",
+      "bytes": 1907,
+      "sha256": "540fb633b2eb79ac977d39e70aaebd45d1eb1cb35cddae519aaa7f6af4a7ea6b"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/diagnostics/picture15-build.log",
+      "bytes": 9638,
+      "sha256": "55548de09f579d128eed478c9a73c537e2f8372126403713f6fb53e3999665ef"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/diagnostics/source-before.json",
+      "bytes": 4485278,
+      "sha256": "6ca11720de4076bfa3a21ce7168e1afab5766a35c41eec2c76b4d749727c3946"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/diagnostics/source-after.json",
+      "bytes": 4485278,
+      "sha256": "6ca11720de4076bfa3a21ce7168e1afab5766a35c41eec2c76b4d749727c3946"
+    }
+  ],
+  "original14PASS1FAIL": {
+    "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/diagnostics/picture15-native-results.json",
+    "bytes": 57632,
+    "sha256": "d418392b342762a1a953905a31e5d495667c2f83ed4c92651284a921999039e1",
+    "retained": true
+  },
+  "recipeDifferences": {
+    "NuGetAudit": false,
+    "taskPrivateWritableXDGConfig": true,
+    "cachedActualNuGetPackages": "/workspace/.tools/nuget/packages",
+    "sharedOwnArtifactsAcrossSerialNormalProjects": true,
+    "sourceCompilerTaskSubstitute": false
+  },
+  "qualifications": [
+    "C6 source/binary/receipt/log/custody readback only; no duplicate payload replay/independent build.",
+    "Task-owned source-built outputs reusedserially; actualfresh normalbuild/currentDLL hashes checked. Historicalnegativebinary at sameoutput is notclaimedretained, originalnegative source/result/log receipts remain.",
+    "ActualCUI/Skia/Bitmap/codec/nativePNG withcontrolledapprovedmedia; no actualbrowser9/provider/privateissuer/fullPicture/all29 acceptance.",
+    "OriginalnativeGPS/font/metadata andactualWrite layout failures unwaived; two warnings reported faithfully."
+  ],
+  "browser9": "NOT_RUN_BY_C6",
+  "acceptanceVerified": false
+}
