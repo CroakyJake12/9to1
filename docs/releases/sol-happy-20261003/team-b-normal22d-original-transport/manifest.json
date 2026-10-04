@@ -1,0 +1,31 @@
+{
+  "scope": "Exact original public normal22d inner archive transport; no provider/runtime/fullparity acceptance. Original Actions outer ZIP remains metadata-only.",
+  "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "originalInnerSha256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+  "originalInnerBytes": 35870413,
+  "receiptSha256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+  "sealSha256": "1b1b92c927ab4949cc9f42805db2a243f494af0248f9a0daae42da9f9f6b6f5a",
+  "rows": [
+    {
+      "part": 1,
+      "path": "docs/releases/sol-happy-20261003/team-b-normal22d-original-transport/part01.zip",
+      "bytes": 19977614,
+      "sha256": "013bd6004b4268d303a26e1d679dcd92e710a49ce5d7e6602600be1ce385d55d",
+      "gitBlob": "7460323256351f1330340b4ea7b72271b1808030",
+      "fullRemoteBodyReadback": true
+    },
+    {
+      "part": 2,
+      "path": "docs/releases/sol-happy-20261003/team-b-normal22d-original-transport/part02.zip",
+      "bytes": 16002139,
+      "sha256": "9cd83752b69bbe74868212932a9b0d1a5651858635e7d75149765ef6c1685b42",
+      "gitBlob": "f2265e57751114c1cfa6124df4e2a5fa5a5549fc",
+      "fullRemoteBodyReadback": true
+    }
+  ],
+  "B1FullCustodyReviewSha256": "fb3d2591d697efe5087ad18353c11c9ae2e4c61be9ff5a9bdb5dd558517bddab",
+  "B6FullIndependentCustodyReviewSha256": "36d7f4cd8f31bb25fe636707a1d90339f2131a0e5c5897b554f738aa8087b10f",
+  "rootFull285BodyShaReadback": true,
+  "expandedPublicBytes": 58424254,
+  "publicFiles": 285
+}
