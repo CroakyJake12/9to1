@@ -115,7 +115,7 @@
   "evidenceLocation": "Remote release 7fc259f1b3aaa02952e2d32a8316fd9d0650a814: exact adopted public OAuth and raw identity failures, SDK6 original refusal, source-owned Sites/persistence controls, SDK7 external issuance, new source-only CUI owner receipt and original native custody.",
   "deploymentStatus": "Isolated identity Worker+D1 actually created/migrated/uploaded and closed rollback/restoration verified; HTTPS journeys NOT_RUN; no production routing/cutover",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "c09451936b3d019039040376b4dc554d5ec60716",
+  "candidateCommit": "0fe9953d6ae9f15c5daa8f2703ab576290bdae47",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -205,7 +205,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-04T08:59:25.593477+00:00",
+  "updatedUTC": "2026-10-04T09:07:35.835070+00:00",
   "candidateStatus": "REVIEWABLE_SOURCE_PLUS_ACTUAL_ISOLATED_CLOSED_IDENTITY_DEPLOYMENT_NOT_FULL_ACCEPTANCE",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -521,7 +521,7 @@
     "currentDelivery": "C6acd9acb7/root1b9e105a; actual7829/9964B adapter bodies read and independently pinned; prior0dce/f8de missingbody history preserved"
   },
   "finalEvidenceHandoff": {
-    "releaseHead": "c09451936b3d019039040376b4dc554d5ec60716",
+    "releaseHead": "0fe9953d6ae9f15c5daa8f2703ab576290bdae47",
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
     "state": "OPEN_DRAFT_ACTIVE_PROVIDER_PASS_FULL_ACCEPTANCE_PENDING",
     "acceptedHead": null,
@@ -621,5 +621,11 @@
       "evidence": "ActualsevenpublishedWPpageHTML inputs andtheme styles captured readonly; root hashpackager7/7; no CSS/media/editor/fullparity/canonicalauthoring acceptance",
       "remaining": "MCP request toolcannotcustomJWTAuthorization assetsupload; official authenticatedtransport readiness needed; no credentialexport/networkbypass/partialpreview overwrite"
     }
-  }
+  },
+  "currentCanonicalImportAudit": {
+    "audit": "85d0efa0/root23fcdcb3",
+    "state": "ACTUAL7_CAPTURE_AND14_OWNERPINS_VERIFIED_ORDINARY_PACKAGER_POSITIVE_TAMPER_NEGATIVE",
+    "qualification": "No canonicalIDs/session/parity/activation. Assertion optimization/duplicateID utility limits recorded; boundedcorrection inprogress."
+  },
+  "currentProviderEvidenceIndex": "13payloads includingrootchecks/existingservicefinalread; C6earlier11payloadaudit remainshistorical; existingcake/previewversions match prepass exactly"
 }
