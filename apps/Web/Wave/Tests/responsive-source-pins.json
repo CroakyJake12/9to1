@@ -132,8 +132,8 @@
       "sha256": "a7ee6b0c9f3320fb312a7e6798c572ef15b729b411405531908fe934dc163ec4"
     },
     "apps/Web/Wave/Tests/WaveResponsiveLayoutControls.cs": {
-      "bytes": 14939,
-      "sha256": "0e6a4c530ba504b1236d6e6f5cb5696eae82b9707d4f88653991d8df983b653f"
+      "bytes": 15916,
+      "sha256": "3673f3b150fd79b9dbc5684ffc30c9efd6fdeacc66544d159e52cb408f39c46e"
     },
     "apps/Web/Tests/ci/run-ordinary-native.py": {
       "bytes": 19584,

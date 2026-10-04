@@ -80,6 +80,19 @@ var failures = await session.Dispatch(() =>
         var texts = controls.OfType<TextBlock>().Where(c => c.IsEffectivelyVisible && !string.IsNullOrEmpty(c.Text)).Select(c => new {
             text = c.Text!, bounds = InRoot(c), width = c.Bounds.Width, height = c.Bounds.Height,
             valid = c.IsMeasureValid && c.IsArrangeValid, complete = c.TextLayout.TextLines.Sum(l => l.Length),
+            // Diagnostic only: full-range hit rectangles can include invisible trailing
+            // whitespace advances. Preserve ALL existing checks/tolerance unchanged.
+            lines = c.TextLayout.TextLines.Select(l => new {
+                l.FirstTextSourceIndex, l.Length, l.NewLineLength, l.TrailingWhitespaceLength,
+                l.Start, l.Width, l.WidthIncludingTrailingWhitespace, l.Height, l.Extent,
+                l.Baseline, l.HasOverflowed, l.HasCollapsed,
+                l.OverhangLeading, l.OverhangTrailing, l.OverhangAfter,
+                sourceSpanValid = l.FirstTextSourceIndex >= 0 && l.Length >= 0
+                    && (long)l.FirstTextSourceIndex + l.Length <= c.Text!.Length,
+                sourceSpan = l.FirstTextSourceIndex >= 0 && l.Length >= 0
+                    && (long)l.FirstTextSourceIndex + l.Length <= c.Text!.Length
+                    ? c.Text!.Substring(l.FirstTextSourceIndex, l.Length) : null
+            }).ToArray(),
             glyphs = c.TextLayout.HitTestTextRange(0, c.Text!.Length).ToArray(), padding = c.Padding }).ToArray();
         Check("Actual native client is requested width", Math.Abs(window.ClientSize.Width - width) < 0.1);
         Check("Outer policy is opt-in only", scroll.HorizontalScrollBarVisibility == (optIn && policyIndex >= 0 ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto));

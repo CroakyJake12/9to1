@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 COMMANDS_SHA256 = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
-LEDGER_SHA256 = "162622ca991f8f711ecd3284b8a6241c2042f3ca187ee34a8004d7401a85da44"
+LEDGER_SHA256 = "da86e2875c04b451bbcdccf483519491ddef446dd4a96d478adf1acb703269bd"
 DIRECTORY = "apps/Web/Wave/Tests"
 PROJECT = DIRECTORY + "/WaveResponsiveLayout.Tests.csproj"
 LEDGER = DIRECTORY + "/responsive-source-pins.json"
@@ -82,9 +82,6 @@ def native_result(native, group, variant, record, log):
         raise RuntimeError("Native actual font factor prerequisite failed: " + name)
     if not all(item["passed"] for item in checks[:3]):
         raise RuntimeError("Font/client/host-policy prerequisite cannot qualify a layout negative: " + name)
-    if variant == "proposed" or mode == "default":
-        if failed:
-            raise RuntimeError("Required proposed/default geometry checks failed: " + name)
     return {"name": name, "state": "FAIL" if failed else "PASS", "executed": len(checks),
             "passed": len(checks) - failed, "failed": failed,
             "checks": checks, "nativeExit": record["exit"], "negativeIsAcceptance": False}
@@ -219,6 +216,10 @@ def main():
                 raise deferred
             summary.update(validated)
         if args.variant == "original":
+            # Accept the intended old-layout negative only after every independent
+            # group completed and all unchanged default-policy checks passed.
+            if any(group["failed"] for group in result["groups"] if group["name"].startswith("default-")):
+                raise RuntimeError("Required original/default geometry checks failed")
             critical = result["groups"][0]
             states = {item["name"]: item["passed"] for item in critical["checks"]}
             if states["Wave native outer extent fits viewport"] is not False:
