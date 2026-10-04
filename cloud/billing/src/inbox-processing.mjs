@@ -26,3 +26,18 @@ export async function failEvent(db, mode, eventId, token) {
     .bind(mode,eventId,token).first();
   return row !== null;
 }
+
+// Discovery is read-only and never grants claim ownership or business effects.
+// Every candidate still requires claimEvent and provider/canonical reconciliation.
+export async function listReconciliationCandidates(db, mode, now, limit) {
+  if (!['test', 'live'].includes(mode) || !Number.isSafeInteger(now) || now < 0 ||
+      !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+    throw new TypeError('Invalid reconciliation discovery configuration');
+  }
+  const result = await db.prepare(`SELECT event_id,event_type,provider_created,accepted_at,state,attempts
+    FROM stripe_event_inbox WHERE mode=? AND
+      (state IN ('pending','reconciliation_required') OR (state='claimed' AND lease_until<=?))
+    ORDER BY accepted_at,event_id LIMIT ?`).bind(mode, now, limit).all();
+  if (!result || !Array.isArray(result.results)) throw new TypeError('Invalid reconciliation discovery result');
+  return result.results;
+}
