@@ -143,14 +143,14 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T23:40:42.503514+00:00",
+  "updatedUTC": "2026-10-04T00:11:32.072431+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
-  "candidateStatus": "ACTUAL_BROWSER_AX_STRUCTURAL5PASS_WAVE_CREATE2PASS; KEYBOARD_INPUT_DEFECTS_UNDER_REPAIR; FULL_SCOPE_ACTIVE_UNVERIFIED",
+  "candidateCommit": "94bbf443",
+  "candidateStatus": "CONTINUING_FULL_ACTIVE_SCOPE_NO_GLOBAL_ACCEPTANCE",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -530,12 +530,13 @@
     "remaining": "All active browserapp/typedcrossapp/platform/donor/backendACL/crossclient/restart requirements remain. RichWrite glyph native failure preserved/owner requested; Cards schema/Forms browser store authority/Present/Motion and other active owners continue.",
     "runtimeSourceCommit": "f8de954396326ca4630202fc0daededb6023f28d",
     "privateAsyncProposal": {
-      "state": "SOURCE_PROPOSAL_ONLY_NOT_APPLIED_NOT_COMPILED",
-      "revision": 2,
+      "state": "SOURCE_PROPOSAL05_NOT_APPLIED; B6SOLESDK_MEAINGFUL_NATIVE_REGISTRY_OVERLAP_CONTROLS_STARTED",
+      "revision": 5,
       "rootProposal": "continuation/coordinator/private-context-proposal/manifest.json",
       "behavior": "synchronous detach+all-real-owner-fence before AX/view/cancellation callbacks; then non-vetoable issuedfactory/command drain; ordinaryclose preserves dirty refusal; newprivate registration gated during drains",
       "independentFinding": "B6 JS DOM cleanup preceded owner fence; revision02 changes ordered actual export call and awaited promise; originalrevision retained, tests NOT_RUN",
-      "ownerDependency": "opaque issued-but-not-returned FormHostSession needs actual issuer group revocation handle before any callbacks. Adapter cannot invent authority or treat late-after-return disposal as immediate fence. Browser private registry gate remains in current source."
+      "ownerDependency": "opaque issued-but-not-returned FormHostSession needs actual issuer group revocation handle before any callbacks. Adapter cannot invent authority or treat late-after-return disposal as immediate fence. Browser private registry gate remains in current source.",
+      "newFindings": "Preserved01 JSAXbeforefence error,02 RouteIdcallbackbeforerevoke partial-detach error,03 detachedprivate drains unjoined/latestreplacementlost,04 Appcounterfinalizationrace;05 rootApp completionledger waitsall actualAppresets andclose without cyclicReset join. Legacy AccountSettings consumedbinding/privateclear-before-cancel gap B5 proposalunderway; no all-private-owner acceptance. Forms opaqueissuergroup maintainedcontract stillBLOCKED."
     }
   },
   "LEOwnerContractDependencies": {
@@ -719,6 +720,62 @@
       "bytes": 7580,
       "sha256": "6cdb2e9324e17d283337cdb8d5eacc9bf813a943cf2a7beb5702e7be738fc14d",
       "classification": "independent read-only original/source/evidence review, no SDK/GUI replay"
+    },
+    "PresentBoards": {
+      "sourceDeliveryCommit": "94bbf443",
+      "frozenOwnedFiles": 20,
+      "graphSourcePinsUnchanged": 579,
+      "focusedAssertionsPassed": 98,
+      "actualPresentAssertions": 54,
+      "actualBoardsAssertions": 44,
+      "handoff": "continuation/b2/productivity-gates/handoff.json",
+      "independentSourceReview": "continuation/b1/productivity-source-review/review.json",
+      "reviewSha256": "2e87ed2794d427abbe7f7d073975b18be78bf9b033d6422bb757f0705e0b5d58",
+      "qualification": "Actual originalnativePresentEditor/canvas/codec/repo stagedadmission, separateprocessseed/restart; realBoardsWorkspaceService/Notes CAS/locked View/Edit/lostreceipt/trash/restore. Parentexcluded/unregistered. ActualBrowserApplication rollback notestablished bydirectadmission14; BoardsFeaturecompile-only finalDLL qualified fromearliercorebinary. Browser durable/assets/originalBoardsrenderer/currentpolicy/richAX/donor/fullcompound criteria pending."
     }
+  },
+  "pictureGpsOwnerReproductionDelivery": {
+    "owner": "A2 canonical Picture",
+    "sourceRequestCommit": "219b52d6d078aff56b77ebc1115f6b520a948703",
+    "sourceRequest": "apps/Web/Picture/OWNER-CONTRACT-REQUEST.json",
+    "sourceRequestSha256": "9b586bf640ffe5b36366f14d49888e59983ea46ef9cefec05dfa6a99872dd93f",
+    "artifactCommit": "5b68baeb",
+    "artifactBranch": "artifact/team-b-browser-83c24b2",
+    "artifactPath": "docs/releases/sol-happy-20261003/team-b-picture-gps-preserve-red",
+    "transportManifestSha256": "7700bc5b314ee124f1f5df08f9e34c06d674168a12ccfa519b79206491e82991",
+    "verifiedExactPayloads": 111,
+    "verifiedPayloadBytes": 3442853,
+    "finding": "Actual original PNG XMP GPS51.5,-.12,24 exact CRC/numeric source verified. Existing PictureCropService ExportPng(Preserve) loses all raw GPS nodes while nonlocation title/comment retained. ActualTagLib2.3.0 portablePDB-matched15sources: Xmp GPS getters null/setters empty, Image.File.CopyFrom copies typed fields only. No B-owned engine fork/width/precision relaxation/product patch.",
+    "actualOutcomes": {
+      "run05": "3PASS1FAIL4NOT_RUN first strict GPSpreserve loss",
+      "run06": "7PASS1FAIL0NOT_RUN25 assertions; sameGPSFAIL preserved, independent RemoveLocation/RemoveAll/refusal/source schema casesPASS",
+      "pixels": "67 actual PNG assertionsPASS",
+      "controlledClose": "8actualnative cases43assertionsPASS; firstUI-context consolehangexit143 preserved"
+    },
+    "qualification": "Native only, package sources/oldfixturecorrections/rawsource+export/logs/frozenbeforeafter delivered. FixtureDLL transport is run06 explicitly qualified; original05 source/log/manifest retained, not relabeled compiled witness. Browser/fullPicture/donor/crossclient pending."
+  },
+  "sealedFocusBrowserCandidate": {
+    "sourceCommit": "219b52d6d078aff56b77ebc1115f6b520a948703",
+    "publishRoot": "/tmp/team-b-artifacts/browser-219b52d6/wwwroot",
+    "manifestSha256": "ff6fc954c9d61fa14a24a822f4b5407482026e292de3f8eb0320293fb58bc411",
+    "actualExit": 0,
+    "sourceInputsBeforeAfterIdentical": 4594,
+    "assets": 267,
+    "assetBytes": 56960741,
+    "focusSourceSha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9",
+    "actualWave14": {
+      "runner": "e14337942c67a8ceef65e392d73d8721392a137c8818eb13346a8e1d056745b5",
+      "executed": 5,
+      "passed": 4,
+      "failed": 1,
+      "notRun": 9,
+      "runtimeErrors": 0,
+      "failure": "Undo availability sampled before owner-visible async operation completed: canonical IDB rev2 but actualUIstatusrev1/Create/Import/Undo allbusy disabled. NoUndo command executed.",
+      "newPass": "Same immediate0.5 import actualTimelineStartFrame24000/48000 andtrimSourceStart6000/length36000/rev2 PASS unchanged assertions.",
+      "evidenceManifestSha256": "edc218e72341880ec14da80c971acc20ed79e3750f116b5e4f4520edb657a80e",
+      "strictBrowserServerPortClosed": true,
+      "plannedCorrection": "Keeporiginale143RED. Separate bounded actualownerNotBusy(Create enabled)+sameProjectGUID+expectedUIrevision after THISOWNER acknowledged operations only, then unchangedstrictUndo/history/identity/frame/revision asserts. Externalwinner/conflict purecanonicalobserver unchanged. Sourcepeer awaiting, replayNOT_RUN."
+    },
+    "qualification": "Exact219 immutable candidate only; current94bb includes excludednewProductivitysource, no newbrowserbuildrelabeled. No full14/nativeIME/platform/privateauthority/globalreleaseacceptance."
   }
 }
