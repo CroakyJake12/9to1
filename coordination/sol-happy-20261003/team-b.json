@@ -153,7 +153,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T03:18:45.199283+00:00",
+  "updatedUTC": "2026-10-04T03:47:52.238389+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -907,7 +907,17 @@
   "formsRespond8Progress": {
     "actual": "Respond01 compileCS4007line114, Respond02 nextcompileCS4007line126 exit1/0runtime/all8+childNOT_RUN preserved. Original4029 and new4037 inputs unchanged, noWeb root inputs. Conservativefirst+second159043584B under300MiB.",
     "repaired03": "All remaining5 awaitbytes hoists preserve byte equality and firstSave Response-null sampled before any awaitedread/cleanup. Only126 actualnewfailure; other4 source-inspection findings. B2peer2f8c6decd542b65ac7315f3fe017acbfbce79a62a683bef40b222acde6ba9e66, ready03manifest71e608/retryNOT_RUN.",
-    "gate": "Native firstcall rootUUIDreplacement prediction not runtime failure yet. No browser publicrespondent authority."
+    "gate": "Native firstcall rootUUIDreplacement prediction not runtime failure yet. No browser publicrespondent authority.",
+    "resource03": {
+      "resultSha256": "771a3161d61851762a00e07b1489988a1525c0dfd56b4efec291924fb0df6172",
+      "exitCodeRaw": 0,
+      "state": "RESOURCE_SETUP_STOP_NOT_COMPILE_OR_ACCEPTANCE_PASS",
+      "executed": 0,
+      "notRun": 8,
+      "childNotRun": 2,
+      "actual": "Monitorstopped79.55s duringdependencycopyburst; carry159MB expanded599MB, no stdout/native cases. All4037inputsunchanged/ownedgroupno liveprocesses. Partialobj fixtureDLL doesnotimply completedbin/runtime.",
+      "next": "Source-onlyLinux-x64frameworkdependent+actualapphost resource04plan8b677a13; unchanged03tests/assertions,700MiBcarry/100MiBincremental/256MiBheadroom gates; no newrunyet."
+    }
   },
   "quotaColdNative05": {
     "actual": "Three actual native IndexedDB write attempts with active quota1 before first cold context access:3 genuine DOMException QuotaExceededError code22 transaction ABORT; both projects/summaries retained exact revision0/64B/hash. Six distinct recorded/reaped browser PIDs, port rebind PASS. No Wave product acceptance inferred.",
@@ -986,8 +996,30 @@
     "independentConsumerReviewSha256": "a289454d1f16ccf4746918b1b3c58e1d510a44cae626ade8e98f5ecd467ea8dc",
     "actualFailure": "Immutable219 actual native SignIn button opens popup then closes before anyissuer requests. Native loader passes view lifetime as caller token; private reset disposes loader/cancels token -> original BrowserAccountSignIn Cancel -> broker abort before metadata. Source causality independently confirmed; original browser1PASS1FAIL8NOT_RUN retained.",
     "requestedChange": "ACK exact193c two-file optional lifetime-aware dispatcher API/acceptedButton branch, or deliver canonical successor. Separate view token from true external caller token; shared loader must contain no account names/policy. B-owned consumer transfers only already admitted sign-in/confirmed mutation at the existing broker boundary, retaining all actual caller cancellation and ordinary read/profile view cancellation.",
-    "acceptanceGates": "Actual original Button baseline3 NOT_RUN, expected meaningful1FAIL2PASS; proposed canonical/consumer compile and same controls plus prehandoff cancel/truecaller/terminaldrain/genuineissuer journeys pending. No private CUI fork/actor/default grant.",
-    "priorRequests": "Hero one-wrap9247, Space35c, glyph metric/native editor AX and PictureGPS remain separate exact pending owner requests. Latest A02:39 contains no new exactACK for these."
+    "acceptanceGates": "ExactA1193ctwofilesACK/successor remainsrequired before proposedCore/Loader+consumer compile/same3 controls+prehandoff/truecaller/terminaldrain/genuineissuercases. Originalactual3 independentlyreproduced2PASS1FAIL.",
+    "priorRequests": "Hero one-wrap9247, Space35c, glyph metric/native editor AX and PictureGPS remain separate exact pending owner requests. Latest A02:39 contains no new exactACK for these.",
+    "actualOriginalBaseline": {
+      "discovered": 3,
+      "executed": 3,
+      "pass": 2,
+      "fail": 1,
+      "skipped": 0,
+      "exitCode": 1,
+      "executedManifestSha256": "d81515c8685dea882f59603477a0e792ebaf3102109c71ff745076aa7f31dab2",
+      "independentRecordedReviewSha256": "462221c77c70db2e2f2d396286c3f0739c7b5251ea5ca099ff51cd00cd78e563",
+      "independentActualReplayReviewSha256": "d61e8c4a4fae19631bde67530bc33b21dc6991b884cd64edaad8ca1a5bb8cef8",
+      "actualFailure": "RealcanonicalSignInButton dispatch callback1, suppliedcaller token cancelledbyviewreset, continuation0, privateEmptytrue. Readtrue-drain and genuineexternalcaller controlsPASS. FailedsigninsecondclickassertionNOT_RUN. Scriptedlifecycleboundary/nativeheadless; no provider/browseracceptance."
+    },
+    "portableReproducer": {
+      "artifactCommit": "5dee1dac36f40828c74c50b269064bc23b24432b",
+      "path": "docs/releases/sol-happy-20261003/team-b-cui-account-lifetime-owner-request/actual-loader-baseline03",
+      "manifestSha256": "726472dcea555cadf71d1576634cfa2b26c10ffcafa2779220ec9ef547b89246",
+      "files": 31,
+      "runtime04ZipSha256": "2b5557da11375d8574618b432e5f2feccdab981a1fcacf6b071235a6ae7160f0",
+      "runtime04ZipBytes": 10194992,
+      "runtimeFiles": 40,
+      "independentReplay": "Fresh extraction/samecompiledDLL3exactcontrols/expectedoriginalruntime+wrapperexit1/all40beforeafterunchanged/ownedprocessgroupabsent. Original03packagingwrapperflawsandalllogs preserved. Native10Linuxruntime required; no install/build/network."
+    }
   },
   "sealedMediaRepairBrowserCandidate": {
     "sourceCommit": "fe3dbaef2629e2e556ab478e5dd42059e3e6ade7",
@@ -1051,12 +1083,41 @@
     "scope": "Only freshlygenerated untracked Accounts/Tests bin/obj174 exactverifiedarchivedduplicates removed. Source/rawfailures/actualreports/B5native12+loaderprobe/rootTestsbin untouched; archive+permissions/mtimeinventory enablesrestore. Perprojectrestore neededbeforeSDK."
   },
   "currentExecutableQueue": {
-    "actual": "B6Wave14 strictGUIreleased. B5 soleSDK actualoriginalCUIButton3 boundedreuse33managed+2nativeDLLs; expectedselfresetred meaningful. Home native20 exact8041/all15pins B6dcf4 clear queuesnext; Respond03 B2clear ready, thenfresh8041publication/realinterop, Data17realcacheonly, originalSQLiteSchedule3/concurrency1, Files17/Sites18 explicitnewrootconsumption."
+    "actual": "B6portableoriginalCUI3 replaycompleted/released. B5Status3originalandcandidateallPASS/released. RootsoleSDKpublishingexact8041 expandedtrackedWave/Write ownercuts; independentbrowserInterop7/Wave14 audits followsealedreceipt. Homepublicflag2 nativeboundedexistingDLL cohort preparation; Respond04/Data17/Planner1+Schedule3/Games4/Files17/Sites18/originalSpaceguardedreference/maintainedreadHTTP6 queuedactualresourcegates.",
+    "owners": "LatestA02:39/C23:48 have no newexact193c/742/35c/Glyph/PictureACK/serviceports. No allbrowserblocked/main/index/acceptedHead/release/deployclaim."
   },
   "specificationMetadataRecheck": {
     "readUTC": "2026-10-04T03:18:45.199283+00:00",
     "modifiedUTC": "2026-10-03T21:06:10.712Z",
     "state": "LIVE_METADATA_UNCHANGED_FROM_FULL_CURRENT_8534PARAGRAPH_READ",
     "scope": "Currentfull31app/LE01-15/SolHappy/Terraform spec stillauthority; noolderTBDexport."
+  },
+  "homeResponsiveJointOwnerAckRequest": {
+    "owner": "TeamA A1 canonicalHomeCUI; B-ownedperHomehostingmetadata",
+    "state": "EXACT_JOINT_SOURCE_ACK_REQUESTED_NO_PRODUCTION_ADOPTION",
+    "artifactCommit": "5dee1dac36f40828c74c50b269064bc23b24432b",
+    "branch": "artifact/team-b-browser-83c24b2",
+    "path": "docs/releases/sol-happy-20261003/team-b-home-responsive-joint-owner-request",
+    "zipSha256": "e27025c269a160dc3f36eaf79506275e60f7176f53309d496511e0ac9ba126d8",
+    "zipBytes": 5192627,
+    "members": 72,
+    "manifestSha256": "bff8456ea4775ee46a6973a156f94ccfe0cc4c67b15b42ffb57b850ea111eee0",
+    "originalCuiSha256": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571",
+    "proposedCuiSha256": "74298cc25b631bb3a63902767abe6d17cbfc4aa4e134a65ec571762cba7dfb69",
+    "sharedPatchSha256": "e861e042048a53b162f2716f88de086591edb1421cdd5a0b69a50a992d15dbe0",
+    "independentRecordedNativeReviewSha256": "21c114acac69fce81124db91b84d1dee3e88fc060faaaa80153d9834c60b100d",
+    "independentJointSourceReviewSha256": "981fd2e1d7e178da1ca027d45020d81f43607fc4ecb1806a3193d9dff27f006a",
+    "actual": "7791sourceinputs+23explicitpinsunchanged, nativebuild0/all7cohorts140checks. Currentcanonical36015PASS5FAIL/root1031. IntrinsicAuto18PASS2FAIL/root988; finitehostalonecanonical14PASS6FAIL. JointintrinsicDisabled360+1440same20eachPASS. Allfirstreds retained.",
+    "requestedChange": "ACK exact00589to742104nodes/layout-only10already-supportedWrapPanels+maxwidth/wrapping, ormaintainedsuccessor. B-ownedoptionalConstrainHorizontalLayout defaultfalse optsHomefallbackonly intoexistingfiniteScrollViewermeasure; no globalreinterpretation/secondHome/authbypass.",
+    "pending": "Proposedpublichostflag fixture same20wide/narrow AUTHORED_NOT_RUN; originalgreen usedexplicitdiagnosticmutation. ExactownerACKneededbeforejointadoption; realbrowser/touch/keyboard/AT/200percent/themestillpending."
+  },
+  "accountStatusCaptionNativeComparison": {
+    "executedManifestSha256": "ae68ccbc27b576605761e69aff67c52948b8aa96989fdc7f49b79df659fc8dc2",
+    "originalPass": 3,
+    "proposedPass": 3,
+    "sourceInputs": 44,
+    "changedInputs": [],
+    "classification": "SOURCE_HYPOTHESIS_REJECTED_NO_PRODUCT_EDIT",
+    "actual": "OriginalrealTextBlock nativepeerGetName exposesactualboundText initially+Refresh. FixedAccessibleName literal didnot reproduciblyhidecaption. ProposedoneattributeNOTadopted; no redtogreen repairclaimed. FreshrealbrowserInterop7stillpending."
   }
 }
