@@ -187,7 +187,7 @@ def assert_compiled_target_unchanged(name):
   if path.is_file():current.append({'path':str(path.relative_to(root)),'bytes':path.stat().st_size,'sha256':digest(path)})
  if current!=closure:raise SystemExit('compiled entire pinned output closure changed during execution')
  assert_task_unchanged()
- project,before=restoredProjects[name];after=restore.snapshot_restore(root,project,evidence_cohort='owning',evidence_output=out,managed_artifacts=root/'artifacts/root14-managed-build',host_artifacts=root/'artifacts/root14-host-build-tasks')
+ project,before=restoredProjects[name];after=restore.snapshot_restore(root,project,evidence_cohort='owning',evidence_output=out,managed_artifacts=root/'artifacts/root14-managed-build',host_artifacts=root/'artifacts/root14-host-build-tasks',metadata_diagnostic=globals().get('native_metadata_diagnostic'))
  (out/(name+'-restore-after.json')).write_text(json.dumps(after,indent=2)+'\n')
  if before!=after:raise SystemExit('actual restored graph/package payload changed during execution')
 def build_and_pin(name,project):
@@ -278,4 +278,7 @@ formsNative=importlib.util.module_from_spec(formsNativeSpec);formsNativeSpec.loa
 def assert_native_unchanged():
  # Preserve the SAME original entire Desktop output/native payload, source-built task and restored graph guard.
  assert_compiled_target_unchanged('desktop')
-formsNative.run(root,out,cutPaths,digest,command,verify,taskTarget,assert_task_unchanged,assert_native_unchanged)
+metadataSpec=importlib.util.spec_from_file_location('forms_original_native_exact_metadata',root/'.github/scripts/astra-forms-native-restore-metadata-diagnostic.py')
+metadataModule=importlib.util.module_from_spec(metadataSpec);metadataSpec.loader.exec_module(metadataModule)
+native_metadata_diagnostic=metadataModule.ExactSitesMetadata(root,out,restoredProjects['desktop'][1])
+formsNative.run(root,out,cutPaths,digest,command,verify,taskTarget,assert_task_unchanged,assert_native_unchanged,metadata_diagnostic=native_metadata_diagnostic)

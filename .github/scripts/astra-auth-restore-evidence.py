@@ -3,7 +3,7 @@ import json,pathlib,hashlib,base64,subprocess,os
 
 DEFAULT_TOOLS=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj']
 DEFAULT_TOOLS.append('framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj')
-def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS,*,evidence_cohort,evidence_output,managed_artifacts,host_artifacts):
+def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS,*,evidence_cohort,evidence_output,managed_artifacts,host_artifacts,metadata_diagnostic=None):
  root=root.resolve()
  if type(evidence_cohort) is not str or evidence_cohort not in ('owning','regression','resource') or os.environ.get('COHORT')!=evidence_cohort:raise ValueError('explicit exact Shelf37 evidence cohort required')
  for label,value,expected in [('evidence output',evidence_output,root/('artifacts/desktop-visible-'+evidence_cohort)),('managed artifacts',managed_artifacts,root/'artifacts/root14-managed-build'),('host artifacts',host_artifacts,root/'artifacts/root14-host-build-tasks')]:
@@ -28,7 +28,7 @@ def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS,*,evidence_cohort,e
   props.append('-p:AvaloniaBuildTasksLocation='+taskLocation)
   if hostContext:props=[v for v in props if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained='))]
   argv=['dotnet','msbuild',str(project),'-nologo','-m:1','-nr:false',*props,'-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath']
-  query=subprocess.run(argv,capture_output=True,text=True)
+  query=subprocess.run(argv,capture_output=True,text=True) if metadata_diagnostic is None else metadata_diagnostic.query('canonical-restore-property-query',argv)
   diagnostic={'project':str(project.relative_to(root)),'argv':argv,'cwd':str(pathlib.Path.cwd()),'exitCode':query.returncode,'stdout':query.stdout,'stderr':query.stderr}
   diagnostics=evidence_output/'restore-diagnostics';diagnostics.mkdir(parents=True,exist_ok=True)
   diagnosticPath=diagnostics/(hashlib.sha256((str(project)+str(contextKey)).encode()).hexdigest()+'.json')

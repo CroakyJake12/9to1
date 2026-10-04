@@ -3,7 +3,7 @@ import json,pathlib,hashlib,base64,subprocess,os
 
 DEFAULT_TOOLS=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj']
 DEFAULT_TOOLS.append('framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj')
-def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
+def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS,*,metadata_diagnostic=None):
  root=root.resolve();entry=(root/entry).resolve();pending=[(entry,None,False)]+[((root/p).resolve(),None,p.endswith("/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj")) for p in extra_projects];seen=set();projects=[];packages={}
  def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
  while pending:
@@ -24,7 +24,7 @@ def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
   props.append('-p:AvaloniaBuildTasksLocation='+taskLocation)
   if hostContext:props=[v for v in props if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained='))]
   argv=['dotnet','msbuild',str(project),'-nologo','-m:1','-nr:false',*props,'-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath']
-  query=subprocess.run(argv,capture_output=True,text=True)
+  query=subprocess.run(argv,capture_output=True,text=True) if metadata_diagnostic is None else metadata_diagnostic.query('native-restore-property-query',argv)
   diagnostic={'project':str(project.relative_to(root)),'argv':argv,'cwd':str(pathlib.Path.cwd()),'exitCode':query.returncode,'stdout':query.stdout,'stderr':query.stderr}
   cohort=os.environ.get('COHORT')
   if cohort not in ('owning','regression','resource'):raise ValueError('explicit Data/Browse owning evidence cohort required')

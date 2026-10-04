@@ -35,8 +35,20 @@ def snapshot_output(root, target, digest):
             rows.append({'path': str(path.relative_to(root)), 'bytes': path.stat().st_size, 'sha256': digest(path)})
     return rows
 
-def run(root, out, cut_paths, digest, command, verify, task_target, assert_task, assert_native):
+def run(root, out, cut_paths, digest, command, verify, task_target, assert_task, assert_native, *, metadata_diagnostic=None):
     root, out, task_target = Path(root), Path(out), Path(task_target)
+    if metadata_diagnostic is not None:
+        original_command = command
+        def command(argv, name):
+            return metadata_diagnostic.operation(name, argv, lambda: original_command(argv, name))
+    def actual_query(argv):
+        return subprocess.run(argv, capture_output=True, text=True) if metadata_diagnostic is None else metadata_diagnostic.query('native-direct-property-query', argv)
+    def actual_snapshot(label):
+        if metadata_diagnostic is None:
+            return restore.snapshot_restore(root, PROJECT)
+        return metadata_diagnostic.guard(label, lambda: restore.snapshot_restore(root, PROJECT, metadata_diagnostic=metadata_diagnostic))
+    def actual_guard(label, guard):
+        return guard() if metadata_diagnostic is None else metadata_diagnostic.guard(label, guard)
     if sys.platform != 'linux' or not os.environ.get('DISPLAY'):
         raise RuntimeError('Actual original Linux/Xvfb display required')
     targets = root / '.github/validation/astra-forms-native-probe.targets'
@@ -69,10 +81,10 @@ def run(root, out, cut_paths, digest, command, verify, task_target, assert_task,
         verify()
         if code:
             raise RuntimeError('Original native canonical tool restore failed: ' + tool)
-        query = subprocess.run(['dotnet', 'msbuild', tool, '-nologo', '-m:1', '-nr:false',
+        query = actual_query(['dotnet', 'msbuild', tool, '-nologo', '-m:1', '-nr:false',
                                 '-p:Configuration=Release', '-p:TargetFramework=netstandard2.0',
                                 '-p:RuntimeIdentifier=linux-x64', *props,
-                                '-getProperty:TargetFramework,MSBuildProjectFullPath,ProjectAssetsFile,StartupObject'], capture_output=True, text=True)
+                                '-getProperty:TargetFramework,MSBuildProjectFullPath,ProjectAssetsFile,StartupObject'])
         (out / (name + '.stdout')).write_text(query.stdout)
         (out / (name + '.stderr')).write_text(query.stderr)
         query.check_returncode()
@@ -84,19 +96,19 @@ def run(root, out, cut_paths, digest, command, verify, task_target, assert_task,
                 not assets.resolve().is_relative_to(artifact_root) or not assets.is_file() or
                 not any(key.split('/')[0] == 'netstandard2.0' for key in json.loads(assets.read_text())['targets'])):
             raise ValueError('Actual original native canonical tool framework/path/entry mismatch')
-    before_restore = restore.snapshot_restore(root, PROJECT)
+    before_restore = actual_snapshot('native-restore-before-snapshot')
     (out / 'forms-original-native-restore-before.json').write_text(json.dumps(before_restore, indent=2) + '\n')
-    assert_task()
-    assert_native()
+    actual_guard('native-original-task-guard', assert_task)
+    actual_guard('native-original-desktop-positive-guard', assert_native)
     code = command(['dotnet', 'build', PROJECT, *flags, '--no-restore', '-c', 'Release',
                     '-f', 'net10.0', '-r', 'linux-x64', *props], 'forms-original-native-build')
     verify()
     if code:
         raise RuntimeError('Original native Desktop build failed: ' + str(code))
-    query = subprocess.run(['dotnet', 'msbuild', PROJECT, '-nologo', '-m:1', '-nr:false',
+    query = actual_query(['dotnet', 'msbuild', PROJECT, '-nologo', '-m:1', '-nr:false',
                             '-p:Configuration=Release', '-p:TargetFramework=net10.0',
                             '-p:RuntimeIdentifier=linux-x64', *props,
-                            '-getProperty:TargetPath,OutputPath,RuntimeIdentifier,Configuration,TargetFramework,AssemblyName,DefineConstants,StartupObject,AvaloniaBuildTasksLocation'], capture_output=True, text=True)
+                            '-getProperty:TargetPath,OutputPath,RuntimeIdentifier,Configuration,TargetFramework,AssemblyName,DefineConstants,StartupObject,AvaloniaBuildTasksLocation'])
     (out / 'forms-original-native-target.stdout').write_text(query.stdout)
     (out / 'forms-original-native-target.stderr').write_text(query.stderr)
     query.check_returncode()
@@ -134,7 +146,7 @@ def run(root, out, cut_paths, digest, command, verify, task_target, assert_task,
     # Every original post-launch guard runs even if the actual child or drain
     # refuses. Preserve the primary and each independent guard failure.
     try:
-        after_restore = restore.snapshot_restore(root, PROJECT)
+        after_restore = actual_snapshot('native-restore-after-snapshot')
         (out / 'forms-original-native-restore-after.json').write_text(json.dumps(after_restore, indent=2) + '\n')
         if after_restore != before_restore:
             raise ValueError('Original native restored output changed during execution')
@@ -147,7 +159,7 @@ def run(root, out, cut_paths, digest, command, verify, task_target, assert_task,
         launch_failures.append(error)
     for guard in (assert_task, assert_native, verify):
         try:
-            guard()
+            actual_guard('native-original-post-launch-' + guard.__name__, guard)
         except BaseException as error:
             launch_failures.append(error)
     if launch_failures:
