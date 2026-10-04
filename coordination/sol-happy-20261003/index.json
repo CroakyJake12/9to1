@@ -170,7 +170,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T20:19:23.067379+00:00",
+  "updatedUTC": "2026-10-04T21:07:27.533764+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
@@ -1152,7 +1152,7 @@
     "firstActualCombinedCheckpoint": "13:56 Europe/London",
     "documentReadback": "Three H1 checkpoints; NORMAL_TEXT bold bodies and separate18pt-indented progress paragraphs verified; original templates preserved."
   },
-  "provisionalCandidateHead": "96009c11804e2cbe114eba16a00c4843a2a3cf8e",
+  "provisionalCandidateHead": "ba88e14b2ff1175ce59c882c4a71c99b504a7c6a",
   "provisionalCandidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/5",
   "currentBrowserSuccessorReview": {
     "pullRequest": "https://github.com/CroakyJake12/9to1/pull/6",
@@ -1249,5 +1249,57 @@
       "remainingHandoff": "A1 nativeProgram/composition3wholebodies and A5 installer/currentfoundation union exactfetchablerefs requested on PR12 comment5983961411",
       "missingInstalled": "Protected installedAppID/ABI/approvedpublisher/signing/currentWindowsauthority/machine receipts not supplied; no inventedtrust."
     }
+  },
+  "deadlineAndSafeClose20261004": {
+    "recordedUTC": "2026-10-04T21:07:27.533764+00:00",
+    "status": "ACTIVE_REVIEWED_SOURCE_ORIGINAL_GATES_UNACCEPTED",
+    "candidateHead": "ba88e14b2ff1175ce59c882c4a71c99b504a7c6a",
+    "acceptedHead": null,
+    "latestDirectUserTarget": "2026-10-04T22:30:00+01:00",
+    "targetDoesNotWaiveAcceptance": true,
+    "routineQuestionRouting": "Receiving engineering root / canonical coordination requests; no routine Jacob prompts",
+    "conditionalPoweroff": "Receiving Windows root only after completion, safe save and normal owned process drains; cloud execution independent of Jacob PC",
+    "home": {
+      "e530": "Original6PASS/two real GUI natural0 exits/drains; ZIP81553694B SHA3f0580ab retained",
+      "durableState": "NOT_RUN; sameprofile lockonly",
+      "PR12": "Exact26source composedada; independent receiving original12PASS/whole66DebugReleasePASS reported, exact3legacytest correction source/receipts awaiting publication",
+      "PR14": "88c704a nowfetchable nativeProgram/composition, C5 fullsource review active",
+      "PR15": "d527bf3 nowfetchable packageplanning/lifecycle, C4 fullsource review active",
+      "installedAuthority": "Protected approved9to1 publisher/AppID/ABI/signing/authenticatedWindowsauthority and actual machine receipts still unavailable"
+    },
+    "space": {
+      "source": "50c9419f91743bf83fbfbbbd5cf15376317991a4",
+      "AOwnerAck": "5984043065",
+      "BOwnerAck": "sharedSpaceBOwnerAck_20261004T205611.491508+0000",
+      "composed": "ba88e14b2ff1175ce59c882c4a71c99b504a7c6a",
+      "change": "Exactly twoguards/onepath; everyoutsideentry conserved",
+      "nativeEvidence": "Paired15 and unchanged163Debug/Release16focused reviewed; physical browser/installed/full app open"
+    },
+    "auth": {
+      "R6": "2PASS2FAIL3NOT_RUN; onecallback; actualthreeauthoredlabelsabsent/PUBLIC_CLIENT404",
+      "browserSession": 19671,
+      "issuerSession": 71539,
+      "sessions": "CLOSED final1 browser clean0signals/12birthsgone; issuer strict4reaps6ownedSIGTERM/final0",
+      "productRepair": "C2 bounded bridge/consent JSONdecode source inprogress; new realWebtuple required for critical bridge consumer"
+    },
+    "present": {
+      "source": "4750ca69796fb0fd1b97e84a08bbc01d4662a428",
+      "productComposed": "ec76a419b66d2e963c9c0b7be110c236db4d62e0",
+      "run": 37234388190,
+      "job": 111530500231,
+      "state": "IN_PROGRESS; hostedWindows2022/noPCdependency; no restart"
+    },
+    "canvas": {
+      "source": "9534c5a0fbff85a64a763e4564deca67f0aa04c9",
+      "run": 37234364549,
+      "job": 111530426617,
+      "state": "75PASS/focus+exactvaluefixed then protected HOMEvariable exception; graceful0/drains/noForce; C3minimal readback-localrename inprogress"
+    },
+    "mail": "Trusted72PASS independent; original44raw +3source/index retained; no installed/provider claim",
+    "write": "Measured26layout reportedPASS; longtable wrapping negative undergoing ownerrepair; original durable65 staleSave overwriteswinner, Bbounded atomic CAS ownership needed; no historical65currentPASS claim",
+    "cleanWindows": "VirtualBox outsidePATH and registeredWindows10 VM newlyfound; receiving read-only metadata/snapshot/diskinventory active, no absence proof or cleanacceptance",
+    "runnerInventory": "GitHub selfhosted runner metadata403; no known cleanSDKfree pipeline configuration in available source",
+    "commercial": "Existing approvedcommercial policy preserved; no purchases/pricing/trust changes",
+    "fullGroupAcceptance": "0/30 verified;0/30deliveries;expandedimplementation unmeasured"
   }
 }
