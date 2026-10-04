@@ -1,5 +1,5 @@
 {
-  "state": "ROOT_FULL_ORIGINAL_DIAGNOSTIC_WRAPPER_VERIFIED_B6_REVIEW_PENDING",
+  "state": "ROOT_B6_DIAGNOSTIC_WHOLE_BODY_PROOF_ALL_KNOWN_READERS_CLOSED",
   "scope": "Existing failed original transport diagnostics only; does not receive full1495261 original or claim browser/native acceptance.",
   "official": {
     "artifact": 11314750816,
@@ -40,5 +40,126 @@
     "B6OnlyRemoteReader": true,
     "onlyNewTemporaryPath": "/workspace/attachments/28032c2b-6398-4d80-9d47-07c6bd0e3369/failed-browser-e90-transport-diagnostics-original.zip",
     "olderProtectedOriginalsAndPrivatePR11Retained": true
+  },
+  "B6FullACK": {
+    "state": "B6_FULL_DIAGNOSTIC_OUTER_REMOTE_PROOF_READERS_CLOSED",
+    "UTC": "2026-10-04T20:57:45.495455+00:00",
+    "branch": "artifact/team-b-original-transport-diagnostics-20261004",
+    "head": "11156c7c8b13406463f544f1e7e6988639a4dd32",
+    "parent": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+    "path": "docs/releases/sol-happy-20261003/team-b-original-transport-diagnostics/failed-browser-e90-diagnostics-original.zip",
+    "gitBlob": "65931f3ba2e6549a599f69ae3f61d6c3a0f6afd3",
+    "outerBytes": 5406,
+    "outerSHA256": "a25ae61c7f8b4c473862748adb20bb319ad30e62f9204f9cee794256e18260b0",
+    "indexBlob": "b02cd5acc554b86b879ea90eb4426cb2e6a3e580",
+    "indexSHA256": "066425823792f26d0d119cd86719ed885aaf45a361594a31a12d47027d65297d",
+    "exactOnlyTwoAddedLeaves": true,
+    "inheritedLeaves": 9749,
+    "allInheritedModesTypesSHAsExact": true,
+    "officialRootCaptured": {
+      "artifact": 11314750816,
+      "bytes": 5406,
+      "sha256": "a25ae61c7f8b4c473862748adb20bb319ad30e62f9204f9cee794256e18260b0",
+      "exportRun": 37232499500,
+      "exportHead": "26cc2d87b1a57bcc7f632e2605d09108afc48cd2"
+    },
+    "members": [
+      {
+        "path": "original-transport-manifest.json",
+        "bytes": 10201,
+        "sha256": "b479203511fe4a4248037dda0c7812111ad6b02b3d3587e07d7c9af691c200f0",
+        "crc32": 2128684761,
+        "mode": 33188
+      },
+      {
+        "path": "result.json",
+        "bytes": 11099,
+        "sha256": "7050df86c9de340c4c94901d21f1a2d2782b512857da30da80beb7bec98aa96f",
+        "crc32": 2909601565,
+        "mode": 33188
+      }
+    ],
+    "fixedOriginal": {
+      "sourceRun": 37230828986,
+      "sourceArtifact": 11313603170,
+      "sourceCommit": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+      "archiveBytes": 1495261,
+      "archiveSha256": "e794fb5e3ab92b8019876f14bb908c340bd0a88be1be53a585ac36122b35fcc7",
+      "custodyWorkflowCommit": "26cc2d87b1a57bcc7f632e2605d09108afc48cd2"
+    },
+    "originalMemberCount": 36,
+    "originalMemberMapSHA256": "3197a6839bd8bbeb98b415c432a33a7fe6b5dcb0e3687266b503c6e8ff4c2446",
+    "fragments": [
+      {
+        "part": 1,
+        "offset": 0,
+        "bytes": 400000,
+        "sha256": "ddc383a2918338ff02de4153540c6e9a521bbaeb13e4e881fb3cfbf32464595a"
+      },
+      {
+        "part": 2,
+        "offset": 400000,
+        "bytes": 400000,
+        "sha256": "99ec84e14a2a200fcc0e6077f622574a7d6f407879e59da5176df6bdd491e81a"
+      },
+      {
+        "part": 3,
+        "offset": 800000,
+        "bytes": 400000,
+        "sha256": "0cdf4735b17e22893ff1e25dc79049a8ccfd9719e9fe08e221dea504f3268eac"
+      },
+      {
+        "part": 4,
+        "offset": 1200000,
+        "bytes": 295261,
+        "sha256": "ae95e790922025c58de4d5c536097a836f2e19337caa23665a32c04f9a908da6"
+      }
+    ],
+    "fragmentSetSHA256": "ae09823bafc00e830e631fd56fbd32fd26deb58cbdccdbcc3e4013e87ce8fdac",
+    "wrapperRows": [
+      {
+        "part": 1,
+        "path": "part01/original-outer-part01.zip",
+        "bytes": 410906,
+        "sha256": "72ba14411142fec867b892978c09b41279a669d36e714695fc6532e2836b25b5"
+      },
+      {
+        "part": 2,
+        "path": "part02/original-outer-part02.zip",
+        "bytes": 410911,
+        "sha256": "8c36a2aad1cb1d3ee1f757ac5d79fd5c202ef8998b253132aa751e582435f4f9"
+      },
+      {
+        "part": 3,
+        "path": "part03/original-outer-part03.zip",
+        "bytes": 410911,
+        "sha256": "92e7090ff97c6ae56e6a8fd942fe7bfc12db3b7e543785bcc099dbc08244954f"
+      },
+      {
+        "part": 4,
+        "path": "part04/original-outer-part04.zip",
+        "bytes": 306173,
+        "sha256": "57a486ec170158fc3b1ad12180fa1a63f5567a5ce585676273ea99ac016c5ff5"
+      }
+    ],
+    "actualExportSource": {
+      "path": "apps/Web/Wave/Tests/ci/export-existing-wave-browser-failure-original-parts.py",
+      "gitBlob": "08f809c5b8e89bbfbdc993db160b5621249094dd",
+      "bytes": 12021,
+      "sha256": "a3d4e2cb509059ae472d0b4e960810d0ba8c267b4d4ddd8784e1a6b6cf6e58dc",
+      "requiresActualFailureConclusion": true
+    },
+    "allCRCFullBodiesGitSHA1Tree100644Read": true,
+    "allReadersClosed": true,
+    "noLocalFilesOrTempReadsOrWatchRequests": true,
+    "originalWhole1495261BodyIndependentlyRead": false,
+    "browser14New3Acceptance": false,
+    "analystCorrection": "First checker expected named conclusion constant; actual source uses direct run.get(conclusion)==failure. Corrected before ACK; no test/result changed.",
+    "qualification": "Full5406B export-diagnostic ZIP proof only;36 original member metadata/four400k maps agree. Whole1495261B original not independently read yet. Source browser failed before14/new3; transport PASS not product acceptance. Root retains FULLACK then freshremote/local readback before only named NEW duplicate retirement."
+  },
+  "actualAdditionalClosedReader": {
+    "owner": "B3",
+    "scope": "Single local diagnostic ZIP fullCRC RAM read before restriction message arrived; tool exit0 and explicit READER_CLOSED. No write/extract/copy; will not reopen.",
+    "planDeviationRecorded": true
   }
 }
