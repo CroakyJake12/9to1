@@ -1,0 +1,142 @@
+{
+  "state": "EXACT_ORIGINAL_ACTIONS_ARCHIVES_PRESERVED_FULL_REMOTE_BODY_READBACK",
+  "UTC": "2026-10-04T17:21:09.791136+00:00",
+  "branch": "artifact/team-b-write-package-dbb-restore-budget-diagnostics-20261004",
+  "base": "400ecdf1ec36a3d28e742beeba28e223f3ab0d14",
+  "sourceRun": 37218630581,
+  "sourceCommit": "dbb10e81c865dac61dbfb9f27a16da4e9556e7aa",
+  "archives": [
+    {
+      "variant": "restore-budget-first-failure",
+      "id": 11308474942,
+      "bytes": 389461,
+      "sha256": "dc2196ae6662db24a70accb83cb3cde145d806e35307ecd370bb2e756049b095",
+      "path": "docs/releases/sol-happy-20261003/team-b-write-dbb-restore-budget-original-diagnostics/restore-budget-first-failure.zip",
+      "gitBlob": "30c050af1f9c335b2683e0d6bc9017350f8cee62",
+      "rootWholeRemoteBodyReadback": true,
+      "originalActionsOuterWholeBodyReadHere": true,
+      "temporarySourcePath": "/workspace/attachments/8e14f379-df63-4441-b19a-5c5ee51f24a8/write-package-dbb-restore-budget-failure.zip",
+      "temporaryRetired": false,
+      "members": [
+        {
+          "path": "diagnostics/dotnet-info.log",
+          "bytes": 3194,
+          "sha256": "2a2f2be0512496ebcc108094c48143f8a90bcb46b78d263648449c3c481d7bba",
+          "crc": 4226940602,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc": 3257738113,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/commands.json",
+          "bytes": 3329,
+          "sha256": "9e69ad6bfc803c7a4c1672f4e60a5698300a41c3cc5525bbbc10666dd37df2fe",
+          "crc": 2508991874,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc": 0,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/git-head.log",
+          "bytes": 41,
+          "sha256": "0433fc6df3a07a9b6df4d43f3f3eac5ffe9653439b850a6796e3c6fcb60b983c",
+          "crc": 451772482,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/resource-latest.json",
+          "bytes": 562,
+          "sha256": "ba509825244f4b0d9ab759bfe1ace30eb4fe424292849339614fff31fc0fdf69",
+          "crc": 3507159254,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/restore-fixture.log",
+          "bytes": 569,
+          "sha256": "d2077c8c6539021a2c3de89db78fbda7adb148e1fc9e21855770052caefba594",
+          "crc": 704342974,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/result.json",
+          "bytes": 1585,
+          "sha256": "49134de367c0e2ba1b130148a25f4cdc5b620726750c39814734ea3dcbe79f33",
+          "crc": 2301712448,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/source-after.json",
+          "bytes": 98453,
+          "sha256": "7e0c5781839235f515cb8b28bcb14d8e9ab2aed29881a6fb6b6dde9e16b7e91e",
+          "crc": 4195274087,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/source-before.json",
+          "bytes": 98453,
+          "sha256": "7e0c5781839235f515cb8b28bcb14d8e9ab2aed29881a6fb6b6dde9e16b7e91e",
+          "crc": 4195274087,
+          "mode": 33188
+        },
+        {
+          "path": "diagnostics/source-tree-pins.log",
+          "bytes": 1306876,
+          "sha256": "0ffe3e9a891a7cc788c21c4e236bd2cb9dcd0f0ecd67d102ea86d5afcb85d15c",
+          "crc": 2712097914,
+          "mode": 33188
+        }
+      ],
+      "actualResult": {
+        "state": "FAIL_OR_INCOMPLETE",
+        "commit": "dbb10e81c865dac61dbfb9f27a16da4e9556e7aa",
+        "browserGroupsExpected": 9,
+        "scope": "Actual native package chooser/import, physical selection + typed CUI Bold, real IDB save/history, download/readback and cold browser process reopen; NOT raw Space-input/donor/fullWrite/permissions/provider acceptance",
+        "error": "RuntimeError('Same192MB output+new-cache-positive-growth cap/256MB free floor violated')",
+        "normalFamilies": true,
+        "processFamiliesClosed": true,
+        "resourceBeforeFinalReceipt": {
+          "taskLogicalBytes": 55653622,
+          "taskPositivePathPeakBytes": 55653622,
+          "publisherCacheBaselineBytes": 1833156624,
+          "publisherCacheCurrentBytes": 2014019221,
+          "publisherCachePositiveGrowthPeakBytes": 180862597,
+          "combinedPositivePathPeakBytes": 236516219,
+          "taskCategories": {
+            "diagnostics": 1511486,
+            "artifacts": 441020,
+            "http": 53700911,
+            "tmp": 0,
+            "cli": 205
+          },
+          "freeBytes": 86809554944,
+          "cap": 192000000,
+          "floor": 256000000,
+          "qualification": "Before/after command samples; transient unsampled allocations not claimed"
+        },
+        "accepted": false,
+        "acceptanceAuthority": "Actual complete stdout and natural process exit only; this internal receipt is deliberately nonaccepting",
+        "custody": "Publisher all-member seal; native runtime hashes; explicit synthetic source/tampered/download packages + expected actual IDB canonical JSON are uploaded. Browser profile/cache/native binaries excluded.",
+        "resourceError": "Prospective final receipt cap/floor violated"
+      }
+    }
+  ],
+  "predeclaredTemporaryPlan": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/write-dbb-restore-budget-temporary-transport-plan.json",
+  "scope": "Whole originals retained, no full app/AT/resource/provider/all31 acceptance. Wave original intentional53/11 negative with defaults12PASS; proposed11PASS2glyphFAIL51NOTRUN. Write current restore-only capFAIL, allnative7/browser9/native9NOTRUN; no focusfix runtime result."
+}
