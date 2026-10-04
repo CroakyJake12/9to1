@@ -21,6 +21,7 @@ if ($output.StartsWith($repo + [IO.Path]::DirectorySeparatorChar, [StringCompari
 [void][IO.Directory]::CreateDirectory($output)
 $result = [ordered]@{
     schemaVersion = 1; target = $Target; sourceBasis = $catalog.sourceBasis
+    nativeSourceProposals = $catalog.nativeSourceProposals
     generatedAtUtc = [DateTimeOffset]::UtcNow.ToString('o')
     status = 'NOT_RUN'; stage = 'preflight'; package = $null; files = @()
     commands = @(); extractionVerified = $false; launch = $null
@@ -33,8 +34,28 @@ $result = [ordered]@{
 $probe = $null
 $exitCode = 1
 
-function Write-Result {
-    $result | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'result.json') -Encoding utf8
+function Write-Result([switch]$EmitPublicRunnerObservation) {
+    $json = $result | ConvertTo-Json -Depth 12
+    $json | Set-Content -LiteralPath (Join-Path $output 'result.json') -Encoding utf8
+    if ($EmitPublicRunnerObservation) {
+        # This probe supplies no accounts, keys or secrets to the executable.
+        # Keep its original result retrievable even when package downloads fail.
+        Write-Host '::group::Actual public synthetic Windows probe result (unaccepted)'
+        Write-Host $json
+        foreach ($name in @('launch.stdout.log', 'launch.stderr.log')) {
+            $path = Join-Path $output $name
+            if (Test-Path -LiteralPath $path -PathType Leaf) {
+                $body = Get-Content -Raw -LiteralPath $path
+                if ($null -eq $body) { $body = '' }
+                Write-Host $name
+                if ($body.Length -gt 16384) {
+                    Write-Host $body.Substring(0, 16384)
+                    Write-Host 'Observation excerpt truncated at 16384 characters; original retained in the compact artifact.'
+                } else { Write-Host $body }
+            }
+        }
+        Write-Host '::endgroup::'
+    }
 }
 
 function Invoke-DotNet([string]$Name, [string[]]$Arguments) {
@@ -62,6 +83,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Cannot compare immutable source basis.' }
     foreach ($path in $changed) {
         if ($catalog.proposalPaths -cnotcontains $path) { throw "Undeclared source change: $path" }
+    }
+    foreach ($proposal in @($catalog.nativeSourceProposals)) {
+        & git -C $repo merge-base --is-ancestor $proposal.appliedProposalCommit HEAD
+        if ($LASTEXITCODE -ne 0) { throw 'Reviewed provisional native-source proposal is outside this candidate lineage.' }
     }
     foreach ($pin in $catalog.sourcePins) {
         $actual = (Get-FileHash -LiteralPath (Join-Path $repo $pin.path) -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -180,6 +205,6 @@ finally {
         }
         $probe.Dispose()
     }
-    Write-Result
+    Write-Result -EmitPublicRunnerObservation
 }
 exit $exitCode

@@ -2,7 +2,7 @@ name: Team C Windows package probe (unaccepted)
 
 on:
   push:
-    branches: [team-c/sol-happy-c1-windows-build-proposal-20261004]
+    branches: [team-c/sol-happy-c1-home-window-probe-20261004]
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        target: [home, boards, canvas, studio, present, picture, shared-desktop]
+        target: [home]
     env:
       AVALONIA_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
@@ -49,12 +49,22 @@ jobs:
         run: |
           & .github/scripts/windows-package-probe.ps1 -Target $env:PROBE_TARGET -OutputDirectory $env:PROBE_OUTPUT
           exit $LASTEXITCODE
-      - name: Retain successful packages and all failed observations
+      - name: Retain compact original results and all failed observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-observation-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/windows-probe-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.target }}/*.json
+            ${{ runner.temp }}/windows-probe-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.target }}/*.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Retain complete published packages
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: windows-unaccepted-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/windows-probe-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.target }}
+          path: ${{ runner.temp }}/windows-probe-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.target }}/*.zip
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7

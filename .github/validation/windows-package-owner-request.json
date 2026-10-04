@@ -5,7 +5,7 @@
   "requestedDeadlineEuropeLondon": "2026-10-04T20:00:00+01:00",
   "proposedImmediateBuildBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
   "nativeNormalBasis": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
-  "sourceLineage": "eec reviewed owner source delivery descends directly from normal A63; proposal adds only 4 C-owned validation files. No global source adoption or accepted-head claim.",
+  "sourceLineage": "eec reviewed owner source delivery descends directly from normal A63. Home-only successor adds exactly two reviewed provisional namespace imports plus C-owned validation files. Current native graph is provisional, not the unchanged eec graph, normal-source adoption or accepted head.",
   "canonicalInventory": {
     "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revisionId": "AHj4eMQsTIT4NLLbffjytUtKvQ-c1NMJ6tAnLf2xD7xcs-AQ188ZHRg49KZ1J4b6z3M3jKMEB_V2tUwEQH26Gd4GBo8MmIUircsD02y-a_0",
@@ -26,13 +26,7 @@
     "basis": "All top-level Pass1 Apps product headings; Vision & Voice is one product group whose both surfaces/modes must pass. Shared services and embedded destinations remain required dependencies rather than guessed separate installers. Not a full semantic acceptance denominator."
   },
   "immediateProbeTargets": [
-    "home",
-    "boards",
-    "canvas",
-    "studio",
-    "present",
-    "picture",
-    "shared-desktop"
+    "home"
   ],
   "rows": [
     {
@@ -568,5 +562,33 @@
     "windowsPackagesProduced": false,
     "acceptanceVerifiedWindowsApps": 0,
     "pcDelivery": false
+  },
+  "reviewedProvisionalNativeSourceDelta": {
+    "path": "apps/Home/src/AvaloniaHome/Program.cs",
+    "reviewedProposalCommit": "88049b2f9f25977f732c881aa893cfd3081ef0a9",
+    "appliedProposalCommit": "57f8d13dca238535696dd2c25cb4f997f78f68d6",
+    "originalSha256": "808580096627894af27d5a6f52ed6d41ee2b3385885159ea053de0f9f59ed9cc",
+    "originalGitBlob": "bfc82f6f825fe282f35485e29f935824dfa115a2",
+    "provisionalSha256": "702aec57d7f3f1881e4d9a458459ba21fd052cdf720084a88a70e3164a7359b5",
+    "provisionalGitBlob": "ab1d0884fd33165e4a5ce707cf515d64c81725a2",
+    "change": "Exactly two BCL namespace imports: System.Collections.Generic and System.Threading. No method, bootstrap, authorization policy or UI body changes.",
+    "ownerAdoption": "NOT_ADOPTED; reviewed minimal provisional compiler repair only"
+  },
+  "originalSevenTargetRun": {
+    "runId": 37203799923,
+    "commit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+    "probeSuccess": [
+      "canvas",
+      "picture",
+      "shared-desktop"
+    ],
+    "probeFailure": [
+      "home",
+      "boards",
+      "studio",
+      "present"
+    ],
+    "fullAppAcceptanceVerified": false,
+    "qualification": "All first-run originals retained; shared-desktop is legacy dependency host. Only changed Home is retried."
   }
 }
