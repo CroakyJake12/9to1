@@ -155,7 +155,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-04T20:19:55.873198+00:00",
+  "updatedUTC": "2026-10-04T20:51:21.948495+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -3776,5 +3776,62 @@
     },
     "ownership": "Root sole B source/artifact/coordination integrator. A native/shared/canonical authority; C sole main/release/acceptedHead/index/combined WorkerLogs integrator. This commit changes only B JSON and preserves every existing checkpoint. No full app/31/LE/platform/provider/release acceptance."
   },
-  "currentBOnlyCheckpointRef": "currentBOnlyCheckpoint_20261004T201955Z"
+  "currentBOnlyCheckpointRef": "currentBOnlyCheckpoint_20261004T201955Z",
+  "engineeringRecoveryRequest_20261004T205121.948495+0000": {
+    "UTC": "2026-10-04T20:51:21.948495+00:00",
+    "authority": "Actual latest receiving-root user messages read: stop routine questions to Jacob, coordinate engineering decisions with receiving root, pre-empt blockers; corrected deadline 10:30 interpreted by explicit current delegation as22:30 Europe/London4October. Full acceptance/security/donor scope preserved.",
+    "deadlineUTC": "2026-10-04T21:30:00Z",
+    "deadlineLocal": "2026-10-04T22:30:00+01:00 Europe/London",
+    "owner": "B root source/browser consumer integration; A shared/native technical authority and C global/main/release ownership retained.",
+    "sourceHead": "e90c6fab21aebd27cb7d8f330022414a889be8df",
+    "status": "Actual native proposed64PASS with49mandatory UNIT decoded; full original custody pending. Browser run37230828986/job111520664921FAIL after same-source285assets58508248B publicationPASS, before original14 and new3 checks; all17NOT_RUN, fresh-source and unknown-input guard.",
+    "urgentReceivingRootAction": {
+      "problem": "B receiving storage admission headroom now360448B; exact 401583-403708B failed-browser wrappers and407281/407253B Write wrappers inadmissible, nativepart2 also exceeds current wholewrapper+folder+reserve admission. No old cleanup, SDK execution or floor weakening.",
+      "recommendedBoundedAction": "Use existing roomier receiving Windows/source lane to receive immutable PUBLIC GitHub Actions originals below once; verify official complete bytes/SHA/all CRC/manifest and return exact browser status-before/status-after and owner-built-assets member bodies plus source/runtime pins. B preserves actual browser/product ownership and will implement reviewed guard repair only after exact failure diagnosis. Root is concurrently receiving small diagnostics and preparing exact selected-member read-only export; no duplicate product writes.",
+      "originals": [
+        {
+          "lane": "failedBrowser",
+          "run": 37230828986,
+          "artifact": 11313603170,
+          "bytes": 1495261,
+          "sha256": "e794fb5e3ab92b8019876f14bb908c340bd0a88be1be53a585ac36122b35fcc7",
+          "head": "e90c6fab21aebd27cb7d8f330022414a889be8df"
+        },
+        {
+          "lane": "nativeWaveProposed",
+          "run": 37230470710,
+          "artifact": 11312544861,
+          "bytes": 1113752,
+          "sha256": "71e2cc204fc50ed3199a2cf1b88fe65176d066d0a3616211849565c4527aca59",
+          "head": "e90c6fab21aebd27cb7d8f330022414a889be8df"
+        },
+        {
+          "lane": "WriteCurrent",
+          "run": 37226746160,
+          "artifact": 11312019529,
+          "bytes": 25407257,
+          "sha256": "ae04b698db600bdd4c3f950ce2dbd003f5fb5f4a73201dc6d18f03ee204e943f"
+        },
+        {
+          "lane": "WriteOriginal",
+          "run": 37224554469,
+          "artifact": 11311313103,
+          "bytes": 25397848,
+          "sha256": "fc4f48f45a5df40e401a5df08cf018c97fc0f9bf3f79f3946db3792c57576bc3"
+        }
+      ],
+      "exportRuns": {
+        "failedBrowser400k": 37232499500,
+        "native400k": 37232254079,
+        "WriteCurrent400k": 37232246676,
+        "WriteOriginal400k": 37232237846
+      },
+      "acceptanceLimit": "Artifact integrity PASS never browser/installed/full acceptance; retain original red failures and all original17 oracles."
+    },
+    "sharedSpacePR11": "B source and privately provided paired native evidence review clear for exact two historical guards; A/C shared-source adoption still held. No physical browser/installed/full acceptance. Private links, internal chat identifiers and packet body deliberately excluded.",
+    "routineQuestionRouting": "Receiving root engineering decision point supplied in current session. This owned canonical request is the fallback because direct send-message tool is unavailable. No routine user prompt; continue independent work.",
+    "allPriorHistoryPreserved": true,
+    "noAcceptanceWaiver": true
+  },
+  "currentEngineeringRecoveryRequestRef": "engineeringRecoveryRequest_20261004T205121.948495+0000"
 }
