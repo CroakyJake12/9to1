@@ -1,0 +1,1167 @@
+{
+  "recordedUTC": "2026-10-04T14:20:17.676318+00:00",
+  "reviewer": "B4 independent bounded packet source/artifact peer",
+  "verdict": "CLEAR_SCOPED_PACKET_COUNTS_CUSTODY_AND_QUALIFICATIONS_NO_FULL_PARITY_ACCEPTANCE",
+  "packetFiles": [
+    {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/README.md",
+      "bytes": 940,
+      "sha256": "c5268c5984fdb67f70b2fb234985039deec2c3c76a989e03bedbc891fe952039"
+    },
+    {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/manifest.json",
+      "bytes": 21132,
+      "sha256": "41a4b32328a28a567aa828f73dbb7e28d27601e74f91117a76820646fed14f19"
+    },
+    {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/package-receipt.json",
+      "bytes": 847,
+      "sha256": "46df96493d0a9e959b5c625ed58eec598a0e56a714a04355ef39f6443231b21b"
+    },
+    {
+      "path": "/workspace/team-b-compiled-artifact/docs/releases/sol-happy-20261003/team-b-scoped-actual-apps-through-22d/reviewed-evidence.zip",
+      "bytes": 7993418,
+      "sha256": "69a65c37810102f68d3f2531d7d60cbe799aa4443c87197e4c611ab14fdcfc92"
+    }
+  ],
+  "logicalDenominator": {
+    "files": 62,
+    "bytes": 8772407,
+    "allFullBodySHAAndCRC": true,
+    "allManifestPathRows": true,
+    "allOriginBodiesOrZIPMembersExact": true
+  },
+  "originalZIPDenominator": {
+    "archives": 16,
+    "members": 281,
+    "fullCRCAndSHA": true,
+    "exactRootRecordedCustodyMembership": true,
+    "fullOriginalBodiesByteExact": true
+  },
+  "logicalMembers": [
+    {
+      "path": "custody/full-native-and-publisher-archive-readback.json",
+      "bytes": 49585,
+      "sha256": "d6fc52421e26493d6ae0c919700727d2ccc7391c8dad5f5e02f574700f2edb39",
+      "crc32": "61ad7001"
+    },
+    {
+      "path": "independent/team-b-b6-chat10-original-current-ci-recorded-review01.json",
+      "bytes": 14516,
+      "sha256": "f763ab5f283e47bac4a3da163374e81949239a797faecd0e8a02c3f829b26935",
+      "crc32": "67cd015d"
+    },
+    {
+      "path": "independent/team-b-b6-files-sites-lifecycle04ae-recorded-review01.json",
+      "bytes": 11515,
+      "sha256": "65d626a516b23a4cb5c9aa3472d79d9d19af3358ba01037abcdcf087c39c7292",
+      "crc32": "35f7c581"
+    },
+    {
+      "path": "independent/team-b-b6-picture-browser9-source-binding02-review.json",
+      "bytes": 25059,
+      "sha256": "69bf3c62a95629fd9e248aedfcf0dae2a4b8d2eb4ff73ab1be44e4da3a405090",
+      "crc32": "74feb2cc"
+    },
+    {
+      "path": "independent/team-b-b6-planner-original-ci-recorded-review01.json",
+      "bytes": 15823,
+      "sha256": "e9a8564513823cb8056ef623e02124530b00ce1d06b9c53c186b74f0b4a72436",
+      "crc32": "305d317a"
+    },
+    {
+      "path": "independent/team-b-b6-write-existing-ci-recorded-review01.json",
+      "bytes": 27415,
+      "sha256": "8657603edea4ddc417676deae54a1e62d42a8c8de5801d6770c557c81bbb1d54",
+      "crc32": "22f795cd"
+    },
+    {
+      "path": "owner-requests/A-BOARDS-PUBLIC-WORKSPACE-CLOSE-REQUEST03.json",
+      "bytes": 17095,
+      "sha256": "6f22ba2cac8e473ae2b8ebef51a11df07140b8573553ecadd80c9beacecf8eb1",
+      "crc32": "59e64d57"
+    },
+    {
+      "path": "owner-requests/A-SPACE-KEY-ACTUAL-CI-HANDOFF01.json",
+      "bytes": 34210,
+      "sha256": "d2f26415aa385d6883bf618d01d83c29c57706b8894d2cf81e63a1bedb581869",
+      "crc32": "cbf61e99"
+    },
+    {
+      "path": "owner-requests/C-HOSTED-RECEIVING-PREREQUISITES-REQUEST01.json",
+      "bytes": 3006,
+      "sha256": "d6231d9818a90f66a8fb4067936a0db62024b5a159b63fbea52e0c503154c5b1",
+      "crc32": "6f285439"
+    },
+    {
+      "path": "owner-requests/REQUEST-SELECTION-INDEX01.json",
+      "bytes": 3875,
+      "sha256": "78ea5d2ceede1701c3e9f481bac07a850880242128c8fec439f606b06eba481f",
+      "crc32": "8e0541ce"
+    },
+    {
+      "path": "owner-requests/SHARED-CUI-TWO-FILE-PROPOSAL-MANIFEST.json",
+      "bytes": 3397,
+      "sha256": "b116dbc2c9d77254807790499d9a709f585740fc4476dd2ac85c7eaabf7a468f",
+      "crc32": "4e9e45f2"
+    },
+    {
+      "path": "owner-requests/canonical-two-file-lifetime.patch",
+      "bytes": 2492,
+      "sha256": "193cd9e6693ab11db10f077623aaf7b526a08d464ae53aa4476c29e38cd1557d",
+      "crc32": "d67d9051"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/chromium-path.log",
+      "bytes": 78,
+      "sha256": "94dc7d669e3d3966bf82ee64f3ae62d074e8d1302c5c4686e5bff330c7879cb2",
+      "crc32": "bb215fa4"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/commands.json",
+      "bytes": 5220,
+      "sha256": "27f3d24a2203e7229f118a90009632753c3ab282d4a430b02b8fc391bcd2a078",
+      "crc32": "b1c655d6"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "crc32": "00000000"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "crc32": "00000000"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-head-after.log",
+      "bytes": 41,
+      "sha256": "bb8ff0aab99a96f672642bb42f3c8aca250da70aab930c73b3a5e1c349a3a8a0",
+      "crc32": "160fb0ae"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-head.log",
+      "bytes": 41,
+      "sha256": "bb8ff0aab99a96f672642bb42f3c8aca250da70aab930c73b3a5e1c349a3a8a0",
+      "crc32": "160fb0ae"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/output-custody-before-final-receipt.json",
+      "bytes": 38486,
+      "sha256": "a68ae14d7d9da3334e5f78ddfcf0871f7044300fe1db312295a189913f083efd",
+      "crc32": "b2a1c048"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/picture-browser-nine.log",
+      "bytes": 115,
+      "sha256": "4cb08067aba5464fd0494a80dd517de8ba89fafaadc8ae5d5e8502e82a4cac81",
+      "crc32": "ce185201"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/playwright-version.log",
+      "bytes": 7,
+      "sha256": "bc43ef34a131fd2f99047a8aca491f24fa0a36010dcb90166e73c49f58a1928d",
+      "crc32": "d7dddcd5"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/result.json",
+      "bytes": 497,
+      "sha256": "34c418dff05314b844a441688f29b7d88143ca28c50f286c7d6612fce9613cde",
+      "crc32": "e0a3bac8"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/raw/actual-crop-remove-all.png",
+      "bytes": 102,
+      "sha256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+      "crc32": "2af4e8d4"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/raw/picture-original.png",
+      "bytes": 76032,
+      "sha256": "4f6216c7ca372a05d4c1a5df9fa27820e72922b0821986c055c67bd276aa57bd",
+      "crc32": "044eba73"
+    },
+    {
+      "path": "picture-browser9-selected-full-members/raw/results.json",
+      "bytes": 126092,
+      "sha256": "6ac6caeabbefecd3ca56ce8544373373c5fa33e18bf3369258f6bab772e5b944",
+      "crc32": "69d8b3e9"
+    },
+    {
+      "path": "raw-archives/094d4ed7-5a99-4b01-b22a-6c8fc1499328-artifact-11304750489.zip",
+      "bytes": 336980,
+      "sha256": "7cf9fc0dadd66e063336cd2b4cfc93aa5437144c3eeb32cb3de6108024c28cc6",
+      "crc32": "e393608f"
+    },
+    {
+      "path": "raw-archives/1b410c78-2c51-4d43-868e-be56711bd747-github-actions-artifact-11302943956.zip",
+      "bytes": 334895,
+      "sha256": "c0cd28452809ce4aaf2f8791a16bca0b9dcb4707e3c3a42d10308fd7547a03c1",
+      "crc32": "32782326"
+    },
+    {
+      "path": "raw-archives/2367f828-d3f3-44d0-bacd-7768f26ff537-picture-22d-admission01-repaired.zip",
+      "bytes": 352330,
+      "sha256": "d69a94465dbf4960bc596035d43017d9c4b2e4aea8c1d4aa8a5ac59268634c96",
+      "crc32": "72a71ebf"
+    },
+    {
+      "path": "raw-archives/2806f6ac-cee3-416f-ac65-c7839b55af1a-artifact-11304012551.zip",
+      "bytes": 336448,
+      "sha256": "9c993e31c96bdc8968433ddb8d9e4fc9366700895ec8c6d19ad79e13cee89a59",
+      "crc32": "eae13e5b"
+    },
+    {
+      "path": "raw-archives/3f473716-b0e2-480c-8d75-a4b9a262020d-planner-original-sqlite-45eb0685.zip",
+      "bytes": 335071,
+      "sha256": "cfc0742dc8e8f8eb0a64781db77f96b114119c3478d406b67d9967ecbd25967c",
+      "crc32": "3506f195"
+    },
+    {
+      "path": "raw-archives/41695bdf-2ec1-4349-807a-71bd263ed8d4-web-success-8ff617c3-diagnostics.zip",
+      "bytes": 1469131,
+      "sha256": "0098d731a0c4920ff6108af0216e206c2a2961f95fcff95b2145dfee2a47305d",
+      "crc32": "1afb9d6c"
+    },
+    {
+      "path": "raw-archives/76bbebd2-261c-4515-a57f-28c010e371bd-picture-22d-original-repaired.zip",
+      "bytes": 351505,
+      "sha256": "6e778ede24eb99003011f37c15e861dac676fbf4d95cb11ec07a86cede11af8e",
+      "crc32": "0b9c8564"
+    },
+    {
+      "path": "raw-archives/a29c7b6c-895f-4ae9-8be3-534679075a2b-artifact-11304601466.zip",
+      "bytes": 336193,
+      "sha256": "db26b7f747ceef82e5810a1af816bc083e032025ef9b66c8cfd0b94a3516fa03",
+      "crc32": "512a94e4"
+    },
+    {
+      "path": "raw-archives/ab984520-b354-43db-b8e3-4fccb4aaa090-artifact-11304720902.zip",
+      "bytes": 335441,
+      "sha256": "c773f0ae2560e7d67e329bdb47414f90aec67ef3fc2c68e7f676055ac1f6de3e",
+      "crc32": "975e0ea1"
+    },
+    {
+      "path": "raw-archives/b0f63bfa-7b3e-4885-a4e7-33c3b0412261-github-actions-artifact-11303787544.zip",
+      "bytes": 345200,
+      "sha256": "f95f39f60236cf7b55f1b80743dd5dd4d5e71cc930cab854c9ab9936b74b1d6f",
+      "crc32": "dcc103d6"
+    },
+    {
+      "path": "raw-archives/b498e46b-5706-4c86-928a-4bc96c1d5206-github-actions-artifact-11303850457.zip",
+      "bytes": 336781,
+      "sha256": "51420539234bffa417509360cbbd12297182760c1e616d1c6f7755508e389bda",
+      "crc32": "c79e9851"
+    },
+    {
+      "path": "raw-archives/c760716b-2e3b-4070-890a-67d448b476be-picture-22d-browser-publisher.zip",
+      "bytes": 1472662,
+      "sha256": "7545bdd49f0a6f4403be48a0ce9aa09bcfaa3f7da371e569cb820bbf82c57c76",
+      "crc32": "8b35936a"
+    },
+    {
+      "path": "raw-archives/c803febe-cf9d-415d-aa39-2b5a55f30358-github-actions-artifact-11303409855.zip",
+      "bytes": 345515,
+      "sha256": "310a4c2a95eb4aaa88bf1e337bf87a5f86eacabe02748214728f0085d3790c9a",
+      "crc32": "2536b451"
+    },
+    {
+      "path": "raw-archives/dfdb7391-fba6-492d-8feb-5b8b6ab91aa0-picture-22d-admission01.zip",
+      "bytes": 348940,
+      "sha256": "46a7e81cb438efa1f2eabebeface41d268149f6016cb7486d529fdde11bfe818",
+      "crc32": "2ee5a90c"
+    },
+    {
+      "path": "raw-archives/e0f51cf7-e00e-4631-89fa-42893d510915-picture-22d-current.zip",
+      "bytes": 352009,
+      "sha256": "72370f57cb7d6144130286d043e7f52faaf235da6eb81489e57a500acaec594a",
+      "crc32": "da8cc22e"
+    },
+    {
+      "path": "raw-archives/fea0d17e-784b-492c-87a3-e97f7516b6c9-artifact-11303588863.zip",
+      "bytes": 335013,
+      "sha256": "b690c6243edf1b371e11ec39e2d6a46c15f0dbe54a41982e9379365cbc1b71a9",
+      "crc32": "b0cfb5f1"
+    },
+    {
+      "path": "reviews/b1/published-8ff617c3-actual-review01/actual-diagnostics-review01.json",
+      "bytes": 16162,
+      "sha256": "dc90c3429844586c11d0eae86590e05cd7eb686211fa2dbcbe7080fb33354f87",
+      "crc32": "53c18a69"
+    },
+    {
+      "path": "reviews/b2/boards-notebook-browser-proposal01/A-BOARDS-PUBLIC-WORKSPACE-CLOSE-REQUEST03.json",
+      "bytes": 17095,
+      "sha256": "6f22ba2cac8e473ae2b8ebef51a11df07140b8573553ecadd80c9beacecf8eb1",
+      "crc32": "59e64d57"
+    },
+    {
+      "path": "reviews/b2/chat-ci-recorded-review01/REVIEW.json",
+      "bytes": 55946,
+      "sha256": "5cb7118c94fa6b5fd012e913186bbb41d69c53d4a94a328abf49958b4c9f66ef",
+      "crc32": "af9aeeae"
+    },
+    {
+      "path": "reviews/b2/planner-original-sqlite-ci-recorded-review01/REVIEW.json",
+      "bytes": 15703,
+      "sha256": "238ffa0b1c0e47c6007a6c7b24eeb408f60080d8340d2bc6b0ed7555757914b0",
+      "crc32": "ce786f4f"
+    },
+    {
+      "path": "reviews/b2/write-ci-recorded-review01/A-SPACE-KEY-ACTUAL-CI-HANDOFF01.json",
+      "bytes": 34210,
+      "sha256": "d2f26415aa385d6883bf618d01d83c29c57706b8894d2cf81e63a1bedb581869",
+      "crc32": "cbf61e99"
+    },
+    {
+      "path": "reviews/b2/write-ci-recorded-review01/REVIEW.json",
+      "bytes": 58714,
+      "sha256": "70ad1798fc40a24c88c5d6d65f0d3dd6641f36416b7d4267e82d66872ed74b14",
+      "crc32": "ca3eefbf"
+    },
+    {
+      "path": "reviews/b3/picture-browser-22d-recorded-review01/review02.json",
+      "bytes": 24753,
+      "sha256": "a20d797b2df86fa5095e60fb5e1e7ba39cee26117d1372b69ed25f26496da36d",
+      "crc32": "c326f467"
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/admission01-repaired-markup-canonical-receipts.json",
+      "bytes": 50502,
+      "sha256": "b7fad9b191525654c0001efa042fdb389f11d1cbf1c6b885e4884c858aa8c8c0",
+      "crc32": "899eaca3"
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/admission01-repaired-markup-review02.json",
+      "bytes": 23162,
+      "sha256": "78612cc91772635d130126f0e564ac6a166513a4da85bc30f04f6951ae9ac5ff",
+      "crc32": "e934736e"
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/admission01-review.json",
+      "bytes": 33884,
+      "sha256": "7592a4ccfbad5bb241b1f570eef6e850a5f896edf55b8e0c485072031ba9a41d",
+      "crc32": "730795bc"
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/current-canonical-receipts.json",
+      "bytes": 49682,
+      "sha256": "4f2de677fcbc8153c09ed5a9276d87db8e70c96a72cd35d07a80ff764e291e26",
+      "crc32": "a3886718"
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/current-review02.json",
+      "bytes": 21115,
+      "sha256": "77fbb47e7a377d34bbf7f3731ee09f6d2f91801b89d5b2c46bcc0b1d9e21fb6b",
+      "crc32": "28194601"
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/original-review.json",
+      "bytes": 32334,
+      "sha256": "1bf3cdd3999ac6bff54668008986cfe46add524a630f1837bf5e390cdcd66a40",
+      "crc32": "1aca1df1"
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/production-original-repaired-markup-review.json",
+      "bytes": 40088,
+      "sha256": "9203940ba00a65dfd4936984c4812f00322cbd70f2bdbfd6c7dffd6a3137ae5f",
+      "crc32": "a7fd5038"
+    },
+    {
+      "path": "reviews/b4/github-lifecycle04ae-actual-review01/review.json",
+      "bytes": 77374,
+      "sha256": "952ffcfd0aed4eba815385b179dbfad6a683564c28085423ad1cedaa9f4e1b75",
+      "crc32": "f49ad503"
+    },
+    {
+      "path": "reviews/b5/a63-c7254-home-cui-source-review/REVIEW.json",
+      "bytes": 7799,
+      "sha256": "416335eac5448a661dc5f3449ca5fe81a99e5b79d70540ecde37c7426f671a09",
+      "crc32": "f6a86f80"
+    },
+    {
+      "path": "reviews/b5/c-hosted-auth-a7fed780-source-review/REVIEW.json",
+      "bytes": 12960,
+      "sha256": "1ef1d18a106921454d0e0fe78669bab8a047aa8a6d6e4c99b93470c7ee5be675",
+      "crc32": "e32946b5"
+    },
+    {
+      "path": "reviews/coordinator/files-sites-lifecycle-root-adoption09.json",
+      "bytes": 12313,
+      "sha256": "95a512dac816f783b348567a88ce52e8a6068e80586ff16b2713d757d89a99ea",
+      "crc32": "987a7e6a"
+    },
+    {
+      "path": "reviews/coordinator/live-1217-text-diff01.json",
+      "bytes": 2106,
+      "sha256": "11ca0414e2957744556f994c742222ce552749cc1f6d02600d1641a6fbe5f61e",
+      "crc32": "ca44c164"
+    },
+    {
+      "path": "reviews/coordinator/picture-markup02-and-cache03-root-adoption.json",
+      "bytes": 4936,
+      "sha256": "90ded20601635495d8488c85719349e0e086a0b1d46a3dbeed51ac2810d853c0",
+      "crc32": "b48f56ee"
+    },
+    {
+      "path": "scoped-results.json",
+      "bytes": 2756,
+      "sha256": "d2e5c73932c5b669d70c64f1da9005ee68adc7b4b8a04ced1f5fd3868196f77a",
+      "crc32": "4e241819"
+    }
+  ],
+  "origins": [
+    {
+      "path": "independent/team-b-b6-chat10-original-current-ci-recorded-review01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "independent/team-b-b6-files-sites-lifecycle04ae-recorded-review01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "independent/team-b-b6-picture-browser9-source-binding02-review.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "independent/team-b-b6-planner-original-ci-recorded-review01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "independent/team-b-b6-write-existing-ci-recorded-review01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "owner-requests/A-BOARDS-PUBLIC-WORKSPACE-CLOSE-REQUEST03.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "owner-requests/A-SPACE-KEY-ACTUAL-CI-HANDOFF01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "owner-requests/C-HOSTED-RECEIVING-PREREQUISITES-REQUEST01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "owner-requests/REQUEST-SELECTION-INDEX01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "owner-requests/SHARED-CUI-TWO-FILE-PROPOSAL-MANIFEST.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "owner-requests/canonical-two-file-lifetime.patch",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/chromium-path.log",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/commands.json",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-clean-after.log",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-clean-before.log",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-head-after.log",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/git-head.log",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/output-custody-before-final-receipt.json",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/picture-browser-nine.log",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/playwright-version.log",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/diagnostics/result.json",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/raw/actual-crop-remove-all.png",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/raw/picture-original.png",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "picture-browser9-selected-full-members/raw/results.json",
+      "sameOriginalZIPMember": true
+    },
+    {
+      "path": "raw-archives/094d4ed7-5a99-4b01-b22a-6c8fc1499328-artifact-11304750489.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/1b410c78-2c51-4d43-868e-be56711bd747-github-actions-artifact-11302943956.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/2367f828-d3f3-44d0-bacd-7768f26ff537-picture-22d-admission01-repaired.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/2806f6ac-cee3-416f-ac65-c7839b55af1a-artifact-11304012551.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/3f473716-b0e2-480c-8d75-a4b9a262020d-planner-original-sqlite-45eb0685.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/41695bdf-2ec1-4349-807a-71bd263ed8d4-web-success-8ff617c3-diagnostics.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/76bbebd2-261c-4515-a57f-28c010e371bd-picture-22d-original-repaired.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/a29c7b6c-895f-4ae9-8be3-534679075a2b-artifact-11304601466.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/ab984520-b354-43db-b8e3-4fccb4aaa090-artifact-11304720902.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/b0f63bfa-7b3e-4885-a4e7-33c3b0412261-github-actions-artifact-11303787544.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/b498e46b-5706-4c86-928a-4bc96c1d5206-github-actions-artifact-11303850457.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/c760716b-2e3b-4070-890a-67d448b476be-picture-22d-browser-publisher.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/c803febe-cf9d-415d-aa39-2b5a55f30358-github-actions-artifact-11303409855.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/dfdb7391-fba6-492d-8feb-5b8b6ab91aa0-picture-22d-admission01.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/e0f51cf7-e00e-4631-89fa-42893d510915-picture-22d-current.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "raw-archives/fea0d17e-784b-492c-87a3-e97f7516b6c9-artifact-11303588863.zip",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b1/published-8ff617c3-actual-review01/actual-diagnostics-review01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b2/boards-notebook-browser-proposal01/A-BOARDS-PUBLIC-WORKSPACE-CLOSE-REQUEST03.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b2/chat-ci-recorded-review01/REVIEW.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b2/planner-original-sqlite-ci-recorded-review01/REVIEW.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b2/write-ci-recorded-review01/A-SPACE-KEY-ACTUAL-CI-HANDOFF01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b2/write-ci-recorded-review01/REVIEW.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-browser-22d-recorded-review01/review02.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/admission01-repaired-markup-canonical-receipts.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/admission01-repaired-markup-review02.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/admission01-review.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/current-canonical-receipts.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/current-review02.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/original-review.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b3/picture-native-22d-remote-review01/production-original-repaired-markup-review.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b4/github-lifecycle04ae-actual-review01/review.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b5/a63-c7254-home-cui-source-review/REVIEW.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/b5/c-hosted-auth-a7fed780-source-review/REVIEW.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/coordinator/files-sites-lifecycle-root-adoption09.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/coordinator/live-1217-text-diff01.json",
+      "sameOriginalFile": true
+    },
+    {
+      "path": "reviews/coordinator/picture-markup02-and-cache03-root-adoption.json",
+      "sameOriginalFile": true
+    }
+  ],
+  "archiveChecks": [
+    {
+      "path": "raw-archives/094d4ed7-5a99-4b01-b22a-6c8fc1499328-artifact-11304750489.zip",
+      "sha256": "7cf9fc0dadd66e063336cd2b4cfc93aa5437144c3eeb32cb3de6108024c28cc6",
+      "members": 17,
+      "memberBytes": 1337848,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "04ae712269021637da0fe1856ffa3c455261613b",
+      "actualResultStatus": "FAIL",
+      "suite": "lifecycle-original01",
+      "variant": null,
+      "commands": 12,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native",
+          "exit": 1
+        }
+      ],
+      "strictNegativeClassification": {
+        "status": "EXPECTED_RED_CONTROL",
+        "sourceCommit": "04ae712269021637da0fe1856ffa3c455261613b",
+        "suite": "lifecycle-original01",
+        "criteriaExpected": 14,
+        "criteriaExecuted": 14,
+        "criteriaPassed": 6,
+        "criteriaFailed": 8,
+        "failedCases": [
+          "actual-files-reentrant-negative-owner-drain-issued-once",
+          "actual-sites-reentrant-negative-owner-drain-issued-once",
+          "actual-files-held-preparation-opening-remains-issued",
+          "actual-sites-held-preparation-opening-remains-issued",
+          "actual-files-repeated-missing-fence-stays-failed",
+          "actual-sites-repeated-missing-fence-stays-failed",
+          "actual-files-owner-action-reentry-joins-fence-settlement",
+          "actual-sites-owner-action-reentry-joins-fence-settlement"
+        ],
+        "intendedFirstFailureLinesMatched": true,
+        "actualFirstFailureLines": {
+          "actual-files-reentrant-negative-owner-drain-issued-once": "System.Exception: Reentrant disposal issued another owner drain instead of returning the published task.",
+          "actual-sites-reentrant-negative-owner-drain-issued-once": "System.Exception: Reentrant Sites disposal issued another owner drain instead of returning the published task.",
+          "actual-files-held-preparation-opening-remains-issued": "System.Exception: Drain completed while the actual outward opening's preparation continuation was still issued.",
+          "actual-sites-held-preparation-opening-remains-issued": "System.Exception: Drain completed while the actual outward opening's preparation continuation was still issued.",
+          "actual-files-repeated-missing-fence-stays-failed": "System.Exception: Repeated failed fence appeared successful.",
+          "actual-sites-repeated-missing-fence-stays-failed": "System.Exception: Repeated failed Sites fence appeared successful.",
+          "actual-files-owner-action-reentry-joins-fence-settlement": "System.Exception: Owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled.",
+          "actual-sites-owner-action-reentry-joins-fence-settlement": "System.Exception: Native owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled."
+        },
+        "actualNativeExit": 1,
+        "actualDriverExit": 1,
+        "notProductPass": true,
+        "realOwnerGroupAuthority": "BLOCKED",
+        "browser": "NOT_RUN",
+        "nativeLogSHA256": "505e50b66e8363ec8809eaae3c78389c219abad143795bd2a561cdc3704eb997"
+      }
+    },
+    {
+      "path": "raw-archives/1b410c78-2c51-4d43-868e-be56711bd747-github-actions-artifact-11302943956.zip",
+      "sha256": "c0cd28452809ce4aaf2f8791a16bca0b9dcb4707e3c3a42d10308fd7547a03c1",
+      "members": 16,
+      "memberBytes": 1325139,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "actualResultStatus": "FAIL",
+      "suite": "space15",
+      "variant": null,
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native-space",
+          "exit": -6
+        }
+      ],
+      "driverReportedCounters": {
+        "expected": null,
+        "discovered": null,
+        "executed": null,
+        "passed": null,
+        "failed": null,
+        "notRun": null
+      }
+    },
+    {
+      "path": "raw-archives/2367f828-d3f3-44d0-bacd-7768f26ff537-picture-22d-admission01-repaired.zip",
+      "sha256": "d69a94465dbf4960bc596035d43017d9c4b2e4aea8c1d4aa8a5ac59268634c96",
+      "members": 16,
+      "memberBytes": 1521673,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "actualResultStatus": "FAIL",
+      "suite": null,
+      "variant": "admission01-repaired-markup",
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native",
+          "exit": 1
+        }
+      ],
+      "nativeCounters": {
+        "discovered": 15,
+        "executed": 15,
+        "passed": 12,
+        "failed": 3,
+        "notRun": 0,
+        "assertions": 123
+      }
+    },
+    {
+      "path": "raw-archives/2806f6ac-cee3-416f-ac65-c7839b55af1a-artifact-11304012551.zip",
+      "sha256": "9c993e31c96bdc8968433ddb8d9e4fc9366700895ec8c6d19ad79e13cee89a59",
+      "members": 17,
+      "memberBytes": 1332795,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "04ae712269021637da0fe1856ffa3c455261613b",
+      "actualResultStatus": "FAIL",
+      "suite": "lifecycle-original02",
+      "variant": null,
+      "commands": 12,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native",
+          "exit": 1
+        }
+      ],
+      "strictNegativeClassification": {
+        "status": "EXPECTED_RED_CONTROL",
+        "sourceCommit": "04ae712269021637da0fe1856ffa3c455261613b",
+        "suite": "lifecycle-original02",
+        "criteriaExpected": 14,
+        "criteriaExecuted": 14,
+        "criteriaPassed": 12,
+        "criteriaFailed": 2,
+        "failedCases": [
+          "actual-files-owner-action-reentry-joins-fence-settlement",
+          "actual-sites-owner-action-reentry-joins-fence-settlement"
+        ],
+        "intendedFirstFailureLinesMatched": true,
+        "actualFirstFailureLines": {
+          "actual-files-owner-action-reentry-joins-fence-settlement": "System.Exception: Owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled.",
+          "actual-sites-owner-action-reentry-joins-fence-settlement": "System.Exception: Native owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled."
+        },
+        "actualNativeExit": 1,
+        "actualDriverExit": 1,
+        "notProductPass": true,
+        "realOwnerGroupAuthority": "BLOCKED",
+        "browser": "NOT_RUN",
+        "nativeLogSHA256": "7d8cd9acb008fe039cdc0ce3353fd4705b5e6287532fd98ada0b21b30765821d"
+      }
+    },
+    {
+      "path": "raw-archives/3f473716-b0e2-480c-8d75-a4b9a262020d-planner-original-sqlite-45eb0685.zip",
+      "sha256": "cfc0742dc8e8f8eb0a64781db77f96b114119c3478d406b67d9967ecbd25967c",
+      "members": 17,
+      "memberBytes": 1315086,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "45eb0685621259e1a2e16c007f896acee0a88345",
+      "actualResultStatus": "PASS",
+      "suite": null,
+      "variant": null,
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [],
+      "driverReportedCounters": {
+        "expected": null,
+        "discovered": 2,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "notRun": null
+      }
+    },
+    {
+      "path": "raw-archives/41695bdf-2ec1-4349-807a-71bd263ed8d4-web-success-8ff617c3-diagnostics.zip",
+      "sha256": "0098d731a0c4920ff6108af0216e206c2a2961f95fcff95b2145dfee2a47305d",
+      "members": 27,
+      "memberBytes": 5441215,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "8ff617c3afc3b2327726081dd66d5f8e4b94d8f9",
+      "actualResultStatus": "PASS",
+      "suite": null,
+      "variant": null,
+      "commands": 19,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": []
+    },
+    {
+      "path": "raw-archives/76bbebd2-261c-4515-a57f-28c010e371bd-picture-22d-original-repaired.zip",
+      "sha256": "6e778ede24eb99003011f37c15e861dac676fbf4d95cb11ec07a86cede11af8e",
+      "members": 16,
+      "memberBytes": 1486866,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "actualResultStatus": "PRODUCTION_ORIGINAL_SESSION_REPAIRED_MARKUP_CONTROL_RED_OBSERVED",
+      "suite": null,
+      "variant": "production-original-repaired-markup",
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native",
+          "exit": 1
+        }
+      ],
+      "nativeCounters": {
+        "discovered": 13,
+        "executed": 13,
+        "passed": 4,
+        "failed": 9,
+        "notRun": 0,
+        "assertions": 95
+      },
+      "driverReportedCounters": {
+        "expected": 13,
+        "discovered": 13,
+        "executed": 13,
+        "passed": 4,
+        "failed": 9,
+        "notRun": 0
+      }
+    },
+    {
+      "path": "raw-archives/a29c7b6c-895f-4ae9-8be3-534679075a2b-artifact-11304601466.zip",
+      "sha256": "db26b7f747ceef82e5810a1af816bc083e032025ef9b66c8cfd0b94a3516fa03",
+      "members": 16,
+      "memberBytes": 1330904,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "04ae712269021637da0fe1856ffa3c455261613b",
+      "actualResultStatus": "PASS",
+      "suite": "sites18",
+      "variant": null,
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [],
+      "driverReportedCounters": {
+        "expected": 18,
+        "discovered": null,
+        "executed": 18,
+        "passed": 18,
+        "failed": 0,
+        "notRun": null
+      }
+    },
+    {
+      "path": "raw-archives/ab984520-b354-43db-b8e3-4fccb4aaa090-artifact-11304720902.zip",
+      "sha256": "c773f0ae2560e7d67e329bdb47414f90aec67ef3fc2c68e7f676055ac1f6de3e",
+      "members": 16,
+      "memberBytes": 1329837,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "04ae712269021637da0fe1856ffa3c455261613b",
+      "actualResultStatus": "PASS",
+      "suite": "lifecycle14",
+      "variant": null,
+      "commands": 12,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [],
+      "driverReportedCounters": {
+        "expected": 14,
+        "discovered": null,
+        "executed": 14,
+        "passed": 14,
+        "failed": 0,
+        "notRun": null
+      }
+    },
+    {
+      "path": "raw-archives/b0f63bfa-7b3e-4885-a4e7-33c3b0412261-github-actions-artifact-11303787544.zip",
+      "sha256": "f95f39f60236cf7b55f1b80743dd5dd4d5e71cc930cab854c9ab9936b74b1d6f",
+      "members": 15,
+      "memberBytes": 1446367,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "8ff617c3afc3b2327726081dd66d5f8e4b94d8f9",
+      "actualResultStatus": "SUPPORTING_INTERFACE_UNIT_PASS",
+      "suite": null,
+      "variant": "current",
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [],
+      "driverReportedCounters": {
+        "expected": 10,
+        "discovered": 10,
+        "executed": 10,
+        "passed": 10,
+        "failed": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "path": "raw-archives/b498e46b-5706-4c86-928a-4bc96c1d5206-github-actions-artifact-11303850457.zip",
+      "sha256": "51420539234bffa417509360cbbd12297182760c1e616d1c6f7755508e389bda",
+      "members": 19,
+      "memberBytes": 1322857,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "actualResultStatus": "PASS",
+      "suite": "durable65",
+      "variant": null,
+      "commands": 13,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [],
+      "driverReportedCounters": {
+        "expected": null,
+        "discovered": null,
+        "executed": 65,
+        "passed": 65,
+        "failed": 0,
+        "notRun": null
+      }
+    },
+    {
+      "path": "raw-archives/c760716b-2e3b-4070-890a-67d448b476be-picture-22d-browser-publisher.zip",
+      "sha256": "7545bdd49f0a6f4403be48a0ce9aa09bcfaa3f7da371e569cb820bbf82c57c76",
+      "members": 27,
+      "memberBytes": 5450290,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "actualResultStatus": "PASS",
+      "suite": null,
+      "variant": null,
+      "commands": 19,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": []
+    },
+    {
+      "path": "raw-archives/c803febe-cf9d-415d-aa39-2b5a55f30358-github-actions-artifact-11303409855.zip",
+      "sha256": "310a4c2a95eb4aaa88bf1e337bf87a5f86eacabe02748214728f0085d3790c9a",
+      "members": 15,
+      "memberBytes": 1447212,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "8ff617c3afc3b2327726081dd66d5f8e4b94d8f9",
+      "actualResultStatus": "EXPECTED_RED_CONTROL",
+      "suite": null,
+      "variant": "original",
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native",
+          "exit": 1
+        }
+      ],
+      "driverReportedCounters": {
+        "expected": 10,
+        "discovered": 10,
+        "executed": 10,
+        "passed": 9,
+        "failed": 1,
+        "notRun": 0
+      }
+    },
+    {
+      "path": "raw-archives/dfdb7391-fba6-492d-8feb-5b8b6ab91aa0-picture-22d-admission01.zip",
+      "sha256": "46a7e81cb438efa1f2eabebeface41d268149f6016cb7486d529fdde11bfe818",
+      "members": 16,
+      "memberBytes": 1479926,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "actualResultStatus": "FAIL",
+      "suite": null,
+      "variant": "admission01",
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native",
+          "exit": 1
+        }
+      ],
+      "nativeCounters": {
+        "discovered": 15,
+        "executed": 15,
+        "passed": 0,
+        "failed": 15,
+        "notRun": 0,
+        "assertions": 28
+      }
+    },
+    {
+      "path": "raw-archives/e0f51cf7-e00e-4631-89fa-42893d510915-picture-22d-current.zip",
+      "sha256": "72370f57cb7d6144130286d043e7f52faaf235da6eb81489e57a500acaec594a",
+      "members": 16,
+      "memberBytes": 1517609,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "actualResultStatus": "FAIL",
+      "suite": null,
+      "variant": "current",
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [
+        {
+          "name": "native",
+          "exit": 1
+        }
+      ],
+      "nativeCounters": {
+        "discovered": 15,
+        "executed": 15,
+        "passed": 14,
+        "failed": 1,
+        "notRun": 0,
+        "assertions": 128
+      }
+    },
+    {
+      "path": "raw-archives/fea0d17e-784b-492c-87a3-e97f7516b6c9-artifact-11303588863.zip",
+      "sha256": "b690c6243edf1b371e11ec39e2d6a46c15f0dbe54a41982e9379365cbc1b71a9",
+      "members": 15,
+      "memberBytes": 1326861,
+      "allCRCAndFullSHAAndRecordedCustodyRowsMatch": true,
+      "sameOriginalFullArchive": true,
+      "sourceCommit": "04ae712269021637da0fe1856ffa3c455261613b",
+      "actualResultStatus": "PASS",
+      "suite": "files17",
+      "variant": null,
+      "commands": 11,
+      "normalClosureAllCommands": true,
+      "nonzeroNativeCommands": [],
+      "driverReportedCounters": {
+        "expected": 17,
+        "discovered": null,
+        "executed": 17,
+        "passed": 17,
+        "failed": 0,
+        "notRun": null
+      }
+    }
+  ],
+  "decodedJSONBodies": 119,
+  "scopedCounts": {
+    "FilesSitesPositiveNativeCases": 49,
+    "FilesCurrent": 17,
+    "SitesCurrent": 18,
+    "LifecycleCurrent": 14,
+    "LifecycleOriginal01": "6PASS8intendedFAIL native/driverFAIL1; strict validator expectedRED, not acceptance",
+    "LifecycleOriginal02": "12PASS2intendedFAIL native/driverFAIL1; strict validator expectedRED, not acceptance",
+    "ChatCurrent": "10 supporting scripted-interface PASS; no browser/provider/ACL",
+    "ChatOriginal": "9PASS1 exact denied-refresh privacyFAIL expectedRED",
+    "Write": "65 durable assertion checkpoints (not cases); Space15=10PASS1FAIL4NOT_RUN natural SIGABRT",
+    "Planner": "One selected original real SQLite PASS; discovered2 is not full2 acceptance",
+    "PictureBrowser": "Primary9 local IDB/nativeCUI groups PASS; exact9outcomes/2closed launches and held ordinary command-family births gone",
+    "PictureNativeCurrent": "14PASS1FAIL preserved",
+    "PictureNativeAdmission01Repaired": "12PASS3FAIL preserved",
+    "PictureNativeOriginalRepaired": "4PASS9FAIL intended first message; not acceptance",
+    "PictureOldMarkupOriginal": "0PASS13FAIL actual CUI029; review body present, full original archive is outside this selected16",
+    "PictureOldMarkupAdmission": "0PASS15FAIL actual CUI029",
+    "WebPublisher": "8ff617 and22d separate285 asset receipts; no interchangeable bundle or full35MB body custody claim"
+  },
+  "requests": [
+    {
+      "group": "A Space keyboard routing",
+      "kind": "request",
+      "bytes": 34210,
+      "sha256": "d2f26415aa385d6883bf618d01d83c29c57706b8894d2cf81e63a1bedb581869"
+    },
+    {
+      "group": "A port193 selected caller/view lifetime",
+      "kind": "request",
+      "bytes": 3397,
+      "sha256": "b116dbc2c9d77254807790499d9a709f585740fc4476dd2ac85c7eaabf7a468f"
+    },
+    {
+      "group": "A port193 selected caller/view lifetime",
+      "kind": "patch",
+      "bytes": 2492,
+      "sha256": "193cd9e6693ab11db10f077623aaf7b526a08d464ae53aa4476c29e38cd1557d"
+    },
+    {
+      "group": "C hosted CORS/private PKCE and real account bridge",
+      "kind": "request",
+      "bytes": 3006,
+      "sha256": "d6231d9818a90f66a8fb4067936a0db62024b5a159b63fbea52e0c503154c5b1"
+    },
+    {
+      "group": "A Boards seamless native workspace/guarded close",
+      "kind": "request",
+      "bytes": 17095,
+      "sha256": "6f22ba2cac8e473ae2b8ebef51a11df07140b8573553ecadd80c9beacecf8eb1"
+    }
+  ],
+  "independentPictureReplayAtPackaging": "Explicitly PENDING37207768958; not upgraded by this packet review or any later results",
+  "governance": "AcceptedHead null/mainMerged false are packaging-state declarations, not a new remote main/PR verification; Team C owns integration. DraftPR6 retained.",
+  "limits": "No full active31 acceptance, hosted provider/permissions, donor parity, AT/themes/200%, canonical Files continuity or quota acceptance. No private profile/cache/token/key/fixture database or native binary/package bodies included.",
+  "bodyQualification": "Native/task/SDK/bundle hashes in diagnostic receipts are metadata only where binaries not included. Output screenshots/cropped PNG are approved synthetic image artifacts, not private profiles/stores/credentials. Two full Picture traces omitted and linked to original11304832599/571dfec7; remaining13 browser outer members included whole.",
+  "execution": {
+    "SDK": false,
+    "GUI": false,
+    "moduleOrHelperImports": false,
+    "productionChanges": false,
+    "remoteWrites": false
+  },
+  "findings": []
+}

@@ -1,0 +1,25 @@
+{
+  "zip": {
+    "path": "reviewed-evidence.zip",
+    "bytes": 7993418,
+    "sha256": "69a65c37810102f68d3f2531d7d60cbe799aa4443c87197e4c611ab14fdcfc92"
+  },
+  "manifest": {
+    "bytes": 21132,
+    "sha256": "41a4b32328a28a567aa828f73dbb7e28d27601e74f91117a76820646fed14f19"
+  },
+  "logicalFiles": 62,
+  "logicalBytes": 8772407,
+  "nativePublisherOriginalArchives": 16,
+  "fullArchiveReadback": true,
+  "fullPacketReadback": true,
+  "resourceFreeBefore": {
+    "/workspace": 337723392,
+    "/tmp": 343744512
+  },
+  "resourceFreeAfter": {
+    "/workspace": 329703424,
+    "/tmp": 343744512
+  },
+  "qualification": "No full active31 acceptance, hosted provider/permissions, donor parity, AT/themes/200%, canonical Files continuity or quota acceptance. No private profile/cache/token/key/fixture database or native binary/package bodies included."
+}
