@@ -1,0 +1,37 @@
+{
+  "scope": "Exactly unchanged original Motion three-source BCL project/CLI/file workflow plus thin owned entry; SDK/whole owner app/render/browser are separate",
+  "files": {
+    "9to1 Workspace/Motion/MotionProject.cs": {
+      "bytes": 14526,
+      "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d"
+    },
+    "9to1 Workspace/Motion/MotionProjectCommands.cs": {
+      "bytes": 5674,
+      "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6"
+    },
+    "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs": {
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+    },
+    "apps/Web/Tests/ci/run-ordinary-native.py": {
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    "NuGet.Config": {
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+    },
+    "global.json": {
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    },
+    "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj": {
+      "bytes": 935,
+      "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21"
+    },
+    "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs": {
+      "bytes": 1635,
+      "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38"
+    }
+  }
+}
