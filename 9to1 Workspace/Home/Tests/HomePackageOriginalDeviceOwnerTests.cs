@@ -384,7 +384,8 @@ public sealed class HomePackageOriginalDeviceOwnerTests
             var known = Assert.Single(retained.KnownOriginalResults);
             Assert.Equal(HomePackageOperationState.Succeeded, known.State);
             Assert.Equal(1, rig.Root.Effects);
-            Assert.Throws<InvalidOperationException>(() => { run.ContinueOriginalAsync(rig.Token); });
+            Action continueAfterAttempt = () => { run.ContinueOriginalAsync(rig.Token); };
+            Assert.Throws<InvalidOperationException>(continueAfterAttempt);
             rig.Actors.Current = rig.Actors.Current with { AuthenticationRevision = "retired-before-original-installer-audit" };
             audit = run.RecoverOriginalAsync(CancellationToken.None);
             var recovered = await audit;
@@ -603,11 +604,12 @@ public sealed class HomePackageOriginalDeviceOwnerTests
             _lease = await HomeNativeSessionLease.TryAcquireAsync(Actors, new Paths(_root), Token)
                 ?? throw new InvalidOperationException("Actual original Home lease refused.");
             await Runtime.StartAsync(Token);
-            Session = OperatingSystem.IsWindows()
+            var session = OperatingSystem.IsWindows()
                 ? await Sessions.AcceptWindowsPipeAsync(_pipeServer!, _lease, _connection.Token, Token)
                 : await Sessions.AcceptUnixAsync(_accepted!, _lease, _connection.Token, Token);
-            if (Session is null)
+            if (session is null)
                 throw new UnauthorizedAccessException("Supplied synthetic original installed attestation refused.");
+            Session = session;
             var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(Actors, [new PackageResourceOwner(Actors)]), Permissions);
             Adapter = Session.OpenOriginalPackageOperations(Owner, broker);
         }

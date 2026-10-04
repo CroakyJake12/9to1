@@ -18,7 +18,7 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         var policy = new ScriptedPolicy();
         var home = Selection(owner, "fixture.home");
         var shared = Selection(owner, "fixture.core");
-        var dependency = Selection(owner, "fixture.dependency", new("fixture.core", "1.0.0", "2.0.0"));
+        var dependency = Selection(owner, "fixture.dependency", new HomePackageDependency("fixture.core", "1.0.0", "2.0.0"));
         var app = Selection(owner, "fixture.app", new("fixture.core", "1.0.0", "2.0.0"),
             new("fixture.dependency", "1.0.0", "2.0.0"));
         policy.Classify(home, HomePackageComponentClass.MandatorySharedCore);
@@ -51,7 +51,7 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         var requirement = kind == "unsupported" ? new HomePackageDependency("fixture.dependency", "unsupported", null)
             : new HomePackageDependency("fixture.dependency", kind == "conflict" ? "2.0.0" : "1.0.0", null);
         var app = Selection(owner, "fixture.app", requirement);
-        var dependency = kind == "cycle" ? Selection(owner, "fixture.dependency", new("fixture.app"))
+        var dependency = kind == "cycle" ? Selection(owner, "fixture.dependency", new HomePackageDependency("fixture.app"))
             : Selection(owner, "fixture.dependency");
         policy.Classify(home, HomePackageComponentClass.MandatorySharedCore);
         policy.Classify(app, HomePackageComponentClass.OptionalApp);
@@ -71,7 +71,7 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         var policy = new ScriptedPolicy();
         var home = Selection(owner, "fixture.home");
         var app = Selection(owner, "fixture.app");
-        var feature = Selection(owner, "fixture.feature", new("fixture.app"));
+        var feature = Selection(owner, "fixture.feature", new HomePackageDependency("fixture.app"));
         policy.Classify(home, HomePackageComponentClass.MandatorySharedCore);
         policy.Classify(app, HomePackageComponentClass.OptionalApp);
         policy.Classify(feature, HomePackageComponentClass.OptionalFeature);
@@ -97,7 +97,7 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         var policy = new ScriptedPolicy();
         var home = Selection(owner, "fixture.home");
         var dependency = Selection(owner, "fixture.dependency");
-        var app = Selection(owner, "fixture.app", new("fixture.dependency"));
+        var app = Selection(owner, "fixture.app", new HomePackageDependency("fixture.dependency"));
         policy.Classify(home, HomePackageComponentClass.MandatorySharedCore);
         policy.Classify(dependency, HomePackageComponentClass.AppRequiredDependency);
         policy.Classify(app, HomePackageComponentClass.OptionalApp);
@@ -180,7 +180,7 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         var policy = new ScriptedPolicy();
         var home = Selection(owner, "fixture.home");
         var feature = Selection(owner, "fixture.feature");
-        var app = Selection(owner, "fixture.app", new("fixture.feature"));
+        var app = Selection(owner, "fixture.app", new HomePackageDependency("fixture.feature"));
         policy.Classify(home, HomePackageComponentClass.MandatorySharedCore);
         policy.Classify(feature, HomePackageComponentClass.OptionalFeature);
         policy.Classify(app, HomePackageComponentClass.OptionalApp);
