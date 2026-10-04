@@ -1,0 +1,49 @@
+name: Original Mail draft and local durable owner
+on:
+  workflow_dispatch:
+  push:
+    branches: [team-b/astra-browser-validation-20261003]
+    paths:
+      - .github/workflows/team-b-original-mail-drafts.yml
+      - apps/Web/Productivity/Mail/Tests/**
+      - apps/Web/Tests/ci/run-ordinary-native.py
+      - 9to1 Workspace/shared/tests/Haven.Desktop.Tests/FileMailDraftStoreTests.cs
+      - 9to1 Workspace/shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs
+      - 9to1 Workspace/shared/src/Haven.Infrastructure/Mail/FileMailDraftStore.cs
+      - 9to1 Workspace/shared/src/Haven.Core/**
+      - 9to1 Workspace/shared/src/Haven.Application/**
+      - framework/CUI/AI/**
+      - global.json
+      - NuGet.Config
+permissions:
+  contents: read
+jobs:
+  original-owner:
+    if: github.ref == 'refs/heads/team-b/astra-browser-validation-20261003'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Original Fact then genuine owner seed and fresh-process verification
+        env:
+          MAIL_SOURCE_COMMIT: ${{ github.sha }}
+        run: >-
+          python3 apps/Web/Productivity/Mail/Tests/ci/run-mail-original-durable.py
+          --expected-commit "$MAIL_SOURCE_COMMIT"
+          --output "$RUNNER_TEMP/mail-original-durable"
+      - name: Preserve complete original failure and bounded diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-mail-durable-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/mail-original-durable/diagnostics/
+            ${{ runner.temp }}/mail-original-durable/test-results/
+          if-no-files-found: error
+          retention-days: 14
