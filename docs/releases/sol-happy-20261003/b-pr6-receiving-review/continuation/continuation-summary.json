@@ -1,0 +1,55 @@
+{
+  "baseEvidenceCommit": "aecbd3563b49a3dad4578d5ac3ab58bb7f7a013a",
+  "baseEvidenceIndexSHA256": "6c7c106b1b75f4a1ad50d5519a2d37971d47d1e7fdb7d0161f8b2477f0fa3546",
+  "actualGlobalFirstRun": {
+    "source": "ce50dacc7189a91ad6c589904610a0cfcd0445e5",
+    "run": 37211850761,
+    "url": "https://github.com/CroakyJake12/9to1/actions/runs/37211850761",
+    "status": "FAIL",
+    "firstCause": "Original linked owner source custody is incomplete beforeworkload/build; threeWaveCSharpbodiesmissing, other2older",
+    "browser": "NOT_RUN/SKIPPED",
+    "artifactReadback": "518484B originalpublisherdiagnosticsZIPCRC/member/bodycustodyverified; successfulauthorizedGitHubconnector/file-IDfallback afterGHstorage403; no signedURL/tokenpublished"
+  },
+  "WaveCanonicalClosure": {
+    "base": "28e48b64acb96763dda2bd67e9759922442a31e6",
+    "browserFiveOnly": "3333749b62b2393a667f9b7f30b81be220cc8f9b",
+    "closedTen": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+    "wholeCanonicalBodies": 10,
+    "bytes": 115904,
+    "wholeBodyIdentity": "EEC=A63=Bbase=f7",
+    "outsideTenRootAndProtectedCUnchanged": true,
+    "originalProjectAndBrowserEngineAndGeneratorUnchanged": true,
+    "sourceCustody": "UNACCEPTEDnativeowneradoptionrequest; rootsoleintegrator; C4sourceACK35979cae, C6pendingatpublication",
+    "nativeNormalReleaseCompile": "PASS0warnings0errors",
+    "actualNativeProcesses": {
+      "originalSelfTest": 0,
+      "markersRegions": 0,
+      "PCMFloatSixRepresentationsAndExtensible": 0,
+      "FilesWorkflowWithRequiredPhysicalPCMFixture": 0
+    },
+    "originalSelfTestAssertions": "All28 original Require callbodies retainedwithin42canonicalcallbodies; actualnativeexit0. Callsitecount is not runtimeassertioncount.",
+    "initialFilesWorkflowAttempt": "ExplicitrequiredASTRA_GSTREAMER_FIXTURE absent beforeassertions; originalprereqexception preserved. Firstactualassertions executedwithknownphysicalstandardPythonwavePCM16input; no source/assert/expectedvaluesmodified.",
+    "actualConsoleCLIRoundtrip": "create/open/mutate/reopenPASS; staleexpectedrev actualexit2 RevisionConflict preserveslatestfilebytes",
+    "maintainedBrowserEngineNormalReleaseCompile": "PASS0; unchangedoriginalsourceSHA4cabd81a/prefixSHA5426f61cguard+actualgeneratedmanifest",
+    "currentPublisherCustodyPrecondition": "sameunchangedsource_snapshot functionPASS all9LINKED_CUTS; offlineprereqproofONLY, not actualWebbuild/publish/browser",
+    "qualifications": [
+      "actualpublicCore.Media lease/decoder/resolverports only, no productionadapterregistered",
+      "controlledFilesleasefixture andPCMinput do not prove provider/GStreamer/hardware or browser",
+      "strict333fiveproposal standalone is not eligible globalnativeconsolecomposition",
+      "nextactualWebpublish must bind currentglobalroot+tenclosure, no guardrepin/alternateasset/extraC5dispatch"
+    ]
+  },
+  "OriginalWriteOnCurrent28": {
+    "source": "28e48b64acb96763dda2bd67e9759922442a31e6",
+    "maintainedDriver": "apps/Web/Write/Tests/ci/run-original-write-formats.py exactcurrenttrackedbody",
+    "project": "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+    "originalFactsAndAssertionsUnchanged": true,
+    "discovered": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "originalDiscoveryAndTRXGate": "PASS",
+    "scope": "originalsupportedDOCXsubset +native.9to1w physicalfile/XML/integrity; originalSpace-key/layoutred andownerfactoryrequirementsremainopen"
+  }
+}

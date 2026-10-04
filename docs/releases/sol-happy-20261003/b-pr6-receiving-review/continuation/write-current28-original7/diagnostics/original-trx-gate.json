@@ -1,0 +1,123 @@
+{
+  "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/test-results/write-original-formats.trx",
+  "started_wall_ns": 1791127281089495149,
+  "accepted": true,
+  "violations": [],
+  "mtime_ns": 1791127282775464555,
+  "counters": {
+    "total": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "error": 0,
+    "timeout": 0,
+    "aborted": 0,
+    "inconclusive": 0,
+    "passedButRunAborted": 0,
+    "notRunnable": 0,
+    "notExecuted": 0,
+    "disconnected": 0,
+    "warning": 0,
+    "completed": 0,
+    "inProgress": 0,
+    "pending": 0
+  },
+  "summary_outcome": "Completed",
+  "actual_result_names": [
+    "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_changed_document_bytes_without_returning_a_partial_document",
+    "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Save_and_open_preserve_structured_document_identity_and_content",
+    "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_unsupported_manifest_version",
+    "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Failed_save_keeps_existing_destination_intact",
+    "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_traversal_entries",
+    "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata",
+    "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Rich_docx_export_emits_word_formatting_and_round_trips_supported_features"
+  ],
+  "actual_outcomes": [
+    "Passed",
+    "Passed",
+    "Passed",
+    "Passed",
+    "Passed",
+    "Passed",
+    "Passed"
+  ],
+  "actual_identity_links": [
+    {
+      "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_changed_document_bytes_without_returning_a_partial_document",
+      "testId": "710ec5d6-956e-8cc7-4d9d-f8018520fe9f",
+      "executionId": "a9cc784f-3ade-4570-ba9a-97dacdc98847",
+      "method": {
+        "codeBase": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+        "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+        "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+        "name": "Open_rejects_changed_document_bytes_without_returning_a_partial_document"
+      }
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Save_and_open_preserve_structured_document_identity_and_content",
+      "testId": "8eebdc64-6393-c521-9663-b86186450360",
+      "executionId": "0eb53e00-e390-49b0-8054-e7d0f8d28790",
+      "method": {
+        "codeBase": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+        "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+        "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+        "name": "Save_and_open_preserve_structured_document_identity_and_content"
+      }
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_unsupported_manifest_version",
+      "testId": "0755f8d6-2e2e-523f-8942-15adca978094",
+      "executionId": "91456add-96df-4c0d-a148-0d120b37aa41",
+      "method": {
+        "codeBase": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+        "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+        "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+        "name": "Open_rejects_unsupported_manifest_version"
+      }
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Failed_save_keeps_existing_destination_intact",
+      "testId": "ea781297-6500-ef8a-9333-d1cf054d24c1",
+      "executionId": "3e79c51d-7ec7-4889-a183-c6dc15148fbd",
+      "method": {
+        "codeBase": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+        "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+        "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+        "name": "Failed_save_keeps_existing_destination_intact"
+      }
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_traversal_entries",
+      "testId": "01c99792-c078-8994-27b2-84f15545f0f0",
+      "executionId": "07ef2c26-1cf2-4e9c-a258-7020a3d72d9c",
+      "method": {
+        "codeBase": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+        "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+        "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+        "name": "Open_rejects_traversal_entries"
+      }
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata",
+      "testId": "91e7246d-6740-0c74-92dc-84e2796c115d",
+      "executionId": "c30486b7-e8a9-4cbe-a8e5-78c2c4dbbf47",
+      "method": {
+        "codeBase": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+        "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+        "className": "Haven.Infrastructure.Tests.WriteDocxFidelityTests",
+        "name": "Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata"
+      }
+    },
+    {
+      "name": "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Rich_docx_export_emits_word_formatting_and_round_trips_supported_features",
+      "testId": "f3f9e1ac-3805-f247-c04f-e421332cb9b5",
+      "executionId": "95ac7013-9e75-4e52-b659-926ae590408f",
+      "method": {
+        "codeBase": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+        "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+        "className": "Haven.Infrastructure.Tests.WriteDocxFidelityTests",
+        "name": "Rich_docx_export_emits_word_formatting_and_round_trips_supported_features"
+      }
+    }
+  ]
+}

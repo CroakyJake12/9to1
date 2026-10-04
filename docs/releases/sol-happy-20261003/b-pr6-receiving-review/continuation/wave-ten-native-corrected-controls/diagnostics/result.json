@@ -1,0 +1,24 @@
+{
+  "sourceCommit": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "scope": "OriginalFilesWorkflowfirstassertionswithrequiredphysicalrealPCMfixtureconfigured; priorinitialmissingfixtureNOT_RUN retained. Exactalreadycompiledcurrentnativeproject/CLI andactualengine source graph; no assertions/production/expectedvalues edits.",
+  "stages": [
+    {
+      "name": "originalFilesWorkflowwithRequiredFixture",
+      "exit": 0,
+      "scope": "controllednativelease/revision/movedsource/exactphysicalPCMexport; no productionadapter"
+    },
+    {
+      "name": "actualconsole-cli-roundtrip-and-stale-save-refusal",
+      "createOpenMutationReopen": true,
+      "staleRevisionExit": 2,
+      "latestBytesPreserved": true
+    },
+    {
+      "name": "actualsource-linked-browser-engine-build",
+      "exit": 0,
+      "exactOriginalGeneratorAndSourceGuards": true
+    }
+  ],
+  "status": "SCOPED_REMAINING_NATIVE_AND_ENGINE_PASS",
+  "sourceAfter": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1"
+}

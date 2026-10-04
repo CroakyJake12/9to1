@@ -1,0 +1,95 @@
+{
+  "sourceCommit": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "parentBrowserOnly": "3333749b62b2393a667f9b7f30b81be220cc8f9b",
+  "receivingBase": "28e48b64acb96763dda2bd67e9759922442a31e6",
+  "ownerAvailableSource": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "wholeBodyEquality": "All10 EEC=A63=Bbase=f7; no altered hunk/prefixsplice/hashrepin",
+  "scope": "UNACCEPTED minimalcompleteWaveCSharp/nativeconsoledispatch+browser4models/exactguardeddecoderprefix. Actualnativeproject preserved whole; original28 Require callbodies conserved; runtime gates pending. No productionmedia resolver/decoderregistration/provider/device/browserfullacceptance.",
+  "outsideSelected10Unchanged": true,
+  "selection": [
+    {
+      "path": "9to1 Workspace/Wave/WaveProject.cs",
+      "oldTreeEntry": "100644 blob d071d3065b750e4763fef305f7e6b67fff1a0906\t9to1 Workspace/Wave/WaveProject.cs",
+      "bytes": 18706,
+      "sha256": "8ce0273faff2f8b47c4cf15a57838d2defeed6be115e6a3f32700132f6a44ff2",
+      "newTreeEntry": "100644 blob b15043b6058983db177fee8ea7d746828cf03bbd\t9to1 Workspace/Wave/WaveProject.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectEdits.cs",
+      "oldTreeEntry": null,
+      "bytes": 8427,
+      "sha256": "ededd91053649b22ab7ed074381813ac72e9e453fbea9b7e14e119fa7201a4bf",
+      "newTreeEntry": "100644 blob 9c566d9dae8ef0042466f63307eb7b61d77a5029\t9to1 Workspace/Wave/WaveProjectEdits.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveTimelineAnnotations.cs",
+      "oldTreeEntry": null,
+      "bytes": 6681,
+      "sha256": "e824f1add1da06eec8d9be15e0091f0bc7b6ac32f038de3a0154fc2dadd7841a",
+      "newTreeEntry": "100644 blob a69cbf47f8a3c592434997a8f428f618b96ca3c2\t9to1 Workspace/Wave/WaveTimelineAnnotations.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
+      "oldTreeEntry": null,
+      "bytes": 787,
+      "sha256": "a8ba16905a071620495ba18023923c31f3eb3a64b7bb8bad9908655fa1fbc2d1",
+      "newTreeEntry": "100644 blob b124d849d14a568c9e60552bd0de2e95d098034f\t9to1 Workspace/Wave/WaveMediaAssetReferences.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/Program.cs",
+      "oldTreeEntry": "100644 blob 39975d34bc7912deb2c13b3e420a0e2de2797570\t9to1 Workspace/Wave/Program.cs",
+      "bytes": 38203,
+      "sha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f",
+      "newTreeEntry": "100644 blob 6f7c0b5d9275637a5f4a4de7be76ae3273eeeb9f\t9to1 Workspace/Wave/Program.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMarkersRegionsWorkflowTest.cs",
+      "oldTreeEntry": null,
+      "bytes": 11450,
+      "sha256": "cb497db3bd2fc7741e92c5391e19916ed1809278d8a55d7e9d18f17b68afd559",
+      "newTreeEntry": "100644 blob 8c4569987a037260dbcf3b3b6fadee5038b3720f\t9to1 Workspace/Wave/WaveMarkersRegionsWorkflowTest.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WavePcmFormatsWorkflowTest.cs",
+      "oldTreeEntry": null,
+      "bytes": 8197,
+      "sha256": "d17caa301099f48390fd0d0c42d62b6fdedd9fcd4c5307081b6e9c026baf125e",
+      "newTreeEntry": "100644 blob 4e7fe8164fbe093872d92acb87cf4db051d08ffe\t9to1 Workspace/Wave/WavePcmFormatsWorkflowTest.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectWorkflowTest.cs",
+      "oldTreeEntry": null,
+      "bytes": 5695,
+      "sha256": "2a2fd74a60ac69e728dbd3f34e18b2258ff403fd919cb4e0ddcaa3924aae9fb8",
+      "newTreeEntry": "100644 blob aa0d7ef294d4ea3a0576ad19cb45614d6d5b797e\t9to1 Workspace/Wave/WaveFilesProjectWorkflowTest.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectCommands.cs",
+      "oldTreeEntry": null,
+      "bytes": 6129,
+      "sha256": "96013882a15c7efa1ece9937b009ad62598bc274053c2d7aaa99d3305da1b8f2",
+      "newTreeEntry": "100644 blob 2a1be75111d988e217f7739b4d8edb065a0c2932\t9to1 Workspace/Wave/WaveProjectCommands.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectService.cs",
+      "oldTreeEntry": null,
+      "bytes": 11629,
+      "sha256": "f4c01a3e576e07f5e26aa88030ded48f9f9a1fb8d8c950c40a6bda197768d13c",
+      "newTreeEntry": "100644 blob dd305a4b110f4ee8e83617baf1ba8af26b984850\t9to1 Workspace/Wave/WaveFilesProjectService.cs"
+    }
+  ],
+  "nativeProject": {
+    "path": "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+    "sha256": "2da8e3ee74e4ec341ac55625da8016dbe85b670abdce7616b12917a1401305ec",
+    "bytes": 716
+  },
+  "nativeTransitiveClosure": "Only publiccurrentCore.Media contracts/resolver/readlease/decoder/result + currentInfrastructure refs; exactactualavailablewholeBodies. Source/GES/GStreamer excludedoriginalcompiler trees.",
+  "ownerCustodyRequest": {
+    "request": "Exact10-path solewriter/adoption ACK for availableEEC/A63 nativeWave closure; no activeowner file edit; root soleintegrator; preserves priorC security/lifetime/rules and exactpublicinterfaces.",
+    "approved": "No native adoption or runtime acceptance claimed"
+  },
+  "firstActualGlobalRun": 37211850761,
+  "globalSource": "ce50dacc7189a91ad6c589904610a0cfcd0445e5",
+  "retainedFailure": "publisher Original linked owner source custody is incomplete beforeworkload/build; three requirednativeWave bodies absent and2othersolder",
+  "actualTests": "NOT_RUN atsourcefreeze; maintainedowningnormalcompile/selftests next"
+}

@@ -1,0 +1,57 @@
+{
+  "sourceCommit": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "scope": "Actual maintained complete nativeWave project and original canonicalconsole/selftests; exactnativeengine compile. Controlled localFiles/decoderfixture is not realproductionadapter/provider/device/browser acceptance; original28 Require +canonical42 untouched.",
+  "stages": [
+    {
+      "name": "original-selftest",
+      "exit": 0,
+      "log": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/original-selftest.log",
+      "qualification": "actualnativecontrol/syntheticfilefixtures; notproductionadapter"
+    },
+    {
+      "name": "markers-regions",
+      "exit": 0,
+      "log": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/markers-regions.log",
+      "qualification": "actualnativecontrol/syntheticfilefixtures; notproductionadapter"
+    },
+    {
+      "name": "pcm-formats",
+      "exit": 0,
+      "log": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/pcm-formats.log",
+      "qualification": "actualnativecontrol/syntheticfilefixtures; notproductionadapter"
+    }
+  ],
+  "targetProperties": {
+    "TargetPath": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave.dll",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "UseAppHost": "true"
+  },
+  "entrySHA256": "37dd3f68f0115f54a8ce8b934d8cdfda38b3de6020814251380700b85d77592a",
+  "status": "FAILED_FIRST_GATE",
+  "error": "RuntimeError('files-workflow exit -6')",
+  "firstFailedCommand": {
+    "name": "files-workflow",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave",
+      "--files-workflow-test"
+    ],
+    "exit": -6,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 103168,
+        "birth": 1446585,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": -6,
+    "seconds": 0.073,
+    "bytes": 447,
+    "familyClosed": true
+  },
+  "sourceAfter": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1"
+}

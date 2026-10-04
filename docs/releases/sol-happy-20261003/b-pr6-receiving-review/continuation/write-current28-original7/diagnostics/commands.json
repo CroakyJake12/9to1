@@ -1,0 +1,376 @@
+[
+  {
+    "name": "git-head",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101407,
+        "birth": 1408829,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.035,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101408,
+        "birth": 1408832,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.065,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "source-tree-pins",
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101429,
+        "birth": 1408839,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.158,
+    "bytes": 2541824,
+    "familyClosed": true
+  },
+  {
+    "name": "owned-files-tracked",
+    "argv": [
+      "git",
+      "ls-files",
+      "--",
+      "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+      "apps/Web/Tests/ci/run-ordinary-native.py",
+      "apps/Web/Write/Tests/ci/run-original-write-formats.py",
+      "apps/Web/Write/Tests/ci/original-format-acceptance.py"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101430,
+        "birth": 1408855,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.029,
+    "bytes": 205,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-version",
+    "argv": [
+      "dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101431,
+        "birth": 1408858,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.13,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-info",
+    "argv": [
+      "dotnet",
+      "--info"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101439,
+        "birth": 1408871,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.174,
+    "bytes": 1459,
+    "familyClosed": true
+  },
+  {
+    "name": "restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+      "--configfile",
+      "/workspace/team-c-c5-original-write-current28/NuGet.Config",
+      "--disable-parallel",
+      "-p:Configuration=Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts",
+      "-r",
+      "linux-x64",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101447,
+        "birth": 1408889,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 9.635,
+    "bytes": 658,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "dotnet",
+      "build",
+      "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts",
+      "-r",
+      "linux-x64",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101595,
+        "birth": 1409852,
+        "gone": true
+      },
+      {
+        "pid": 101617,
+        "birth": 1409953,
+        "gone": true
+      },
+      {
+        "pid": 101652,
+        "birth": 1410319,
+        "gone": true
+      },
+      {
+        "pid": 101670,
+        "birth": 1410489,
+        "gone": true
+      },
+      {
+        "pid": 101717,
+        "birth": 1411370,
+        "gone": true
+      },
+      {
+        "pid": 101735,
+        "birth": 1411543,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 19.202,
+    "bytes": 943,
+    "familyClosed": true
+  },
+  {
+    "name": "discovery",
+    "argv": [
+      "dotnet",
+      "test",
+      "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+      "--no-build",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--list-tests",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts",
+      "-r",
+      "linux-x64",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101753,
+        "birth": 1411773,
+        "gone": true
+      },
+      {
+        "pid": 101767,
+        "birth": 1411822,
+        "gone": true
+      },
+      {
+        "pid": 101780,
+        "birth": 1411838,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.253,
+    "bytes": 1120,
+    "familyClosed": true
+  },
+  {
+    "name": "original-seven-facts",
+    "argv": [
+      "dotnet",
+      "test",
+      "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+      "--no-build",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--filter",
+      "FullyQualifiedName=Haven.Infrastructure.Tests.WriteDocxFidelityTests.Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata|FullyQualifiedName=Haven.Infrastructure.Tests.WriteDocxFidelityTests.Rich_docx_export_emits_word_formatting_and_round_trips_supported_features|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Failed_save_keeps_existing_destination_intact|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_changed_document_bytes_without_returning_a_partial_document|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_traversal_entries|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_unsupported_manifest_version|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Save_and_open_preserve_structured_document_identity_and_content",
+      "--logger",
+      "trx;LogFileName=write-original-formats.trx",
+      "--results-directory",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/test-results",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts",
+      "-r",
+      "linux-x64",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101803,
+        "birth": 1411898,
+        "gone": true
+      },
+      {
+        "pid": 101818,
+        "birth": 1411949,
+        "gone": true
+      },
+      {
+        "pid": 101831,
+        "birth": 1411966,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.836,
+    "bytes": 553,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 101889,
+        "birth": 1412082,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.067,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]
