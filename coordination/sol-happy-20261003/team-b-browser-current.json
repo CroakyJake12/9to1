@@ -1,0 +1,63 @@
+{
+  "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_1",
+  "recordedAtUTC": "2026-10-04 22:40:21 UTC",
+  "source": "0dde967d9266b483f6d91483f0573c25497762fe",
+  "run": 37239104685,
+  "browserJob": 111544806101,
+  "conclusion": "FAILURE",
+  "nativeGeometry": {
+    "proposed": "64PASS",
+    "original": "48PASS16FAIL_EXPECTED_NEGATIVE",
+    "independentFullNative49RawReview": "PENDING"
+  },
+  "originalBrowser14": "14PASS",
+  "responsive": {
+    "discovered": 3,
+    "executed": 1,
+    "passed": 0,
+    "failed": 1,
+    "notRun": 2
+  },
+  "failure": {
+    "case": "real-populated-390-canvas-fit",
+    "step": "physical-mouse",
+    "message": "Actual operation deadline",
+    "precisePendingOperation": "UNESTABLISHED"
+  },
+  "fileChooser": "FULFILLED",
+  "runtimeErrorsAllZero": true,
+  "screenshots": [],
+  "zoom": "NOT_RUN",
+  "strictConsumerStatusBeforeAndAfterBytes": 0,
+  "originalArtifact": {
+    "id": 11317575196,
+    "bytes": 2049318,
+    "sha256": "99bfa28605e73bfd305b237b1cb5840e2f3df88b47689ca97912b3b152088952"
+  },
+  "readOnlyDiagnosticExport": {
+    "source": "6c43eeeb77d819af1929662542c64a8bc2eaeeb1",
+    "run": 37240303483,
+    "job": 111547515405,
+    "artifact": 11317161846,
+    "bytes": 7601,
+    "sha256": "2fa2b811fd4c267b268e648e42893eb0b597a165787c5dd9607dd3ac7515f807",
+    "memberCount": 52,
+    "selectedDecodedBytes": 11000,
+    "memberMapSHA256": "3dcc70d9c39f210d8dde9753399cbe57cf2167296839c893fa5bd6382de47e58"
+  },
+  "commandClosure": {
+    "families": 11,
+    "births": 57,
+    "allNormalEOFAndECHILDAndFamilyClosed": true,
+    "allBirthsGone": true,
+    "signals": [],
+    "responsiveExit": 1,
+    "original14Exit": 0,
+    "portRebind": true
+  },
+  "nextAction": "Instrument existing helpers to identify the actual pending operation and retain bounded last-observed native and readonly IndexedDB state. Preserve the three entire case blocks, all assertions and15s/45s/70s deadlines; add no reads or domain mutations.",
+  "receivingAction": "Receive and preserve the complete exact failed original artifact and independently review raw results and command closure. Preserve all original failures. Repair the observed product cause after diagnostic evidence identifies it.",
+  "acceptance": "INCOMPLETE",
+  "deadline": "22:30 Europe/London 2026-10-04 MISSED; no verification waiver",
+  "installedSigningCleanWindowsAcceptance": "NOT_ESTABLISHED"
+}
