@@ -1,3 +1,10 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Application.Games;
 using Haven.Core.Games;
@@ -8,6 +15,111 @@ namespace HavenOS.Games.Tests;
 
 public sealed class GamesCuiWorkspaceTests
 {
+    [Fact]
+    public async Task Mounted_buttons_refresh_independently_when_host_availability_changes()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(GamesRenderApplication));
+        await session.Dispatch(async () =>
+        {
+            var store = new Store();
+            string? denied = null;
+            var surface = new GamesCuiWorkspace(new(store), null, () => store.Saved.FileID, command => command != denied);
+            await surface.DispatchAsync("9to1.Games.Open", null);
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(surface);
+            loader.SetActionDispatcher(surface);
+            var root = Assert.IsType<Grid>(loader.Load(GamesCuiWorkspace.LoadDocument()));
+            var toolbar = Assert.IsType<StackPanel>(root.Children[0]);
+            var scene = Assert.IsType<Grid>(root.Children[1]);
+            var graph = Assert.IsType<StackPanel>(scene.Children[0]);
+            var buttons = new Dictionary<string, Button>
+            {
+                ["9to1.Games.Development"] = Assert.IsType<Button>(toolbar.Children[1]),
+                ["9to1.Games.CreationRendering"] = Assert.IsType<Button>(toolbar.Children[2]),
+                ["9to1.Games.NextNode"] = Assert.IsType<Button>(graph.Children[^1])
+            };
+            var window = new Window { Width = 1280, Height = 720, Content = root };
+            window.Show();
+            try
+            {
+                foreach (var appearance in Enum.GetValues<CuiAppearance>())
+                {
+                    loader.SetAppearance(appearance);
+                    foreach (var command in buttons.Keys)
+                    {
+                        denied = command;
+                        surface.RefreshAvailability();
+                        foreach (var pair in buttons) Assert.Equal(pair.Key != denied, pair.Value.IsEnabled);
+                        denied = null;
+                        surface.RefreshAvailability();
+                        Assert.All(buttons.Values, button => Assert.True(button.IsEnabled));
+                    }
+                    using var frame = window.CaptureRenderedFrame();
+                    Assert.NotNull(frame);
+                    Assert.True(frame.PixelSize.Width > 0);
+                }
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    public sealed class GamesRenderApplication : Avalonia.Application
+    {
+        public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(AppBuilder.Configure<GamesRenderApplication>().UseSkia())
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+        public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this, "Games");
+    }
+
+    [Theory]
+    [InlineData("9to1.Games.NextNode")]
+    [InlineData("9to1.Games.Development")]
+    [InlineData("9to1.Games.CreationRendering")]
+    public async Task Authored_buttons_follow_their_own_action_availability_and_revocation(string deniedCommand)
+    {
+        var store = new Store();
+        string? denied = deniedCommand;
+        var surface = new GamesCuiWorkspace(new(store), null, () => store.Saved.FileID, command => command != denied);
+        var buttons = Descendants(GamesCuiWorkspace.LoadDocument().Components)
+            .Where(component => component.Type == "Button" && component.Actions.Values.Any(action =>
+                action.Name is "9to1.Games.NextNode" or "9to1.Games.Development" or "9to1.Games.CreationRendering"))
+            .ToArray();
+        Assert.Equal(3, buttons.Length);
+        AssertButtons(false);
+        await surface.DispatchAsync("9to1.Games.Open", null);
+        AssertButtons(true);
+        var original = store.Saved;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => surface.DispatchAsync(deniedCommand, null).AsTask());
+        Assert.Same(original, store.Saved);
+
+        denied = null;
+        surface.RefreshAvailability();
+        AssertButtons(true);
+        denied = deniedCommand;
+        surface.RefreshAvailability();
+        AssertButtons(true);
+
+        void AssertButtons(bool opened)
+        {
+            foreach (var button in buttons)
+            {
+                var command = Assert.Single(button.Actions.Values).Name;
+                var binding = Assert.IsType<CuiBindingValue>(button.Properties["is-enabled"]);
+                Assert.True(surface.TryGetValue(binding.Path, out var enabled));
+                Assert.Equal(opened && command != denied, Assert.IsType<bool>(enabled));
+            }
+        }
+    }
+
+    private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> components)
+    {
+        foreach (var component in components)
+        {
+            yield return component;
+            foreach (var child in Descendants(component.Children)) yield return child;
+        }
+    }
+
     [Fact]
     public async Task Position_approval_callback_pins_original_target_and_blocks_editing_while_pending_without_fallback_on_denial()
     {

@@ -46,11 +46,12 @@ public sealed class GamesCuiWorkspace(GamesProjectEditorService editor, GamesSce
             "NodeIdentity" => Selected?.NodeID.ToString("D") ?? "",
             "PositionX" => _x, "PositionY" => _y, "PositionZ" => _z, "Status" => _status,
             "CanOpen" => IsActionAvailable("9to1.Games.Open"), "CanEdit" => IsActionAvailable("9to1.Games.SetPosition"),
-            "CanObserve" => IsActionAvailable("9to1.Games.Observe"), "CanSelect" => !_busy && Selected is not null,
-            "CanWorkspace" => IsActionAvailable("9to1.Games.Development"), _ => null
+            "CanObserve" => IsActionAvailable("9to1.Games.Observe"), "CanSelect" => IsActionAvailable("9to1.Games.NextNode"),
+            "CanWorkspace" => IsActionAvailable("9to1.Games.Development"),
+            "CanCreationRendering" => IsActionAvailable("9to1.Games.CreationRendering"), _ => null
         };
         return path is "Project" or "Workspace" or "Scene" or "Node" or "NodeIdentity" or "PositionX" or "PositionY" or "PositionZ"
-            or "Status" or "CanOpen" or "CanEdit" or "CanObserve" or "CanSelect" or "CanWorkspace";
+            or "Status" or "CanOpen" or "CanEdit" or "CanObserve" or "CanSelect" or "CanWorkspace" or "CanCreationRendering";
     }
     public bool TrySetValue(string path, object? value)
     {
