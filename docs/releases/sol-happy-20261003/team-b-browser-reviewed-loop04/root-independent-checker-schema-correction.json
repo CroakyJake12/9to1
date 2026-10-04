@@ -1,0 +1,7 @@
+{
+  "UTC": "2026-10-04T18:27:42.965870+00:00",
+  "priorChecker": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/independent-wave-critical-root-checker-first-source.txt",
+  "priorSHA256": "8c5646eb3528dcff2cae0fd92b0841e2078b5cad72d8378f19f6764e4c36eed1",
+  "analystIssue": "First readonly analyst checker assumed diagnostics array. Actual archived runner schema is counts/boundedSamples object; corrected to require all four zero counts and no samples. Actual original14 result unchanged; this is not product/native failure.",
+  "actualProductAssertionsUnchanged": true
+}

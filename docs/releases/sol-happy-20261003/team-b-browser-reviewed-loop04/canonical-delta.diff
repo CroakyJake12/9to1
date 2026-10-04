@@ -1,0 +1,27 @@
+--- canonical11:47
+
++++ canonical18:20
+
+@@ -863,6 +863,11 @@
+
+ 
+ 
+ Pass 1: Astra la Vista
++Pass 1 scope and current delivery targets
++Pass 1 includes ALL requirements of the former Pass 4: Lunar Eclipse, including its complete LE-01–LE-15 contracts, product descriptions, reference material, tests and applicable platform obligations. Those requirements are incorporated into Pass 1 in full and retained at their existing document location under “Pass 1 incorporated requirements: Lunar Eclipse (LE-01–LE-15)”. They are not a separate later pass or deferred scope. Existing LE identifiers and precise supersessions remain valid; references within that section to “this pass” mean the incorporated Lunar Eclipse requirements of Pass 1. Pass 2 Terra-form and Pass 3 Sol Happy remain intact; unrelated post-release scope is not added. Pass membership does not change technical ownership: Team A owns native/shared work, Team B browser work and Team C hosted services and global integration.
++The revised delivery targets are 07:00 Europe/London on Monday 5 October 2026 for acceptance-verified Windows packages for every required Pass 1 app, including all applicable incorporated Lunar Eclipse requirements and matched Home/runtime dependencies, and 19:00 Europe/London on Monday 5 October 2026 for full completion of expanded Pass 1, Pass 2 and Pass 3. These targets supersede the historical Sunday 20:00 deadline and earlier dated delivery checkpoints, without weakening acceptance, security or approval requirements. A partial morning package remains partial; required Windows behaviour cannot be deferred to the evening while describing that package as acceptance-verified. Existing evidence retains its tested scope and revision; estimates and acceptance maps must be rebaselined without double-counting or relabelling old results.
++
++
+ 
+ 
+ CakeUI (CUI)
+@@ -11624,7 +11629,7 @@
+
+ The final evidence ledger MUST identify the tested release, deployed service versions, functioning user journeys and every remaining blocker or approved scoped exception. No service may be described as online merely because its interface exists, a provider account has been connected or a test request succeeded.
+ 
+ 
+-Pass 4: Lunar Eclipse
++Pass 1 incorporated requirements: Lunar Eclipse (LE-01–LE-15)
+ This is the final feature-completion, integration and polish pass before release. The LE contracts below make every named requirement executable and testable.
+ 
+ 

@@ -1,0 +1,204 @@
+{
+  "state": "SOURCE_ONLY_NOT_ADOPTED_NOT_RUN",
+  "adoption": [
+    {
+      "target": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/WriteRetainedSceneControl.cs",
+      "bytes": 4729,
+      "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/WriteRetainedSceneControl.cs",
+        "bytes": 4729,
+        "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/ci/run-write-package-browser.py",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-write-package-browser.py",
+      "bytes": 90565,
+      "sha256": "a4ff697525e58902d19073e4027e9c968fca8ae5f619d9b11abc22923018a539",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/run-write-package-browser.py",
+        "bytes": 90748,
+        "sha256": "00f51108c30fef5a4dc9cfdb858ad88f6d16bf1f209c8b754aa0fa16754f7608"
+      },
+      "unchanged08": false
+    },
+    {
+      "target": ".github/workflows/team-b-write-package-browser.yml",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-write-package-browser.yml",
+      "bytes": 4894,
+      "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/team-b-write-package-browser.yml",
+        "bytes": 4894,
+        "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/SceneProgram.cs",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SceneProgram.cs",
+      "bytes": 38529,
+      "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/SceneProgram.cs",
+        "bytes": 38529,
+        "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/ci/run-existing-write.py",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-existing-write.py",
+      "bytes": 20105,
+      "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/run-existing-write.py",
+        "bytes": 20105,
+        "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": ".github/workflows/team-b-existing-write.yml",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-existing-write.yml",
+      "bytes": 2782,
+      "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/team-b-existing-write.yml",
+        "bytes": 2782,
+        "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad"
+      },
+      "unchanged08": true
+    }
+  ],
+  "files": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SOURCE-CORRECTION09.json",
+      "bytes": 6407,
+      "sha256": "75e534a142a986d3b2299293422c677b5bee843cf539812e13998709b0ca0276"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SceneProgram.cs",
+      "bytes": 38529,
+      "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SceneProgram.cs.from07.diff",
+      "bytes": 1971,
+      "sha256": "1a08e5f4c4fcc49cc96e8faad3853c0eb573458187aef5eddbef1515a7f4564a"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SceneProgram.cs.from08.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/WriteRetainedSceneControl.cs",
+      "bytes": 4729,
+      "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/WriteRetainedSceneControl.cs.from07.diff",
+      "bytes": 1355,
+      "sha256": "bda3fe813f8cc856cb069617cd4ac7b69552440db96a8be32bc0e81878af4039"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/WriteRetainedSceneControl.cs.from08.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/original08-SceneProgram.cs",
+      "bytes": 38529,
+      "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/original08-WriteRetainedSceneControl.cs",
+      "bytes": 4729,
+      "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/original08-run-existing-write.py",
+      "bytes": 20105,
+      "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/original08-run-write-package-browser.py",
+      "bytes": 90748,
+      "sha256": "00f51108c30fef5a4dc9cfdb858ad88f6d16bf1f209c8b754aa0fa16754f7608"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/original08-team-b-existing-write.yml",
+      "bytes": 2782,
+      "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/original08-team-b-write-package-browser.yml",
+      "bytes": 4894,
+      "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-existing-write.py",
+      "bytes": 20105,
+      "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-existing-write.py.from07.diff",
+      "bytes": 13336,
+      "sha256": "78a612799f0ba794fa84b4be5b3809eded7b23e8a500837bd28708aef67b311f"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-existing-write.py.from08.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-write-package-browser.py",
+      "bytes": 90565,
+      "sha256": "a4ff697525e58902d19073e4027e9c968fca8ae5f619d9b11abc22923018a539"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-write-package-browser.py.from07.diff",
+      "bytes": 145236,
+      "sha256": "5e7a9053f8060cf1202d0e8f0e2666a7ac700ed7d57da18eea1ecadf913ecac9"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-write-package-browser.py.from08.diff",
+      "bytes": 1306,
+      "sha256": "eaa9afa7b8f9504faa0b6ddc91951db010c924f65e66279234acfad8e8b2c4e7"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-existing-write.yml",
+      "bytes": 2782,
+      "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-existing-write.yml.from07.diff",
+      "bytes": 522,
+      "sha256": "b6d730f6c0edf7c2335a849fea70a16cdbc23510a9c89ddab628f687047202e2"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-existing-write.yml.from08.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-write-package-browser.yml",
+      "bytes": 4894,
+      "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-write-package-browser.yml.from07.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-write-package-browser.yml.from08.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

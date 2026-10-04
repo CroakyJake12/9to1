@@ -1,0 +1,14 @@
+{
+  "UTC": "2026-10-04T18:29:30.923118+00:00",
+  "state": "ONLY_NEW_PREDECLARED_PART03_DUPLICATE_RETIRED_ALL_ROOT_B1_B6_READERS_CLOSED",
+  "permanentHead": "b53980f16e36c91b5fccf281320684395da7c51d",
+  "permanentBlob": "8914523b02743132bf965ea22d663b8300f80a36",
+  "retiredTemporary": "/workspace/attachments/14e6e3ac-5fd6-40ef-bd88-5a4004a59ce3/independent-wave-original-member-transport-part03.zip",
+  "bytes": 5451091,
+  "sha256": "a63fcb9c340fcccd02221c7f922a10c275d4f157aabc4baaf508447608871eb9",
+  "independentReceipt": "/tmp/team-b-b6-wave22d-independent-full26-memory-review01/closed-reader-final-critical-summary.json",
+  "independentReceiptSHA256": "8a32d15d9a768c2804d410d95f6661c3d9acf10df3bed3fbb95fe9889dd153d1",
+  "rootLiteral27Proof": "independent-wave-full26-critical-root-review.json SHAb67e3d866b6a9a171b626cae80007c676143525d5ddb9f8f5afddc589f51ff8f",
+  "B1Full26AndThreePNGProof": "visual-review02.json SHA8b655c186915b3146fcf7b1d8eea1e2cb11b03c1ba7542859f2e96955d153dde",
+  "scope": "Original part3 exact ZIP permanently retained; all previous protected originals untouched. Independent extracted26+365trace/literal27/WAV supporting proof closed; originalActions44MB/oldpart02ZIP metadata-only, no responsive/all31 acceptance."
+}

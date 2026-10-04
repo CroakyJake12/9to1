@@ -1,0 +1,21 @@
+{
+  "UTC": "2026-10-04T18:33:18.837073+00:00",
+  "authority": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "modifiedTime": "2026-10-04T18:20:37.341Z",
+  "exportBytes": 1404321,
+  "exportSHA256": "2a2a90823fdef8962f89b360c565cb02df7a0cad8749e81b54eebeddad07215a",
+  "exportPath": "/workspace/attachments/50942447-9d27-41e5-87af-9d569839acc8/9to1 Development Specification.txt",
+  "previousSHA256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
+  "completeDeltaPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/canonical-live-1820-update.diff",
+  "effect": "Entire LE01\u201315 formally incorporated into Pass1 and remains at existing location under renamed heading; all technical contracts/platforms/precise supersessions unchanged. TeamB existing full31/LE goal continues, no passing evidence relabel or double count.",
+  "deliveryTargets": {
+    "WindowsRequiredPass1": "2026-10-05T07:00:00+01:00",
+    "FullPass1Pass2Pass3": "2026-10-05T19:00:00+01:00",
+    "timezone": "Europe/London"
+  },
+  "acceptanceAndSecurityApprovalRequirementsUnchanged": true,
+  "TeamA": "native/shared",
+  "TeamB": "browser",
+  "TeamC": "hosted/globalintegration",
+  "actualCurrent07bcNativeFailurePreserved": true
+}

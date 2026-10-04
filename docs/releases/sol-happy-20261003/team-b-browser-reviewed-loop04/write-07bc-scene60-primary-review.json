@@ -1,0 +1,304 @@
+{
+  "UTC": "2026-10-04T18:35:02.595762+00:00",
+  "state": "RECORDED_ACTUAL_FAILURE_FULL_READ_NO_REPLAY",
+  "run": 37224554478,
+  "job": 111501407980,
+  "artifact": 11311950506,
+  "sourceCommit": "07bc9f277d6163712064cc5b7e25953613ca5a09",
+  "archive": {
+    "path": "/workspace/attachments/c1964776-0838-4aad-9299-db8cc523c144/write-native-07bc-scene60-original-failure.zip",
+    "bytes": 341035,
+    "sha256": "2c0f9857ef0f1edb875989282b910746f48bd960ed39522184d3bb3f71751d3d",
+    "all18MembersCRCRead": true,
+    "members": [
+      {
+        "name": "actual-original-assertions.json",
+        "bytes": 2266,
+        "sha256": "f35bc268faf565d1ce871fdaefa47c6706e95a3cee5732882a57ddf570332809",
+        "CRC32": 2175336609
+      },
+      {
+        "name": "build.log",
+        "bytes": 6617,
+        "sha256": "f79a8c42cfdfacc9530d5490b8418615ed45a72772e880908b4caabff7ab39ef",
+        "CRC32": 1476484828
+      },
+      {
+        "name": "commands.json",
+        "bytes": 10626,
+        "sha256": "6fc250a47a283cd8b152cf08cbd7b40b529370caf3a82dc97deae0afa9e978cc",
+        "CRC32": 1588671481
+      },
+      {
+        "name": "dotnet-info.log",
+        "bytes": 2980,
+        "sha256": "433b2d394722cac6764b753c5282e7477958ca405eea1a0e587b9dde36940169",
+        "CRC32": 3816982130
+      },
+      {
+        "name": "dotnet-version.log",
+        "bytes": 9,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+        "CRC32": 3257738113
+      },
+      {
+        "name": "entry-identity.json",
+        "bytes": 169,
+        "sha256": "de99652b6979f999f7df48d54fc1f3161a1b45d948aa6135b86a032755fd8f3e",
+        "CRC32": 2992671216
+      },
+      {
+        "name": "fixture-tracked.log",
+        "bytes": 177,
+        "sha256": "54fb23159acf3cec6dea3e5003f15fdc88a3515369c774e07ec0c697b4dbf586",
+        "CRC32": 3332322691
+      },
+      {
+        "name": "git-clean-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "CRC32": 0
+      },
+      {
+        "name": "git-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "CRC32": 0
+      },
+      {
+        "name": "git-head.log",
+        "bytes": 41,
+        "sha256": "a4027d6e77438ce89d4c8a68df968696bf8448fe8ea5dbf0b9c293a23c701be7",
+        "CRC32": 467326874
+      },
+      {
+        "name": "native-initial-focus.log",
+        "bytes": 1661,
+        "sha256": "7893886922798c31f8d49c734f6015478f688bf6379d81f0b76e24d30aa4ca7c",
+        "CRC32": 1827388599
+      },
+      {
+        "name": "native-toolbar.log",
+        "bytes": 1700,
+        "sha256": "c04dfa60c6c7e8f67f634089a30da598a8636dd618d6bacd5de70cad06b81dcf",
+        "CRC32": 3243947882
+      },
+      {
+        "name": "restore.log",
+        "bytes": 5383,
+        "sha256": "917b2db2564765f690aa1aa784bf26d6cd1f0be659eed6e3a65be44be02885b6",
+        "CRC32": 4166413263
+      },
+      {
+        "name": "result.json",
+        "bytes": 4821,
+        "sha256": "7592d2a004fe97188a9b9eb50a2aa9d7185e4a337c95589f03b4d1de9233cdd9",
+        "CRC32": 514173135
+      },
+      {
+        "name": "source-pins-before.json",
+        "bytes": 1785,
+        "sha256": "7fd79017e6257e9160402968ad75b995b5899dddd4a8b6ade5016eda642db19f",
+        "CRC32": 2115401764
+      },
+      {
+        "name": "source-tree-pins.log",
+        "bytes": 1306876,
+        "sha256": "b0f07c1624be6c8026dba8f9ec859e2c1e3789500a1a71ea4878ec9f21fbb92d",
+        "CRC32": 1343876083
+      },
+      {
+        "name": "target-properties.json",
+        "bytes": 253,
+        "sha256": "b1f3e7409a2700cc2c6ce7f9c0f6c672bd285afeb3b92894819bda6ebcbca076",
+        "CRC32": 2444639535
+      },
+      {
+        "name": "target-properties.log",
+        "bytes": 283,
+        "sha256": "2750c47bb864a6a2fd7ed788148b62c14fcd259113e05b4f4b15c41c4d950b41",
+        "CRC32": 990664225
+      }
+    ]
+  },
+  "all16SelectedSourceGitBlobsVerified": [
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+      "bytes": 1974,
+      "sha256": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2"
+    },
+    {
+      "path": "apps/Web/Write/Tests/SceneProgram.cs",
+      "bytes": 38529,
+      "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    {
+      "path": "apps/Web/Write/Tests/ci/run-existing-write.py",
+      "bytes": 20105,
+      "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c"
+    },
+    {
+      "path": "NuGet.Config",
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+    },
+    {
+      "path": "global.json",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneResources.cs",
+      "bytes": 731,
+      "sha256": "bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e"
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "bytes": 4729,
+      "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c"
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserSession.cs",
+      "bytes": 31701,
+      "sha256": "741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f"
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserSurface.cs",
+      "bytes": 2269,
+      "sha256": "04f2dfce3b52e212ab8eaa09ad77370b8e324ce0863231c2cfd5487fc2a18ad0"
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserFeature.cs",
+      "bytes": 12137,
+      "sha256": "dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4"
+    },
+    {
+      "path": "apps/Web/Write/IWriteBrowserPackageBroker.cs",
+      "bytes": 954,
+      "sha256": "67599b070ef01fa5a8a4dedd1f9aa00784bc90cf41d4e136328f4709d29ebcb0"
+    },
+    {
+      "path": "apps/Web/Write/Write.cui",
+      "bytes": 2152,
+      "sha256": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e"
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    {
+      "path": "apps/Web/BrowserActionAvailability.cs",
+      "bytes": 7180,
+      "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369"
+    }
+  ],
+  "fullTree": {
+    "bytes": 1306876,
+    "sha256": "b0f07c1624be6c8026dba8f9ec859e2c1e3789500a1a71ea4878ec9f21fbb92d",
+    "actualExactGitTreeMatched": true
+  },
+  "cleanBeforeAfter": true,
+  "normalSourceBuild": {
+    "warnings": 0,
+    "errors": 0
+  },
+  "nativeCases": [
+    {
+      "mode": "toolbar",
+      "pass": 16,
+      "fail": 1,
+      "notRun": 31,
+      "expected": 48,
+      "passedNames": [
+        "actual packed font resolves original asset URI and matches exact owner bytes",
+        "actual owning Write.cui parses",
+        "actual registered owner surface lowers",
+        "actual native templates render before querying editor descendants",
+        "actual toolbar New enabled=True",
+        "actual toolbar Save enabled=False",
+        "actual toolbar Bold enabled=False",
+        "actual toolbar Undo enabled=False",
+        "actual toolbar Redo enabled=False",
+        "actual toolbar Close enabled=False",
+        "actual New control permits interaction",
+        "actual toolbar Save enabled=True",
+        "actual toolbar Bold enabled=True",
+        "actual toolbar Close enabled=True",
+        "actual toolbar Undo enabled=False",
+        "actual toolbar Redo enabled=False"
+      ],
+      "failedName": "toolbar journey actual routed typing mutates owner",
+      "nativeExit": -6,
+      "logSHA256": "c04dfa60c6c7e8f67f634089a30da598a8636dd618d6bacd5de70cad06b81dcf"
+    },
+    {
+      "mode": "initial-focus",
+      "pass": 9,
+      "fail": 1,
+      "notRun": 2,
+      "expected": 12,
+      "passedNames": [
+        "actual packed font resolves original asset URI and matches exact owner bytes",
+        "initial-focus actual native owner frame renders",
+        "initial-focus disabled new editor does not seize native focus",
+        "initial-focus new owner attachment focuses native scene once when enabled",
+        "initial-focus actual routed native text reaches same original owner editor",
+        "initial-focus same editor busy release preserves real toolbar focus",
+        "initial-focus toolbar-focused text does not mutate original document",
+        "initial-focus null attachment clears pending focus before enable",
+        "initial-focus enabled non-null replacement uses actual owner focus"
+      ],
+      "failedName": "initial-focus actual busy router renewal preserves already-native-focused scene",
+      "nativeExit": -6,
+      "logSHA256": "7893886922798c31f8d49c734f6015478f688bf6379d81f0b76e24d30aa4ca7c"
+    }
+  ],
+  "commandFamilies": {
+    "records": 12,
+    "births": 56,
+    "allNaturalEOFAndGoneAndECHILD": true,
+    "sentSignals": 0,
+    "nonzeroCommands": [
+      {
+        "name": "native-toolbar",
+        "exit": -6
+      },
+      {
+        "name": "native-initial-focus",
+        "exit": -6
+      }
+    ],
+    "bothNativeModesActuallyExecutedAfterCleanCustody": true,
+    "nativeSIGABRTFunctionalAssertionNotCustodianSignal": true
+  },
+  "entryIdentity": {
+    "entrySHA": "608e6745bcdb6404edd511deaebc82e52a63adaaf96ad079c9f286324a1eb851",
+    "apphostSHA": "5d855d03d9466dea2aaf3373aedf879262437841e7ff6331c92a3d9a33a36902"
+  },
+  "targetProperties": {
+    "TargetPath": "/home/runner/work/_temp/existing-write-scene-focus60/artifacts/bin/WriteBrowser.Scene.Tests/release_linux-x64/WriteBrowser.Scene.Tests.dll",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "UseAppHost": "true"
+  },
+  "cause": "Actual initial-focus required10th fails same native scene focus after disable/enable. Maintained Avalonia InputElement523\u2013527 clears FocusManager focus when disabled. SOURCE09 checked _scene.IsFocused only after disabling; saved focus was lost. Actual focus value/router contents were not separately instrumented; original exact assertions retained.",
+  "limits": [
+    "Actual toolbar48 remains16PASS1FAIL31NOT_RUN",
+    "Initial-focus12 remains9PASS1FAIL2NOT_RUN",
+    "Whole emitted binary closure not included: entry/apphost identity only",
+    "Physical Space generic-owner failure is distinct and unchanged",
+    "No browser/package/provider/ACL/fullWrite parity acceptance"
+  ],
+  "readers": "ALL_B2_ZIP_AND_MEMBER_READERS_CLOSED"
+}

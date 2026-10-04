@@ -1,0 +1,1100 @@
+{
+  "state": "RECORDED_ORIGINAL_CONTROL_SCOPE_CONFIRMED; NOT_PRODUCT_ACCEPTANCE",
+  "utc": "2026-10-04T18:20:58.786047+00:00",
+  "archive": {
+    "path": "/workspace/attachments/36a18c43-e53a-4af5-b364-d9c37d804413/wave-native-d93-original-control.zip",
+    "bytes": 636215,
+    "sha256": "8c053f6bd573159caf4a8b56caa5432de327aa13abba8bf4ad5bd45468c2acb8",
+    "members": [
+      {
+        "path": "build.log",
+        "bytes": 6926,
+        "sha256": "6a2bb30ad1fd88004cdc0487258c0d71c3bc7fb4d88a1c74bd0c381d3c48baf8",
+        "crc32": "0a76312c"
+      },
+      {
+        "path": "default-narrow-native-font2-native.json",
+        "bytes": 1204557,
+        "sha256": "d661512025e7bb9977bef27a6a79440c3393e3591d2b88bcf1990104dd0b803f",
+        "crc32": "97e52168"
+      },
+      {
+        "path": "commands.json",
+        "bytes": 16789,
+        "sha256": "3f2a919172f75b775ca4b4f2139a0094493ec64ef84edc4a5daad4f63ec893c7",
+        "crc32": "74458b81"
+      },
+      {
+        "path": "default-narrow-native-font2.log",
+        "bytes": 185,
+        "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+        "crc32": "1e063627"
+      },
+      {
+        "path": "default-narrow-native.json",
+        "bytes": 1180998,
+        "sha256": "7c7510073e0c0f2030a2b8bdb947cec5b0815d829e73d97d49dcb8ba798c7595",
+        "crc32": "8c0b5efd"
+      },
+      {
+        "path": "default-narrow.log",
+        "bytes": 185,
+        "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+        "crc32": "1e063627"
+      },
+      {
+        "path": "default-wide-native.json",
+        "bytes": 1182717,
+        "sha256": "bf27af6fc6bbf5aa07321abc19f5fedaf8288fad9e127f6083d8b07083509b54",
+        "crc32": "73e182a9"
+      },
+      {
+        "path": "default-wide.log",
+        "bytes": 185,
+        "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+        "crc32": "1e063627"
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2979,
+        "sha256": "fcd9157f0a04570e257474028c51bab291dc6bf01f7a8dacd8319b6613a8e61c",
+        "crc32": "e58c6476"
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+        "crc32": "c22d2381"
+      },
+      {
+        "path": "geometry-stress195-not-zoom-native.json",
+        "bytes": 1181861,
+        "sha256": "3ff3f282f89c6abee4648f92c6bf65ed107eb85de4bc71f428ef59cb5f19912a",
+        "crc32": "36813075"
+      },
+      {
+        "path": "geometry-stress195-not-zoom.log",
+        "bytes": 641,
+        "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c",
+        "crc32": "97d1286c"
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+        "crc32": "2a2e6c74"
+      },
+      {
+        "path": "narrow-native-font2-native.json",
+        "bytes": 1205420,
+        "sha256": "0dac645e7e99932181d02738d7fe665f2841a6b828077547fe2cdeebf9a64fd4",
+        "crc32": "0c4accaf"
+      },
+      {
+        "path": "narrow-native-font2.log",
+        "bytes": 641,
+        "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c",
+        "crc32": "97d1286c"
+      },
+      {
+        "path": "narrow-native.json",
+        "bytes": 1181861,
+        "sha256": "253905ea7dee373fe2b966339c8fcac6565558900b1beb0c3dedf2e13efef2c3",
+        "crc32": "fb2f400d"
+      },
+      {
+        "path": "narrow.log",
+        "bytes": 641,
+        "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c",
+        "crc32": "97d1286c"
+      },
+      {
+        "path": "native-submodule-pins.log",
+        "bytes": 202,
+        "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+        "crc32": "f1749c30"
+      },
+      {
+        "path": "restore.log",
+        "bytes": 5656,
+        "sha256": "350184a7393c3e4d2c11d5f6c2f03961d40d5cac5918d88391f581c5772efbf6",
+        "crc32": "d62056f0"
+      },
+      {
+        "path": "result.json",
+        "bytes": 17766,
+        "sha256": "ea540100158deaa34d19194346ae47bf162a1a519acfe724639e6170b6938f98",
+        "crc32": "e1f95d92"
+      },
+      {
+        "path": "selected-native-binary-after.json",
+        "bytes": 141358,
+        "sha256": "87ebe514a6d5b254e67551644c0020febf3550b2d2230a2f4d60713801455388",
+        "crc32": "15a0c1dd"
+      },
+      {
+        "path": "selected-native-binary-before.json",
+        "bytes": 141358,
+        "sha256": "87ebe514a6d5b254e67551644c0020febf3550b2d2230a2f4d60713801455388",
+        "crc32": "15a0c1dd"
+      },
+      {
+        "path": "selected-source-after.json",
+        "bytes": 6269,
+        "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+        "crc32": "29c9e98e"
+      },
+      {
+        "path": "selected-source-before.json",
+        "bytes": 6269,
+        "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+        "crc32": "29c9e98e"
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 661,
+        "sha256": "1717345b21ab2a714337dc4f9348462219ce0acb9b9498812407d4d164e6273e",
+        "crc32": "0e27ce1f"
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 697,
+        "sha256": "69118e09bbe37c0c01ad627d06e187f6548f8988073f669bd7130eed3973f3c3",
+        "crc32": "a628de4e"
+      },
+      {
+        "path": "tracked-source-tree.log",
+        "bytes": 1306876,
+        "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+        "crc32": "1c15a551"
+      },
+      {
+        "path": "wide-native.json",
+        "bytes": 1183579,
+        "sha256": "5d6a712e262ac8700deee5d937f2f4803442e28fdbad48b327febcd1bc944040",
+        "crc32": "daf69c4b"
+      },
+      {
+        "path": "wide.log",
+        "bytes": 641,
+        "sha256": "7fab6679ac575e9808673cbc019d12ffd37a24b353b7105f361f47db135a6d5f",
+        "crc32": "44537bc2"
+      }
+    ]
+  },
+  "actualResult": {
+    "status": "ORIGINAL_LAYOUT_RED_CONTROL_OBSERVED",
+    "variant": "original",
+    "expectedGroups": 7,
+    "expectedChecks": 64,
+    "executed": 64,
+    "passed": 53,
+    "failed": 11,
+    "notRun": 0,
+    "sourceCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+    "sourceLedgerSHA256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+    "driverSHA256": "04cabfe1c849afb3e9d9a1b2735b025d90cc7771f245403a33a8966119a9c8da",
+    "entrySHA256": "ee748e7fc6d4b38f8833e67a46c81ef919d395009237c9d08fdf5d73d8813fba",
+    "apphostSHA256": "cc960c260be0a3319be2f99714904b7548913e5da7a039371f13fa642182a680"
+  },
+  "matrix": [
+    {
+      "group": "narrow-native.json",
+      "width": 390,
+      "fontFactor": 1,
+      "optIn": true,
+      "policyPresent": false,
+      "rootWidth": 795,
+      "outerExtentWidth": 827,
+      "viewportWidth": 390,
+      "checks": 13,
+      "passed": 10,
+      "failed": [
+        "Wave native outer extent fits viewport",
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "localScrollSelectedCount": 0
+    },
+    {
+      "group": "narrow-native-font2-native.json",
+      "width": 390,
+      "fontFactor": 2,
+      "optIn": true,
+      "policyPresent": false,
+      "rootWidth": 1455,
+      "outerExtentWidth": 1487,
+      "viewportWidth": 390,
+      "checks": 13,
+      "passed": 10,
+      "failed": [
+        "Wave native outer extent fits viewport",
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "localScrollSelectedCount": 0
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "width": 195,
+      "fontFactor": 1,
+      "optIn": true,
+      "policyPresent": false,
+      "rootWidth": 795,
+      "outerExtentWidth": 827,
+      "viewportWidth": 195,
+      "checks": 13,
+      "passed": 10,
+      "failed": [
+        "Wave native outer extent fits viewport",
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "localScrollSelectedCount": 0
+    },
+    {
+      "group": "wide-native.json",
+      "width": 1200,
+      "fontFactor": 1,
+      "optIn": true,
+      "policyPresent": false,
+      "rootWidth": 1168,
+      "outerExtentWidth": 1200,
+      "viewportWidth": 1200,
+      "checks": 13,
+      "passed": 11,
+      "failed": [
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "localScrollSelectedCount": 0
+    },
+    {
+      "group": "default-narrow-native.json",
+      "width": 390,
+      "fontFactor": 1,
+      "optIn": false,
+      "policyPresent": false,
+      "rootWidth": 795,
+      "outerExtentWidth": 827,
+      "viewportWidth": 390,
+      "checks": 4,
+      "passed": 4,
+      "failed": [],
+      "localScrollSelectedCount": 0
+    },
+    {
+      "group": "default-narrow-native-font2-native.json",
+      "width": 390,
+      "fontFactor": 2,
+      "optIn": false,
+      "policyPresent": false,
+      "rootWidth": 1455,
+      "outerExtentWidth": 1487,
+      "viewportWidth": 390,
+      "checks": 4,
+      "passed": 4,
+      "failed": [],
+      "localScrollSelectedCount": 0
+    },
+    {
+      "group": "default-wide-native.json",
+      "width": 1200,
+      "fontFactor": 1,
+      "optIn": false,
+      "policyPresent": false,
+      "rootWidth": 1168,
+      "outerExtentWidth": 1200,
+      "viewportWidth": 1200,
+      "checks": 4,
+      "passed": 4,
+      "failed": [],
+      "localScrollSelectedCount": 0
+    }
+  ],
+  "selected36SourceRowsCurrentMatchAndArchiveBeforeAfterEqual": [
+    {
+      "path": "apps/Web/Wave/WaveBrowserSession.cs",
+      "bytes": 34166,
+      "sha256": "467d0667ef7df79722f424acb7465161beb89366c0b2bd1f8a34528f6713abcd"
+    },
+    {
+      "path": "apps/Web/BrowserRouteCodec.cs",
+      "bytes": 4164,
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a"
+    },
+    {
+      "path": "apps/Web/BrowserRouteDispatcher.cs",
+      "bytes": 2559,
+      "sha256": "0deb17b239d0cabe89f0c65633ea00275a415761955c51b0dd7b827c73d06ae6"
+    },
+    {
+      "path": "apps/Web/BrowserHomeContext.cs",
+      "bytes": 3223,
+      "sha256": "67d160a6cb30ed2bc5c1020235d02ba931fe276aeb23c83003263a4e48923829"
+    },
+    {
+      "path": "apps/Web/BrowserActionAvailability.cs",
+      "bytes": 7180,
+      "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369"
+    },
+    {
+      "path": "apps/Web/BrowserAccessibilityBridge.cs",
+      "bytes": 6998,
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+    },
+    {
+      "path": "apps/Web/BrowserAccessibilityJsonContext.cs",
+      "bytes": 389,
+      "sha256": "86b6b7b9aa6d39f4b0f51157322fd93ed599a9655c02d8d73ac7f662ab97d851"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserRenderPlatformShims.cs",
+      "bytes": 1183,
+      "sha256": "d261718ea1a2a991c29afe9736c4e247a57d4ed045ea331ef7eedd37dd26347d"
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "bytes": 1745,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    {
+      "path": "framework/CUI/Core/CuiRuntimeContracts.cs",
+      "bytes": 1441,
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlRegistry.cs",
+      "bytes": 27472,
+      "sha256": "0e9d88c9e0f6d158ade46f05b25cf06b96cbff4816601cfc39f3ce158cddda8b"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiNativeHost.cs",
+      "bytes": 4202,
+      "sha256": "fe6b426a09c72f3ffe59ea6e1225d10b077da0f6869701dbe323e81f17d47b0c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Presenters/ScrollContentPresenter.cs",
+      "bytes": 44679,
+      "sha256": "3967b62e867bfde0799660c610ae96bd7246196cd67a89612a2f0a30312737af"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/WrapPanel.cs",
+      "bytes": 14755,
+      "sha256": "59a9dd4b4ef942c937a2c2eec641916c7baed23e721c696e35384b0fa674eff6"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/StackPanel.cs",
+      "bytes": 18890,
+      "sha256": "c4325c6c722dc84a5254ce2d0aa7fa391d03d33e771ad5ce821f889d96fd741f"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBlockAutomationPeer.cs",
+      "bytes": 1134,
+      "sha256": "be0f1e249ec2f12a8174fce36fd970f1d7f9f0ff99ebd5d7208861e4f52ba090"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs",
+      "bytes": 1061,
+      "sha256": "2cf3aa4d9b42dcefac0a033b71b055daa79811b2ae8b675ea4a4e58e26e32f5b"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TextBlock.cs",
+      "bytes": 34179,
+      "sha256": "408cd0ef2f97ff51c7b4901f42c63ad73f767373dc030016887d722da5ee0dd7"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Button.cs",
+      "bytes": 25239,
+      "sha256": "92552728cb3aa76fd85980f0259fa1541983439f471223658bbb556db9760149"
+    },
+    {
+      "path": "apps/Web/wwwroot/browser-accessibility.js",
+      "bytes": 8891,
+      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9"
+    },
+    {
+      "path": "apps/Web/wwwroot/browser-platform.js",
+      "bytes": 3009,
+      "sha256": "4ddcd9ffad1aac575dcb3aa5a176df8bb8e5747d57975d3bfc87e8241650cb80"
+    },
+    {
+      "path": "NuGet.Config",
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+    },
+    {
+      "path": "apps/Web/BrowserApplication.cs",
+      "bytes": 18796,
+      "sha256": "786242db9e6c2b8b44c03d47d669afa14e1a989ad2b892795544fe01ac1c5143"
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    {
+      "path": "apps/Web/Wave/Wave.cui",
+      "bytes": 14376,
+      "sha256": "833732f152351b5807b026a341982064722d60d56ab6887b307aad3ad72b2f04"
+    },
+    {
+      "path": "apps/Web/Wave/WaveBrowserFeature.cs",
+      "bytes": 4821,
+      "sha256": "e6569d58d34b14664a607df83b0da7df1fedf4f9ac622ea1065a31270c951fa2"
+    },
+    {
+      "path": "apps/Web/Wave/Tests/Fixtures/Original/BrowserApplication.cs",
+      "bytes": 18556,
+      "sha256": "8e78a7aa6cc19b722feff81765a5465ecf5dc67d63ba3b613decf0be54d57581"
+    },
+    {
+      "path": "apps/Web/Wave/Tests/Fixtures/Original/BrowserSurfaceRegistry.cs",
+      "bytes": 14479,
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94"
+    },
+    {
+      "path": "apps/Web/Wave/Tests/Fixtures/Original/Wave.cui",
+      "bytes": 10736,
+      "sha256": "be7dd65a38f2507e6ce309b99118e76ca1f2792bb33764be9d87793cf0694729"
+    },
+    {
+      "path": "apps/Web/Wave/Tests/WaveResponsiveLayout.Tests.csproj",
+      "bytes": 1439,
+      "sha256": "a7ee6b0c9f3320fb312a7e6798c572ef15b729b411405531908fe934dc163ec4"
+    },
+    {
+      "path": "apps/Web/Wave/Tests/WaveResponsiveLayoutControls.cs",
+      "bytes": 20958,
+      "sha256": "ad4697e52f7c9ce2639e3117004a3619ec0c58a9c45bf48adc2c26ff678d0adf"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "global.json",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    }
+  ],
+  "all23OriginalOwnClipInkOverhangRows": [
+    {
+      "group": "narrow-native.json",
+      "text": "Save locally",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "rightExcess": 0.17897727272728048,
+      "lineSourceIndex": 0,
+      "lineLength": 13,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.97443181818183,
+      "WidthIncludingTrailingWhitespace": 77.97443181818183,
+      "OverhangTrailing": -0.20454545454545325,
+      "nearestButtonName": "wave-save"
+    },
+    {
+      "group": "narrow-native.json",
+      "text": "Import WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "rightExcess": 0.46875,
+      "lineSourceIndex": 0,
+      "lineLength": 11,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.9346590909091,
+      "WidthIncludingTrailingWhitespace": 77.9346590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-import"
+    },
+    {
+      "group": "narrow-native.json",
+      "text": "Export PCM16 WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 129,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "rightExcess": 0.21875,
+      "lineSourceIndex": 0,
+      "lineLength": 17,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 128.6846590909091,
+      "WidthIncludingTrailingWhitespace": 128.6846590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-export"
+    },
+    {
+      "group": "narrow-native-font2-native.json",
+      "text": "Open Narrow field recording \u00b7 revision 12 \u00b7 f69fd693-4d20-4b3c-b35b-b7e902728bf2",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 1138.261363636364,
+      "rightExcess": 436.26136363636397,
+      "lineSourceIndex": 0,
+      "lineLength": 81,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 1140.2045454545457,
+      "WidthIncludingTrailingWhitespace": 1140.2045454545457,
+      "OverhangTrailing": 1.9431818181817562,
+      "nearestButtonName": null
+    },
+    {
+      "group": "narrow-native-font2-native.json",
+      "text": "Open Second recording \u00b7 revision 3 \u00b7 d9b49a84-72cb-45eb-80f6-08fa05e77ec7",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 1063.7272727272725,
+      "rightExcess": 361.7272727272725,
+      "lineSourceIndex": 0,
+      "lineLength": 74,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 1064.7159090909088,
+      "WidthIncludingTrailingWhitespace": 1064.7159090909088,
+      "OverhangTrailing": 0.9886363636362603,
+      "nearestButtonName": null
+    },
+    {
+      "group": "narrow-native-font2-native.json",
+      "text": "Selected: Field recording stereo \u00b7 f69fd693-4d20-4b3c-b35b-b7e902728bf2",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 1021.7670454545458,
+      "rightExcess": 319.76704545454584,
+      "lineSourceIndex": 0,
+      "lineLength": 72,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 1023.7102272727277,
+      "WidthIncludingTrailingWhitespace": 1023.7102272727277,
+      "OverhangTrailing": 1.9431818181818699,
+      "nearestButtonName": null
+    },
+    {
+      "group": "narrow-native-font2-native.json",
+      "text": "Selected clip: f69fd693-4d20-4b3c-b35b-b7e902728bf2 \u00b7 96000 frames",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 974.7500000000001,
+      "rightExcess": 272.7500000000001,
+      "lineSourceIndex": 0,
+      "lineLength": 67,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 975.3863636363637,
+      "WidthIncludingTrailingWhitespace": 975.3863636363637,
+      "OverhangTrailing": 0.636363636363626,
+      "nearestButtonName": null
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "text": "Save locally",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "rightExcess": 0.17897727272728048,
+      "lineSourceIndex": 0,
+      "lineLength": 13,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.97443181818183,
+      "WidthIncludingTrailingWhitespace": 77.97443181818183,
+      "OverhangTrailing": -0.20454545454545325,
+      "nearestButtonName": "wave-save"
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "text": "Import WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "rightExcess": 0.46875,
+      "lineSourceIndex": 0,
+      "lineLength": 11,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.9346590909091,
+      "WidthIncludingTrailingWhitespace": 77.9346590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-import"
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "text": "Export PCM16 WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 129,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "rightExcess": 0.21875,
+      "lineSourceIndex": 0,
+      "lineLength": 17,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 128.6846590909091,
+      "WidthIncludingTrailingWhitespace": 128.6846590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-export"
+    },
+    {
+      "group": "wide-native.json",
+      "text": "Save locally",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "rightExcess": 0.17897727272728048,
+      "lineSourceIndex": 0,
+      "lineLength": 13,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.97443181818183,
+      "WidthIncludingTrailingWhitespace": 77.97443181818183,
+      "OverhangTrailing": -0.20454545454545325,
+      "nearestButtonName": "wave-save"
+    },
+    {
+      "group": "wide-native.json",
+      "text": "Import WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "rightExcess": 0.46875,
+      "lineSourceIndex": 0,
+      "lineLength": 11,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.9346590909091,
+      "WidthIncludingTrailingWhitespace": 77.9346590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-import"
+    },
+    {
+      "group": "wide-native.json",
+      "text": "Export PCM16 WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 129,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "rightExcess": 0.21875,
+      "lineSourceIndex": 0,
+      "lineLength": 17,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 128.6846590909091,
+      "WidthIncludingTrailingWhitespace": 128.6846590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-export"
+    },
+    {
+      "group": "default-narrow-native.json",
+      "text": "Save locally",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "rightExcess": 0.17897727272728048,
+      "lineSourceIndex": 0,
+      "lineLength": 13,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.97443181818183,
+      "WidthIncludingTrailingWhitespace": 77.97443181818183,
+      "OverhangTrailing": -0.20454545454545325,
+      "nearestButtonName": "wave-save"
+    },
+    {
+      "group": "default-narrow-native.json",
+      "text": "Import WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "rightExcess": 0.46875,
+      "lineSourceIndex": 0,
+      "lineLength": 11,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.9346590909091,
+      "WidthIncludingTrailingWhitespace": 77.9346590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-import"
+    },
+    {
+      "group": "default-narrow-native.json",
+      "text": "Export PCM16 WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 129,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "rightExcess": 0.21875,
+      "lineSourceIndex": 0,
+      "lineLength": 17,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 128.6846590909091,
+      "WidthIncludingTrailingWhitespace": 128.6846590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-export"
+    },
+    {
+      "group": "default-narrow-native-font2-native.json",
+      "text": "Open Narrow field recording \u00b7 revision 12 \u00b7 f69fd693-4d20-4b3c-b35b-b7e902728bf2",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 1138.261363636364,
+      "rightExcess": 436.26136363636397,
+      "lineSourceIndex": 0,
+      "lineLength": 81,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 1140.2045454545457,
+      "WidthIncludingTrailingWhitespace": 1140.2045454545457,
+      "OverhangTrailing": 1.9431818181817562,
+      "nearestButtonName": null
+    },
+    {
+      "group": "default-narrow-native-font2-native.json",
+      "text": "Open Second recording \u00b7 revision 3 \u00b7 d9b49a84-72cb-45eb-80f6-08fa05e77ec7",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 1063.7272727272725,
+      "rightExcess": 361.7272727272725,
+      "lineSourceIndex": 0,
+      "lineLength": 74,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 1064.7159090909088,
+      "WidthIncludingTrailingWhitespace": 1064.7159090909088,
+      "OverhangTrailing": 0.9886363636362603,
+      "nearestButtonName": null
+    },
+    {
+      "group": "default-narrow-native-font2-native.json",
+      "text": "Selected: Field recording stereo \u00b7 f69fd693-4d20-4b3c-b35b-b7e902728bf2",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 1021.7670454545458,
+      "rightExcess": 319.76704545454584,
+      "lineSourceIndex": 0,
+      "lineLength": 72,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 1023.7102272727277,
+      "WidthIncludingTrailingWhitespace": 1023.7102272727277,
+      "OverhangTrailing": 1.9431818181818699,
+      "nearestButtonName": null
+    },
+    {
+      "group": "default-narrow-native-font2-native.json",
+      "text": "Selected clip: f69fd693-4d20-4b3c-b35b-b7e902728bf2 \u00b7 96000 frames",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 702,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 974.7500000000001,
+      "rightExcess": 272.7500000000001,
+      "lineSourceIndex": 0,
+      "lineLength": 67,
+      "HasOverflowed": true,
+      "HasCollapsed": false,
+      "Width": 975.3863636363637,
+      "WidthIncludingTrailingWhitespace": 975.3863636363637,
+      "OverhangTrailing": 0.636363636363626,
+      "nearestButtonName": null
+    },
+    {
+      "group": "default-wide-native.json",
+      "text": "Save locally",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "rightExcess": 0.17897727272728048,
+      "lineSourceIndex": 0,
+      "lineLength": 13,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.97443181818183,
+      "WidthIncludingTrailingWhitespace": 77.97443181818183,
+      "OverhangTrailing": -0.20454545454545325,
+      "nearestButtonName": "wave-save"
+    },
+    {
+      "group": "default-wide-native.json",
+      "text": "Import WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 78,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "rightExcess": 0.46875,
+      "lineSourceIndex": 0,
+      "lineLength": 11,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 77.9346590909091,
+      "WidthIncludingTrailingWhitespace": 77.9346590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-import"
+    },
+    {
+      "group": "default-wide-native.json",
+      "text": "Export PCM16 WAV",
+      "type": "Avalonia.Controls.Primitives.AccessText",
+      "ownWidth": 129,
+      "ownClip": true,
+      "padding": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 0,
+        "Bottom": 0,
+        "IsUniform": true
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "rightExcess": 0.21875,
+      "lineSourceIndex": 0,
+      "lineLength": 17,
+      "HasOverflowed": false,
+      "HasCollapsed": false,
+      "Width": 128.6846590909091,
+      "WidthIncludingTrailingWhitespace": 128.6846590909091,
+      "OverhangTrailing": -0.5340909090909065,
+      "nearestButtonName": "wave-export"
+    }
+  ],
+  "comparison": [
+    "Original64=53PASS11FAIL; accepted expected-original layoutRED is not UI acceptance. Defaultthreegroups12 checksPASS preserveAuto; original390/195 geometry root beyondviewport remains meaningful intrinsic-width failure.",
+    "Original template AccessText inherits native TextBlock defaultCliptrue. SAME3 smallcaption conservativeoverhangs atfont1/Padding0 occur here andproposed d93; this boundarypredates responsivecaptiontype markup. NativeBox does not itself count exact clippedraster pixels.",
+    "Originalfont2 reallongproject/track/cliprow AccessText has ownwidth702 vsink974\u20131138; HasOverflowed=true and actualownClip=true, a strong genuine nonblank clippingnegative. Proposed d93 wrappedcaptionfont2 removes these reportedoverflows; scopedPaddingfactory stillunverified forfuturecandidate.",
+    "All7 original localScrollSelectedCount0; frozenoriginalmarkup line50 HorizontalScrolling panel is unnamed/no wave-waveform-scrollID. The4 historicalscrollpredicateFAILs stem at least fromselector no match; no oldactualextent/viewport can be inferred from missingdiagnostics. RetainrawFAIL andqualification, no repairedoldcounts.",
+    "Proposedactuald93 namedpanel fullnativegeometry700extent/1799children remains direct runtimeproof ofunreachable stress tail. Its causepluspublicWrapScrollable ordering justifiesnewouterviewportparent candidate; originalsource same700 contentcap onlysource evidence, not originalactualmeasurement.",
+    "All source owner/APIs already independently pinned in source06 and original archive36rows fullmatch current; no fakecatalog/provider/render substitution. Historicalchecks.1 unmodified and source06frozenstillunverified."
+  ],
+  "readerCustody": {
+    "zipReaders": "CLOSED after full31 CRC/SHA and allsevenreports",
+    "copiedOrExtractedBodies": false,
+    "nativeSdkBrowserProviderCalls": false,
+    "sourceEdited": false
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "UTC": "2026-10-04T18:27:44.415438+00:00",
+  "state": "ROOT_ADOPTED_EXACT_SOURCE09_SIX_TARGETS_RUNTIME_NOT_RUN",
+  "before": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+  "freeze": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SOURCE-FREEZE09.json",
+  "freezeSHA256": "0f828bf97768a4e6424753f1a0f048bc82061a7ad0995d9618661006bbbf59f8",
+  "peer": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/write-package-correction09-source-peer01/REVIEW.json",
+  "peerSHA256": "5db5a7a3d59d470899173867cbfe7d3dfbd16c0222a49fcacbd860203807ee94",
+  "adoption": [
+    {
+      "target": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/WriteRetainedSceneControl.cs",
+      "bytes": 4729,
+      "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/WriteRetainedSceneControl.cs",
+        "bytes": 4729,
+        "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/ci/run-write-package-browser.py",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-write-package-browser.py",
+      "bytes": 90565,
+      "sha256": "a4ff697525e58902d19073e4027e9c968fca8ae5f619d9b11abc22923018a539",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/run-write-package-browser.py",
+        "bytes": 90748,
+        "sha256": "00f51108c30fef5a4dc9cfdb858ad88f6d16bf1f209c8b754aa0fa16754f7608"
+      },
+      "unchanged08": false
+    },
+    {
+      "target": ".github/workflows/team-b-write-package-browser.yml",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-write-package-browser.yml",
+      "bytes": 4894,
+      "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/team-b-write-package-browser.yml",
+        "bytes": 4894,
+        "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/SceneProgram.cs",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SceneProgram.cs",
+      "bytes": 38529,
+      "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/SceneProgram.cs",
+        "bytes": 38529,
+        "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/ci/run-existing-write.py",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-existing-write.py",
+      "bytes": 20105,
+      "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/run-existing-write.py",
+        "bytes": 20105,
+        "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": ".github/workflows/team-b-existing-write.yml",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-existing-write.yml",
+      "bytes": 2782,
+      "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/team-b-existing-write.yml",
+        "bytes": 2782,
+        "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad"
+      },
+      "unchanged08": true
+    }
+  ],
+  "rootReview": [
+    "Whole maintained SOURCE07 to SOURCE09 Scene/fixture/native driver/workflow deltas read; exact baseline d93 SOURCE07.",
+    "All498 actual prospective package facts rehashed, same keyset onlyScene changed; every package function AST unchanged except bounded compact asset capture.",
+    "All11 actual prospective native source bodies rehashed; original48 names and wholetoolbar unchanged; original10 names preserved/new2realrouterroundtrip; total60 two native modes fresh original apphost.",
+    "Public ownerFocusElement and exact same-element nativeKeyboardDevice focus guards read; no shared changes.",
+    "All mode continuation refuses custody failure, exact name/argv EOF/ECHILD/noerror/0signals/allbirthsgone required; actual functionalFAIL retained.",
+    "All seven/nine/nine package oracles, same192M/256M and fulloriginalselectedasset separate-upload/64Kindex gate unchanged."
+  ],
+  "actualPreviousFailuresPreserved": true,
+  "newNative60AndPackage7Browser9Native9": "NOT_RUN",
+  "protectDirtyUserAndOtherAgentFiles": true
+}

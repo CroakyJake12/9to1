@@ -1,0 +1,515 @@
+{
+  "state": "COMPLETE_D93_ORIGINAL_EXPECTED_NEGATIVE_REVIEW",
+  "workflowRun": 37222377927,
+  "commit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+  "officialArtifact": 11311285642,
+  "path": "/workspace/attachments/36a18c43-e53a-4af5-b364-d9c37d804413/wave-native-d93-original-control.zip",
+  "bytes": 636215,
+  "sha256": "8c053f6bd573159caf4a8b56caa5432de327aa13abba8bf4ad5bd45468c2acb8",
+  "members": [
+    {
+      "path": "build.log",
+      "bytes": 6926,
+      "sha256": "6a2bb30ad1fd88004cdc0487258c0d71c3bc7fb4d88a1c74bd0c381d3c48baf8"
+    },
+    {
+      "path": "default-narrow-native-font2-native.json",
+      "bytes": 1204557,
+      "sha256": "d661512025e7bb9977bef27a6a79440c3393e3591d2b88bcf1990104dd0b803f"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 16789,
+      "sha256": "3f2a919172f75b775ca4b4f2139a0094493ec64ef84edc4a5daad4f63ec893c7"
+    },
+    {
+      "path": "default-narrow-native-font2.log",
+      "bytes": 185,
+      "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7"
+    },
+    {
+      "path": "default-narrow-native.json",
+      "bytes": 1180998,
+      "sha256": "7c7510073e0c0f2030a2b8bdb947cec5b0815d829e73d97d49dcb8ba798c7595"
+    },
+    {
+      "path": "default-narrow.log",
+      "bytes": 185,
+      "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7"
+    },
+    {
+      "path": "default-wide-native.json",
+      "bytes": 1182717,
+      "sha256": "bf27af6fc6bbf5aa07321abc19f5fedaf8288fad9e127f6083d8b07083509b54"
+    },
+    {
+      "path": "default-wide.log",
+      "bytes": 185,
+      "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7"
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 2979,
+      "sha256": "fcd9157f0a04570e257474028c51bab291dc6bf01f7a8dacd8319b6613a8e61c"
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "geometry-stress195-not-zoom-native.json",
+      "bytes": 1181861,
+      "sha256": "3ff3f282f89c6abee4648f92c6bf65ed107eb85de4bc71f428ef59cb5f19912a"
+    },
+    {
+      "path": "geometry-stress195-not-zoom.log",
+      "bytes": 641,
+      "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c"
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11"
+    },
+    {
+      "path": "narrow-native-font2-native.json",
+      "bytes": 1205420,
+      "sha256": "0dac645e7e99932181d02738d7fe665f2841a6b828077547fe2cdeebf9a64fd4"
+    },
+    {
+      "path": "narrow-native-font2.log",
+      "bytes": 641,
+      "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c"
+    },
+    {
+      "path": "narrow-native.json",
+      "bytes": 1181861,
+      "sha256": "253905ea7dee373fe2b966339c8fcac6565558900b1beb0c3dedf2e13efef2c3"
+    },
+    {
+      "path": "narrow.log",
+      "bytes": 641,
+      "sha256": "0d2f4b5916258166ce4ff2229b7dd5228d23675e9f324d8eb70a4837c65cb48c"
+    },
+    {
+      "path": "native-submodule-pins.log",
+      "bytes": 202,
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999"
+    },
+    {
+      "path": "restore.log",
+      "bytes": 5656,
+      "sha256": "350184a7393c3e4d2c11d5f6c2f03961d40d5cac5918d88391f581c5772efbf6"
+    },
+    {
+      "path": "result.json",
+      "bytes": 17766,
+      "sha256": "ea540100158deaa34d19194346ae47bf162a1a519acfe724639e6170b6938f98"
+    },
+    {
+      "path": "selected-native-binary-after.json",
+      "bytes": 141358,
+      "sha256": "87ebe514a6d5b254e67551644c0020febf3550b2d2230a2f4d60713801455388"
+    },
+    {
+      "path": "selected-native-binary-before.json",
+      "bytes": 141358,
+      "sha256": "87ebe514a6d5b254e67551644c0020febf3550b2d2230a2f4d60713801455388"
+    },
+    {
+      "path": "selected-source-after.json",
+      "bytes": 6269,
+      "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75"
+    },
+    {
+      "path": "selected-source-before.json",
+      "bytes": 6269,
+      "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75"
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 661,
+      "sha256": "1717345b21ab2a714337dc4f9348462219ce0acb9b9498812407d4d164e6273e"
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 697,
+      "sha256": "69118e09bbe37c0c01ad627d06e187f6548f8988073f669bd7130eed3973f3c3"
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1306876,
+      "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e"
+    },
+    {
+      "path": "wide-native.json",
+      "bytes": 1183579,
+      "sha256": "5d6a712e262ac8700deee5d937f2f4803442e28fdbad48b327febcd1bc944040"
+    },
+    {
+      "path": "wide.log",
+      "bytes": 641,
+      "sha256": "7fab6679ac575e9808673cbc019d12ffd37a24b353b7105f361f47db135a6d5f"
+    }
+  ],
+  "all31CRCWholeBodySHAAllJSONRead": true,
+  "source36FullGitBodiesAndCapturedTreeVerified": true,
+  "selectedSourceBeforeAfterEqual": true,
+  "selectedNativeBinaryCount": 766,
+  "selectedNativeBinaryBeforeAfterEqual": true,
+  "nativeBinaryBodiesUploaded": false,
+  "counts": {
+    "executed": 64,
+    "passed": 53,
+    "failed": 11,
+    "notRun": 0
+  },
+  "status": "ORIGINAL_LAYOUT_RED_CONTROL_OBSERVED",
+  "negativeIsAcceptance": false,
+  "actualSDK": "10.0.401",
+  "buildWarnings": 0,
+  "buildErrors": 0,
+  "groups": [
+    {
+      "name": "narrow",
+      "counts": [
+        13,
+        10,
+        3
+      ],
+      "nativeExit": 1,
+      "failedNames": [
+        "Wave native outer extent fits viewport",
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "rootWidth": 795,
+      "outerExtent": {
+        "AspectRatio": 0.560677966101695,
+        "Width": 827,
+        "Height": 1475
+      },
+      "viewport": {
+        "AspectRatio": 0.46208530805687204,
+        "Width": 390,
+        "Height": 844
+      },
+      "localScrolls": []
+    },
+    {
+      "name": "narrow-native-font2",
+      "counts": [
+        13,
+        10,
+        3
+      ],
+      "nativeExit": 1,
+      "failedNames": [
+        "Wave native outer extent fits viewport",
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "rootWidth": 1455,
+      "outerExtent": {
+        "AspectRatio": 0.5604975499434602,
+        "Width": 1487,
+        "Height": 2653
+      },
+      "viewport": {
+        "AspectRatio": 0.46208530805687204,
+        "Width": 390,
+        "Height": 844
+      },
+      "localScrolls": []
+    },
+    {
+      "name": "geometry-stress195-not-zoom",
+      "counts": [
+        13,
+        10,
+        3
+      ],
+      "nativeExit": 1,
+      "failedNames": [
+        "Wave native outer extent fits viewport",
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "rootWidth": 795,
+      "outerExtent": {
+        "AspectRatio": 0.560677966101695,
+        "Width": 827,
+        "Height": 1475
+      },
+      "viewport": {
+        "AspectRatio": 0.23104265402843602,
+        "Width": 195,
+        "Height": 844
+      },
+      "localScrolls": []
+    },
+    {
+      "name": "wide",
+      "counts": [
+        13,
+        11,
+        2
+      ],
+      "nativeExit": 1,
+      "failedNames": [
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ],
+      "rootWidth": 1168,
+      "outerExtent": {
+        "AspectRatio": 0.8135593220338984,
+        "Width": 1200,
+        "Height": 1475
+      },
+      "viewport": {
+        "AspectRatio": 1.4218009478672986,
+        "Width": 1200,
+        "Height": 844
+      },
+      "localScrolls": []
+    },
+    {
+      "name": "default-narrow",
+      "counts": [
+        4,
+        4,
+        0
+      ],
+      "nativeExit": 0,
+      "failedNames": [],
+      "rootWidth": 795,
+      "outerExtent": {
+        "AspectRatio": 0.560677966101695,
+        "Width": 827,
+        "Height": 1475
+      },
+      "viewport": {
+        "AspectRatio": 0.46208530805687204,
+        "Width": 390,
+        "Height": 844
+      },
+      "localScrolls": []
+    },
+    {
+      "name": "default-narrow-native-font2",
+      "counts": [
+        4,
+        4,
+        0
+      ],
+      "nativeExit": 0,
+      "failedNames": [],
+      "rootWidth": 1455,
+      "outerExtent": {
+        "AspectRatio": 0.5604975499434602,
+        "Width": 1487,
+        "Height": 2653
+      },
+      "viewport": {
+        "AspectRatio": 0.46208530805687204,
+        "Width": 390,
+        "Height": 844
+      },
+      "localScrolls": []
+    },
+    {
+      "name": "default-wide",
+      "counts": [
+        4,
+        4,
+        0
+      ],
+      "nativeExit": 0,
+      "failedNames": [],
+      "rootWidth": 1168,
+      "outerExtent": {
+        "AspectRatio": 0.8135593220338984,
+        "Width": 1200,
+        "Height": 1475
+      },
+      "viewport": {
+        "AspectRatio": 1.4218009478672986,
+        "Width": 1200,
+        "Height": 844
+      },
+      "localScrolls": []
+    }
+  ],
+  "commands": [
+    {
+      "name": "git-head",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "git-clean-before",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "tracked-source-tree",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "native-submodule-pins",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 3
+    },
+    {
+      "name": "dotnet-version",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "dotnet-info",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "restore",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "build",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 48
+    },
+    {
+      "name": "target-properties",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "narrow",
+      "exit": 1,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "narrow-native-font2",
+      "exit": 1,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "geometry-stress195-not-zoom",
+      "exit": 1,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "wide",
+      "exit": 1,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "default-narrow",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "default-narrow-native-font2",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "default-wide",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    },
+    {
+      "name": "git-clean-after",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "zeroSignals": true,
+      "allBirthsGone": true,
+      "heldBirths": 1
+    }
+  ],
+  "heldBirths": 66,
+  "scope": "Frozen original host/markup geometry negative. All64 actual53PASS11FAIL/default12PASS; no originallayout acceptance. Font2/195 notbrowserzoom; no actions/storage/audio/browser3 proof.",
+  "readerClosed": true,
+  "newExecution": false,
+  "extraction": false,
+  "productOrAssertionsModified": false
+}

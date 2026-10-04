@@ -1,0 +1,490 @@
+{
+  "status": "CLEAR_INDEPENDENT14_RECORDED_CRITICAL_TWO_STORE_RETURNS",
+  "reviewer": "B6 independent validation",
+  "UTC": "2026-10-04T18:27:16.944835+00:00",
+  "sourceRun": 37212388505,
+  "sourceRuntime": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "driverCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "parentFull26Receipt": {
+    "path": "/tmp/team-b-b6-wave22d-independent-full26-memory-review01/review.json",
+    "sha256": "47e29e68d803570451cc0849d95c74d91d5ab4653cace4f81775e97f1e1e027d"
+  },
+  "method": "Full permanent Git blobs/ZIP/trace read in memory. Strict serialized-value decoder; actual readonly indexedDB evaluation returns, no runtime/helper import/body disk copy.",
+  "actualReadonlyReturns": [
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@45",
+      "revisions": [
+        0
+      ],
+      "fullDecodedReturnSha256": "2ac432b322050c9cf06ec141d013515a8822d25f7f087709dda1a2993ad2873a"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@51",
+      "revisions": [
+        0
+      ],
+      "fullDecodedReturnSha256": "2ac432b322050c9cf06ec141d013515a8822d25f7f087709dda1a2993ad2873a"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@57",
+      "revisions": [
+        0
+      ],
+      "fullDecodedReturnSha256": "2ac432b322050c9cf06ec141d013515a8822d25f7f087709dda1a2993ad2873a"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@63",
+      "revisions": [
+        0
+      ],
+      "fullDecodedReturnSha256": "2ac432b322050c9cf06ec141d013515a8822d25f7f087709dda1a2993ad2873a"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@93",
+      "revisions": [
+        1
+      ],
+      "fullDecodedReturnSha256": "e64e827e2f740996b9dd23b15adbeb19ec92730ef7d3c3aa1a15c0498ea4f556"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@116",
+      "revisions": [
+        2
+      ],
+      "fullDecodedReturnSha256": "1da5ead1e4a6f3d839caccdb6fe3d40be0c97890207799c34c01cb2af72b15f8"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@131",
+      "revisions": [
+        3
+      ],
+      "fullDecodedReturnSha256": "ed27ebfc7158d1a20776c35eccbeb58975625fb399ebfb7b9abbd4cc43ddd02d"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@146",
+      "revisions": [
+        4
+      ],
+      "fullDecodedReturnSha256": "79fd006b468e97a6bbf4108144c50eac0e0ab166b218fa1b6108e44647d4e37d"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@181",
+      "revisions": [
+        5
+      ],
+      "fullDecodedReturnSha256": "ddfee9ce742d5443926c4dbf08806e00f4e59837a012637f784dff49521301a1"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@188",
+      "revisions": [
+        5
+      ],
+      "fullDecodedReturnSha256": "ddfee9ce742d5443926c4dbf08806e00f4e59837a012637f784dff49521301a1"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@204",
+      "revisions": [
+        5
+      ],
+      "fullDecodedReturnSha256": "ddfee9ce742d5443926c4dbf08806e00f4e59837a012637f784dff49521301a1"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@256",
+      "revisions": [
+        5
+      ],
+      "fullDecodedReturnSha256": "ddfee9ce742d5443926c4dbf08806e00f4e59837a012637f784dff49521301a1"
+    },
+    {
+      "trace": "browser/browser-phase1.zip",
+      "store": "projects",
+      "callId": "call@279",
+      "revisions": [
+        5
+      ],
+      "fullDecodedReturnSha256": "ddfee9ce742d5443926c4dbf08806e00f4e59837a012637f784dff49521301a1"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@313",
+      "revisions": [
+        5
+      ],
+      "fullDecodedReturnSha256": "ddfee9ce742d5443926c4dbf08806e00f4e59837a012637f784dff49521301a1"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@341",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@362",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@366",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@380",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@384",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@422",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "projects",
+      "callId": "call@429",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-before-quota-restart.zip",
+      "store": "summaries",
+      "callId": "call@431",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "b346ead5fef37d0ed6d549309579e178bdc76bfc24e0f878225d4f6391af5398"
+    },
+    {
+      "trace": "browser/browser-final.zip",
+      "store": "projects",
+      "callId": "call@485",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-final.zip",
+      "store": "projects",
+      "callId": "call@511",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "e970719fd080e530d8a2fb7384c0d83e1a19889f970a2b03e304d47f51c41430"
+    },
+    {
+      "trace": "browser/browser-final.zip",
+      "store": "summaries",
+      "callId": "call@513",
+      "revisions": [
+        6
+      ],
+      "fullDecodedReturnSha256": "b346ead5fef37d0ed6d549309579e178bdc76bfc24e0f878225d4f6391af5398"
+    },
+    {
+      "trace": "browser/browser-final.zip",
+      "store": "projects",
+      "callId": "call@529",
+      "revisions": [
+        7
+      ],
+      "fullDecodedReturnSha256": "1881142364ab3f37ef1f722ff028a77c210250d857b67030376608a480a72dd6"
+    },
+    {
+      "trace": "browser/browser-final.zip",
+      "store": "summaries",
+      "callId": "call@536",
+      "revisions": [
+        7
+      ],
+      "fullDecodedReturnSha256": "b062ffca50e41726d946fe387bb5eb515195a2ca6379589a590edf1d660a9be5"
+    }
+  ],
+  "durableRevisionHistory": [
+    {
+      "revision": 0,
+      "projectJsonSha256": "7615e28597e0c87be9c3442403c8fec6bc0c1da68a1b9f0593099b1951256e35",
+      "completeBundleSha256": "995eec8ca00e75861b3fb5a95d7c1b431fcc277c7bab406785085466dc7c25a8",
+      "clip": null,
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    },
+    {
+      "revision": 1,
+      "projectJsonSha256": "7d5fc3f6b88277bf5f97a4e7e23f7dea8591c71c5aca549976d46fd6ff6af43f",
+      "completeBundleSha256": "c26431b05b706fb5587446116bd2107d788f609d66e6aefb5d70803f4e06b6fb",
+      "clip": {
+        "ClipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "SourceReferenceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "SourceStartFrame": 0,
+        "FrameCount": 48000,
+        "TimelineStartFrame": 24000,
+        "Gain": 1,
+        "FadeInFrames": 0,
+        "FadeOutFrames": 0
+      },
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    },
+    {
+      "revision": 2,
+      "projectJsonSha256": "7324e76351a7e30b1dd0ae40ea4228231b2a888c6d4182928da8746d6dbf582d",
+      "completeBundleSha256": "cda75fccf1a070fabff908207fc579cafca69d65d391aac97fd3b5238e4a13fb",
+      "clip": {
+        "ClipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "SourceReferenceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "SourceStartFrame": 6000,
+        "FrameCount": 36000,
+        "TimelineStartFrame": 30000,
+        "Gain": 1,
+        "FadeInFrames": 0,
+        "FadeOutFrames": 0
+      },
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    },
+    {
+      "revision": 3,
+      "projectJsonSha256": "64fa2c875f83f034f9cb4a5e9babfc3928f136d367f3076eaddd34bff4836979",
+      "completeBundleSha256": "823f272d4d045a017d78ad563cc688a8b0d64f57544e069c3ca07faab2999f38",
+      "clip": {
+        "ClipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "SourceReferenceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "SourceStartFrame": 0,
+        "FrameCount": 48000,
+        "TimelineStartFrame": 24000,
+        "Gain": 1,
+        "FadeInFrames": 0,
+        "FadeOutFrames": 0
+      },
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    },
+    {
+      "revision": 4,
+      "projectJsonSha256": "a7cc6d883c0ab931cd7c4995b4da658522e523c647d88761b84d0c0b6fc18871",
+      "completeBundleSha256": "6be1140b490017dc9b03b196a40b8279f53f9324b7568392f41ccfd32d9c6b71",
+      "clip": {
+        "ClipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "SourceReferenceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "SourceStartFrame": 6000,
+        "FrameCount": 36000,
+        "TimelineStartFrame": 30000,
+        "Gain": 1,
+        "FadeInFrames": 0,
+        "FadeOutFrames": 0
+      },
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    },
+    {
+      "revision": 5,
+      "projectJsonSha256": "a599c78fbb30f4979bcfd80edff542ff370ae3f5b7c5f953cde54d84138988bf",
+      "completeBundleSha256": "c9e0942d09a7f44ceb9c5a9154a31328b68f7784444e88d5150a38583cdcb885",
+      "clip": {
+        "ClipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "SourceReferenceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "SourceStartFrame": 0,
+        "FrameCount": 48000,
+        "TimelineStartFrame": 24000,
+        "Gain": 1,
+        "FadeInFrames": 0,
+        "FadeOutFrames": 0
+      },
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    },
+    {
+      "revision": 6,
+      "projectJsonSha256": "4486f944976313d7e58d830566fd5ca875d4d6896c47b9b8c0f1005449aa6fa9",
+      "completeBundleSha256": "0dc604fd82dc116ea09a57871c67fb2877be7441f4dd6a3ad6d7e4d468424d07",
+      "clip": {
+        "ClipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "SourceReferenceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "SourceStartFrame": 0,
+        "FrameCount": 48000,
+        "TimelineStartFrame": 12000,
+        "Gain": 1,
+        "FadeInFrames": 0,
+        "FadeOutFrames": 0
+      },
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    },
+    {
+      "revision": 7,
+      "projectJsonSha256": "d4f2b0967e0cbcf5e62f519b1fc27c20dada2cb9fb9ae2202b27904c29b9ecdf",
+      "completeBundleSha256": "dc1f76e1a89033351a97bc68df0d719e9967412e58a9b073741f9ce47be28d1b",
+      "clip": {
+        "ClipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "SourceReferenceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "SourceStartFrame": 0,
+        "FrameCount": 48000,
+        "TimelineStartFrame": 16800,
+        "Gain": 1,
+        "FadeInFrames": 0,
+        "FadeOutFrames": 0
+      },
+      "track": {
+        "TrackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "Gain": 1,
+        "Pan": 0,
+        "Mute": false,
+        "Solo": false,
+        "RecordArm": false
+      }
+    }
+  ],
+  "actualRecordedWAV": {
+    "trace": "browser/browser-phase1.zip",
+    "resource": "resources/fd58441dc07c2af47fb961fef48b64a32ac75f3c.wav",
+    "bytes": 288044,
+    "sha256": "71a6402a78f20031a04fd757749cc440f22db5c3ab8efad307b5426407b72882",
+    "fullCRCAndSHA1ResourceVerified": true,
+    "recordedDownloadSha256Equal": true,
+    "header": {
+      "format": "PCM16",
+      "channels": 2,
+      "sampleRate": 48000,
+      "frames": 72000
+    },
+    "fullSilentPrefixFrames": 24000,
+    "fullTailBytesEqualCanonicalSource192000": true,
+    "actualProjectRevision": 5,
+    "trackGain": 1,
+    "trackPan": 0,
+    "clipGain": 1,
+    "fades": 0,
+    "scope": "Actual audio/wav local Blob206 trace response recovered in full. Its full SHA equals recorded actual Export download SHA; downloaded pathname itself was not archived. No nonzero pan/fade or hardware assertion."
+  },
+  "quotaProof": {
+    "preColdBaselineRevision": 6,
+    "coldOpenCompleteProjectBundleEqualBaseline": true,
+    "afterStorageFullCompleteProjectBundleEqualBaseline": true,
+    "afterStorageFullCompleteSummaryEqualBaseline": true,
+    "retryRevisionProjectsAndSummaries": 7,
+    "beforeTimeline12000": true,
+    "afterTimeline16800": true,
+    "samePendingRetryCanonicalProject": true,
+    "completeSourcesEqualAcrossAbortRetry": true,
+    "sourceWaveBodySHAAndBytesRehashed": true
+  },
+  "canonical": {
+    "projectIds": [
+      "63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    ],
+    "trackIds": [
+      "52ae6d0d-a6fb-400f-a801-00f8a50da211"
+    ],
+    "clipIds": [
+      "3420fa37-8b52-46ad-8a72-d25e54263fd1"
+    ],
+    "sourceIds": [
+      "a4750d71-ef78-469f-9d78-535e7ec2f3a8"
+    ]
+  },
+  "limits": [
+    "Read-only actual returns independently decoded for B6-dispatched independent run37212388505, actual hosted-CI executor on frozen7f/normal22d runtime. Original run37208724474 evidence remains separate.",
+    "Whole recorded JSON/storage values equal, not forensic exported raw IndexedDB page files; native one-byte quota and owner StorageFull established in raw/source mapping.",
+    "Fixture embedded source rehashed; actual Blob WAV body equals recorded download digest/full expected samples. Downloaded pathname itself not uploaded; nonzero pan/fade/hardware not tested.",
+    "No provider/issuer/BFCache/deployment/full31 acceptance."
+  ],
+  "allRemoteReadersClosed": true
+}

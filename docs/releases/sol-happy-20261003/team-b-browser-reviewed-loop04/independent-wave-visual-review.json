@@ -1,0 +1,96 @@
+{
+  "state": "ACTUAL_INDEPENDENT_WAVE14_SCREENSHOTS_VISUALLY_REVIEWED_RESPONSIVE_DEFECT_CONFIRMED",
+  "utc": "2026-10-04T18:26:01.940989+00:00",
+  "reviewer": "B1",
+  "custodyReceipt": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-visual-memory-review01/source-custody-receipt.json",
+    "bytes": 106889,
+    "sha256": "7837e4541307fb91bd51e25c648b40f16bdd5f0fa60ad063fb99e2c24f2dad27"
+  },
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "driverCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "sourceReplayRun": 37212388505,
+  "sourceArtifact": 11306648191,
+  "screenshots": [
+    {
+      "member": "browser/wave-empty.png",
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-visual-memory-review01/wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4",
+      "width": 1100,
+      "height": 800
+    },
+    {
+      "member": "browser/wave-narrow.png",
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-visual-memory-review01/wave-narrow.png",
+      "bytes": 91059,
+      "sha256": "191ba777d0ca1e11e65ede9be73b1db197bcae56a7f3bd60c789a531d5751d94",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "member": "browser/wave-populated.png",
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-visual-memory-review01/wave-populated.png",
+      "bytes": 121524,
+      "sha256": "b46623e6be2f9e76fbd2d0149ae509757047555c5dafaf655002f8ccb76c83e3",
+      "width": 1100,
+      "height": 800
+    }
+  ],
+  "actualImageObservations": [
+    {
+      "image": "wave-empty.png",
+      "viewport": [
+        1100,
+        800
+      ],
+      "observed": "Native drawn empty Wave controls and create/rate/channels fields are visible. Save/export/edit controls are visibly grey. Wide top content fits within this captured view; lower editor content lies beyond the screenshot. This is screenshot state, not behavioral disabled-action proof."
+    },
+    {
+      "image": "wave-populated.png",
+      "viewport": [
+        1100,
+        800
+      ],
+      "observed": "Actual scrolled populated native surface shows revision5 canonical project GUID, 192 waveform buckets over1.500s, selected track and selected clip GUID captions. Wide captured content fits overall width; bottom source-range text and timeline fields continue below screenshot. No entire app/glyph readability proof."
+    },
+    {
+      "image": "wave-narrow.png",
+      "viewport": [
+        390,
+        844
+      ],
+      "observed": "Actual scrolled revision7 at390px has right-edge clipping. Sample-rate field fits, Channels heading/field and Create button extend past the right edge. Open-project row truncates canonical ID; save/close and export/playback toolbar right-hand controls are outside the captured horizontal viewport. Project identity, preview explanatory/summary text, timeline row and selected track/clip labels run past right edge. Visible header/panel sections remain vertically stacked. This is concrete narrow-layout failure, not only screenshot absence of controls."
+    }
+  ],
+  "nativeAxRelationship": {
+    "source": "Full CRC/SHA verified browser/native-ax-tree.json from same original independent archive",
+    "buttonTextboxNameCount": 41,
+    "examples": [
+      {
+        "role": "textbox",
+        "fullName": "Project channel count"
+      },
+      {
+        "role": "textbox",
+        "fullName": "Timeline position in seconds for import split move duplicate marker"
+      }
+    ],
+    "qualification": "This recorded AX snapshot contains named native fields (Project channel count and Timeline position in seconds for import split move duplicate marker), but no populated project/track/clip GUID caption. Populated screenshots and saved AX tree represent different checkpoints. Canonical full IDs are visually present in the wide screenshot and truncated in narrow screenshot; this AX snapshot cannot independently prove those full populated captions or simultaneous focus/hit-testing. No complete accessibility or repaired-layout claim."
+  },
+  "qualifications": [
+    "These are original sealed22d independent Wave14 screenshots, not the new responsive3 workflow and not the proposed allocation source06 runtime.",
+    "The original14 raw behavioral PASS remains separate from this failed responsive subset. Screenshots cannot establish actual200% Chrome zoom, touch/Tab, full glyph/clip geometry, hidden controls reach or full31 parity.",
+    "Only threePNG bodies298945B saved. Full26 reconstructed container and all members verified in memory; no fullZIP/trace disk write, Actions redownload, SDK/GUI/browser run or local temporary transport read.",
+    "All HTTP and Zip readers closed and execution process ended normally before view_image. Finalpart3 temporary attachment was never opened. OriginalActions outer ZIP fullbody identity remains metadata-only."
+  ],
+  "resourceCurrent": {
+    "/workspace": 270725120,
+    "/tmp": 256454656
+  },
+  "supersedes": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-visual-memory-review01/visual-review.json",
+    "sha256": "df2e7910b0488575ba5078956aee28eb68b80fef7151957790b7336b74ad7e83",
+    "reason": "Initial generic AX qualification overstated canonical-ID presence. Direct actual AX index contains no project/track/clip GUID caption; correct below."
+  }
+}

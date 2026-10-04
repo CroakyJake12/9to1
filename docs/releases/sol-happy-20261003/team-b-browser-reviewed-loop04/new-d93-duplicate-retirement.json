@@ -1,0 +1,65 @@
+{
+  "UTC": "2026-10-04T18:26:40.862502+00:00",
+  "state": "ONLY_SIX_NEW_PREDECLARED_DUPLICATES_RETIRED_AFTER_PERMANENT_FULL_ROOT_AND_B6_PROOF_ALL_READERS_CLOSED",
+  "permanentHead": "fe27d2d4300e5b4a44a247879e170381fccd6d1d",
+  "independentReceipt": "/workspace/attachments/0a547b16-4aff-459f-b011-86a3b108167c/write-package-d93-original-index-overflow.zip",
+  "independentReceiptSHA256": "6bd9e1461d605fd9812f52cd7103b8da51835c9a4b209fbb9ca73ca526f1972c",
+  "retired": [
+    {
+      "kind": "write-scene-focus58",
+      "id": 11311245271,
+      "bytes": 338972,
+      "sha256": "f18ea65f930e2dd66c1cf8f199d0c1963f8a639da09d4896e247190f190f7969",
+      "gitBlob": "25c3562552c375af93c4c591c466fe0ac8bce234",
+      "temporarySourcePath": "/workspace/attachments/570e3898-b0e0-4823-9a1c-ba5d998cdd09/write-native-scene58-d93-original-failure.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-scene-focus58.zip"
+    },
+    {
+      "kind": "write-durable65",
+      "id": 11310826657,
+      "bytes": 340342,
+      "sha256": "42701125f2e22920aad0d104c20f0d882e829042c8c26084a1579e66db8e554b",
+      "gitBlob": "1f4f5447e82930208382abeafabf831c6eba2a19",
+      "temporarySourcePath": "/workspace/attachments/2405a443-8651-446d-8b78-9a785671bfa4/write-native-durable65-d93-original.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-durable65.zip"
+    },
+    {
+      "kind": "write-space15",
+      "id": 11310797005,
+      "bytes": 338457,
+      "sha256": "28cbafe024680f99e7ee61101a4c5368de8cabdd5fb8ce538539dc4ef138ed4d",
+      "gitBlob": "7269755c4a1a2e6cd5549a200edc6298f6a42177",
+      "temporarySourcePath": "/workspace/attachments/709ccccd-50e3-48fe-8ea0-ea1d7e53bdf7/write-native-space15-d93-original-failure.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-space15.zip"
+    },
+    {
+      "kind": "wave-original",
+      "id": 11311285642,
+      "bytes": 636215,
+      "sha256": "8c053f6bd573159caf4a8b56caa5432de327aa13abba8bf4ad5bd45468c2acb8",
+      "gitBlob": "7aac99e9670153e17a77ae9e93547fc4857d5d53",
+      "temporarySourcePath": "/workspace/attachments/36a18c43-e53a-4af5-b364-d9c37d804413/wave-native-d93-original-control.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/wave-original.zip"
+    },
+    {
+      "kind": "wave-proposed",
+      "id": 11311061313,
+      "bytes": 750456,
+      "sha256": "23924ac6bb4588ed27b91c4e78dc99ad519271835d2b56c0f6a086f34d49e252",
+      "gitBlob": "c50c363d51360a65a7c50b35130645372ef6b913",
+      "temporarySourcePath": "/workspace/attachments/c634f570-c117-4202-a40b-4417b71260f3/wave-native-d93-clipping-original-failure.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/wave-proposed.zip"
+    },
+    {
+      "kind": "write-package-index-overflow",
+      "id": 11310468403,
+      "bytes": 389413,
+      "sha256": "e8e81e5b1286838dc4471edcdf355384d28a251b1a5545d330c4da7cceb1748c",
+      "gitBlob": "485e7f7200c6fae61dd8a55347678f9e0316a051",
+      "temporarySourcePath": "/workspace/attachments/0a547b16-4aff-459f-b011-86a3b108167c/write-package-d93-original-index-overflow.zip",
+      "path": "docs/releases/sol-happy-20261003/team-b-d93-original-native-write-wave-diagnostics/write-package-index-overflow.zip"
+    }
+  ],
+  "closure": "Root original archive fullbody publisher ended; B2 allfour Write closed; B3 both Wave closed; B5 both Wave closed; B6 allsix fullremoteproof and closedreader ACK.",
+  "qualification": "Every older protected original remains untouched; actual failures preserved permanently. Finalpart3 separate newduplicate still retained pending B6 criticalreview."
+}

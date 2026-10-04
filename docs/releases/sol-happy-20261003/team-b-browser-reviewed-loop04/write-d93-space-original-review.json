@@ -1,0 +1,728 @@
+{
+  "state": "RECORDED_SCOPED_ORIGINAL_FAIL",
+  "case": "space",
+  "run": 37222377934,
+  "job": 111495157349,
+  "commit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+  "archive": {
+    "path": "/workspace/attachments/709ccccd-50e3-48fe-8ea0-ea1d7e53bdf7/write-native-space15-d93-original-failure.zip",
+    "bytes": 338457,
+    "sha256": "28cbafe024680f99e7ee61101a4c5368de8cabdd5fb8ce538539dc4ef138ed4d",
+    "wholeCRCVerified": true,
+    "members": [
+      {
+        "path": "build.log",
+        "bytes": 6362,
+        "crc": 2012651943,
+        "sha256": "1294b51388e3aecd0497084690bd4cc8a6c7855b4dfd914c9afa2aa6c2307fea"
+      },
+      {
+        "path": "commands.json",
+        "bytes": 10022,
+        "crc": 1396322441,
+        "sha256": "f787b1703708bf3b5e20fdaec7722fedf5d94988829e92ceca8f4dd6136209b9"
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2974,
+        "crc": 3936218595,
+        "sha256": "57fe32783f1629003e4a7f9a98aed79cc864c50ab09e70618d70e0c012250c51"
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "crc": 3257738113,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+      },
+      {
+        "path": "entry-identity.json",
+        "bytes": 169,
+        "crc": 3056826941,
+        "sha256": "c3987e73712f79c65f53a913ea2258d7cc1977e422a997dd3f88d8a2a482d033"
+      },
+      {
+        "path": "fixture-tracked.log",
+        "bytes": 179,
+        "crc": 3753362500,
+        "sha256": "90c9bc741fca81c514142cc2585c59445a1acb51447c2a8ab9010c3e6c323258"
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "crc": 707685492,
+        "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11"
+      },
+      {
+        "path": "native-space.log",
+        "bytes": 1572,
+        "crc": 424723634,
+        "sha256": "923f5fa09a819076e988f8b9138fde2f0539d8c6a1725a16abfe359630d91f82"
+      },
+      {
+        "path": "restore.log",
+        "bytes": 5365,
+        "crc": 653128330,
+        "sha256": "8e89d16552cf1df84573807ffdc68cf94c60987ff397ce52bb6289852c27747a"
+      },
+      {
+        "path": "result.json",
+        "bytes": 1304,
+        "crc": 3622646425,
+        "sha256": "01a12666bb315de7bc2be1a47ed2fd45fd1ba8eaea1c3f3f334a825f9d40b1d0"
+      },
+      {
+        "path": "source-pins-before.json",
+        "bytes": 645,
+        "crc": 4155801725,
+        "sha256": "0447576e31c6cb2721ccf9f8fae7ce4e4325097e3f23a29ea97c633c9603c21d"
+      },
+      {
+        "path": "source-tree-pins.log",
+        "bytes": 1306876,
+        "crc": 471180625,
+        "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e"
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 245,
+        "crc": 3283227953,
+        "sha256": "1606afa1acb31d1949c6c430f1b98d73f85d947039a18adefbb9f5402f6325be"
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 275,
+        "crc": 214694409,
+        "sha256": "20e0db89a13850bec5b1dec7cf83c1f08c38f01cd580782d12e3e6136889c9a2"
+      }
+    ]
+  },
+  "source": {
+    "selectedActualGitBlobs": [
+      {
+        "path": "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+        "bytes": 850,
+        "sha256": "02448d481ff10e13073d4035013d95bee0a8ad9142fb145f8a128153db785f7d",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "apps/Web/Tests/BrowserWriteSpaceRegression.cs",
+        "bytes": 8972,
+        "sha256": "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "apps/Web/Write/Tests/ci/run-existing-write.py",
+        "bytes": 17769,
+        "sha256": "89bb719aff6a2aba792bc68ef0fb86d365882e10d72299f2ba863210e1f57ffd",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "NuGet.Config",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "global.json",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b",
+        "actualGitBlobMatch": true
+      }
+    ],
+    "wholeActualGitTree": {
+      "bytes": 1306876,
+      "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+      "matchesRaw": true
+    },
+    "cleanBeforeAfter": true,
+    "selectedAfterFileQualification": "Package499 exactbefore/after ledger; native driver comparesselectedafter but onlybeforefile uploaded."
+  },
+  "commands": [
+    {
+      "name": "git-head",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2649,
+          "birth": 4693,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.057,
+      "bytes": 41,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-before",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2650,
+          "birth": 4699,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.194,
+      "bytes": 0,
+      "familyClosed": true
+    },
+    {
+      "name": "source-tree-pins",
+      "argv": [
+        "git",
+        "ls-tree",
+        "-r",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2672,
+          "birth": 4718,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.182,
+      "bytes": 1306876,
+      "familyClosed": true
+    },
+    {
+      "name": "fixture-tracked",
+      "argv": [
+        "git",
+        "ls-files",
+        "--",
+        "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+        "apps/Web/Tests/BrowserWriteSpaceRegression.cs",
+        "apps/Web/Tests/ci/run-ordinary-native.py",
+        "apps/Web/Write/Tests/ci/run-existing-write.py"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2673,
+          "birth": 4744,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.06,
+      "bytes": 179,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-version",
+      "argv": [
+        "dotnet",
+        "--version"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2674,
+          "birth": 4779,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.924,
+      "bytes": 9,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-info",
+      "argv": [
+        "dotnet",
+        "--info"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2682,
+          "birth": 4871,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.51,
+      "bytes": 2974,
+      "familyClosed": true
+    },
+    {
+      "name": "restore",
+      "argv": [
+        "dotnet",
+        "restore",
+        "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+        "--configfile",
+        "/home/runner/work/9to1/9to1/NuGet.Config",
+        "-p:Configuration=Release",
+        "--artifacts-path",
+        "/home/runner/work/_temp/existing-write-space15/artifacts",
+        "-r",
+        "linux-x64",
+        "--disable-build-servers",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/existing-write-space15/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2690,
+          "birth": 4922,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 12.535,
+      "bytes": 5365,
+      "familyClosed": true
+    },
+    {
+      "name": "build",
+      "argv": [
+        "dotnet",
+        "build",
+        "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+        "--no-restore",
+        "-c",
+        "Release",
+        "--artifacts-path",
+        "/home/runner/work/_temp/existing-write-space15/artifacts",
+        "-r",
+        "linux-x64",
+        "--disable-build-servers",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/existing-write-space15/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2743,
+          "birth": 6176,
+          "gone": true
+        },
+        {
+          "pid": 2766,
+          "birth": 6551,
+          "gone": true
+        },
+        {
+          "pid": 2793,
+          "birth": 7372,
+          "gone": true
+        },
+        {
+          "pid": 2811,
+          "birth": 7600,
+          "gone": true
+        },
+        {
+          "pid": 2857,
+          "birth": 8918,
+          "gone": true
+        },
+        {
+          "pid": 2881,
+          "birth": 9276,
+          "gone": true
+        },
+        {
+          "pid": 2900,
+          "birth": 9395,
+          "gone": true
+        },
+        {
+          "pid": 2919,
+          "birth": 9553,
+          "gone": true
+        },
+        {
+          "pid": 2937,
+          "birth": 9667,
+          "gone": true
+        },
+        {
+          "pid": 2955,
+          "birth": 9809,
+          "gone": true
+        },
+        {
+          "pid": 2974,
+          "birth": 9955,
+          "gone": true
+        },
+        {
+          "pid": 3024,
+          "birth": 12386,
+          "gone": true
+        },
+        {
+          "pid": 3043,
+          "birth": 12617,
+          "gone": true
+        },
+        {
+          "pid": 3089,
+          "birth": 14595,
+          "gone": true
+        },
+        {
+          "pid": 3124,
+          "birth": 14907,
+          "gone": true
+        },
+        {
+          "pid": 3143,
+          "birth": 15075,
+          "gone": true
+        },
+        {
+          "pid": 3161,
+          "birth": 15370,
+          "gone": true
+        },
+        {
+          "pid": 3181,
+          "birth": 15719,
+          "gone": true
+        },
+        {
+          "pid": 3201,
+          "birth": 15911,
+          "gone": true
+        },
+        {
+          "pid": 3225,
+          "birth": 16253,
+          "gone": true
+        },
+        {
+          "pid": 3245,
+          "birth": 17089,
+          "gone": true
+        },
+        {
+          "pid": 3286,
+          "birth": 18359,
+          "gone": true
+        },
+        {
+          "pid": 3305,
+          "birth": 18654,
+          "gone": true
+        },
+        {
+          "pid": 3324,
+          "birth": 18946,
+          "gone": true
+        },
+        {
+          "pid": 3345,
+          "birth": 19149,
+          "gone": true
+        },
+        {
+          "pid": 3360,
+          "birth": 19169,
+          "gone": true
+        },
+        {
+          "pid": 3381,
+          "birth": 19482,
+          "gone": true
+        },
+        {
+          "pid": 3410,
+          "birth": 19748,
+          "gone": true
+        },
+        {
+          "pid": 3429,
+          "birth": 20105,
+          "gone": true
+        },
+        {
+          "pid": 3460,
+          "birth": 20663,
+          "gone": true
+        },
+        {
+          "pid": 3479,
+          "birth": 20995,
+          "gone": true
+        },
+        {
+          "pid": 3497,
+          "birth": 21157,
+          "gone": true
+        },
+        {
+          "pid": 3537,
+          "birth": 21804,
+          "gone": true
+        },
+        {
+          "pid": 3571,
+          "birth": 22423,
+          "gone": true
+        },
+        {
+          "pid": 3589,
+          "birth": 22645,
+          "gone": true
+        },
+        {
+          "pid": 3612,
+          "birth": 22812,
+          "gone": true
+        },
+        {
+          "pid": 3635,
+          "birth": 23520,
+          "gone": true
+        },
+        {
+          "pid": 3657,
+          "birth": 23679,
+          "gone": true
+        },
+        {
+          "pid": 3675,
+          "birth": 23932,
+          "gone": true
+        },
+        {
+          "pid": 3693,
+          "birth": 24099,
+          "gone": true
+        },
+        {
+          "pid": 3711,
+          "birth": 24301,
+          "gone": true
+        },
+        {
+          "pid": 3729,
+          "birth": 24492,
+          "gone": true
+        },
+        {
+          "pid": 3747,
+          "birth": 24728,
+          "gone": true
+        },
+        {
+          "pid": 3765,
+          "birth": 24811,
+          "gone": true
+        },
+        {
+          "pid": 3786,
+          "birth": 25078,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 191.329,
+      "bytes": 6362,
+      "familyClosed": true
+    },
+    {
+      "name": "target-properties",
+      "argv": [
+        "dotnet",
+        "msbuild",
+        "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+        "-p:Configuration=Release",
+        "-p:RuntimeIdentifier=linux-x64",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=/home/runner/work/_temp/existing-write-space15/artifacts",
+        "-nodeReuse:false",
+        "-getProperty:TargetPath,TargetFramework,RuntimeIdentifier,UseAppHost",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/existing-write-space15/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3805,
+          "birth": 25309,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.621,
+      "bytes": 275,
+      "familyClosed": true
+    },
+    {
+      "name": "native-space",
+      "argv": [
+        "/home/runner/work/_temp/existing-write-space15/artifacts/bin/BrowserWriteSpace.Tests/release_linux-x64/BrowserWriteSpace.Tests"
+      ],
+      "exit": -6,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3816,
+          "birth": 25371,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": -6,
+      "seconds": 2.094,
+      "bytes": 1572,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-after",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3839,
+          "birth": 25581,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.167,
+      "bytes": 0,
+      "familyClosed": true
+    }
+  ],
+  "custody": {
+    "commands": 11,
+    "births": 55,
+    "allNormalEOFZeroCustodianSignalsGoneFinalECHILD": true,
+    "allExitZero": false,
+    "negativeNativeSIGABRT": "Uncaughtfunctionalassertion, not a custodian-sent signal/leak"
+  },
+  "actual": {
+    "actualCounts": {
+      "passed": 10,
+      "failed": 1,
+      "notRun": 4,
+      "expected": 15
+    },
+    "passedNames": [
+      "Actual native Button receives focus",
+      "Actual Button Space invokes once and consumes key without text",
+      "Actual Button Enter invokes exactly once more",
+      "Actual Button releases pressed state",
+      "Actual ordinary Input receives native focus",
+      "Actual ordinary Input admits one Space text event",
+      "Custom owning keyboard handler receives native focus",
+      "Custom true Space handler retains ownership and receives no duplicate text",
+      "Actual owning Write scene renders with native resources",
+      "Actual owning Write surface receives native focus"
+    ],
+    "requiredFailedName": "Actual per-character native Write input preserves all spaces",
+    "sourceLine": 103,
+    "unchangedRequiredOracle": "Actual per-character native Write input preserves all spaces",
+    "sourceBuiltEntry": {
+      "entrySHA": "3e74ced55014ea46fecc02d368dc525e43174fb9b333617c399d72c7b24ed8f7",
+      "apphostSHA": "3b345b9d85046ba402ed6cd475109a17a5b24355a57da4bc27aaf174673f7ee2"
+    },
+    "targetProperties": {
+      "TargetPath": "/home/runner/work/_temp/existing-write-space15/artifacts/bin/BrowserWriteSpace.Tests/release_linux-x64/BrowserWriteSpace.Tests.dll",
+      "TargetFramework": "net10.0",
+      "RuntimeIdentifier": "linux-x64",
+      "UseAppHost": "true"
+    },
+    "scope": "Actual original ownerRawKeyDown/RawText admission native fixture; genericSpace ownerdefect retained. No fix/waiver/skip/Space PASS from importedsynthetictext; laterfour checksNOT_RUN.",
+    "functionalAbortNotCustodyFault": true
+  },
+  "allArchiveReadersClosed": true,
+  "reviewExecution": "Recordedfullreads/stdlibhash/actualGitblobcomparison only; no helper import/artifactextraction/SDK/native/browser rerun/download/copy"
+}

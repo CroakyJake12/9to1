@@ -1,0 +1,201 @@
+{
+  "state": "INDEPENDENT14_FULL26_LITERAL_IDB_AND_PCM_RECORD_REVIEW_COMPLETE_READERS_CLOSED",
+  "utc": "2026-10-04T18:28:32.404469+00:00",
+  "full26": {
+    "path": "/tmp/team-b-b6-wave22d-independent-full26-memory-review01/review.json",
+    "bytes": 15676,
+    "sha256": "47e29e68d803570451cc0849d95c74d91d5ab4653cace4f81775e97f1e1e027d"
+  },
+  "literal27IDBAndWAV": {
+    "path": "/tmp/team-b-b6-wave22d-independent-full26-memory-review01/critical-idb-review.json",
+    "bytes": 15722,
+    "sha256": "8295adfaf9c9802ec3b09981f1a6ea7a98630f19f671c4e0156bdd0c5770c99b"
+  },
+  "historicalCausalMap": {
+    "path": "/tmp/team-b-b6-wave22d-independent-causal-review01/review.json",
+    "bytes": 15150,
+    "sha256": "244bd569f6fb7a50b0e8bc5d334346e30040de2c2f2dfb2a4a786093455afe80",
+    "unchanged14ActualCriteria": {
+      "real-cui-route-and-inputs": {
+        "outcome": "PASS",
+        "observed": {
+          "route": "http://127.0.0.1:18761/#/app.wave",
+          "realNativeSemantics": true
+        }
+      },
+      "create-canonical-local-project": {
+        "outcome": "PASS",
+        "observed": {
+          "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+          "trackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+          "revision": 0,
+          "rejectedDeepLinksBeforeMissingEntityLookup": [
+            "",
+            "unsupported-local-route"
+          ]
+        }
+      },
+      "real-filechooser-import": {
+        "outcome": "PASS",
+        "observed": {
+          "clipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+          "sourceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+          "timelineStart": 24000,
+          "frames": 48000
+        }
+      },
+      "nondestructive-trim": {
+        "outcome": "PASS",
+        "observed": {
+          "revision": 2,
+          "sourceStart": 6000,
+          "frames": 36000
+        }
+      },
+      "persistent-undo-redo": {
+        "outcome": "PASS",
+        "observed": {
+          "reopenedHistory": true,
+          "revision": 5,
+          "persistentIds": [
+            "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+            "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+            "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+            "a4750d71-ef78-469f-9d78-535e7ec2f3a8"
+          ]
+        }
+      },
+      "exact-pcm-download": {
+        "outcome": "PASS",
+        "observed": {
+          "actualDownloadBytes": 288044,
+          "exactPcm": true,
+          "projectUnchanged": true
+        }
+      },
+      "real-browser-audio-transport": {
+        "outcome": "PASS",
+        "observed": {
+          "decodedDuration": 1.5,
+          "actualAdvancingPosition": 0.483405,
+          "hardwareAudibilityVerified": false
+        }
+      },
+      "wrong-format-preserves-state": {
+        "outcome": "PASS",
+        "observed": {
+          "refusedActual44100Source": true,
+          "durableBytesUnchanged": true
+        }
+      },
+      "browser-process-restart": {
+        "outcome": "PASS",
+        "observed": {
+          "actualBrowserProcessRestart": true,
+          "sameProfileSameOrigin": true,
+          "revision": 5
+        }
+      },
+      "actual-two-tab-revision-conflict": {
+        "outcome": "PASS",
+        "observed": {
+          "winnerRevision": 6,
+          "winnerTimeline": 12000,
+          "rejectedTabPreservedUnsavedTimeline": 36000
+        }
+      },
+      "failed-save-cannot-close-dirty-project": {
+        "outcome": "PASS",
+        "observed": {
+          "dirtyConflictCannotClose": true,
+          "durableWinnerUnchanged": true
+        }
+      },
+      "stored-source-integrity-negative-control": {
+        "outcome": "PASS",
+        "observed": {
+          "isolatedDurableSourceCorruptionDetected": true,
+          "originalPackageRestored": true
+        }
+      },
+      "actual-browser-quota-two-store-atomicity": {
+        "outcome": "PASS",
+        "observed": {
+          "genuineChromiumQuotaRefusal": true,
+          "bothDurableStoresUnchangedOnAbort": true,
+          "samePendingEditCommittedOnceAfterRecovery": true
+        }
+      },
+      "runtime-and-candidate-integrity": {
+        "outcome": "PASS",
+        "observed": {
+          "exactManifestSha256": "473023ba1a69881375c49eccb12688fb6dddd339ff3b3d64bcade1844aa83994",
+          "candidateCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+          "assetFiles": 285,
+          "unexpectedErrors": {
+            "consoleError": 0,
+            "managedRuntimeError": 0,
+            "pageError": 0,
+            "requestFailed": 0
+          }
+        }
+      }
+    },
+    "closure": {
+      "ordinaryCommands": 9,
+      "ordinaryGoneBirthRecords": 109,
+      "normalEOF": true,
+      "nativeHeldIdentities": 36,
+      "actualSequentialBoundBrowserPids": [
+        3257,
+        3378,
+        3496
+      ],
+      "allHeldFDExitAndBirthGoneRecorded": true,
+      "signals": 0,
+      "forcedCleanup": false,
+      "finalECHILD": true,
+      "custodyClean": true,
+      "finalObservedFootprintBytes": 60257339,
+      "footprintScope": "Recorded final current footprint, not independently reconstructed transient MAX"
+    },
+    "runtimeCustody": {
+      "inventoryRowsBeforeAfterEqual": 285,
+      "bytes": 58424254,
+      "localReceiptSha256": "473023ba1a69881375c49eccb12688fb6dddd339ff3b3d64bcade1844aa83994",
+      "originalReceiptSha256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+      "originalInnerSha256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+      "independentAll285BodyReview": "/tmp/team-b-b6-normal-web22d-inner-custody-review01/review.json SHA36d7f4cd8f31bb25fe636707a1d90339f2131a0e5c5897b554f738aa8087b10f",
+      "runtimeBodyChecksHere": "Recorded inventories equal; earlier separate original285 full-body proof applies to exact same inner/receipt tuple"
+    }
+  },
+  "all10DriverSourceGitBodiesIndependentlyRecheckedAtExact7f": true,
+  "currentEvidenceResolvedHistoricalOmissions": [
+    "Allthree full nested traces and three PNG structural bodies now independently read; twenty causal records byteexact historical causal pass.",
+    "Full actual readonly27 IndexedDB returns decoded, including exact both-store baseline/refusal equality and same pending revision7 retry.",
+    "Full288044B actual trace WAV recovered, header and every expected PCM byte checked; full SHA equals recorded actual download SHA."
+  ],
+  "stillUnresolved": [
+    "PNG structure/body CRC does not establish visible narrow layout; original old22d glyph/caption faults and new responsive native failures remain separate.",
+    "Original44.6MB Actions outer and old19.9MB part02 Actions outer remain metadata-only; exact derived26container and current four transport ZIP bodies fully verified.",
+    "Download pathname file body itself not uploaded; actual blob WAV body hash matches recorded download. Nonzero pan/fades/hardware not tested.",
+    "No provider/issuer/BFCache/deployment/fullWave/full31/AT acceptance. Final measured footprint is not transient highwater proof."
+  ],
+  "sourceRun": 37212388505,
+  "driverCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "part3Retirement": {
+    "onlyNewPredeclaredTemporary": "/workspace/attachments/14e6e3ac-5fd6-40ef-bd88-5a4004a59ce3/independent-wave-original-member-transport-part03.zip",
+    "rootOnlyAfterAllOtherReaderOwnershipChecks": true
+  },
+  "allReadersClosed": true,
+  "activity": {
+    "localRuntime": false,
+    "SDK": false,
+    "browser": false,
+    "bulkDiskBodies": false,
+    "extraction": false,
+    "localOriginalTemporaryRead": false,
+    "unlink": false
+  }
+}

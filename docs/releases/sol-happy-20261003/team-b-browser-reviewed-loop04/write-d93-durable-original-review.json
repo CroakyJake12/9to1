@@ -1,0 +1,695 @@
+{
+  "state": "RECORDED_SCOPED_PASS",
+  "case": "durable",
+  "run": 37222377934,
+  "job": 111495157354,
+  "commit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+  "archive": {
+    "path": "/workspace/attachments/2405a443-8651-446d-8b78-9a785671bfa4/write-native-durable65-d93-original.zip",
+    "bytes": 340342,
+    "sha256": "42701125f2e22920aad0d104c20f0d882e829042c8c26084a1579e66db8e554b",
+    "wholeCRCVerified": true,
+    "members": [
+      {
+        "path": "actual-original-assertions.json",
+        "bytes": 4250,
+        "crc": 462335072,
+        "sha256": "a4545dd84bf1e2faa0200bf566b07d8fb6ee4a2f0382e582220b7f2b406ce3af"
+      },
+      {
+        "path": "commands.json",
+        "bytes": 7995,
+        "crc": 380073905,
+        "sha256": "1a7ef65970499729adfaa4a58b886f60cda87351ed8d45cb4081b8bca601dafb"
+      },
+      {
+        "path": "build.log",
+        "bytes": 905,
+        "crc": 782106055,
+        "sha256": "c330cda28d42a01ff63ddfff961608e64b088d599ef9ec29834ec0a1dc237aa8"
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2976,
+        "crc": 1267723600,
+        "sha256": "b6b8d30f190b458d14d75d5b3a1239852c858965a16bdc8a56df49f155416e68"
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "crc": 3257738113,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+      },
+      {
+        "path": "entry-identity.json",
+        "bytes": 169,
+        "crc": 1557020177,
+        "sha256": "a2fdba95a46358687c2a1d3942bdc223e1c14caa844ac45869f58a0435200e7a"
+      },
+      {
+        "path": "fixture-tracked.log",
+        "bytes": 178,
+        "crc": 932028850,
+        "sha256": "6beb123632043db7341a993536e9d2c9af020804c3cc615b16526ec7f6debb93"
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "crc": 707685492,
+        "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11"
+      },
+      {
+        "path": "native-seed.log",
+        "bytes": 1180,
+        "crc": 1158159854,
+        "sha256": "643db015a92caa6e2a7da9d6a8de791545e29bd49e1baa8f459d9a754abf418c"
+      },
+      {
+        "path": "native-subscriber.log",
+        "bytes": 241,
+        "crc": 1773559391,
+        "sha256": "3c0be8c3feeddf728524fe03251757f80434931259703dc121916dc6895ccb02"
+      },
+      {
+        "path": "native-verify.log",
+        "bytes": 2299,
+        "crc": 2794641382,
+        "sha256": "df542b71b096400e49bda74a0878a9901bc52e1ca726a366d0828286572bdd32"
+      },
+      {
+        "path": "restore.log",
+        "bytes": 670,
+        "crc": 2607598928,
+        "sha256": "88236cf972b24e5fdfcb8c23850b2aa5be4c93eb176cdbc26db97b0a06e9f9c8"
+      },
+      {
+        "path": "result.json",
+        "bytes": 4771,
+        "crc": 1601043798,
+        "sha256": "4ba88eaaaf88b26b0bcf941b51bfce7c884a2138e404fdfb7fbf8c1cff447205"
+      },
+      {
+        "path": "source-pins-before.json",
+        "bytes": 644,
+        "crc": 3009706633,
+        "sha256": "8ec4262f3d707b2c74dcd20e5b54c90d052252773f930575478b1a9c043d15a8"
+      },
+      {
+        "path": "source-tree-pins.log",
+        "bytes": 1306876,
+        "crc": 471180625,
+        "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e"
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 261,
+        "crc": 1006103515,
+        "sha256": "a19b65be1e66dcb0c2708c79a71062b93816a0dde7c18c5195ea7c62ae4aad21"
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 291,
+        "crc": 4215123088,
+        "sha256": "2783b3c52f14e007189da7c66766ce548984541a82c16ad00f289c4eb495f17b"
+      }
+    ]
+  },
+  "source": {
+    "selectedActualGitBlobs": [
+      {
+        "path": "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+        "bytes": 1983,
+        "sha256": "a03ae96ff75514a85a54eb2f587d292d26d655a87d6b71d0111e6ace1dd4a3c2",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "apps/Web/Write/Tests/Program.cs",
+        "bytes": 13599,
+        "sha256": "44b11fa3bb3b508bf249bfb52892144f999d754c56d333d0ab325c0e0f7217b8",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "apps/Web/Write/Tests/ci/run-existing-write.py",
+        "bytes": 17769,
+        "sha256": "89bb719aff6a2aba792bc68ef0fb86d365882e10d72299f2ba863210e1f57ffd",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "NuGet.Config",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e",
+        "actualGitBlobMatch": true
+      },
+      {
+        "path": "global.json",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b",
+        "actualGitBlobMatch": true
+      }
+    ],
+    "wholeActualGitTree": {
+      "bytes": 1306876,
+      "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+      "matchesRaw": true
+    },
+    "cleanBeforeAfter": true,
+    "selectedAfterFileQualification": "Package499 exactbefore/after ledger; native driver comparesselectedafter but onlybeforefile uploaded."
+  },
+  "commands": [
+    {
+      "name": "git-head",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2652,
+          "birth": 3569,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.047,
+      "bytes": 41,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-before",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2653,
+          "birth": 3574,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.461,
+      "bytes": 0,
+      "familyClosed": true
+    },
+    {
+      "name": "source-tree-pins",
+      "argv": [
+        "git",
+        "ls-tree",
+        "-r",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2675,
+          "birth": 3620,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.148,
+      "bytes": 1306876,
+      "familyClosed": true
+    },
+    {
+      "name": "fixture-tracked",
+      "argv": [
+        "git",
+        "ls-files",
+        "--",
+        "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+        "apps/Web/Write/Tests/Program.cs",
+        "apps/Web/Tests/ci/run-ordinary-native.py",
+        "apps/Web/Write/Tests/ci/run-existing-write.py"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2676,
+          "birth": 3635,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.046,
+      "bytes": 178,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-version",
+      "argv": [
+        "dotnet",
+        "--version"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2677,
+          "birth": 3640,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 2.478,
+      "bytes": 9,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-info",
+      "argv": [
+        "dotnet",
+        "--info"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2685,
+          "birth": 3888,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.725,
+      "bytes": 2976,
+      "familyClosed": true
+    },
+    {
+      "name": "restore",
+      "argv": [
+        "dotnet",
+        "restore",
+        "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+        "--configfile",
+        "/home/runner/work/9to1/9to1/NuGet.Config",
+        "-p:Configuration=Release",
+        "--artifacts-path",
+        "/home/runner/work/_temp/existing-write-durable65/artifacts",
+        "-r",
+        "linux-x64",
+        "--disable-build-servers",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/existing-write-durable65/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2693,
+          "birth": 3960,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 6.708,
+      "bytes": 670,
+      "familyClosed": true
+    },
+    {
+      "name": "build",
+      "argv": [
+        "dotnet",
+        "build",
+        "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+        "--no-restore",
+        "-c",
+        "Release",
+        "--artifacts-path",
+        "/home/runner/work/_temp/existing-write-durable65/artifacts",
+        "-r",
+        "linux-x64",
+        "--disable-build-servers",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/existing-write-durable65/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2735,
+          "birth": 4631,
+          "gone": true
+        },
+        {
+          "pid": 2758,
+          "birth": 4757,
+          "gone": true
+        },
+        {
+          "pid": 2789,
+          "birth": 5464,
+          "gone": true
+        },
+        {
+          "pid": 2807,
+          "birth": 5673,
+          "gone": true
+        },
+        {
+          "pid": 2848,
+          "birth": 6799,
+          "gone": true
+        },
+        {
+          "pid": 2866,
+          "birth": 6955,
+          "gone": true
+        },
+        {
+          "pid": 2886,
+          "birth": 7144,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 27.641,
+      "bytes": 905,
+      "familyClosed": true
+    },
+    {
+      "name": "target-properties",
+      "argv": [
+        "dotnet",
+        "msbuild",
+        "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+        "-p:Configuration=Release",
+        "-p:RuntimeIdentifier=linux-x64",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=/home/runner/work/_temp/existing-write-durable65/artifacts",
+        "-nodeReuse:false",
+        "-getProperty:TargetPath,TargetFramework,RuntimeIdentifier,UseAppHost",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/existing-write-durable65/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2905,
+          "birth": 7395,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.592,
+      "bytes": 291,
+      "familyClosed": true
+    },
+    {
+      "name": "native-seed",
+      "argv": [
+        "/home/runner/work/_temp/existing-write-durable65/artifacts/bin/WriteBrowser.Persistence.Tests/release_linux-x64/WriteBrowser.Persistence.Tests",
+        "seed"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2916,
+          "birth": 7455,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.497,
+      "bytes": 1180,
+      "familyClosed": true
+    },
+    {
+      "name": "native-verify",
+      "argv": [
+        "/home/runner/work/_temp/existing-write-durable65/artifacts/bin/WriteBrowser.Persistence.Tests/release_linux-x64/WriteBrowser.Persistence.Tests",
+        "verify"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2929,
+          "birth": 7504,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.628,
+      "bytes": 2299,
+      "familyClosed": true
+    },
+    {
+      "name": "native-subscriber",
+      "argv": [
+        "/home/runner/work/_temp/existing-write-durable65/artifacts/bin/WriteBrowser.Persistence.Tests/release_linux-x64/WriteBrowser.Persistence.Tests",
+        "subscriber"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2943,
+          "birth": 7567,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.405,
+      "bytes": 241,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-after",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2958,
+          "birth": 7608,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.422,
+      "bytes": 0,
+      "familyClosed": true
+    }
+  ],
+  "custody": {
+    "commands": 13,
+    "births": 19,
+    "allNormalEOFZeroCustodianSignalsGoneFinalECHILD": true,
+    "allExitZero": true,
+    "negativeNativeSIGABRT": null
+  },
+  "actual": {
+    "actualCounts": {
+      "seed": 23,
+      "freshProcessVerify": 40,
+      "separateSubscriber": 2,
+      "passed": 65,
+      "failed": 0,
+      "notRun": 0
+    },
+    "orderedRawLabelsAndStructuredCountsMatch": [
+      {
+        "mode": "seed",
+        "assertions": 23,
+        "actualNames": [
+          "fixture is fresh; never overwrite another test run",
+          "owner creates durable opaque document ID",
+          "owner selection addresses actual object ID",
+          "owner structured editor inserts text",
+          "select actual beta range",
+          "same CUI action changes actual editor and marks dirty",
+          "exact document text",
+          "range formatting preserves three text runs",
+          "only beta is bold; adjacent text remains unchanged",
+          "owner undo removes only range formatting",
+          "undo does not alter durable base revision",
+          "owner redo restores formatting",
+          "exact document text",
+          "range formatting preserves three text runs",
+          "only beta is bold; adjacent text remains unchanged",
+          "canonical save acknowledges clean state",
+          "actual native codec exports saved document",
+          "native package retains canonical identity and revision",
+          "exact document text",
+          "range formatting preserves three text runs",
+          "only beta is bold; adjacent text remains unchanged",
+          "real repository publishes create and edit history",
+          "close releases saved editor"
+        ],
+        "originalReceipt": {
+          "mode": "seed",
+          "assertions": 23,
+          "scope": "local durable owner/session; browser GUI not executed"
+        }
+      },
+      {
+        "mode": "verify",
+        "assertions": 40,
+        "actualNames": [
+          "fresh process opens same owner document ID",
+          "fresh process retains revision and object ID",
+          "exact document text",
+          "range formatting preserves three text runs",
+          "only beta is bold; adjacent text remains unchanged",
+          "fresh process retains entire section/page/block/run structure, IDs and attributes",
+          "open explicit read-only presentation",
+          "read-only session rejects editor mutation without dirtying",
+          "read-only formatting action disabled",
+          "read-only rejection does not change durable revision",
+          "independent repository session opens same base revision",
+          "first independent session commits next owner revision",
+          "actual repository rejects stale expected revision and preserves draft",
+          "stale save leaves committed bytes unchanged",
+          "conflicting session retains its own exact unsaved text",
+          "failed conflict save prevents close and draft loss",
+          "conflict draft can be preserved by actual native codec",
+          "undo uses owner editor after save",
+          "undo content saves against current durable revision",
+          "exact document text",
+          "range formatting preserves three text runs",
+          "only beta is bold; adjacent text remains unchanged",
+          "explicit native import creates independent durable document",
+          "exact document text",
+          "range formatting preserves three text runs",
+          "only beta is bold; adjacent text remains unchanged",
+          "independent import leaves original canonical artifact unchanged",
+          "native integrity failure preserves currently open document",
+          "independent imported document closes safely",
+          "lifetime refuses silent dirty-document disposal",
+          "create separate durable queue fixture",
+          "queued mutation completes after actual repository save",
+          "committed snapshot excludes queued later mutation",
+          "later edit remains visible and unsaved",
+          "remaining edit commits exactly next owner revision",
+          "real filesystem failure preserves unsaved draft",
+          "failed write retains durable base and exact draft text",
+          "failed save left previous real durable content recoverable",
+          "retry commits once against preserved owner revision",
+          "recovered draft safely closes"
+        ],
+        "originalReceipt": {
+          "mode": "verify",
+          "assertions": 40,
+          "scope": "local durable owner/session; browser GUI not executed"
+        }
+      },
+      {
+        "mode": "subscriber",
+        "assertions": 2,
+        "actualNames": [
+          "presentation listener error is visible after real durable create",
+          "subscriber exception cannot strand command gate; subsequent operation completes"
+        ],
+        "originalReceipt": {
+          "mode": "subscriber",
+          "assertions": 2,
+          "scope": "actual local durable owner/session"
+        }
+      }
+    ],
+    "sourceBuiltEntry": {
+      "entrySHA": "684908ccf857b85c1be4afb087b9a59ca89fb50b8011e5224efa0b2c7dea02ce",
+      "apphostSHA": "dea0c888447e24e8f847a19432d973aadd0836a2159f70b444418969838cf8d9"
+    },
+    "targetProperties": {
+      "TargetPath": "/home/runner/work/_temp/existing-write-durable65/artifacts/bin/WriteBrowser.Persistence.Tests/release_linux-x64/WriteBrowser.Persistence.Tests.dll",
+      "TargetFramework": "net10.0",
+      "RuntimeIdentifier": "linux-x64",
+      "UseAppHost": "true"
+    },
+    "distinctNativeProcessIds": [
+      2916,
+      2929,
+      2943
+    ],
+    "scope": "Actual NotesRepository/nativecodec/structuredWrite owner/session localdurability+sameprocess independentCAS/history/undo/redo/conflict/failure/queuedmutation/subscriber. Native read-only is session presentation denial only; notbackend ACL. No browser/rawSpace/GUI/provider/fullWrite/platform/donor acceptance.",
+    "runtimeQualification": "Entry/apphost identities uploaded; emittedruntime whole bodies and actualfixturedata not in diagnosticartifact. Underlyingmeaningfulassertions/source actualsource-built, not replayed here."
+  },
+  "allArchiveReadersClosed": true,
+  "reviewExecution": "Recordedfullreads/stdlibhash/actualGitblobcomparison only; no helper import/artifactextraction/SDK/native/browser rerun/download/copy"
+}

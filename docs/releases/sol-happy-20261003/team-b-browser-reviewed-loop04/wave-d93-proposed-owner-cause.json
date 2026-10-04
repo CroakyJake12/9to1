@@ -1,0 +1,6241 @@
+{
+  "state": "ACTUAL_SOURCE05_PROPOSED_FAILURE_CAUSE_MAPPING_ONLY; NO_TEST_OR_PRODUCT_CHANGE",
+  "utc": "2026-10-04T18:04:56.746594+00:00",
+  "archive": {
+    "path": "/workspace/attachments/c634f570-c117-4202-a40b-4417b71260f3/wave-native-d93-clipping-original-failure.zip",
+    "bytes": 750456,
+    "sha256": "23924ac6bb4588ed27b91c4e78dc99ad519271835d2b56c0f6a086f34d49e252",
+    "filenameQualification": "Filename says original-failure; actual result.variant is proposed. No acceptance relabel.",
+    "members": [
+      {
+        "path": "build.log",
+        "bytes": 6926,
+        "sha256": "5fe02fad3ef3bd933207adebc5bc085bcb642825b8021055393f42e95239d184",
+        "crc32": "e47bf51c"
+      },
+      {
+        "path": "default-narrow-native-font2-native.json",
+        "bytes": 1784919,
+        "sha256": "bb916276d622c3ad9eb53ef9f79cd81451d9dc08b8554b7426a4d46098d7a934",
+        "crc32": "4ba39a5b"
+      },
+      {
+        "path": "commands.json",
+        "bytes": 15860,
+        "sha256": "de62f5152a72cb85fdd19ebc8f16d1b049b1bb9ce4a78244523ac85231d11041",
+        "crc32": "a7cadbe1"
+      },
+      {
+        "path": "default-narrow-native-font2.log",
+        "bytes": 185,
+        "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+        "crc32": "1e063627"
+      },
+      {
+        "path": "default-narrow-native.json",
+        "bytes": 1752983,
+        "sha256": "a38888627c7a94a1592b53838dec5303fbb4a6e2095bf8653ce1a88eadfe070a",
+        "crc32": "6d3c4f4c"
+      },
+      {
+        "path": "default-narrow.log",
+        "bytes": 185,
+        "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+        "crc32": "1e063627"
+      },
+      {
+        "path": "default-wide-native.json",
+        "bytes": 1754868,
+        "sha256": "1b51129e49663bde9f6a51a6cd0b3de019a3aec2db20c240f98681e4d440b00b",
+        "crc32": "adf83d5c"
+      },
+      {
+        "path": "default-wide.log",
+        "bytes": 185,
+        "sha256": "00f4047bb0aa17262cdc11c96b1ab0de75c295ef71b3f32d76b43e4669d88ac7",
+        "crc32": "1e063627"
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2979,
+        "sha256": "5b3a661f0c4ebac01b080ae13692e4867b02920d3973e68a5b5192f6f69ad891",
+        "crc32": "7e6c1fce"
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+        "crc32": "c22d2381"
+      },
+      {
+        "path": "geometry-stress195-not-zoom-native.json",
+        "bytes": 1904119,
+        "sha256": "d1e131169bca6a74723271ba44dbe2c09eec7cefd60886d7dafb1bf5b944038e",
+        "crc32": "2ee58b5b"
+      },
+      {
+        "path": "geometry-stress195-not-zoom.log",
+        "bytes": 641,
+        "sha256": "60d346110b06d130143259ec0b9c4c2bede7059c32784aac4932b449ad31ee9e",
+        "crc32": "c3851a84"
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+        "crc32": "2a2e6c74"
+      },
+      {
+        "path": "narrow-native-font2-native.json",
+        "bytes": 1861140,
+        "sha256": "4c42c08ad8c34a0f8bb305dd21ae357d8af96957de17f218bbc12825d91c7c6e",
+        "crc32": "df2253f8"
+      },
+      {
+        "path": "narrow-native-font2.log",
+        "bytes": 641,
+        "sha256": "60d346110b06d130143259ec0b9c4c2bede7059c32784aac4932b449ad31ee9e",
+        "crc32": "c3851a84"
+      },
+      {
+        "path": "narrow-native.json",
+        "bytes": 1786484,
+        "sha256": "9d344f2e1e78f58cf8386b9c4dd58de57b282450c91b3d1a150847e95070ac32",
+        "crc32": "9d8a357c"
+      },
+      {
+        "path": "narrow.log",
+        "bytes": 641,
+        "sha256": "60d346110b06d130143259ec0b9c4c2bede7059c32784aac4932b449ad31ee9e",
+        "crc32": "c3851a84"
+      },
+      {
+        "path": "native-submodule-pins.log",
+        "bytes": 202,
+        "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+        "crc32": "f1749c30"
+      },
+      {
+        "path": "restore.log",
+        "bytes": 5649,
+        "sha256": "5c10c720b0cc51f2a61fdd14f87eba9374fb27ca50cefc068de42b08f39f01f1",
+        "crc32": "01a88c00"
+      },
+      {
+        "path": "result.json",
+        "bytes": 17813,
+        "sha256": "01d18beebbf188b8e9968a74abb8880f1b092d2a38238f1a4fd948f00bfa1ad0",
+        "crc32": "51bdc8a1"
+      },
+      {
+        "path": "selected-native-binary-after.json",
+        "bytes": 141358,
+        "sha256": "b70907d0015a0acc88146a4b2d609ca080018c76ba7506dc27af15e8d79af132",
+        "crc32": "a407fe3d"
+      },
+      {
+        "path": "selected-native-binary-before.json",
+        "bytes": 141358,
+        "sha256": "b70907d0015a0acc88146a4b2d609ca080018c76ba7506dc27af15e8d79af132",
+        "crc32": "a407fe3d"
+      },
+      {
+        "path": "selected-source-after.json",
+        "bytes": 6269,
+        "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+        "crc32": "29c9e98e"
+      },
+      {
+        "path": "selected-source-before.json",
+        "bytes": 6269,
+        "sha256": "48e156dc8cdb38d41128774f1f6031648a2b5c392ded3613f265ee89388a4a75",
+        "crc32": "29c9e98e"
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 637,
+        "sha256": "dd161cd73a66f3576edbd10143b4dff758402d8688d408b788efe3bed7916241",
+        "crc32": "fc2085ae"
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 673,
+        "sha256": "59f30d42ac822727a6374de082d1aab01210877776405273f54106dde52f80f8",
+        "crc32": "05cbb1f8"
+      },
+      {
+        "path": "tracked-source-tree.log",
+        "bytes": 1306876,
+        "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+        "crc32": "1c15a551"
+      },
+      {
+        "path": "wide-native.json",
+        "bytes": 1755730,
+        "sha256": "7249fa09957853e7801f87168c4036e991d10a8564a9bff506284ac202916883",
+        "crc32": "07fd1fc7"
+      },
+      {
+        "path": "wide.log",
+        "bytes": 641,
+        "sha256": "7fab6679ac575e9808673cbc019d12ffd37a24b353b7105f361f47db135a6d5f",
+        "crc32": "44537bc2"
+      }
+    ]
+  },
+  "actualResult": {
+    "variant": "proposed",
+    "status": "FAIL",
+    "expectedGroups": 7,
+    "expectedChecks": 64,
+    "executed": 64,
+    "passed": 56,
+    "failed": 8,
+    "notRun": 0
+  },
+  "matrix": [
+    {
+      "name": "narrow-native.json",
+      "width": 390,
+      "fontFactor": 1,
+      "optIn": true,
+      "count": 13,
+      "passed": 11,
+      "failed": [
+        "Every full native Wave glyph fits assigned bounds",
+        "Every full native Wave text stays inside root"
+      ]
+    },
+    {
+      "name": "narrow-native-font2-native.json",
+      "width": 390,
+      "fontFactor": 2,
+      "optIn": true,
+      "count": 13,
+      "passed": 11,
+      "failed": [
+        "Every full native Wave glyph fits assigned bounds",
+        "Every full native Wave text stays inside root"
+      ]
+    },
+    {
+      "name": "geometry-stress195-not-zoom-native.json",
+      "width": 195,
+      "fontFactor": 1,
+      "optIn": true,
+      "count": 13,
+      "passed": 11,
+      "failed": [
+        "Every full native Wave glyph fits assigned bounds",
+        "Every full native Wave text stays inside root"
+      ]
+    },
+    {
+      "name": "wide-native.json",
+      "width": 1200,
+      "fontFactor": 1,
+      "optIn": true,
+      "count": 13,
+      "passed": 11,
+      "failed": [
+        "Every full native Wave glyph fits assigned bounds",
+        "Deliberate waveform keeps local horizontal scrolling"
+      ]
+    },
+    {
+      "name": "default-narrow-native.json",
+      "width": 390,
+      "fontFactor": 1,
+      "optIn": false,
+      "count": 4,
+      "passed": 4,
+      "failed": []
+    },
+    {
+      "name": "default-narrow-native-font2-native.json",
+      "width": 390,
+      "fontFactor": 2,
+      "optIn": false,
+      "count": 4,
+      "passed": 4,
+      "failed": []
+    },
+    {
+      "name": "default-wide-native.json",
+      "width": 1200,
+      "fontFactor": 1,
+      "optIn": false,
+      "count": 4,
+      "passed": 4,
+      "failed": []
+    }
+  ],
+  "all15ActualOwnClipCaptionInkRows": [
+    {
+      "group": "narrow-native.json",
+      "optIn": true,
+      "text": "Save locally",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 13,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.97443181818183,
+        "WidthIncludingTrailingWhitespace": 77.97443181818183,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 0,
+        "OverhangTrailing": -0.20454545454545325,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "excessRight": 0.17897727272728048,
+      "paintFrame": {
+        "Name": "wave-button-caption-05",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-05",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 21,
+          "Y": 465,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-save",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-save",
+        "bounds": {
+          "X": 0,
+          "Y": 30,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 459,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-save",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-save",
+          "bounds": {
+            "X": 0,
+            "Y": 30,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 12,
+            "Y": 459,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 390,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "narrow-native.json",
+      "optIn": true,
+      "text": "Import WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 11,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.9346590909091,
+        "WidthIncludingTrailingWhitespace": 77.9346590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "excessRight": 0.46875,
+      "paintFrame": {
+        "Name": "wave-button-caption-07",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-07",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 9,
+          "Y": 565,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-import",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-import",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 0,
+          "Y": 559,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-import",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-import",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 0,
+            "Y": 559,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 390,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "narrow-native.json",
+      "optIn": true,
+      "text": "Export PCM16 WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 17,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 128.6846590909091,
+        "WidthIncludingTrailingWhitespace": 128.6846590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "excessRight": 0.21875,
+      "paintFrame": {
+        "Name": "wave-button-caption-11",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-11",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 129,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 9,
+          "Y": 595,
+          "Width": 129,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-export",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-export",
+        "bounds": {
+          "X": 0,
+          "Y": 30,
+          "Width": 147,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 0,
+          "Y": 589,
+          "Width": 147,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-export",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-export",
+          "bounds": {
+            "X": 0,
+            "Y": 30,
+            "Width": 147,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 0,
+            "Y": 589,
+            "Width": 147,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 390,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "optIn": true,
+      "text": "Save locally",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 13,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.97443181818183,
+        "WidthIncludingTrailingWhitespace": 77.97443181818183,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 0,
+        "OverhangTrailing": -0.20454545454545325,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "excessRight": 0.17897727272728048,
+      "paintFrame": {
+        "Name": "wave-button-caption-05",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-05",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 21,
+          "Y": 868,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-save",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-save",
+        "bounds": {
+          "X": 0,
+          "Y": 77,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 862,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-save",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-save",
+          "bounds": {
+            "X": 0,
+            "Y": 77,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 12,
+            "Y": 862,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 195,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "optIn": true,
+      "text": "Import WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 11,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.9346590909091,
+        "WidthIncludingTrailingWhitespace": 77.9346590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "excessRight": 0.46875,
+      "paintFrame": {
+        "Name": "wave-button-caption-07",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-07",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 9,
+          "Y": 1049,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-import",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-import",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 0,
+          "Y": 1043,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-import",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-import",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 0,
+            "Y": 1043,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 195,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "optIn": true,
+      "text": "Export PCM16 WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 17,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 128.6846590909091,
+        "WidthIncludingTrailingWhitespace": 128.6846590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "excessRight": 0.21875,
+      "paintFrame": {
+        "Name": "wave-button-caption-11",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-11",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 129,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 9,
+          "Y": 1139,
+          "Width": 129,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-export",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-export",
+        "bounds": {
+          "X": 0,
+          "Y": 90,
+          "Width": 147,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 0,
+          "Y": 1133,
+          "Width": 147,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-export",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-export",
+          "bounds": {
+            "X": 0,
+            "Y": 90,
+            "Width": 147,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 0,
+            "Y": 1133,
+            "Width": 147,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 195,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 195,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 195,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "wide-native.json",
+      "optIn": true,
+      "text": "Save locally",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 13,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.97443181818183,
+        "WidthIncludingTrailingWhitespace": 77.97443181818183,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 0,
+        "OverhangTrailing": -0.20454545454545325,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "excessRight": 0.17897727272728048,
+      "paintFrame": {
+        "Name": "wave-button-caption-05",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-05",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 294,
+          "Y": 301,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-save",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-save",
+        "bounds": {
+          "X": 273,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 285,
+          "Y": 295,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-save",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-save",
+          "bounds": {
+            "X": 273,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 285,
+            "Y": 295,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 1200,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "wide-native.json",
+      "optIn": true,
+      "text": "Import WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 11,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.9346590909091,
+        "WidthIncludingTrailingWhitespace": 77.9346590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "excessRight": 0.46875,
+      "paintFrame": {
+        "Name": "wave-button-caption-07",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-07",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 9,
+          "Y": 384,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-import",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-import",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 0,
+          "Y": 378,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-import",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-import",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 0,
+            "Y": 378,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 1200,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "wide-native.json",
+      "optIn": true,
+      "text": "Export PCM16 WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 17,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 128.6846590909091,
+        "WidthIncludingTrailingWhitespace": 128.6846590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "excessRight": 0.21875,
+      "paintFrame": {
+        "Name": "wave-button-caption-11",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-11",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 129,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 344,
+          "Y": 384,
+          "Width": 129,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-export",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-export",
+        "bounds": {
+          "X": 335,
+          "Y": 0,
+          "Width": 147,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 335,
+          "Y": 378,
+          "Width": 147,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-export",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-export",
+          "bounds": {
+            "X": 335,
+            "Y": 0,
+            "Width": 147,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 335,
+            "Y": 378,
+            "Width": 147,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 1200,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "default-narrow-native.json",
+      "optIn": false,
+      "text": "Save locally",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 13,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.97443181818183,
+        "WidthIncludingTrailingWhitespace": 77.97443181818183,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 0,
+        "OverhangTrailing": -0.20454545454545325,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "excessRight": 0.17897727272728048,
+      "paintFrame": {
+        "Name": "wave-button-caption-05",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-05",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 294,
+          "Y": 301,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-save",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-save",
+        "bounds": {
+          "X": 273,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 285,
+          "Y": 295,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-save",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-save",
+          "bounds": {
+            "X": 273,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 285,
+            "Y": 295,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 390,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "default-narrow-native.json",
+      "optIn": false,
+      "text": "Import WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 11,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.9346590909091,
+        "WidthIncludingTrailingWhitespace": 77.9346590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "excessRight": 0.46875,
+      "paintFrame": {
+        "Name": "wave-button-caption-07",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-07",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 9,
+          "Y": 384,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-import",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-import",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 0,
+          "Y": 378,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-import",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-import",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 0,
+            "Y": 378,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 390,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "default-narrow-native.json",
+      "optIn": false,
+      "text": "Export PCM16 WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 17,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 128.6846590909091,
+        "WidthIncludingTrailingWhitespace": 128.6846590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "excessRight": 0.21875,
+      "paintFrame": {
+        "Name": "wave-button-caption-11",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-11",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 129,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 344,
+          "Y": 384,
+          "Width": 129,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-export",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-export",
+        "bounds": {
+          "X": 335,
+          "Y": 0,
+          "Width": 147,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 335,
+          "Y": 378,
+          "Width": 147,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-export",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-export",
+          "bounds": {
+            "X": 335,
+            "Y": 0,
+            "Width": 147,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 335,
+            "Y": 378,
+            "Width": 147,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 390,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 390,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 390,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "default-wide-native.json",
+      "optIn": false,
+      "text": "Save locally",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 13,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.97443181818183,
+        "WidthIncludingTrailingWhitespace": 77.97443181818183,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 0,
+        "OverhangTrailing": -0.20454545454545325,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 0,
+      "inkRight": 78.17897727272728,
+      "excessRight": 0.17897727272728048,
+      "paintFrame": {
+        "Name": "wave-button-caption-05",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-05",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 294,
+          "Y": 301,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-save",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-save",
+        "bounds": {
+          "X": 273,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 285,
+          "Y": 295,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-save",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-save",
+          "bounds": {
+            "X": 273,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 285,
+            "Y": 295,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 1200,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "default-wide-native.json",
+      "optIn": false,
+      "text": "Import WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 11,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 77.9346590909091,
+        "WidthIncludingTrailingWhitespace": 77.9346590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 78.46875,
+      "excessRight": 0.46875,
+      "paintFrame": {
+        "Name": "wave-button-caption-07",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-07",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 78,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 9,
+          "Y": 384,
+          "Width": 78,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-import",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-import",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 96,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 0,
+          "Y": 378,
+          "Width": 96,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-import",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-import",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 96,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 0,
+            "Y": 378,
+            "Width": 96,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 1200,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "default-wide-native.json",
+      "optIn": false,
+      "text": "Export PCM16 WAV",
+      "line": {
+        "FirstTextSourceIndex": 0,
+        "Length": 17,
+        "NewLineLength": 0,
+        "TrailingWhitespaceLength": 0,
+        "Start": 0,
+        "Width": 128.6846590909091,
+        "WidthIncludingTrailingWhitespace": 128.6846590909091,
+        "Height": 16.94318181818182,
+        "Extent": 14,
+        "Baseline": 13.5625,
+        "HasOverflowed": false,
+        "HasCollapsed": false,
+        "OverhangLeading": 1,
+        "OverhangTrailing": -0.5340909090909065,
+        "OverhangAfter": -0.3806818181818201,
+        "sourceSpanValid": false,
+        "sourceSpan": null
+      },
+      "inkLeft": 1,
+      "inkRight": 129.21875,
+      "excessRight": 0.21875,
+      "paintFrame": {
+        "Name": "wave-button-caption-11",
+        "type": "Avalonia.Controls.TextBlock",
+        "stableId": "id:wave-button-caption-11",
+        "bounds": {
+          "X": 9,
+          "Y": 6,
+          "Width": 129,
+          "Height": 17
+        },
+        "inRoot": {
+          "X": 344,
+          "Y": 384,
+          "Width": 129,
+          "Height": 17
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "nearestButton": {
+        "Name": "wave-export",
+        "type": "Avalonia.Controls.Button",
+        "stableId": "id:wave-export",
+        "bounds": {
+          "X": 335,
+          "Y": 0,
+          "Width": 147,
+          "Height": 30
+        },
+        "inRoot": {
+          "X": 335,
+          "Y": 378,
+          "Width": 147,
+          "Height": 30
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 8,
+          "Top": 5,
+          "Right": 8,
+          "Bottom": 6,
+          "IsUniform": false
+        }
+      },
+      "clipAncestors": [
+        {
+          "Name": "wave-export",
+          "type": "Avalonia.Controls.Button",
+          "stableId": "id:wave-export",
+          "bounds": {
+            "X": 335,
+            "Y": 0,
+            "Width": 147,
+            "Height": 30
+          },
+          "inRoot": {
+            "X": 335,
+            "Y": 378,
+            "Width": 147,
+            "Height": 30
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 8,
+            "Top": 5,
+            "Right": 8,
+            "Bottom": 6,
+            "IsUniform": false
+          }
+        },
+        {
+          "Name": "PART_ContentPresenter",
+          "type": "Avalonia.Controls.Presenters.ScrollContentPresenter",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": null
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ScrollViewer",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.ContentControl",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": "NaN",
+          "height": "NaN",
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Window",
+          "stableId": null,
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 1200,
+            "Height": 844
+          },
+          "inRoot": {
+            "X": -16,
+            "Y": -16,
+            "Width": 1200,
+            "Height": 844
+          },
+          "ClipToBounds": true,
+          "clip": null,
+          "IsMeasureValid": true,
+          "IsArrangeValid": true,
+          "IsVisible": true,
+          "IsEffectivelyVisible": true,
+          "width": 1200,
+          "height": 844,
+          "minWidth": 0,
+          "maxWidth": "Infinity",
+          "minHeight": 0,
+          "maxHeight": "Infinity",
+          "Margin": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          },
+          "padding": {
+            "Left": 0,
+            "Top": 0,
+            "Right": 0,
+            "Bottom": 0,
+            "IsUniform": true
+          }
+        }
+      ]
+    }
+  ],
+  "all7LocalScrollGeometry": [
+    {
+      "group": "narrow-native.json",
+      "frame": {
+        "Name": null,
+        "type": "Avalonia.Controls.ScrollViewer",
+        "stableId": "id:wave-waveform-scroll:scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 264,
+          "Width": 334,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 907,
+          "Width": 334,
+          "Height": 110
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "extent": {
+        "Width": 700,
+        "Height": 110
+      },
+      "viewport": {
+        "Width": 334,
+        "Height": 110
+      },
+      "offset": {
+        "X": 0,
+        "Y": 0
+      },
+      "content": {
+        "Name": "wave-waveform-scroll",
+        "type": "Avalonia.Controls.StackPanel",
+        "stableId": "id:wave-waveform-scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 700,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 907,
+          "Width": 700,
+          "Height": 110
+        },
+        "ClipToBounds": false,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": 110,
+        "minWidth": 0,
+        "maxWidth": 700,
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": null
+      },
+      "childCount": 1201,
+      "finiteAggregate": {
+        "finiteCount": 1201,
+        "unavailableOrNonfiniteCount": 0,
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 1799,
+          "Height": 75
+        }
+      },
+      "lastChildren": [
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Panel",
+          "bounds": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1809,
+            "Y": 907,
+            "Width": 2,
+            "Height": 75
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Border",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1809,
+            "Y": 907,
+            "Width": 2,
+            "Height": 75
+          }
+        }
+      ],
+      "maximumNativeOffsetX": 366,
+      "aggregateBeyondAdvertisedExtent": 1099
+    },
+    {
+      "group": "narrow-native-font2-native.json",
+      "frame": {
+        "Name": null,
+        "type": "Avalonia.Controls.ScrollViewer",
+        "stableId": "id:wave-waveform-scroll:scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 620,
+          "Width": 334,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 2368,
+          "Width": 334,
+          "Height": 110
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "extent": {
+        "Width": 700,
+        "Height": 110
+      },
+      "viewport": {
+        "Width": 334,
+        "Height": 110
+      },
+      "offset": {
+        "X": 0,
+        "Y": 0
+      },
+      "content": {
+        "Name": "wave-waveform-scroll",
+        "type": "Avalonia.Controls.StackPanel",
+        "stableId": "id:wave-waveform-scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 700,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 2368,
+          "Width": 700,
+          "Height": 110
+        },
+        "ClipToBounds": false,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": 110,
+        "minWidth": 0,
+        "maxWidth": 700,
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": null
+      },
+      "childCount": 1201,
+      "finiteAggregate": {
+        "finiteCount": 1201,
+        "unavailableOrNonfiniteCount": 0,
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 1799,
+          "Height": 75
+        }
+      },
+      "lastChildren": [
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Panel",
+          "bounds": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1809,
+            "Y": 2368,
+            "Width": 2,
+            "Height": 75
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Border",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1809,
+            "Y": 2368,
+            "Width": 2,
+            "Height": 75
+          }
+        }
+      ],
+      "maximumNativeOffsetX": 366,
+      "aggregateBeyondAdvertisedExtent": 1099
+    },
+    {
+      "group": "geometry-stress195-not-zoom-native.json",
+      "frame": {
+        "Name": null,
+        "type": "Avalonia.Controls.ScrollViewer",
+        "stableId": "id:wave-waveform-scroll:scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 426,
+          "Width": 139,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 1613,
+          "Width": 139,
+          "Height": 110
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "extent": {
+        "Width": 700,
+        "Height": 110
+      },
+      "viewport": {
+        "Width": 139,
+        "Height": 110
+      },
+      "offset": {
+        "X": 0,
+        "Y": 0
+      },
+      "content": {
+        "Name": "wave-waveform-scroll",
+        "type": "Avalonia.Controls.StackPanel",
+        "stableId": "id:wave-waveform-scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 700,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 1613,
+          "Width": 700,
+          "Height": 110
+        },
+        "ClipToBounds": false,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": 110,
+        "minWidth": 0,
+        "maxWidth": 700,
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": null
+      },
+      "childCount": 1201,
+      "finiteAggregate": {
+        "finiteCount": 1201,
+        "unavailableOrNonfiniteCount": 0,
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 1799,
+          "Height": 75
+        }
+      },
+      "lastChildren": [
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Panel",
+          "bounds": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1809,
+            "Y": 1613,
+            "Width": 2,
+            "Height": 75
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Border",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1809,
+            "Y": 1613,
+            "Width": 2,
+            "Height": 75
+          }
+        }
+      ],
+      "maximumNativeOffsetX": 561,
+      "aggregateBeyondAdvertisedExtent": 1099
+    },
+    {
+      "group": "wide-native.json",
+      "frame": {
+        "Name": null,
+        "type": "Avalonia.Controls.ScrollViewer",
+        "stableId": "id:wave-waveform-scroll:scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 200,
+          "Width": 1144,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 632,
+          "Width": 1144,
+          "Height": 110
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "extent": {
+        "Width": 700,
+        "Height": 110
+      },
+      "viewport": {
+        "Width": 1144,
+        "Height": 110
+      },
+      "offset": {
+        "X": 0,
+        "Y": 0
+      },
+      "content": {
+        "Name": "wave-waveform-scroll",
+        "type": "Avalonia.Controls.StackPanel",
+        "stableId": "id:wave-waveform-scroll",
+        "bounds": {
+          "X": 222,
+          "Y": 0,
+          "Width": 700,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 234,
+          "Y": 632,
+          "Width": 700,
+          "Height": 110
+        },
+        "ClipToBounds": false,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": 110,
+        "minWidth": 0,
+        "maxWidth": 700,
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": null
+      },
+      "childCount": 1201,
+      "finiteAggregate": {
+        "finiteCount": 1201,
+        "unavailableOrNonfiniteCount": 0,
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 1799,
+          "Height": 75
+        }
+      },
+      "lastChildren": [
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Panel",
+          "bounds": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 2031,
+            "Y": 632,
+            "Width": 2,
+            "Height": 75
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Border",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 2031,
+            "Y": 632,
+            "Width": 2,
+            "Height": 75
+          }
+        }
+      ],
+      "maximumNativeOffsetX": 0,
+      "aggregateBeyondAdvertisedExtent": 1099
+    },
+    {
+      "group": "default-narrow-native.json",
+      "frame": {
+        "Name": null,
+        "type": "Avalonia.Controls.ScrollViewer",
+        "stableId": "id:wave-waveform-scroll:scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 200,
+          "Width": 771,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 632,
+          "Width": 771,
+          "Height": 110
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "extent": {
+        "Width": 700,
+        "Height": 110
+      },
+      "viewport": {
+        "Width": 771,
+        "Height": 110
+      },
+      "offset": {
+        "X": 0,
+        "Y": 0
+      },
+      "content": {
+        "Name": "wave-waveform-scroll",
+        "type": "Avalonia.Controls.StackPanel",
+        "stableId": "id:wave-waveform-scroll",
+        "bounds": {
+          "X": 36,
+          "Y": 0,
+          "Width": 700,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 48,
+          "Y": 632,
+          "Width": 700,
+          "Height": 110
+        },
+        "ClipToBounds": false,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": 110,
+        "minWidth": 0,
+        "maxWidth": 700,
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": null
+      },
+      "childCount": 1201,
+      "finiteAggregate": {
+        "finiteCount": 1201,
+        "unavailableOrNonfiniteCount": 0,
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 1799,
+          "Height": 75
+        }
+      },
+      "lastChildren": [
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Panel",
+          "bounds": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1845,
+            "Y": 632,
+            "Width": 2,
+            "Height": 75
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Border",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 1845,
+            "Y": 632,
+            "Width": 2,
+            "Height": 75
+          }
+        }
+      ],
+      "maximumNativeOffsetX": 0,
+      "aggregateBeyondAdvertisedExtent": 1099
+    },
+    {
+      "group": "default-narrow-native-font2-native.json",
+      "frame": {
+        "Name": null,
+        "type": "Avalonia.Controls.ScrollViewer",
+        "stableId": "id:wave-waveform-scroll:scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 356,
+          "Width": 1431,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 1218,
+          "Width": 1431,
+          "Height": 110
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "extent": {
+        "Width": 700,
+        "Height": 110
+      },
+      "viewport": {
+        "Width": 1431,
+        "Height": 110
+      },
+      "offset": {
+        "X": 0,
+        "Y": 0
+      },
+      "content": {
+        "Name": "wave-waveform-scroll",
+        "type": "Avalonia.Controls.StackPanel",
+        "stableId": "id:wave-waveform-scroll",
+        "bounds": {
+          "X": 366,
+          "Y": 0,
+          "Width": 700,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 378,
+          "Y": 1218,
+          "Width": 700,
+          "Height": 110
+        },
+        "ClipToBounds": false,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": 110,
+        "minWidth": 0,
+        "maxWidth": 700,
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": null
+      },
+      "childCount": 1201,
+      "finiteAggregate": {
+        "finiteCount": 1201,
+        "unavailableOrNonfiniteCount": 0,
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 1799,
+          "Height": 75
+        }
+      },
+      "lastChildren": [
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Panel",
+          "bounds": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 2175,
+            "Y": 1218,
+            "Width": 2,
+            "Height": 75
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Border",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 2175,
+            "Y": 1218,
+            "Width": 2,
+            "Height": 75
+          }
+        }
+      ],
+      "maximumNativeOffsetX": 0,
+      "aggregateBeyondAdvertisedExtent": 1099
+    },
+    {
+      "group": "default-wide-native.json",
+      "frame": {
+        "Name": null,
+        "type": "Avalonia.Controls.ScrollViewer",
+        "stableId": "id:wave-waveform-scroll:scroll",
+        "bounds": {
+          "X": 0,
+          "Y": 200,
+          "Width": 1144,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 12,
+          "Y": 632,
+          "Width": 1144,
+          "Height": 110
+        },
+        "ClipToBounds": true,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": "NaN",
+        "minWidth": 0,
+        "maxWidth": "Infinity",
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        }
+      },
+      "extent": {
+        "Width": 700,
+        "Height": 110
+      },
+      "viewport": {
+        "Width": 1144,
+        "Height": 110
+      },
+      "offset": {
+        "X": 0,
+        "Y": 0
+      },
+      "content": {
+        "Name": "wave-waveform-scroll",
+        "type": "Avalonia.Controls.StackPanel",
+        "stableId": "id:wave-waveform-scroll",
+        "bounds": {
+          "X": 222,
+          "Y": 0,
+          "Width": 700,
+          "Height": 110
+        },
+        "inRoot": {
+          "X": 234,
+          "Y": 632,
+          "Width": 700,
+          "Height": 110
+        },
+        "ClipToBounds": false,
+        "clip": null,
+        "IsMeasureValid": true,
+        "IsArrangeValid": true,
+        "IsVisible": true,
+        "IsEffectivelyVisible": true,
+        "width": "NaN",
+        "height": 110,
+        "minWidth": 0,
+        "maxWidth": 700,
+        "minHeight": 0,
+        "maxHeight": "Infinity",
+        "Margin": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 0,
+          "Bottom": 0,
+          "IsUniform": true
+        },
+        "padding": null
+      },
+      "childCount": 1201,
+      "finiteAggregate": {
+        "finiteCount": 1201,
+        "unavailableOrNonfiniteCount": 0,
+        "bounds": {
+          "X": 0,
+          "Y": 0,
+          "Width": 1799,
+          "Height": 75
+        }
+      },
+      "lastChildren": [
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Panel",
+          "bounds": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 2031,
+            "Y": 632,
+            "Width": 2,
+            "Height": 75
+          }
+        },
+        {
+          "Name": null,
+          "type": "Avalonia.Controls.Border",
+          "bounds": {
+            "X": 0,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inContent": {
+            "X": 1797,
+            "Y": 0,
+            "Width": 2,
+            "Height": 75
+          },
+          "inRoot": {
+            "X": 2031,
+            "Y": 632,
+            "Width": 2,
+            "Height": 75
+          }
+        }
+      ],
+      "maximumNativeOffsetX": 0,
+      "aggregateBeyondAdvertisedExtent": 1099
+    }
+  ],
+  "unsupportedActualGeometryClipOrRoundedBorderCandidates": [],
+  "causalFindings": [
+    "All15 recurring caption public conservative ink overhangs beyond ownbounds occur on actual TextBlock ClipToBounds=true, Clip=null, Padding0. Padded nearestButton and root do not override innerclip. Native conservative ink box is real platform metadata; not precise missing raster pixels. A real B allocation repair is required, not tolerance waiver.",
+    "All7 600bar stress local contents advertise extent700 with actual descendant aggregate1799. MaxWidth700 constrains content rather than viewport wrapper. Wide viewport1144 means max native horizontaloffset0 despite1799 children; narrow maxoffset366 still cannot expose tail beyond contentextent700. Actual child boxes/offset/extent show a real unreachable stress tail; cannot declare harmless fit or weaken current >viewport predicate.",
+    "Actual maintained CUI WrapScrollable returns new uncapped ScrollViewer AFTER literal maxwidth700 applied to content. A new B-authored OUTER finite allocation parent with maxwidth700 can bound viewport while original scroll CONTENT grows to full1799; existing id/scroll semantics can remain. This is candidate source repair, needs native all64 and real browserwheel proof.",
+    "Actual production Wave SetWaveform limits192 derived peak buckets (not600stress), so new outerallocation must preserve actual192 fullreach/narrow motion and widefit separately.600stress is a meaningful overflow guard retained.",
+    "Current64=56PASS8FAIL and .1 remain actual failures. Visible-ink semantic proposal/negativecontrols and actualfactory/native clip proof require root+B6 review before criterion adoption."
+  ],
+  "readerCustody": {
+    "allZipReaders": "CLOSED after full31member CRC/SHA reads",
+    "copiedOrExtractedBodies": false,
+    "archiveEdited": false,
+    "sdkOrRuntimeInvoked": false
+  }
+}

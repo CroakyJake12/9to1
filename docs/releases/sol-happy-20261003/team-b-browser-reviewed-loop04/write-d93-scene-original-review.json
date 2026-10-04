@@ -1,0 +1,292 @@
+{
+  "state": "RECORDED_SCOPED_ORIGINAL_FAIL",
+  "run": 37222377934,
+  "job": 111495157146,
+  "commit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+  "archive": {
+    "path": "/workspace/attachments/570e3898-b0e0-4823-9a1c-ba5d998cdd09/write-native-scene58-d93-original-failure.zip",
+    "bytes": 338972,
+    "sha256": "f18ea65f930e2dd66c1cf8f199d0c1963f8a639da09d4896e247190f190f7969",
+    "wholeCRCVerified": true,
+    "members": [
+      {
+        "path": "build.log",
+        "bytes": 6617,
+        "sha256": "ef7fe9bceceea3e0bf8595cf9d77861d44aad6666ae585538cc5f9aaa7b02ccd",
+        "crc": 1028791798
+      },
+      {
+        "path": "commands.json",
+        "bytes": 10106,
+        "sha256": "6f8d4f5ddcad74857aaec8a620bda1769c0ad5d014d8b1d592d6c0b8fc1d4fb8",
+        "crc": 4155148541
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2980,
+        "sha256": "82646e5dabfd914dea24c7e6fc466aff4c1d0a0a50375880035122abb7088100",
+        "crc": 3175825471
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+        "crc": 3257738113
+      },
+      {
+        "path": "entry-identity.json",
+        "bytes": 169,
+        "sha256": "1811b071365cfb9d6677110956cd707703443d8802537fa0e14759068eeac699",
+        "crc": 1369676001
+      },
+      {
+        "path": "fixture-tracked.log",
+        "bytes": 177,
+        "sha256": "54fb23159acf3cec6dea3e5003f15fdc88a3515369c774e07ec0c697b4dbf586",
+        "crc": 3332322691
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc": 0
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc": 0
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "sha256": "31eb4c2dd07bb3cf0efde4b1d8fb0d37aba1aba420c337df43a829fd0d43cb11",
+        "crc": 707685492
+      },
+      {
+        "path": "native-toolbar.log",
+        "bytes": 1700,
+        "sha256": "c8908e9f23056128e7593b4a0b931d115f68b1e5689cdd7fc52e49c0470e60a8",
+        "crc": 2280034731
+      },
+      {
+        "path": "restore.log",
+        "bytes": 5377,
+        "sha256": "e78a82f7f2f99f4845f9710d522547e44180c6c344d718e543bdb70b1ab577d4",
+        "crc": 1928849794
+      },
+      {
+        "path": "result.json",
+        "bytes": 1493,
+        "sha256": "6fbe0ba1c28a1756358ebff6f52c992e6a82b1683ce7262a567b43d6b6d23a56",
+        "crc": 1805209348
+      },
+      {
+        "path": "source-pins-before.json",
+        "bytes": 1785,
+        "sha256": "5c0c53474e9b80e5294249222eb6b6f74be321b5a5b39a532609962ff88c1df8",
+        "crc": 2283008103
+      },
+      {
+        "path": "source-tree-pins.log",
+        "bytes": 1306876,
+        "sha256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+        "crc": 471180625
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 253,
+        "sha256": "e54854068bb761ee1b8d7e19353cba27244b8b2e711412ce546bee65ee1bf494",
+        "crc": 1667769693
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 283,
+        "sha256": "7ad2310ad938dc48e3e94c4acb24cf0f17d504f54ff8557dc77daf9a081ff8e1",
+        "crc": 1054780467
+      }
+    ]
+  },
+  "source": {
+    "before17EqualsActualGitBlob": [
+      {
+        "path": "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+        "bytes": 1974,
+        "sha256": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/Tests/SceneProgram.cs",
+        "bytes": 37995,
+        "sha256": "72048cc02a8498ecd96d9621503c992d824660914bf9f474db860250bd5d8846",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/Tests/ci/run-existing-write.py",
+        "bytes": 17769,
+        "sha256": "89bb719aff6a2aba792bc68ef0fb86d365882e10d72299f2ba863210e1f57ffd",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "NuGet.Config",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "global.json",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+        "bytes": 6624,
+        "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/Scene/WriteRetainedSceneResources.cs",
+        "bytes": 731,
+        "sha256": "bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+        "bytes": 4634,
+        "sha256": "40a325d9ba36cb61671cf91657f4fb9b3d8fabd1ab54c8bb87015b4275543d1e",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/WriteBrowserSession.cs",
+        "bytes": 31701,
+        "sha256": "741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/WriteBrowserSurface.cs",
+        "bytes": 2269,
+        "sha256": "04f2dfce3b52e212ab8eaa09ad77370b8e324ce0863231c2cfd5487fc2a18ad0",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/WriteBrowserFeature.cs",
+        "bytes": 12137,
+        "sha256": "dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/IWriteBrowserPackageBroker.cs",
+        "bytes": 954,
+        "sha256": "67599b070ef01fa5a8a4dedd1f9aa00784bc90cf41d4e136328f4709d29ebcb0",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/Write/Write.cui",
+        "bytes": 2152,
+        "sha256": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/BrowserSurfaceRegistry.cs",
+        "bytes": 14519,
+        "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283",
+        "exactActualGitBlob": true
+      },
+      {
+        "path": "apps/Web/BrowserActionAvailability.cs",
+        "bytes": 7180,
+        "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369",
+        "exactActualGitBlob": true
+      }
+    ],
+    "actualWholeGitTreeBytes": 1306876,
+    "actualWholeGitTreeSHA256": "8517f42bb5f1147cb8441310f228b233ebdd7abbf8e2cb16ee84370d9e49390e",
+    "cleanBeforeAfter": true,
+    "separateSourceAfterLedgerAbsent": "Existing driver compares selected bodies and records clean Git after; no second source-pins file is uploaded."
+  },
+  "build": {
+    "restoreExit": 0,
+    "buildExit": 0,
+    "warnings": 0,
+    "errors": 0,
+    "target": {
+      "TargetPath": "/home/runner/work/_temp/existing-write-scene-focus58/artifacts/bin/WriteBrowser.Scene.Tests/release_linux-x64/WriteBrowser.Scene.Tests.dll",
+      "TargetFramework": "net10.0",
+      "RuntimeIdentifier": "linux-x64",
+      "UseAppHost": "true"
+    },
+    "entryIdentity": {
+      "entrySHA": "b90516442379a8dd22f22ac5227a6fc2c071c771927712b55ddaaf7effc11ad4",
+      "apphostSHA": "5d855d03d9466dea2aaf3373aedf879262437841e7ff6331c92a3d9a33a36902"
+    },
+    "wholeEmittedNativeRuntimeBodyCustody": "NOT_UPLOADED; do not infer full runtime reproduction from entry identities alone"
+  },
+  "actual": {
+    "toolbar": {
+      "expected": 48,
+      "passed": 16,
+      "failed": 1,
+      "notRun": 31,
+      "failure": "toolbar journey actual routed typing mutates owner",
+      "sourceLine": 375,
+      "nativeExit": -6,
+      "prefixNames": [
+        "actual packed font resolves original asset URI and matches exact owner bytes",
+        "actual owning Write.cui parses",
+        "actual registered owner surface lowers",
+        "actual native templates render before querying editor descendants",
+        "actual toolbar New enabled=True",
+        "actual toolbar Save enabled=False",
+        "actual toolbar Bold enabled=False",
+        "actual toolbar Undo enabled=False",
+        "actual toolbar Redo enabled=False",
+        "actual toolbar Close enabled=False",
+        "actual New control permits interaction",
+        "actual toolbar Save enabled=True",
+        "actual toolbar Bold enabled=True",
+        "actual toolbar Close enabled=True",
+        "actual toolbar Undo enabled=False",
+        "actual toolbar Redo enabled=False"
+      ]
+    },
+    "initialFocus": {
+      "expected": 10,
+      "executed": 0,
+      "state": "NOT_RUN: predecessor native-toolbar threw and current sequential driver stopped"
+    }
+  },
+  "family": {
+    "commands": 11,
+    "births": 55,
+    "allNormalEOFNoSignalsFinalECHILDAllBirthsGone": true,
+    "allCommandExitsZero": false,
+    "nativeSIGABRT": "Actual uncaught functional assertion causedexit-6; not a custodian-sent signal or surviving process."
+  },
+  "sourceCausalExplanation": {
+    "scope": "Supported exact source chain, not an instrumented actual focus/router trace",
+    "sequence": [
+      "SceneProgram.SelectAsync(block,0,0) before required TextInput",
+      "Session.SelectAsync uses OperateAsync busytrue thenfalse",
+      "PresentationLifetime.Refresh freezes whilebusy",
+      "SetInputAllowed(false) setsScene.Root null then same_surface",
+      "OriginalScene.Root creates new HavenInputRouter with _focused defaultnull",
+      "Same-editor SetInputAllowed(true) skips FocusElement unless initiallatch",
+      "OwnerRouter.TextInput dispatches only _focused target"
+    ],
+    "proposedBoundedOwnerReuse": "On reenabling already-native-focused scene, invoke existing public FocusElement to restore originalrouter focus; actual Avalonia sameFocusedElement produces no focuschangeevent. Preserve native toolbar focus and singleinitialattachment latch. Await root scope/peer/runtime."
+  },
+  "held": [
+    "Raw physicalSpace ownerFAIL remains separate",
+    "No browser/permission/fullWrite acceptance",
+    "Current focus10 unexecuted",
+    "Exact nativefocused element and failed TextInput content not recorded"
+  ],
+  "allArchiveReadersClosed": true
+}

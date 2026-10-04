@@ -1,0 +1,188 @@
+{
+  "state": "CLEAR_COMBINED_SOURCE09_FOR_ROOT_EXACT_ADOPTION_AND_ACTUAL_ORDINARY_CI_ONLY",
+  "reviewer": "B4 independent full source peer",
+  "asOfUTC": "2026-10-04T18:26:15.227392+00:00",
+  "sourceFreeze": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SOURCE-FREEZE09.json",
+    "bytes": 11075,
+    "sha256": "0f828bf97768a4e6424753f1a0f048bc82061a7ad0995d9618661006bbbf59f8"
+  },
+  "preservedSource07Peer": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/write-package-correction07-source-peer01/REVIEW.json",
+    "sha256": "f0ab65f05e8500a8c4849c7c79cb31ba30e693f9a7cbfbef347fae8633f2eb22"
+  },
+  "checks": {
+    "fullSource07Pins": 19,
+    "fullSource08Pins": 19,
+    "fullSource09Pins": 25,
+    "exactAdoptionAndBaselinePairs": 6,
+    "whole07To09And08To09DiffsRegenerated": 12,
+    "packageSourceFactsCount": 498,
+    "sourceFactKeysIdentical07": true,
+    "singleChangedFactFrom07": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+    "other497ValuesUnchanged": true,
+    "current498FullBodiesCheckedOnlyProposedSceneDiffers": true,
+    "nativeSelectedSceneFullBodies": 11,
+    "ownerFocusInputAvaloniaWitnessFullBodies": 5,
+    "actualPriorSceneReviewBodyFullSHA": true,
+    "source09Only183ByteMetadataProjectionFrom08": true,
+    "wholeReverseRecovers08Exactly": true,
+    "allOtherPackageFunctionAndClassASTsExactly08": true,
+    "oldToolbarWholeSourceAnd48NamesUnchanged": true,
+    "oldInitial10WholeAssertionsPreservedByExactInverse": true,
+    "newBusyRouterChecks": 2,
+    "initialFocusNamesMatchLiteralSource": 12,
+    "toolbarNames": 48,
+    "totalNativeAssertionChecks": 60,
+    "oldSpace15Durable65TupleUnchanged": true,
+    "maintainedA57FullSHAExact": true,
+    "wholeExecutableSourceViewsRead": true,
+    "noCustodianForkOrMonkeypatch": true
+  },
+  "adoption": [
+    {
+      "target": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/WriteRetainedSceneControl.cs",
+      "bytes": 4729,
+      "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/WriteRetainedSceneControl.cs",
+        "bytes": 4729,
+        "sha256": "b8b8a1b0eec581245d78735a301b02dfaf53ab744b2df0180b4d8b084a84af8c"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/ci/run-write-package-browser.py",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-write-package-browser.py",
+      "bytes": 90565,
+      "sha256": "a4ff697525e58902d19073e4027e9c968fca8ae5f619d9b11abc22923018a539",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/run-write-package-browser.py",
+        "bytes": 90748,
+        "sha256": "00f51108c30fef5a4dc9cfdb858ad88f6d16bf1f209c8b754aa0fa16754f7608"
+      },
+      "unchanged08": false
+    },
+    {
+      "target": ".github/workflows/team-b-write-package-browser.yml",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-write-package-browser.yml",
+      "bytes": 4894,
+      "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/team-b-write-package-browser.yml",
+        "bytes": 4894,
+        "sha256": "ba7ab7472281e1cf419f2bc6686daf394b8853bb2e51b5465bf8a97754eaea58"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/SceneProgram.cs",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/SceneProgram.cs",
+      "bytes": 38529,
+      "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/SceneProgram.cs",
+        "bytes": 38529,
+        "sha256": "86656cfb443a8efc9f34f8031c3c8587d407e4301aba55e529e266572fb86c80"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": "apps/Web/Write/Tests/ci/run-existing-write.py",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/run-existing-write.py",
+      "bytes": 20105,
+      "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/run-existing-write.py",
+        "bytes": 20105,
+        "sha256": "b97e53453af911f97a98d461ca13253bf6eea48d87afd9a260fc433a2b3c983c"
+      },
+      "unchanged08": true
+    },
+    {
+      "target": ".github/workflows/team-b-existing-write.yml",
+      "proposal": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction09/team-b-existing-write.yml",
+      "bytes": 2782,
+      "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad",
+      "baseline08": {
+        "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-package-corrected-dbb-review01/correction08/team-b-existing-write.yml",
+        "bytes": 2782,
+        "sha256": "c070a2f18ceaa822df528817f576c9d59a13849c1c10733e012650d5ac5a6cad"
+      },
+      "unchanged08": true
+    }
+  ],
+  "review": [
+    {
+      "topic": "Owner router/focus mechanism",
+      "finding": "Original HavenSceneControl.Root reattachment renews real HavenInputRouter; owner TextInput routes through its focused target. Existing public FocusElement focuses actual retained target then native scene. Actual KeyboardDevice.SetFocusedElement wraps events/state change in element!=FocusedElement. Source09 consumes initial pending attach OR invokes owner focus when scene.IsFocused alreadytrue; toolbar-focused later Save does not enter branch. This is a credible B-owned routing repair using public unchanged owner APIs, not an instrumented runtime causal proof."
+    },
+    {
+      "topic": "Presentation identity/lifetime fences",
+      "finding": "Unchanged identity earlyreturn, changed/null latch clear, root/surface detach, nonnull disabled initial-latch arm, dispose clear and initial enabled focus remain exactly source07. Input permissions/native_enabled/retained_enabled and real async clipboard-router renewal preserved. No shared owner edits, private input router, forced text/selection injection or fake focus API introduced."
+    },
+    {
+      "topic": "Canonical native regression controls",
+      "finding": "Two added checks use same actual canonical replacement NotesDocument/WriteDocumentEditor and native FocusManager/TextInput after genuine false->true router renewal: native scene staysfocused and exactDelta echo owner text appears. Deleting only2checks and restoring original secondEditor allocation reverses whole SceneProgram exactly07. Original toolbar48 wholebranch untouched; old initial9+originalfont1 ten names preserved; new12 and48 ordered lists exact.60 denotes assertions across two native modes, not60 testcases/fullspec denominator."
+    },
+    {
+      "topic": "Functional failure drain",
+      "finding": "New runner attempts toolbar and initial-focus in separate real apphost processes/fresh data roots after one genuine build. A caught command failure can advance only after latest exact command name+argv, equal exit/exitAfterDrain, normalEOF, familyClosed, finalECHILD, errorNone, zero signals, nonempty births and every birthgone. Missing log/record or custody mismatch throws immediately; no later process. Functional abort remains modeFAIL, raw prefix/error/nativeexit retained, and any failedmode forces finalFAIL. Complete exact ordered48/12 labels and single same-mode counts required for PASS."
+    },
+    {
+      "topic": "Genuine compile graph",
+      "finding": "Actual Scene.Tests/owner project references remain unchanged. Native Linux-RID normal officialSDK10.0.401 builds current owner Avalonia task and apphost once; isolated output/caches/no compiled body borrowing. Shareda57 hashes before/after future import; no classcopy/monkeypatch. Source fixtureSHA and11 Scene/body pins select actual reviewed current/proposed bodies, clean exactgit/source before-after, normal family gates retained. Native separatejob is not covered by package192M accounting."
+    },
+    {
+      "topic": "Compact assets index fix",
+      "finding": "Source09 changes exactly one capture row from embedded libraries/projectFrameworks/restoreFrameworks to path/bytes/SHA.183B deletion reverse recovers08 Python exactly; all other package function/classes/main AST unchanged08. Original full asset JSON parse remains, full actualSDK asset bodies unmodified and directly separate-uploaded only through exact list/hash validation. No semantic asset replacement or hand-built dependency model."
+    },
+    {
+      "topic": "Selection/privacy/upload bounds",
+      "finding": "Source07 repaired explicit assets gate remains byte/AST unchanged: absent indexskip, malformed/currentbody/set/path/alias failure refuses positive selection, exactSHA/size each<=512KiB/total<=2MiB/index<=64KiB/GITHUB_OUTPUT<=64KiB, no fallbackglob. Alwaysdiagnostics preserved and actual full asset bodies gated separately. Selection/action read are sequential but not atomic held-FD snapshot. No private cache/binary/profile/body copies or public credential read introduced."
+    },
+    {
+      "topic": "Package workflow unchanged",
+      "finding": "Source498 keyset unchanged; onlyScene body witness updates from07, same497 owners/fixtures/CJS/pub witness values remain. Native7 seed/browser9/native9 codec readback oracles, physical native selection/Bold/IDB/save/download/coldrestart, source/revision identity, actual malformed durable/history preservation and readiness scope all unchanged. Extra SceneProgram binding is native suite SHA, absent package498, not quietly inserted as extra acceptance."
+    },
+    {
+      "topic": "Resource and final authority",
+      "finding": "Unchanged192000000 logical cap/256000000 freefloor includes task positive path peaks+BOTH genuine completed-publisher NuGet/HTTP positivegrowth peaks; before/after samples retain observed deletionhistory. Full fit stillNOT_ESTABLISHED and allocation/global/unsampled peak notclaimed. Internal acceptedfalse remains; actual complete stdout+naturalexit+postreceipt resources final acceptance. Real successor may stillfail; no discarded actual debt or increased threshold."
+    }
+  ],
+  "preservedActualFailures": [
+    {
+      "cut": "5864",
+      "scope": "Native7PASS/browser4PASS1FAIL4NOT_RUN; Download bounds failure and294953832 taskcapFAIL retained. Earlier B4 fullraw review unchanged."
+    },
+    {
+      "cut": "dbb",
+      "scope": "Restoreexit0,236517804 positivepeak capFAIL, floorPASS; build/native/browser NOT_RUN, package causeUNKNOWN retained."
+    },
+    {
+      "cut": "d93 nativeScene",
+      "scope": "Pinned B2 primary reviewe4f836e7 retains build0/0 and original toolbar16PASS1FAIL31NOT_RUN routedtyping, initial10NOT_RUN. This source peer verifies primary receipt identity and original source controls; no new independent rawZIP/runtime proof claimed."
+    },
+    {
+      "cut": "d93 package",
+      "scope": "Root/B2 reported successful restore then Bounded selected-assets index exceeded BEFOREbuild/7+9+9. Rejected index actual bytecount/library IDs unrecordedUNKNOWN, as-ofrestore1941905B cap/floorPASS is not fullworkflow fit. Source09 targets duplicated index projection, actual fix unrun."
+    }
+  ],
+  "confirmedIssues": [],
+  "execution": {
+    "successor09Package7Browser9Readback9": "NOT_RUN",
+    "native60TwoModes": "NOT_RUN",
+    "compactIndexNewGate": "NOT_RUN",
+    "sourceHelpersImportedOrExecuted": false,
+    "localSDKGUIOrNative": false,
+    "networkDownloadOrMaintainedWrite": false,
+    "allReadersClosed": true,
+    "protectedOldArchivesTouched": false
+  },
+  "limits": [
+    "Exact source09 clear for root six-target adoption and actual ordinary CI, not an actual future commit/binary/budget pass.",
+    "PhysicalSpace KeyDown originalfailure, browser focus/viewport geometry and all fullWrite/donor/provider/ACL acceptance remain held; nativeTextInput does not waive them.",
+    "Original03/04/05/06/07/08 cuts and all actual failures remain preserved; all resource/fullscope qualifications retained."
+  ]
+}
