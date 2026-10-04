@@ -41,10 +41,14 @@ function Invoke-FixtureMove([string]$SourceFile,[string]$DestinationFile){
         $child.Dispose()
     }
 }
+function Test-ControlledMoveRefusal($Move){
+    if($Move.moveCompleted -or -not $Move.overwriteTrue){return $false}
+    return (($Move.errorType -ceq 'System.IO.IOException' -and $Move.hresult -eq -2147024864 -and $Move.win32Code -eq 32) -or ($Move.errorType -ceq 'System.UnauthorizedAccessException' -and $Move.hresult -eq -2147024891 -and $Move.win32Code -eq 5))
+}
 function Test-OriginalSharingObservation($Observation){
     if(-not $Observation.access.readAccessAllowed -or $Observation.access.readError -ne 0){return $false}
     if($Observation.access.deleteAccessAllowed){return $Observation.access.deleteError -eq 0 -and $Observation.move.moveCompleted}
-    return $Observation.access.deleteError -eq 32 -and -not $Observation.move.moveCompleted -and $Observation.move.win32Code -eq 32
+    return $Observation.access.deleteError -eq 32 -and (Test-ControlledMoveRefusal $Observation.move)
 }
 $workerCode=@'
 using System;
@@ -110,7 +114,7 @@ try{
     $target=Join-Path $output 'held-no-delete.json';$replacement=Join-Path $output 'held-no-delete-new.json'
     [IO.File]::WriteAllText($target,$oldJson,$utf8);[IO.File]::WriteAllText($replacement,$newJson,$utf8)
     $stream=New-Object IO.FileStream($target,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite)
-    try{$access=Read-NativeAccess $target;$move=Invoke-FixtureMove $replacement $target;$result.noDeleteControl=[ordered]@{access=$access;move=$move};Check (-not $access.deleteAccessAllowed -and $access.deleteError -eq 32 -and -not $move.moveCompleted -and $move.win32Code -eq 32) 'Held reader without Delete sharing refuses actual overwrite with sharing violation'}finally{$stream.Dispose()}
+    try{$access=Read-NativeAccess $target;$move=Invoke-FixtureMove $replacement $target;$result.noDeleteControl=[ordered]@{access=$access;move=$move};Check (-not $access.deleteAccessAllowed -and $access.deleteError -eq 32 -and (Test-ControlledMoveRefusal $move)) 'Held reader without Delete sharing refuses kernel DELETE32 and exact genuine overwrite refusal'}finally{$stream.Dispose()}
     Check ([IO.File]::ReadAllText($target) -ceq $oldJson -and [IO.File]::Exists($replacement)) 'Refused overwrite preserves both controlled old primary and new source'
     $target=Join-Path $output 'held-with-delete.json';$replacement=Join-Path $output 'held-with-delete-new.json'
     [IO.File]::WriteAllText($target,$oldJson,$utf8);[IO.File]::WriteAllText($replacement,$newJson,$utf8)
@@ -138,7 +142,7 @@ try{
     Check $accessAfter.deleteAccessAllowed 'Actual original reader is closed after the full pipeline returns'
     $afterSource=Join-Path $output 'after-pipeline-new.json';[IO.File]::WriteAllText($afterSource,$newJson,$utf8);$afterMove=Invoke-FixtureMove $afterSource $script:pipelineTarget;$result.afterOriginalPipelineMove=$afterMove
     Check ($afterMove.moveCompleted) 'Same overwrite succeeds after actual original pipeline reader closes'
-    $result.originalReaderReplacementObstructionObserved=-not $result.originalSharing.access.deleteAccessAllowed -and -not $result.originalSharing.move.moveCompleted -and $result.originalSharing.move.win32Code -eq 32
+    $result.originalReaderReplacementObstructionObserved=-not $result.originalSharing.access.deleteAccessAllowed -and $result.originalSharing.access.deleteError -eq 32 -and (Test-ControlledMoveRefusal $result.originalSharing.move)
     $result.originalNativeFailureCause='UNESTABLISHED_BY_SYNTHETIC_PROBE'
     Check (-not $result.forcedWorkerCleanup -and -not $result.Contains('workerCleanupFailure') -and @($result.workerDrains | Where-Object {-not $_.stdoutCompleted -or -not $_.stderrCompleted -or $_.exitCode -ne 0}).Count -eq 0) 'All controlled workers exit naturally with bounded complete drains'
     $result.status='SYNTHETIC_WINDOWS_SHARING_OBSERVATIONS_COMPLETE_NATIVE_CAUSE_UNESTABLISHED';$result.stage='complete';$exitCode=0

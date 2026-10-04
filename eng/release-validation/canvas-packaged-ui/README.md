@@ -296,3 +296,5 @@ identifier, GUI input, request, ownership recovery, grant or policy is used. A
 confirmed synthetic sharing obstruction would identify an observer mechanism;
 the exact original native failure cause and every Canvas acceptance gate remain
 unestablished. No native reader correction or workflow retry is included here.
+
+The original standalone sharing probe at 83e718 retained six passing preflight checks and a failed synthetic refusal predicate. Its held no-Delete stream refused actual kernel DELETE access with Win32 32; the same genuine .NET 10 File.Move overwrite refused with UnauthorizedAccessException/HRESULT 0x80070005. The isolated successor admits only that exact observed tuple or IOException/HRESULT 0x80070020, while retaining actual kernel DELETE 32, no completed overwrite, true overwrite argument, old-content preservation and the unchanged ReadWrite|Delete success/stream-disposal controls. Other error types, codes or HRESULTs still refuse. This corrects the synthetic error attribution, leaves the entire native observer and app source unchanged, and cannot establish the original Canvas failure cause.
