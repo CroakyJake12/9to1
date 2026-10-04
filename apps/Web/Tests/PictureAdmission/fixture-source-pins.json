@@ -24,6 +24,10 @@
     "Fixtures/Admission01/PictureBrowserFeature.cs": {
       "bytes": 12715,
       "sha256": "ac250d1a63bb70fee012b383d67a9427d2868af26e976a62a1958e0015144973"
+    },
+    "Fixtures/Admission01SameSessionRetirement/PictureBrowserFeature.cs": {
+      "bytes": 12785,
+      "sha256": "e96095a8a0631a0c51ab98af7cb2ca4c8b413532efade75f487465f2bb6e4a2b"
     }
   },
   "png": {

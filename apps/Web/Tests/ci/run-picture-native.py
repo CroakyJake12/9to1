@@ -13,7 +13,8 @@ from pathlib import Path
 import re
 
 B1_COMMANDS_SHA256 = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
-VARIANTS = {"production-original": 13, "admission01": 15, "current": 15, "production-original-repaired-markup": 13, "admission01-repaired-markup": 15}
+VARIANTS = {"production-original": 13, "admission01": 15, "current": 15, "production-original-repaired-markup": 13, "admission01-repaired-markup": 15, "admission01-repaired-markup-and-same-session-retirement": 15}
+REPAIRED_MARKUP_VARIANTS = {"production-original-repaired-markup", "admission01-repaired-markup", "admission01-repaired-markup-and-same-session-retirement"}
 OBSERVER_FAILURES = {
     "candidate-publication-cannot-write-detached-previous-input":
         "Real synchronous candidate observer cannot write a soon-retired previous owner.",
@@ -60,7 +61,7 @@ def normal_command(record, expected_exit):
 
 def validate_native(variant, native, log, actual_exit):
     expected = VARIANTS[variant]
-    if variant.endswith("-repaired-markup") and native.get("actualMarkupDiagnostics") != []:
+    if variant in REPAIRED_MARKUP_VARIANTS and native.get("actualMarkupDiagnostics") != []:
         raise RuntimeError("Repaired-markup control still has actual parser diagnostics")
     if (native["discovered"] != expected or native["executed"] != expected
             or native["notRun"] != 0 or native["prerequisite"] is not None or native["timedOut"]
@@ -79,7 +80,7 @@ def validate_native(variant, native, log, actual_exit):
         if actual_exit != 0 or (passed, failed) != (15, 0):
             raise RuntimeError("Current actual fifteen controls did not all pass")
         status = "CURRENT_NATIVE_PASS"
-    elif variant in ("admission01", "admission01-repaired-markup"):
+    elif variant in ("admission01", "admission01-repaired-markup", "admission01-repaired-markup-and-same-session-retirement"):
         actual_failures = {name for name, item in states.items() if item["state"] == "FAIL"}
         if actual_exit != 1 or (passed, failed) != (13, 2) or actual_failures != set(OBSERVER_FAILURES):
             raise RuntimeError("Preserved admission01 did not show exactly the two intended same-oracle observer negatives")
@@ -87,6 +88,8 @@ def validate_native(variant, native, log, actual_exit):
             if required not in states[name].get("failure", ""):
                 raise RuntimeError("Wrong failure mechanism for intended observer control: " + name)
         status = "PRESERVED_ADMISSION01_CONTROL_RED_OBSERVED" if variant == "admission01" else "ADMISSION01_SESSION_REPAIRED_MARKUP_CONTROL_RED_OBSERVED"
+        if variant == "admission01-repaired-markup-and-same-session-retirement":
+            status = "ADMISSION01_SESSION_REPAIRED_MARKUP_AND_SAME_SESSION_RETIREMENT_CONTROL_RED_OBSERVED"
     else:
         first = states[FIRST_ORIGINAL_FAILURE]
         if actual_exit != 1 or first["state"] != "FAIL" or FIRST_ORIGINAL_MESSAGE not in first.get("failure", ""):
@@ -152,9 +155,11 @@ def main():
         directory = root / Path(project).parent
         source_pins = json.loads((directory / "fixture-source-pins.json").read_text())
         check_sources(directory, args.variant, source_pins)
-        if args.variant.endswith("-repaired-markup"):
+        if args.variant in REPAIRED_MARKUP_VARIANTS:
             check_sources(directory, "current", source_pins)
-            result["markupControl"] = "Additive preserved Feature/Session/case-body control with only current authored-ID markup; historical fixture CUI remains unchanged"
+            result["markupControl"] = ("Additive old admission01 Session/current same15 cases with current authored-ID markup and new Feature whose only lifecycle repair skips same-session retirement; all historical fixtures unchanged"
+                                     if args.variant == "admission01-repaired-markup-and-same-session-retirement" else
+                                     "Additive preserved Feature/Session/case-body control with only current authored-ID markup; historical fixture CUI remains unchanged")
         source_pins_sha = digest(directory / "fixture-source-pins.json")
         artifacts = output / "artifacts"
         owner_task = artifacts / "bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
@@ -230,16 +235,18 @@ def main():
         if log is None:
             log = (diagnostics / "native.log").read_text(errors="strict")
         selected_markup_pin = (source_pins["currentActualSource"]["Picture.cui"]
-                               if args.variant == "current" or args.variant.endswith("-repaired-markup")
+                               if args.variant == "current" or args.variant in REPAIRED_MARKUP_VARIANTS
                                else source_pins["sourceFiles"]["Fixtures/" + ("ProductionOriginal" if args.variant == "production-original" else "Admission01") + "/Picture.cui"])
         if native.get("actualMarkupSHA256", "").lower() != selected_markup_pin["sha256"]:
             raise RuntimeError("Actual embedded Picture markup differs from explicit selected source tuple")
         result.update(validate_native(args.variant, native, log, native_record["exit"]))
         result["fixtureSourcePinManifestSHA256"] = source_pins_sha
         check_sources(directory, args.variant, source_pins)
-        if args.variant.endswith("-repaired-markup"):
+        if args.variant in REPAIRED_MARKUP_VARIANTS:
             check_sources(directory, "current", source_pins)
-            result["markupControl"] = "Additive preserved Feature/Session/case-body control with only current authored-ID markup; historical fixture CUI remains unchanged"
+            result["markupControl"] = ("Additive old admission01 Session/current same15 cases with current authored-ID markup and new Feature whose only lifecycle repair skips same-session retirement; all historical fixtures unchanged"
+                                     if args.variant == "admission01-repaired-markup-and-same-session-retirement" else
+                                     "Additive preserved Feature/Session/case-body control with only current authored-ID markup; historical fixture CUI remains unchanged")
         if digest(directory / "fixture-source-pins.json") != source_pins_sha:
             raise RuntimeError("Preserved source pin ledger changed during native execution")
     except Exception as error:
@@ -255,7 +262,8 @@ def main():
     return 0 if result["status"] in ("CURRENT_NATIVE_PASS", "PRESERVED_PRODUCTION_CONTROL_RED_OBSERVED",
                                      "PRESERVED_ADMISSION01_CONTROL_RED_OBSERVED",
                                      "PRODUCTION_ORIGINAL_SESSION_REPAIRED_MARKUP_CONTROL_RED_OBSERVED",
-                                     "ADMISSION01_SESSION_REPAIRED_MARKUP_CONTROL_RED_OBSERVED") else 1
+                                     "ADMISSION01_SESSION_REPAIRED_MARKUP_CONTROL_RED_OBSERVED",
+                                     "ADMISSION01_SESSION_REPAIRED_MARKUP_AND_SAME_SESSION_RETIREMENT_CONTROL_RED_OBSERVED") else 1
 
 
 if __name__ == "__main__":

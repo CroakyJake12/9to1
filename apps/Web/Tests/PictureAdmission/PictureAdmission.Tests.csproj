@@ -7,15 +7,17 @@
     <PictureControlVariant Condition="'$(PictureControlVariant)' == ''">current</PictureControlVariant>
     <PictureSourceRoot Condition="'$(PictureControlVariant)' == 'current'">$(RepositoryRoot)/apps/Web/Picture</PictureSourceRoot>
     <PictureSourceRoot Condition="('$(PictureControlVariant)' == 'production-original' or '$(PictureControlVariant)' == 'production-original-repaired-markup')">$(MSBuildProjectDirectory)/Fixtures/ProductionOriginal</PictureSourceRoot>
-    <PictureSourceRoot Condition="('$(PictureControlVariant)' == 'admission01' or '$(PictureControlVariant)' == 'admission01-repaired-markup')">$(MSBuildProjectDirectory)/Fixtures/Admission01</PictureSourceRoot>
-    <PictureMarkupSource Condition="'$(PictureControlVariant)' == 'current' or '$(PictureControlVariant)' == 'production-original-repaired-markup' or '$(PictureControlVariant)' == 'admission01-repaired-markup'">$(RepositoryRoot)/apps/Web/Picture/Picture.cui</PictureMarkupSource>
+    <PictureSourceRoot Condition="('$(PictureControlVariant)' == 'admission01' or '$(PictureControlVariant)' == 'admission01-repaired-markup' or '$(PictureControlVariant)' == 'admission01-repaired-markup-and-same-session-retirement')">$(MSBuildProjectDirectory)/Fixtures/Admission01</PictureSourceRoot>
+    <PictureMarkupSource Condition="'$(PictureControlVariant)' == 'current' or '$(PictureControlVariant)' == 'production-original-repaired-markup' or '$(PictureControlVariant)' == 'admission01-repaired-markup' or '$(PictureControlVariant)' == 'admission01-repaired-markup-and-same-session-retirement'">$(RepositoryRoot)/apps/Web/Picture/Picture.cui</PictureMarkupSource>
     <PictureMarkupSource Condition="'$(PictureControlVariant)' == 'production-original' or '$(PictureControlVariant)' == 'admission01'">$(PictureSourceRoot)/Picture.cui</PictureMarkupSource>
+    <PictureFeatureSource>$(PictureSourceRoot)/PictureBrowserFeature.cs</PictureFeatureSource>
+    <PictureFeatureSource Condition="'$(PictureControlVariant)' == 'admission01-repaired-markup-and-same-session-retirement'">$(MSBuildProjectDirectory)/Fixtures/Admission01SameSessionRetirement/PictureBrowserFeature.cs</PictureFeatureSource>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="PictureRawPngMetadata.cs" />
     <Compile Include="PictureProductionOriginalRegression.cs" Condition="('$(PictureControlVariant)' == 'production-original' or '$(PictureControlVariant)' == 'production-original-repaired-markup')" />
     <Compile Include="PictureAdmissionRegression.cs" Condition="'$(PictureControlVariant)' != 'production-original' and '$(PictureControlVariant)' != 'production-original-repaired-markup'" />
-    <Compile Include="$(PictureSourceRoot)/PictureBrowserFeature.cs;$(PictureSourceRoot)/PictureBrowserSession.cs" Link="SelectedActualSource/%(Filename)%(Extension)" />
+    <Compile Include="$(PictureFeatureSource);$(PictureSourceRoot)/PictureBrowserSession.cs" Link="SelectedActualSource/%(Filename)%(Extension)" />
     <Compile Include="$(RepositoryRoot)/apps/Web/BrowserSurfaceRegistry.cs;$(RepositoryRoot)/apps/Web/Media/IPictureBrowserMedia.cs;$(RepositoryRoot)/apps/Web/Media/BrowserPictureMedia.cs" Link="Production/%(Filename)%(Extension)" />
     <ProjectReference Include="$(RepositoryRoot)/apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj" />
     <ProjectReference Include="$(RepositoryRoot)/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
@@ -25,6 +27,6 @@
     <None Include="Fixtures/Picture8x6.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RequireExplicitPictureVariant" BeforeTargets="CoreCompile">
-    <Error Condition="'$(PictureControlVariant)' != 'current' and '$(PictureControlVariant)' != 'production-original' and '$(PictureControlVariant)' != 'admission01' and '$(PictureControlVariant)' != 'production-original-repaired-markup' and '$(PictureControlVariant)' != 'admission01-repaired-markup'" Text="Unknown Picture control variant; source selection is explicit and closed." />
+    <Error Condition="'$(PictureControlVariant)' != 'current' and '$(PictureControlVariant)' != 'production-original' and '$(PictureControlVariant)' != 'admission01' and '$(PictureControlVariant)' != 'production-original-repaired-markup' and '$(PictureControlVariant)' != 'admission01-repaired-markup' and '$(PictureControlVariant)' != 'admission01-repaired-markup-and-same-session-retirement'" Text="Unknown Picture control variant; source selection is explicit and closed." />
   </Target>
 </Project>

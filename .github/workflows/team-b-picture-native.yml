@@ -135,7 +135,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [production-original-repaired-markup, admission01-repaired-markup]
+        variant: [production-original-repaired-markup, admission01-repaired-markup, admission01-repaired-markup-and-same-session-retirement]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
