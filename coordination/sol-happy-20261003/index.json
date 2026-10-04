@@ -7,7 +7,7 @@
   "baselineAcceptance": "UNVERIFIED: remote main identity verified; full acceptance has not passed",
   "releaseBranch": "release/sol-happy-20261003",
   "acceptedHead": null,
-  "releaseStatus": "BLOCKED",
+  "releaseStatus": "BLOCKED_PENDING_FULL_REQUIRED_ACCEPTANCE",
   "teams": {
     "A": {
       "registration": "REGISTERED_REMOTE_READBACK_VERIFIED",
@@ -61,7 +61,7 @@
     "textEquivalentPreviousRevision": "ANLCKQlZuLSuopoik2qJHrWoQxliYXJ0xjJfH2ncI9frS-Tm7sLiDFLwVdoLZ3-gbZ4aB1qDkX6j9nGYYpvqrgULBc32eKABkwDZNo2d3v8",
     "finalContinuity": "Atomic final get_document_text revision agreed with get_document; entire1383780B SHAa48cf... byte-identical to21:04 snapshot.8534paragraphs notrequirements. No text scope/default change, reason for revision change not inferred. Historical maps/results retain original sources."
   },
-  "candidateStatus": "PREPARATORY_SOURCE_ONLY_NOT_ACCEPTED_NOT_DEPLOYED_NOT_LOCAL_PC_DELIVERED",
+  "candidateStatus": "REVIEWABLE_SOURCE_PLUS_ACTUAL_ISOLATED_CLOSED_IDENTITY_DEPLOYMENT_NOT_FULL_ACCEPTANCE",
   "incomingCandidate": {
     "team": "A",
     "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+  "candidateHead": "c09451936b3d019039040376b4dc554d5ec60716",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -124,8 +124,36 @@
     "audit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
     "globalAdoption": false
   },
-  "finalHandoff": "Current Cloudflare authenticated account/resource metadata reads verified, browser bridge HTTP404, latest Sites/Files owner source receipts published in draft candidate. Release BLOCKED; no accepted global executable/deployed services/installedPC delivery or background completion claim.",
+  "finalHandoff": "Active provider pass has actual closed identity deployment/migrations/rollback; reviewable draftsource/evidence published. HTTPS hostname networkallowance and approvedowner/platform/commercial/PC gates remain; globalacceptedHead null.",
   "cloudflareConnection": {
+    "state": "AUTHENTICATED_APPROVED_ISOLATED_WRITES_AND_READBACK_VERIFIED",
+    "isolated": {
+      "state": "ACTUAL_ISOLATED_PROVIDER_DEPLOYMENT_AND_CLOSED_ROLLBACK_VERIFIED_HTTPS_NOT_RUN",
+      "worker": "cake-id-release-validation",
+      "databaseId": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+      "identityVersion": "713c1695-7e21-489b-bc97-906450972cfa",
+      "firstUploadDeployment": "cd07e309-9d15-44c1-a9bd-d24e02c50c71",
+      "currentRestoredDeployment": "2f2e8251-d404-4fe4-8e5e-43dd179fd1a6",
+      "closedRollbackVersion": "5f1e7db8-f098-429d-adb0-0bac1566a86a",
+      "rollbackExerciseDeployment": "5fafd683-21e6-45c2-a77c-28c0ef648f37",
+      "authorization": "User confirmed Workers Paid and explicitly approved named isolated Worker/D1 resources and bounded tests within existing allowance; no US$1 payment/upgrade/AI/mail/DNS/production cutover authority",
+      "schema": "Both exact migrations actual200/allstatementssuccess; independent35maintainedDDL objects/parsedFK match and actualforeign_keys=1; emptyuser/account/session/client/JWKS/reservedownerNULL",
+      "exposure": "workers.dev=false/previews=false throughout; cpu1000/logpushfalse; uploadobservabilityfalse, independentsettingsomission qualified",
+      "source": "C2d643d723/root018e56 compiledactual production two modules; index3109063B SHA9d859012015fd20b67500d07646fd5e09dea3d08e8b89229494907adf37e54a2, authUI39127B SHAb1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e",
+      "evidence": "release c09451936b3d019039040376b4dc554d5ec60716:docs/releases/sol-happy-20261003/cloudflare-provider-pass +C6readbacks/44d7recovery/9a9dcustody +C2schema212aff",
+      "remaining": "HTTPS NOT_RUN: executor enforced restricted network revision19 lacks hostname allowance; no bypass. Mail/admin/client/nativeRSA-auth_revision/Turnstile/fulljourneys remain unconfigured/open. No complete service/release acceptance."
+    },
+    "existingServices": "Existingcake/migrationpreview/DNS/WordPress unchanged by root pass",
+    "browser": "Available browser connector postrestart stillHTTP404; no DOM/nativebrowser accepted",
+    "qualification": "No CLIcredential/currentpaidusageheadroom/nativeproviderjourney/fullrelease acceptance inferred"
+  },
+  "currentOwnerSourceReviews": {
+    "coordSource": "a3535c87d64a3ea08dbdc04815f303af6d54e4bc",
+    "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
+    "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
+  },
+  "updatedUTC": "2026-10-04T08:59:25.593477+00:00",
+  "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
     "independentRead": "C6 1f67e77c",
@@ -133,10 +161,32 @@
     "browser": "Post-restart available connector MCP SSE HTTP404; no DOM control",
     "qualification": "No write/CLI/deployment/paid entitlement/allocation/quota/service journey/fullrelease acceptance; resources unchanged"
   },
-  "currentOwnerSourceReviews": {
-    "coordSource": "a3535c87d64a3ea08dbdc04815f303af6d54e4bc",
-    "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
-    "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
-  },
-  "updatedUTC": "2026-10-04T07:58:02.424114+00:00"
+  "executionStatus": "ACTIVE_CLOUDFLARE_PASS_CONTINUING",
+  "currentOwnerRequests": {
+    "workersAiMetadata": {
+      "owner": "TeamA maintained provider",
+      "sourceHead": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+      "branch": "team-c/sol-happy-c5-workers-ai-metadata",
+      "sourcePath": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+      "sourceBytes": 34906,
+      "sourceSHA256": "8d907d23fbc5ce7cbfdc90322722e2d668f00efb9f6383712225047ade339d4f",
+      "baseSHA256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+      "testPath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs",
+      "testBytes": 10151,
+      "testSHA256": "7a4db7e89535112817c495bca06bfe75bea721df7503ec57b63b612403d9d9c5",
+      "proposal": "docs/releases/sol-happy-20261003/workers-ai-metadata/proposal.json +page-bound-successor/review.json",
+      "request": "ACK narrow native readonly WorkersAI metadata recognition/parser/dispatch on exact currentselected ownerbody; if currentdiffers provide bounded rebase preserving allcurrent guards, no wholesalestale provider replacement. Models/API/providerID/funding/job/cancellation/generationpayload unchanged. Rootglobaladoption pendingACK.",
+      "review": "C6 44d7 boundedsource ACK;24Debug/24Release0, exact50fb oversizednegative1failed/23pass preserved; bytes unbounded explicit",
+      "remaining": "No inference until exactmaxoutputtokens/approvedroutepricing/quote/funding policies; cataloguevisibilitynotentitlement; fullproject currentrootCanvas511 failed beforediscovery"
+    },
+    "canonicalSiteImport": {
+      "owner": "TeamA current Sites/Files native authority; TeamB editor composition; C1/C4 hosted adapters",
+      "sourceHead": "cc0cb0de24a90a0cd870b8ed8c15d0da7889aea2",
+      "input": "release c09451936b3d019039040376b4dc554d5ec60716:docs/releases/sol-happy-20261003/cloudflare/canonical-wordpress-import-input.json",
+      "pinsAndRequest": "cloudflare/canonical-sites-owner-request.json (seven exact e0c paths/Gitblob/SHA) +semantic/c4-canonical-hosted-composition-ports.json (seven exacte0c paths/SHA)",
+      "request": "Supply actual originalFiles directory/profile/store/current-session write/read authority, canonical SiteProject snapshot export/CAS and retainedsource revision. ACK exactmaintainedimporter/renderer/build consumption and manifest/perfile remote composition overexistingmodels. Resolve fulltheme/editor/runtime mapping and actualsecretscanner; no inventedIDs/private alternative service/artifactsemantics.",
+      "evidence": "ActualsevenpublishedWPpageHTML inputs andtheme styles captured readonly; root hashpackager7/7; no CSS/media/editor/fullparity/canonicalauthoring acceptance",
+      "remaining": "MCP request toolcannotcustomJWTAuthorization assetsupload; official authenticatedtransport readiness needed; no credentialexport/networkbypass/partialpreview overwrite"
+    }
+  }
 }
