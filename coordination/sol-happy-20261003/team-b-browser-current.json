@@ -1,6 +1,6 @@
 {
   "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_2",
-  "recordedAtUTC": "2026-10-04 23:32:54 UTC",
+  "recordedAtUTC": "2026-10-04 23:51:17 UTC",
   "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
   "run": 37241408354,
   "browserJob": 111551453106,
@@ -97,7 +97,7 @@
       "native49BodiesSelected": false
     }
   },
-  "nextAction": "Wave owner traces and repairs the native Import-button focus loss after completed import. Preserve all original cases, focus predicates, assertions and deadlines; re-run the actual affected gate only after reviewed product source changes.",
+  "nextAction": "Follow the unchanged affected native geometry and original14/responsive3/genuine-zoom gates on exact5ee99c19. Preserve all failing originals; inspect new raw evidence before any further bounded owner repair.",
   "receivingActions": [
     "Receive and preserve complete current original artifact. Current command-family closure is pending exact raw verification.",
     "Provide the actual typed backend indeterminate-commit fault or typed transport code and the receiver-owned composition constructor path/ref. Existing browser composition already maps its actual IndexedDB NotesCommitOutcomeUnknownException through the existing Func<Exception,bool> seam; no guessed string or all-IOException classifier will be activated.",
@@ -274,7 +274,7 @@
     ]
   },
   "repairPreparation": {
-    "state": "OWNER_RAM_PROPOSAL_IN_PROGRESS",
+    "state": "ADOPTED_REVIEWED_SOURCE_PENDING_ACTUAL_GATE",
     "productPaths": [
       "apps/Web/Wave/WaveNativePresentation.cs",
       "apps/Web/Wave/WaveBrowserFeature.cs",
@@ -284,7 +284,50 @@
     ],
     "nativeGraph": "Optional capture/validate delegates default DENY, so the unchanged native fixture adds no browser source dependency or stub.",
     "browserGraph": "Existing named Wave module supplies actual synchronous imports; host claim stamp must reject blur, hidden state, off-app focus or later input. No shared main/platform changes.",
-    "runtime": "NOT_RUN"
+    "runtime": "PENDING_NEW_SOURCE_ACTUAL_RUN",
+    "productSourcePins": [
+      {
+        "path": "apps/Web/Wave/WaveNativePresentation.cs",
+        "blob": "f7b44ac35ea62c7c26e46a25efc7e6e0e59fd590",
+        "bytes": 6249,
+        "sha256": "01e6d8e19f7aa7b99f8069a98c7adeb2791ac857441a4941b8fcef93c6479a06"
+      },
+      {
+        "path": "apps/Web/Wave/WaveBrowserFeature.cs",
+        "blob": "9d8ce4bdd2ef7125a211631feba5408f95cc49f6",
+        "bytes": 5080,
+        "sha256": "9b614ac89cf89cc6f0f7c39910b7ea31b2bf84d5021a7fd109d29ae119da7cc1"
+      },
+      {
+        "path": "apps/Web/Wave/Wave.cui",
+        "blob": "33ee9ae5d3fb0d983316ad65844111326c60e60e",
+        "bytes": 14504,
+        "sha256": "0e80d1cc3bffea5d5a9d3db6854339fd00b4bc6a1285501088a14dac3ff1586d"
+      },
+      {
+        "path": "apps/Web/Media/BrowserWaveMedia.cs",
+        "blob": "66a181cc6570898e0d8e1ffdfdffa73e386166fc",
+        "bytes": 1656,
+        "sha256": "a4d41e8523c961cb1b36a0a1e874108d69e37d227e4ce362cf5ac5660757afbc"
+      },
+      {
+        "path": "apps/Web/Media/wave-browser.js",
+        "blob": "4ba1140d60011c4f86f27de9af718aa4186ef26e",
+        "bytes": 15940,
+        "sha256": "1e0d65775847cecd42218485f2fde15c0d8380597c5c9d775c7dde3457fc934c"
+      }
+    ],
+    "nativeSourceLedger": {
+      "rows": 42,
+      "bytes": 7540,
+      "sha256": "1df832a7acadf34c786e6e3264acbb55fc379dfb0c74eb080024a074d59ac313"
+    },
+    "browserSourceLedger": {
+      "rows": 19,
+      "bytes": 3390,
+      "sha256": "f5f29704edc3ad6596e4c344633080fc186cb9d61bd92cbf3e6a1a369d942db0"
+    },
+    "physicalQualification": "A physical chooser blur or disabled semantic proxy moving DOM focus outside the owned host cancels restoration. Headless pointer success would not establish physical-dialog or broader keyboard/assistive-technology restoration."
   },
   "originalCustodyAcquisition": {
     "officialGitHubOriginalArtifactStillRetained": true,
@@ -296,5 +339,15 @@
     "nativeUploadEndpoint": "Requires a local file path; the returned connector reference was rejected as nonexistent path before a successful upload.",
     "localAdmission": "Full original ZIP not admitted under the current workspace resource floor; no original or protected source was deleted.",
     "boundedReceivingAction": "Use the existing independent receiving environment to download original artifact11317921211 and export11318110993, verify exact sealed lengths/SHA256/CRC, and preserve in the existing private evidence folder. Public source note includes no private folder or file-reference identifiers."
+  },
+  "currentReviewedSource": {
+    "source": "5ee99c19d42e9e6ae687c7ef528fd947a8828540",
+    "parent": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
+    "state": "PUBLISHED_TO_PRIMARY_AND_PR6",
+    "sourceReview": "ROOT_AND_THREE_SCOPED_PEERS_CLEAR",
+    "existingTreeLeaves": 9749,
+    "changedExistingPaths": 10,
+    "newOrDeletedFiles": 0,
+    "actualAffectedRuntime": "PENDING_NEW_SOURCE_RUN"
   }
 }
