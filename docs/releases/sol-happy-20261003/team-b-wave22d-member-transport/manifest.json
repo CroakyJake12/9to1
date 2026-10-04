@@ -11,6 +11,17 @@
       "gitBlob": "45015a24ca2fc09c07c94b5883aafe5d6b784b4d",
       "fullRemoteBodyReadback": true,
       "temporarySourcePath": "/workspace/attachments/4cc1aae9-1caa-4f3e-9f96-fc4d7f763be2/wave22d-member-transport-part01.zip",
+      "temporaryRetired": true
+    },
+    {
+      "part": 2,
+      "artifact": 11306681841,
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part02.zip",
+      "bytes": 19929162,
+      "sha256": "c9a0623b29a5a65ae99567155c4b7ec91710c41723cd463484fa1b9ebb6f0a33",
+      "gitBlob": "53cbe21f1417905a16e558128159a6ca3af678cb",
+      "fullRemoteBodyReadback": true,
+      "temporarySourcePath": "/workspace/attachments/5160b2b3-73a4-40ff-9436-224ceca2d0d9/wave22d-member-transport-part02.zip",
       "temporaryRetired": false
     }
   ],
@@ -202,5 +213,7 @@
     ]
   },
   "scope": "Exact official-extracted original Wave26 diagnostic members. New transport container; original Actions outer ZIP identity unverified. No runtime rerun or provider acceptance.",
-  "state": "PARTIAL_1_OF_THREE_PRESERVED"
+  "state": "PARTIAL_2_OF_THREE_PRESERVED",
+  "remoteRefVerified": true,
+  "url": "https://github.com/CroakyJake12/9to1/tree/9e162a4dff35023118c09888722a22ccdd1135ef/docs/releases/sol-happy-20261003/team-b-wave22d-member-transport"
 }
