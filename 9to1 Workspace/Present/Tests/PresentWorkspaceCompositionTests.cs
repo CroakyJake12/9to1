@@ -53,8 +53,8 @@ public sealed class PresentWorkspaceCompositionTests
             var search = Assert.IsType<Input>(Element(root, "Present.Library.Search"));
             Assert.Equal("Search local presentation titles", search.Accessibility.AccessibleName);
             search.Text = "Workspace composition control";
-            Assert.Single(root.DescendantsAndSelf().OfType<HavenButton>()
-                .Where(button => button.Name?.StartsWith("Present.Library.Open.", StringComparison.Ordinal) == true));
+            Assert.Single(root.DescendantsAndSelf().OfType<HavenButton>(),
+                button => button.Name?.StartsWith("Present.Library.Open.", StringComparison.Ordinal) == true);
             Invoke(Assert.IsType<HavenButton>(Element(root, $"Present.Library.Open.{documentId:N}")));
             await WaitUntilAsync(() => host.Document?.Id == documentId);
             AssertVisible(Element(root, "Present.MenuBar"));
@@ -102,7 +102,7 @@ public sealed class PresentWorkspaceCompositionTests
     }
 
     private static HavenElement Element(HavenElement root, string name) =>
-        Assert.Single(root.DescendantsAndSelf().Where(element => element.Name == name));
+        Assert.Single(root.DescendantsAndSelf(), element => element.Name == name);
 
     private static Container CanonicalWorkspace(HavenElement root)
     {
@@ -124,12 +124,12 @@ public sealed class PresentWorkspaceCompositionTests
 
     private static void InvokeFileAction(HavenElement root, string label)
     {
-        var menu = Assert.Single(root.DescendantsAndSelf().OfType<HavenButton>().Where(button => button.Name == "Present.Menu.File"));
+        var menu = Assert.Single(root.DescendantsAndSelf().OfType<HavenButton>(), button => button.Name == "Present.Menu.File");
         AssertVisible(menu);
         Invoke(menu);
         var popup = Assert.Single(root.DescendantsAndSelf().OfType<PopupMenu>());
         Assert.Equal("File menu", popup.Card.Accessibility.AccessibleName);
-        Invoke(Assert.Single(popup.Card.DescendantsAndSelf().OfType<HavenButton>().Where(button => button.Content == label)));
+        Invoke(Assert.Single(popup.Card.DescendantsAndSelf().OfType<HavenButton>(), button => button.Content == label));
     }
 
     private static void Invoke(HavenButton button)
