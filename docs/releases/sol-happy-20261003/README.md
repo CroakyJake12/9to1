@@ -461,26 +461,54 @@ Forms adapter bodies are absent from both the declared baseline and delivered
 commit, so their complete adapter ACK is held. No approved new hosted contract or
 runtime acceptance is supplied by these requests.
 
+## Current owner source reviews
+
+The [Sites artifact isolation review](c1-sites-artifact-isolation-owner-review.md)
+acknowledges only the exact 663-byte proposal with explicit early
+`UseArtifactsOutput=true`; false/unset legacy behavior is preserved. The proposal
+remains unadopted and unrun. A fresh complete owning cut and evaluated roots with
+the original source, PE/PDB, document, task, restore and drain controls are needed
+before execution; ArtifactsPath-only opt-in is outside this ACK.
+
+The [current Files guard review](semantic/c4-files-current-e0c-guard-review.md)
+consumes actual `e0c0310e` source and preserves its guarded mutation checks. The
+async original-session lifetime, revocation/disposal, lease order and current
+read/publication suppression ports remain open. LE-07 still needs server paid
+entitlement, allocation strictly above 10,000,000,000 bytes and separate quota
+admission; an existing Cloudflare bucket proves none of those application gates.
+All twelve Files transport procedures remain NOT_RUN. The
+[coordination triage](c1-latest-coordination-triage.md) preserves the exact A/B
+requests and separates source ACKs from runtime and release acceptance.
+
 ## Cloudflare setup
 
-The official requested guide and official Cloudflare skill sources were fetched.
-Global CLI registration/install encountered protected managed-environment paths.
-A private account plugin preserves the official 16 skills and registers the guide's
-five MCP endpoints. Its saved files were read back from the backend; the host
-reports it installed. This session exposes no Cloudflare MCP tools, so OAuth,
-account access and deployed-provider acceptance remain unverified.
+Cloudflare authentication works after the user's app restart. Actual connector
+`GET /accounts` returns HTTP 200 and exactly one account matching the selected
+dashboard; C6 independently repeats that read. Bounded Workers, D1, KV and R2
+metadata requests also return HTTP 200: two Workers, zero D1 databases, zero KV
+namespaces and one R2 bucket returned. The R2 projection does not establish list
+completeness. No resource data content or secrets were read and no resources were
+changed. The [current connection receipt](cloudflare-authenticated-read-20261004.json)
+and [independent account audit](c6/cloudflare-account-read-20261004-audit.json)
+preserve the scope and evidence limits.
 
-The user's subsequently selected `cloudflare@openai-curated-remote` reference is
-distinct from the saved private plugin ID; equivalence was not established. After
-that selection, an earlier discovery exposed neither Cloudflare tools nor skills.
-The latest discovery now exposes all 16 official Cloudflare skills, while callable
-account tools remain absent. Current managed-environment revision 11 is observed
-and enforced, with no provider identity, credentials or runtime variables. Skill
-loading does not prove OAuth or account access. Account tools and connection must
-become available before account verification can run. The official guide requires
-an agent restart to load newly configured MCP servers. The saved private package
-is [Cloudflare](https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4);
-assembly provenance and status are in [cloudflare-setup.json](cloudflare-setup.json).
+Three Cloudflare tools are callable (`search`, `execute`, `docs`); `execute` is the
+account API tool. The available browser connector still returns MCP SSE HTTP 404
+on the post-restart list-tabs request, so the dashboard tab cannot be read or
+controlled here. Earlier HTTP 404/429 and zero-tool observations remain historical;
+no login-state or error-cause inference is made. Connector authentication does
+not prove CLI credentials, write permission, deployed CAKE ID identity, provider
+journeys, paid app entitlement, allocation or available quota.
+
+The official guide and 16 official skill sources were fetched earlier. Protected
+managed-environment paths prevented global CLI registration/install. The saved
+private [Cloudflare plugin](https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4)
+preserves those skills and five guide MCP endpoints. Equivalence between that
+private package and the user's subsequently selected curated/app references
+remains unestablished. [cloudflare-setup.json](cloudflare-setup.json) retains the
+assembly provenance, historical discovery states and successful follow-up.
+Managed-executor bindings and functional connector authentication are separate
+observations. Actual service deployment and full release acceptance remain open.
 
 ## Recovery and delivery
 

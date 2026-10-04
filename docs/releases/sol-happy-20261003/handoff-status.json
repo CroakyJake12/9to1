@@ -1,5 +1,5 @@
 {
-  "recordedUTC": "2026-10-03T23:45:49.852795+00:00",
+  "recordedUTC": "2026-10-04T07:54:39.307635+00:00",
   "releaseStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "acceptedHead": null,
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
@@ -110,9 +110,28 @@
   },
   "cloudflare": {
     "skillsLoaded": 16,
-    "callableAccountTools": 0,
-    "oauthAndAccountAccess": "UNVERIFIED",
-    "readOnlyBrowserFallback": "UNAVAILABLE/MCP SSE HTTP404; no account page read"
+    "cloudflareToolsExposed": 3,
+    "callableAccountTools": 1,
+    "oauthAndAccountAccess": "AUTHENTICATED_READ_VERIFIED/HTTP200/account matches selected dashboard/count1",
+    "resourceMetadataReads": {
+      "WorkersReturned": 2,
+      "D1Returned": 0,
+      "KVReturned": 0,
+      "R2BoundedListReturned": 1,
+      "allRequestsHTTP200": true
+    },
+    "readOnlyBrowserFallback": "UNAVAILABLE/MCP SSE HTTP404 after restart; no page read",
+    "evidence": "cloudflare-authenticated-read-20261004.json",
+    "independentAudit": "c6/cloudflare-account-read-20261004-audit.json",
+    "notVerified": [
+      "Write permission",
+      "CLI credentials",
+      "CAKE ID deployed issuer/source",
+      "Email/Stripe/AI service integration",
+      "Paid entitlement and separate allocation/quota",
+      "Deployed SH-12 journeys"
+    ],
+    "qualification": "Cloudflare connector authenticated account/resource metadata reads verified; no resource writes/data-content reads, billable enablement or service operability claim. R2 list completeness unverified. Historical failures preserved."
   },
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
@@ -122,7 +141,7 @@
   "remainingGates": [
     "Current owner API catalogues and Files async session/read/publication authority",
     "Configured browser sign-in/disposal/focus/input/AX/Wave and whole product journeys",
-    "Genuine issuer/signing/auth_revision and real authenticated provider services",
+    "Genuine deployed issuer/signing/auth_revision and configured email/Stripe/AI provider integration; Cloudflare metadata reads alone do not verify service journeys",
     "Full semantic/default-SHOULD/donor/platform/installed/security/recovery acceptance",
     "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
     "Verified exact tested artifacts delivered to Jacob PC"
@@ -224,6 +243,24 @@
       "protectedUnchangedFilesVerified": 15,
       "errors": 0,
       "payloadRerun": false
+    }
+  },
+  "currentOwnerSourceReviews": {
+    "coordinationSource": "a3535c87d64a3ea08dbdc04815f303af6d54e4bc",
+    "sitesArtifactIsolation": {
+      "reviewCommit": "5d63ef2e",
+      "path": "c1-sites-artifact-isolation-owner-review.md",
+      "proposalBytes": 663,
+      "proposalSha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c",
+      "status": "SOURCE_ACK_ONLY/explicit early UseArtifactsOutput=true; false/unset legacy unchanged",
+      "qualification": "ArtifactsPath-only auto-opt-in outside ACK. Proposal unadopted/unrun; requires fresh complete cut, evaluated owner roots and original source/PE/PDB/document/task/restore/drain controls. SDK10.0.401 variance explicit."
+    },
+    "filesGuard": {
+      "sourceCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+      "reviewCommit": "9a0e74c2",
+      "path": "semantic/c4-files-current-e0c-guard-review.json",
+      "status": "QUALIFIED_SOURCE_ACK_ONLY/current guarded mutation source consumed",
+      "qualification": "Async original-session/revocation/disposal/lease order and read/publication suppression ports remain missing; LE07 needs paid entitlement plus allocation >10,000,000,000B and separate quota/admission ports. All12 transport procedures NOT_RUN."
     }
   }
 }
