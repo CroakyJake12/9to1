@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "recordedUTC": "2026-10-04T21:07:27.533764+00:00",
+  "recordedUTC": "2026-10-04T21:48:36.793676+00:00",
   "status": "ACTIVE_REVIEWED_SOURCE_ORIGINAL_GATES_UNACCEPTED",
-  "candidateHead": "ba88e14b2ff1175ce59c882c4a71c99b504a7c6a",
+  "candidateHead": "6ac6c6ef0e67c62d03eb4b35e8235459899776cb",
   "acceptedHead": null,
   "latestDirectUserTarget": "2026-10-04T22:30:00+01:00",
   "targetDoesNotWaiveAcceptance": true,
@@ -56,19 +56,57 @@
     "B shared NotesRepository owner retain originalstale-save conflict test and implement atomic storedrevision check/publish across independent writers",
     "Receiving root inspect existing VirtualBox guest/snapshots/disk provenance/SDK status read-only and registeredVsBuildAgent30060 ownerdrain before anyconditionalPC poweroff"
   ],
-  "rootOwnedLocalHandles": "NONE LIVE: authbrowser19671 andissuer71539 fullyclosed; no PC process controlled here",
-  "remoteCloudHandles": [
-    {
-      "run": 37234388190,
-      "job": 111530500231,
-      "owner": "C1",
-      "state": "IN_PROGRESS"
-    },
-    {
-      "run": 37234364549,
-      "job": 111530426617,
-      "owner": "C3",
-      "state": "COMPLETE_FAILURE_RETAINED"
-    }
-  ]
+  "rootOwnedLocalHandles": "NONE LIVE; all auth original sessions and three actual Canvas/Present runs completed normally with recorded cleanup",
+  "remoteCloudHandles": "All known owned actual runs completed; no healthy cloud job restarted",
+  "targetState": "22:30London passed; onceDone shutdown condition unmet; mandatory gates remain; no clock waiver or healthy job cancellation",
+  "poweroffExecuted": false,
+  "sourceCompositions": {
+    "PR16": "df519826 exact3 legacy tests; all original66/12 identities conserved",
+    "PR14": "a5d25cec exact4 native composition bodies",
+    "PR13": "a703cc89 exact17 Files route bodies",
+    "PR15": "6ac6c6ef exact11 final78de package/lifecycle bodies"
+  },
+  "actualCurrentCombinedHome": "113 cases authored; not yet executed on combined source",
+  "authentication": {
+    "reviewProposal": "be8d4b9baf24137c254f6a764bb8e9360a0cc6eb",
+    "branch": "review/team-c-account-native-label-consent-20261004",
+    "C6": "18ea08d5c2c7aa97b320731aa5cb8d8c16c4ee4c2f985bf9e595256a6ec5e3f6",
+    "BReviewRequest": "PR6 comment5984579306",
+    "remaining": "B source owner ACK; genuine new sealedWeb publication/criticalconsumer provenance; no currentissuer/browser live"
+  },
+  "presentSuccessor": {
+    "source": "25aec2f6d0993f7f2adb03ffcb4220359b06d767",
+    "C4": "05061b992949aade7090cf3769c3d10a76d8515df7d31ab528d2bf1c34c4f1d3",
+    "C6": "d7e88166daf4f246cdd931385b0ac1192b92800d79415d93276314d76fdea588",
+    "remaining": "A shared vendor owner decision for exact existingWindowBaseAutomationPeer.GetFocus recursion; actualWindows run held",
+    "actualOriginal": "4750 original13PASS/new2FAIL/shared6PASS1FAIL/native232 then focusquery refusal; cleanup natural0/two drains"
+  },
+  "canvasActual": {
+    "source": "b0db9a7cd74188cfc7c4895b1a02a09518fce092",
+    "run": 37236397518,
+    "job": 111536241374,
+    "artifact": 11315189929,
+    "zipBytes": 46212,
+    "zipSHA256": "e4ef21e80b617f8f85997f2a92f3c011917870ace4e89e3b27d110b0f721d783",
+    "result": "77PASS then20s config0; actualprofile/principalvalid; noCanvasrequests/state; cleanup0/twodrains/noforce",
+    "causalLimit": "Visible ownership-conflict text covers every failed guarded write, including IO/permission; actualcode/cause unobserved",
+    "next": "Bounded standalone PS5 reader-sharing/atomic-publication probe only; no ownership/recovery/policy mutation"
+  },
+  "receivingNotesCAS": {
+    "exclusiveOwner": "Existing receiving engineering root under explicitB criticalhandoff; no C writer here",
+    "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+    "currentBlob": "242809b6",
+    "existingSession": "3623aa76",
+    "existingConflictException": "627a5009",
+    "boundedAction": "Minimal atomic storedrevision read/publication shared across instances/processes and mutators; preserve original65 stale-winner oracle and genuine2process race/cancel/exit/recovery"
+  },
+  "privateMetrics": {
+    "status": "Private source/runtime review only; specific public new6 payload automatically rejected; exact human approval pending",
+    "action": "No indirect public payload/commit/publication; C4 private review only",
+    "reportedEvidence": "Current143Debug143Release +7905table/pixel; UI163Release; Debug128 audit network warnings preserved",
+    "noPrivateLinksInPublicRecord": true
+  },
+  "candidateCleanWindows": "Existing registered VirtualBox guest is a candidate only; clean/noSDK/loginroute/publisher/installed authority unverified",
+  "safeShutdown": "Receiving root explicitly confirms no shutdown while onceDone condition unmet; VsBuildAgent healthy foreign process untouched",
+  "nextVerification": "Prepare only truthful current6ac combinedHome113 and original2+6 source catalog successors; olddfe66 and2b0a5 scopedsource checkpoints remain historical"
 }
