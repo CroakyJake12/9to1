@@ -27,10 +27,12 @@
   </PropertyGroup>
   <ItemGroup>
     <AssemblyMetadata Include="9to1.WindowsAppId" Value="$(ProductWindowsAppId)" />
+    <AssemblyMetadata Include="9to1.InitialApp" Value="$(ProductInitialApp)" Condition="'$(ProductInitialApp)' != ''" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
+    <ProjectReference Include="../../../Files/NativeUI/HavenOS.Files.NativeUI.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
     <!-- During Phase 2 this desktop project is the Avalonia backend/host for platform-neutral Haven.UI. -->
     <ProjectReference Include="..\Haven.UI\Haven.UI.csproj" />
