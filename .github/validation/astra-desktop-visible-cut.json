@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "3a52c431368fee3aa03b2a0f8303fb6cfbb49224",
-  "programTree": "e5b24dccae2020e21e33605cfbf0856b64774f07",
+  "baselineCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+  "programTree": "27f0642a657dc45a098731e783ab1df286858ced",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -239,9 +239,9 @@
     {
       "path": ".github/validation/astra-joint-native-sdk01-sources.json",
       "mode": "100644",
-      "object": "26fce1f2d2f5544121135571bd8c447a2b395a7c",
+      "object": "e753283bd3c8ca48896268a2f9d14fd893b0d48e",
       "bytes": 81891,
-      "sha256": "066ce07789d3a52778693945c0c5c1aeae854ba5a91ae4eb19f53c65a1156f8e"
+      "sha256": "1b45daf017b35f801f3f172f3fafc38f30914bdaf38a9d1f6f85b65dd7403703"
     },
     {
       "path": ".github/validation/astra-mail-expected-case-methods.json",
@@ -24081,9 +24081,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
       "mode": "100644",
-      "object": "bbc80d8953a97d793ae59a1bab18d92815091f85",
-      "bytes": 46308,
-      "sha256": "ada51273b49a766885edb9477df6dc29ade1ba3a5e33b28114132a64007694f4"
+      "object": "cc6ba17728923511aae03b9194945c2200933d3f",
+      "bytes": 48284,
+      "sha256": "f8770b858d87ac9f02b46308ed387f9411d0cb928fe514a5879a5ae83d2636f7"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelCatalogueEntry.cs",
@@ -24186,9 +24186,9 @@
     {
       "path": "9to1 Workspace/Home/Tests/HomeAgentExecutionAdmissionsTests.cs",
       "mode": "100644",
-      "object": "a6e2b0f274564153917b713af4d412fb3eb9c477",
-      "bytes": 67848,
-      "sha256": "a6e98e780a11adbbc595b6d281b23852682ddd625872353d6d8aeb3dd9356101"
+      "object": "1e05e7b1817a3e5d4a167cac40fa43c5c8701ba7",
+      "bytes": 67834,
+      "sha256": "6b653ec4422501aa5878aacde03f742f184b38909d3568db810acfa4bb8fad7c"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeAgentOriginalConnectionDrainTests.cs",
@@ -38977,16 +38977,16 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/AgentDependencyCatalogServiceTests.cs",
       "mode": "100644",
-      "object": "652a1e79a1c2b99fb5e929703f9ca7a462dd96c9",
-      "bytes": 17407,
-      "sha256": "274ce24cbe58a1c03b127e80bd93f04a6524d23c0a4f7a221a52084e554b15fb"
+      "object": "52973e3cae7e2fbc294b28ebecc052f22fae28b5",
+      "bytes": 17953,
+      "sha256": "7348ef283218e284f80316040f7809a437335b2c81bd9946b3e99f05254db0d3"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/CapabilityConcretePlatformTests.cs",
       "mode": "100644",
-      "object": "a4ab7ef34b95d9f9ff3581179699566a3bd3972b",
-      "bytes": 4110,
-      "sha256": "c9d8f8afff33a58756edb4d808b4ef079e75e7dd15bd1730225714f4cdb95e8f"
+      "object": "e17240635fd22cac782447581a0df9116f7e3980",
+      "bytes": 4170,
+      "sha256": "dc32e0d7e167c56bcbb833d3c38a424f482be1408095a67dc4ff5c713ddd5dcd"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj",
@@ -66867,16 +66867,19 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Root selects the exact failed3a52 corrective base after complete owner/source/custody/package peers, then unchanged54ac constructor; no owner Git, source copy, build or runtime.",
-    "Whole original215 owning/12 regression/48 resource class tables/callers/method/native/TLS/CRL/Java/task/compiled/PDB/restores/profile/shutdown/drains remain byte exact; Home14 actual native failed/unaccepted. Fresh complete actual source cut is mandatory.",
-    "Additive SDK job independently evaluates Debug/Release graphs:22entry restores,16full xUnit runs,2full original Files console executions,4product executable builds plus source-built tasks/analyzers/complete graph builds/discovery/metadata. The inherited22default-configuration templates remain byte exact historical recipes.",
-    "All102 canonical source targets/38 unchanged A4 prerequisites and one exact actor-verifier interface selected. Physical actual TargetPath/AssemblyName/PE-PDB and every emitted source document plus generated/materialized bytes required; five exact pure enum/record/interface declarations lacking sequence points separately evaluated Compile/hash bound.",
-    "No test filtering/discovery skip/mock replacement. Every discovered actual case must pass and reconcile to full original TRX;29 selected fixture files/190methods/237 authored-case minima are source inventory, not executed results. All188 old methods/235 old minima remain mandatory.",
-    "Exact source-built Avalonia task target/output closure and each independently restored actual graph/NuGet physical hash/metadata closure must remain equal before/after execution. Original guarded creator PID/pidfd/session/drains plus distinct primary/close/persistence/post-pin failures retained.",
-    "256MiB retained evidence,16MiB command log,1200s per original command and180minSDK job are polling acceptance bounds, not atomic filesystem/process caps. Raw package/output dependencies are fingerprinted; retained physical producer PE/PDB/source-built task/generated source bytes remain independently replayable.",
-    "Both SDK/headless passes and every original native cohort outcome remain required; SDK source compilation is not ordinary installed Home bootstrap/current actor/owner-selected provider/real Agent route/UI/Dulche/Files receipt/Windows/macOS/Android/iOS native acceptance.",
-    "Terra pass-start/B/C4/A1 standalone contracts remain separately held; no hosted/cloud/paid provider activation or product scope expansion.",
-    "SDK04 actual37154578730 failed: original46/70-member small cohorts bind five compiler diagnostics; independent full SDK/owning cause and original custody remain gating. Source-confirmed Admissions/Work caller-first cancellation and actual App root-provider fixes are separate necessary corrections; no automatic replay or false profile/drain cleanup."
+    "Root selects exact failed SDK07 e0c0310e parent/tree and current semantic program tree only after complete source/custody/package peers; unchanged54ac constructor and643 launcher. No owner Git, build, SDK or native invocation.",
+    "Four actual compiler-cause product paths only: restore approved exact prompt display acknowledgement atop current C2 grant/identity service; actual IReadOnlyList/DenPermission/collection assertions; fourteen+two current xUnit3 tokens. Entire actual e0c source inverses and all original fixture bodies/assertions required.",
+    "All102 canonical source targets/29 source fixture files/190 methods/237 authored minima and38 prerequisites remain; four source hashes and three fixture hashes only change. Source minima are not executed results; all188/235 historical SDK04 minima remain mandatory.",
+    "Original215 owning/12 regression/48 resource class tables/callers/method/native/TLS/CRL/Java/task/compiled/PDB/restores/profile/shutdown/drains stay byte exact. These four product targets intersect none of the three original cohort class-source tables.",
+    "Mandatory evaluated Debug and Release matrix:22 entry restores,16 full xUnit runs,2 full original Files console executions,4 product executable builds plus source-built tasks/analyzers/full graph builds and discovery. Original22 default-configuration command templates stay exact historical recipes.",
+    "Physical actual TargetPath/AssemblyName/PE plus actual embedded-or-external Portable PDB CodeView/#Pdb identity and EVERY document hash/evaluated Compile/source byte required. Exact five pure type-only declarations retain only existing narrow exceptions with Compile/hash/full owning PE proof.",
+    "Current SDK07 task PE physical witness contains221 documents with217 evaluated Compile items, two SDK generated and two DevGenerator documents. Actual generated physical-file availability was not measured before consumer build refusal; no missing-file outcome, C counts, producer flag edit or document waiver is inferred.",
+    "Entire source-built Avalonia task target/output closure, generated/materialized source retention and independent actual restored graph/NuGet physical hash/metadata closure remain equal before/after. Original guarded creator PID/pidfd/session/strict all-command ledgers plus primary/close/persistence/post-pin errors retained.",
+    "SDK07 complete original causal archive independently validates572 safeCRC members,604 family+path file rows,537 piece descriptors and568 locally reproduced full evidence bodies. Thirty-six binary/nontext rows and221 task symbol documents are original custody-reader witnesses rather than separate local raw-part/binary replay.",
+    "Actual SDK07 joint99 original commands:98 exit0 and Home build exit1,all99 recorded seals true plus59 observed inner attempts/profile restoration. Distinct owning16 Application analyzer errors prevent later native probe; preallocated future-native marker remains false although real managed Mail caller5862 is drained.",
+    "256MiB retained evidence,16MiB command log,1200s per original command and180min SDK job remain acceptance bounds. Whole original indexed multipart transport has26MiB payload/29MiB inner/<32MiB outer/at most12 parts; no filtering or fabricated external PDB.",
+    "Every discovered full actual case/no skips plus original native outcomes remain mandatory. No ordinary installed Home/bootstrap/current actor/provider/Agent route/native UI/Dulche/Files receipt/Windows/macOS/Android/iOS acceptance from source or compiler correction.",
+    "No OS222/module lifecycle, new privacy/attachment policy, Terra pass-start, hosted/Cloud/paid-provider activation or unrelated product scope is selected by this corrective recipe."
   ],
   "inputManifests": [
     {
@@ -67063,6 +67066,31 @@
       "path": "/workspace/astra-source/ready-artifacts/root-sdk04-linux19-c-original-causal-records887/admission.json",
       "bytes": 20597,
       "sha256": "4a38a914834debaa0ae56cd71863f92398b90a2463ef8c4e40229930e9817225"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk07-actual-compiler-original-prompt-and-fixture-source01/manifest.json",
+      "bytes": 25798,
+      "sha256": "8b86b27163175cdfd7ec5dc99728f6819a63948fe28a27e877c01417ac408dec"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk07-actual-compiler-original-prompt-and-fixture-source01/whole-actual-sdk07-inverses.json",
+      "bytes": 8294,
+      "sha256": "fce36364c054220c833b7772bd4314c3aee233b8ff036db5f63a19dabe84200c"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk07-complete-original-causal-review01/receipt.json",
+      "bytes": 13373,
+      "sha256": "d4e02c0590e95ebc2c694667ae438ce6fc56a9bb00281a303f8a0cb81d679033"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk07-complete-original-causal-review01/verify.py",
+      "bytes": 18285,
+      "sha256": "0fa912d5d93ee4331a4e0c2442b9ce1c92d6894f21d867bdf9ce7efda7c181dc"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-joint05-sdk-native-package07-exact-caller-catalog-descriptor/manifest.json",
+      "bytes": 41681,
+      "sha256": "c21472d90db8b6b7d4076bc8e035cb18282b8ce586a187d5e2d5e83a9afa0d25"
     }
   ],
   "sharedCakeIdContract": null

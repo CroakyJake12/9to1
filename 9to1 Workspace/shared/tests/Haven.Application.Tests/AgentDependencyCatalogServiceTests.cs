@@ -15,11 +15,11 @@ public sealed class AgentDependencyCatalogServiceTests
         var repository = new Repository(_ => [definition]);
         var service = new AgentDependencyCatalogService(new(repository));
         var result = await service.ResolveCurrentAsync(new([definition.Id.ToString("D"), definition.Key,
-            definition.ImplementationKey], [], [], [], "user"), CapabilityPlatform.Windows);
+            definition.ImplementationKey], [], [], [], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.True(result.DependenciesResolved);
         Assert.Equal(definition, Assert.Single(result.Capabilities));
         Assert.Empty(result.Packages); Assert.Empty(result.Skills);
-        var alias = await service.ResolveCurrentAsync(new([definition.Name], [], [], [], "user"), CapabilityPlatform.Windows);
+        var alias = await service.ResolveCurrentAsync(new([definition.Name], [], [], [], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(alias.DependenciesResolved); Assert.Empty(alias.Capabilities);
         Assert.Contains(alias.Diagnostics, item => item.Code == "CapabilityNotFound");
         Assert.Equal(4, repository.Reads);
@@ -31,10 +31,10 @@ public sealed class AgentDependencyCatalogServiceTests
         var first = Definition("files.one", "owner.shared");
         var second = Definition("files.two", "owner.shared");
         var service = new AgentDependencyCatalogService(new(new Repository(_ => [first, second])));
-        var ambiguous = await service.ResolveCurrentAsync(new(["owner.shared"], [], [], [], "user"), CapabilityPlatform.Windows);
+        var ambiguous = await service.ResolveCurrentAsync(new(["owner.shared"], [], [], [], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(ambiguous.DependenciesResolved); Assert.Empty(ambiguous.Capabilities);
         Assert.Contains(ambiguous.Diagnostics, item => item.Code == "AmbiguousCapabilityIdentity");
-        var foreign = await service.ResolveCurrentAsync(new([], [], [], [first.Key], "user"), CapabilityPlatform.Windows);
+        var foreign = await service.ResolveCurrentAsync(new([], [], [], [first.Key], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(foreign.DependenciesResolved); Assert.Empty(foreign.Capabilities);
         Assert.Contains(foreign.Diagnostics, item => item.Code == "McpCapabilityRequired");
     }
@@ -46,11 +46,11 @@ public sealed class AgentDependencyCatalogServiceTests
         ready = ready with { Key = ExternalConnectionNaming.CapabilityKey(ready.Id) };
         var repository = new Repository(_ => [ready]);
         var service = new AgentDependencyCatalogService(new(repository));
-        var result = await service.ResolveCurrentAsync(new([], [], [], [ready.Key], "user"), CapabilityPlatform.Windows);
+        var result = await service.ResolveCurrentAsync(new([], [], [], [ready.Key], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.True(result.DependenciesResolved);
         Assert.Equal(CapabilityAvailability.PermissionRequired, Assert.Single(result.Capabilities).Availability);
         repository.Values = _ => [ready with { IsEnabled = false }];
-        var revoked = await service.ResolveCurrentAsync(new([], [], [], [ready.Key], "user"), CapabilityPlatform.Windows);
+        var revoked = await service.ResolveCurrentAsync(new([], [], [], [ready.Key], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(revoked.DependenciesResolved); Assert.Empty(revoked.Capabilities);
         Assert.Contains(revoked.Diagnostics, item => item.Code == "CapabilityNotFound");
     }
@@ -62,7 +62,7 @@ public sealed class AgentDependencyCatalogServiceTests
         var repository = new Repository(read => read == 1 ? [original] :
             [original with { Availability = CapabilityAvailability.DependencyRequired, UpdatedAt = original.UpdatedAt.AddTicks(1) }]);
         var result = await new AgentDependencyCatalogService(new(repository)).ResolveCurrentAsync(
-            new([original.Key], [], [], [], "user"), CapabilityPlatform.Windows);
+            new([original.Key], [], [], [], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(result.DependenciesResolved);
         Assert.Contains(result.Diagnostics, item => item.Code == "CapabilityChanged");
         Assert.Equal(2, repository.Reads);
@@ -76,7 +76,7 @@ public sealed class AgentDependencyCatalogServiceTests
     {
         var repository = new Repository(_ => throw new InvalidOperationException("Discovery must not run."));
         var result = await new AgentDependencyCatalogService(new(repository)).ResolveCurrentAsync(
-            new([], [], [], [], "user"), platform);
+            new([], [], [], [], "user"), platform, TestContext.Current.CancellationToken);
         Assert.False(result.DependenciesResolved);
         Assert.Contains(result.Diagnostics, item => item.Code == "UnsupportedConcretePlatform");
         Assert.Equal(0, repository.Reads);
@@ -87,7 +87,7 @@ public sealed class AgentDependencyCatalogServiceTests
     {
         var repository = new Repository(_ => []);
         var result = await new AgentDependencyCatalogService(new(repository)).ResolveCurrentAsync(
-            new([], ["missing-package/missing-skill"], ["missing-plugin"], [], "user"), CapabilityPlatform.Windows);
+            new([], ["missing-package/missing-skill"], ["missing-plugin"], [], "user"), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(result.DependenciesResolved); Assert.Empty(result.Packages); Assert.Empty(result.Skills);
         Assert.Contains(result.Diagnostics, item => item.Code == "PackageIdentityUnavailable");
         Assert.Contains(result.Diagnostics, item => item.Code == "SkillRuntimeUnavailable");
@@ -101,7 +101,7 @@ public sealed class AgentDependencyCatalogServiceTests
         using var canceled = new CancellationTokenSource(); canceled.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ResolveCurrentAsync(
             new([], [], [], [], "user"), CapabilityPlatform.Windows, canceled.Token));
-        var wrong = await service.ResolveCurrentAsync(new([], [], [], [], " agent:" + Guid.NewGuid().ToString("N")), CapabilityPlatform.Windows);
+        var wrong = await service.ResolveCurrentAsync(new([], [], [], [], " agent:" + Guid.NewGuid().ToString("N")), CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(wrong.DependenciesResolved);
         Assert.Contains(wrong.Diagnostics, item => item.Code == "InvalidCurrentScope");
         Assert.Equal(0, repository.Reads);
@@ -117,14 +117,14 @@ public sealed class AgentDependencyCatalogServiceTests
         var windows = Definition("windows.only", "owner.windows");
         var repository = new Repository(read => read == 1 ? [actual, windows] : [actual with { IsEnabled = false }, windows]);
         var service = new AgentDependencyCatalogService(new(repository));
-        var stale = await service.ResolveCurrentAsync(new([actual.Key], [], [], [], "user"), platform);
+        var stale = await service.ResolveCurrentAsync(new([actual.Key], [], [], [], "user"), platform, TestContext.Current.CancellationToken);
         Assert.False(stale.DependenciesResolved);
         Assert.Contains(stale.Diagnostics, value => value.Code == "CapabilityChanged");
         repository.Values = _ => [actual, windows];
-        var foreign = await service.ResolveCurrentAsync(new([windows.Key], [], [], [], "user"), platform);
+        var foreign = await service.ResolveCurrentAsync(new([windows.Key], [], [], [], "user"), platform, TestContext.Current.CancellationToken);
         Assert.False(foreign.DependenciesResolved); Assert.Empty(foreign.Capabilities);
         Assert.Contains(foreign.Diagnostics, value => value.Code == "CapabilityNotFound");
-        var current = await service.ResolveCurrentAsync(new([actual.Key], [], [], [], "user"), platform);
+        var current = await service.ResolveCurrentAsync(new([actual.Key], [], [], [], "user"), platform, TestContext.Current.CancellationToken);
         Assert.True(current.DependenciesResolved); Assert.Equal(actual, Assert.Single(current.Capabilities));
         Assert.Equal(6, repository.Reads);
     }
@@ -140,7 +140,7 @@ public sealed class AgentDependencyCatalogServiceTests
         var repository = new Repository(read => read == 1 ? [original] : [original, late]);
         var request = mcp ? new AgentDependencyRequest([], [], [], [original.Key], "user") :
             new AgentDependencyRequest([original.Key], [], [], [], "user");
-        var result = await new AgentDependencyCatalogService(new(repository)).ResolveCurrentAsync(request, CapabilityPlatform.Windows);
+        var result = await new AgentDependencyCatalogService(new(repository)).ResolveCurrentAsync(request, CapabilityPlatform.Windows, TestContext.Current.CancellationToken);
         Assert.False(result.DependenciesResolved);
         Assert.Contains(result.Diagnostics, item => item.Code == "AmbiguousCapabilityIdentity" && item.Target == original.Key);
         Assert.Contains(result.Diagnostics, item => item.Code == "CapabilityChanged");

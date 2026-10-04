@@ -213,7 +213,7 @@ public sealed class HomeAgentExecutionAdmissionsTests
         var (_, _, run, step) = await f.StartStepAsync();
         var admission = Assert.IsType<AgentStepAdmission>((await f.Issuer.GetOriginalStepAdmissionAsync(step, f.Token)).Value);
         Assert.True(f.Models.Features.Remove(ToolCapability.Vision));
-        Assert.True(f.Models.Features.Contains(ToolCapability.Text));
+        Assert.Contains(ToolCapability.Text, f.Models.Features);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Issuer.DemandCurrentAsync(
             admission.OriginalExecutionAuthority, Guid.Parse(run.SessionId), "exact-local-model", null, f.Token).AsTask());
         Assert.Equal(0, f.Tools.Resolutions);
@@ -518,7 +518,7 @@ public sealed class HomeAgentExecutionAdmissionsTests
     {
         f.Definition = await f.Personal.Den.SaveAsync(f.Definition with
         {
-            AllowedPermissions = new HashSet<string> { "files.write", "files.rename" },
+            AllowedPermissions = new[] { "files.write", "files.rename" },
             CapabilityPolicyJson = JsonSerializer.Serialize(new AgentCapabilityPolicy(
                 new HashSet<string> { "files.write" }, new HashSet<string> { "FILES.WRITE" },
                 RequireApprovalForConsequentialActions: false), DenJson.Options)
@@ -608,7 +608,7 @@ public sealed class HomeAgentExecutionAdmissionsTests
         var same = await factory.OpenAsync(f.Token);
         Assert.Same(f.Personal.Den.Store, same.Den.Store); Assert.Equal(f.Personal.Actor, same.Actor);
         Assert.False(await same.Den.AccessPolicy.IsAllowedAsync(same.Actor.ActorId, "personal", f.Definition.Id, DenPermission.Execute, f.Token));
-        Assert.False(await same.Den.AccessPolicy.IsAllowedAsync(same.Actor.ActorId, "personal", f.Definition.Id, DenPermission.Admin, f.Token));
+        Assert.False(await same.Den.AccessPolicy.IsAllowedAsync(same.Actor.ActorId, "personal", f.Definition.Id, DenPermission.Administer, f.Token));
         Assert.Null(await new HomeRegisteredCurrentDenSource([f.Provider, f.Provider], authority, f.Actors)
             .ResolveCurrentAsync(f.Personal.DenId, f.Personal.Actor, f.Token));
         Assert.Null(await source.ResolveCurrentAsync("unregistered-den", f.Personal.Actor, f.Token));

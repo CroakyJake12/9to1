@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using HavenOS.Home.Core;
 
 namespace HavenOS.Home.PermissionsTrustNotifications;
@@ -147,8 +148,6 @@ public sealed class HomePermissionTrustService
                 ResultMessage = "Home approval is required before the target app action can execute.",
             };
             ReplaceRequest(state, request);
-            AddAudit(state, request, HomePermissionAuditKind.ApprovalPromptShown, request.State,
-                request.ResultCode, request.ResultMessage, now);
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
             return Authorization(request);
         }
@@ -212,6 +211,34 @@ public sealed class HomePermissionTrustService
             return request is null
                 ? new(HomePermissionRequestState.Denied, "HOME_PERMISSION_REQUEST_NOT_FOUND", "The request was not found.", requestId, null)
                 : Authorization(request);
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Trusted Home UI observation only, after the exact native scene is mounted and visible.
+    /// This audit acknowledgement never approves, trusts or begins execution.</summary>
+    public async Task<HomePermissionOperationResult> AcknowledgePromptDisplayedAsync(string requestId,
+        string displayedRequestDigest, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(requestId) || string.IsNullOrWhiteSpace(displayedRequestDigest))
+            return Failure("HOME_PROMPT_OBSERVATION_INVALID", "The exact displayed request is required.");
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var request = FindPending(state, requestId);
+            if (request is null) return Failure("HOME_REQUEST_NOT_PENDING", "The request is no longer awaiting approval.");
+            var actualDigest = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(request)));
+            if (!StringComparer.Ordinal.Equals(displayedRequestDigest, actualDigest))
+                return Failure("HOME_PROMPT_REQUEST_CHANGED", "The request changed. Display and review it again.");
+            if (state.Audit.Any(item => item.RequestId == requestId &&
+                item.Kind == HomePermissionAuditKind.ApprovalPromptShown && item.ResultCode == "HOME_PROMPT_DISPLAY_ACKNOWLEDGED"))
+                return Success("HOME_PROMPT_DISPLAY_ACKNOWLEDGED", "The native Home prompt display is already recorded.");
+            AddAudit(state, request, HomePermissionAuditKind.ApprovalPromptShown, request.State,
+                "HOME_PROMPT_DISPLAY_ACKNOWLEDGED", "The exact pending request was displayed by the native Home scene.",
+                _timeProvider.GetUtcNow());
+            await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            return Success("HOME_PROMPT_DISPLAY_ACKNOWLEDGED", "The native Home prompt display is recorded.");
         }
         finally { _gate.Release(); }
     }

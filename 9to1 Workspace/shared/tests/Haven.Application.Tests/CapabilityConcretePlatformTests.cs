@@ -35,7 +35,7 @@ public sealed class CapabilityConcretePlatformTests
         var historical = Definition("actual.historical", CapabilityPlatform.All);
         var declaredAll = Definition("actual.declared.all", CapabilityPlatform.AllSupported);
         var result = await new CapabilityRegistryService(new Repository([specific, historical, declaredAll]))
-            .DiscoverAsync(platform, default);
+            .DiscoverAsync(platform, TestContext.Current.CancellationToken);
         Assert.Contains(result, value => value.Id == specific.Id);
         Assert.Contains(result, value => value.Id == declaredAll.Id);
         Assert.Equal(platform is CapabilityPlatform.Windows or CapabilityPlatform.Android,
@@ -51,7 +51,7 @@ public sealed class CapabilityConcretePlatformTests
     public async Task A_union_or_unknown_host_is_not_a_concrete_discovery_identity(CapabilityPlatform platform)
     {
         var repository = new Repository([]);
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => new CapabilityRegistryService(repository).DiscoverAsync(platform, default));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => new CapabilityRegistryService(repository).DiscoverAsync(platform, TestContext.Current.CancellationToken));
         Assert.Equal(0, repository.Reads);
     }
 
