@@ -664,5 +664,6 @@ jobs:
           name: astra-compiler05-original-custody-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/compiler05-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/
           compression-level: 6
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
