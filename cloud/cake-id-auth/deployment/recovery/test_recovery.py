@@ -62,3 +62,65 @@ with tempfile.TemporaryDirectory() as tmp:
   else:raise RuntimeError('changed image accepted')
   if output.exists():raise RuntimeError('changed image published')
  print(json.dumps({'status':'PASS','sealedImageControls':2,'privateValuesPrinted':False}))
+# A matching staged image can drift at the actual publication boundary,
+# including a change preserving every row count before final readback.
+with tempfile.TemporaryDirectory() as tmp:
+ root=Path(tmp);source=root/'source.db'
+ with sqlite3.connect(source) as db:
+  for p in sorted(migrations.glob('*.sql')):db.executescript(p.read_text())
+ image=root/'backup.db';receipt=recovery.backup(source,image,migrations)
+ controls=[]
+ for name in ['same-count-published-drift','corrupt-published-image']:
+  dest=root/(name+'.db');original_unlink=recovery.os.unlink
+  def change_after_publication(path,*args,**kwargs):
+   result=original_unlink(path,*args,**kwargs)
+   if Path(path).name.startswith('.restore-') and dest.exists():
+    if name=='same-count-published-drift':
+     with sqlite3.connect(dest) as changed:changed.execute("UPDATE cake_reserved_usernames SET reason='fictional published value drift'")
+    else:dest.write_bytes(b'fictional invalid SQLite image')
+   return result
+  recovery.os.unlink=change_after_publication
+  try:
+   try:recovery.restore(image,dest,migrations,receipt)
+   except recovery.RecoveryReadbackError as error:
+    if not error.publication_completed or error.destination_state!='RECONCILIATION_REQUIRED':raise RuntimeError('publication outcome lost')
+   else:raise RuntimeError('changed published image reported restored')
+  finally:recovery.os.unlink=original_unlink
+  if not dest.exists() or recovery.digest(dest)==receipt['sha256']:raise RuntimeError('published drift evidence not retained')
+  if recovery.digest(image)!=receipt['sha256']:raise RuntimeError('original backup changed')
+  if name=='same-count-published-drift' and recovery.counts(dest)!=receipt['counts']:raise RuntimeError('same-count control changed its criterion')
+  controls.append(name)
+ # Copying only the source .db would lose committed values still in its WAL.
+ with sqlite3.connect(source) as live:
+  if live.execute('PRAGMA journal_mode=WAL').fetchone()!=('wal',):raise RuntimeError('WAL fixture unavailable')
+  live.execute('PRAGMA wal_autocheckpoint=0')
+  live.execute("UPDATE cake_reserved_usernames SET reason='fictional committed WAL value'");live.commit()
+  expected=list(live.iterdump());wal_backup=root/'wal-backup.db';wal_receipt=recovery.backup(source,wal_backup,migrations)
+  restored=root/'wal-restored.db';result=recovery.restore(wal_backup,restored,migrations,wal_receipt)
+  with recovery.connect(restored) as actual:
+   if list(actual.iterdump())!=expected:raise RuntimeError('committed WAL state lost')
+  if result['sha256']!=wal_receipt['sha256']:raise RuntimeError('successful readback identity lost')
+  # A held-open writer can change SQLite-visible values only in a sidecar,
+  # preserving the restored main-file hash and every row count.
+  drift=root/'wal-drift.db';original_unlink=recovery.os.unlink;holders=[]
+  def change_wal_after_publication(path,*args,**kwargs):
+   result=original_unlink(path,*args,**kwargs)
+   if Path(path).name.startswith('.restore-') and drift.exists():
+    changed=sqlite3.connect(drift);holders.append(changed)
+    changed.execute('PRAGMA wal_autocheckpoint=0')
+    changed.execute("UPDATE cake_reserved_usernames SET reason='fictional WAL-only drift'");changed.commit()
+   return result
+  recovery.os.unlink=change_wal_after_publication
+  try:
+   try:recovery.restore(wal_backup,drift,migrations,wal_receipt)
+   except recovery.RecoveryReadbackError as error:
+    if not error.publication_completed:raise RuntimeError('WAL publication outcome lost')
+   else:raise RuntimeError('WAL-only changed image reported restored')
+   if recovery.digest(drift)!=wal_receipt['sha256'] or recovery.counts(drift)!=wal_receipt['counts']:raise RuntimeError('WAL-only negative criterion changed')
+   if not Path(str(drift)+'-wal').exists():raise RuntimeError('WAL evidence missing')
+  finally:
+   recovery.os.unlink=original_unlink
+   for changed in holders:changed.close()
+  controls.append('same-count-WAL-only-published-drift')
+ controls.append('live-WAL-committed-state-recovery')
+ print(json.dumps({'status':'PASS','publishedReadbackControls':controls,'providerRestoration':'NOT_RUN','privateValuesPrinted':False}))

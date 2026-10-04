@@ -1,0 +1,43 @@
+{
+  "basis": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+  "originalRecoveryBytes": 4486,
+  "originalRecoverySHA256": "64b3f43bdbeb03ef5bbef559126b3e02a05cfe501024ca811644e0e5e40e7350",
+  "status": "PROVISIONAL_LOCAL_FIX_PENDING_INDEPENDENT_REVIEW",
+  "sourcePaths": [
+    "cloud/cake-id-auth/deployment/recovery/recovery.py",
+    "cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+    "cloud/cake-id-auth/deployment/recovery/README.md"
+  ],
+  "tests": {
+    "command": "CAKE_RECOVERY_MIGRATIONS=/workspace/team-c-c4-recovery-provisional/cloud/cake-id-auth/migrations python3 -B cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+    "originalControls": 10,
+    "newControls": 4,
+    "implementerExit": 0,
+    "providerRestoration": "NOT_RUN"
+  },
+  "failurePreservation": "Original post-publication same-count FALSE_SUCCESS retained. Intermediate sidecar check refused valid WAL backup because readback created its own sidecars; original failure log retained. Final immutable checks apply only to receipt-matching generated sealed image, never to live source online backup.",
+  "scope": "Private local canonical35 SQLite backup/restore only. No hosted/D1 restore/session/ACL lease/full-platform acceptance.",
+  "publicOutputContainsPrivateValues": false,
+  "originalRegression": {
+    "command": "python3 -B docs/releases/sol-happy-20261003/resume-20261004/c4-recovery-readback/original_readback_regression.py REPO",
+    "exitCode": 1,
+    "preservedFalseSuccesses": 2
+  },
+  "filePins": [
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/recovery.py",
+      "bytes": 6152,
+      "sha256": "9834e944783d863aaafca81f4cb380b412b4110c0e10f52d7bf889ed9c785a95"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/test_recovery.py",
+      "bytes": 9707,
+      "sha256": "b7a04830f74c8cdf860c9faae3177baa1ae627e33495b93a06bc9c8c34ab15c1"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/recovery/README.md",
+      "bytes": 3401,
+      "sha256": "8841c740968548a52f8d9b909e06cb55b0560297e282a51777a4b2a736b34ef8"
+    }
+  ]
+}
