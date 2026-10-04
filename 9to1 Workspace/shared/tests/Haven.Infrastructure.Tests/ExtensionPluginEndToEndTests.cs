@@ -287,7 +287,13 @@ public sealed class ExtensionPluginEndToEndTests
 
         await manager.AddSourceAsync(source, CancellationToken.None);
         var candidate = Assert.Single(await manager.RefreshAsync(source.Id, CancellationToken.None));
-        var installed = await manager.InstallAsync(candidate, CancellationToken.None);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            manager.InstallAsync(candidate, CancellationToken.None));
+        Assert.Empty(await extensionRepository.GetInstalledAsync(CancellationToken.None));
+        var installed = await manager.InstallAsync(candidate, RequiredPermissions, CancellationToken.None);
+        Assert.Equal(RequiredPermissions, installed.GrantedPermissions);
+        await manager.SetGrantedPermissionsAsync(installed.Id, ExtensionPermission.None, CancellationToken.None);
+        installed = Assert.Single(await extensionRepository.GetInstalledAsync(CancellationToken.None));
         Assert.False(installed.IsEnabled);
         Assert.Equal(ExtensionPermission.None, installed.GrantedPermissions);
         await manager.SetGrantedPermissionsAsync(installed.Id, RequiredPermissions, CancellationToken.None);
