@@ -21,9 +21,10 @@ if ($output.StartsWith($repo + [IO.Path]::DirectorySeparatorChar, [StringCompari
 [void][IO.Directory]::CreateDirectory($output)
 $result = [ordered]@{
     schemaVersion = 1; target = $Target; sourceBasis = $catalog.sourceBasis
+    nativeSourceProposals = $catalog.nativeSourceProposals
     generatedAtUtc = [DateTimeOffset]::UtcNow.ToString('o')
     status = 'NOT_RUN'; stage = 'preflight'; package = $null; files = @()
-    commands = @(); extractionVerified = $false; launch = $null
+    commands = @(); nativeControls = $null; extractionVerified = $false; launch = $null
     acceptanceVerified = $false; fullAppAcceptance = 'NOT_RUN'
     homeBootstrapAndCompatibility = 'NOT_RUN'; pcDelivery = 'NOT_RUN'
     qualification = $entry.qualification
@@ -33,17 +34,37 @@ $result = [ordered]@{
 $probe = $null
 $exitCode = 1
 
-function Write-Result {
-    $result | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'result.json') -Encoding utf8
+function Write-Result([switch]$EmitPublicRunnerObservation) {
+    $json = $result | ConvertTo-Json -Depth 12
+    $json | Set-Content -LiteralPath (Join-Path $output 'result.json') -Encoding utf8
+    if ($EmitPublicRunnerObservation) {
+        # This probe supplies no accounts, keys or secrets to the executable.
+        # Keep its original result retrievable even when package downloads fail.
+        Write-Host '::group::Actual public synthetic Windows probe result (unaccepted)'
+        Write-Host $json
+        foreach ($name in @('launch.stdout.log', 'launch.stderr.log')) {
+            $path = Join-Path $output $name
+            if (Test-Path -LiteralPath $path -PathType Leaf) {
+                $body = Get-Content -Raw -LiteralPath $path
+                if ($null -eq $body) { $body = '' }
+                Write-Host $name
+                if ($body.Length -gt 16384) {
+                    Write-Host $body.Substring(0, 16384)
+                    Write-Host 'Observation excerpt truncated at 16384 characters; original retained in the compact artifact.'
+                } else { Write-Host $body }
+            }
+        }
+        Write-Host '::endgroup::'
+    }
 }
 
-function Invoke-DotNet([string]$Name, [string[]]$Arguments) {
+function Invoke-DotNet([string]$Name, [string[]]$Arguments, [switch]$RetainFailure) {
     $log = Join-Path $output ($Name + '.log')
     & dotnet @Arguments 2>&1 | Tee-Object -FilePath $log | Out-Host
     $code = $LASTEXITCODE
     $result.commands += [ordered]@{ name = $Name; argv = $Arguments; exitCode = $code; log = [IO.Path]::GetFileName($log) }
     Write-Result
-    if ($code -ne 0) { throw "$Name failed with exit code $code." }
+    if ($code -ne 0 -and -not $RetainFailure) { throw "$Name failed with exit code $code." }
 }
 
 try {
@@ -63,6 +84,10 @@ try {
     foreach ($path in $changed) {
         if ($catalog.proposalPaths -cnotcontains $path) { throw "Undeclared source change: $path" }
     }
+    foreach ($proposal in @($catalog.nativeSourceProposals)) {
+        & git -C $repo merge-base --is-ancestor $proposal.appliedProposalCommit HEAD
+        if ($LASTEXITCODE -ne 0) { throw 'Reviewed provisional native-source proposal is outside this candidate lineage.' }
+    }
     foreach ($pin in $catalog.sourcePins) {
         $actual = (Get-FileHash -LiteralPath (Join-Path $repo $pin.path) -Algorithm SHA256).Hash.ToLowerInvariant()
         if ($actual -cne $pin.sha256) { throw "Source pin mismatch: $($pin.path)" }
@@ -75,6 +100,41 @@ try {
     $tasks = Join-Path $repo 'framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/bin/Release/netstandard2.0/CakeOS.Cui.Build.Tasks.dll'
     if (-not (Test-Path -LiteralPath $tasks -PathType Leaf)) { throw 'Original CUI build-task assembly is missing.' }
     $result.cuiBuildTasksSha256 = (Get-FileHash -LiteralPath $tasks -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($entry.PSObject.Properties.Name -ccontains 'nativeControls') {
+        $result.stage = 'native-controls'
+        $control = $entry.nativeControls
+        $arguments = @(
+            'test', (Join-Path $repo $control.project), '-c', 'Release', '-f', $control.framework,
+            "-p:CuiBuildTasksLocation=$tasks", '--nologo',
+            '--logger', 'trx;LogFileName=native-controls.trx', '--results-directory', $output,
+            '--blame-hang-timeout', '2m', '--blame-hang-dump-type', 'none'
+        )
+        if ($null -ne $control.filter) { $arguments += @('--filter', $control.filter) }
+        Invoke-DotNet 'native-controls-release' $arguments -RetainFailure
+        $result.nativeControls = [ordered]@{
+            project = $control.project; scope = $control.scope
+            exitCode = $result.commands[-1].exitCode; passed = $false
+            counters = $null; failure = $null
+        }
+        try {
+            $trxPath = Join-Path $output 'native-controls.trx'
+            [xml]$trx = Get-Content -Raw -LiteralPath $trxPath
+            $counters = $trx.TestRun.ResultSummary.Counters
+            $result.nativeControls.counters = [ordered]@{
+                total = [int]$counters.total; executed = [int]$counters.executed
+                passed = [int]$counters.passed; failed = [int]$counters.failed
+            }
+            if ($result.nativeControls.exitCode -ne 0) { throw 'The original native controls returned failure; original test results remain retained.' }
+            if ([int]$counters.total -lt [int]$control.minimumTests -or [int]$counters.executed -ne [int]$counters.total -or [int]$counters.passed -ne [int]$counters.total) {
+                throw 'The declared native controls did not all execute and pass; no empty or skipped test acceptance inferred.'
+            }
+            $result.nativeControls.passed = $true
+        }
+        catch { $result.nativeControls.failure = $_.Exception.Message }
+        # Keep the real package/window attempt useful even when a normal native
+        # control exposes a retained dependency, renderer or functional failure.
+        Write-Result
+    }
     $result.stage = 'publish'
     $publish = Join-Path $output 'publish'
     Invoke-DotNet 'publish-release-win-x64' @(
@@ -162,6 +222,10 @@ try {
     if ($launch.exitCode -ne 0) { throw 'Executable exited with failure.' }
     $result.status = 'PACKAGE_EXTRACTION_AND_WINDOW_PROBE_PASS_UNACCEPTED'
     $exitCode = 0
+    if ($null -ne $result.nativeControls -and -not $result.nativeControls.passed) {
+        $result.status = 'PACKAGE_EXTRACTION_AND_WINDOW_PROBE_PASS_NATIVE_CONTROLS_FAILED_UNACCEPTED'
+        $exitCode = 1
+    }
 }
 catch {
     $result.status = 'FAILED_OR_BLOCKED_UNACCEPTED'
@@ -180,6 +244,6 @@ finally {
         }
         $probe.Dispose()
     }
-    Write-Result
+    Write-Result -EmitPublicRunnerObservation
 }
 exit $exitCode

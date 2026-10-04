@@ -2,13 +2,22 @@
   "schemaVersion": 1,
   "sourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
   "nativeNormalBasis": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
-  "sourceAdoption": "PROVISIONAL_UNACCEPTED_EXACT_OWNER_DELIVERY",
+  "sourceAdoption": "PROVISIONAL_UNACCEPTED_EXACT_OWNER_DELIVERY_PLUS_REVIEWED_BOARDS_PRESENT_STUDIO_PROPOSALS",
   "rid": "win-x64",
   "proposalPaths": [
     ".github/workflows/team-c-windows-package-probe.yml",
     ".github/scripts/windows-package-probe.ps1",
     ".github/validation/windows-package-probe.json",
-    ".github/validation/windows-package-owner-request.json"
+    ".github/validation/windows-package-owner-request.json",
+    "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+    "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+    "eng/release-validation/boards-startup/Program.cs",
+    "eng/release-validation/boards-startup/README.md",
+    "9to1 Workspace/Present/PresentApplication.cs",
+    "9to1 Workspace/Present/Tests/PresentThemeBootstrapTests.cs",
+    "9to1 Workspace/Present/Tests/TestAppBuilder.cs",
+    "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeWindow.cs",
+    "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs"
   ],
   "sourcePins": [
     {
@@ -94,6 +103,78 @@
       "bytes": 5398,
       "sha256": "b2c59a97af4e1faa5e92fd327d56caef5b240d051f88523e620885446b51d01d",
       "gitBlob": "c50f0172933c1c0a75fb6068d77e93a0bb08e639"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "bytes": 41060,
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145",
+      "gitBlob": "5068f35d120c528c90671804f34b9f2a61075067"
+    },
+    {
+      "path": "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+      "bytes": 835,
+      "sha256": "5c516cf8d8a197823bae8213ab3676b445b4a8096f614019969af8c446cf0dba",
+      "gitBlob": "b9a77117d08bcb8bcac41fd46ce5d5c1c53adff7"
+    },
+    {
+      "path": "eng/release-validation/boards-startup/Program.cs",
+      "bytes": 11140,
+      "sha256": "ade449b48deec78348591c1080452574e46fd23b453f450c9f5780ffccb13e03",
+      "gitBlob": "c0fd2b7e6173b8029d92e5379c26b03702410fdd"
+    },
+    {
+      "path": "eng/release-validation/boards-startup/README.md",
+      "bytes": 2609,
+      "sha256": "9d60a9e406a43c8b3179e67e8544ab9e893272fb88b29c397ee4d3e1f50a0053",
+      "gitBlob": "3e165a7531d1fc23174ebfddc43e491d09c161d0"
+    },
+    {
+      "path": "9to1 Workspace/Present/PresentApplication.cs",
+      "bytes": 2043,
+      "sha256": "3fbaa1362401b866a8120e2809c1570d64438570a2716561cc1224a6cbd56c09",
+      "gitBlob": "8c883b1d3c5628597bf55570a454fe505b4b80b5"
+    },
+    {
+      "path": "9to1 Workspace/Present/Tests/PresentThemeBootstrapTests.cs",
+      "bytes": 5950,
+      "sha256": "800f809d3fcde9d36d8e88824794a0dc852fb6c8de015f44f50efc28318707a4",
+      "gitBlob": "cb1c4603fa8aadaa415ed6f4cc45d354e4464ec0"
+    },
+    {
+      "path": "9to1 Workspace/Present/Tests/TestAppBuilder.cs",
+      "bytes": 479,
+      "sha256": "c5f2b22249b501edddb03b40d4a89692e69af61f613453df292a02c1ede51080",
+      "gitBlob": "69afa9c2be8c0b16524fe8204fd51508da1810eb"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeWindow.cs",
+      "bytes": 15374,
+      "sha256": "fc0bc6f5d49e75d46f8e3400deef41cef9ad195adeab82337dcfc0ec2a4398ba",
+      "gitBlob": "06ec540eb78bc4490b8cfc9acc86e849ebe9ebe6"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs",
+      "bytes": 11482,
+      "sha256": "fee818109f0d51153cdc0afbd5536ad93255208273c2c7a0a2ec05345341cea2",
+      "gitBlob": "2a8d977a9d24df4fc7213357556de39ee67c3401"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app.tests/CakeOS.Apps.Boards.App.Tests.csproj",
+      "bytes": 919,
+      "sha256": "01a77cfd5520389c7f61cfdfec84264428ea84533dffff8af05970c17587c5b1",
+      "gitBlob": "475c66c9bd05c35129164e8ba312bdc3820f9517"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
+      "bytes": 694,
+      "sha256": "a73ac644a86826253e45002304298c828ddfb382b927141ac89ee3522bfed742",
+      "gitBlob": "30036112e20e57646f0f4a13de304ac8655a5156"
+    },
+    {
+      "path": "9to1 Workspace/Present/Tests/HavenOS.Present.Tests.csproj",
+      "bytes": 955,
+      "sha256": "8fe73ae229e3690d767df59101db3a0ee3ba87dd0f70c60063d10721b891231d",
+      "gitBlob": "73087fc6d3534f1c2e40df95f9c5d84cfd459f4d"
     }
   ],
   "targets": [
@@ -129,7 +210,14 @@
         "hostpolicy.dll",
         "Boards.cui"
       ],
-      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied.",
+      "nativeControls": {
+        "project": "9to1 Workspace/Boards/app.tests/CakeOS.Apps.Boards.App.Tests.csproj",
+        "framework": "net10.0-windows",
+        "filter": null,
+        "minimumTests": 9,
+        "scope": "All maintained normal Boards App.Tests, including actual Windows STA/native UI controls."
+      }
     },
     {
       "key": "canvas",
@@ -161,7 +249,14 @@
         "hostfxr.dll",
         "hostpolicy.dll"
       ],
-      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied.",
+      "nativeControls": {
+        "project": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
+        "framework": "net10.0",
+        "filter": "FullyQualifiedName~StudioNativeHostTests",
+        "minimumTests": 3,
+        "scope": "Original native configuration/permission/avatar-import controls plus actual off-UI owned Den disposal; no decoder substitute or import waiver."
+      }
     },
     {
       "key": "present",
@@ -177,7 +272,14 @@
         "hostfxr.dll",
         "hostpolicy.dll"
       ],
-      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied."
+      "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied.",
+      "nativeControls": {
+        "project": "9to1 Workspace/Present/Tests/HavenOS.Present.Tests.csproj",
+        "framework": "net10.0",
+        "filter": null,
+        "minimumTests": 13,
+        "scope": "All maintained normal Present tests, including actual Skia rendering in four canonical appearances and two widths."
+      }
     },
     {
       "key": "picture",
@@ -212,5 +314,132 @@
       "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied. Existing legacy AXAML/HUI shell is not the canonical all-CUI all-app delivery or 29 accepted apps."
     }
   ],
-  "qualification": "Seven existing graphical entry points, including one legacy dependency host; not the complete 29 product package inventory. Build/package/launch probes preserve unmet Home, trust, donor and acceptance requirements. No native body edits, bypass properties, signing keys or alternate services."
+  "qualification": "Seven original graphical entrypoints and 29 canonical product groups remain visible. This successor executes only affected Boards/Present/Studio against eec plus exact isolated source proposals, not the unchanged owner graph. Original run37203799923 and Home successor37205981853 remain retained. No accepted-head, owner adoption, signing, Home ABI, no-SDK clean install, PC delivery or full-app acceptance claim.",
+  "nativeSourceProposals": [
+    {
+      "productGroup": "Boards",
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+      "originalSha256": "0c42bb60ad89b6bab827ef39420bcc33766a63171efca34fb94d7b94ff874de7",
+      "originalGitBlob": "5d065c22ac7a71396d89405e6dfb8faa6472ccbc",
+      "provisionalSha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145",
+      "provisionalGitBlob": "5068f35d120c528c90671804f34b9f2a61075067",
+      "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "Boards",
+      "path": "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+      "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+      "originalSha256": null,
+      "originalGitBlob": null,
+      "provisionalSha256": "5c516cf8d8a197823bae8213ab3676b445b4a8096f614019969af8c446cf0dba",
+      "provisionalGitBlob": "b9a77117d08bcb8bcac41fd46ce5d5c1c53adff7",
+      "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "Boards",
+      "path": "eng/release-validation/boards-startup/Program.cs",
+      "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+      "originalSha256": null,
+      "originalGitBlob": null,
+      "provisionalSha256": "ade449b48deec78348591c1080452574e46fd23b453f450c9f5780ffccb13e03",
+      "provisionalGitBlob": "c0fd2b7e6173b8029d92e5379c26b03702410fdd",
+      "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "Boards",
+      "path": "eng/release-validation/boards-startup/README.md",
+      "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+      "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+      "originalSha256": null,
+      "originalGitBlob": null,
+      "provisionalSha256": "9d60a9e406a43c8b3179e67e8544ab9e893272fb88b29c397ee4d3e1f50a0053",
+      "provisionalGitBlob": "3e165a7531d1fc23174ebfddc43e491d09c161d0",
+      "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "Present",
+      "path": "9to1 Workspace/Present/PresentApplication.cs",
+      "reviewedProposalCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+      "appliedProposalCommit": "b0eb0c9d75f8702911f022e515d295b9b4cc1deb",
+      "originalSha256": "97cdc60168d9dfbfe563f63988153edb3a92ce59715cf5c0de0ff9c4aa7786cc",
+      "originalGitBlob": "8b168e23b5afbd89f9c4e95fcb7f41145b5b5667",
+      "provisionalSha256": "3fbaa1362401b866a8120e2809c1570d64438570a2716561cc1224a6cbd56c09",
+      "provisionalGitBlob": "8c883b1d3c5628597bf55570a454fe505b4b80b5",
+      "change": "Include existing canonical native semantic theme; preserve theme/accent/font selection; test actual bundled glyph and real four-appearance/two-width render frames.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "Present",
+      "path": "9to1 Workspace/Present/Tests/PresentThemeBootstrapTests.cs",
+      "reviewedProposalCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+      "appliedProposalCommit": "b0eb0c9d75f8702911f022e515d295b9b4cc1deb",
+      "originalSha256": null,
+      "originalGitBlob": null,
+      "provisionalSha256": "800f809d3fcde9d36d8e88824794a0dc852fb6c8de015f44f50efc28318707a4",
+      "provisionalGitBlob": "cb1c4603fa8aadaa415ed6f4cc45d354e4464ec0",
+      "change": "Include existing canonical native semantic theme; preserve theme/accent/font selection; test actual bundled glyph and real four-appearance/two-width render frames.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "Present",
+      "path": "9to1 Workspace/Present/Tests/TestAppBuilder.cs",
+      "reviewedProposalCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+      "appliedProposalCommit": "b0eb0c9d75f8702911f022e515d295b9b4cc1deb",
+      "originalSha256": "0ee1856a4e908fbb15ce043805efa18a194791250f8c3d00241ceecf012b676f",
+      "originalGitBlob": "eeb2e570445bc27bb92255a2f2d4650e80dd5f91",
+      "provisionalSha256": "c5f2b22249b501edddb03b40d4a89692e69af61f613453df292a02c1ede51080",
+      "provisionalGitBlob": "69afa9c2be8c0b16524fe8204fd51508da1810eb",
+      "change": "Include existing canonical native semantic theme; preserve theme/accent/font selection; test actual bundled glyph and real four-appearance/two-width render frames.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "AI Studio",
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeWindow.cs",
+      "reviewedProposalCommit": "a0be9e297f457b7576568b7f1a11b1cefca46e9f",
+      "appliedProposalCommit": "05ed3ec094d9d7be069e837896b5ed0c81089a7e",
+      "originalSha256": "dd832f6a21680219e4af08c5217382592828ebdd9220a3b3671352af31ba541f",
+      "originalGitBlob": "4a9b4b5347dddf3ff880b830e7e8ca97f47bb4ef",
+      "provisionalSha256": "fc0bc6f5d49e75d46f8e3400deef41cef9ad195adeab82337dcfc0ec2a4398ba",
+      "provisionalGitBlob": "06ec540eb78bc4490b8cfc9acc86e849ebe9ebe6",
+      "change": "Marshal native editor detachment/host disposal and later model reset to existing UI thread; retain preview/provider/lifetime ordering; actual background Den-disposal control.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    },
+    {
+      "productGroup": "AI Studio",
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs",
+      "reviewedProposalCommit": "a0be9e297f457b7576568b7f1a11b1cefca46e9f",
+      "appliedProposalCommit": "05ed3ec094d9d7be069e837896b5ed0c81089a7e",
+      "originalSha256": "4121d6213bd0c4260698fcfba1b091c0f7b3524b0fda655d38b65dd08b132e9a",
+      "originalGitBlob": "eec6342f44bab7c6e2f884d14ff7e0e110543e3b",
+      "provisionalSha256": "fee818109f0d51153cdc0afbd5536ad93255208273c2c7a0a2ec05345341cea2",
+      "provisionalGitBlob": "2a8d977a9d24df4fc7213357556de39ee67c3401",
+      "change": "Marshal native editor detachment/host disposal and later model reset to existing UI thread; retain preview/provider/lifetime ordering; actual background Den-disposal control.",
+      "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+    }
+  ],
+  "originalRuns": [
+    {
+      "runId": 37203799923,
+      "workflowCommit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+      "scope": "All seven original GUI package/window observations; original failures retained."
+    },
+    {
+      "runId": 37205981853,
+      "workflowCommit": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+      "scope": "Home import-only source compile/package/extraction/window proof; forced cleanup not qualified as service shutdown; intentional shared Core lifetime preserved."
+    }
+  ],
+  "globalReleaseReference": {
+    "pullRequest": 127,
+    "sourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "qualification": "Root global draft release evidence is separate from this exact isolated receiving native source graph; no automatic source adoption."
+  }
 }
