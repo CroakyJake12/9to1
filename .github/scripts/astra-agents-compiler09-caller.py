@@ -191,7 +191,7 @@ if __name__=='__main__':
  out.mkdir(mode=0o700,parents=True)
  records=out/'original-session';records.mkdir(mode=0o700)
  # Keep the original conservative false marker before the guarded child can exist.
- marker={'expectedManagedLaunch':True,'drained':False,'classification':'Original isolated compiler child, never a test/native pass'}
+ marker={'expectedManagedLaunch':True,'drained':False}
  handle=None;primary=None;cleanup=[]
  try:
   handle=(records/'expected-managed-launch.json').open('xb')

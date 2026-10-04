@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "f09cfcd0d490e99db0abd6849129a69cf405aa7b",
+  "baselineCommit": "78d63bf31af259aca6708d4efb87aa9cff903935",
   "programTree": "a1495094b0e463f0bfdeb591d6faf4a85c940f3f",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
@@ -22,9 +22,9 @@
     {
       "path": ".github/scripts/astra-agents-compiler09-caller.py",
       "mode": "100644",
-      "object": "bb06decd7d9b892059aad8da89bbba73f23865be",
-      "bytes": 13959,
-      "sha256": "89771fc6f23bce189d55142b95912c25fdfe8df14ad17dd73d8086d8eb1665e5"
+      "object": "dd41751d7dd87cafcc23981232eba0f20efcee6e",
+      "bytes": 13881,
+      "sha256": "ea112d95b491b557dad796048db54a5bb5742b75c7c2dba699c796ad4d00434c"
     },
     {
       "path": ".github/scripts/astra-agents-compiler09-original.py",
@@ -218,9 +218,9 @@
     {
       "path": ".github/validation/astra-agents-compiler09-sources.json",
       "mode": "100644",
-      "object": "3d04aa2b974d30a202c5b7712da0326267fa80fa",
+      "object": "cee821e90a221d6361dc196d87b64bd6ac5124fe",
       "bytes": 115830,
-      "sha256": "87150dedfb25bc862a61d3c074c0aaf6786785e52cf387111341d4a3da7d5fdb"
+      "sha256": "7eae8002b3b1fb6aa3bdd62afedd85d1692ca907781cc058f58c39b133c617ee"
     },
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
@@ -67182,6 +67182,11 @@
       "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/manifest.json",
       "bytes": 27085,
       "sha256": "089e85829a70ad72833b07c40b63c42daa9da4c0a639de59c7096e2dcb2e6506"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source02-original-marker-utf8/manifest.json",
+      "bytes": 32050,
+      "sha256": "29829a9160f09691eb2d73c21672b75e5fb1167e687557cec14016bba3666f7f"
     }
   ],
   "sharedCakeIdContract": null
