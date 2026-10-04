@@ -5,8 +5,21 @@ using NineToOne.Dulche.Den;
 namespace HavenOS.AIStudio;
 
 /// <summary>Authenticated, bounded presentation frames. A decoder session never grants ongoing asset access.</summary>
-public sealed class AgentAvatarPreview(DenAgentPresentationAssets assets) : IAsyncDisposable
+public sealed class AgentAvatarPreview : IAsyncDisposable
 {
+    private readonly DenAgentPresentationAssets assets;
+    private readonly IPictureSharedRasterDecoder _rasterDecoder;
+
+    public AgentAvatarPreview(DenAgentPresentationAssets assets)
+        : this(assets, new PictureGlycinSharedRasterProvider()) { }
+
+    public AgentAvatarPreview(DenAgentPresentationAssets assets, IPictureSharedRasterDecoder rasterDecoder)
+    {
+        ArgumentNullException.ThrowIfNull(assets);
+        ArgumentNullException.ThrowIfNull(rasterDecoder);
+        this.assets = assets;
+        _rasterDecoder = rasterDecoder;
+    }
     private readonly object _sync = new();
     private long _generation;
     private Lease? _active;
@@ -45,7 +58,7 @@ public sealed class AgentAvatarPreview(DenAgentPresentationAssets assets) : IAsy
         try
         {
             await assets.ValidateAsync(namespaceId, presentation.AgentId, presentation.DefinitionRevision, acquired, cancellationToken).ConfigureAwait(false);
-            var decoder = await Task.Run(() => new PictureGlycinSharedRasterDecoder().OpenFrames(acquired.Content, loopAnimation, cancellationToken), cancellationToken).ConfigureAwait(false);
+            var decoder = await Task.Run(() => _rasterDecoder.OpenFrames(acquired.Content, loopAnimation, cancellationToken), cancellationToken).ConfigureAwait(false);
             owned = new(namespaceId, presentation, acquired, decoder);
             var decoded = await ReadFrameAsync(owned, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidDataException("The avatar asset contains no frame.");
@@ -132,12 +145,12 @@ public sealed class AgentAvatarPreview(DenAgentPresentationAssets assets) : IAsy
     }
 
     private sealed class Lease(string namespaceId, AgentPresentationFrame presentation, AgentPresentationAssetBytes bytes,
-        PictureGlycinSharedRasterDecoder.FrameSession decoder) : IAsyncDisposable
+        IPictureSharedRasterFrameSession decoder) : IAsyncDisposable
     {
         public string NamespaceId { get; } = namespaceId;
         public AgentPresentationFrame Presentation { get; } = presentation;
         public AgentPresentationAssetBytes Bytes { get; } = bytes;
-        public PictureGlycinSharedRasterDecoder.FrameSession Decoder { get; } = decoder;
+        public IPictureSharedRasterFrameSession Decoder { get; } = decoder;
         public SemaphoreSlim Gate { get; } = new(1, 1);
         private readonly object _disposalSync = new();
         private Task? _disposal;
@@ -153,8 +166,9 @@ public sealed class AgentAvatarPreview(DenAgentPresentationAssets assets) : IAsy
         }
         private async Task DisposeCoreAsync()
         {
-            // Interrupt the genuine donor before waiting for an outstanding frame's
-            // owner gate. Waiting for that gate first would prevent native cancellation.
+            // The selected provider closes the same original decoder. Glycin can
+            // interrupt its donor; Skia joins its synchronous call without claiming
+            // interruption. Keep that close off the UI and before the owner gate.
             try { await Task.Run(Decoder.Dispose).ConfigureAwait(false); }
             finally
             {

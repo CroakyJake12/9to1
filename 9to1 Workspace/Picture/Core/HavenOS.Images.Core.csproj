@@ -22,5 +22,6 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="TagLibSharp" VersionOverride="2.3.0" />
+    <PackageReference Include="SkiaSharp" VersionOverride="3.119.3-preview.1.1" />
   </ItemGroup>
 </Project>

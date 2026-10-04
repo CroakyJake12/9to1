@@ -17,6 +17,7 @@ namespace HavenOS.AIStudio;
 public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
 {
     private readonly IServiceProvider _services;
+    private readonly IPictureSharedRasterDecoder _rasterDecoder;
     private readonly StudioDenLifetime _den;
     private readonly CuiViewModel _model = new();
     private readonly CuiSceneHost _shell;
@@ -33,7 +34,12 @@ public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
     public Task Initialization { get; private set; } = Task.CompletedTask;
 
     public StudioNativeWindow(IServiceProvider services)
+        : this(services, new PictureGlycinSharedRasterProvider()) { }
+
+    public StudioNativeWindow(IServiceProvider services, IPictureSharedRasterDecoder rasterDecoder)
     {
+        ArgumentNullException.ThrowIfNull(rasterDecoder);
+        _rasterDecoder = rasterDecoder;
         _services = services; _den = Get<StudioDenLifetime>();
         Title = "AI Studio"; Width = 1100; Height = 850;
         _approvals = new(Get<HomeCoreRuntime>(), Get<HomeLocalProfileIdentity>(), Get<HomePermissionTrustService>());
@@ -152,7 +158,7 @@ public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
         await RetireEditorAsync(ct);
         var session = await _den.OpenBoundSessionAsync(Get<IResourceStoreOwnershipReceiptAuthority>(), ct);
         var assets = new DenAgentPresentationAssets(session.Den);
-        var editor = new AgentAvatarEditor(new AgentPresentationService(session.Den, assets), assets, RetireWorkspaceAsync);
+        var editor = new AgentAvatarEditor(new AgentPresentationService(session.Den, assets), assets, RetireWorkspaceAsync, _rasterDecoder);
         await editor.OpenAsync("personal", id, ct);
         _session = session; _workspaceActor = session.Actor; _editor = editor;
         var scene = StudioNativeScene.Create(editor.Bindings, editor, new SessionReadiness(this), editor.Preview);
@@ -200,7 +206,7 @@ public sealed class StudioNativeWindow : Window, ICuiActionDispatcher
                 bytes = output.ToArray();
             }
             finally { Array.Clear(buffer); if (output.TryGetBuffer(out var owned)) Array.Clear(owned.Array!, owned.Offset, owned.Count); }
-            var mime = await Task.Run(() => { using var decoder = new PictureGlycinSharedRasterDecoder().OpenFrames(bytes, false, ct); return decoder.MimeType; }, ct);
+            var mime = await Task.Run(() => { using var decoder = _rasterDecoder.OpenFrames(bytes, false, ct); return decoder.MimeType; }, ct);
             await RequireSessionAsync(ct);
             if (!ReferenceEquals(_editor, editor) || editor.CurrentAgentIdentity != identity)
                 throw new InvalidOperationException("The Agent selection changed while choosing its avatar image.");

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
 using NineToOne.Dulche.Den;
+using HavenOS.Images;
 using Xunit;
 
 namespace HavenOS.AIStudio.Tests;
@@ -117,7 +118,7 @@ public sealed class AgentAvatarAnimationTests
                 var assets = new DenAgentPresentationAssets(den); var service = new AgentPresentationService(den, assets);
                 await service.SetAsync("personal", agent.Id, agent.Revision,
                     new(1, AgentIconPresentation.Animated, attachment.Id, "Animated avatar", "idle", [new("idle", "Idle", attachment.Id, loop)], [], []), "presentation");
-                var editor = new AgentAvatarEditor(service, assets); await editor.OpenAsync("personal", agent.Id);
+                var editor = new AgentAvatarEditor(service, assets, null, PictureSharedRasterProviders.ForCurrentPlatform()); await editor.OpenAsync("personal", agent.Id);
                 return new(root, store, den, policy, editor);
             }
             catch { await store.DisposeAsync(); Directory.Delete(root, true); throw; }

@@ -1,6 +1,7 @@
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using NineToOne.Dulche.Den;
+using HavenOS.Images;
 
 namespace HavenOS.AIStudio;
 
@@ -25,10 +26,15 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
     public AgentAvatarPreview? Preview { get; }
 
     public AgentAvatarEditor(AgentPresentationService canonical, DenAgentPresentationAssets? assets = null, Func<CancellationToken, Task>? authorityLost = null)
+        : this(canonical, assets, authorityLost, new PictureGlycinSharedRasterProvider()) { }
+
+    public AgentAvatarEditor(AgentPresentationService canonical, DenAgentPresentationAssets? assets,
+        Func<CancellationToken, Task>? authorityLost, IPictureSharedRasterDecoder rasterDecoder)
     {
+        ArgumentNullException.ThrowIfNull(rasterDecoder);
         _canonical = canonical;
         _authorityLost = authorityLost;
-        Preview = assets is null ? null : new(assets);
+        Preview = assets is null ? null : new(assets, rasterDecoder);
         _builder = new(canonical);
         foreach (var field in new[] { "Status", "NamespaceID", "AgentID", "AgentName", "Revision", "StaticAsset", "AccessibleName", "InitialState", "StateID", "StateLabel", "StateAsset", "FromState", "ToState", "TransitionEvent", "ReactionEvent", "ReactionState", "PreviewEvent", "AvatarActivity", "PreviewAsset" })
             Bindings.Set(field, "");

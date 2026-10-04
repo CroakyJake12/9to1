@@ -7,6 +7,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Platform.Storage;
 using Haven.Application;
 using HavenOS.Home.Core;
+using HavenOS.Images;
 using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using NineToOne.Dulche.Den;
@@ -22,11 +23,21 @@ public sealed class StudioNativeHostTests
     public Task Actual_picker_import_preserves_bytes_in_owned_Den_and_native_authoring_saves_reference() => ExerciseHostAsync(true);
     [Fact]
     public Task Actual_background_Den_disposal_retires_native_editor_and_workspace_before_returning() => ExerciseHostAsync(false, true);
-    private static async Task ExerciseHostAsync(bool importAvatar, bool retireFromBackground = false)
+    [Fact]
+    public Task Actual_picker_refusal_preserves_original_Agent_and_writes_no_Den_attachment() =>
+        ExerciseHostAsync(true, unavailableAvatar: true);
+    private static async Task ExerciseHostAsync(bool importAvatar, bool retireFromBackground = false, bool unavailableAvatar = false)
     {
         var root = Path.Combine(Path.GetTempPath(), "studio-native-host-" + Guid.NewGuid().ToString("N"));
         var chosen = Path.Combine(root, "chosen"); Directory.CreateDirectory(chosen);
         var avatarBytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
+        if (unavailableAvatar)
+        {
+            var rejected = OperatingSystem.IsWindows()
+                ? Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAEUlEQVR42mP4z8DQwMDw/z8ADX4DfpfxiD8AAAAASUVORK5CYII=")
+                : avatarBytes.AsSpan(0, 6).ToArray();
+            Array.Clear(avatarBytes); avatarBytes = rejected;
+        }
         var avatarPath = Path.Combine(root, "picked-avatar.gif");
         await File.WriteAllBytesAsync(avatarPath, avatarBytes);
         try
@@ -49,7 +60,7 @@ public sealed class StudioNativeHostTests
                 services.AddSingleton<IResourceStoreOwnershipReceiptAuthority>(receipts);
                 services.AddSingleton(SelectedFolder(chosen, avatarPath));
                 await using var provider = services.BuildServiceProvider();
-                window = new StudioNativeWindow(provider); window.Show();
+                window = new StudioNativeWindow(provider, PictureSharedRasterProviders.ForCurrentPlatform()); window.Show();
                 try
                 {
                     await window.Initialization;
@@ -68,6 +79,28 @@ public sealed class StudioNativeHostTests
                     Assert.Null(agent.Presentation);
                     if (importAvatar)
                     {
+                        if (unavailableAvatar)
+                        {
+                            var originalAgent = System.Text.Json.JsonSerializer.Serialize(agent);
+                            Assert.Empty(await session.Den.ListAsync<BlobReferenceRecord>("personal"));
+                            if (OperatingSystem.IsWindows())
+                            {
+                                var refusal = await Assert.ThrowsAsync<PictureSharedRasterUnavailableException>(() =>
+                                    window.DispatchAsync("ImportAvatar", null).AsTask());
+                                Assert.Equal("image/png", refusal.DetectedMimeType);
+                                Assert.Equal(ImageMetadataAvailability.UnsupportedByReader, refusal.MetadataAvailability);
+                            }
+                            else
+                                await Assert.ThrowsAsync<IOException>(() => window.DispatchAsync("ImportAvatar", null).AsTask());
+                            Assert.Empty(await session.Den.ListAsync<BlobReferenceRecord>("personal"));
+                            Assert.Equal(originalAgent, System.Text.Json.JsonSerializer.Serialize(
+                                await session.Den.GetAsync<AgentDefinitionRecord>("personal", agent.Id)));
+                            var unchangedAsset = All(window).OfType<TextBox>().Single(item =>
+                                AutomationProperties.GetName(item) == "Static fallback asset reference");
+                            Assert.True(string.IsNullOrEmpty(unchangedAsset.Text));
+                        }
+                        else
+                        {
                         FindButton(window, "Import an avatar image into this Agent…").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                         var assetField = All(window).OfType<TextBox>().Single(item => AutomationProperties.GetName(item) == "Static fallback asset reference");
                         try { await Until(() => Task.FromResult(!string.IsNullOrEmpty(assetField.Text))); }
@@ -89,6 +122,7 @@ public sealed class StudioNativeHostTests
                         FindButton(window, "Save to Agent").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                         await Until(async () => (await session.Den.GetAsync<AgentDefinitionRecord>("personal", agent.Id))!.Presentation is not null);
                         Assert.Equal(reference.Id, (await session.Den.GetAsync<AgentDefinitionRecord>("personal", agent.Id))!.Presentation!.StaticFallbackAssetReference);
+                        }
                     }
                     Assert.False(await session.Den.AccessPolicy.IsAllowedAsync(session.Actor.ActorId, "personal", agent.Id, DenPermission.Execute));
                     if (retireFromBackground)

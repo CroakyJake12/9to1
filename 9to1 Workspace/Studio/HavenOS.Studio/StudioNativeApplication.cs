@@ -4,6 +4,7 @@ using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Infrastructure;
 using HavenOS.Home.Core;
+using HavenOS.Images;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HavenOS.AIStudio;
@@ -24,7 +25,7 @@ public sealed class StudioNativeApplication : Application
                 ct => _window?.RetireWorkspaceAsync(ct) ?? Task.CompletedTask));
             services.AddSingleton<IHomeLocalStoreEvidenceProvider>(provider => provider.GetRequiredService<StudioDenLifetime>());
             _services = services.BuildServiceProvider();
-            _window = new StudioNativeWindow(_services);
+            _window = new StudioNativeWindow(_services, PictureSharedRasterProviders.ForCurrentPlatform());
             desktop.MainWindow = _window;
             desktop.ShutdownRequested += async (_, args) =>
             {
