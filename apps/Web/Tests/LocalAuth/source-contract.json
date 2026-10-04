@@ -1,11 +1,11 @@
 {
-  "sourceBasis": "a9dc1a80499b7ddfd925ac7f816633abfb523b0e",
+  "sourceBasis": "45522d633a363586618888273e4a3cd605395521",
   "scope": "Existing current public browser broker and genuine native CUI owner/consumer contract; no authority substitution.",
   "requiredSource": [
     {
       "path": "apps/Web/Auth/browser-public-client.js",
-      "bytes": 18092,
-      "sha256": "18d7885bc847fb969a1d56dda8639106b103bd51abbfdcbc400308926d107697"
+      "bytes": 18256,
+      "sha256": "d2aa74927617e1b33b87c5637803784e8da9b14026e70d1d25386571caaf471c"
     },
     {
       "path": "apps/Web/Auth/configured-accounts.js",
@@ -14,8 +14,8 @@
     },
     {
       "path": "apps/Web/Auth/account-api-client.js",
-      "bytes": 14059,
-      "sha256": "305d81f13520617d20e42e6832a7ed2436d395fa8624de567d6dcc21cec50f72"
+      "bytes": 14223,
+      "sha256": "cede4b8df0b0664325e3f409bc714aa9aa414742d6011e119d95f47b62561219"
     },
     {
       "path": "apps/Web/Services/account-service.js",
