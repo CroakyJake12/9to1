@@ -26,6 +26,11 @@
       "sha256": "c1988eed1ea512af225a0261de86b7629175ecc331754bb7e0d832dffe8d4890"
     },
     {
+      "path": "existing-services-after-pass.json",
+      "bytes": 1896,
+      "sha256": "49df15bc90f3c72bac8d0847ee68b38a18864c69e7367cdbc74ad8560d3a2f73"
+    },
+    {
       "path": "identity-readback.json",
       "bytes": 4158,
       "sha256": "9f01bcae8fb916ad2e8e6036bf4af80e2575635da114f5eb1741b112e63a792b"

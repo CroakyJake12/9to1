@@ -1,6 +1,6 @@
 {
-  "recordedUTC": "2026-10-04T07:54:39.307635+00:00",
-  "releaseStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
+  "recordedUTC": "2026-10-04T09:03:56.949019+00:00",
+  "releaseStatus": "FULL_ACCEPTANCE_PENDING_ACTIVE_CLOUDFLARE_PASS",
   "acceptedHead": null,
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "OPEN_DRAFT",
@@ -109,31 +109,26 @@
     }
   },
   "cloudflare": {
-    "skillsLoaded": 16,
-    "cloudflareToolsExposed": 3,
-    "callableAccountTools": 1,
-    "oauthAndAccountAccess": "AUTHENTICATED_READ_VERIFIED/HTTP200/account matches selected dashboard/count1",
-    "resourceMetadataReads": {
-      "WorkersReturned": 2,
-      "D1Returned": 0,
-      "KVReturned": 0,
-      "R2BoundedListReturned": 1,
-      "allRequestsHTTP200": true
-    },
-    "readOnlyBrowserFallback": "UNAVAILABLE/MCP SSE HTTP404 after restart; no page read",
-    "evidence": "cloudflare-authenticated-read-20261004.json",
-    "independentAudit": "c6/cloudflare-account-read-20261004-audit.json",
-    "notVerified": [
-      "Write permission",
-      "CLI credentials",
-      "CAKE ID deployed issuer/source",
-      "Email/Stripe/AI service integration",
-      "Paid entitlement and separate allocation/quota",
-      "Deployed SH-12 journeys"
+    "state": "ACTUAL_AUTHORIZED_ISOLATED_WRITES_AND_READBACK_VERIFIED",
+    "accountMatch": true,
+    "plan": "Workers Paid confirmed by user; no upgrade/US$1 purchase",
+    "providerRecord": "cloudflare-provider-pass/deployment-identity.json",
+    "providerReceipts": "cloudflare-provider-pass/artifact-index.json",
+    "independentReads": [
+      "c6/cloudflare-identity-upload-readback.json",
+      "c6/cloudflare-rollback-restoration-readback.json"
     ],
-    "qualification": "Cloudflare connector authenticated account/resource metadata reads verified; no resource writes/data-content reads, billable enablement or service operability claim. R2 list completeness unverified. Historical failures preserved."
+    "schema": "cloud/cake-id-auth/deployment/evidence/actual-schema-comparison.json at repository root",
+    "notVerified": [
+      "CLI credentials",
+      "HTTPS identity/account/client/session/recovery/native signing contract",
+      "Email/Stripe/AI real service journeys",
+      "Paid application entitlement and original allocation/quota",
+      "Complete deployed SH12 journeys"
+    ],
+    "qualification": "Actual named isolated Worker/D1 creation, schema migrations, production-module upload and closed rollback/restoration verified. Provider control-plane evidence is separate from service response behavior."
   },
-  "deploymentStatus": "NOT_DEPLOYED",
+  "deploymentStatus": "ISOLATED_IDENTITY_DEPLOYED_CLOSED_HTTPS_NOT_RUN",
   "commercialStatus": "NOT_ENABLED",
   "mainMerged": false,
   "localPCDelivery": "DESTINATION_AND_ACTUAL_DELIVERY_NOT_VERIFIED",
@@ -146,7 +141,7 @@
     "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
     "Verified exact tested artifacts delivered to Jacob PC"
   ],
-  "qualification": "Local source/harness outcomes do not establish a combined accepted executable, deployment, full requirement denominator or final release acceptance. All prior failures and unissued4472/de683 cuts retained; SDK10.0.401 variance explicit.",
+  "qualification": "Actual isolated identity deployment and recovery verified; local source/harness outcomes remain bounded and source-bound. No combined accepted executable, full requirement denominator or final release acceptance. Prior failures/unissued4472/de683 cuts and SDK10.0.401 variance retained.",
   "isolatedSDK7Audit": {
     "commit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
     "path": "c6/sdk7-ae6ca7-publication-audit.json",
@@ -188,17 +183,9 @@
     }
   },
   "formsPresentSourceReview": {
-    "sourceCommit": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
-    "reviewCommit": "a57175d17da8baab3776da8a9055801cf678057c",
-    "verifiedPins": {
-      "Forms": 11,
-      "Present": 4
-    },
-    "missingFormsBodies": [
-      "apps/Web/Forms/FormsBrowserRoute.cs",
-      "apps/Web/Forms/FormsBrowserSession.cs"
-    ],
-    "qualification": "Exact both requests read/hashed; missing bodies in both declared baseline and delivered source prevent complete adapter ACK. No new approved C-owned executable contract, implementation or runtime acceptance."
+    "currentSource": "8041 delivery; c6/forms-8041-source-delivery-audit.json",
+    "state": "BOTH_CURRENT_ADAPTER_BODIES_DELIVERED_HASH_VERIFIED_AUTHORITY_OPEN",
+    "qualification": "Historical missing-body receipts retained. Current Func/IDisposable-only adapter is not approved hosted store/public-respondent/original asynchronous session authority. No runtime/adoption acceptance."
   },
   "receiverFixtureRecovery": {
     "originalRequest": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
@@ -262,5 +249,168 @@
       "status": "QUALIFIED_SOURCE_ACK_ONLY/current guarded mutation source consumed",
       "qualification": "Async original-session/revocation/disposal/lease order and read/publication suppression ports remain missing; LE07 needs paid entitlement plus allocation >10,000,000,000B and separate quota/admission ports. All12 transport procedures NOT_RUN."
     }
+  },
+  "executionStatus": "ACTIVE",
+  "historicalCloudflareReadOnly": {
+    "skillsLoaded": 16,
+    "cloudflareToolsExposed": 3,
+    "callableAccountTools": 1,
+    "oauthAndAccountAccess": "AUTHENTICATED_READ_VERIFIED/HTTP200/account matches selected dashboard/count1",
+    "resourceMetadataReads": {
+      "WorkersReturned": 2,
+      "D1Returned": 0,
+      "KVReturned": 0,
+      "R2BoundedListReturned": 1,
+      "allRequestsHTTP200": true
+    },
+    "readOnlyBrowserFallback": "UNAVAILABLE/MCP SSE HTTP404 after restart; no page read",
+    "evidence": "cloudflare-authenticated-read-20261004.json",
+    "independentAudit": "c6/cloudflare-account-read-20261004-audit.json",
+    "notVerified": [
+      "Write permission",
+      "CLI credentials",
+      "CAKE ID deployed issuer/source",
+      "Email/Stripe/AI service integration",
+      "Paid entitlement and separate allocation/quota",
+      "Deployed SH-12 journeys"
+    ],
+    "qualification": "Cloudflare connector authenticated account/resource metadata reads verified; no resource writes/data-content reads, billable enablement or service operability claim. R2 list completeness unverified. Historical failures preserved."
+  },
+  "currentCloudflarePass": {
+    "state": "ACTUAL_ISOLATED_PROVIDER_DEPLOYMENT_CLOSED_ENDPOINT",
+    "worker": "cake-id-release-validation",
+    "databaseId": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+    "versionId": "713c1695-7e21-489b-bc97-906450972cfa",
+    "deploymentId": "2f2e8251-d404-4fe4-8e5e-43dd179fd1a6",
+    "rollbackVersionId": "5f1e7db8-f098-429d-adb0-0bac1566a86a",
+    "rollbackDeploymentId": "80ee7781-9fb0-4d76-b71f-ac87be55a07c",
+    "sourceCommit": "d643d723d15ec20d70263a408b0cfefbd5be69ae",
+    "rootSourceCommit": "018e56eb72a964e240797044f9b9686d2917d6ff",
+    "metadata": {
+      "main_module": "index.js",
+      "compatibility_date": "2026-10-01",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "bindings": [
+        {
+          "name": "DB",
+          "type": "d1",
+          "database_id": "fb094287-efab-4d3c-b9d5-c588a83d6f42"
+        },
+        {
+          "name": "APP_MODE",
+          "type": "plain_text",
+          "text": "production"
+        },
+        {
+          "name": "EMAIL_CAPTURE",
+          "type": "plain_text",
+          "text": "false"
+        },
+        {
+          "name": "AUTH_BASE_URL",
+          "type": "plain_text",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev"
+        },
+        {
+          "name": "API_RESOURCE",
+          "type": "plain_text",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev"
+        },
+        {
+          "name": "ALLOWED_WEB_ORIGINS",
+          "type": "plain_text",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev"
+        },
+        {
+          "name": "LOGIN_MAX_ATTEMPTS",
+          "type": "plain_text",
+          "text": "8"
+        },
+        {
+          "name": "LOGIN_WINDOW_SECONDS",
+          "type": "plain_text",
+          "text": "900"
+        },
+        {
+          "name": "LOGIN_LOCK_SECONDS",
+          "type": "plain_text",
+          "text": "1800"
+        },
+        {
+          "name": "AUTH_SECRET",
+          "type": "secret_text"
+        },
+        {
+          "name": "LOGIN_LIMITER_KEY",
+          "type": "secret_text"
+        }
+      ],
+      "limits": {
+        "cpu_ms": 1000
+      },
+      "observability": {
+        "enabled": false
+      },
+      "logpush": false,
+      "tags": [
+        "sol-happy-isolated-validation"
+      ],
+      "annotations": {
+        "workers/message": "Reviewed isolated CAKE ID production source d643d723; index SHA256 9d859012015fd20b67500d07646fd5e09dea3d08e8b89229494907adf37e54a2; public endpoint initially disabled",
+        "workers/tag": "isolated-auth-d643d723"
+      }
+    },
+    "modules": [
+      {
+        "name": "index.js",
+        "sha256": "9d859012015fd20b67500d07646fd5e09dea3d08e8b89229494907adf37e54a2",
+        "bytes": 3109063
+      },
+      {
+        "name": "c38a9b6078aaf2c8cdfc1a4fbef6c1503335e663-auth-ui.txt",
+        "sha256": "b1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e",
+        "bytes": 39127
+      }
+    ],
+    "authorization": "User explicitly approved isolated Worker and D1 resources on existing Workers Paid plan, using included allowance for bounded tests. No US$1 payment, upgrade, AI/mail activation, production cutover or DNS change.",
+    "hostedJourneys": "NOT_RUN: environment network policy does not yet allow the Workers hostname. Public endpoint and previews remain disabled.",
+    "mail": "No EMAIL binding or sender configured; production delivery fails closed. No reserved-account/client/admin privilege bootstrap.",
+    "data": "Schema migrations succeeded; no test user or OAuth client provisioned. Independent census evidence is separate.",
+    "recovery": "Actual closed rollback and exact identity restoration both succeeded HTTP200 and GETreadback; public and preview exposure stayed disabled. Schema/data/secrets are not undone by Worker rollback.",
+    "firstUploadDeploymentId": "cd07e309-9d15-44c1-a9bd-d24e02c50c71",
+    "rollbackExerciseDeploymentId": "5fafd683-21e6-45c2-a77c-28c0ef648f37"
+  },
+  "billingHostedPreparation": {
+    "source": "0cdbf60ef384fc1cc2058dc674dd2d6ae0228dbc",
+    "evidence": "evidence/c3-billing-hosted-local/result.json",
+    "boundedUnit": 14,
+    "boundedNativeAssertions": 43,
+    "peer": "C5-billing-01c18-peer-review.json +C5-billing-preview-closure-peer-review.json",
+    "actualIntegrationUnit": "cloudflare-provider-pass/root-bounded-checks.json",
+    "deployment": "NONE; identity resource authorization does not authorize separate billing deployment",
+    "qualification": "No consumer/reconciliation/payment/checkout/entitlement authority or replacement balance."
+  },
+  "historicalFormsPresentSourceReview": {
+    "sourceCommit": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
+    "reviewCommit": "a57175d17da8baab3776da8a9055801cf678057c",
+    "verifiedPins": {
+      "Forms": 11,
+      "Present": 4
+    },
+    "missingFormsBodies": [
+      "apps/Web/Forms/FormsBrowserRoute.cs",
+      "apps/Web/Forms/FormsBrowserSession.cs"
+    ],
+    "qualification": "Exact both requests read/hashed; missing bodies in both declared baseline and delivered source prevent complete adapter ACK. No new approved C-owned executable contract, implementation or runtime acceptance."
+  },
+  "currentCanonicalSitePreparation": {
+    "source": "cc0cb0de",
+    "inputs": "cloudflare/canonical-wordpress-import-input.json",
+    "ownerRequest": "cloudflare/canonical-sites-owner-request.json +semantic/c4-canonical-hosted-composition-ports.json",
+    "audit": "c6/canonical-import-d7cf-audit.json",
+    "state": "SOURCE_CAPTURE_AND_PACKAGING_VERIFIED_CANONICAL_AUTHORITY_PARITY_UNBOUND",
+    "qualification": "Seven exact public page bodies; trusted ordinary python3 utility only, assert/-O and duplicate-ID limitations retained. No canonical identities/editable theme/full asset/runtime build/activation inferred."
   }
 }

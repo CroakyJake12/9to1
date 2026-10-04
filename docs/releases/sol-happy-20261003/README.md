@@ -1,8 +1,30 @@
-# Sol Happy preparatory source handoff — BLOCKED
+# Sol Happy source and isolated Cloudflare deployment — full release pending
 
-This branch contains reviewed hosted-service repairs and retained evidence. It
-is not an accepted release, deployed service, installed product or verified
-delivery to Jacob's PC. The combined accepted-head pointer remains null.
+This branch contains reviewed hosted-service repairs, an actual closed isolated
+CAKE ID deployment and retained evidence. Full service journeys, an accepted
+release, installed product and delivery to Jacob's PC remain unverified. The
+combined accepted-head pointer remains null; the Cloudflare pass is active.
+
+The approved new Worker and D1 database are `cake-id-release-validation`. Both
+schema migrations and the exact reviewed two-module identity upload succeeded.
+Independent reads verify schema/configuration and closed exposure. Actual rollback
+to the closed baseline and restoration to identity version `713c1695-7e21-489b-bc97-906450972cfa`
+both succeeded. Current deployment is `2f2e8251-d404-4fe4-8e5e-43dd179fd1a6`.
+[Provider receipts and limits](cloudflare-provider-pass/README.md) preserve the
+upload, schema, recovery and source/configuration identities. HTTPS journeys are
+NOT_RUN while the managed environment lacks the Worker hostname allowance.
+
+The [billing preparation](evidence/c3-billing-hosted-local/README.md) preserves the
+existing production D1 adapter. Its local native D1 cohort passed 43 assertions,
+14 Node tests pass, and actual failure controls caught and verified a correction
+to premature success reporting. Configuration explicitly disables version previews.
+No remote billing, Stripe consumer or entitlement activation is claimed.
+
+The [canonical website inputs](cloudflare/README.md) retain seven actual published
+WordPress pages. Independent fresh packaging and a tampered-HTML refusal verify
+the retained bytes. These inputs still need the actual Files/session binding,
+editable theme/editor mapping, source snapshot export and manifest/per-file hosted
+composition. Minimal wrappers must not overwrite the existing preview.
 
 ## Changes available for review
 
@@ -32,7 +54,10 @@ Service runtime/test/package/schema source was tested at
 `5073c83a`. The reviewed public OAuth fix subsequently changes only the existing
 auth `src/index.ts`; package, schema, provider/session implementation and original
 maintained assertions remain unchanged. Historical results retain their original
-source, with fresh actual-source identity results recorded separately below.
+source, with fresh actual-source identity results recorded separately below. The
+later optional production email adapter has its own maintained 222-assertion local
+regression and exact compiled artifact evidence in `cloud/cake-id-auth/deployment`.
+Older public-route cohorts are not relabelled as tests of that later source.
 Commands, identities, raw output, TRX results and SHA-256 hashes are retained in
 [final/summary.json](final/summary.json) and [final/manifest.json](final/manifest.json).
 
@@ -73,8 +98,9 @@ then `npm test` in that directory. Reserve loopback port 8798 for the local test
 program. In a restricted managed environment set writable `XDG_CONFIG_HOME`,
 `XDG_CACHE_HOME` and `WRANGLER_LOG_PATH`, and set `WRANGLER_SEND_METRICS=false`.
 The program creates isolated synthetic data and removes its ephemeral secret file.
-These commands provision no remote infrastructure. There is no verified deployed
-test URL. A loopback test URL is not a public service.
+These commands provision no remote infrastructure. The new isolated Worker is
+deployed with its endpoint closed; a working HTTPS test URL is not yet verified.
+A loopback test URL is not a public service.
 
 ## Ownership and reconciliation
 
@@ -456,10 +482,12 @@ failures. Failure cause and full native acceptance remain unresolved; no archive
 payload or test was executed here.
 
 The [Forms and Present source receipt](C5-forms-present-owner-request-review.md)
-verifies both owner requests, 11 Forms pins and all four Present pins. Two referenced
-Forms adapter bodies are absent from both the declared baseline and delivered
-commit, so their complete adapter ACK is held. No approved new hosted contract or
-runtime acceptance is supplied by these requests.
+verifies both historical owner requests, 11 Forms pins and all four Present pins.
+Two adapter bodies were absent from the stated baseline and delivery. The later
+[8041 delivery audit](c6/forms-8041-source-delivery-audit.json) verifies both complete
+current bodies and closes that source-absence gate. Hosted canonical store,
+public-respondent, original authority and asynchronous lifecycle contracts remain
+open; source delivery supplies no runtime acceptance.
 
 ## Current owner source reviews
 
@@ -480,15 +508,15 @@ All twelve Files transport procedures remain NOT_RUN. The
 [coordination triage](c1-latest-coordination-triage.md) preserves the exact A/B
 requests and separates source ACKs from runtime and release acceptance.
 
-## Cloudflare setup
+## Cloudflare connection history and current execution
 
 Cloudflare authentication works after the user's app restart. Actual connector
 `GET /accounts` returns HTTP 200 and exactly one account matching the selected
 dashboard; C6 independently repeats that read. Bounded Workers, D1, KV and R2
-metadata requests also return HTTP 200: two Workers, zero D1 databases, zero KV
+metadata requests initially returned HTTP 200: two Workers, zero D1 databases, zero KV
 namespaces and one R2 bucket returned. The R2 projection does not establish list
-completeness. No resource data content or secrets were read and no resources were
-changed. The [current connection receipt](cloudflare-authenticated-read-20261004.json)
+completeness. That read-only observation changed no resources. The
+[historical connection receipt](cloudflare-authenticated-read-20261004.json)
 and [independent account audit](c6/cloudflare-account-read-20261004-audit.json)
 preserve the scope and evidence limits.
 
@@ -497,8 +525,10 @@ account API tool. The available browser connector still returns MCP SSE HTTP 404
 on the post-restart list-tabs request, so the dashboard tab cannot be read or
 controlled here. Earlier HTTP 404/429 and zero-tool observations remain historical;
 no login-state or error-cause inference is made. Connector authentication does
-not prove CLI credentials, write permission, deployed CAKE ID identity, provider
-journeys, paid app entitlement, allocation or available quota.
+not establish CLI credentials, provider journeys, paid application entitlement,
+allocation or available quota. The subsequent explicitly approved isolated
+creation, migrations, upload and recovery exercise verify actual write access and
+deployment identity separately in the current provider receipts.
 
 The official guide and 16 official skill sources were fetched earlier. Protected
 managed-environment paths prevented global CLI registration/install. The saved
@@ -508,7 +538,8 @@ private package and the user's subsequently selected curated/app references
 remains unestablished. [cloudflare-setup.json](cloudflare-setup.json) retains the
 assembly provenance, historical discovery states and successful follow-up.
 Managed-executor bindings and functional connector authentication are separate
-observations. Actual service deployment and full release acceptance remain open.
+observations. Actual isolated closed deployment is now verified. HTTPS service
+operability and full release acceptance remain open.
 
 ## Recovery and delivery
 
@@ -516,6 +547,8 @@ Main remains `98a08827c9fbc486fe987da73f4aee8398120d31`. There has been no produ
 deployment, commercial activation, DNS cutover, WordPress retirement or main
 merge. The source history, proposal branches and evidence permit review and
 recovery. Revert an adopted bounded change through normal reviewed history;
-do not force-push shared branches. Future deployment requires retained immutable
-artifacts/configuration, current provider verification and an authorized tested
-rollback. A source PR/cloud-workspace file does not prove delivery to Jacob's PC.
+do not force-push shared branches. The separate authorized identity Worker has an
+actual recorded closed rollback version; both rollback and restoration were
+verified while public exposure stayed disabled. Worker rollback does not undo D1
+data/schema/secrets. A source PR/cloud-workspace file does not prove delivery to
+Jacob's PC.
