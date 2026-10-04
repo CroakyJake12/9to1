@@ -37,6 +37,17 @@ function Write-Result {
         throw
     }
 }
+function Apply-Final-Failure-Guard {
+    $cleanupFailed = $result.forcedCleanup -or
+        ($result.Contains('cleanupDrainFailure') -and -not [string]::IsNullOrWhiteSpace([string]$result.cleanupDrainFailure)) -or
+        ($result.Contains('cleanupFailure') -and -not [string]::IsNullOrWhiteSpace([string]$result.cleanupFailure)) -or
+        ($result.Contains('evidenceWriteFailure') -and $null -ne $result.evidenceWriteFailure)
+    if ($cleanupFailed) {
+        $result.status = 'FAILED_OR_BLOCKED_UNACCEPTED'
+        $result.finalizationFailure = $true
+        $script:exitCode = 1
+    }
+}
 function Check([bool]$Condition, [string]$Name) {
     $result.checks += [ordered]@{ name = $Name; passed = $Condition; observedAtUtc = [DateTimeOffset]::UtcNow.ToString('o') }
     Write-Result
@@ -49,7 +60,9 @@ function Wait-Observed([scriptblock]$Probe, [string]$Name, [int]$Seconds = 20) {
         if ($observed) { return $observed }
         Start-Sleep -Milliseconds 100
     } while ([DateTimeOffset]::UtcNow -lt $until)
-    throw "Timed out observing: $Name"
+    $result.observationTimeout = [ordered]@{ name = $Name; seconds = $Seconds }
+    Write-Result
+    throw 'A controlled observation deadline expired.'
 }
 function Find-InputFile([string]$Root, [string]$Name) {
     $files = @(Get-ChildItem -LiteralPath $Root -Recurse -Force)
@@ -397,7 +410,7 @@ public static class PresentPackageInput {
     $result.status = 'BOUNDED_PACKAGED_NATIVE_UI_CONTROLS_PASS_UNACCEPTED'; $result.stage = 'complete'; $exitCode = 0
 } catch {
     $result.status = 'FAILED_OR_BLOCKED_UNACCEPTED'
-    $result.failure = [ordered]@{ type = $_.Exception.GetType().FullName; message = $_.Exception.Message; stage = $result.stage; scriptLine = $_.InvocationInfo.ScriptLineNumber }
+    $result.failure = [ordered]@{ type = $_.Exception.GetType().FullName; stage = $result.stage; scriptLine = $_.InvocationInfo.ScriptLineNumber; rawExceptionText = 'WITHHELD' }
 } finally {
     if ($null -ne $process) {
         try {
@@ -410,6 +423,7 @@ public static class PresentPackageInput {
             }
         } catch { $result.cleanupFailure = $_.Exception.GetType().FullName } finally { $process.Dispose() }
     }
-    try { Write-Result } catch { $exitCode = 1; Write-Error ('Final evidence write failed; original caught failure: ' + ($result.failure | ConvertTo-Json -Compress)) -ErrorAction Continue }
+    Apply-Final-Failure-Guard
+    try { Write-Result } catch { $exitCode = 1; Apply-Final-Failure-Guard; Write-Error ('Final evidence write failed; original caught failure: ' + ($result.failure | ConvertTo-Json -Compress)) -ErrorAction Continue }
 }
 exit $exitCode
