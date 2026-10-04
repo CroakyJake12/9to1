@@ -2,6 +2,21 @@
   "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
   "files": [
     {
+      "path": "C6/independent-review.json",
+      "bytes": 1428,
+      "sha256": "4b41cfbf7ae026f592243572d8789a034df6516e375fb847bc188d99d9a9cb25"
+    },
+    {
+      "path": "C6/results/affected-mesh.trx",
+      "bytes": 28223,
+      "sha256": "8c08fcfa78bf8911f47013e143629c28ad629f29aa2a3a19c62032289cee6fe2"
+    },
+    {
+      "path": "C6/run.log",
+      "bytes": 2992,
+      "sha256": "032c95b735d875b8a5f24bc4da0ad17db7bad67bc88d43091be1611193c9404e"
+    },
+    {
       "path": "compiled-output-pins.json",
       "bytes": 1049,
       "sha256": "4bd79131fde4c84387cf562d8dcb4c1ab203e593804e726dde38bc1266d84a4d"
@@ -48,8 +63,8 @@
     },
     {
       "path": "owner-adoption-request.json",
-      "bytes": 2766,
-      "sha256": "365f87afd95fb9537dadae572806460a2f18edae3985f5ab511a1b3f8eecd322"
+      "bytes": 2864,
+      "sha256": "44459deb48ed1cff3c1675fe18ac90e25951786fe7af40b7c3e68a8f24029795"
     },
     {
       "path": "preservation-review.json",
@@ -58,8 +73,8 @@
     },
     {
       "path": "proposal.json",
-      "bytes": 1762,
-      "sha256": "8a95a3ddf66e229dd6ecbc35e1012c1026480af2a2f4cdf0f8731e4cd41be07f"
+      "bytes": 1945,
+      "sha256": "8aea5c001af77547825d4ad8af134d3833eaf06d8d941fec3dd53acfd45553d4"
     },
     {
       "path": "run-review.json",

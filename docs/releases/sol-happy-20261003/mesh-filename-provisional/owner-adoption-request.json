@@ -34,6 +34,7 @@
     "wholeNormalPass": false,
     "remainingFailures": "Preview child environment, plugin explicit permission fixture and Present empty speaker-note fixture unchanged."
   },
-  "pending": "C6 exact independent source/runtime peer review and Team A exact current owner source adoption ACK",
-  "noNewStoreSchemaPolicyOrAuthenticationBypass": true
+  "pending": "Team A exact current owning source adoption ACK. C6 exact source and independent actual normal-project store Release16/16 peer ACK is complete.",
+  "noNewStoreSchemaPolicyOrAuthenticationBypass": true,
+  "independentReview": "C6/independent-review.json"
 }

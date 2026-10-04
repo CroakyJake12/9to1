@@ -1,5 +1,5 @@
 {
-  "status": "PROVISIONAL_MESH_SEPARATOR_REPAIR_VALIDATED_PEER_REVIEW_PENDING_FULL_SUITE_STILL_FAILED",
+  "status": "PROVISIONAL_MESH_SEPARATOR_REPAIR_SOURCE_AND_INDEPENDENT_RUNTIME_ACK_FULL_SUITE_STILL_FAILED",
   "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
   "basisCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
   "branch": "team-c/sol-happy-c5-mesh-filename-provisional-20261004",
@@ -20,7 +20,9 @@
   "originalBehaviorCustody": "preservation-review.json",
   "ownerAdoptionRequest": "owner-adoption-request.json",
   "peerReviewStatus": {
-    "C6": "REQUESTED_EXACT_SOURCE_AND_FOCUSED_ACTUAL_NORMAL_PROJECT_REVIEW"
+    "C6": "EXACT_SOURCE_ACK_AND_INDEPENDENT_ACTUAL_MAINTAINED_NORMAL_RELEASE_ORIGINAL_AND_NEW_STORE_16PASS_0FAIL_0SKIP",
+    "receipt": "C6/independent-review.json",
+    "receiptSHA256": "4b41cfbf7ae026f592243572d8789a034df6516e375fb847bc188d99d9a9cb25"
   },
   "qualification": [
     "Closest actual normal49Mesh Debug cases pass; whole normal Release428executes425pass3fail0skip.",
