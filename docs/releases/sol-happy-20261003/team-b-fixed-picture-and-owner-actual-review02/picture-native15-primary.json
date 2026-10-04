@@ -1,0 +1,508 @@
+{
+  "scope": "Independent full recorded-artifact read only; no native/browser replay. Actual canonical owner model/CUI/Bitmap with controlled native media; not actualIDB/provider/complete Picture parity.",
+  "runId": 37209306469,
+  "commit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "artifactId": 11304964885,
+  "archive": {
+    "path": "/workspace/attachments/08cef903-5c7e-4021-b373-982f7f1cb534/picture-7f-current.zip",
+    "bytes": 353840,
+    "sha256": "548b89f3ef469422879842f91d2300c8c21fcb760a2d1151e9c461067746c47c"
+  },
+  "members": [
+    {
+      "path": "actual-native-binary-pins.json",
+      "bytes": 130652,
+      "sha256": "a20b0d479d68a894d196e4585a8fa14e0bafbac3b864dc3b3081f7fb420eb5d5",
+      "zipCRCverified": true
+    },
+    {
+      "path": "build.log",
+      "bytes": 7878,
+      "sha256": "8517d7d6844cfce7c3fcc1159ac23e28c911f5e40465fd7928f0d1b76b72a16a",
+      "zipCRCverified": true
+    },
+    {
+      "path": "commands.json",
+      "bytes": 11262,
+      "sha256": "cab4567c5d2420032497676aeef562e420e8b05f795726ed4794e58d2a9a3f24",
+      "zipCRCverified": true
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 2974,
+      "sha256": "b58778e8bc868bb88126c257c9fd3789d25b83f3812461bf2a1261af87bcf47e",
+      "zipCRCverified": true
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+      "zipCRCverified": true
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "zipCRCverified": true
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "zipCRCverified": true
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+      "zipCRCverified": true
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 63746,
+      "sha256": "55f51f0afc3f09974a7e34d45186486051dc8445439a9093ef660a7c0868b60d",
+      "zipCRCverified": true
+    },
+    {
+      "path": "native-submodule-pins.log",
+      "bytes": 202,
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+      "zipCRCverified": true
+    },
+    {
+      "path": "native.log",
+      "bytes": 1907,
+      "sha256": "540fb633b2eb79ac977d39e70aaebd45d1eb1cb35cddae519aaa7f6af4a7ea6b",
+      "zipCRCverified": true
+    },
+    {
+      "path": "restore.log",
+      "bytes": 5561,
+      "sha256": "ae26eed6da34cc9d39be79313bc2e8d31aeb74ea2813220b073c1337284334a0",
+      "zipCRCverified": true
+    },
+    {
+      "path": "result.json",
+      "bytes": 3893,
+      "sha256": "570ff3cc275473465f1c3e452cace404f58c3f131d264606999d9ae0526590f0",
+      "zipCRCverified": true
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 404,
+      "sha256": "499a3bed62ceca50c3d19d667904bb996421f421d2239fa315ce76308b18da40",
+      "zipCRCverified": true
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 436,
+      "sha256": "8e404f2e6be5d8e00bf183dd4a909a8f9a57f9c7456da08a10c1273f3b890ffe",
+      "zipCRCverified": true
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1300840,
+      "sha256": "41370af1dca0b7b84e92eb74eb01e7b639eea088543817664a28bd85abc913a9",
+      "zipCRCverified": true
+    }
+  ],
+  "driver": {
+    "status": "CURRENT_NATIVE_PASS",
+    "variant": "current",
+    "expected": 15,
+    "scope": "Controlled actual native Picture criteria only; all browser/provider/durable restart acceptance NOT_RUN",
+    "preservedHistory": "Original Picture GPS Preserve RED, old admission01/source-review and all prior browser/native evidence are not replaced",
+    "sourceCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+    "nativeStarted": true,
+    "actualNativeCommandRecord": {
+      "name": "native",
+      "argv": [
+        "/home/runner/work/_temp/team-b-picture-current/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests",
+        "/home/runner/work/_temp/team-b-picture-current/fixture-data/picture"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3814,
+          "birth": 23206,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.975,
+      "bytes": 1907,
+      "familyClosed": true
+    },
+    "nativeResultSHA256": "55f51f0afc3f09974a7e34d45186486051dc8445439a9093ef660a7c0868b60d",
+    "nativeResultBytes": 63746,
+    "nativeResultDiagnostic": "native-results.json",
+    "nativeResultCaptureState": "STRUCTURED_CAPTURED_NOT_VALIDATED",
+    "actualNativeCounters": {
+      "discovered": 15,
+      "executed": 15,
+      "passed": 15,
+      "failed": 0,
+      "notRun": 0,
+      "timedOut": false,
+      "prerequisite": null,
+      "assertions": 138,
+      "exitCode": 0
+    },
+    "discovered": 15,
+    "executed": 15,
+    "passed": 15,
+    "failed": 0,
+    "notRun": 0,
+    "assertions": 138,
+    "outcomes": [
+      {
+        "name": "independent-target-prepare-and-reject-preserve-active-bitmap-and-canonical",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "name": "invalid-route-refused-before-owner-or-device-effects",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "name": "controlled-target-read-failure-preserves-active-owner",
+        "state": "PASS",
+        "assertions": 6
+      },
+      {
+        "name": "typed-input-before-navigation-and-close-is-retained",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "name": "typed-input-after-render-fences-native-admission",
+        "state": "PASS",
+        "assertions": 9
+      },
+      {
+        "name": "acknowledged-owner-edit-after-render-fences-target",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "name": "forged-view-state-and-superseded-offer-have-no-authority",
+        "state": "PASS",
+        "assertions": 12
+      },
+      {
+        "name": "cancelled-late-read-and-pending-close-preserve-owner",
+        "state": "PASS",
+        "assertions": 7
+      },
+      {
+        "name": "disposal-during-read-fences-late-candidate-without-extra-release",
+        "state": "PASS",
+        "assertions": 6
+      },
+      {
+        "name": "candidate-preview-does-not-write-native-cache-before-accept",
+        "state": "PASS",
+        "assertions": 9
+      },
+      {
+        "name": "changed-native-cache-refuses-admission-without-overwrite",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "name": "old-retirement-cannot-clear-new-real-canonical-dirty-edit",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "name": "actual-raster-crop-history-save-close-reopen-and-pixel-export",
+        "state": "PASS",
+        "assertions": 14
+      },
+      {
+        "name": "candidate-publication-cannot-write-detached-previous-input",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "name": "candidate-observer-reentrant-navigation-waits-coherent-retirement",
+        "state": "PASS",
+        "assertions": 11
+      }
+    ],
+    "negativeIsAcceptance": false,
+    "qualification": "Actual native CUI/Bitmap/codec with controlled media boundary; NOT browser IDB/provider/permissions/full Picture parity",
+    "fixtureSourcePinManifestSHA256": "a74be75f97e8cad2a18b1b3808ed5113f12f795ec80b27ae63f560b231e8f320"
+  },
+  "nativeWithoutSeparatedReceipts": {
+    "scope": "Controlled native feature/CUI/codec/raster admission and fault boundary only; no browser IDB/provider/permission/Files/complete Picture acceptance",
+    "discovered": 15,
+    "executed": 15,
+    "passed": 15,
+    "failed": 0,
+    "notRun": 0,
+    "timedOut": false,
+    "prerequisite": null,
+    "actualMarkupSHA256": "2D408A38D204E9704A4F39491BF457355C38162D71A3F28FC9B9A83DC7A18402",
+    "actualMarkupDiagnostics": [],
+    "assertions": 138,
+    "results": [
+      {
+        "Name": "independent-target-prepare-and-reject-preserve-active-bitmap-and-canonical",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "invalid-route-refused-before-owner-or-device-effects",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "Name": "controlled-target-read-failure-preserves-active-owner",
+        "state": "PASS",
+        "assertions": 6
+      },
+      {
+        "Name": "typed-input-before-navigation-and-close-is-retained",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "Name": "typed-input-after-render-fences-native-admission",
+        "state": "PASS",
+        "assertions": 9
+      },
+      {
+        "Name": "acknowledged-owner-edit-after-render-fences-target",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "forged-view-state-and-superseded-offer-have-no-authority",
+        "state": "PASS",
+        "assertions": 12
+      },
+      {
+        "Name": "cancelled-late-read-and-pending-close-preserve-owner",
+        "state": "PASS",
+        "assertions": 7
+      },
+      {
+        "Name": "disposal-during-read-fences-late-candidate-without-extra-release",
+        "state": "PASS",
+        "assertions": 6
+      },
+      {
+        "Name": "candidate-preview-does-not-write-native-cache-before-accept",
+        "state": "PASS",
+        "assertions": 9
+      },
+      {
+        "Name": "changed-native-cache-refuses-admission-without-overwrite",
+        "state": "PASS",
+        "assertions": 8
+      },
+      {
+        "Name": "old-retirement-cannot-clear-new-real-canonical-dirty-edit",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "actual-raster-crop-history-save-close-reopen-and-pixel-export",
+        "state": "PASS",
+        "assertions": 14
+      },
+      {
+        "Name": "candidate-publication-cannot-write-detached-previous-input",
+        "state": "PASS",
+        "assertions": 10
+      },
+      {
+        "Name": "candidate-observer-reentrant-navigation-waits-coherent-retirement",
+        "state": "PASS",
+        "assertions": 11
+      }
+    ],
+    "exitCode": 0
+  },
+  "canonicalReceipts": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-7f-remote-review01/current-canonical-receipts.json",
+    "bytes": 57204,
+    "sha256": "a6c8931a8cb6cca551f5d3e7ee4caf7c6f68a5a604d35d1635dfee62ff12a3d2"
+  },
+  "independentlyCompared": {
+    "same15CurrentSourceNamesInOrder": true,
+    "caseCountersAndAssertionSum138": true,
+    "actualAfterCropSavedDocumentEqualsSession": true,
+    "afterCropSameID": "e3b46453-1cdb-4a7f-af8e-57fa9bed6149",
+    "afterCropRev1TypedCrop": [
+      {
+        "type": "crop",
+        "x": 1,
+        "y": 2,
+        "width": 5,
+        "height": 3
+      }
+    ],
+    "afterCropFlags": {
+      "IsDirty": false,
+      "IsBusy": false,
+      "HasPendingInput": false,
+      "featureHasUnsavedChanges": false,
+      "retirementStatus": "RanToCompletion",
+      "retirementCompletedSuccessfully": true,
+      "SavedRevision": 1,
+      "CommitCalls": 2
+    },
+    "beforePendingRealInputStillRefusesCloseFlags": {
+      "HasPendingInput": true,
+      "featureHasUnsavedChanges": true,
+      "retirementStatus": "RanToCompletion",
+      "retirementCompletedSuccessfully": true
+    },
+    "completedRasterReceipt": {
+      "name": "actual-raster",
+      "documentId": "e3b46453-1cdb-4a7f-af8e-57fa9bed6149",
+      "canonical": "{\"documentId\":\"e3b46453-1cdb-4a7f-af8e-57fa9bed6149\",\"schemaVersion\":1,\"displayName\":\"c9ba5503fab740bb9bbc3662e5d33cba\",\"fileId\":null,\"sourcePath\":\"/home/runner/work/_temp/team-b-picture-current/tmp/9to1-picture-local/sources/c9ba5503fab740bb9bbc3662e5d33cba.png\",\"sourceRevision\":\"A17E304D0A333065202CF77C656D7BC86ABDD37237B407A0A5CB870D33870297\",\"canvasWidth\":5,\"canvasHeight\":3,\"operations\":[{\"type\":\"crop\",\"x\":1,\"y\":2,\"width\":5,\"height\":3}],\"revision\":3}",
+      "sourceSHA256": "A17E304D0A333065202CF77C656D7BC86ABDD37237B407A0A5CB870D33870297",
+      "rgbaSHA256": "A205E6EC1450A74B66E9DE990D5816A79FFD13B54E9C920DA7675D302795F39D",
+      "CommitCalls": 4
+    },
+    "allRecordedHeldBirthsGoneZeroSignals": true
+  },
+  "commandSummary": [
+    {
+      "name": "git-head",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "git-clean-before",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "tracked-source-tree",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "native-submodule-pins",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 3,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "dotnet-version",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "dotnet-info",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "restore",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "build",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 46,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "target-properties",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "native",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    },
+    {
+      "name": "git-clean-after",
+      "exit": 0,
+      "error": null,
+      "normalEOF": true,
+      "familyClosed": true,
+      "finalECHILD": true,
+      "signals": [],
+      "heldBirths": 1,
+      "allRecordedBirthsGone": true
+    }
+  ],
+  "causalComparison": "Oldb8 same15 diagnostics observed clean/savecorrect crop but same-session retirementWaiting\u2192HasUnsavedtrue14PASS1FAIL. ONE currentFeature same-session earlyreturn beforeYield, all15 assertions/messages/callbacks unchanged; actual7f15PASS afterretirementRanToCompletion, typed-inputdirty guard intact. Genuine different-session/admission/refusal/rollback observer controls allsame15PASS.",
+  "preserved": "Old22d/b8 raster14/1 and allhistoricalparser/repaired12/3 outcomes remain unchanged; separately authored additive oldAdmission two-negative variant not yet observed. GPSPreserve sharedownerRED untouched.",
+  "notClaimed": [
+    "No physicalhardware/display/AT/provider/hosted/IDB acceptance from controllednative cohort.",
+    "Nativepixel comparison is actual ownerBitmap/engine execution, not new PCM/pixel engine; no source format/schema/engine changes.",
+    "Fresh7f browser workflowSUCCESS metadata observed, largearchive not locallydownloaded due local256MiBresourcefloor. Old22dactual9PASS+independent9PASS remain separate."
+  ]
+}

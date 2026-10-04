@@ -1,0 +1,1015 @@
+{
+  "status": "RECORDED_EVIDENCE_CLEAR_ORIGINAL_WRITE_FORMATS7_SCOPED",
+  "utc": "2026-10-04T14:37:04.999826+00:00",
+  "runId": 37209563662,
+  "url": "https://github.com/CroakyJake12/9to1/actions/runs/37209563662",
+  "sourceCommit": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+  "artifactId": 11305664931,
+  "archive": {
+    "path": "/workspace/attachments/cab79683-3022-474a-a4bb-26cf4279dc28/original-write-formats-f7c0473c.zip",
+    "bytes": 339815,
+    "sha256": "e566bf9e6f66b4fb8f6a48d90d413820ebda27a74ec53158a6cdaee8a5bbc485",
+    "all17CRCAndWholeMemberSHA": true
+  },
+  "members": [
+    {
+      "name": "diagnostics/build.log",
+      "bytes": 783,
+      "compressedBytes": 252,
+      "crc32": "f66f1ac5",
+      "sha256": "ed2818885bf9140b399630f27fb270c118e183acf5f9cb408ad9b01eea2fdb1a"
+    },
+    {
+      "name": "diagnostics/discovery-gate.json",
+      "bytes": 1893,
+      "compressedBytes": 395,
+      "crc32": "95126c7e",
+      "sha256": "33727e5cd0cb646634db8b31143e7a72bfee29cbbf40bfde69651a9f8ddcd10f"
+    },
+    {
+      "name": "diagnostics/commands.json",
+      "bytes": 8184,
+      "compressedBytes": 1314,
+      "crc32": "9ac68f27",
+      "sha256": "5b5486c0973945007681c7e93520110a99cb02a065abb9d264416235895bf3b8"
+    },
+    {
+      "name": "diagnostics/discovery.log",
+      "bytes": 1088,
+      "compressedBytes": 430,
+      "crc32": "f379c716",
+      "sha256": "0cf97b7c4046ca1c78cd4316acfeaa16361b3ea814c8dc9eab14040b97237b6c"
+    },
+    {
+      "name": "diagnostics/dotnet-info.log",
+      "bytes": 2974,
+      "compressedBytes": 789,
+      "crc32": "4371c40b",
+      "sha256": "a27aebe43a9bc527c7f7a1704de7935fa6874db99fe12d1bd37f0a83b4a97ade"
+    },
+    {
+      "name": "diagnostics/dotnet-version.log",
+      "bytes": 9,
+      "compressedBytes": 11,
+      "crc32": "c22d2381",
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "name": "diagnostics/git-clean-after.log",
+      "bytes": 0,
+      "compressedBytes": 2,
+      "crc32": "00000000",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "diagnostics/git-clean-before.log",
+      "bytes": 0,
+      "compressedBytes": 2,
+      "crc32": "00000000",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "diagnostics/git-head.log",
+      "bytes": 41,
+      "compressedBytes": 42,
+      "crc32": "a540ba77",
+      "sha256": "1af41d17845ec2299a25b0fe64acd3d3c4c97e9d88cad13a91cdc6d2a77d42f5"
+    },
+    {
+      "name": "diagnostics/original-seven-facts.log",
+      "bytes": 489,
+      "compressedBytes": 257,
+      "crc32": "51eb1357",
+      "sha256": "76bef929b4253cb720b76d1af1c27446c4ecb527b39f2ba393e7fd3fdf126418"
+    },
+    {
+      "name": "diagnostics/original-trx-gate.json",
+      "bytes": 6534,
+      "compressedBytes": 1265,
+      "crc32": "6035dce7",
+      "sha256": "2acd4677d441e600e6db5fbf87437d894519a2bdb6696e654d2030949e827b7d"
+    },
+    {
+      "name": "diagnostics/owned-files-tracked.log",
+      "bytes": 205,
+      "compressedBytes": 110,
+      "crc32": "8b103c16",
+      "sha256": "78ff3d90588cf1c04512577c5f063cd70925362468526e433a6f46c80989cc38"
+    },
+    {
+      "name": "diagnostics/restore.log",
+      "bytes": 573,
+      "compressedBytes": 222,
+      "crc32": "db959074",
+      "sha256": "005ef96f7dfd99a520f2c0384aea3dcc4f481623379d192ab4dc94b60628725f"
+    },
+    {
+      "name": "diagnostics/result.json",
+      "bytes": 888,
+      "compressedBytes": 455,
+      "crc32": "c1cae969",
+      "sha256": "c433eaed7172d120101730d61c3909ef6234dabd1818ecdba00c4e7ef3f8b446"
+    },
+    {
+      "name": "diagnostics/source-pins-before.json",
+      "bytes": 2626,
+      "compressedBytes": 1027,
+      "crc32": "c3ac0b84",
+      "sha256": "951192b870919cade58a40aca03f2c5010f028d727f9c0d006d95582f91d4e9b"
+    },
+    {
+      "name": "diagnostics/source-tree-pins.log",
+      "bytes": 1301268,
+      "compressedBytes": 328487,
+      "crc32": "4f0292f1",
+      "sha256": "4058fe6f873e9084b539367383806e6ad3f7b0294b641962d67dc60184cbcf07"
+    },
+    {
+      "name": "test-results/write-original-formats.trx",
+      "bytes": 12379,
+      "compressedBytes": 2163,
+      "crc32": "23d96733",
+      "sha256": "ce7e1b463066a75817a28d6bd68cdd07cfa468b5290bf6ccd957edd5414f648f"
+    }
+  ],
+  "source": {
+    "actualFullGitTreeSHA256": "4058fe6f873e9084b539367383806e6ad3f7b0294b641962d67dc60184cbcf07",
+    "trackedTreeEntries": 9692,
+    "rawTreeMatchesExactActualCommit": true,
+    "originalOwner26": [
+      {
+        "path": "9to1 Workspace/Directory.Build.props",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+        "bytes": 781,
+        "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+      },
+      {
+        "path": "9to1 Workspace/Directory.Packages.props",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+        "bytes": 2581,
+        "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "3d06cea5f9131680ed447fb423feebeba5f477e3",
+        "bytes": 1993,
+        "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "cc85c272caa8e95166986e1294cd827f7527e354",
+        "bytes": 700,
+        "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesDocumentValidator.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "00729740b47fa5cab39b0cccfc6feb017ff7fe02",
+        "bytes": 22785,
+        "sha256": "d00c18aa25dc513e8f0623057920b7d26d5c2ad14bdfbd0d2e07ea8539169669"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/NotesAbstractions.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "cbcd5b7a69e43f568de91db0871c7de601f4a5e4",
+        "bytes": 11449,
+        "sha256": "72d70b50c9c6a09ecd53e1faf18c0069b8a6f7c7409ad0c78980b0d64868bd0b"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a6996aa2c75031e77bf1c4d60861ff365ed1e386",
+        "bytes": 375,
+        "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesBlock.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "433d6895cdd4d6b3135950b925ea1c5e3b021e76",
+        "bytes": 19407,
+        "sha256": "a38e7219429490bd10debe93960a0c14036fc939d3b109ad0ccc248f644c7916"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesCollaboration.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "9f586c9e8441843a8f6926a3ce2cc547f2f7e006",
+        "bytes": 3738,
+        "sha256": "4473e1292f029a5e84aa1b7aaab16646b6687e0a57f6822d1390e9e53e466544"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "abed72f3be1ed2ad7e1ad3d4b647ec419f7c64ad",
+        "bytes": 8528,
+        "sha256": "6aaf49f88b08b77ae98c3efdef067f7af3741c52df51e89e3aee4815e9947bc4"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesEnums.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "dfaf9371dae220e65c35fa811cbde6651e5809b3",
+        "bytes": 2392,
+        "sha256": "5a7ab9574af8ae44be8fe22c5fef65f14d179ec2fe81c5055c998a2026d83ef8"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesInkAndStudy.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "4cbcd87bfcb510f5b7b68253563282a816fa231a",
+        "bytes": 8055,
+        "sha256": "8b90aac61d2f05961c20b083deda0b8703908da510ebe98ab8ce94a00d8e4b3e"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesMetadata.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "91ab568b61136e32b760d68369a4f0114eb524cd",
+        "bytes": 10683,
+        "sha256": "3019980292b53b48727e775aa50786071f67c59e31f7cc59094a885df36417a4"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "2c1b1ad79be709e0066003d896db45ead7b21f77",
+        "bytes": 24341,
+        "sha256": "a46ad14f586f24501591637275717db4698bd3c3f9c5fc9019c3847c64717f80"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesDocxFormatService.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "3ef887f78e78883a4af6d0c4de940d73c676de81",
+        "bytes": 46744,
+        "sha256": "2f9d21ac834ae90bdf51d105ce7906a03de05fa70c722cacc3962681a698d863"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesImportExportService.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "18f0be23f0207f147bc355a7cde7c679e1566265",
+        "bytes": 58647,
+        "sha256": "e02dd020b697e6ba5932a1193787a5be04500ef509c0ebe2a514724095a26499"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Write/WriteNativeDocumentPackageStore.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "0b3a416f1ecb639ee4189159876e5b93ce00ad4b",
+        "bytes": 23242,
+        "sha256": "559b61801042107efb622070ac08d3aa5f59b6a54119c4a0966a7f5c29f7c502"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AssemblyInfo.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "bf6624239eb90188ebc609687eaa372e62ff29fe",
+        "bytes": 292,
+        "sha256": "8285427fb7535ccbafebfa3fb58e724495859fd711d40df82a877e0f33fb9640"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteDocxFidelityTests.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "4006e4542fb48faa84b8a303dc701deaaffb99cf",
+        "bytes": 13783,
+        "sha256": "0ff96df4fd4068bf9f4512d51b302e9fcad93699eb85d193bd8980f0fa3c4259"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteNativeDocumentPackageStoreTests.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "024aa11700c0458dc86c18a163a1b722e8617f32",
+        "bytes": 6589,
+        "sha256": "f1baa6a612ee8a7dbf77e94c18d528a5ed1b403fd13d8f9c4f2c3647bb281303"
+      },
+      {
+        "path": "NuGet.Config",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "24489cbd21c319685f8e7d5caee66965cd4a9e57",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+      },
+      {
+        "path": "apps/Web/Write/Packages/NineToOne.Write.Packages.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "23139ed89f9c57ee19258907368f1a2c0095286d",
+        "bytes": 718,
+        "sha256": "cdcead31de80b2fc6f981c949d1a2887be508b57d6242e02a11a4a3668b93a48"
+      },
+      {
+        "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8a7bef631e2cbc38ad730fe92600492b95846e64",
+        "bytes": 453,
+        "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504"
+      },
+      {
+        "path": "framework/CUI/Directory.Packages.props",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "016ac27619beda53b745721030cc89a9c71da843",
+        "bytes": 429,
+        "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+      },
+      {
+        "path": "global.json",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+      }
+    ],
+    "fourAdopted": [
+      {
+        "path": "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8a2726b017ffc0f92cb443a6eee5194c7933068e",
+        "bytes": 2005,
+        "sha256": "5f94476bb0c82bfbd4833290d3b0e884fa2ef5e0500b4a186295b9a342242410"
+      },
+      {
+        "path": "apps/Web/Write/Tests/ci/run-original-write-formats.py",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "06a6f57d5713008ca4d395d936d36e1eaef0a6cc",
+        "bytes": 10728,
+        "sha256": "f8357549d92063988509812ce089a2107feb63b52b99cf22dfd52f95fc1c2f73"
+      },
+      {
+        "path": "apps/Web/Write/Tests/ci/original-format-acceptance.py",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "0ba2b475b1be1304a8ad604ffbc0ee8ba30fe981",
+        "bytes": 6106,
+        "sha256": "659451490c8728dff25264781c55fe43b7cfe780ca71da17d21157438d760fbd"
+      },
+      {
+        "path": ".github/workflows/team-b-original-write-formats.yml",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "de43f59456774dbc1c73423fbb5f5e33d3249a42",
+        "bytes": 1987,
+        "sha256": "c4afc88d4d6e6d03c829676888642023faa4a3ef6668b59ab3e4a4585e547bca"
+      }
+    ],
+    "actualBeforePinRows": [
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+        "bytes": 700,
+        "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs",
+        "bytes": 24341,
+        "sha256": "a46ad14f586f24501591637275717db4698bd3c3f9c5fc9019c3847c64717f80"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesDocxFormatService.cs",
+        "bytes": 46744,
+        "sha256": "2f9d21ac834ae90bdf51d105ce7906a03de05fa70c722cacc3962681a698d863"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesImportExportService.cs",
+        "bytes": 58647,
+        "sha256": "e02dd020b697e6ba5932a1193787a5be04500ef509c0ebe2a514724095a26499"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AssemblyInfo.cs",
+        "bytes": 292,
+        "sha256": "8285427fb7535ccbafebfa3fb58e724495859fd711d40df82a877e0f33fb9640"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteDocxFidelityTests.cs",
+        "bytes": 13783,
+        "sha256": "0ff96df4fd4068bf9f4512d51b302e9fcad93699eb85d193bd8980f0fa3c4259"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteNativeDocumentPackageStoreTests.cs",
+        "bytes": 6589,
+        "sha256": "f1baa6a612ee8a7dbf77e94c18d528a5ed1b403fd13d8f9c4f2c3647bb281303"
+      },
+      {
+        "path": "NuGet.Config",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+      },
+      {
+        "path": "apps/Web/Write/Packages/NineToOne.Write.Packages.csproj",
+        "bytes": 718,
+        "sha256": "cdcead31de80b2fc6f981c949d1a2887be508b57d6242e02a11a4a3668b93a48"
+      },
+      {
+        "path": "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+        "bytes": 2005,
+        "sha256": "5f94476bb0c82bfbd4833290d3b0e884fa2ef5e0500b4a186295b9a342242410"
+      },
+      {
+        "path": "apps/Web/Write/Tests/ci/original-format-acceptance.py",
+        "bytes": 6106,
+        "sha256": "659451490c8728dff25264781c55fe43b7cfe780ca71da17d21157438d760fbd"
+      },
+      {
+        "path": "apps/Web/Write/Tests/ci/run-original-write-formats.py",
+        "bytes": 10728,
+        "sha256": "f8357549d92063988509812ce089a2107feb63b52b99cf22dfd52f95fc1c2f73"
+      },
+      {
+        "path": "global.json",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+      }
+    ],
+    "sourceAfterQualification": "No source-after JSON uploaded. Exact source-pinned driver calls source_pins equality after native success and finalization; raw git-clean-after exit0/empty preserved. Review directly checks before rows/owner26/four adopted against actual Git blob bodies."
+  },
+  "discovery": {
+    "actualCount": 7,
+    "exactOriginalNames": [
+      "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Rich_docx_export_emits_word_formatting_and_round_trips_supported_features",
+      "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata",
+      "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Save_and_open_preserve_structured_document_identity_and_content",
+      "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_changed_document_bytes_without_returning_a_partial_document",
+      "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_unsupported_manifest_version",
+      "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Failed_save_keeps_existing_destination_intact",
+      "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_traversal_entries"
+    ],
+    "noUnknownOrDuplicateSelectedNames": true
+  },
+  "trx": {
+    "sha256": "ce7e1b463066a75817a28d6bd68cdd07cfa468b5290bf6ccd957edd5414f648f",
+    "actualCounters": {
+      "total": 7,
+      "executed": 7,
+      "passed": 7,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "aborted": 0,
+      "inconclusive": 0,
+      "passedButRunAborted": 0,
+      "notRunnable": 0,
+      "notExecuted": 0,
+      "disconnected": 0,
+      "warning": 0,
+      "completed": 0,
+      "inProgress": 0,
+      "pending": 0
+    },
+    "originalResultMethodExecutionLinks": [
+      {
+        "name": "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Rich_docx_export_emits_word_formatting_and_round_trips_supported_features",
+        "outcome": "Passed",
+        "testId": "f3f9e1ac-3805-f247-c04f-e421332cb9b5",
+        "executionId": "ffd7f20f-5258-4959-8314-bd220ec5cb2d",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/write-original-formats/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.WriteDocxFidelityTests",
+          "name": "Rich_docx_export_emits_word_formatting_and_round_trips_supported_features"
+        },
+        "duration": "00:00:00.0461656"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Failed_save_keeps_existing_destination_intact",
+        "outcome": "Passed",
+        "testId": "ea781297-6500-ef8a-9333-d1cf054d24c1",
+        "executionId": "0db2dd15-1d58-4cf4-ab02-79f71d1a5573",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/write-original-formats/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+          "name": "Failed_save_keeps_existing_destination_intact"
+        },
+        "duration": "00:00:00.0102683"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_traversal_entries",
+        "outcome": "Passed",
+        "testId": "01c99792-c078-8994-27b2-84f15545f0f0",
+        "executionId": "47d5e06e-edac-43ae-a5d2-a3c1d9f7ea81",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/write-original-formats/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+          "name": "Open_rejects_traversal_entries"
+        },
+        "duration": "00:00:00.0283462"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_unsupported_manifest_version",
+        "outcome": "Passed",
+        "testId": "0755f8d6-2e2e-523f-8942-15adca978094",
+        "executionId": "841fed06-b81a-41a8-a4ac-c88a667baac5",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/write-original-formats/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+          "name": "Open_rejects_unsupported_manifest_version"
+        },
+        "duration": "00:00:00.2250586"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Save_and_open_preserve_structured_document_identity_and_content",
+        "outcome": "Passed",
+        "testId": "8eebdc64-6393-c521-9663-b86186450360",
+        "executionId": "2375daf0-6fc5-4074-bc39-6e7ff6828d29",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/write-original-formats/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+          "name": "Save_and_open_preserve_structured_document_identity_and_content"
+        },
+        "duration": "00:00:00.0313830"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.WriteDocxFidelityTests.Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata",
+        "outcome": "Passed",
+        "testId": "91e7246d-6740-0c74-92dc-84e2796c115d",
+        "executionId": "b8f60ff7-ff1e-4e27-9753-22a23f08c5a7",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/write-original-formats/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.WriteDocxFidelityTests",
+          "name": "Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata"
+        },
+        "duration": "00:00:00.0910786"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_changed_document_bytes_without_returning_a_partial_document",
+        "outcome": "Passed",
+        "testId": "710ec5d6-956e-8cc7-4d9d-f8018520fe9f",
+        "executionId": "5a561f2c-89f3-4354-b00e-620dec5edc93",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/write-original-formats/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+          "name": "Open_rejects_changed_document_bytes_without_returning_a_partial_document"
+        },
+        "duration": "00:00:00.0059775"
+      }
+    ],
+    "summaryOutcome": "Completed",
+    "freshMtimeReceipt": {
+      "started_wall_ns": 1791124322037585967,
+      "mtime_ns": 1791124324002808839,
+      "qualification": "Actual source-pinned driver records filesystem freshness; ZIP alone does not retain filesystem nanosecond metadata."
+    },
+    "times": {
+      "creation": "2026-10-04T14:32:03.9790810+00:00",
+      "queuing": "2026-10-04T14:32:03.9790811+00:00",
+      "start": "2026-10-04T14:32:02.7813709+00:00",
+      "finish": "2026-10-04T14:32:03.9851467+00:00"
+    }
+  },
+  "processCustody": {
+    "commands": 11,
+    "observedBirthRecords": 20,
+    "allNaturalExit0": true,
+    "allEOF": true,
+    "allHeldBirthsGone": true,
+    "allECHILD": true,
+    "signals": 0,
+    "actualNormalCommandRecords": [
+      {
+        "name": "git-head",
+        "argv": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2538,
+            "birth": 3849,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.054,
+        "bytes": 41,
+        "familyClosed": true
+      },
+      {
+        "name": "git-clean-before",
+        "argv": [
+          "git",
+          "diff",
+          "--exit-code",
+          "HEAD",
+          "--"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2539,
+            "birth": 3855,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.07,
+        "bytes": 0,
+        "familyClosed": true
+      },
+      {
+        "name": "source-tree-pins",
+        "argv": [
+          "git",
+          "ls-tree",
+          "-r",
+          "HEAD"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2559,
+            "birth": 3862,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.169,
+        "bytes": 1301268,
+        "familyClosed": true
+      },
+      {
+        "name": "owned-files-tracked",
+        "argv": [
+          "git",
+          "ls-files",
+          "--",
+          "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+          "apps/Web/Tests/ci/run-ordinary-native.py",
+          "apps/Web/Write/Tests/ci/run-original-write-formats.py",
+          "apps/Web/Write/Tests/ci/original-format-acceptance.py"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2560,
+            "birth": 3879,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.052,
+        "bytes": 205,
+        "familyClosed": true
+      },
+      {
+        "name": "dotnet-version",
+        "argv": [
+          "dotnet",
+          "--version"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2561,
+            "birth": 3885,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.396,
+        "bytes": 9,
+        "familyClosed": true
+      },
+      {
+        "name": "dotnet-info",
+        "argv": [
+          "dotnet",
+          "--info"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2570,
+            "birth": 3924,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.497,
+        "bytes": 2974,
+        "familyClosed": true
+      },
+      {
+        "name": "restore",
+        "argv": [
+          "dotnet",
+          "restore",
+          "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+          "--configfile",
+          "/home/runner/work/9to1/9to1/NuGet.Config",
+          "--disable-parallel",
+          "-p:Configuration=Release",
+          "--artifacts-path",
+          "/home/runner/work/_temp/write-original-formats/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2578,
+            "birth": 3974,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 6.329,
+        "bytes": 573,
+        "familyClosed": true
+      },
+      {
+        "name": "build",
+        "argv": [
+          "dotnet",
+          "build",
+          "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--artifacts-path",
+          "/home/runner/work/_temp/write-original-formats/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2618,
+            "birth": 4607,
+            "gone": true
+          },
+          {
+            "pid": 2669,
+            "birth": 4733,
+            "gone": true
+          },
+          {
+            "pid": 2702,
+            "birth": 5268,
+            "gone": true
+          },
+          {
+            "pid": 2720,
+            "birth": 5495,
+            "gone": true
+          },
+          {
+            "pid": 2767,
+            "birth": 6773,
+            "gone": true
+          },
+          {
+            "pid": 2786,
+            "birth": 6979,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 26.759,
+        "bytes": 783,
+        "familyClosed": true
+      },
+      {
+        "name": "discovery",
+        "argv": [
+          "dotnet",
+          "test",
+          "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+          "--no-build",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--list-tests",
+          "--artifacts-path",
+          "/home/runner/work/_temp/write-original-formats/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2804,
+            "birth": 7283,
+            "gone": true
+          },
+          {
+            "pid": 2819,
+            "birth": 7340,
+            "gone": true
+          },
+          {
+            "pid": 2832,
+            "birth": 7395,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 1.874,
+        "bytes": 1088,
+        "familyClosed": true
+      },
+      {
+        "name": "original-seven-facts",
+        "argv": [
+          "dotnet",
+          "test",
+          "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+          "--no-build",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--filter",
+          "FullyQualifiedName=Haven.Infrastructure.Tests.WriteDocxFidelityTests.Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata|FullyQualifiedName=Haven.Infrastructure.Tests.WriteDocxFidelityTests.Rich_docx_export_emits_word_formatting_and_round_trips_supported_features|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Failed_save_keeps_existing_destination_intact|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_changed_document_bytes_without_returning_a_partial_document|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_traversal_entries|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Open_rejects_unsupported_manifest_version|FullyQualifiedName=Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests.Save_and_open_preserve_structured_document_identity_and_content",
+          "--logger",
+          "trx;LogFileName=write-original-formats.trx",
+          "--results-directory",
+          "/home/runner/work/_temp/write-original-formats/test-results",
+          "--artifacts-path",
+          "/home/runner/work/_temp/write-original-formats/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2855,
+            "birth": 7470,
+            "gone": true
+          },
+          {
+            "pid": 2870,
+            "birth": 7527,
+            "gone": true
+          },
+          {
+            "pid": 2883,
+            "birth": 7548,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 2.13,
+        "bytes": 489,
+        "familyClosed": true
+      },
+      {
+        "name": "git-clean-after",
+        "argv": [
+          "git",
+          "diff",
+          "--exit-code",
+          "HEAD",
+          "--"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2940,
+            "birth": 7684,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.058,
+        "bytes": 0,
+        "familyClosed": true
+      }
+    ]
+  },
+  "build": {
+    "normalOfficialSourceRestoreBuild": true,
+    "sdk": "10.0.401",
+    "runtimePlatform": "Ubuntu24.04/Linux-x64",
+    "warnings": 0,
+    "errors": 0,
+    "actualGraph": "Haven.Core, CUI.AI, Haven.Application, existing Packages leaf, source-linked original format tests/importexport/DOCX/diagnostics leaves",
+    "noRuntimeOrGUIProject": true
+  },
+  "acceptedSubset": [
+    "Two unchanged original supported-subset DOCX Facts: actual document/styles/numbering/header/footer/relationships ZIP/XML output; rich runs/links/paragraph/list/table/page geometry/header/footer reimport; independent WordprocessingML source import",
+    "Five unchanged original native-package Facts: document/section/text/bold identity/content; actual altered document digest refusal/null partial result; unsupported version refusal; failed save preserves destination bytes; ZIP traversal refused"
+  ],
+  "assertionQualification": "Seven original xUnit Facts, not a full Write requirement denominator. Source Assert sites unchanged; no individual assertion instrumentation count claimed.",
+  "notAccepted": [
+    "LibreOffice Writer/LibreOfficeKit execution/parity",
+    "full DOCX/ODT/native model fidelity, CompatibilityReport/unsupported loss policy/unknown optional package parts (separate existing fixture)",
+    "PDF editing/ODT/Markdown/TXT/browser chooser/download/render/native raw input",
+    "canonical repository commit/save/reopen/history/CAS/FilesID or hosted provider/ACL/identity",
+    "rich cross-app object model or full Write donor/schema acceptance"
+  ],
+  "preservedOwnerHolds": [
+    "Original Space-key native assertion remains failed in separate Write run; no shared input patch",
+    "Boards seamless workspace renderer and public guarded close/factory still held"
+  ],
+  "binaryPackageCustody": "Artifact contains diagnostics/TRX only; no emitted binaries, package archives/extracted package members or actual document stores. Normal source build corroborated by logs, portable binary/package custody not claimed.",
+  "localActions": {
+    "sdk": false,
+    "helperImports": false,
+    "nativeReplay": false,
+    "gui": false,
+    "productionEdits": false,
+    "workflowRerun": false
+  }
+}

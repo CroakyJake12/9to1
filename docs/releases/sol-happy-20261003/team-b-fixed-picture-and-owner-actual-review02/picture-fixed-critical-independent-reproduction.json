@@ -1,0 +1,129 @@
+{
+  "status": "CRITICAL_SCOPED_NATIVE15_PLUS_BROWSER9_INDEPENDENTLY_REPRODUCED",
+  "sourceCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "dispatchRef": "team-b/picture-fixed-7f-independent-20261004",
+  "dispatchBy": "B6 independent validation",
+  "executor": "Existing ordinary GitHub Actions unchanged workflows, Ubuntu24.04; no localSDK/GUI",
+  "dispatchReceipt": {
+    "path": "/tmp/team-b-b6-picture7f-independent-ci-dispatch01/dispatch.json",
+    "sha256": "1a8605a1a6b1e79890e20f864a0ac93ac9537fe54708174511c8fe0b6d267730"
+  },
+  "actualFinalRuns": [
+    {
+      "id": 37210724375,
+      "sha": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+      "event": "workflow_dispatch",
+      "ref": "team-b/picture-fixed-7f-independent-20261004",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 111461193857,
+          "name": "production-original",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 111461745521,
+          "name": "admission01",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 111462264521,
+          "name": "current",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 111462975021,
+          "name": "repaired-markup-controls (admission01-repaired-markup)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 111462975048,
+          "name": "repaired-markup-controls (production-original-repaired-markup)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 37210726410,
+      "sha": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+      "event": "workflow_dispatch",
+      "ref": "team-b/picture-fixed-7f-independent-20261004",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 111461199191,
+          "name": "actual-local-picture",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "criticalReviews": [
+    {
+      "path": "/tmp/team-b-b6-picture7f-independent-native-ci-review01/review.json",
+      "bytes": 11249,
+      "sha256": "ad45fb028c3d19dea1ddd5f661fdbec3d04b0bcc2edb97d8e0116ee409ec7f71"
+    },
+    {
+      "path": "/tmp/team-b-b6-picture7f-independent-browser-ci-review01/review.json",
+      "bytes": 8972,
+      "sha256": "1520d33bcf982fdba519cebe9075324565d348d0432f4e7ed9d7b1dfce266574"
+    }
+  ],
+  "actualCriticalNativeCurrent": {
+    "run": 37210724375,
+    "job": 111462264521,
+    "artifact": 11306731493,
+    "native15": {
+      "passed": 15,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 138
+    },
+    "normalFamilies": 11,
+    "allRecordedBirthsGone": 58,
+    "unknownSignals": 0,
+    "allEOF_ECHILD": true,
+    "buildWarnings": 2,
+    "buildErrors": 0
+  },
+  "actualCriticalBrowserNine": {
+    "run": 37210726410,
+    "job": 111461199191,
+    "artifact": 11306986018,
+    "publisherArtifact": 11306806194,
+    "nine": {
+      "passed": 9,
+      "failed": 0,
+      "notRun": 0
+    },
+    "normalFamilies": 26,
+    "allRecordedBirthsGone": 150,
+    "allEOF_ECHILD_zeroSignals": true,
+    "readOnlyStores": 19,
+    "winnerRev4FullTwoStoreEqualReads": 4,
+    "realProcessRestart": true,
+    "exactCropRGBApixels": 15,
+    "traceNestedMembers": 242,
+    "networkBodyReferencesRead": 296,
+    "networkBodyReferencesMissing": 52,
+    "manifestAssetsObserved": 87
+  },
+  "historicalJobs": "Native whole workflow conclusion FAILURE preserved; historical production-original/admission01 failed and additive repaired admission job failed. Those raw negative cases not accepted or relabelled by current15 success. Additive repaired production job succeeded separately (metadata only, not rawreviewed here).",
+  "binaryBodyScope": "Native707DLL/PDB inventory metadata only; no binariesuploaded; actualownercode controlledmedia. Browser285asset inventory verifier recorded; partial87networkdistinctbody coverage not full285body custody.",
+  "notAccepted": [
+    "all31/fullPicture156requirements",
+    "historicalnativeOriginal/repairedAdmissionPASS",
+    "provider/Filesauthority/AT/hardware/BFCache/inAppMerge/quota",
+    "native15 uncontrolledbrowserbackend or pipelinewholePASS"
+  ],
+  "bodyCustody": "Actualnative+browser+publisherZIPs downloaded once and streamed complete CRC/SHA; generated smallreview/checkmetadata only. Browser large reader handles closed, root separately maymove exactZIP/symlink withSHA unchanged."
+}

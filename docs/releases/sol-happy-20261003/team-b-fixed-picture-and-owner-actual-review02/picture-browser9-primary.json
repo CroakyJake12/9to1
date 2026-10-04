@@ -1,0 +1,707 @@
+{
+  "state": "RECORDED_REAL_BROWSER9_FULL_READBACK_PASS_NO_B3_REPLAY",
+  "scope": "Actual7f local staticPNG canonical/raster/history/IDB/restart/CAS/close-consent scope; fullPicture/provider/GPSPreserve/vector/hybrid/donor/AT/hardware/quota separate.",
+  "commit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "run": 37209306466,
+  "browserArtifactID": 11306335357,
+  "zip": {
+    "path": "/workspace/attachments/4d30abfc-5aba-43fe-9300-eea2a3e57b59/picture-browser-7f-nine.zip",
+    "bytes": 28459302,
+    "sha256": "71ffbb6b5519d4ce1d1964496242c968d55720239ba570554405f3d640d066b8"
+  },
+  "publisherArtifactID": 11306280598,
+  "publisherZip": {
+    "path": "/workspace/attachments/83040c4d-a44c-4304-bd7e-8856df1c9d37/picture-7f-browser-publisher.zip",
+    "bytes": 1476674,
+    "sha256": "579e3d41cb50ead4169ed15d20189b441682a86f281b2f2715f546a62474a8b1"
+  },
+  "outerMembers": [
+    {
+      "path": "diagnostics/commands.json",
+      "bytes": 5220,
+      "sha256": "5b6dc7e701c4ad22eddea0db67fb29b453765e2246bb5d9b01b69605dec63170",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/chromium-path.log",
+      "bytes": 78,
+      "sha256": "94dc7d669e3d3966bf82ee64f3ae62d074e8d1302c5c4686e5bff330c7879cb2",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/git-head-after.log",
+      "bytes": 41,
+      "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/git-head.log",
+      "bytes": 41,
+      "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/output-custody-before-final-receipt.json",
+      "bytes": 38318,
+      "sha256": "81a38864514096421107ef1ae7b08711611761856f165473419c5fd4ef69e2fd",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/picture-browser-nine.log",
+      "bytes": 115,
+      "sha256": "4cb08067aba5464fd0494a80dd517de8ba89fafaadc8ae5d5e8502e82a4cac81",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/playwright-version.log",
+      "bytes": 7,
+      "sha256": "bc43ef34a131fd2f99047a8aca491f24fa0a36010dcb90166e73c49f58a1928d",
+      "CRCverified": true
+    },
+    {
+      "path": "diagnostics/result.json",
+      "bytes": 497,
+      "sha256": "2ca7164b15863465a10551a297f43510c010b6cf9dbfb1312ebe349473f51b51",
+      "CRCverified": true
+    },
+    {
+      "path": "raw/results.json",
+      "bytes": 126092,
+      "sha256": "83006c2fed85fb4901996da8195ecf9767303337cb56ff962f21bf7359e94bc8",
+      "CRCverified": true
+    },
+    {
+      "path": "raw/picture-original.png",
+      "bytes": 76846,
+      "sha256": "de800aafb93211718c1de35aba2f9dbc42928a00c4d8a0d71f41a7c694d9b1e9",
+      "CRCverified": true
+    },
+    {
+      "path": "raw/actual-crop-remove-all.png",
+      "bytes": 102,
+      "sha256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+      "CRCverified": true
+    },
+    {
+      "path": "raw/picture-first-process.zip",
+      "bytes": 14145997,
+      "sha256": "7a76b6d92fe770d56391d1b61676515f0c6c21c85faed015d469cfd1f23f18be",
+      "CRCverified": true
+    },
+    {
+      "path": "raw/picture-final-process.zip",
+      "bytes": 14311448,
+      "sha256": "760717bd8bcf52f71adee11dd9e1c168d9284abdfb7522170260995818270211",
+      "CRCverified": true
+    }
+  ],
+  "publisherMembers": [
+    {
+      "path": "bun-tool-install.log",
+      "bytes": 130,
+      "sha256": "76ffff4195a1a79bed46576508389beebb64bb57b3dbcf66c6af8fc5fe18f5ba",
+      "CRCverified": true
+    },
+    {
+      "path": "bun-version.log",
+      "bytes": 6,
+      "sha256": "e0a72941ba72e471c37b0bce5e8c292659befc51dbf1c7ceea354b26642c39c3",
+      "CRCverified": true
+    },
+    {
+      "path": "build.log",
+      "bytes": 20993,
+      "sha256": "f0f4b5e5b0b33e50c5fb686ddddda24b987b41a549727076b0cf70726be4d0a2",
+      "CRCverified": true
+    },
+    {
+      "path": "actual-runtime-and-native-inputs.json",
+      "bytes": 1041,
+      "sha256": "863db6010889712441617a86f3cdb1074b664b053cdb3b3cb17ff1318ea238d2",
+      "CRCverified": true
+    },
+    {
+      "path": "commands.json",
+      "bytes": 18545,
+      "sha256": "97e1c476f9d85f47e3975cd1c6735114621c57a97e2f6debc5977dc1c599497b",
+      "CRCverified": true
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 2962,
+      "sha256": "8cf22d13c329c0bf3bc3e2e5659b093ff306a050a0ebe3be66a0783953f178a5",
+      "CRCverified": true
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+      "CRCverified": true
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRCverified": true
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRCverified": true
+    },
+    {
+      "path": "git-clean-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRCverified": true
+    },
+    {
+      "path": "git-head-after.log",
+      "bytes": 41,
+      "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+      "CRCverified": true
+    },
+    {
+      "path": "locked-assets-install.log",
+      "bytes": 501,
+      "sha256": "cb604940d3cbf7bd0d8d6db96a4487e12f33977084e1d1dd549514eda86480f9",
+      "CRCverified": true
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+      "CRCverified": true
+    },
+    {
+      "path": "native-submodule-pins.log",
+      "bytes": 202,
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+      "CRCverified": true
+    },
+    {
+      "path": "owner-assets-build.log",
+      "bytes": 9,
+      "sha256": "b33e48dc0ef555a56f86e0477dd74ee7eca926a57266cb64b6dde060b0b7a63b",
+      "CRCverified": true
+    },
+    {
+      "path": "publish.log",
+      "bytes": 327075,
+      "sha256": "5ba958738a59bae53c8e44e260ecf41a59d53dafad0aa8a49caaa786b32957db",
+      "CRCverified": true
+    },
+    {
+      "path": "owner-built-assets.json",
+      "bytes": 1272,
+      "sha256": "3cba4f74f796c7f0637d64ca1313e36928caa6fa2625d1902d7f8e379e20b1a2",
+      "CRCverified": true
+    },
+    {
+      "path": "receipt-verify.log",
+      "bytes": 700,
+      "sha256": "132e4e73198fa74c3d77fd6c02a4174d7eda25dfbcd614952a0cef6bd2d3bbf3",
+      "CRCverified": true
+    },
+    {
+      "path": "restore.log",
+      "bytes": 6071,
+      "sha256": "693c44a49bd48718cdca65d6e923be16a89be953b1026bc5f399ccf337987282",
+      "CRCverified": true
+    },
+    {
+      "path": "runtime-pack-properties.json",
+      "bytes": 4877,
+      "sha256": "62a7341a1cea56dfab0486643d01567ee3b97a5eaca413d14a8414e0898eabc7",
+      "CRCverified": true
+    },
+    {
+      "path": "source-after-final.json",
+      "bytes": 1257977,
+      "sha256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+      "CRCverified": true
+    },
+    {
+      "path": "result.json",
+      "bytes": 638,
+      "sha256": "93e89471db396cce3680e3e963f88a051c686cc697f15c8a9132d75157cd2157",
+      "CRCverified": true
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 1257977,
+      "sha256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+      "CRCverified": true
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 1257977,
+      "sha256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+      "CRCverified": true
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1300840,
+      "sha256": "1c599c857e0d779efdb8502c90ad2945e34cf7fdf945eca08e7953aafc6af37b",
+      "CRCverified": true
+    },
+    {
+      "path": "wasm-tools-install.log",
+      "bytes": 1995,
+      "sha256": "3f88d0b44426477d799b3a629be98cda032edaeced11c3e06c9db09789995bcf",
+      "CRCverified": true
+    },
+    {
+      "path": "wasm-tools-list.log",
+      "bytes": 330,
+      "sha256": "9f8024f2d8e0470e23b3d57b7f233bcfa9d5f062de1d843a87fe09d29453aa5d",
+      "CRCverified": true
+    }
+  ],
+  "counts": {
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "outcomes": {
+    "create-real-png-local-document": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "revision": 0,
+        "realNativeImage": {
+          "automationId": null,
+          "name": "Canonical Picture raster preview",
+          "className": "Image",
+          "controlType": "Image",
+          "bounds": {
+            "x": 203,
+            "y": 265,
+            "width": 693.3333333333334,
+            "height": 520
+          }
+        },
+        "canonical": {
+          "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+          "schemaVersion": 1,
+          "displayName": "9312180504914e17ba5d5058154cb04e",
+          "fileId": null,
+          "sourcePath": "/tmp/9to1-picture-local/sources/9312180504914e17ba5d5058154cb04e.png",
+          "sourceRevision": "A17E304D0A333065202CF77C656D7BC86ABDD37237B407A0A5CB870D33870297",
+          "canvasWidth": 8,
+          "canvasHeight": 6,
+          "operations": [],
+          "revision": 0
+        }
+      }
+    },
+    "canonical-crop": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "revision": 1,
+        "crop": {
+          "type": "crop",
+          "x": 1,
+          "y": 2,
+          "width": 5,
+          "height": 3
+        }
+      }
+    },
+    "canonical-undo-redo": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "undoRevision": 2,
+        "redoRevision": 3
+      }
+    },
+    "clean-save-close": {
+      "state": "PASS",
+      "observed": {
+        "savedRevision": 3,
+        "actualClosed": true,
+        "packageUnchanged": true
+      }
+    },
+    "reopen-real-local-row": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "revision": 3,
+        "sameOriginalSource": true,
+        "realNativeImage": {
+          "automationId": null,
+          "name": "Canonical Picture raster preview",
+          "className": "Image",
+          "controlType": "Image",
+          "bounds": {
+            "x": 170,
+            "y": 265,
+            "width": 760,
+            "height": 456
+          }
+        }
+      }
+    },
+    "real-png-download-exact-pixels": {
+      "state": "PASS",
+      "observed": {
+        "pixelsChecked": 15,
+        "rgbaBytes": 60,
+        "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+        "actualPngSHA256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+        "canonicalPackageUnchanged": true
+      }
+    },
+    "clean-browser-process-restart": {
+      "state": "PASS",
+      "observed": {
+        "firstPID": 11044,
+        "secondPID": 11156,
+        "sameCanonicalID": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "sameRevision": 3,
+        "packageByteObjectEquality": true,
+        "qualification": "Deliberately clean blank navigation covers controlled process restart; no automatic tab restoration/BFCache claim"
+      }
+    },
+    "real-presentation-and-pending-input-refusal": {
+      "state": "PASS",
+      "observed": {
+        "refusedDeepLinks": [
+          "",
+          "unsupported"
+        ],
+        "pendingInputRetainedBeforeExplicitRestoration": true,
+        "sameCanonicalRevision": 3
+      }
+    },
+    "two-tab-cas-dirty-close-and-explicit-reload": {
+      "state": "PASS",
+      "observed": {
+        "winnerRevision": 4,
+        "winnerCanvas": [
+          6,
+          3
+        ],
+        "loserRevision": 4,
+        "retainedLoserCanvasBeforeConsent": [
+          3,
+          5
+        ],
+        "actualBothStoresUnchangedOnConflict": true,
+        "failedCloseRetainedDirty": true,
+        "explicitBrowserDiscardReloadObserved": true,
+        "inAppConflictMerge": "NOT_RUN/not implemented by this slice",
+        "quotaAndTransactionAbort": "NOT_RUN/separate genuine calibration and two-store invariance gates required"
+      }
+    }
+  },
+  "candidate": {
+    "sourceCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+    "manifestSHA256": "f34d83fc2a5f68196e68745e348d9ee40b3aad005b4628d9278a3e72e5806fd9",
+    "sourceBeforeSHA256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+    "sourceAfterSHA256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+    "assets": 285,
+    "assetBytes": 58423374
+  },
+  "bundleInventoryBeforeAfterEqual": true,
+  "selectedPublisherSourceRows": 4796,
+  "selectedSourceBeforeAfterFinalSHA256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+  "publisherResult": {
+    "status": "PASS",
+    "sourceCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+    "scope": "Normal source build/publish and public artifact custody; browser/runtime/provider/deployment/full parity NOT_RUN",
+    "seal": {
+      "sourceCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+      "receiptSha256": "f34d83fc2a5f68196e68745e348d9ee40b3aad005b4628d9278a3e72e5806fd9",
+      "zipSha256": "148860d9655e5fe5bae239311be6f921996abee62b8e9fce8c86e60492fd849e",
+      "zipBytes": 35870140,
+      "fileCount": 285,
+      "totalBytes": 58423374,
+      "runtimeVerified": false,
+      "deploymentVerified": false,
+      "fullParityVerified": false
+    }
+  },
+  "nativeCommand": {
+    "name": "picture-browser-nine",
+    "argv": [
+      "node",
+      "/home/runner/work/9to1/9to1/apps/Web/Tests/PictureBrowser/run-picture-browser.cjs",
+      "/home/runner/work/_temp/pb-publish/sdk-publish/wwwroot",
+      "/home/runner/work/_temp/pb-run/raw",
+      "/home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/Fixtures/Picture8x6.png"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 11032,
+        "birth": 30191,
+        "gone": true
+      },
+      {
+        "pid": 11044,
+        "birth": 30220,
+        "gone": true
+      },
+      {
+        "pid": 11046,
+        "birth": 30224,
+        "gone": true
+      },
+      {
+        "pid": 11048,
+        "birth": 30224,
+        "gone": true
+      },
+      {
+        "pid": 11051,
+        "birth": 30224,
+        "gone": true
+      },
+      {
+        "pid": 11052,
+        "birth": 30224,
+        "gone": true
+      },
+      {
+        "pid": 11073,
+        "birth": 30229,
+        "gone": true
+      },
+      {
+        "pid": 11089,
+        "birth": 30240,
+        "gone": true
+      },
+      {
+        "pid": 11096,
+        "birth": 30242,
+        "gone": true
+      },
+      {
+        "pid": 11119,
+        "birth": 30245,
+        "gone": true
+      },
+      {
+        "pid": 11120,
+        "birth": 30246,
+        "gone": true
+      },
+      {
+        "pid": 11139,
+        "birth": 30254,
+        "gone": true
+      },
+      {
+        "pid": 11156,
+        "birth": 30795,
+        "gone": true
+      },
+      {
+        "pid": 11158,
+        "birth": 30798,
+        "gone": true
+      },
+      {
+        "pid": 11160,
+        "birth": 30798,
+        "gone": true
+      },
+      {
+        "pid": 11163,
+        "birth": 30798,
+        "gone": true
+      },
+      {
+        "pid": 11164,
+        "birth": 30798,
+        "gone": true
+      },
+      {
+        "pid": 11183,
+        "birth": 30802,
+        "gone": true
+      },
+      {
+        "pid": 11186,
+        "birth": 30802,
+        "gone": true
+      },
+      {
+        "pid": 11193,
+        "birth": 30804,
+        "gone": true
+      },
+      {
+        "pid": 11225,
+        "birth": 30808,
+        "gone": true
+      },
+      {
+        "pid": 11226,
+        "birth": 30809,
+        "gone": true
+      },
+      {
+        "pid": 11244,
+        "birth": 30814,
+        "gone": true
+      },
+      {
+        "pid": 11268,
+        "birth": 31185,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 15.643,
+    "bytes": 115,
+    "familyClosed": true
+  },
+  "runtimeDiagnostics": {
+    "counts": {},
+    "samples": [],
+    "maximumSamples": 64
+  },
+  "launches": [
+    {
+      "number": 1,
+      "initialUrls": [
+        "about:blank"
+      ],
+      "browserPID": 11044,
+      "browserVersion": "151.0.7922.34"
+    },
+    {
+      "number": 2,
+      "initialUrls": [
+        "about:blank"
+      ],
+      "browserPID": 11156,
+      "browserVersion": "151.0.7922.34"
+    }
+  ],
+  "closedLaunches": [
+    {
+      "number": 1,
+      "browserPID": 11044,
+      "contextCloseResolved": true
+    },
+    {
+      "number": 2,
+      "browserPID": 11156,
+      "contextCloseResolved": true
+    }
+  ],
+  "contextClosed": true,
+  "serverClosed": true,
+  "portRebind": true,
+  "independentPixels": {
+    "standardLibraryChunkCRCAndBoundaryRead": true,
+    "maintainedPillowVersion": "12.3.0",
+    "sourceBytes": 667,
+    "sourceChunks": [
+      "IHDR",
+      "iTXt",
+      "tEXt",
+      "tEXt",
+      "tEXt",
+      "sRGB",
+      "IDAT",
+      "IEND"
+    ],
+    "cropSize": [
+      5,
+      3
+    ],
+    "pixelCount": 15,
+    "rgbaBytes": 60,
+    "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+    "exportPNGBytes": 102,
+    "exportPNGSHA256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+    "exportChunks": [
+      "IHDR",
+      "sBIT",
+      "IDAT",
+      "IEND"
+    ],
+    "actualRemovableTextXmpExifChunksAbsent": true,
+    "strictPixelByteEqualityToActualSourceCrop": true,
+    "additionalStandardLibraryFilterReadAlsoConfirmed": "Actual15RGBA equality/a205 before PIL crosscheck; no productpixelengine copied."
+  },
+  "nativeDialogs": [
+    {
+      "type": "beforeunload",
+      "controlledExplicitDiscard": true,
+      "page": "http://127.0.0.1:18761/#/app.picture?entityType=PictureDocument&entityId=6dbd6289-b461-46dd-adba-8abe6cd94925"
+    }
+  ],
+  "traceFiles": [
+    {
+      "path": "raw/picture-first-process.zip",
+      "bytes": 14145997,
+      "sha256": "7a76b6d92fe770d56391d1b61676515f0c6c21c85faed015d469cfd1f23f18be"
+    },
+    {
+      "path": "raw/picture-final-process.zip",
+      "bytes": 14311448,
+      "sha256": "760717bd8bcf52f71adee11dd9e1c168d9284abdfb7522170260995818270211"
+    }
+  ],
+  "traceCustody": {
+    "trace-member-custody.json": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-7f-recorded-review01/trace-member-custody.json",
+      "bytes": 62747,
+      "sha256": "2b97815aff49cb6ac92df1fcf1aca3364c1fbe2c768ac2169557e952411ed678"
+    },
+    "trace-network-custody.json": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-7f-recorded-review01/trace-network-custody.json",
+      "bytes": 52695,
+      "sha256": "94a1003546ea85c6947cc5cd89f24bcf69e645d3dc4137ca0a08862de1aff40f"
+    },
+    "trace-store-observations.json": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-7f-recorded-review01/trace-store-observations.json",
+      "bytes": 16674,
+      "sha256": "4c412980cdccb93314a452eaa0e76c24dc8b3bafb6e71bcdabf29f4b2ffd37f9"
+    }
+  },
+  "networkCounts": {
+    "actualLocalGET200": 348,
+    "actualRecordedBodiesRehashedAgainst285Inventory": 296,
+    "responsesWithoutBodyReference": 52,
+    "qualification": "Only actualrecorded bodyrefs individually rehashed. No all-response-byte claim."
+  },
+  "actualReadonlyStoreReads": 19,
+  "rev4WinnerBothStoreEqualReadbacks": 4,
+  "initialReadOnlyAnalysisFailure": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-7f-recorded-review01/initial-analysis-failure.json",
+    "bytes": 1214,
+    "sha256": "6bc70c19fb29fc3a8fc3cdc35bdba6a8a02ce11defee2e57c0cda47b0cb0beb5"
+  },
+  "rootSourceChanges": "Current7f one-line same-session retirement/currentledger tuple repair. Unadopted additional oldAdmission lifecycle sourcecontrol NOTRUN; unrelated f7c Write workflow commit separate.",
+  "qualification": "Selected publisher source set explicit/nonexhaustive; full285 runtimebodyarchive NOTlocallyread. Actual trace-recorded networkbody subset bound to manifest rows with counts above. MaintainedCommands normal familyEOF/ECHILD/allrecorded births gone/0signals. Full anonymous fixture outer+nestedZIPCRC/SHA read; no B3 browser execution/no profile extracted.",
+  "history": "All22d/b8/initialmarkup/native14/1/oldrepaired12/3 failures preserved; independent22d9/9 separate."
+}

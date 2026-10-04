@@ -1,0 +1,557 @@
+{
+  "requestId": "TEAM-B-WRITE-SPACE-KEY-OWNER-ACTUAL-CI-20261004-01",
+  "preparedAtUTC": "2026-10-04T13:09:11.881854+00:00",
+  "status": "MAINTAINED_OWNER_REPAIR_OR_NEWER_DELIVERY_REQUESTED_ACK_PENDING",
+  "owner": "Team A shared Haven.UI/HavenInputRouter maintained owner; root owns coordination/adoption.",
+  "actualGitHubRun": {
+    "id": 37202417337,
+    "url": "https://github.com/CroakyJake12/9to1/actions/runs/37202417337",
+    "commit": "556034ac2d6c93478f9922aae516311017c459c5"
+  },
+  "recordedReview": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-ci-recorded-review01/REVIEW.json",
+    "bytes": 58714,
+    "sha256": "70ad1798fc40a24c88c5d6d65f0d3dd6641f36416b7d4267e82d66872ed74b14"
+  },
+  "actualArtifacts": [
+    {
+      "path": "/workspace/attachments/1b410c78-2c51-4d43-868e-be56711bd747/github-actions-artifact-11302943956.zip",
+      "bytes": 334895,
+      "sha256": "c0cd28452809ce4aaf2f8791a16bca0b9dcb4707e3c3a42d10308fd7547a03c1",
+      "crcAllMembersVerified": true,
+      "members": [
+        {
+          "name": "build.log",
+          "bytes": 6362,
+          "sha256": "dca0faadcd6cff347c1de1fa6c6093783d9899980e1786959a2481dc17fa2ab1",
+          "crc32": "18b62831"
+        },
+        {
+          "name": "commands.json",
+          "bytes": 10023,
+          "sha256": "5b8f1b6f22c1bf75ad2016e963ade63216a7a025607dea6d74ed6e11537bf399",
+          "crc32": "ba0578c0"
+        },
+        {
+          "name": "dotnet-info.log",
+          "bytes": 2974,
+          "sha256": "57fe32783f1629003e4a7f9a98aed79cc864c50ab09e70618d70e0c012250c51",
+          "crc32": "ea9dede3"
+        },
+        {
+          "name": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc32": "c22d2381"
+        },
+        {
+          "name": "entry-identity.json",
+          "bytes": 169,
+          "sha256": "bbc5262ee7a5accbd4ae34bafa56c0ff507ca6075170855a7be0ecca3864f46b",
+          "crc32": "75ea3ec7"
+        },
+        {
+          "name": "fixture-tracked.log",
+          "bytes": 179,
+          "sha256": "90c9bc741fca81c514142cc2585c59445a1acb51447c2a8ab9010c3e6c323258",
+          "crc32": "dfb7c444"
+        },
+        {
+          "name": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": "00000000"
+        },
+        {
+          "name": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": "00000000"
+        },
+        {
+          "name": "git-head.log",
+          "bytes": 41,
+          "sha256": "65c91c1a3520caf5dc2ecbf7d25cc36027362bf2c5e71928e06b8fb48fc8beca",
+          "crc32": "69f4cf4e"
+        },
+        {
+          "name": "native-space.log",
+          "bytes": 1572,
+          "sha256": "923f5fa09a819076e988f8b9138fde2f0539d8c6a1725a16abfe359630d91f82",
+          "crc32": "1950c4b2"
+        },
+        {
+          "name": "restore.log",
+          "bytes": 5363,
+          "sha256": "1a81887e2b3f5d6a863f12cc114f4f2958ed684cbdd475cdaf920e3e8376e6bf",
+          "crc32": "8f296d41"
+        },
+        {
+          "name": "result.json",
+          "bytes": 1304,
+          "sha256": "c5d9f500b688bf0a150bea979cbcd12fad307226ce87194c13f7c51bd9a14478",
+          "crc32": "d122c1e8"
+        },
+        {
+          "name": "source-pins-before.json",
+          "bytes": 645,
+          "sha256": "a09a8c67e54ba35fa749357bd8e3f50d27e325ce873dce6b667bdbc2bfa667d9",
+          "crc32": "7d6b0602"
+        },
+        {
+          "name": "source-tree-pins.log",
+          "bytes": 1295978,
+          "sha256": "3ae8b12ff91e7ec38a49c4ad98d35448e69a679363b958c76b6782022d8afe69",
+          "crc32": "f4d55407"
+        },
+        {
+          "name": "target-properties.json",
+          "bytes": 245,
+          "sha256": "1606afa1acb31d1949c6c430f1b98d73f85d947039a18adefbb9f5402f6325be",
+          "crc32": "c3b21531"
+        },
+        {
+          "name": "target-properties.log",
+          "bytes": 275,
+          "sha256": "20e0db89a13850bec5b1dec7cf83c1f08c38f01cd580782d12e3e6136889c9a2",
+          "crc32": "0ccbfa09"
+        }
+      ],
+      "uncompressedBytes": 1325139
+    },
+    {
+      "path": "/workspace/attachments/b498e46b-5706-4c86-928a-4bc96c1d5206/github-actions-artifact-11303850457.zip",
+      "bytes": 336781,
+      "sha256": "51420539234bffa417509360cbbd12297182760c1e616d1c6f7755508e389bda",
+      "crcAllMembersVerified": true,
+      "members": [
+        {
+          "name": "actual-original-assertions.json",
+          "bytes": 4250,
+          "sha256": "a4545dd84bf1e2faa0200bf566b07d8fb6ee4a2f0382e582220b7f2b406ce3af",
+          "crc32": "1b8eac60"
+        },
+        {
+          "name": "build.log",
+          "bytes": 905,
+          "sha256": "2ec0e435f0afe484b3dacefd96c846aede4c78183668114a3b143088b3cf5902",
+          "crc32": "84e39d06"
+        },
+        {
+          "name": "commands.json",
+          "bytes": 7995,
+          "sha256": "9e4fd8a84694da933f657a83f83d68920b1297b876fc21256469375500fdddbd",
+          "crc32": "9d314dd6"
+        },
+        {
+          "name": "dotnet-info.log",
+          "bytes": 2976,
+          "sha256": "b6b8d30f190b458d14d75d5b3a1239852c858965a16bdc8a56df49f155416e68",
+          "crc32": "4b8fed50"
+        },
+        {
+          "name": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "crc32": "c22d2381"
+        },
+        {
+          "name": "entry-identity.json",
+          "bytes": 169,
+          "sha256": "b397f651e70c9cfee8e05badd6d69820d481618dfa9aa760802af4552af19997",
+          "crc32": "24f4e8fa"
+        },
+        {
+          "name": "fixture-tracked.log",
+          "bytes": 178,
+          "sha256": "6beb123632043db7341a993536e9d2c9af020804c3cc615b16526ec7f6debb93",
+          "crc32": "378da1b2"
+        },
+        {
+          "name": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": "00000000"
+        },
+        {
+          "name": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "crc32": "00000000"
+        },
+        {
+          "name": "git-head.log",
+          "bytes": 41,
+          "sha256": "65c91c1a3520caf5dc2ecbf7d25cc36027362bf2c5e71928e06b8fb48fc8beca",
+          "crc32": "69f4cf4e"
+        },
+        {
+          "name": "native-seed.log",
+          "bytes": 1180,
+          "sha256": "643db015a92caa6e2a7da9d6a8de791545e29bd49e1baa8f459d9a754abf418c",
+          "crc32": "45081dee"
+        },
+        {
+          "name": "native-subscriber.log",
+          "bytes": 241,
+          "sha256": "3c0be8c3feeddf728524fe03251757f80434931259703dc121916dc6895ccb02",
+          "crc32": "69b65e5f"
+        },
+        {
+          "name": "native-verify.log",
+          "bytes": 2299,
+          "sha256": "df542b71b096400e49bda74a0878a9901bc52e1ca726a366d0828286572bdd32",
+          "crc32": "a692d7e6"
+        },
+        {
+          "name": "restore.log",
+          "bytes": 669,
+          "sha256": "d4b07c51b8b4aa12bf53c7648fc30777fca92434acdb48e2895066d19b3513f7",
+          "crc32": "29e572f0"
+        },
+        {
+          "name": "result.json",
+          "bytes": 4771,
+          "sha256": "828863011ee235b16563f0847f35e06cae0748c1755612d2d8d14021bf326e1c",
+          "crc32": "6fe19a38"
+        },
+        {
+          "name": "source-pins-before.json",
+          "bytes": 644,
+          "sha256": "6a4457bbec4c3fa4ebff5ecb6cfd4f2dc02ba3b35dae53f9fb44186ddd706979",
+          "crc32": "39bbfcf6"
+        },
+        {
+          "name": "source-tree-pins.log",
+          "bytes": 1295978,
+          "sha256": "3ae8b12ff91e7ec38a49c4ad98d35448e69a679363b958c76b6782022d8afe69",
+          "crc32": "f4d55407"
+        },
+        {
+          "name": "target-properties.json",
+          "bytes": 261,
+          "sha256": "a19b65be1e66dcb0c2708c79a71062b93816a0dde7c18c5195ea7c62ae4aad21",
+          "crc32": "3bf7ebdb"
+        },
+        {
+          "name": "target-properties.log",
+          "bytes": 291,
+          "sha256": "2783b3c52f14e007189da7c66766ce548984541a82c16ad00f289c4eb495f17b",
+          "crc32": "fb3dac90"
+        }
+      ],
+      "uncompressedBytes": 1322857
+    }
+  ],
+  "nativeWhitespaceFailure": {
+    "fixture": "apps/Web/Tests/BrowserWriteSpaceRegression.cs",
+    "fixtureSha256": "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee",
+    "project": "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+    "projectSha256": "02448d481ff10e13073d4035013d95bee0a8ad9142fb145f8a128153db785f7d",
+    "build": "Ordinary actual current source graph compiled0warnings/0errors; no owner compile-replacement hook.",
+    "expectedFullText": "Alpha beta gamma",
+    "requiredTwoSpaces": true,
+    "assertionOrdinal": 11,
+    "exactFailedCase": "Actual per-character native Write input preserves all spaces",
+    "exactException": "System.InvalidOperationException: Actual per-character native Write input preserves all spaces",
+    "stack": "BrowserWriteSpaceRegression.cs:103 assertion, Check helper:24",
+    "nativeExit": -6,
+    "naturalProcessAbort": true,
+    "forcedCleanupSignals": 0,
+    "authoredTotal": 15,
+    "observedPassed": 10,
+    "failed": 1,
+    "notRun": 4,
+    "cases": [
+      {
+        "ordinal": 1,
+        "name": "Actual native Button receives focus",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 2,
+        "name": "Actual Button Space invokes once and consumes key without text",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 3,
+        "name": "Actual Button Enter invokes exactly once more",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 4,
+        "name": "Actual Button releases pressed state",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 5,
+        "name": "Actual ordinary Input receives native focus",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 6,
+        "name": "Actual ordinary Input admits one Space text event",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 7,
+        "name": "Custom owning keyboard handler receives native focus",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 8,
+        "name": "Custom true Space handler retains ownership and receives no duplicate text",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 9,
+        "name": "Actual owning Write scene renders with native resources",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 10,
+        "name": "Actual owning Write surface receives native focus",
+        "outcome": "PASS"
+      },
+      {
+        "ordinal": 11,
+        "name": "Actual per-character native Write input preserves all spaces",
+        "outcome": "FAIL"
+      },
+      {
+        "ordinal": 12,
+        "name": "Write Space stays unhandled and emits exactly one native text event",
+        "outcome": "NOT_RUN"
+      },
+      {
+        "ordinal": 13,
+        "name": "Real repository preserves exact per-character text",
+        "outcome": "NOT_RUN"
+      },
+      {
+        "ordinal": 14,
+        "name": "Real repository preserves owner document and structured identities",
+        "outcome": "NOT_RUN"
+      },
+      {
+        "ordinal": 15,
+        "name": "Actual durable receipt matches reloaded canonical revision",
+        "outcome": "NOT_RUN"
+      }
+    ],
+    "commandCustody": {
+      "commands": 11,
+      "births": 55,
+      "allHeldBirthsGone": true,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "forcedSignals": 0
+    },
+    "rawLogSHA256": "923f5fa09a819076e988f8b9138fde2f0539d8c6a1725a16abfe359630d91f82",
+    "rawLogLocation": "native-space.log member in exact archived Space ZIP",
+    "actualWrongString": "NOT_ESTABLISHED_FROM_THIS_ARTIFACT: raw-key-diagnostics.json is not uploaded. Older Alphabetagamma observation remains separate historical evidence.",
+    "durableQualification": "Fixture awaited actual NotesRepository save/load before assertion11; exact text, identities and receipt checks12..15 do not thereby pass."
+  },
+  "typedOwnerDurabilityControl": {
+    "suite": "durable65",
+    "assertionsPassed": 65,
+    "modes": {
+      "seed": 23,
+      "freshProcessVerify": 40,
+      "subscriber": 2
+    },
+    "qualification": "Actual owner typed insertion preserves exact Alpha beta gamma and bold beta runs/native package/local repository restart. This demonstrates typed editor/repository behavior; it does not fix raw-key admission or prove browser rendering/ACL.",
+    "freshApphostProcesses": 3,
+    "normalCommands": 13,
+    "heldBirthsGone": 19
+  },
+  "sourceChain": [
+    "Actual WriteDocumentSurface implements custom keyboard/text targets; Space declines KeyDown/KeyUp. TextInput forwards unchanged string to actual editor.",
+    "HavenInputRouter honors custom true KeyDown first; when custom text editor declines Space, generic ANY-focused Enter/Space fallback sets Pressed and returns true. KeyUp generic fallback also activates it.",
+    "Actual native HavenSceneControl marks event Handled when router true. Owning BrowserInputHandler sends a one-character RawTextEvent only when raw key is unhandled.",
+    "Existing typed editor normalizes only CR/LF and inserts ordinary spaces intact; B-owned busy/read-only wrapper only gates input admission, with no whitespace rewrite.",
+    "Source-native fixture executes genuine raw Avalonia events/native scene/router/editor/repository and mirrors exact browser text-admission condition; browser class itself is not executed."
+  ],
+  "maintainedOwnerRequest": {
+    "desiredDisposition": "Owner-maintained Space admission for focused IHavenTextInputTarget which has declined custom keyboard handling: before generic activation fallback, leave Space unhandled in BOTH KeyDown and KeyUp. No generic Pressed/Activate effect for this declined textual Space.",
+    "preserve": [
+      "Actual custom keyboard true Space handlers retain ownership and receive no duplicate text.",
+      "Actual Button pressed/Invoke/declarative ClickActions remain exactly once for Space and Enter.",
+      "Existing ordinary Input Space admission and all Enter/clipboard/Tab/navigation/modifier behavior remain owner-governed."
+    ],
+    "scope": "Existing shared interfaces/router semantics; no new B control/editor/document/provider model and no browser-private Space insertion/skip workaround.",
+    "ask": "Acknowledge exact maintained repair scope or provide newer canonical owner delivery which already fixes it, with exact source/revision and required regression evidence.",
+    "requiredValidation": [
+      "Run unchanged actual BrowserWriteSpace15 source at new genuine owner head: all15, exact three-word text/two spaces, declined Space down/up/unpressed/one text event, actual repository IDs/content/revision.",
+      "Preserve original ten passing Button/Input/custom ownership/resource/focus checks; retain exact first failure/original bytepins.",
+      "Run owning input-router relevant regressions including keyboard/declarative activation; no double button invocation.",
+      "After owner source adoption/root seal, rerun real WASM physical per-character three-word Write create/edit/rich-format/save/close/reopen journey; native green is not browser acceptance."
+    ]
+  },
+  "history": {
+    "sourceCauseReview": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-space-admission-source-review.json",
+    "qualification": "Historical sealed f8de browser and source-replacement diagnostic control remain distinct; actual556 source CI failure adds maintained baseline evidence. This request concerns input routing, separately from glyph width/layout owner requests."
+  },
+  "exactActualSourcePinsAndWitnesses": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs",
+      "bytes": 30893,
+      "sha256": "eb887775d9c1ec9928acf9a1411c8ab1ebe5e77550ac2f7aae4c478963d927dd",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 303,
+          "lastLine": 308,
+          "text": "\n    public bool KeyDown(HavenKey key, HavenInputModifiers modifiers = default)\n    {\n        var keyInput = new HavenKeyInput(key, ToKeyModifiers(modifiers));\n        if (_focused is IHavenKeyboardInputTarget custom && custom.KeyDown(keyInput)) return true;\n        if ((modifiers.Control || modifiers.Meta) && _focused is IHavenClipboardInputTarget clipboardTarget)"
+        },
+        {
+          "firstLine": 405,
+          "lastLine": 408,
+          "text": "        if (_focused is null || key is not (HavenKey.Enter or HavenKey.Space)) return false;\n        _focused.SetState(HavenElementState.Pressed, true);\n        return true;\n    }"
+        },
+        {
+          "firstLine": 410,
+          "lastLine": 440,
+          "text": "    public bool KeyUp(HavenKey key)\n    {\n        if (_focused is IHavenKeyboardInputTarget custom)\n        {\n            var focusedBeforeKeyUp = _focused;\n            var wasPressed = focusedBeforeKeyUp.State.HasFlag(HavenElementState.Pressed);\n            if (custom.KeyUp(new HavenKeyInput(key, HavenKeyModifiers.None)))\n            {\n                // Canonical Button handles its own Enter/Space pressed state and Invoke(),\n                // so the router's generic Activate() path is not reached. Preserve pointer\n                // parity by executing the same declarative ClickActions after a successful\n                // keyboard activation, without invoking the button a second time.\n                if (focusedBeforeKeyUp is Button button\n                    && key is HavenKey.Enter or HavenKey.Space\n                    && wasPressed\n                    && !button.State.HasFlag(HavenElementState.Disabled))\n                    _actions.ExecuteClick(root, button);\n                return true;\n            }\n        }\n        if (key == HavenKey.Tab) return true;\n        if (_focused is Button tabButton && IsTabButton(tabButton) && key is (HavenKey.Left or HavenKey.Right or HavenKey.Home or HavenKey.End)) return true;\n        if (_focused is Input && key is HavenKey.Enter or HavenKey.Space or HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Home or HavenKey.End or HavenKey.Backspace or HavenKey.Delete or HavenKey.A or HavenKey.C or HavenKey.V or HavenKey.X or HavenKey.Y or HavenKey.Z) return true;\n        if (_focused is Slider && key is HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down) return true;\n        if (_focused is Select && key is HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Home or HavenKey.End or HavenKey.Escape) return true;\n        if (_focused is null || key is not (HavenKey.Enter or HavenKey.Space)) return false;\n        _focused.SetState(HavenElementState.Pressed, false);\n        Activate(_focused);\n        return true;\n    }\n"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.UI/Input/IHavenPointerInputTarget.cs",
+      "bytes": 2373,
+      "sha256": "61d7f96110e48ad370d298cc1fc77a93e1ecd34274770845e88889929e9b5516",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 52,
+          "lastLine": 63,
+          "text": "public interface IHavenKeyboardInputTarget\n{\n    bool KeyDown(HavenKeyInput input);\n    bool KeyUp(HavenKeyInput input) => false;\n}\n\n/// <summary>Text composition for custom Haven elements.</summary>\npublic interface IHavenTextInputTarget\n{\n    bool TextInput(string? text);\n}\n"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface.cs",
+      "bytes": 31995,
+      "sha256": "cba8ec28168a119a3a156e1a8867cede51098e9219493c9122914c873b6bf383",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 107,
+          "lastLine": 150,
+          "text": "    public bool TextInput(string? text)\n    {\n        if (TryTableTextInput(text)) return true;\n        if (_editor?.InsertDocumentText(text) != true) return false;\n        InvalidateDocument();\n        return true;\n    }\n\n    public bool KeyDown(HavenKey key, HavenInputModifiers modifiers)\n    {\n        if (_editor is null) return false;\n        if (TryTableKeyDown(key, modifiers)) return true;\n        if (modifiers.Control)\n        {\n            if (key == HavenKey.A) { _editor.SelectAllDocumentText(); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true; }\n            if (key == HavenKey.Z) { if (_editor.Undo()) { InvalidateDocument(); return true; } return false; }\n            if (key == HavenKey.Y) { if (_editor.Redo()) { InvalidateDocument(); return true; } return false; }\n        }\n        switch (key)\n        {\n            case HavenKey.Left: if (_editor.MoveDocumentCaret(-1, modifiers.Shift)) { SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true; } break;\n            case HavenKey.Right: if (_editor.MoveDocumentCaret(1, modifiers.Shift)) { SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true; } break;\n            case HavenKey.Up: if (MoveVertical(-1, modifiers.Shift)) return true; break;\n            case HavenKey.Down: if (MoveVertical(1, modifiers.Shift)) return true; break;\n            case HavenKey.Home: _editor.MoveDocumentCaretToBoundary(false, modifiers.Shift); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true;\n            case HavenKey.End: _editor.MoveDocumentCaretToBoundary(true, modifiers.Shift); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true;\n            case HavenKey.Backspace: if (_editor.BackspaceDocument()) { InvalidateDocument(); return true; } break;\n            case HavenKey.Delete: if (_editor.DeleteForwardDocument()) { InvalidateDocument(); return true; } break;\n            case HavenKey.Enter: if (_editor.InsertDocumentText(\"\\n\")) { InvalidateDocument(); return true; } break;\n            case HavenKey.Tab:\n                if (_editor.SelectedBlock is { } block)\n                {\n                    var next = Math.Max(0, block.Paragraph.IndentLeft + (modifiers.Shift ? -24 : 24));\n                    _editor.SetLeftIndent(next);\n                    InvalidateDocument();\n                    return true;\n                }\n                break;\n        }\n        return false;\n    }\n\n    bool IHavenKeyboardInputTarget.KeyDown(HavenKeyInput input) => KeyDown(input.Key, ToInputModifiers(input));\n"
+        },
+        {
+          "firstLine": 164,
+          "lastLine": 164,
+          "text": "    public bool KeyUp(HavenKey key) => key is HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Home or HavenKey.End or HavenKey.Backspace or HavenKey.Delete or HavenKey.Enter or HavenKey.Tab or HavenKey.A or HavenKey.Z or HavenKey.Y;"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+      "bytes": 14936,
+      "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 84,
+          "lastLine": 104,
+          "text": "    public bool InsertDocumentText(string? text)\n    {\n        text ??= string.Empty;\n        if (text.Length == 0 && !HasDocumentSelection) return false;\n        var caret = DocumentCaret;\n        if (caret.BlockId == Guid.Empty) return false;\n        Mutate(() =>\n        {\n            if (HasDocumentSelection) DeleteDocumentSelectionCore();\n            caret = DocumentCaret;\n            var block = TextBlocks().First(candidate => candidate.Id == caret.BlockId);\n            var current = EditableText(block);\n            var offset = Math.Clamp(caret.Offset, 0, current.Length);\n            var normalized = text.Replace(\"\\r\\n\", \"\\n\", StringComparison.Ordinal).Replace('\\r', '\\n');\n            var lines = normalized.Split('\\n');\n            if (lines.Length == 1)\n            {\n                ReplaceTextPreservingRuns(block, current.Insert(offset, lines[0]));\n                SetCaretState(new WriteDocumentPosition(block.Id, offset + lines[0].Length));\n                return;\n            }"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
+      "bytes": 44574,
+      "sha256": "87a76ce5c3c0c3ca457300503eb992d396f4e2ec3a010b11c9379257624d31b3",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 361,
+          "lastLine": 384,
+          "text": "    protected override void OnKeyDown(KeyEventArgs e)\n    {\n        base.OnKeyDown(e);\n        ConfigureInputRouter();\n        if (_input?.KeyDown(MapInputKey(e.Key), ToHavenModifiers(e.KeyModifiers)) != true) return;\n        e.Handled = true;\n        InvalidateMeasure();\n        InvalidateScene();\n    }\n\n    protected override void OnKeyUp(KeyEventArgs e)\n    {\n        base.OnKeyUp(e);\n        if (_input?.KeyUp(MapInputKey(e.Key)) != true) return;\n        e.Handled = true;\n        InvalidateScene();\n    }\n\n    protected override void OnTextInput(TextInputEventArgs e)\n    {\n        base.OnTextInput(e);\n        if (_input?.TextInput(e.Text) != true) return;\n        e.Handled = true;\n        InvalidateMeasure();"
+        }
+      ]
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/BrowserInputHandler.cs",
+      "bytes": 13480,
+      "sha256": "1a19a4a58582b809b09aa55d0abe30ff352410f7023545d0942b1fe576fc3400",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 230,
+          "lastLine": 245,
+          "text": "    public bool OnKeyDown(string code, string key, int modifier)\n    {\n        var handled = RawKeyboardEvent(RawKeyEventType.KeyDown, code, key, (RawInputModifiers)modifier);\n\n        if (!handled && key.Length == 1)\n        {\n            handled = RawTextEvent(key);\n        }\n\n        return handled;\n    }\n\n    public bool OnKeyUp(string code, string key, int modifier)\n    {\n        return RawKeyboardEvent(RawKeyEventType.KeyUp, code, key, (RawInputModifiers)modifier);\n    }"
+        }
+      ]
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "bytes": 4010,
+      "sha256": "7640a081cd4efb66fd28750b9c90ee7c8caa0c0a9ccdce6a499bb8744b0a27f3",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 61,
+          "lastLine": 82,
+          "text": "    public void SetInputAllowed(bool allowed)\n    {\n        ObjectDisposedException.ThrowIf(_disposed, this);\n        if (_inputAllowed == allowed) return;\n        _inputAllowed = allowed;\n        _scene.IsEnabled = allowed;\n        if (_surface is null) return;\n        _surface.SetValue(HavenProperties.Enabled, allowed);\n        _surface.Accessibility.Enabled = allowed;\n        if (!allowed)\n        {\n            // The original async clipboard code checks its captured router identity.\n            // Renewing that router invalidates a pending paste before save/read-only.\n            // Reattach the same retained node so this does not replace document state.\n            _scene.Root = null;\n            _scene.Root = _surface;\n        }\n        else _scene.FocusElement(_surface);\n    }\n\n    private void GateKey(object? sender, KeyEventArgs args) { if (!_inputAllowed) args.Handled = true; }\n    private void GateText(object? sender, TextInputEventArgs args) { if (!_inputAllowed) args.Handled = true; }"
+        }
+      ]
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": []
+    },
+    {
+      "path": "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+      "bytes": 850,
+      "sha256": "02448d481ff10e13073d4035013d95bee0a8ad9142fb145f8a128153db785f7d",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": []
+    },
+    {
+      "path": "apps/Web/Tests/BrowserWriteSpaceRegression.cs",
+      "bytes": 8972,
+      "sha256": "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": [
+        {
+          "firstLine": 37,
+          "lastLine": 50,
+          "text": "        var down = new RawKeyEventArgs(keyboard, ++timestamp, inputRoot, RawKeyEventType.KeyDown, key, modifiers, physical, symbol);\n        input.ProcessInput(down);\n        var pressed = scene.Root!.State.HasFlag(HavenElementState.Pressed);\n        // Exact owning BrowserInputHandler.OnKeyDown admission condition. Native\n        // event routing/scene/router/editor are genuine; browser class is not run.\n        var emitted = !down.Handled && symbol.Length == 1;\n        if (emitted) input.ProcessInput(new RawTextInputEventArgs(keyboard, ++timestamp, inputRoot, symbol));\n        var up = new RawKeyEventArgs(keyboard, ++timestamp, inputRoot, RawKeyEventType.KeyUp, key, modifiers, physical, symbol);\n        input.ProcessInput(up);\n        observations.Add(new { key = key.ToString(), symbol, downHandled = down.Handled, upHandled = up.Handled,\n            pressedAfterDown = pressed, textEventEmitted = emitted, pressedAfterUp = scene.Root.State.HasFlag(HavenElementState.Pressed) });\n        return (down.Handled, up.Handled, pressed, emitted);\n    }\n    host.SetInputAllowed(true);"
+        },
+        {
+          "firstLine": 78,
+          "lastLine": 109,
+          "text": "        var editor = new WriteDocumentEditor(document);\n        host.SetInputAllowed(true); host.SetEditor(editor);\n        using (var frame = window.CaptureRenderedFrame()) Check(\"Actual owning Write scene renders with native resources\", frame is not null);\n        Check(\"Actual owning Write surface receives native focus\", scene.FocusElement(scene.Root!));\n        var spaces = new List<(bool Down, bool Up, bool Pressed, bool Text)>();\n        foreach (var ch in \"Alpha beta gamma\")\n        {\n            var upper = char.ToUpperInvariant(ch).ToString();\n            var stroke = ch == ' ' ? RawStroke(Key.Space, PhysicalKey.Space, \" \")\n                : RawStroke(Enum.Parse<Key>(upper), Enum.Parse<PhysicalKey>(upper), ch.ToString(), char.IsUpper(ch) ? RawInputModifiers.Shift : RawInputModifiers.None);\n            if (ch == ' ') spaces.Add(stroke);\n        }\n        var first = document.Sections[0].Pages[0].Blocks[0];\n        var authoredText = string.Concat(first.Runs.Select(run => run.Text));\n        var paths = new AppPaths();\n        var repository = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));\n        var receipt = await repository.SaveAsync(document, \"Actual per-character native keyboard fixture\", default);\n        var reloaded = await repository.LoadAsync(document.Id, default) ?? throw new InvalidOperationException(\"Actual repository did not reload document.\");\n        var loadedBlock = reloaded.Sections[0].Pages[0].Blocks[0];\n        File.WriteAllText(Path.Combine(paths.DataDirectory, \"raw-key-diagnostics.json\"), JsonSerializer.Serialize(new\n        {\n            documentId = document.Id, authoredText, savedText = string.Concat(loadedBlock.Runs.Select(run => run.Text)),\n            receipt.Version, observations, spaces = spaces.Select(value => new { value.Down, value.Up, value.Pressed, value.Text }),\n            uiAssembly = typeof(HavenInputRouter).Assembly.Location, sceneAssembly = typeof(WriteRetainedSceneControl).Assembly.Location\n        }, new JsonSerializerOptions { WriteIndented = true }));\n        Check(\"Actual per-character native Write input preserves all spaces\", authoredText == \"Alpha beta gamma\");\n        Check(\"Write Space stays unhandled and emits exactly one native text event\", spaces.Count == 2 && spaces.All(value => !value.Down && !value.Up && !value.Pressed && value.Text));\n        Check(\"Real repository preserves exact per-character text\", string.Concat(loadedBlock.Runs.Select(run => run.Text)) == \"Alpha beta gamma\");\n        Check(\"Real repository preserves owner document and structured identities\", reloaded.Id == document.Id\n            && reloaded.Sections[0].Id == document.Sections[0].Id && reloaded.Sections[0].Pages[0].Id == document.Sections[0].Pages[0].Id\n            && loadedBlock.Id == first.Id && loadedBlock.Runs.Select(run => run.Id).SequenceEqual(first.Runs.Select(run => run.Id)));\n        Check(\"Actual durable receipt matches reloaded canonical revision\", receipt.Version == reloaded.Version && receipt.Version > 0);"
+        }
+      ]
+    },
+    {
+      "path": "apps/Web/Write/Tests/ci/run-existing-write.py",
+      "bytes": 11703,
+      "sha256": "7238749ef9254bb30b97dba7cd1b18ab5b49415356f6696d9eb5ac9396e5073c",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": []
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "actualCommit": "556034ac2d6c93478f9922aae516311017c459c5",
+      "witnesses": []
+    }
+  ],
+  "actions": {
+    "sharedPatch": false,
+    "ownerACK": false,
+    "SDK": false,
+    "nativeReplay": false,
+    "GUI": false,
+    "rootCoordinationPublication": "Prepared for root; B2 did not publish messages to external people."
+  }
+}

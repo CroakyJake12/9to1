@@ -1,0 +1,1183 @@
+{
+  "status": "RECORDED_EVIDENCE_CLEAR_ORIGINAL_PERSISTED_STUDY4_SUBSET",
+  "utc": "2026-10-04T14:52:07.374998+00:00",
+  "runId": 37210629435,
+  "url": "https://github.com/CroakyJake12/9to1/actions/runs/37210629435",
+  "sourceCommit": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+  "artifactId": 11306536851,
+  "archive": {
+    "path": "/workspace/attachments/27385336-9d55-45d2-adb1-65d385df4f82/original-study-persisted-0424b292.zip",
+    "bytes": 341132,
+    "sha256": "c8d19ae03a30c1059bda95ee2306ee8020cc21b58640f35e0bb8292af7b2a198",
+    "all17CRCAndWholeMemberSHA": true
+  },
+  "members": [
+    {
+      "name": "diagnostics/build.log",
+      "bytes": 644,
+      "compressedBytes": 234,
+      "crc32": "1f048495",
+      "sha256": "9ba3d114089da88ee4926622cfb62a8729b5cc2c2b211e25e643820cc5de6a1c"
+    },
+    {
+      "name": "diagnostics/commands.json",
+      "bytes": 7777,
+      "compressedBytes": 1186,
+      "crc32": "4c127163",
+      "sha256": "19212698d823d32ac037dfb3480f5cbd1d4de3d80eacf87a420f5554be3efef9"
+    },
+    {
+      "name": "diagnostics/discovery-gate.json",
+      "bytes": 5378,
+      "compressedBytes": 854,
+      "crc32": "a27501db",
+      "sha256": "835d7af7d7a12fc4681a26c6f087e4a80979c5fcc9e6967fed79ba2fe9df93a4"
+    },
+    {
+      "name": "diagnostics/discovery.log",
+      "bytes": 2785,
+      "compressedBytes": 829,
+      "crc32": "6d3949fd",
+      "sha256": "7fa4e9a0451f1c2fbc3f541c132494e688ba1217b40379df506cf78bb6a18c52"
+    },
+    {
+      "name": "diagnostics/dotnet-info.log",
+      "bytes": 2976,
+      "compressedBytes": 790,
+      "crc32": "25e321c3",
+      "sha256": "39eb8f56fbe15f0851d3bccbf85337838e5201daa34b148c94bf96b1b97875e0"
+    },
+    {
+      "name": "diagnostics/dotnet-version.log",
+      "bytes": 9,
+      "compressedBytes": 11,
+      "crc32": "c22d2381",
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "name": "diagnostics/git-clean-after.log",
+      "bytes": 0,
+      "compressedBytes": 2,
+      "crc32": "00000000",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "diagnostics/git-clean-before.log",
+      "bytes": 0,
+      "compressedBytes": 2,
+      "crc32": "00000000",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "diagnostics/git-head.log",
+      "bytes": 41,
+      "compressedBytes": 42,
+      "crc32": "b3909b0c",
+      "sha256": "4a42023e329dfc924ebd41e4dd1afd93119257845b5ff0cd9179b7eb7268e3f7"
+    },
+    {
+      "name": "diagnostics/original-four-study-facts.log",
+      "bytes": 501,
+      "compressedBytes": 258,
+      "crc32": "5563caa5",
+      "sha256": "f1d80f67a6004fe2d0325971c850ed76ba1f3725833391583830890179c0e1aa"
+    },
+    {
+      "name": "diagnostics/original-trx-gate.json",
+      "bytes": 3892,
+      "compressedBytes": 923,
+      "crc32": "e56371e0",
+      "sha256": "f3de8ade14dc4dd8f085024160745ddb54493121519f1b825a335d204f16243c"
+    },
+    {
+      "name": "diagnostics/owned-files-tracked.log",
+      "bytes": 243,
+      "compressedBytes": 113,
+      "crc32": "693bf410",
+      "sha256": "0b84fe52be4cf989acae2ed09d31f8dc9037c36c5f8dfee838d92e879c40e9d8"
+    },
+    {
+      "name": "diagnostics/restore.log",
+      "bytes": 483,
+      "compressedBytes": 215,
+      "crc32": "73cd0563",
+      "sha256": "d7ea0c10257649314723eec484c3897a9dfb19cd8cda8483623569eaac851346"
+    },
+    {
+      "name": "diagnostics/result.json",
+      "bytes": 950,
+      "compressedBytes": 492,
+      "crc32": "3880b10d",
+      "sha256": "539459637f68b72b6e84e5ee491ba358676bce16cf6618b39c84c0dfd1d9b6a0"
+    },
+    {
+      "name": "diagnostics/source-pins-before.json",
+      "bytes": 6385,
+      "compressedBytes": 1989,
+      "crc32": "64bb81e1",
+      "sha256": "1a45b1f2c1243e3602ea2ff23ce70c10f6451da326dab2b0b94e82fc488190d0"
+    },
+    {
+      "name": "test-results/study-original-persisted.trx",
+      "bytes": 7656,
+      "compressedBytes": 1673,
+      "crc32": "bddc93ee",
+      "sha256": "bcc2479211eaa5e94b4f3dd49d45fc5db455ba457682d64325d474c5d6171b85"
+    },
+    {
+      "name": "diagnostics/source-tree-pins.log",
+      "bytes": 1302653,
+      "compressedBytes": 328913,
+      "crc32": "9c80755a",
+      "sha256": "1d5d7be532a368f723a16f9041698369419c6ce2bd6022d0bdffd870664fd53f"
+    }
+  ],
+  "source": {
+    "actualFullGitTreeSHA256": "1d5d7be532a368f723a16f9041698369419c6ce2bd6022d0bdffd870664fd53f",
+    "trackedTreeEntries": 9704,
+    "rawTreeMatchesExactActualCommit": true,
+    "originalOwner36": [
+      {
+        "path": "9to1 Workspace/Directory.Build.props",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+        "bytes": 781,
+        "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+      },
+      {
+        "path": "9to1 Workspace/Directory.Packages.props",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+        "bytes": 2581,
+        "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "3d06cea5f9131680ed447fb423feebeba5f477e3",
+        "bytes": 1993,
+        "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "cc85c272caa8e95166986e1294cd827f7527e354",
+        "bytes": 700,
+        "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerAvailabilityService.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "fe36b54727ed6f49f79e5bb8cd61eb1ef9cbf2d6",
+        "bytes": 1367,
+        "sha256": "08ce54d2d2070d1d8fba12a7aa053aceaae27bb9d9c226e3295dddbd41ab5da1"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerDayService.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "697e28aa5668931dd0c4c8c6835ee5e19e59ca03",
+        "bytes": 1704,
+        "sha256": "81ea709d87d4dd3e3dc3c278d6573e0f9f82663485bff89498b5530d162ccea7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Planner/StudyPlannerService.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "f7b98f54ab6c6e8dad2d19e8227e29e5c45bdeb9",
+        "bytes": 11851,
+        "sha256": "8cbafe9a2560b830b7e7f4697feac937ecae0faef44ab5344f47c8cf7b33939b"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a6996aa2c75031e77bf1c4d60861ff365ed1e386",
+        "bytes": 375,
+        "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/CalendarSyncProviders.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "d42f97d8b67c2bda006e55f3a69a2dbf4a694586",
+        "bytes": 10050,
+        "sha256": "07e08a384f72e2a2efbbba5703068492d8f885dd1d2b1ee5f071ba39dc3344a9"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/GoogleCalendarProviderTransport.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "077642b4231cac902f499fdad63e4260bb23d275",
+        "bytes": 18933,
+        "sha256": "359a33a5b9a37ab56db3f201e2bf19898790c872b612770b9eac5305e1611ff6"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/MicrosoftCalendarProviderTransport.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "5b7de3d7cbf0d8267f9455d0392c9cc063179518",
+        "bytes": 19089,
+        "sha256": "a2335f37edcc538f7097f3e23297c88a1043aa877b4214020672c042c19d9b25"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/OAuthCalendarTransportBase.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "47bd762db654e72e8e707ee965e77a0da341bf2a",
+        "bytes": 23054,
+        "sha256": "c96412a641851e60878bb1df59f2ff28ca22d8806542d535bac3c0f3af404775"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/OAuthPlatformServices.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a34b47435e4a1b940a9e897fe670e5b83c1d1e74",
+        "bytes": 947,
+        "sha256": "56ca40e3283d3ad86f9513b6c3f3779568bd0b2ca6dacccac78588938cc67dc3"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/AutomationOwnerStateMigration.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "bf3f85fa4ea4ace3c004ee0f861cac59b679e9fe",
+        "bytes": 2112,
+        "sha256": "fe4ae9b56ad09a6a499a2da1aa43b700cb01333de688943ff2833348a270e3e5"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/FeatureMigration.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "ee13117bacbcac004b2a4b59da84cd3d1c18c236",
+        "bytes": 3812,
+        "sha256": "69502fdd7d47991758319690e90bfbb1b8e33c02e6276ad1ea500b5a8d90cd9f"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/PlannerMigration.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "4f0e1547710834ff725d7f0a9b905d23e0a39aa1",
+        "bytes": 8734,
+        "sha256": "12629718b0860ae6b6a890eb9769a9cd320b4b713f671d0c7d98ac9b15ae5d62"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/PlannerRichEntitiesMigration.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "c5d647c4eeb0653700ea2fa84838362a9740f024",
+        "bytes": 1926,
+        "sha256": "973f98b07ee864f4fdfabf118a1395850f69b8224bb1771af65cec10ca144182"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteDatabase.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "f8411cf34b3f81420292740b2e761cca619b4b98",
+        "bytes": 48588,
+        "sha256": "038c439d7ff12c7f421e469126dfbff056bc19406d1f500b73cb182cd5aa2f88"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteMapping.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "0c1379255cc74b823d8a99a2a55b2ebc7c737dc0",
+        "bytes": 3321,
+        "sha256": "2c2426e7ecce4e23d325c604a1c13a56cc366f02bb8f28f570aedf1ac06d08c3"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteProviderBootstrap.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "916cdf79b506523d7ee12f2ecaf84088aef7af71",
+        "bytes": 1973,
+        "sha256": "1202f300421e9f1485ca23dfc4b7b0d9659fee1f369e47073aa7987376342ef7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/ConnectedAccountAccessTokenProvider.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "578c8e34d9badbd06e947466e2c2946ea4248f75",
+        "bytes": 4955,
+        "sha256": "3a59d4a52e038c570743873646ed2a8b29a7a66fd3cd4ba324f6d65854b97005"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/FileMailDraftStore.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "1c5f06cedbe072ea00547e7f9c0771a5e1e3438b",
+        "bytes": 4104,
+        "sha256": "b067b09159b7f7b34075cfe07abd7cd0ee798d11e60d3eb597d11405ca2b7070"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/GoogleMailProvider.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "1744db32d87df93d5bb5aad0672acd30bf8ee146",
+        "bytes": 24024,
+        "sha256": "bbf75724fc35f9ad6447686f0906a672c68954442086f35f068ef1b150daf23f"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/MailHttpProviderBase.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "4d3f538fe06276bedd267824024a196d32d5b8e0",
+        "bytes": 4653,
+        "sha256": "41c010490b7e02a427e9531305cc4088e71b2029a8870a7bfc66a07420ad9fd7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/MailService.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "2db17e7d85dab7e4c6a72f8eed619b4c0c89a978",
+        "bytes": 19212,
+        "sha256": "c6cacb9e20b9c7bf21c3f1d21c4d95264359572277fc58163cb96f2ae941f5df"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/MicrosoftMailProvider.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "b242d1f7ff85e74fac5eae9534139c4a6220fc27",
+        "bytes": 24125,
+        "sha256": "f02ee999536796f082f51003fe89b94eb664f0c0d713bd62edd1661db693f0b2"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ContainerRepository.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "60e6dc860a3c05810188a45357b8f8ba1a0211e8",
+        "bytes": 16955,
+        "sha256": "c5614bbadc6467cc60c69c92ab039211d9276e716e4770587d197e6c31d95453"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/PlannerRepository.JourneySnapshot.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "48685223d613e4af4eaaf3af76597961b4ca722a",
+        "bytes": 1424,
+        "sha256": "fda518690f9001e4987ce31e8b92c6d7fbed387e961944e752c7e10e9f3069f7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/PlannerRepository.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "3b1fc30a3299bab457d2a22f9758fbb21ccd9f52",
+        "bytes": 106736,
+        "sha256": "06d2bc622f5e60cce463307ab04fd7659cb8659644a0cbc1bb241ba4dc04f86f"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/Secure/CalendarTokenStore.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "4fa7ff4d9b515ceb6e381f74dc3be0b4f1a43b3a",
+        "bytes": 7194,
+        "sha256": "7e18e9f5cf3e57fd894a9dcf00b0351c1db651484dd2e394da66946a0fffc263"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AssemblyInfo.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "bf6624239eb90188ebc609687eaa372e62ff29fe",
+        "bytes": 292,
+        "sha256": "8285427fb7535ccbafebfa3fb58e724495859fd711d40df82a877e0f33fb9640"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PlannerRepositoryTests.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "02df190084e1fd6e125e51f596969d6c1d61bd67",
+        "bytes": 52911,
+        "sha256": "6b885e43b9d8fb6ba7dbfe055c45695538caa7d6332441915a3ecedecee05352"
+      },
+      {
+        "path": "NuGet.Config",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "24489cbd21c319685f8e7d5caee66965cd4a9e57",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+      },
+      {
+        "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8a7bef631e2cbc38ad730fe92600492b95846e64",
+        "bytes": 453,
+        "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504"
+      },
+      {
+        "path": "global.json",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+      }
+    ],
+    "fourAdopted": [
+      {
+        "path": "apps/Web/Productivity/Planner/Tests/Study.OriginalPersisted.Tests.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "adf407ba9e767f92658cad4fef2285fc639eb639",
+        "bytes": 5522,
+        "sha256": "918e638185be9444fb753cf26bab99c0514b637b19a9f0167afa8731c55dcbcc"
+      },
+      {
+        "path": "apps/Web/Productivity/Planner/Tests/ci/run-original-study.py",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "21ded0fda9fc4cb3f9a29f8ce3130234ab277000",
+        "bytes": 10688,
+        "sha256": "52c7cb87abe3416edbdcadf0c4a354f7c1b829438be0ac3e1c063138c6316280"
+      },
+      {
+        "path": "apps/Web/Productivity/Planner/Tests/ci/original-study-acceptance.py",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "3b8f618a54c988d2767e5fd83f01389a547afd29",
+        "bytes": 8231,
+        "sha256": "76020ecf390c3dde0c2409dc5dee9783807b5a06b4623eb28f907e58e15dcd3c"
+      },
+      {
+        "path": ".github/workflows/team-b-original-study.yml",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "e501ab2ea8d7e68af23945f20d034cefdf577bd4",
+        "bytes": 1839,
+        "sha256": "d685f434ae2a5196a9b480eeb10c77b4c2e8c10968184fa21fb8be11fa04dce6"
+      }
+    ],
+    "actualBeforePinRows": [
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+        "bytes": 700,
+        "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+        "bytes": 375,
+        "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/CalendarSyncProviders.cs",
+        "bytes": 10050,
+        "sha256": "07e08a384f72e2a2efbbba5703068492d8f885dd1d2b1ee5f071ba39dc3344a9"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/GoogleCalendarProviderTransport.cs",
+        "bytes": 18933,
+        "sha256": "359a33a5b9a37ab56db3f201e2bf19898790c872b612770b9eac5305e1611ff6"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/MicrosoftCalendarProviderTransport.cs",
+        "bytes": 19089,
+        "sha256": "a2335f37edcc538f7097f3e23297c88a1043aa877b4214020672c042c19d9b25"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/OAuthCalendarTransportBase.cs",
+        "bytes": 23054,
+        "sha256": "c96412a641851e60878bb1df59f2ff28ca22d8806542d535bac3c0f3af404775"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Calendar/OAuthPlatformServices.cs",
+        "bytes": 947,
+        "sha256": "56ca40e3283d3ad86f9513b6c3f3779568bd0b2ca6dacccac78588938cc67dc3"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/AutomationOwnerStateMigration.cs",
+        "bytes": 2112,
+        "sha256": "fe4ae9b56ad09a6a499a2da1aa43b700cb01333de688943ff2833348a270e3e5"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/FeatureMigration.cs",
+        "bytes": 3812,
+        "sha256": "69502fdd7d47991758319690e90bfbb1b8e33c02e6276ad1ea500b5a8d90cd9f"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/PlannerMigration.cs",
+        "bytes": 8734,
+        "sha256": "12629718b0860ae6b6a890eb9769a9cd320b4b713f671d0c7d98ac9b15ae5d62"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/Migrations/PlannerRichEntitiesMigration.cs",
+        "bytes": 1926,
+        "sha256": "973f98b07ee864f4fdfabf118a1395850f69b8224bb1771af65cec10ca144182"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteDatabase.cs",
+        "bytes": 48588,
+        "sha256": "038c439d7ff12c7f421e469126dfbff056bc19406d1f500b73cb182cd5aa2f88"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteMapping.cs",
+        "bytes": 3321,
+        "sha256": "2c2426e7ecce4e23d325c604a1c13a56cc366f02bb8f28f570aedf1ac06d08c3"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteProviderBootstrap.cs",
+        "bytes": 1973,
+        "sha256": "1202f300421e9f1485ca23dfc4b7b0d9659fee1f369e47073aa7987376342ef7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/ConnectedAccountAccessTokenProvider.cs",
+        "bytes": 4955,
+        "sha256": "3a59d4a52e038c570743873646ed2a8b29a7a66fd3cd4ba324f6d65854b97005"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/FileMailDraftStore.cs",
+        "bytes": 4104,
+        "sha256": "b067b09159b7f7b34075cfe07abd7cd0ee798d11e60d3eb597d11405ca2b7070"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/GoogleMailProvider.cs",
+        "bytes": 24024,
+        "sha256": "bbf75724fc35f9ad6447686f0906a672c68954442086f35f068ef1b150daf23f"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/MailHttpProviderBase.cs",
+        "bytes": 4653,
+        "sha256": "41c010490b7e02a427e9531305cc4088e71b2029a8870a7bfc66a07420ad9fd7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/MailService.cs",
+        "bytes": 19212,
+        "sha256": "c6cacb9e20b9c7bf21c3f1d21c4d95264359572277fc58163cb96f2ae941f5df"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/MicrosoftMailProvider.cs",
+        "bytes": 24125,
+        "sha256": "f02ee999536796f082f51003fe89b94eb664f0c0d713bd62edd1661db693f0b2"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ContainerRepository.cs",
+        "bytes": 16955,
+        "sha256": "c5614bbadc6467cc60c69c92ab039211d9276e716e4770587d197e6c31d95453"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/PlannerRepository.JourneySnapshot.cs",
+        "bytes": 1424,
+        "sha256": "fda518690f9001e4987ce31e8b92c6d7fbed387e961944e752c7e10e9f3069f7"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/PlannerRepository.cs",
+        "bytes": 106736,
+        "sha256": "06d2bc622f5e60cce463307ab04fd7659cb8659644a0cbc1bb241ba4dc04f86f"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/Secure/CalendarTokenStore.cs",
+        "bytes": 7194,
+        "sha256": "7e18e9f5cf3e57fd894a9dcf00b0351c1db651484dd2e394da66946a0fffc263"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AssemblyInfo.cs",
+        "bytes": 292,
+        "sha256": "8285427fb7535ccbafebfa3fb58e724495859fd711d40df82a877e0f33fb9640"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PlannerRepositoryTests.cs",
+        "bytes": 52911,
+        "sha256": "6b885e43b9d8fb6ba7dbfe055c45695538caa7d6332441915a3ecedecee05352"
+      },
+      {
+        "path": "NuGet.Config",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+      },
+      {
+        "path": "apps/Web/Productivity/Planner/Tests/Study.OriginalPersisted.Tests.csproj",
+        "bytes": 5522,
+        "sha256": "918e638185be9444fb753cf26bab99c0514b637b19a9f0167afa8731c55dcbcc"
+      },
+      {
+        "path": "apps/Web/Productivity/Planner/Tests/ci/original-study-acceptance.py",
+        "bytes": 8231,
+        "sha256": "76020ecf390c3dde0c2409dc5dee9783807b5a06b4623eb28f907e58e15dcd3c"
+      },
+      {
+        "path": "apps/Web/Productivity/Planner/Tests/ci/run-original-study.py",
+        "bytes": 10688,
+        "sha256": "52c7cb87abe3416edbdcadf0c4a354f7c1b829438be0ac3e1c063138c6316280"
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+      },
+      {
+        "path": "global.json",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+      }
+    ],
+    "sourceAfterQualification": "No source-after JSON uploaded. Exact source-pinned driver enforces source equality after success/finalization and raw git-clean-after exit0/empty preserved. Direct recorded checks bind actual before pins/all36owner/fouradopted to Git blob bodies."
+  },
+  "discovery": {
+    "actualCount": 24,
+    "exactOriginalNames": [
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.DefaultsTasksHierarchyAndEventsRoundTrip",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.RejectsCyclesAndReadOnlyEventEdits",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.CompletingRecurringTaskAdvancesItAndRecordsHistory",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.RecurringEventAppearsInLaterCalendarRange",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.DueReminderIsReturnedOnlyUntilMarkedDelivered",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.StructuredPlannerEntitiesUseOptimisticRevisionsAndDurableEventOutbox",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.RemoteCalendarWritesQueueOutboxAndSyncStateRoundTrips",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.ProviderIngestionDoesNotEchoBackIntoOutbox",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.ConflictKeepProviderAppliesRemoteVersionAndCancelsPendingWrite",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.ConflictKeepHavenQueuesChosenEditAndRecreatesRemoteDeletion",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.ConflictDuplicateKeepsProviderAndCreatesPrivateHavenCopy",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.WindowsTokenStoreEncryptsAndRoundTripsForCurrentUser",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.DayServiceBuildsNowNextAndProgressFromPersistedPlanState",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.DayServiceIncludesPersistedTaskWhoseEstimateCrossesMidnight",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.CountdownServiceTracksPersistedDeadlineChangesWithoutDuplicateState",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.AvailabilityServiceFindsFreeWindowsFromPersistedPlanState",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.AvailabilityServiceBlocksPersistedCrossMidnightTaskOnFollowingDay",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerSchedulesRevisionIntoPersistedPlanFreeWindow",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerLifecyclePreservesCanonicalTaskAndUnrelatedTags",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceUsesCanonicalPersistedPlanTaskState",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceRejectsLessonFromAnotherSubject",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.ProposalApplicationIsAtomic",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.ProposalCreateRetryIsIdempotent",
+      "Haven.Infrastructure.Tests.PlannerRepositoryTests.ProposalValidationAndUnconfiguredProviderFailSafely"
+    ],
+    "selectedCount": 4,
+    "remaining20": "NOT_RUN",
+    "unknownDuplicateNames": 0
+  },
+  "trx": {
+    "sha256": "bcc2479211eaa5e94b4f3dd49d45fc5db455ba457682d64325d474c5d6171b85",
+    "actualCounters": {
+      "total": 4,
+      "executed": 4,
+      "passed": 4,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "aborted": 0,
+      "inconclusive": 0,
+      "passedButRunAborted": 0,
+      "notRunnable": 0,
+      "notExecuted": 0,
+      "disconnected": 0,
+      "warning": 0,
+      "completed": 0,
+      "inProgress": 0,
+      "pending": 0
+    },
+    "originalResultMethodExecutionLinks": [
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceUsesCanonicalPersistedPlanTaskState",
+        "outcome": "Passed",
+        "testId": "13778308-1353-173d-5520-502c594e9cd3",
+        "executionId": "e34e5519-077d-48e5-94a8-b7ce175434b4",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/study-original-persisted/artifacts/bin/Study.OriginalPersisted.Tests/release_linux-x64/NineToOne.Study.OriginalPersisted.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.PlannerRepositoryTests",
+          "name": "StudyPlannerServiceUsesCanonicalPersistedPlanTaskState"
+        },
+        "duration": "00:00:00.2342548"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerLifecyclePreservesCanonicalTaskAndUnrelatedTags",
+        "outcome": "Passed",
+        "testId": "075fe2ac-9493-043e-7057-173c0b4f69b2",
+        "executionId": "ea88725e-d555-40c1-86d3-caec2da2979f",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/study-original-persisted/artifacts/bin/Study.OriginalPersisted.Tests/release_linux-x64/NineToOne.Study.OriginalPersisted.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.PlannerRepositoryTests",
+          "name": "StudyPlannerLifecyclePreservesCanonicalTaskAndUnrelatedTags"
+        },
+        "duration": "00:00:00.0659586"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceRejectsLessonFromAnotherSubject",
+        "outcome": "Passed",
+        "testId": "d81e1d4f-82bc-0b85-776c-ae0e3aa4625f",
+        "executionId": "689e84c1-984a-4579-89cd-a8737e2eabf2",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/study-original-persisted/artifacts/bin/Study.OriginalPersisted.Tests/release_linux-x64/NineToOne.Study.OriginalPersisted.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.PlannerRepositoryTests",
+          "name": "StudyPlannerServiceRejectsLessonFromAnotherSubject"
+        },
+        "duration": "00:00:00.0547876"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerSchedulesRevisionIntoPersistedPlanFreeWindow",
+        "outcome": "Passed",
+        "testId": "adfd74c7-5dda-aca3-9aeb-45e3cbf4eb3c",
+        "executionId": "57c2bbed-a304-41bf-a390-d0cb2190aa88",
+        "method": {
+          "codeBase": "/home/runner/work/_temp/study-original-persisted/artifacts/bin/Study.OriginalPersisted.Tests/release_linux-x64/NineToOne.Study.OriginalPersisted.Tests.dll",
+          "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+          "className": "Haven.Infrastructure.Tests.PlannerRepositoryTests",
+          "name": "StudyPlannerSchedulesRevisionIntoPersistedPlanFreeWindow"
+        },
+        "duration": "00:00:00.0855774"
+      }
+    ],
+    "summaryOutcome": "Completed",
+    "freshMtimeReceipt": {
+      "started_wall_ns": 1791125366140798683,
+      "mtime_ns": 1791125368107592584,
+      "qualification": "Actual source-pinned driver records filesystem freshness; ZIP alone does not retain original filesystem nanosecond metadata."
+    },
+    "times": {
+      "creation": "2026-10-04T14:49:28.0842958+00:00",
+      "queuing": "2026-10-04T14:49:28.0842959+00:00",
+      "start": "2026-10-04T14:49:26.8698880+00:00",
+      "finish": "2026-10-04T14:49:28.0925499+00:00"
+    }
+  },
+  "processCustody": {
+    "commands": 11,
+    "observedBirthRecords": 19,
+    "allNaturalExit0": true,
+    "allEOF": true,
+    "allHeldBirthsGone": true,
+    "allECHILD": true,
+    "signals": 0,
+    "actualNormalCommandRecords": [
+      {
+        "name": "git-head",
+        "argv": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2566,
+            "birth": 22193,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.059,
+        "bytes": 41,
+        "familyClosed": true
+      },
+      {
+        "name": "git-clean-before",
+        "argv": [
+          "git",
+          "diff",
+          "--exit-code",
+          "HEAD",
+          "--"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2567,
+            "birth": 22199,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.322,
+        "bytes": 0,
+        "familyClosed": true
+      },
+      {
+        "name": "source-tree-pins",
+        "argv": [
+          "git",
+          "ls-tree",
+          "-r",
+          "HEAD"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2587,
+            "birth": 22231,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.184,
+        "bytes": 1302653,
+        "familyClosed": true
+      },
+      {
+        "name": "owned-files-tracked",
+        "argv": [
+          "git",
+          "ls-files",
+          "--",
+          "apps/Web/Productivity/Planner/Tests/Study.OriginalPersisted.Tests.csproj",
+          "apps/Web/Tests/ci/run-ordinary-native.py",
+          "apps/Web/Productivity/Planner/Tests/ci/run-original-study.py",
+          "apps/Web/Productivity/Planner/Tests/ci/original-study-acceptance.py"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2588,
+            "birth": 22250,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.054,
+        "bytes": 243,
+        "familyClosed": true
+      },
+      {
+        "name": "dotnet-version",
+        "argv": [
+          "dotnet",
+          "--version"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2589,
+            "birth": 22257,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 1.965,
+        "bytes": 9,
+        "familyClosed": true
+      },
+      {
+        "name": "dotnet-info",
+        "argv": [
+          "dotnet",
+          "--info"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2597,
+            "birth": 22453,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.681,
+        "bytes": 2976,
+        "familyClosed": true
+      },
+      {
+        "name": "restore",
+        "argv": [
+          "dotnet",
+          "restore",
+          "apps/Web/Productivity/Planner/Tests/Study.OriginalPersisted.Tests.csproj",
+          "--configfile",
+          "/home/runner/work/9to1/9to1/NuGet.Config",
+          "--disable-parallel",
+          "-p:Configuration=Release",
+          "--artifacts-path",
+          "/home/runner/work/_temp/study-original-persisted/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2605,
+            "birth": 22521,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 8.307,
+        "bytes": 483,
+        "familyClosed": true
+      },
+      {
+        "name": "build",
+        "argv": [
+          "dotnet",
+          "build",
+          "apps/Web/Productivity/Planner/Tests/Study.OriginalPersisted.Tests.csproj",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--artifacts-path",
+          "/home/runner/work/_temp/study-original-persisted/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2642,
+            "birth": 23352,
+            "gone": true
+          },
+          {
+            "pid": 2665,
+            "birth": 23482,
+            "gone": true
+          },
+          {
+            "pid": 2685,
+            "birth": 24223,
+            "gone": true
+          },
+          {
+            "pid": 2703,
+            "birth": 24448,
+            "gone": true
+          },
+          {
+            "pid": 2750,
+            "birth": 25822,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 28.208,
+        "bytes": 644,
+        "familyClosed": true
+      },
+      {
+        "name": "discovery",
+        "argv": [
+          "dotnet",
+          "test",
+          "apps/Web/Productivity/Planner/Tests/Study.OriginalPersisted.Tests.csproj",
+          "--no-build",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--list-tests",
+          "--artifacts-path",
+          "/home/runner/work/_temp/study-original-persisted/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2769,
+            "birth": 26173,
+            "gone": true
+          },
+          {
+            "pid": 2784,
+            "birth": 26230,
+            "gone": true
+          },
+          {
+            "pid": 2797,
+            "birth": 26278,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 1.815,
+        "bytes": 2785,
+        "familyClosed": true
+      },
+      {
+        "name": "original-four-study-facts",
+        "argv": [
+          "dotnet",
+          "test",
+          "apps/Web/Productivity/Planner/Tests/Study.OriginalPersisted.Tests.csproj",
+          "--no-build",
+          "--no-restore",
+          "-c",
+          "Release",
+          "--filter",
+          "FullyQualifiedName=Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerLifecyclePreservesCanonicalTaskAndUnrelatedTags|FullyQualifiedName=Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerSchedulesRevisionIntoPersistedPlanFreeWindow|FullyQualifiedName=Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceRejectsLessonFromAnotherSubject|FullyQualifiedName=Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceUsesCanonicalPersistedPlanTaskState",
+          "--logger",
+          "trx;LogFileName=study-original-persisted.trx",
+          "--results-directory",
+          "/home/runner/work/_temp/study-original-persisted/test-results",
+          "--artifacts-path",
+          "/home/runner/work/_temp/study-original-persisted/artifacts",
+          "-r",
+          "linux-x64",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "--disable-build-servers",
+          "-m:1",
+          "-nodeReuse:false"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2820,
+            "birth": 26355,
+            "gone": true
+          },
+          {
+            "pid": 2835,
+            "birth": 26411,
+            "gone": true
+          },
+          {
+            "pid": 2848,
+            "birth": 26431,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 2.131,
+        "bytes": 501,
+        "familyClosed": true
+      },
+      {
+        "name": "git-clean-after",
+        "argv": [
+          "git",
+          "diff",
+          "--exit-code",
+          "HEAD",
+          "--"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2873,
+            "birth": 26569,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.297,
+        "bytes": 0,
+        "familyClosed": true
+      }
+    ]
+  },
+  "build": {
+    "normalOfficialSourceRestoreBuild": true,
+    "sdk": "10.0.401",
+    "runtimePlatform": "Ubuntu24.04/Linux-x64",
+    "warnings": 0,
+    "errors": 0,
+    "actualGraph": "Whole unchanged PlannerRepositoryTests24 + unchanged exact infrastructure serial policy; actual9SQLite/migration/Planner leaves, ContainerRepository, CalendarTokenStore/Calendar/Mail compilation context; actual Core/Application/CUI.AI",
+    "providerCompileContextQualification": "Calendar/Mail/Windows token sources compile only; selected4 do not execute providers/network/DI registry/WindowsDPAPI."
+  },
+  "acceptedSubset": [
+    {
+      "method": "StudyPlannerSchedulesRevisionIntoPersistedPlanFreeWindow",
+      "originalLine1": 539,
+      "oracle": "Actual ContainerRepository Subject/Lesson IDs; persisted calendar9-10/task11-12; exact revision task10-11/duration60/deadline18, persisted same task contents, remaining free12-13."
+    },
+    {
+      "method": "StudyPlannerLifecyclePreservesCanonicalTaskAndUnrelatedTags",
+      "originalLine1": 601,
+      "oracle": "Same canonical PlannerTaskID linked Maths then Law subjects/lessons; original subject list empty/new subject sameID; deadline persisted; complete/unlink preserve status, one task and unrelated revision/haven:other:metadata tags."
+    },
+    {
+      "method": "StudyPlannerServiceUsesCanonicalPersistedPlanTaskState",
+      "originalLine1": 667,
+      "oracle": "Actual StudyPlannerService Subject/Lesson creates linked canonical persisted PlannerTaskID/deadline/tags, list matches owner task, completion persisted and query state updates."
+    },
+    {
+      "method": "StudyPlannerServiceRejectsLessonFromAnotherSubject",
+      "originalLine1": 715,
+      "oracle": "Actual Maths/Law subjects and Law lesson; original invalid crosssubject link rejected by InvalidOperationException with does-not-belong text, no fabricated link tags."
+    }
+  ],
+  "assertionQualification": "Four unchanged original xUnit Facts, not four complete app criteria. Original Assert sites are not individually instrumented/count-claimed. All other20 discovered tests NOT_RUN, including platform-return Windows token case; no skipped pass manufactured.",
+  "notAccepted": [
+    "RevisionBank/ArtifactBank/canonical Files catalogue or Burrows full owner model/ports",
+    "rich new PlannerAssignment schema or full Study workflow",
+    "native rendering/raw Space/browser/identity/hosted ACL/provider/network/DPAPI",
+    "optimistic CAS/concurrentwriter revision authority from these legacy task writes",
+    "cold separate-process durable restart/crossclient: original TestPaths disposes/deletes its isolated test database"
+  ],
+  "canonicalCriterionMap": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/study-original-persisted-ci-proposal01/SOURCE-FREEZE01.json",
+    "qualification": "Exact original partial oracle mapping remains unchanged; full canonical paragraphs not promoted to PASS by four selected Facts."
+  },
+  "preservedOwnerHolds": [
+    "Shared Space-key original nativeFAIL remains open",
+    "Boards seamless renderer/public guardedclose owner requests retained",
+    "Other20originalFacts not executed by this filter"
+  ],
+  "binaryPackageCustody": "Diagnostics/TRX only; no emitted binaries/package archive/extracted package members or actual database stores. Ordinary source build corroborated by logs, portable binary/package custody not claimed.",
+  "localActions": {
+    "sdk": false,
+    "helperImports": false,
+    "nativeReplay": false,
+    "gui": false,
+    "productionEdits": false,
+    "workflowRerun": false
+  }
+}

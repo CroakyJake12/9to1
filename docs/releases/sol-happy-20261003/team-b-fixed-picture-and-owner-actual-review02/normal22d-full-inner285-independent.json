@@ -1,0 +1,38 @@
+{
+  "verdict": "CLEAR_EXACT_ORIGINAL_INNER285_BODY_CUSTODY_ONLY",
+  "primaryReviewSHA256": "fb3d2591d697efe5087ad18353c11c9ae2e4c61be9ff5a9bdb5dd558517bddab",
+  "runtimeSourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "normalProducerRun": 37206507459,
+  "normalPublicArtifact": 11304679865,
+  "receiverRun": 37208724474,
+  "transportArchives": [
+    {
+      "path": "/tmp/team-b-root-custody/normal-web22d-original-inner-part01.zip",
+      "bytes": 19977614,
+      "sha256": "013bd6004b4268d303a26e1d679dcd92e710a49ce5d7e6602600be1ce385d55d"
+    },
+    {
+      "path": "/tmp/team-b-root-custody/normal-web22d-original-inner-part02.zip",
+      "bytes": 16002139,
+      "sha256": "9cd83752b69bbe74868212932a9b0d1a5651858635e7d75149765ef6c1685b42"
+    }
+  ],
+  "outerTransportMembersFullCRC_SHA_Mode": 8,
+  "repeatedReceiptSealPartMetadataByteEqual": true,
+  "receiptSHA256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+  "sealSHA256": "1b1b92c927ab4949cc9f42805db2a243f494af0248f9a0daae42da9f9f6b6f5a",
+  "originalInnerSHA256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+  "originalInnerBytes": 35870413,
+  "innerFiles": 285,
+  "expandedBytes": 58424254,
+  "all285FullCRC_SHA_ModeComparedReceiptSeal": true,
+  "all285SortedMemberDigest": "1204b28e9a63ea558fef1f1f78a5713cdab14751c5aecc4ae1969003e93ed45b",
+  "requiredBootstrapBodyCount": 6,
+  "sourceMapsBeforeAfterFinalByteExact": true,
+  "sourceRowsAllImmutableGitBodyPathBlobSHA_SizeChecked": 4783,
+  "requiredLinkedOwnerCutsPresent": 9,
+  "transportAllUnchangedAfter": true,
+  "diskOperation": "Original inner assembled in BytesIO only; no extraction/copy/disk inner/runtime execution. Finite new source/review metadata only.",
+  "originalPublicActionsOuterZIPByteIdentity": "UNVERIFIED: b788 API metadata only; neither transport outer ZIP is original GitHub outer ZIP.",
+  "scope": "Adds missing full original public inner body custody to earlier sealed22d Accounts7 record. No new browser/runtime outcomes, deployment, issuer/provider or full acceptance."
+}

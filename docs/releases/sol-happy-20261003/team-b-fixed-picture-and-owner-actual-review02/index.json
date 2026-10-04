@@ -1,0 +1,193 @@
+{
+  "UTC": "2026-10-04T15:06:28.479096+00:00",
+  "state": "SCOPED_ACTUAL_RAW_AND_INDEPENDENT_RECEIPTS_NO_FULL31_ACCEPTANCE",
+  "members": [
+    {
+      "name": "picture-native15-primary.json",
+      "bytes": 16169,
+      "sha256": "d724af1b2602aab1dc8320269f2f6c663b5b431ed6472c47b044860055c2877b",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-7f-remote-review01/current-review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "picture-native15-canonical.json",
+      "bytes": 57204,
+      "sha256": "a6c8931a8cb6cca551f5d3e7ee4caf7c6f68a5a604d35d1635dfee62ff12a3d2",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-native-7f-remote-review01/current-canonical-receipts.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "picture-native15-independent.json",
+      "bytes": 11588,
+      "sha256": "8e49d9e9eacd46c776faea54e167efb8b2b7191f8997869a4312a8f1510c9e1b",
+      "sourceObservedPath": "/tmp/team-b-b6-picture-native7f-recorded-review01/review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "picture-browser9-primary.json",
+      "bytes": 21110,
+      "sha256": "59f3039e731f4d2a546df21b57e01d7069c8fc8b562ffe88d97c8caffb6c8ff2",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-browser-7f-recorded-review01/review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "picture-browser9-independent-recorded.json",
+      "bytes": 8844,
+      "sha256": "d38ad539485fe653ce584d44371b61fe49eee0b636c36780d0ce6a5170eaf3d8",
+      "sourceObservedPath": "/tmp/team-b-b6-picture-browser7f-recorded-review01/review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "picture-fixed-critical-independent-reproduction.json",
+      "bytes": 4605,
+      "sha256": "ead927694eae7abc1d58455756f4bb530f3cdb92d1547f7e87e0923b315568b5",
+      "sourceObservedPath": "/tmp/team-b-b6-picture7f-independent-ci-dispatch01/actual-independent-critical-review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "write-formats7-primary.json",
+      "bytes": 36956,
+      "sha256": "4fee69ae3b3ddb25053eef919fb6c7ba6e8085cc496e16cadcb435f469d36a60",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-original-formats-ci-recorded-review01/REVIEW.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "write-formats7-independent.json",
+      "bytes": 6744,
+      "sha256": "30fb9e51ad43cb3e0250368575b122d11da3d6a781119b24c22bb312fe5c6bea",
+      "sourceObservedPath": "/tmp/team-b-b6-write-formats7-f7c-recorded-review01/review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "math4-independent.json",
+      "bytes": 6971,
+      "sha256": "a5f49bd6883b71003c5cc9e3cf9677e75911b72b22098128968f2090aa6019d4",
+      "sourceObservedPath": "/tmp/team-b-b6-math-native4-23eb-recorded-review01/review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "study4-primary.json",
+      "bytes": 45036,
+      "sha256": "bce2ffd2d1eac314e1a2b034f91125b6760de5180c653ba08424636c9aefc2ab",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/study-original-ci-recorded-review01/REVIEW.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "study4-independent.json",
+      "bytes": 4065,
+      "sha256": "f6ce88f748a211fec9d5bd216f174a3b3591fd3b343ce95a462e8633d8751c1f",
+      "sourceObservedPath": "/tmp/team-b-b6-study4-0424-recorded-review01/review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "chat3-primary.json",
+      "bytes": 15317,
+      "sha256": "edb381c7eef07b65c8487fcd23ea351db7f000a72f7348f18ac63bd970891770",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/chat-local-durable-0424-actual-review01/REVIEW.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "wave14-full-causal-primary.json",
+      "bytes": 33054,
+      "sha256": "a0de11e8bf4cff789c8357d0aea3697402b008d956c757689bcf87559efce2f1",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-recorded-raw-review01/recorded-wave14-full-causal-review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "normal22d-full-inner285-primary.json",
+      "bytes": 72469,
+      "sha256": "fb3d2591d697efe5087ad18353c11c9ae2e4c61be9ff5a9bdb5dd558517bddab",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/normal-web22d-original-inner-local-custody01/full-original-inner-custody-report.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "normal22d-full-inner285-independent.json",
+      "bytes": 2073,
+      "sha256": "36d7f4cd8f31bb25fe636707a1d90339f2131a0e5c5897b554f738aa8087b10f",
+      "sourceObservedPath": "/tmp/team-b-b6-normal-web22d-inner-custody-review01/review.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "normal22d-durable-original-transport-delivery.json",
+      "bytes": 2191,
+      "sha256": "3eeb38a4863a73cadeb762b9088a8bbed5ce664bf526ec793e6025388dc2995d",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/normal22d-original-transport-durable-git-delivery.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "normal22d-local-transient-retirement.json",
+      "bytes": 1624,
+      "sha256": "6c7f409e8a306625294ba449bb6ba9e6b7e8abde5e477e5859ecd678519f1d44",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/normal22d-transient-transport-retirement01.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "picture-admission-control-root-adoption.json",
+      "bytes": 1773,
+      "sha256": "0902cc5c2e856225e7aa5ac18e53c8d2446cd44d3454218f250394d9c2363daa",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/picture-admission01-retirement-control-root-adoption.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "A-write-space-actual-request.json",
+      "bytes": 34210,
+      "sha256": "d2f26415aa385d6883bf618d01d83c29c57706b8894d2cf81e63a1bedb581869",
+      "sourceObservedPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/write-ci-recorded-review01/A-SPACE-KEY-ACTUAL-CI-HANDOFF01.json",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "raw-picture-7f-current.zip",
+      "bytes": 353840,
+      "sha256": "548b89f3ef469422879842f91d2300c8c21fcb760a2d1151e9c461067746c47c",
+      "sourceObservedPath": "/workspace/attachments/08cef903-5c7e-4021-b373-982f7f1cb534/picture-7f-current.zip",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "raw-write-formats7.zip",
+      "bytes": 339815,
+      "sha256": "e566bf9e6f66b4fb8f6a48d90d413820ebda27a74ec53158a6cdaee8a5bbc485",
+      "sourceObservedPath": "/workspace/attachments/cab79683-3022-474a-a4bb-26cf4279dc28/original-write-formats-f7c0473c.zip",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "raw-study4.zip",
+      "bytes": 341132,
+      "sha256": "c8d19ae03a30c1059bda95ee2306ee8020cc21b58640f35e0bb8292af7b2a198",
+      "sourceObservedPath": "/workspace/attachments/27385336-9d55-45d2-adb1-65d385df4f82/original-study-persisted-0424b292.zip",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "raw-chat3.zip",
+      "bytes": 391947,
+      "sha256": "4db14cae726c56d7fb773a65e7cbdd49822583151e998ee744b329150e612932",
+      "sourceObservedPath": "/workspace/attachments/79964124-bc38-4519-91e2-3579644d4e40/chat-local-durable-0424b292-diagnostics.zip",
+      "wholeOriginalBodyCopied": true
+    },
+    {
+      "name": "raw-wave-existing-causal.zip",
+      "bytes": 74917,
+      "sha256": "2b10739b84aef36b098331ccfee699ffd3d3ba296e47726824412585589e4453",
+      "sourceObservedPath": "/workspace/attachments/d2726528-17d4-4022-bc29-1ce239d347c5/wave-existing-causal-d53c.zip",
+      "wholeOriginalBodyCopied": true
+    }
+  ],
+  "scope": {
+    "fixedPicture": "Same15native PASS138+browser9PASS on7f; exact independentnative15/browser9 dispatch reproduction complete. Nativewholeworkflow historicalcontrols remainFAILED;2buildwarnings preserved. NewadditiveoldAdmission strict13/2 control rootadopted2e/0424 runtimepending.",
+    "formats": "OriginalWrite7/7 independentlyreviewed; fullformats/LO/browserheld.",
+    "math": "Originalcontrols4 genuine input/precisioncases independentlyreviewed at23eb; historical22 separate.",
+    "study": "Selectedoriginal4/4 independentlyreviewed/discovery24; other20NOT_RUN.",
+    "chat": "3actualowner scenarios seed/freshverify6phaseexecutions38assert PASS; independent recorded review pending. No catalog/executor/provider/ACL/browser.",
+    "wave": "Actual14/14 fullcausal20originalJSON/logs verified;originalextraction26members.3trace3PNGfullbodyreviewpending; rawWAV notuploaded, hardwareaudibilityunverified. Runtime normal22d distinctPicture7fpublication.",
+    "normalPublic": "Originalnormal22d innerb325 all285bodyCRC/SHA checked root/B1/B6; exacttwo transport ZIPs permanentlyavailable separateimmutableGita3c954. OriginalActionsouterb788metadataonly.",
+    "owners": "OriginalsharedWriteSpace failure persists plus nativegeometry/Home/Forms/GPS/guardedfactory/privatefixture ports open."
+  },
+  "largeBrowserEvidence": {
+    "primaryRun": 37209306466,
+    "primaryArtifact": 11306335357,
+    "primarySha256": "71ffbb6b5519d4ce1d1964496242c968d55720239ba570554405f3d640d066b8",
+    "criticalIndependentRun": 37210726410,
+    "criticalIndependentArtifact": 11306986018,
+    "criticalIndependentSha256": "07ca07900b6ce104f17734001ebd7bd82909fc67a9e9f7f93109d5289f4be8bf",
+    "wholeTracesReviewedButNotDuplicatedHere": true
+  }
+}

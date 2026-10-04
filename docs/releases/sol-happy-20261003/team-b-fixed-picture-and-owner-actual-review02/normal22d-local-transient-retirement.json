@@ -1,0 +1,28 @@
+{
+  "UTC": "2026-10-04T15:00:02.655766+00:00",
+  "scope": "Retire exactly two root-owned temporary downloaded transport copies after complete B1/root/B6 CRC/body proofs and remote immutable Git fullbodyreadback; all protected original evidence and runtime inputs retained",
+  "retired": [
+    {
+      "temporaryAttachmentPath": "/workspace/attachments/100d39d1-7555-4d29-bd4d-bb3871a49775/normal-web22d-original-inner-part01.zip",
+      "temporaryBodyPath": "/tmp/team-b-root-custody/normal-web22d-original-inner-part01.zip",
+      "bytes": 19977614,
+      "sha256": "013bd6004b4268d303a26e1d679dcd92e710a49ce5d7e6602600be1ce385d55d",
+      "durableGitPath": "docs/releases/sol-happy-20261003/team-b-normal22d-original-transport/part01.zip"
+    },
+    {
+      "temporaryAttachmentPath": "/workspace/attachments/3128e53c-4de0-416d-868c-508c19d79cf5/normal-web22d-original-inner-part02.zip",
+      "temporaryBodyPath": "/tmp/team-b-root-custody/normal-web22d-original-inner-part02.zip",
+      "bytes": 16002139,
+      "sha256": "9cd83752b69bbe74868212932a9b0d1a5651858635e7d75149765ef6c1685b42",
+      "durableGitPath": "docs/releases/sol-happy-20261003/team-b-normal22d-original-transport/part02.zip"
+    }
+  ],
+  "durableGitHead": "a3c954dfd5b1f6f0dfb863b41558f6c4543c51e7",
+  "durableGitBranch": "artifact/team-b-normal22d-original-transport-20261004",
+  "B6Peer": "Complete actualremote fullblob/GitSHA/manifestreadback CLEAR; all temporaryreaders/handles closed",
+  "state": "TWO_TEMPORARY_TRANSPORT_COPIES_RETIRED_DURABLE_GIT_BODIES_RETAINED",
+  "floorsAfter": {
+    "/workspace": 280276992,
+    "/tmp": 314699776
+  }
+}

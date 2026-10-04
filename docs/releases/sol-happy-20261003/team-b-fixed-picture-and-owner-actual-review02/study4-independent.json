@@ -1,0 +1,73 @@
+{
+  "verdict": "CLEAR_RECORDED_ORIGINAL_PERSISTED_STUDY4_SUBSET",
+  "run": 37210629435,
+  "commit": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+  "artifact": 11306536851,
+  "archive": {
+    "path": "/workspace/attachments/27385336-9d55-45d2-adb1-65d385df4f82/original-study-persisted-0424b292.zip",
+    "bytes": 341132,
+    "sha256": "c8d19ae03a30c1059bda95ee2306ee8020cc21b58640f35e0bb8292af7b2a198",
+    "all17CRCAndWholeMemberSHA": true
+  },
+  "primaryReviewSHA256": "bce2ffd2d1eac314e1a2b034f91125b6760de5180c653ba08424636c9aefc2ab",
+  "all17MembersCRCFullSHARead": true,
+  "fullTrackedTreeActualImmutableGitEquals": true,
+  "owner36PlusAdopted4GitBlobBodyPathSizeSHA": 40,
+  "beforeSourcePinRowsIndependentlyChecked": 32,
+  "sourceAfterLimit": "Exact immutable source-pinned driver rechecks source_pins equality after tests and finally with cleanGit. No separate source-after JSON uploaded; not falsely independently read.",
+  "discovery24ExactOriginalNames": true,
+  "selected4FreshTRX": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "actualCounterOtherStatesAllZero": true,
+    "testResultDefinitionMethodExecutionEntryLinks": [
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceUsesCanonicalPersistedPlanTaskState",
+        "testId": "13778308-1353-173d-5520-502c594e9cd3",
+        "executionId": "e34e5519-077d-48e5-94a8-b7ce175434b4"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerLifecyclePreservesCanonicalTaskAndUnrelatedTags",
+        "testId": "075fe2ac-9493-043e-7057-173c0b4f69b2",
+        "executionId": "ea88725e-d555-40c1-86d3-caec2da2979f"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerServiceRejectsLessonFromAnotherSubject",
+        "testId": "d81e1d4f-82bc-0b85-776c-ae0e3aa4625f",
+        "executionId": "689e84c1-984a-4579-89cd-a8737e2eabf2"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PlannerRepositoryTests.StudyPlannerSchedulesRevisionIntoPersistedPlanFreeWindow",
+        "testId": "adfd74c7-5dda-aca3-9aeb-45e3cbf4eb3c",
+        "executionId": "57c2bbed-a304-41bf-a390-d0cb2190aa88"
+      }
+    ],
+    "freshMtime": "Driver gate records actual originalfilesystem nanosecond freshness; ZIP alone not independentoriginalmtime proof."
+  },
+  "other20OriginalFacts": "NOT_RUN",
+  "actualCriterionMapping": {
+    "StudyPlannerSchedulesRevisionIntoPersistedPlanFreeWindow": "Real SQLite repository/ContainerRepository subject/lesson IDs + real availability. Persisted calendar9-10 and task11-12 force revision10-11, duration60/deadline18; same task contents reread, remaining free12-13.",
+    "StudyPlannerLifecyclePreservesCanonicalTaskAndUnrelatedTags": "Same original taskID relinks Maths\u2192Law lesson, subject query changes; deadlinepersisted; complete/unlink preserve sameID/status/revision+unrelatedtags and exactlyoneoriginaltask.",
+    "StudyPlannerServiceUsesCanonicalPersistedPlanTaskState": "Actual service creates subject/lesson linked canonicaltask/deadline/tags, actualownerread==listedtask; completion reread/queryfalseempty/includecompletedone.",
+    "StudyPlannerServiceRejectsLessonFromAnotherSubject": "Actual mismatchedlesson throws does-not-belong, originaltask reread has no Study assignmenttags; subject linkage denial, not nativeOS/Home actor ACL."
+  },
+  "fourAreOriginalFactsNotAssertionCount": true,
+  "normalFamilies": 11,
+  "allRecordedBirthsGone": 19,
+  "zeroSignals_allEOF_ECHILD": true,
+  "build": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "notAccepted": [
+    "other20Facts",
+    "browser/StudyUI/nativeOS/Home authority",
+    "RevisionBank/Burrow/actualartifactreferenceworkflow",
+    "freshprocess/restart durability (selectedFacts sameprocessdatabase reads)",
+    "calendarprovider/OAuth/sendauthority",
+    "fullStudy/Planner/cohort acceptance",
+    "binary/package/DBbodycustody (not uploaded)"
+  ],
+  "localExecution": "Read-only Git/ZIP/TRX/source inspection only; no SDK/native/browser/helper import/extraction/replay."
+}

@@ -1,0 +1,131 @@
+{
+  "state": "CLEAR_FOUR_SCOPED_NATIVE_OWNER_BOUNDARY_FACTS",
+  "UTC": "2026-10-04T14:45:46.644279+00:00",
+  "run": 37208598089,
+  "sourceCommit": "23eb00d488de2b519b722f8817dc3849bb2c8a93",
+  "artifact": {
+    "path": "/workspace/attachments/317fa9cb-4c93-4627-8da3-248315dea936/math-native-four-23eb00d4.zip",
+    "bytes": 374993,
+    "sha256": "e302ffc177462af86d3edf608d6730408206e2230869756cf80afde5d509d9f4",
+    "members": 20,
+    "allFullBodySHAAndCRCRead": true
+  },
+  "all20CRCBodySHA": true,
+  "APIWholeDigestMatches": true,
+  "sourceCustody": {
+    "actualImmutableGitTreeByteExact": true,
+    "all73SelectedGitBodiesPathSHABytes": true,
+    "beforeAfterJSONByteExact": true,
+    "checkoutCleanBeforeAfter": true,
+    "qualification": "Conservative selected subset, not complete evaluated compile closure."
+  },
+  "TRX": {
+    "sha256": "272e11f1ec001ec678ca7b39d9f7a857c4ce535e92d6a647b53dbe04bb3fe556",
+    "counters": {
+      "total": "4",
+      "executed": "4",
+      "passed": "4",
+      "failed": "0",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    },
+    "fourActualResultsAndExecutionMethodLinks": [
+      {
+        "executionId": "b4043c06-8e8a-48fb-a399-337060b35071",
+        "testId": "fa178c5a-c5eb-c0c4-3579-c35090c699ca",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Native_keyboard_coordinates_emit_same_typed_response_and_rejected_decimal_retains_previous_response",
+        "computerName": "runnervm8df0l",
+        "duration": "00:00:00.2081304",
+        "startTime": "2026-10-04T14:19:32.2826732+00:00",
+        "endTime": "2026-10-04T14:19:32.4909904+00:00",
+        "testType": "13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b",
+        "outcome": "Passed",
+        "testListId": "8c84fa94-04c1-424b-9868-57a2d4851a1d",
+        "relativeResultsDirectory": "b4043c06-8e8a-48fb-a399-337060b35071"
+      },
+      {
+        "executionId": "ced8da4c-fa7a-4b74-98f0-5391f559751d",
+        "testId": "23ee00d3-651b-d7cc-af71-3a50dcb9ccd2",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Outside_plot_and_right_pointer_release_preserve_graph_before_real_left_click_advances_once",
+        "computerName": "runnervm8df0l",
+        "duration": "00:00:00.1570569",
+        "startTime": "2026-10-04T14:19:32.5820733+00:00",
+        "endTime": "2026-10-04T14:19:32.7391967+00:00",
+        "testType": "13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b",
+        "outcome": "Passed",
+        "testListId": "8c84fa94-04c1-424b-9868-57a2d4851a1d",
+        "relativeResultsDirectory": "ced8da4c-fa7a-4b74-98f0-5391f559751d"
+      },
+      {
+        "executionId": "c044216b-36ed-47f4-a79a-9afc0425533a",
+        "testId": "8e0b014d-55d0-6ae9-8cb9-7a32a655c442",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Actual_keyboard_equation_error_retains_last_valid_pixels_identity_and_source_until_restore",
+        "computerName": "runnervm8df0l",
+        "duration": "00:00:01.2019279",
+        "startTime": "2026-10-04T14:19:31.0544110+00:00",
+        "endTime": "2026-10-04T14:19:32.2671917+00:00",
+        "testType": "13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b",
+        "outcome": "Passed",
+        "testListId": "8c84fa94-04c1-424b-9868-57a2d4851a1d",
+        "relativeResultsDirectory": "c044216b-36ed-47f4-a79a-9afc0425533a"
+      },
+      {
+        "executionId": "80a0e409-1aeb-463a-8c5b-2a7a5b639445",
+        "testId": "94e6aa76-c9b7-2005-47a2-c8429e3c765a",
+        "testName": "NineToOne.Web.Mathematics.OwnerBoundaryTests.MathOwnerInputGeometryTests.Failed_native_precision_projection_preserves_existing_pixels_and_exact_canonical_source",
+        "computerName": "runnervm8df0l",
+        "duration": "00:00:00.0882722",
+        "startTime": "2026-10-04T14:19:32.4927598+00:00",
+        "endTime": "2026-10-04T14:19:32.5810947+00:00",
+        "testType": "13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b",
+        "outcome": "Passed",
+        "testListId": "8c84fa94-04c1-424b-9868-57a2d4851a1d",
+        "relativeResultsDirectory": "80a0e409-1aeb-463a-8c5b-2a7a5b639445"
+      }
+    ]
+  },
+  "compiler": [
+    0,
+    0,
+    0
+  ],
+  "normalProcessCustody": {
+    "families": 11,
+    "goneBirthRecords": 62,
+    "allNaturalExit0EOF": true,
+    "allECHILDSignalsEmpty": true
+  },
+  "reportedRuntime": {
+    "rows": 263,
+    "beforeAfterRowsExact": true,
+    "qualification": "Body hash inventory attestation only; emitted binaries/native libs/package bodies not in ZIP."
+  },
+  "criterionMapping": {
+    "equation-error": "Actual headless native Window keyboard TextInput/Enter +existing SharedMathEditorControl. Invalid LaTeX retains SAMEdisplayedImage/Bitmap/fullCopyPixels and canonicalID/revision/validcodecsource; explicit Restore then accepted y advancesrevision4\u21925 sameID.",
+    "coordinate-precision": "Native keyboard -1.25,3.5 plus Enter emits actual GraphResponse tied originalGraphID/revision7, uniqueResponse/PrimitiveID and editorrevision8. Overprecision coordinate control refusal uses actual Button.RaiseEvent after keyboard input; prior canonicalGraph/response unchanged.",
+    "pointer-boundary": "Actual renderedframe/ScottPlot DataRect; headless native Window mouse outside-left and inside-right leave codecstate/noresponse. Inside-left maps1.5,2 within\u00b1.05 and advances once7\u21928; original immutable input unchanged. Not physicalhardware mouse.",
+    "projection-failure": "Actual ScottPlot owneradapter rejects densegrid GraphGridBudgetExceeded and decimalcollapsedline GraphLineBelowDisplayPrecision; native capturedframe pixels/size and original canonical graph bytes remain unchanged; rejectedinputs remain exact."
+  },
+  "qualification": [
+    "Four B-authored boundary Facts invoking unchanged actual ownercontrols/model/codec/CUI/ScottPlot/Skia, distinct from historical original22owner test cohort. No fake backend or alternate parser/renderer.",
+    "Headless native event dispatch and Skia capturedpixels only: no physicaldisplay/AT/hardware/browserfonts/trim/input acceptance.",
+    "No durable store/CAS/restart/hostactor/backendACL/provider/Forms embedding/fullMathematics acceptance.",
+    "TRX identifies actual4 completedFacts/0fail/0skip, no claimed numeric individualassertioncount.",
+    "Uploaded metadata does not establish local binary/packagebody custody or all-task transientresourceMAX."
+  ],
+  "primaryRead": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/mathematics-native4-ci23eb-primary-review01/review.json",
+    "sha256": "afb86fd24599d1a294cbfac65c561a7e7f4dd61ad4d1122ad917b9cf430fc030"
+  },
+  "actions": "Read-only recorded analysis; no imports, localSDK/GUI/runtime or workflowdispatch."
+}

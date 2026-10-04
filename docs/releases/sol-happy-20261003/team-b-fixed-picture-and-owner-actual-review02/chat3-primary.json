@@ -1,0 +1,428 @@
+{
+  "status": "CLEAR_RECORDED_REAL_LOCAL_OWNER_SCOPE_ONLY",
+  "run": 37210629488,
+  "job": 111460910279,
+  "artifact": 11306930507,
+  "sourceCommit": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+  "archive": {
+    "path": "/workspace/attachments/79964124-bc38-4519-91e2-3579644d4e40/chat-local-durable-0424b292-diagnostics.zip",
+    "bytes": 391947,
+    "sha256": "4db14cae726c56d7fb773a65e7cbdd49822583151e998ee744b329150e612932",
+    "members": [
+      {
+        "path": "build.log",
+        "bytes": 600,
+        "sha256": "ba8115b83d7df51200063860f638f8301bee6e90a4a4e72329eae81a497cf7f3",
+        "crc32": "91b18d3a"
+      },
+      {
+        "path": "commands.json",
+        "bytes": 8046,
+        "sha256": "28e15f367e0cdef81311d535e5936f90f61faebc326b47a703e27dbf3c921095",
+        "crc32": "84b54bf6"
+      },
+      {
+        "path": "dotnet-info.log",
+        "bytes": 2970,
+        "sha256": "808c4d9282ceee227938099e98a75a48da9420c086b26f77e56b96c4a3ffe35b",
+        "crc32": "9d0d1e0a"
+      },
+      {
+        "path": "dotnet-version.log",
+        "bytes": 9,
+        "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+        "crc32": "c22d2381"
+      },
+      {
+        "path": "git-clean-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-head.log",
+        "bytes": 41,
+        "sha256": "4a42023e329dfc924ebd41e4dd1afd93119257845b5ff0cd9179b7eb7268e3f7",
+        "crc32": "b3909b0c"
+      },
+      {
+        "path": "git-status-after.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "git-status-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": "00000000"
+      },
+      {
+        "path": "native-seed.log",
+        "bytes": 150,
+        "sha256": "779812ded18f883b1a3958aeebae855a61b0b692ee47718a2ae27a642af475c1",
+        "crc32": "d37a5f9d"
+      },
+      {
+        "path": "native-verify.log",
+        "bytes": 150,
+        "sha256": "779812ded18f883b1a3958aeebae855a61b0b692ee47718a2ae27a642af475c1",
+        "crc32": "d37a5f9d"
+      },
+      {
+        "path": "restore.log",
+        "bytes": 479,
+        "sha256": "2352af272215b633c311a1424f719639cc6970150ca831dbb37aab148473c120",
+        "crc32": "26cca955"
+      },
+      {
+        "path": "result.json",
+        "bytes": 2502,
+        "sha256": "8eb7acdbfd44ca3c8132cef91d1ac5bbec95058dbb65145d9c18f502c6c32ab2",
+        "crc32": "3bae1d81"
+      },
+      {
+        "path": "runtime-after.json",
+        "bytes": 2625,
+        "sha256": "a690d51667a0a9c1bcdbae21bd731924bcadf5b7c1fa7fed6172e6a60378574d",
+        "crc32": "032f1947"
+      },
+      {
+        "path": "runtime-before.json",
+        "bytes": 2625,
+        "sha256": "a690d51667a0a9c1bcdbae21bd731924bcadf5b7c1fa7fed6172e6a60378574d",
+        "crc32": "032f1947"
+      },
+      {
+        "path": "seed-results.json",
+        "bytes": 666,
+        "sha256": "f0a9d192e7e298aad6c2682d71c408461f676ac2b60145c122880f8169b914ad",
+        "crc32": "cf039d5a"
+      },
+      {
+        "path": "source-after.json",
+        "bytes": 92329,
+        "sha256": "4e07e68104d1219bf3470e4e50cd0f6c48c6263bd8fc4f1f6ee0f53c17cf98c6",
+        "crc32": "b0f71a3a"
+      },
+      {
+        "path": "source-before.json",
+        "bytes": 92329,
+        "sha256": "4e07e68104d1219bf3470e4e50cd0f6c48c6263bd8fc4f1f6ee0f53c17cf98c6",
+        "crc32": "b0f71a3a"
+      },
+      {
+        "path": "target-properties.json",
+        "bytes": 367,
+        "sha256": "6c305aba57426e7de5583abf3d4c75c860abd3189e8908d0efc79c3a8ecb39d3",
+        "crc32": "0bc975e6"
+      },
+      {
+        "path": "target-properties.log",
+        "bytes": 399,
+        "sha256": "8468c040cc54ca440411d17369c86ee26b0468c2ecc223009c20db400d0f3337",
+        "crc32": "f51558ec"
+      },
+      {
+        "path": "tracked-source-tree.log",
+        "bytes": 1302653,
+        "sha256": "1d5d7be532a368f723a16f9041698369419c6ce2bd6022d0bdffd870664fd53f",
+        "crc32": "9c80755a"
+      },
+      {
+        "path": "verify-results.json",
+        "bytes": 668,
+        "sha256": "23213465210c11c50aee28ce8c9fc907ba7d95835dd84049611679517f3517c5",
+        "crc32": "01f97e4a"
+      }
+    ],
+    "uniqueSafeMembers": 22,
+    "crcAndFullBodiesVerified": true
+  },
+  "results": {
+    "distinctCriteria": 3,
+    "freshNativeProcesses": 2,
+    "phaseExecutions": 6,
+    "seed": {
+      "scope": "Actual local canonical SQLite owner only; no registered Chat/controller/catalog/executor/provider/Den/permissions/browser acceptance",
+      "mode": "seed",
+      "discovered": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 14,
+      "outcomes": [
+        {
+          "name": "real-branch-original-history-fresh-process",
+          "state": "PASS",
+          "assertions": 5
+        },
+        {
+          "name": "real-overwrite-recovery-draft-fresh-process",
+          "state": "PASS",
+          "assertions": 4
+        },
+        {
+          "name": "real-json-markdown-plain-export-preserves-owner",
+          "state": "PASS",
+          "assertions": 5
+        }
+      ],
+      "exitCode": 0
+    },
+    "verify": {
+      "scope": "Actual local canonical SQLite owner only; no registered Chat/controller/catalog/executor/provider/Den/permissions/browser acceptance",
+      "mode": "verify",
+      "discovered": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 24,
+      "outcomes": [
+        {
+          "name": "real-branch-original-history-fresh-process",
+          "state": "PASS",
+          "assertions": 8
+        },
+        {
+          "name": "real-overwrite-recovery-draft-fresh-process",
+          "state": "PASS",
+          "assertions": 7
+        },
+        {
+          "name": "real-json-markdown-plain-export-preserves-owner",
+          "state": "PASS",
+          "assertions": 7
+        }
+      ],
+      "exitCode": 0
+    },
+    "totalAssertions": 38,
+    "noFailureOrSkip": true
+  },
+  "custody": {
+    "sourceRows": 495,
+    "ledgerSha256": "28067721f88653f977f32aa9c105b2e83ad3741ea7f1b2d7c76f97e3c7f22f28",
+    "fullGitSourceBlobBodiesRecomputed": 495,
+    "sourceBeforeAfterSame": true,
+    "wholeTrackedTreeExactGitCommit": true,
+    "trackedTreeRows": 9704,
+    "runtimeRows": 17,
+    "runtimeBytes": 9393264,
+    "runtimeBeforeAfterSame": true,
+    "runtimePins": [
+      {
+        "path": "Haven.Application.dll",
+        "bytes": 4078592,
+        "sha256": "0b6200075cf21c7b63a109571ed702b38f951093d33bd712607073b1117f6e7f"
+      },
+      {
+        "path": "Haven.Application.pdb",
+        "bytes": 717324,
+        "sha256": "9dd69b1b782f7a39d24e8127bbc32f1a95e553074e6d749af570ba1a606ef34c"
+      },
+      {
+        "path": "Haven.Core.dll",
+        "bytes": 1825792,
+        "sha256": "84e987b97bd59f937dda14ba857edb206a05a17ca94b5bef0b758afd0fe4bd96"
+      },
+      {
+        "path": "Haven.Core.pdb",
+        "bytes": 324840,
+        "sha256": "cadf655979ae543c282ae7a247a1e2721c8394d20ce282a0b4c09bd9498ecfd8"
+      },
+      {
+        "path": "Microsoft.Data.Sqlite.dll",
+        "bytes": 177504,
+        "sha256": "7841927435be066c58a41d498fd067dcf98bf567985526472260ee092a18ab86"
+      },
+      {
+        "path": "NineToOne.Chat.LocalDurable.Tests",
+        "bytes": 78256,
+        "sha256": "0fe532c8b3727415ee7938ccc4925fdac560e9f91660ccee271e192f3ee93dd4"
+      },
+      {
+        "path": "NineToOne.Chat.LocalDurable.Tests.deps.json",
+        "bytes": 6050,
+        "sha256": "fd11efde7d1b77f0a204a96298c75e2c1cda89556b63cd7f4a3e10fbad70f321"
+      },
+      {
+        "path": "NineToOne.Chat.LocalDurable.Tests.dll",
+        "bytes": 416256,
+        "sha256": "5f8ef8c31fe4ec09d10b34d599e27501acf6bdf790d91e30d8fd033f0b002aef"
+      },
+      {
+        "path": "NineToOne.Chat.LocalDurable.Tests.pdb",
+        "bytes": 43444,
+        "sha256": "a1ae73fffaf061f9b6ff20a9683f22163619eabfe685029bd3070365bced7e29"
+      },
+      {
+        "path": "NineToOne.Chat.LocalDurable.Tests.runtimeconfig.json",
+        "bytes": 330,
+        "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+      },
+      {
+        "path": "NineToOne.Cui.AI.dll",
+        "bytes": 122368,
+        "sha256": "547e2ca51f91327a6fc92419b6721a83c54e71cc28fb1fb69e7bc149b0e456b6"
+      },
+      {
+        "path": "NineToOne.Cui.AI.pdb",
+        "bytes": 33356,
+        "sha256": "6ed4a845c2b19b1b13d3bed554244954a612b5ceddab58eded08b3df48871063"
+      },
+      {
+        "path": "SQLitePCLRaw.batteries_v2.dll",
+        "bytes": 5632,
+        "sha256": "e83aed1d42d8ae806abeb02f0233a477275b82b5db92c92aa0c243255ab6a793"
+      },
+      {
+        "path": "SQLitePCLRaw.core.dll",
+        "bytes": 51712,
+        "sha256": "1e18b89ea319bffb633ea5698d8958cdaae3de8c5ac855353c7c6ad292795403"
+      },
+      {
+        "path": "SQLitePCLRaw.provider.e_sqlite3.dll",
+        "bytes": 36864,
+        "sha256": "64f5e6797a789e6f212cf619cc42af3888e64df3d2ac2b35b81304e5d0945b9d"
+      },
+      {
+        "path": "SQLitePCLRaw.provider.winsqlite3.dll",
+        "bytes": 40448,
+        "sha256": "134c31408ddc552abc3bc68ba926acadbb34d00e6621b78ce61493ce799cc24e"
+      },
+      {
+        "path": "libe_sqlite3.so",
+        "bytes": 1434496,
+        "sha256": "a5e8aed525023e6c209d37d3e762e2e76ed3a830464569a419abfc3cf12d7a6c"
+      }
+    ],
+    "commands": 13,
+    "allNormalEOFAndECHILD": true,
+    "allRecordedBirthsGone": true,
+    "recordedSignals": 0,
+    "nativeCommandRecords": [
+      {
+        "name": "native-seed",
+        "argv": [
+          "/home/runner/work/_temp/chat-local-durable/artifacts/bin/ChatLocalDurable.Tests/release_linux-x64/NineToOne.Chat.LocalDurable.Tests",
+          "seed",
+          "/home/runner/work/_temp/chat-local-durable/fixture-data"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2794,
+            "birth": 6850,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.635,
+        "bytes": 150,
+        "familyClosed": true
+      },
+      {
+        "name": "native-verify",
+        "argv": [
+          "/home/runner/work/_temp/chat-local-durable/artifacts/bin/ChatLocalDurable.Tests/release_linux-x64/NineToOne.Chat.LocalDurable.Tests",
+          "verify",
+          "/home/runner/work/_temp/chat-local-durable/fixture-data"
+        ],
+        "exit": 0,
+        "normalEOF": true,
+        "signals": [],
+        "error": null,
+        "births": [
+          {
+            "pid": 2803,
+            "birth": 6914,
+            "gone": true
+          }
+        ],
+        "finalECHILD": true,
+        "exitAfterDrain": 0,
+        "seconds": 0.455,
+        "bytes": 150,
+        "familyClosed": true
+      }
+    ],
+    "recordedBuildWarnings": 0,
+    "recordedBuildErrors": 0,
+    "sdk": "10.0.401",
+    "target": {
+      "TargetPath": "/home/runner/work/_temp/chat-local-durable/artifacts/bin/ChatLocalDurable.Tests/release_linux-x64/NineToOne.Chat.LocalDurable.Tests.dll",
+      "TargetDir": "/home/runner/work/_temp/chat-local-durable/artifacts/bin/ChatLocalDurable.Tests/release_linux-x64/",
+      "TargetFramework": "net10.0",
+      "RuntimeIdentifier": "linux-x64",
+      "UseAppHost": "true"
+    },
+    "adoptedSourceBodies": {
+      "apps/Web/AI/Tests/LocalDurable/ChatLocalDurableControls.cs": {
+        "bytes": 12637,
+        "sha256": "fa54d2dc09b775b4de88a3e315788ef2a830c9cadddbd8105369db48f1d51f5e",
+        "gitBlob": "ebff5f8d61b07f527f67bf43804bf0a6c18b3bbe"
+      },
+      "apps/Web/AI/Tests/LocalDurable/ChatLocalDurable.Tests.csproj": {
+        "bytes": 3241,
+        "sha256": "a0bc2738084395f079095658daf929689b0532ec6a9f2af7922a6326889bf543",
+        "gitBlob": "90cb4d5b37ff03d704d767a182386bcb2a71a7a3"
+      },
+      "apps/Web/AI/Tests/LocalDurable/source-pins.json": {
+        "bytes": 96550,
+        "sha256": "28067721f88653f977f32aa9c105b2e83ad3741ea7f1b2d7c76f97e3c7f22f28",
+        "gitBlob": "2f99b8fa1ba8bcce8070e82bfa6139c36a9f3a39"
+      },
+      "apps/Web/AI/Tests/LocalDurable/ci/run-chat-local-durable.py": {
+        "bytes": 11540,
+        "sha256": "dfd87b06e938c2896294670dc126e2f446d628243952e9023ecd1d6f4b55f53a",
+        "gitBlob": "03418f481d60802bed7bcde3d6c17d1070632dd7"
+      },
+      ".github/workflows/team-b-chat-local-durable.yml": {
+        "bytes": 1922,
+        "sha256": "85d813731716a1ee3d4a7852b7c468964ac894885b2d5bf73e142babe98b5914",
+        "gitBlob": "39e4eb6f6a2a5ac010565e1fc2542ea9d48c12e7"
+      },
+      "apps/Web/Tests/ci/run-ordinary-native.py": {
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+        "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0"
+      }
+    }
+  },
+  "oracleReview": [
+    "Actual owner NewBranch preserves original message IDs/provenance and edited branch; real current-branch switches restore prior data, then edited projection.",
+    "Actual owner overwrite retains RecoverySnapshot and UserEdit, same message ID, full durable draft identity/timestamp/content in fresh process.",
+    "Actual original typed JSON export equals full canonical owner document with ExportedAt-only normalization; original Markdown/plain authored Unicode/role/model provenance content preserved; snapshot/store identity remain unchanged.",
+    "Fresh verification reads same owner-created SQLite store identity and exact seed snapshot; native seed completely closes before actual second apphost process."
+  ],
+  "qualifications": [
+    "Primary recorded review of actual remote CI, not an independent native rerun. No local SDK/native/provider/browser execution.",
+    "Runtime hashes/bytes are uploaded metadata, not locally received executable/native/package body custody. Actual DB/WAL/seed identity receipt remain intentionally unuploaded.",
+    "Real SQLite initialization, store identity creation and branch switches are fixture-authorized local mutations; original repository test constructor omits production maintenance/restore gates.",
+    "No registered browser Chat, governed catalog/executor, provider inference, Den transfer, actor/ACL, catalog selection, CAS/concurrent write or full schema acceptance. Four mapped canonical paragraphs remain partial.",
+    "CUI/Directory.Packages.props not in 495 selected ledger; exact clean full Git commit/tree guards ancestor, and selected CUI.AI currently has no PackageReferences; original nonblocking qualification preserved."
+  ],
+  "metadataAndJobLog": {
+    "github-metadata.json": {
+      "bytes": 2639,
+      "sha256": "38479b5f180278e59cb28ee15706d9d95df484be630e6f40f129a3931c33d8db"
+    },
+    "github-job.log": {
+      "bytes": 21106,
+      "sha256": "9a8ca6de9f2a5ffd84753e30b338004f840ff80a14b4857485c29ce474758652"
+    }
+  }
+}

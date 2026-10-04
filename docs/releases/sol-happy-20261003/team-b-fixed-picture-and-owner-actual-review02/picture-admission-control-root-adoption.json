@@ -1,0 +1,38 @@
+{
+  "state": "ROOT_FULL_SOURCE_READ_AND_PEER_CLEAR_ADOPTED_NOT_RUN",
+  "manifest": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-admission01-lifecycle-control-source01/manifest.json",
+    "bytes": 7314,
+    "sha256": "dce3124a007d9c3b98bfa9625dbda2d05da72abff5217ba7070b66af7058a820"
+  },
+  "targets": [
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+      "bytes": 4353,
+      "sha256": "e62e5643973f34e6b819b599134d73920433eb1c11f9b829fb809a9142639d17"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/ci/run-picture-native.py",
+      "bytes": 19251,
+      "sha256": "ee1b43b7aa61d58a3ddd3ce95f4b78db5ac744389f68a5271ad4409461a94502"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/.github/workflows/team-b-picture-native.yml",
+      "bytes": 6407,
+      "sha256": "938040d1ae53d43552db36d52833b264e97fa46f7db6ca4b2df80315800c2858"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/PictureAdmission/fixture-source-pins.json",
+      "bytes": 2244,
+      "sha256": "356801bf668b6c7c04afd85c170b2835798c8be48fb0af6e3e151502cdc035ba"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/PictureAdmission/Fixtures/Admission01SameSessionRetirement/PictureBrowserFeature.cs",
+      "bytes": 12785,
+      "sha256": "e96095a8a0631a0c51ab98af7cb2ca4c8b413532efade75f487465f2bb6e4a2b"
+    }
+  ],
+  "sourceHeadBefore": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+  "commonCommandsUnchanged": true,
+  "scope": "Original owner bodies/oracles preserved; no provider/browser/authority/full31 acceptance inferred; root sole integration"
+}

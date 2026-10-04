@@ -1,0 +1,279 @@
+{
+  "verdict": "CLEAR_SCOPED_RECORDED_BROWSER9_FIXED7F",
+  "sourceCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "run": 37209306466,
+  "primaryReviewSHA256": "59f3039e731f4d2a546df21b57e01d7069c8fc8b562ffe88d97c8caffb6c8ff2",
+  "checkedSummary": {
+    "path": "/tmp/team-b-b6-picture-browser7f-recorded-review01/checked-summary.json",
+    "bytes": 16252,
+    "sha256": "226994821c2d86b2f352bc56751bf079b36f95ab6f0b327e41d6d88d56edefc0"
+  },
+  "archives": [
+    {
+      "archive": "/workspace/attachments/4d30abfc-5aba-43fe-9300-eea2a3e57b59/picture-browser-7f-nine.zip",
+      "sha256": "71ffbb6b5519d4ce1d1964496242c968d55720239ba570554405f3d640d066b8",
+      "members": 15,
+      "bytes": 28459302
+    },
+    {
+      "archive": "/workspace/attachments/83040c4d-a44c-4304-bd7e-8856df1c9d37/picture-7f-browser-publisher.zip",
+      "sha256": "579e3d41cb50ead4169ed15d20189b441682a86f281b2f2715f546a62474a8b1",
+      "members": 27,
+      "bytes": 1476674
+    }
+  ],
+  "all42OuterMembersFullCRCAndSHA": true,
+  "nestedTraceMembers": 246,
+  "completeNestedBodiesCRC_SHA": true,
+  "selectedPublisherSourceRowsImmutableGitBlob_Path_Size_SHA": 4796,
+  "sourceBeforeAfterFinalEqual": true,
+  "actualNineNamesCallbacksAndPNGOracleByteExactPrevious22d": true,
+  "actualCounts": {
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "actualOutcomes": {
+    "create-real-png-local-document": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "revision": 0,
+        "realNativeImage": {
+          "automationId": null,
+          "name": "Canonical Picture raster preview",
+          "className": "Image",
+          "controlType": "Image",
+          "bounds": {
+            "x": 203,
+            "y": 265,
+            "width": 693.3333333333334,
+            "height": 520
+          }
+        },
+        "canonical": {
+          "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+          "schemaVersion": 1,
+          "displayName": "9312180504914e17ba5d5058154cb04e",
+          "fileId": null,
+          "sourcePath": "/tmp/9to1-picture-local/sources/9312180504914e17ba5d5058154cb04e.png",
+          "sourceRevision": "A17E304D0A333065202CF77C656D7BC86ABDD37237B407A0A5CB870D33870297",
+          "canvasWidth": 8,
+          "canvasHeight": 6,
+          "operations": [],
+          "revision": 0
+        }
+      }
+    },
+    "canonical-crop": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "revision": 1,
+        "crop": {
+          "type": "crop",
+          "x": 1,
+          "y": 2,
+          "width": 5,
+          "height": 3
+        }
+      }
+    },
+    "canonical-undo-redo": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "undoRevision": 2,
+        "redoRevision": 3
+      }
+    },
+    "clean-save-close": {
+      "state": "PASS",
+      "observed": {
+        "savedRevision": 3,
+        "actualClosed": true,
+        "packageUnchanged": true
+      }
+    },
+    "reopen-real-local-row": {
+      "state": "PASS",
+      "observed": {
+        "documentId": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "revision": 3,
+        "sameOriginalSource": true,
+        "realNativeImage": {
+          "automationId": null,
+          "name": "Canonical Picture raster preview",
+          "className": "Image",
+          "controlType": "Image",
+          "bounds": {
+            "x": 170,
+            "y": 265,
+            "width": 760,
+            "height": 456
+          }
+        }
+      }
+    },
+    "real-png-download-exact-pixels": {
+      "state": "PASS",
+      "observed": {
+        "pixelsChecked": 15,
+        "rgbaBytes": 60,
+        "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+        "actualPngSHA256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+        "canonicalPackageUnchanged": true
+      }
+    },
+    "clean-browser-process-restart": {
+      "state": "PASS",
+      "observed": {
+        "firstPID": 11044,
+        "secondPID": 11156,
+        "sameCanonicalID": "6dbd6289-b461-46dd-adba-8abe6cd94925",
+        "sameRevision": 3,
+        "packageByteObjectEquality": true,
+        "qualification": "Deliberately clean blank navigation covers controlled process restart; no automatic tab restoration/BFCache claim"
+      }
+    },
+    "real-presentation-and-pending-input-refusal": {
+      "state": "PASS",
+      "observed": {
+        "refusedDeepLinks": [
+          "",
+          "unsupported"
+        ],
+        "pendingInputRetainedBeforeExplicitRestoration": true,
+        "sameCanonicalRevision": 3
+      }
+    },
+    "two-tab-cas-dirty-close-and-explicit-reload": {
+      "state": "PASS",
+      "observed": {
+        "winnerRevision": 4,
+        "winnerCanvas": [
+          6,
+          3
+        ],
+        "loserRevision": 4,
+        "retainedLoserCanvasBeforeConsent": [
+          3,
+          5
+        ],
+        "actualBothStoresUnchangedOnConflict": true,
+        "failedCloseRetainedDirty": true,
+        "explicitBrowserDiscardReloadObserved": true,
+        "inAppConflictMerge": "NOT_RUN/not implemented by this slice",
+        "quotaAndTransactionAbort": "NOT_RUN/separate genuine calibration and two-store invariance gates required"
+      }
+    }
+  },
+  "normalCommandFamilies": 26,
+  "allRecordedBirthsGone": 150,
+  "zeroSignals_AllEOF_ECHILD": true,
+  "bundle": {
+    "sourceCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+    "manifestSHA256": "f34d83fc2a5f68196e68745e348d9ee40b3aad005b4628d9278a3e72e5806fd9",
+    "sourceBeforeSHA256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+    "sourceAfterSHA256": "ee6eb296a0cf1e7d12a5fa5c754bc67d1a80de5a9f7bc6a5c321857a2f75d746",
+    "assets": 285,
+    "assetBytes": 58423374
+  },
+  "bundleFull285BeforeAfterInventoryEqual": "Actual runner/source verifier recorded; all285 bodies not independently available in these diagnostic ZIPs.296 network body references cover87 distinctmanifest assets;52 references lack body.",
+  "actual19ReadOnlyBothStoreReads": "Complete actual decoded returned values checked with corresponding readonly evaluate expressions; ID/source/Summary/Document revision consistency checked. Rawsnapshot revisions0,1,2,3,4 each matched.",
+  "storeRevisionSequence": [
+    0,
+    0,
+    1,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4
+  ],
+  "cleanRestart": [
+    {
+      "number": 1,
+      "initialUrls": [
+        "about:blank"
+      ],
+      "browserPID": 11044,
+      "browserVersion": "151.0.7922.34"
+    },
+    {
+      "number": 2,
+      "initialUrls": [
+        "about:blank"
+      ],
+      "browserPID": 11156,
+      "browserVersion": "151.0.7922.34"
+    }
+  ],
+  "closedLaunches": [
+    {
+      "number": 1,
+      "browserPID": 11044,
+      "contextCloseResolved": true
+    },
+    {
+      "number": 2,
+      "browserPID": 11156,
+      "contextCloseResolved": true
+    }
+  ],
+  "realCASWinnerRev4StoreEquality": "Four exact full two-store returned objects unchanged across loser conflict/failedclose/explicitreload; retained loser canvas3x5 and winner6x3 actualcriteria.",
+  "PNG": {
+    "fixtureChunks": [
+      "IHDR",
+      "iTXt",
+      "tEXt",
+      "tEXt",
+      "tEXt",
+      "sRGB",
+      "IDAT",
+      "IEND"
+    ],
+    "exportChunks": [
+      "IHDR",
+      "sBIT",
+      "IDAT",
+      "IEND"
+    ],
+    "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+    "exportSHA256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13",
+    "pixels": 15,
+    "rgbaBytes": 60,
+    "exactCrop": true
+  },
+  "network": {
+    "localGET200": 348,
+    "fullActualResponseBodyReferencesChecked": 296,
+    "missingBodyReferences": 52,
+    "distinctManifestAssetsWithObservation": 87,
+    "noCredentialHeadersOrCookies": true
+  },
+  "contextServerAndPortCleanup": "Actual source/runtime driver result/context-close/server-close/rebind true with normal command families.",
+  "preserved": "Prior22d independent9 and native22d/b8 raster14PASS1FAIL remain separate. Nativefixed7f actual15PASS independently recorded, not inferred from browser9.",
+  "notAccepted": [
+    "fullPicture156clause denominator",
+    "provider/hostedFiles/privateauthority/GPSPreserve/vector/hybrid/donor",
+    "actualon-screenpixels from export decoder or accessibilityImagebounds",
+    "hardwarepointer/AT/BFCache/automaticrestoredtabs",
+    "quota/transactionabort/inAppConflictMerge",
+    "all285 asset byte read from partialnetworkbody coverage"
+  ],
+  "execution": "B6 read-only streamed local originalexisting ZIPs/Git/PNG; no native/SDK/browser re-execution. Independent exactfixed7f CI dispatched separately, pending."
+}
