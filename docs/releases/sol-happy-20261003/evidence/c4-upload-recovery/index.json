@@ -1,0 +1,92 @@
+{
+  "status": "ACTUAL_DURABLE_PROVIDER_RECOVERY_LOCAL_CONTROLLED_OWNER_FIXTURE",
+  "sourceCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+  "positive": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0
+  },
+  "negative": {
+    "failed": 1,
+    "passed": 0,
+    "exit": 1,
+    "mutation": "Isolated VersionedJsonStateStore copy only final validator call before File.Move omitted; unchanged retirement test detects1instead2authoritychecks."
+  },
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+      "bytes": 18979,
+      "sha256": "782a90fd485a8126aef986ad964ee938535ce1791466320882ebce4fd360d149"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.ArtifactContent.cs",
+      "bytes": 7144,
+      "sha256": "0c6824e9240c04c78fb98c6b22a8ad5a3e88e88b2269650038682972a750b0dc"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.ArtifactIdentity.cs",
+      "bytes": 1833,
+      "sha256": "5c125b3d7da9af9aa5772a748c33dd9ca43b9fde9d6ec6602d8a9d3cba809a6f"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Artifacts.cs",
+      "bytes": 13883,
+      "sha256": "d3b38688c1195b9f70be8450d3128203805c51215f282a6f9dad19d4a2ed58ae"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Content.cs",
+      "bytes": 10812,
+      "sha256": "aa639c09aff402bc2c0c339c6abbdee5be29c32db2e662affd4318eb8b72941d"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.CreateArtifact.cs",
+      "bytes": 7768,
+      "sha256": "9fd2f60a9f7c5545d09c06194065726695793bef0ecfef6ed7008bd06bd55287"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.HistoricalContent.cs",
+      "bytes": 1438,
+      "sha256": "141138e1dd90ade31b821c34db29176c80207587aa1f30dd1cd05c3112e1594b"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Identity.cs",
+      "bytes": 4790,
+      "sha256": "450f098e7ef07380a584b0d6aed09391afdf89a682f8cd85af62c489adc1bcf3"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Import.cs",
+      "bytes": 11239,
+      "sha256": "9515d0623ddd14d7326ecd3c29d6048f61eabcb7bff528551d7bfdf2d6862b0b"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.cs",
+      "bytes": 15052,
+      "sha256": "e4bf664776fb62ac77980943b66cece3eebc21a94b31a4fa2b23a06b13d6d5c4"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesCommitAuthorityGuard.cs",
+      "bytes": 1876,
+      "sha256": "f489bf53d1c5618d7e23ddcf255b0bd0bdbf63f726d3f91545082a61116f58c8"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/VersionedJsonStateStore.cs",
+      "bytes": 9496,
+      "sha256": "5736e28865831da0033f106ed2041e7429ab81dfb6fe9b185a1065be305254d6"
+    }
+  ],
+  "observedProtectedDriveSymbol": "No matching symbol in selected e0c search or inspected integration/coord paths; not a global absence assertion. Exact current maintained protectedDrive source/commit still requested.",
+  "missingPorts": [
+    "Exact maintained protectedDrive upload/download source, selected commit and authenticated receiving binding",
+    "Trusted immutable verified-byte ProviderContentReference resolver and current-owner download publication",
+    "Durable transfer resume/JobID and byte offsets/integrity receipt contract bound to canonical FilesTransferId",
+    "C3 allocation/usage/quota reservation ownership and release/commit idempotency; no default ledger invented"
+  ],
+  "qualifications": [
+    "Actual metadata store persistence, not actual R2 transfer or byte validation. Provider trusts transfer-supplied verified immutable reference/hash.",
+    "Fresh controlled-owner guard fixture is authoritative only inside local tests; no PKCE/JWT/session adapter proof.",
+    "No source adoption/provider change or alternate Files model/service.",
+    "HEAD metadata is not content integrity.",
+    "12 full Files HTTP journeys NOT_RUN."
+  ]
+}
