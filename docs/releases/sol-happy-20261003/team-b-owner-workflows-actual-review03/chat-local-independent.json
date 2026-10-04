@@ -1,0 +1,106 @@
+{
+  "verdict": "CLEAR_SCOPED_RECORDED_REAL_CHAT_LOCAL_DURABLE3",
+  "run": 37210629488,
+  "job": 111460910279,
+  "artifact": 11306930507,
+  "sourceCommit": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+  "archive": {
+    "path": "/workspace/attachments/79964124-bc38-4519-91e2-3579644d4e40/chat-local-durable-0424b292-diagnostics.zip",
+    "bytes": 391947,
+    "sha256": "4db14cae726c56d7fb773a65e7cbdd49822583151e998ee744b329150e612932"
+  },
+  "primaryReviewSHA256": "edb381c7eef07b65c8487fcd23ea351db7f000a72f7348f18ac63bd970891770",
+  "all22MembersCRCFullSHA": true,
+  "wholeImmutableTrackedGitTreeExact": true,
+  "all495SelectedSourceGitBodiesPathSizeSHA": true,
+  "sourceBeforeAfterIdentical": true,
+  "allSixAdoptedDriverFixtureProjectLedgerWorkflowCommonBodiesExact": true,
+  "distinctCriteria": 3,
+  "phases": [
+    {
+      "scope": "Actual local canonical SQLite owner only; no registered Chat/controller/catalog/executor/provider/Den/permissions/browser acceptance",
+      "mode": "seed",
+      "discovered": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 14,
+      "outcomes": [
+        {
+          "name": "real-branch-original-history-fresh-process",
+          "state": "PASS",
+          "assertions": 5
+        },
+        {
+          "name": "real-overwrite-recovery-draft-fresh-process",
+          "state": "PASS",
+          "assertions": 4
+        },
+        {
+          "name": "real-json-markdown-plain-export-preserves-owner",
+          "state": "PASS",
+          "assertions": 5
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "scope": "Actual local canonical SQLite owner only; no registered Chat/controller/catalog/executor/provider/Den/permissions/browser acceptance",
+      "mode": "verify",
+      "discovered": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 24,
+      "outcomes": [
+        {
+          "name": "real-branch-original-history-fresh-process",
+          "state": "PASS",
+          "assertions": 8
+        },
+        {
+          "name": "real-overwrite-recovery-draft-fresh-process",
+          "state": "PASS",
+          "assertions": 7
+        },
+        {
+          "name": "real-json-markdown-plain-export-preserves-owner",
+          "state": "PASS",
+          "assertions": 7
+        }
+      ],
+      "exitCode": 0
+    }
+  ],
+  "totalAssertions": 38,
+  "note": "Verify has2 actualstoreidentity/priorreceiptcount assertions beforecasecounterstart, so per-caseverify22+prelude2=24; seed14+verify24=38. Not6distinctcriteria.",
+  "actualNativeProcesses": {
+    "seedPID": 2794,
+    "verifyPID": 2803,
+    "sameApphostAndSameOwnedStoreDirectory": true,
+    "separateFreshProcessAfterSeedFamilyEOF": true
+  },
+  "normalCommandFamilies": 13,
+  "allRecordedBirthsGone": 17,
+  "zeroSignals_allEOF_ECHILD": true,
+  "buildErrorsWarnings": [
+    0,
+    0
+  ],
+  "criterionMapping": [
+    "ActualSQLite ConversationRepository/SafeProductionRepository/versioning NewBranch: originaluserID/history/provenance staysinroot; distincteditedbranchsameuserID restorescurrentselection, freshverify exactcanonical+rootmessages.",
+    "Realoverwrite RecoverySnapshot Before +currentUserEdit After/sameID; actualdurabledraft exactconversation/branch/content/attachments/timestamp reread freshprocess.",
+    "RealtypedJSON fullcanonical export with ExportedAt-only normalization; originalMarkdown/plainUnicode/role/model/provenance content preserved; currentdata/storeID unchanged aroundexport."
+  ],
+  "runtime17BeforeAfterEqual": "Metadata attestation only; no DLL/native/DB/WAL/seedreceipt body uploaded, not fullbinary/backendbodycustody.",
+  "ownerBoundary": "Uses actual original repository test constructor/local fictional mutableSQLite with fixtureIAppPaths; productionmaintenance/restore/ownershipgates not supplied. No ScriptedChatBackend involved, but no registeredChatcontroller/catalog/provideractualauthority accepted.",
+  "notAccepted": [
+    "fullChat/schema/catalog/executor/Den/actorACL/providerinference",
+    "browserIndexedDB/BFCache/UI/AT",
+    "CAS/concurrentwrites orphysicalWALbyteinvariance",
+    "nativecontrolleradapter9/10guards inheritedacceptance"
+  ],
+  "execution": "B6 read-only ZIP/Git/logs/sourcecriteria inspection only. No new SDK/native/browser/replay/helperimport/acquisition."
+}

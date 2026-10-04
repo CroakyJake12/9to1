@@ -1,0 +1,427 @@
+{
+  "status": "RECORDED_SCOPED_PASS_WITH_BODY_LIMITS",
+  "reviewer": "B6 independent validation",
+  "recordedUTC": "2026-10-04T15:14:23.456253+00:00",
+  "execution": "Read-only ZIP/Git/source review; no runtime/replay/extraction/operator imports/body writes",
+  "run": 37208724474,
+  "driverCommit": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "exportRun": 37210874181,
+  "causalZip": {
+    "path": "/workspace/attachments/d2726528-17d4-4022-bc29-1ce239d347c5/wave-existing-causal-d53c.zip",
+    "bytes": 74917,
+    "sha256": "2b10739b84aef36b098331ccfee699ffd3d3ba296e47726824412585589e4453",
+    "fullCRCAndBodyShaMembers": 21,
+    "originalCausalMatched": 20,
+    "originalExtractedBeforeAfterEqualRows": 26,
+    "originalOuterWholeByteIdentityVerified": false
+  },
+  "counts": {
+    "discovered": 14,
+    "executed": 14,
+    "passed": 14,
+    "failed": 0,
+    "notRun": 0
+  },
+  "runner": {
+    "path": "apps/Web/Tests/ci/sealed-browser-replay/run-wave-browser-cold-quota.cjs",
+    "bytes": 35538,
+    "sha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f",
+    "gitBlob": "168f4b38daea68bb801d88bb6e94cfcd30c6a7c5"
+  },
+  "sourceGitBodyPins": [
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0"
+    },
+    {
+      "path": "apps/Web/Tests/verify-publish-receipt.cjs",
+      "bytes": 4958,
+      "sha256": "e5481670b9647ccb7f8cfb6b1106d6a3ee1973b0e507e0ef77ec70e53bb31f8a",
+      "gitBlob": "e9d5c70ea3d382a5ece31d0a10800a1ac5519c2a"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/sealed-https-host-explicit-binding.cjs",
+      "bytes": 4164,
+      "sha256": "3b9c4e4adb44b18629619800335cc4041327588c05748d015b6c97281bc40b0c",
+      "gitBlob": "1ff394431b8ba27cd5a0b16fee875239e0ec1709"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-account-replay01.py",
+      "bytes": 14198,
+      "sha256": "0dde0b377f5de784ff3e93a8d3edec40bd21a8dd12d7aa154be65910ba1cbf95",
+      "gitBlob": "ebb582e44d392a8303cbae2da15fddd3aba1d28b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-wave-browser-cold-quota.cjs",
+      "bytes": 35538,
+      "sha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f",
+      "gitBlob": "168f4b38daea68bb801d88bb6e94cfcd30c6a7c5"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-wave-replay01.py",
+      "bytes": 15709,
+      "sha256": "95f3a1519f761c2cc014dd8c027897b9c76565e622b88182249f943fedc01ba7",
+      "gitBlob": "3b06f17aa72843f4b4d71bf41e03bf3e6e548e28"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-sealed-browser-replay.py",
+      "bytes": 19753,
+      "sha256": "9d1a08b247770646c93e2f12dcf0e70e190389e68b208e53cb129f4918956ed6",
+      "gitBlob": "18c4292c7ca6b50d94137d856fbc7e64dd794a02"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-unconfigured-interop7-portable-ci02.cjs",
+      "bytes": 17712,
+      "sha256": "02b7f2ac22f383b8bd67e496ace3208e27d5d1a7340f380f2c6ba9a4a471027c",
+      "gitBlob": "6811684f0e9ab6aa7161ce7e60cfef6197d7392d"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2",
+      "gitBlob": "78cb6e44c12a95e48de4d83f7f9a57d0f60d1bbb"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/README.md",
+      "bytes": 5057,
+      "sha256": "94e7e94175825dce11df61a0704af4c9251f405a852b9b6e62caa66a73f96870",
+      "gitBlob": "6a0310e75714f8b285afd1dd3d5b0e42804ea328"
+    }
+  ],
+  "criteria": {
+    "real-cui-route-and-inputs": {
+      "outcome": "PASS",
+      "observed": {
+        "route": "http://127.0.0.1:18761/#/app.wave",
+        "realNativeSemantics": true
+      }
+    },
+    "create-canonical-local-project": {
+      "outcome": "PASS",
+      "observed": {
+        "projectId": "91f782a6-d058-4474-b568-fac90dba5255",
+        "trackId": "c164fca2-9bf8-42ff-99c9-3e12beca9aae",
+        "revision": 0,
+        "rejectedDeepLinksBeforeMissingEntityLookup": [
+          "",
+          "unsupported-local-route"
+        ]
+      }
+    },
+    "real-filechooser-import": {
+      "outcome": "PASS",
+      "observed": {
+        "clipId": "c2ae7c24-8a32-4299-9faa-1e0335687a2b",
+        "sourceId": "1297f848-3bbd-4bd2-b5d5-936b96b332f2",
+        "timelineStart": 24000,
+        "frames": 48000
+      }
+    },
+    "nondestructive-trim": {
+      "outcome": "PASS",
+      "observed": {
+        "revision": 2,
+        "sourceStart": 6000,
+        "frames": 36000
+      }
+    },
+    "persistent-undo-redo": {
+      "outcome": "PASS",
+      "observed": {
+        "reopenedHistory": true,
+        "revision": 5,
+        "persistentIds": [
+          "91f782a6-d058-4474-b568-fac90dba5255",
+          "c164fca2-9bf8-42ff-99c9-3e12beca9aae",
+          "c2ae7c24-8a32-4299-9faa-1e0335687a2b",
+          "1297f848-3bbd-4bd2-b5d5-936b96b332f2"
+        ]
+      }
+    },
+    "exact-pcm-download": {
+      "outcome": "PASS",
+      "observed": {
+        "actualDownloadBytes": 288044,
+        "exactPcm": true,
+        "projectUnchanged": true
+      }
+    },
+    "real-browser-audio-transport": {
+      "outcome": "PASS",
+      "observed": {
+        "decodedDuration": 1.5,
+        "actualAdvancingPosition": 0.33523,
+        "hardwareAudibilityVerified": false
+      }
+    },
+    "wrong-format-preserves-state": {
+      "outcome": "PASS",
+      "observed": {
+        "refusedActual44100Source": true,
+        "durableBytesUnchanged": true
+      }
+    },
+    "browser-process-restart": {
+      "outcome": "PASS",
+      "observed": {
+        "actualBrowserProcessRestart": true,
+        "sameProfileSameOrigin": true,
+        "revision": 5
+      }
+    },
+    "actual-two-tab-revision-conflict": {
+      "outcome": "PASS",
+      "observed": {
+        "winnerRevision": 6,
+        "winnerTimeline": 12000,
+        "rejectedTabPreservedUnsavedTimeline": 36000
+      }
+    },
+    "failed-save-cannot-close-dirty-project": {
+      "outcome": "PASS",
+      "observed": {
+        "dirtyConflictCannotClose": true,
+        "durableWinnerUnchanged": true
+      }
+    },
+    "stored-source-integrity-negative-control": {
+      "outcome": "PASS",
+      "observed": {
+        "isolatedDurableSourceCorruptionDetected": true,
+        "originalPackageRestored": true
+      }
+    },
+    "actual-browser-quota-two-store-atomicity": {
+      "outcome": "PASS",
+      "observed": {
+        "genuineChromiumQuotaRefusal": true,
+        "bothDurableStoresUnchangedOnAbort": true,
+        "samePendingEditCommittedOnceAfterRecovery": true
+      }
+    },
+    "runtime-and-candidate-integrity": {
+      "outcome": "PASS",
+      "observed": {
+        "exactManifestSha256": "473023ba1a69881375c49eccb12688fb6dddd339ff3b3d64bcade1844aa83994",
+        "candidateCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+        "assetFiles": 285,
+        "unexpectedErrors": {
+          "consoleError": 0,
+          "managedRuntimeError": 0,
+          "pageError": 0,
+          "requestFailed": 0
+        }
+      }
+    }
+  },
+  "closure": {
+    "ordinaryCommands": 9,
+    "ordinaryGoneBirthRecords": 119,
+    "normalEOF": true,
+    "nativeHeldIdentities": 36,
+    "actualSequentialBoundBrowserPids": [
+      2978,
+      3100,
+      3218
+    ],
+    "allHeldFDExitAndBirthGoneRecorded": true,
+    "signals": 0,
+    "forcedCleanup": false,
+    "finalECHILD": true,
+    "custodyClean": true,
+    "finalObservedFootprintBytes": 60164802,
+    "footprintScope": "Recorded final current footprint, not independently reconstructed transient MAX"
+  },
+  "runtimeCustody": {
+    "inventoryRowsBeforeAfterEqual": 285,
+    "bytes": 58424254,
+    "localReceiptSha256": "473023ba1a69881375c49eccb12688fb6dddd339ff3b3d64bcade1844aa83994",
+    "originalReceiptSha256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+    "originalInnerSha256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+    "independentAll285BodyReview": "/tmp/team-b-b6-normal-web22d-inner-custody-review01/review.json SHA36d7f4cd8f31bb25fe636707a1d90339f2131a0e5c5897b554f738aa8087b10f",
+    "runtimeBodyChecksHere": "Recorded inventories equal; earlier separate original285 full-body proof applies to exact same inner/receipt tuple"
+  },
+  "criticalMapping": {
+    "canonicalId": "91f782a6-d058-4474-b568-fac90dba5255",
+    "readinessRevisions": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      5,
+      5,
+      6,
+      6,
+      6,
+      6,
+      7,
+      7
+    ],
+    "quotaActualOneByte": true,
+    "quotaNewProcessBeforeNavigation": true,
+    "StorageFullPendingRevision": 7,
+    "samePendingRetryCommittedRevision": 7,
+    "comparisonScope": "Unchanged runner strict actual projects+summaries object equality before retry. Raw causal report does not include full returned store values; independent store rehash waits trace bodies.",
+    "audio": "Actual awaited reads separated by250ms; duration1.5/advancing0.33523/Pause/Seek/Stop, no Promise-truthiness predicate",
+    "fixtureSha256IndependentlyReconstructed": "077da5220c69b28c134f578508372681ad3c8b2c3a466edc9512eb67fda76b86",
+    "pcmDownload": "Actual unchanged runner checked288044 bytes, silent prefix and exact original stereo PCM tail; emitted WAV not uploaded/read by B6"
+  },
+  "missingLocalTraceScreenshotBodies": [
+    {
+      "path": "browser/browser-before-quota-restart.zip",
+      "bytes": 14226988,
+      "sha256": "968bfec0e3c6d6e84efdc18f4756cc957845f7694c0428c3018fa67eb45a37eb",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/browser-final.zip",
+      "bytes": 13324896,
+      "sha256": "4fb7dc093fda48b5da5973ded5bb8fadbd6871a946fae3a3580cdc2fb20467fd",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/browser-phase1.zip",
+      "bytes": 16908955,
+      "sha256": "9f06ad1398f1735a86c2f13579f0ed12dd15f87c3d2ae55a6a09b531e024ee38",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/wave-narrow.png",
+      "bytes": 89184,
+      "sha256": "06307f05c08fe356aa1705364f4a5fa9270536471c49881b2557a5b68ad44cbd",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/wave-populated.png",
+      "bytes": 120917,
+      "sha256": "2bb12f5dd499b67cf63ce29c9949d6a25bcdf6a11b58b0a750871fc694cc1a9f",
+      "extractedMode": 420
+    }
+  ],
+  "limits": [
+    "Three trace ZIPs and three screenshots not locally body-read in this pass; no independent returned-store-value or screenshot inspection accepted.",
+    "Original fixture/export WAV bodies omitted from original upload. Deterministic fixture reconstructed only; emitted WAV hash is reported, not independently read.",
+    "Observed genuine Chromium quota refusal and strict owner/two-store/retry source mapping; no arbitrary storage/cross-device/provider guarantee.",
+    "Deliberate blank restart, not automatic tab restoration or BFCache. Semantic focus+Enter/text/filechooser only; no full native pointer/touch/AT/narrow responsive acceptance.",
+    "HTMLAudioElement transport, not physical hardware audibility or separate Audio13 ownership criterion.",
+    "No issuer/deploy/full31/fullWave parity acceptance; original failed/HOLD cohorts remain distinct."
+  ],
+  "members": [
+    {
+      "path": "actual-browser-oracles.log",
+      "bytes": 247,
+      "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193"
+    },
+    {
+      "path": "browser/native-ax-tree.json",
+      "bytes": 156457,
+      "sha256": "80bdca3dbb8e1d01b037eb61cd89ea0494d3694881efbb3531489138153183f5"
+    },
+    {
+      "path": "browser/results.json",
+      "bytes": 119874,
+      "sha256": "cfba7eebb31277bd1c0ba997bbebf0addb969d60a4a07953fd741de1d03a2be1"
+    },
+    {
+      "path": "browser-install.log",
+      "bytes": 18575,
+      "sha256": "9d8765545dbea28b114976dc69bb3738527223b952255670734e67fe83a19202"
+    },
+    {
+      "path": "browser-path.log",
+      "bytes": 99,
+      "sha256": "60384b0ec8f7e1dea08aeb6274d17149bed379678f4440395b7e3ca0f2e6190c"
+    },
+    {
+      "path": "browser-tool-identity.json",
+      "bytes": 362,
+      "sha256": "974864d4d1eb5211464db4a73df704efd21a7661c275fa36bb645bf0d2045744"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 13998,
+      "sha256": "21c8885ba4b7612ddedb064f11a898a5532f26ad9047570ed52f051f5c93bff7"
+    },
+    {
+      "path": "driver-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver-clean-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver-git-head.log",
+      "bytes": 41,
+      "sha256": "865dab0f571dcf9ae9f2f19f1d42778d7ab53d23b7fa20ba192bb7b01583222d"
+    },
+    {
+      "path": "execution-plan.json",
+      "bytes": 3624,
+      "sha256": "6f5862f15e1e6fc76836b54cb3b2adbc102d87175bfcd861ecca8b7caecec873"
+    },
+    {
+      "path": "export-receipt.json",
+      "bytes": 24540,
+      "sha256": "9b167760efdc7a28accdf5a316f4eb3580f423203a7df9401f456b9f47bb92e3"
+    },
+    {
+      "path": "full-inventory-before.log",
+      "bytes": 708,
+      "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283"
+    },
+    {
+      "path": "full-inventory-final.log",
+      "bytes": 708,
+      "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283"
+    },
+    {
+      "path": "owned-family/owned-family-receipt.json",
+      "bytes": 15087,
+      "sha256": "8a826c8faafc169893bd137c022f246bcc537e5aefe64e777bf0a8f4c1c88931"
+    },
+    {
+      "path": "owned-family/runner-safe-stdout.log",
+      "bytes": 86,
+      "sha256": "f8ef2ddb0a2270ade0d383edf2dd2bb0a6c40cc0762175522430c9951e6311b6"
+    },
+    {
+      "path": "playwright-install.log",
+      "bytes": 24,
+      "sha256": "4aaef3acc3c4b16766abf61c4f4aa2d3bd413e2fe822d3edd6cfa9d7e7334efa"
+    },
+    {
+      "path": "public-tool-pins.json",
+      "bytes": 113917,
+      "sha256": "b5abdf4d043eed6824b428093f8a6a00de572413312ad8ed8ff586e8237e126e"
+    },
+    {
+      "path": "receipt-map.json",
+      "bytes": 648,
+      "sha256": "a5c9a46cf81df71d3fff9a887d6c0613fcd454aca37acd45c0143c9c875f7fea"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1646,
+      "sha256": "947a26e60027049059499de750f723c7c1c32cd167cedce6cc944a4848a49db5"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 1977,
+      "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4"
+    }
+  ]
+}

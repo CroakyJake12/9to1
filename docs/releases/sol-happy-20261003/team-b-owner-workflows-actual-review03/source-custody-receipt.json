@@ -1,0 +1,107 @@
+{
+  "status": "PASS_EXACT_THREE_PNG_EXTRACTION_ONLY",
+  "sourceBranch": "artifact/team-b-wave22d-member-transport-20261004",
+  "sourceHead": "8874b8429772597056c9cfe3094f7c58b84800c6",
+  "sourceRun": 37208724474,
+  "sourceArtifact": 11305985932,
+  "driverCommit": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "sourceReceiptSha256": "b967fbb73dabb34062a70281b96a0e656a2e2b8c1ef53796d0056889669b40b2",
+  "sourceContainerSha256": "86db58e6f01876b94fb36f7e037708ac709ace62fad35043a84056f69f1a3f89",
+  "sourceContainerBytes": 45208578,
+  "transportGitBodies": [
+    {
+      "part": 1,
+      "gitBlob": "45015a24ca2fc09c07c94b5883aafe5d6b784b4d",
+      "bytes": 19929162,
+      "sha256": "dd19dd27a040b100fe77c7b06a633f22014ee0655417a6691fc50453567bd05e",
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part01.zip",
+      "fullApiGitBlobBodyRead": true,
+      "members": [
+        {
+          "path": "extracted-members.zip.part",
+          "bytes": 19922944,
+          "sha256": "c95a3d3325569c5dc1f1e963d1454f4494b47b5b8c6863b3606c6d737ee8b6ee",
+          "crc32": 4158681409
+        },
+        {
+          "path": "transport-manifest.json",
+          "bytes": 5914,
+          "sha256": "b91f1413a37a93a7ceda3e3f7f88216bbc10e008834ac6c97b3f1cce7857c0b5",
+          "crc32": 769920137
+        }
+      ],
+      "transportManifestRawSha256": "b91f1413a37a93a7ceda3e3f7f88216bbc10e008834ac6c97b3f1cce7857c0b5"
+    },
+    {
+      "part": 2,
+      "gitBlob": "53cbe21f1417905a16e558128159a6ca3af678cb",
+      "bytes": 19929162,
+      "sha256": "c9a0623b29a5a65ae99567155c4b7ec91710c41723cd463484fa1b9ebb6f0a33",
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part02.zip",
+      "fullApiGitBlobBodyRead": true,
+      "members": [
+        {
+          "path": "extracted-members.zip.part",
+          "bytes": 19922944,
+          "sha256": "515987b9417f0541f9affc3424cf71af963c28dc7949c0a9a5faf26a4892544c",
+          "crc32": 2793677289
+        },
+        {
+          "path": "transport-manifest.json",
+          "bytes": 5914,
+          "sha256": "b91f1413a37a93a7ceda3e3f7f88216bbc10e008834ac6c97b3f1cce7857c0b5",
+          "crc32": 769920137
+        }
+      ],
+      "transportManifestRawSha256": "b91f1413a37a93a7ceda3e3f7f88216bbc10e008834ac6c97b3f1cce7857c0b5"
+    },
+    {
+      "part": 3,
+      "gitBlob": "59ca0815c6d95e3be9ea6d9d0e6ecd348ef5dd78",
+      "bytes": 5368908,
+      "sha256": "08945cc1458e7070599cae922d89a23eea6b741cf460778add4f16c87424cbdb",
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part03.zip",
+      "fullApiGitBlobBodyRead": true,
+      "members": [
+        {
+          "path": "extracted-members.zip.part",
+          "bytes": 5362690,
+          "sha256": "6e6d5745ccafc22d7b3bba96086ae665f30c02cd6ae4f9329bcde71fb5975f59",
+          "crc32": 1767748328
+        },
+        {
+          "path": "transport-manifest.json",
+          "bytes": 5914,
+          "sha256": "b91f1413a37a93a7ceda3e3f7f88216bbc10e008834ac6c97b3f1cce7857c0b5",
+          "crc32": 769920137
+        }
+      ],
+      "transportManifestRawSha256": "b91f1413a37a93a7ceda3e3f7f88216bbc10e008834ac6c97b3f1cce7857c0b5"
+    }
+  ],
+  "screenshots": [
+    {
+      "originalMember": "browser/wave-empty.png",
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4"
+    },
+    {
+      "originalMember": "browser/wave-narrow.png",
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-narrow.png",
+      "bytes": 89184,
+      "sha256": "06307f05c08fe356aa1705364f4a5fa9270536471c49881b2557a5b68ad44cbd"
+    },
+    {
+      "originalMember": "browser/wave-populated.png",
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-populated.png",
+      "bytes": 120917,
+      "sha256": "2bb12f5dd499b67cf63ce29c9949d6a25bcdf6a11b58b0a750871fc694cc1a9f"
+    }
+  ],
+  "totalImageBytes": 296463,
+  "originalDiagnosticOuterZipFullBodyRead": false,
+  "wholeContainerOrTraceWrittenToDisk": false,
+  "scope": "Three original screenshot bodies for root visual inspection only; no responsive/AT/touch/full Wave/browser rerun acceptance inferred."
+}

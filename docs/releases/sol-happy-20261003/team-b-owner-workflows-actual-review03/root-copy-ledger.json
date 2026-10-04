@@ -1,0 +1,1211 @@
+{
+  "files": [
+    {
+      "path": "canvas-maps-primary.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/canvas-maps-d817-actual-primary-review01/REVIEW.json",
+      "bytes": 53434,
+      "sha256": "7e257dc738a91a0627da886f180b7097a656b6774ea40e3c6888b0a99eefb922",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "canvas-maps-independent.json",
+      "source": "/tmp/team-b-b6-canvas8-maps6-d817-recorded-review01/review.json",
+      "bytes": 16602,
+      "sha256": "779ad9c762b558476bb9bbf078d2118f6ce16f15824678413ced4e4a11a7063b",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "mail-primary.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/mail-original-ci-recorded-review01/REVIEW.json",
+      "bytes": 157917,
+      "sha256": "ebf2dafaef1888d9e913118651a9fdc559d900d787a9b11aec3216480252a3f5",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "mail-independent.json",
+      "source": "/tmp/team-b-b6-mail-d817-recorded-review01/review.json",
+      "bytes": 11678,
+      "sha256": "ea17995ee6e6a9645939c6a5ffbe096ac139ca79a0e06681448efed7640313a3",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "picture-negative-primary.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/picture-admission01-retirement-0424-recorded-review01/review.json",
+      "bytes": 24775,
+      "sha256": "2afbf175db3221bd61f4e11c100d2d2d99fe656ac0ee3be482b1ebece858fc35",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "picture-negative-independent.json",
+      "source": "/tmp/team-b-b6-picture-admission0424-recorded-review01/review.json",
+      "bytes": 9328,
+      "sha256": "9eaa487d0fe8ee78be18a19260904ce5b69db7dd433d289202cca3db2c7196d9",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-primary.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-896-recorded-review01/review.json",
+      "bytes": 19254,
+      "sha256": "3b9824b502b93b117c5ab1dea2fad4d5bbf95d6d7f99b6b7bd7b401327348732",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-source-peer.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b5/motion-original-project-ci-source01-peer/REVIEW.json",
+      "bytes": 17443,
+      "sha256": "198cf8348962ff1a101b5d3fbc65b9f11b10d4774c205d03607d8ae1f1888875",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "chat-local-independent.json",
+      "source": "/tmp/team-b-b6-chat-local3-0424-recorded-review01/review.json",
+      "bytes": 4349,
+      "sha256": "ed55adc456543d24aca4f9b7dea4a1f77a44b7a9032a8f6e29b2118b49e2af16",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-original-causal-independent.json",
+      "source": "/tmp/team-b-b6-wave22d-causal-recorded-review01/review.json",
+      "bytes": 14952,
+      "sha256": "10df127d3bbc6991b9910a459feab422c9f13eb3a8af313fcaa25a2eaa3bfc47",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "accounts-critical-independent.json",
+      "source": "/tmp/team-b-b6-accounts7-independent-sealed22d-driver7f-review01/review.json",
+      "bytes": 12362,
+      "sha256": "b8ef169c435f470e3821d3857594ee7e53af6ead6bf59021d793b8c068258abd",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "mail-revision-owner-request.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/mail-original-durable-ci-proposal01/A-MAIL-DRAFT-REVISION-OWNER-REQUEST01.json",
+      "bytes": 2840,
+      "sha256": "ad34235302832d1cda8a80daca0c78ac80e78aea4906f57cd18b715d5c5df08a",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "original-maps6-d81762b9.zip",
+      "source": "/workspace/attachments/7c00ce77-31d6-4934-b527-365ec922e0da/original-maps6-d81762b9.zip",
+      "bytes": 446511,
+      "sha256": "a86537ebba23ecd7c846fba61f8b40ca1271e986c62ac2129e20bad079192d34",
+      "wholeOriginalActionsZIP": true,
+      "allMembers": [
+        {
+          "path": "build.log",
+          "bytes": 591,
+          "sha256": "f2720546e9451be7c87936bfae4fb6b2aebdb10573173408a4fb0e8c87623510",
+          "CRCVerified": true
+        },
+        {
+          "path": "discovery.json",
+          "bytes": 1889,
+          "sha256": "a85c978ea228a3c0398ba608e593e96b38c9c18e777b7c3ace419a181eae25ce",
+          "CRCVerified": true
+        },
+        {
+          "path": "commands.json",
+          "bytes": 9570,
+          "sha256": "78cf674d017030ea59c20b2237b16b6fec4626ecd3a27b3ced5bfd857f81e5d9",
+          "CRCVerified": true
+        },
+        {
+          "path": "discovery.log",
+          "bytes": 1090,
+          "sha256": "2126e3f3d05d6bea263659dbe23ec339ee6c7a5528cabf72f342be4328520bc1",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2966,
+          "sha256": "811f33ea8d4a95be842df1431e46b389d9dcc9ae44d60826a0b9b1c324800d71",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-status-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-status-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "native-test.log",
+          "bytes": 451,
+          "sha256": "f1439900a0c1a692e240befcebe4470d9cee50a9f3f51223e4ac5c9c4f09465e",
+          "CRCVerified": true
+        },
+        {
+          "path": "restore.log",
+          "bytes": 487,
+          "sha256": "78221db1ad5174c1181da0c5f6b5f5d78cecf1768596e35fbc5442a6cce4c115",
+          "CRCVerified": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 8550,
+          "sha256": "76e7010cfa91eb0d82f9d555ede423475044011cb0e622bbced772e8ceafbbb7",
+          "CRCVerified": true
+        },
+        {
+          "path": "runtime-after.json",
+          "bytes": 16332,
+          "sha256": "f8be59291fd07310fbc2bab9339eedbf670ebb8599cc4094119639c81a25fc03",
+          "CRCVerified": true
+        },
+        {
+          "path": "runtime-before.json",
+          "bytes": 16332,
+          "sha256": "f8be59291fd07310fbc2bab9339eedbf670ebb8599cc4094119639c81a25fc03",
+          "CRCVerified": true
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29",
+          "CRCVerified": true
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 369,
+          "sha256": "fdeaa5e9df606293976b08025a254884367a1f27572b40130936adc751691874",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 401,
+          "sha256": "588e539a6f52610a456c4539f805b3b6379cbe775f7d5f3a4995b886a44dcfb9",
+          "CRCVerified": true
+        },
+        {
+          "path": "test-results/maps6.trx",
+          "bytes": 11011,
+          "sha256": "c46512a4c80a22931c94f0212adea376121f90d88ef7dfa133d2a05a9f14deb3",
+          "CRCVerified": true
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1304029,
+          "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673",
+          "CRCVerified": true
+        },
+        {
+          "path": "trx-summary.json",
+          "bytes": 5973,
+          "sha256": "b98581157184057fc8a32f3241d6a3bded1702b06155804eba8e01cc1a43218a",
+          "CRCVerified": true
+        }
+      ],
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "original-canvas8-d81762b9.zip",
+      "source": "/workspace/attachments/daf395a8-a721-4bf9-a047-bc53be82a6a1/original-canvas8-d81762b9.zip",
+      "bytes": 449415,
+      "sha256": "d65b6e70f6d7f29605e1fe7c8df019352269305024e23fe4d5ce7f358a4421d7",
+      "wholeOriginalActionsZIP": true,
+      "allMembers": [
+        {
+          "path": "build.log",
+          "bytes": 1484,
+          "sha256": "95dff2f2ac9465887737134eb1178b0d5c8050a6ed61521737b3fb3401a9cbf2",
+          "CRCVerified": true
+        },
+        {
+          "path": "commands.json",
+          "bytes": 10206,
+          "sha256": "ac0757272e18c13d6395b8062423da69ab2a61ff5abcecaebc01710f7976dd2b",
+          "CRCVerified": true
+        },
+        {
+          "path": "discovery.json",
+          "bytes": 2215,
+          "sha256": "6964d2e516319014d41702c0af9777c5f757002f9454f6dd496b042605d73aa8",
+          "CRCVerified": true
+        },
+        {
+          "path": "discovery.log",
+          "bytes": 1235,
+          "sha256": "3e041bbeb9880a9e977b69363f45ae0b1cd163a6d04594843d799b2659811195",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2968,
+          "sha256": "c82d7d69b3446ef8db8866a71f3143a2afd6b44ec973b41b5d2d1c2a71fd07f5",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-status-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-status-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "native-test.log",
+          "bytes": 436,
+          "sha256": "fdbc5b323631b5c5ab0fc571ec39c26440138466bb06d3852922645441af1038",
+          "CRCVerified": true
+        },
+        {
+          "path": "restore.log",
+          "bytes": 1242,
+          "sha256": "f30316f98d6776543cb16a03c099e68b0349f8033525ca22ca0daf34219ad6eb",
+          "CRCVerified": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 9872,
+          "sha256": "8043ab36503be47783d96c58131734b28a8f6eb7e7f9bdb4cb15f286624b05e8",
+          "CRCVerified": true
+        },
+        {
+          "path": "runtime-after.json",
+          "bytes": 18864,
+          "sha256": "c5d21501cdd7ecc71e431d4e1a319107ca50b6b66c0533e615aab291b26c5b04",
+          "CRCVerified": true
+        },
+        {
+          "path": "runtime-before.json",
+          "bytes": 18864,
+          "sha256": "c5d21501cdd7ecc71e431d4e1a319107ca50b6b66c0533e615aab291b26c5b04",
+          "CRCVerified": true
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29",
+          "CRCVerified": true
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 352,
+          "sha256": "c298217aeb86f56e17a7217ada2289f8a6f5c8d87990db125108389d92c83df4",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 384,
+          "sha256": "d558432a607b7545330db9500f04a7947ca0cd2bc6627a6d12e56e44d648ac30",
+          "CRCVerified": true
+        },
+        {
+          "path": "test-results/canvas8.trx",
+          "bytes": 13532,
+          "sha256": "e2cb71734523ed5d1c7a17426a28d314416e7911e85a1d9399471984fe42886f",
+          "CRCVerified": true
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1304029,
+          "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673",
+          "CRCVerified": true
+        },
+        {
+          "path": "trx-summary.json",
+          "bytes": 7248,
+          "sha256": "50d4516aa503a94c507af6fa77634495cbbec5779eee8a6aae7efcbee47052a3",
+          "CRCVerified": true
+        }
+      ],
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "original-mail-durable-d81762b9.zip",
+      "source": "/workspace/attachments/e0fb8e22-008c-4e60-958a-cefd92e182f7/original-mail-durable-d81762b9.zip",
+      "bytes": 395847,
+      "sha256": "752871c015cea4dca45dee858d6f458689e862bfa2b92b9fc87520b3fba9c5ce",
+      "wholeOriginalActionsZIP": true,
+      "allMembers": [
+        {
+          "path": "diagnostics/build-probe.log",
+          "bytes": 614,
+          "sha256": "713656cd0ac7ed822abda0581d738a75b220e043f2eef8c25ec9991ab8e41311",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/build.log",
+          "bytes": 617,
+          "sha256": "9b6170ec9ea47ba05eea42f37aec9fc0b7f51bff945c6ef4aa4ee9e7e15f7d8a",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/commands.json",
+          "bytes": 11239,
+          "sha256": "4b7924d08cd7f39d1bdbe4265f8d87c1c4be3b1b7edb5ab7858bdcba62bbff15",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/discovery-gate.json",
+          "bytes": 309,
+          "sha256": "92f1a79621b6c0cebd4e3601c934456eec080aa4891950f9dfa66306cc29ae92",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/discovery.log",
+          "bytes": 307,
+          "sha256": "a8fedb735874cdbee2a77a972c4cd687665e3b4c339beb89452ba5657acc16f2",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/dotnet-info.log",
+          "bytes": 2973,
+          "sha256": "26cbb0daf4870deb05b6095e379944559063f18dc1edc4365dfa3301bb06e55a",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/git-head.log",
+          "bytes": 41,
+          "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/native-seed.log",
+          "bytes": 171,
+          "sha256": "3768724e7b9daeff86a8b9709a67d99777f25338d5d0d3935ce7130229369c4b",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/native-verify.log",
+          "bytes": 171,
+          "sha256": "3768724e7b9daeff86a8b9709a67d99777f25338d5d0d3935ce7130229369c4b",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/original-mail-draft-fact.log",
+          "bytes": 475,
+          "sha256": "b447abd3bfef95768b1753c51fba24936e3208b40772aa8ae983dc397eb3846a",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/original-trx-gate.json",
+          "bytes": 1405,
+          "sha256": "11624b592e972371624d089ccd183b9259103ed745f229ff8a1bb42b98700b92",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/owned-files-tracked.log",
+          "bytes": 360,
+          "sha256": "2e217470472e0e9144e11051d0318f819bddaef87c723f3522f3ec037f863bbd",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/restore-probe.log",
+          "bytes": 199,
+          "sha256": "92f55a31f7a331f46ff86ff4167519050df6091a8216ef9c6033816e3f4ee148",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/restore.log",
+          "bytes": 474,
+          "sha256": "9d7b1ace498f8ab343384fb526ceceea6d1301a325325031f9c08d1b0b046ce2",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/result.json",
+          "bytes": 2757,
+          "sha256": "6fe5e85f093f4bc4aa7a046e89738006ae9fa71fbb7bf8518bcc3aebddd02d37",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/runtime-after.json",
+          "bytes": 1705,
+          "sha256": "0dfb3fd3d7312cb083075b9cdb87ad72073fc872e2defe5c14ee8224dbcdd4ef",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/runtime-before.json",
+          "bytes": 1705,
+          "sha256": "0dfb3fd3d7312cb083075b9cdb87ad72073fc872e2defe5c14ee8224dbcdd4ef",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/seed-results.json",
+          "bytes": 538,
+          "sha256": "9d5bc76db3c74d5635f613d85361c8a1252e076ca0e6bb4bb2c93d4f6ab80337",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/source-pins-after.json",
+          "bytes": 96861,
+          "sha256": "390066ae1a00c1d8bce620ea1625e8f94991afbbac94ff8aa24e278d958dadc4",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/source-pins-before.json",
+          "bytes": 96861,
+          "sha256": "390066ae1a00c1d8bce620ea1625e8f94991afbbac94ff8aa24e278d958dadc4",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/source-tree-pins.log",
+          "bytes": 1304029,
+          "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/target-properties.json",
+          "bytes": 375,
+          "sha256": "009095c849f0f33da10d4cb537aa84dc3b8de52046e91938f8002964d2c4f2d1",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/target-properties.log",
+          "bytes": 407,
+          "sha256": "795e833f98c23eb3c6f1198aa45c6950c578c0768072d5302c9c3ee2b7a7a8ed",
+          "CRCVerified": true
+        },
+        {
+          "path": "diagnostics/verify-results.json",
+          "bytes": 540,
+          "sha256": "e4d89235c3e74d771641892ec9b84dae7ad7a720c1c35074f2d08256fb15709d",
+          "CRCVerified": true
+        },
+        {
+          "path": "test-results/mail-original-draft.trx",
+          "bytes": 3017,
+          "sha256": "a4bc5074c360d93a6820d58900c787ab493fee0600295758c64bd8ff29396f16",
+          "CRCVerified": true
+        }
+      ],
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "picture-0424-admission01-retirement.zip",
+      "source": "/workspace/attachments/c9d8be16-c4bd-4d9a-9539-8bdb859a8ae3/picture-0424-admission01-retirement.zip",
+      "bytes": 355181,
+      "sha256": "b6a5bf8f4b861f4cd785ab5ae30759727e3c1968d3aae5c09281d45c82f04e34",
+      "wholeOriginalActionsZIP": true,
+      "allMembers": [
+        {
+          "path": "actual-native-binary-pins.json",
+          "bytes": 130652,
+          "sha256": "f0752b8147add641e055037c0a7615945d50690a04e3d52e36e020948e7a346a",
+          "CRCVerified": true
+        },
+        {
+          "path": "build.log",
+          "bytes": 10104,
+          "sha256": "b93091afa0d887a0c09d0567d043e510e35ef194b58b38da433c520d8e7e556d",
+          "CRCVerified": true
+        },
+        {
+          "path": "commands.json",
+          "bytes": 11873,
+          "sha256": "ce44c592fe4a14b3e2aa3ff42ec7bba8e127ad2434ca0c0ae867b0c08dcbea52",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 3022,
+          "sha256": "b086871c301dfeef9fbee85e76b5644203f572979ac5ea75d876a4709adfb04a",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "4a42023e329dfc924ebd41e4dd1afd93119257845b5ff0cd9179b7eb7268e3f7",
+          "CRCVerified": true
+        },
+        {
+          "path": "native-results.json",
+          "bytes": 67687,
+          "sha256": "a8351e69cda25a93fe38d766e910ec78161d29f158b2849fdb8e5fab1ba8bad8",
+          "CRCVerified": true
+        },
+        {
+          "path": "native-submodule-pins.log",
+          "bytes": 202,
+          "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+          "CRCVerified": true
+        },
+        {
+          "path": "native.log",
+          "bytes": 1907,
+          "sha256": "905d41d1aed971423d46920e931b2c3ccfa1324f303ef52df541bb5cbc3bae45",
+          "CRCVerified": true
+        },
+        {
+          "path": "restore.log",
+          "bytes": 5565,
+          "sha256": "9da0682a68a0a6cbb48b64d244e641b44be35754b6da847ec44ac65085d2b898",
+          "CRCVerified": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 4384,
+          "sha256": "18683dcde7d3ed2a99c4d87488f76ddeb808256b10f2a75f92040f797e7c886f",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 500,
+          "sha256": "7441a6f3cee8c2e6de586214b121996dbfd4f0e79ab60d0e85028c3876109b5d",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 532,
+          "sha256": "bdf59d4ec3e6f04fcff8e0854895e6392ab5298cd788431a869d5c7b530fd94b",
+          "CRCVerified": true
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1302653,
+          "sha256": "1d5d7be532a368f723a16f9041698369419c6ce2bd6022d0bdffd870664fd53f",
+          "CRCVerified": true
+        }
+      ],
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-original-project-896-native.zip",
+      "source": "/workspace/attachments/37bf779f-3985-445e-925e-43aca289b56a/motion-original-project-896-native.zip",
+      "bytes": 335412,
+      "sha256": "4830d9c0534ffe6370d23013a0788c6ce260c7bf7cb5a421cd2be499f8edbe06",
+      "wholeOriginalActionsZIP": true,
+      "allMembers": [
+        {
+          "path": "binary-pins.json",
+          "bytes": 1370,
+          "sha256": "6f5eec09679c69f9fe1d41c0b540252255fbc00a0842befa7a46ea13611edc19",
+          "CRCVerified": true
+        },
+        {
+          "path": "build.log",
+          "bytes": 275,
+          "sha256": "9a0e4d742b42d112518604329426289f8a3a37f70e00e7391f557bb33ed6ec4a",
+          "CRCVerified": true
+        },
+        {
+          "path": "commands.json",
+          "bytes": 6158,
+          "sha256": "420159875c8921d96e316abe0c6187c30b5328062befc24b33f87fcaa1bdb7a2",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2982,
+          "sha256": "38ba2d08337f8a3548872cb86279922e8a7ff874d3acfe1ead26dab245fbab6d",
+          "CRCVerified": true
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "d715be19955709ad2736f7a54daa89fc873d3aca8a2f44a1f46e0b70e2319aa5",
+          "CRCVerified": true
+        },
+        {
+          "path": "native-results.json",
+          "bytes": 578,
+          "sha256": "50b43738158de6da0680c07546b779d15b15a36289ccb2b501800c673ca551fc",
+          "CRCVerified": true
+        },
+        {
+          "path": "native.log",
+          "bytes": 105,
+          "sha256": "4a14b61f8eaa5ab9fed6aea7b60b0f86b2811edb968dcf46de30283eeabace52",
+          "CRCVerified": true
+        },
+        {
+          "path": "restore.log",
+          "bytes": 155,
+          "sha256": "b3023451339424a74d3306ae1ee2dd957c6f1eaab13698e25652b89f551ca2dd",
+          "CRCVerified": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 1434,
+          "sha256": "7a56641a51b6132bab0a19d90146e8603a54e51dbf326516bde879dbcd72a378",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 280,
+          "sha256": "8a5c32b05c26a7ab680c95c0df134ec3542b29f1db4175913202bc7fe2130d43",
+          "CRCVerified": true
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 310,
+          "sha256": "8ab7f749c3da4cb39173aca835c329185623ac4afc9931c4e4d7444106ad4f8d",
+          "CRCVerified": true
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1304560,
+          "sha256": "37a4ceddc7e12de1efbad84a3a52d9782ae57b4db622a65373ba750e3b49bd8e",
+          "CRCVerified": true
+        }
+      ],
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "accounts7-b6-independent-sealed22d-driver7f.zip",
+      "source": "/workspace/attachments/b694b067-6e59-48fb-8ca8-1e53b02d97db/accounts7-b6-independent-sealed22d-driver7f.zip",
+      "bytes": 32427,
+      "sha256": "f654419402bba00792a72143ff7304273f7739187154ae67a19b317b1aa89077",
+      "wholeOriginalActionsZIP": true,
+      "allMembers": [
+        {
+          "path": "actual-browser-oracles.log",
+          "bytes": 247,
+          "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193",
+          "CRCVerified": true
+        },
+        {
+          "path": "anonymous-tls-public-proof.json",
+          "bytes": 245,
+          "sha256": "b6caee3148b67fe621677f940b9aceb618e684833ac78880d4fe3c7a8588a406",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser/results.json",
+          "bytes": 2991,
+          "sha256": "95b62d5017a8ba703e2934d2c5fcabe5361625f4cc8ecd66d72cc532d71927ec",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser-install.log",
+          "bytes": 18584,
+          "sha256": "03f451e0f18a14a6cd5eb2d2982fd8c3a3613d152500affb4024a718de6b3840",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser-path.log",
+          "bytes": 102,
+          "sha256": "7fc19b87a4c9024fbff7610b08cf5296e92d2a1035e304fdc7eae2de5d2fbc26",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser-tool-identity.json",
+          "bytes": 365,
+          "sha256": "b76befa8ac592ab101cdbe12b2a9a080b85a9939af5645a528a8d6cfa6e7f812",
+          "CRCVerified": true
+        },
+        {
+          "path": "commands.json",
+          "bytes": 14924,
+          "sha256": "059681a17286df7b20ec4dae29e3443505da8d5e47df34b1b7125e563fd2a08b",
+          "CRCVerified": true
+        },
+        {
+          "path": "driver-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "driver-clean-final.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "driver-git-head.log",
+          "bytes": 41,
+          "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+          "CRCVerified": true
+        },
+        {
+          "path": "execution-plan.json",
+          "bytes": 3939,
+          "sha256": "0725dfccdfce78ab40f06e878dd3f5e920c3c673344432cbe82428d169437245",
+          "CRCVerified": true
+        },
+        {
+          "path": "fixture-cert-san-and-dates.log",
+          "bytes": 131,
+          "sha256": "e8718577e3d340e8076b5f012307c439d2df9b1e6d679d991197d033ea06db01",
+          "CRCVerified": true
+        },
+        {
+          "path": "fixture-cert-unexpired.log",
+          "bytes": 28,
+          "sha256": "884cfe6153fc074f92defed83aaabbca814ec8e4f43e37b01e55ed76a86aaf8b",
+          "CRCVerified": true
+        },
+        {
+          "path": "fixture-public-key.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "fixture-public-spki.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "fixture-tls-create.log",
+          "bytes": 1950,
+          "sha256": "9f55568098087fff645039e3fb577dc228fb29e8016721385931ae915ccb1ac0",
+          "CRCVerified": true
+        },
+        {
+          "path": "full-inventory-before.log",
+          "bytes": 717,
+          "sha256": "d3b4ad3ad98b9a3da4e745736851dee4616797a0251ffc294bf89bbb7f4292a8",
+          "CRCVerified": true
+        },
+        {
+          "path": "full-inventory-final.log",
+          "bytes": 717,
+          "sha256": "d3b4ad3ad98b9a3da4e745736851dee4616797a0251ffc294bf89bbb7f4292a8",
+          "CRCVerified": true
+        },
+        {
+          "path": "openssl-version.log",
+          "bytes": 65,
+          "sha256": "54668ea977da3703d07ac46186e7c727c114a5243657f46b69a83c69ec005f34",
+          "CRCVerified": true
+        },
+        {
+          "path": "owned-family/owned-family-receipt.json",
+          "bytes": 5671,
+          "sha256": "477bd1d54822fbe2533fc09bf1c580936b18ccf6ef8791757288acdfd708c78c",
+          "CRCVerified": true
+        },
+        {
+          "path": "owned-family/runner-safe-stdout.log",
+          "bytes": 404,
+          "sha256": "cd54258ed89c3ab5fdbfd78a7f918d5a7603eeff0f60b466be4daeb87b36e92f",
+          "CRCVerified": true
+        },
+        {
+          "path": "playwright-install.log",
+          "bytes": 24,
+          "sha256": "65c731cd02e19c79f6f5a3e84a4dd64a49acd6c47d2ee551d7cc9da191e8c96c",
+          "CRCVerified": true
+        },
+        {
+          "path": "receipt-map.json",
+          "bytes": 651,
+          "sha256": "498f30ecfd2b9144ae20d0875e766e5be12af29c5c8590967207b27bb3ee0909",
+          "CRCVerified": true
+        },
+        {
+          "path": "public-tool-pins.json",
+          "bytes": 115940,
+          "sha256": "316c4dec494609fb8c851e10550489e42e0c9dd6c6d31c007bad4bfb6214e8f4",
+          "CRCVerified": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 725,
+          "sha256": "1c4a8f99f206a22b7e02b642147a8cda309a1549b016179d9651afbf5fb28017",
+          "CRCVerified": true
+        },
+        {
+          "path": "source-pins.json",
+          "bytes": 1977,
+          "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4",
+          "CRCVerified": true
+        }
+      ],
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "independent-wave-existing-causal-1a8cea.zip",
+      "source": "/workspace/attachments/51a78efa-0334-4c8b-afcb-7e74c82b0b7e/independent-wave-existing-causal-1a8cea.zip",
+      "bytes": 74869,
+      "sha256": "778da593d0dc0aec610cc4c024278319c975e47125fc4a229755063024c97897",
+      "wholeOriginalActionsZIP": true,
+      "allMembers": [
+        {
+          "path": "actual-browser-oracles.log",
+          "bytes": 247,
+          "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser/native-ax-tree.json",
+          "bytes": 156457,
+          "sha256": "e995f8830542b0c0f41a9d5fe5deacbf8a3c289fc1fbf37ff1be5849a020da92",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser/results.json",
+          "bytes": 119871,
+          "sha256": "959ff3a7c1bde19ab7eda619703de0ec814b2e9b20cac6c0449f51a0e6685d0d",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser-install.log",
+          "bytes": 18575,
+          "sha256": "d07bc6ac81e8ad57948516549b4dc0de35346955f7563ccf312c835e43cd2062",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser-path.log",
+          "bytes": 99,
+          "sha256": "60384b0ec8f7e1dea08aeb6274d17149bed379678f4440395b7e3ca0f2e6190c",
+          "CRCVerified": true
+        },
+        {
+          "path": "browser-tool-identity.json",
+          "bytes": 362,
+          "sha256": "974864d4d1eb5211464db4a73df704efd21a7661c275fa36bb645bf0d2045744",
+          "CRCVerified": true
+        },
+        {
+          "path": "commands.json",
+          "bytes": 13176,
+          "sha256": "084c8cc5e9ad90cfee90ff050944d59d8069a1efed427360af73058300b2777d",
+          "CRCVerified": true
+        },
+        {
+          "path": "driver-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "driver-clean-final.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "CRCVerified": true
+        },
+        {
+          "path": "driver-git-head.log",
+          "bytes": 41,
+          "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+          "CRCVerified": true
+        },
+        {
+          "path": "execution-plan.json",
+          "bytes": 3624,
+          "sha256": "6f5862f15e1e6fc76836b54cb3b2adbc102d87175bfcd861ecca8b7caecec873",
+          "CRCVerified": true
+        },
+        {
+          "path": "export-receipt.json",
+          "bytes": 24541,
+          "sha256": "dcad79d5d2192622176cecdb48b283df28a5499a5297ef50fd2c0dd718a2f33d",
+          "CRCVerified": true
+        },
+        {
+          "path": "full-inventory-before.log",
+          "bytes": 708,
+          "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+          "CRCVerified": true
+        },
+        {
+          "path": "full-inventory-final.log",
+          "bytes": 708,
+          "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+          "CRCVerified": true
+        },
+        {
+          "path": "owned-family/owned-family-receipt.json",
+          "bytes": 15087,
+          "sha256": "61ee699466420e6a0fe7920c8a9b285430188f8916a41a9242d71ee97e640bb7",
+          "CRCVerified": true
+        },
+        {
+          "path": "owned-family/runner-safe-stdout.log",
+          "bytes": 86,
+          "sha256": "f8ef2ddb0a2270ade0d383edf2dd2bb0a6c40cc0762175522430c9951e6311b6",
+          "CRCVerified": true
+        },
+        {
+          "path": "playwright-install.log",
+          "bytes": 24,
+          "sha256": "65c731cd02e19c79f6f5a3e84a4dd64a49acd6c47d2ee551d7cc9da191e8c96c",
+          "CRCVerified": true
+        },
+        {
+          "path": "public-tool-pins.json",
+          "bytes": 113917,
+          "sha256": "b5abdf4d043eed6824b428093f8a6a00de572413312ad8ed8ff586e8237e126e",
+          "CRCVerified": true
+        },
+        {
+          "path": "receipt-map.json",
+          "bytes": 648,
+          "sha256": "a5c9a46cf81df71d3fff9a887d6c0613fcd454aca37acd45c0143c9c875f7fea",
+          "CRCVerified": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 1646,
+          "sha256": "6a221147d8a004d6faf7c06e8bde3011f794b6a9e44392e7375633da0fb622ca",
+          "CRCVerified": true
+        },
+        {
+          "path": "source-pins.json",
+          "bytes": 1977,
+          "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4",
+          "CRCVerified": true
+        }
+      ],
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-independent.json",
+      "source": "/tmp/team-b-b6-motion896-recorded-review01/review.json",
+      "bytes": 8362,
+      "sha256": "4962b6840ebcfd85abf98ade3081ef208ff072f7ab83af7fd0c6d5fc0f1c3180",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-critical-primary.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-independent-recorded-raw-review01/recorded-wave14-full-causal-review.json",
+      "bytes": 33060,
+      "sha256": "41025b04a74fa35d4ce426fc0361dc620cbf75fef6f9729a3f4f4500bbdcfa33",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-critical-independent.json",
+      "source": "/tmp/team-b-b6-wave22d-independent-causal-review01/review.json",
+      "bytes": 15150,
+      "sha256": "244bd569f6fb7a50b0e8bc5d334346e30040de2c2f2dfb2a4a786093455afe80",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-original26-primary.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/full-original26-git-memory-custody-report.json",
+      "bytes": 232333,
+      "sha256": "e615dc4c0a41e0106ac4ee2f69916cc5a710ca6891a377440d32db850dae5770",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-original26-independent.json",
+      "source": "/tmp/team-b-b6-wave22d-full26-memory-review01/review.json",
+      "bytes": 12304,
+      "sha256": "1abfddd455af6bd5bb5efc28f080dbd40ee206a68782ca9524d95290e5a27de4",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-narrow-visual-failure.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave-original-narrow-visual-review01.json",
+      "bytes": 2163,
+      "sha256": "4aff8ff9cba6f5b6240fac2eb770145da011481b2782625081811e6d931b285b",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-empty.png",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-narrow.png",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-narrow.png",
+      "bytes": 89184,
+      "sha256": "06307f05c08fe356aa1705364f4a5fa9270536471c49881b2557a5b68ad44cbd",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-populated.png",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-populated.png",
+      "bytes": 120917,
+      "sha256": "2bb12f5dd499b67cf63ce29c9949d6a25bcdf6a11b58b0a750871fc694cc1a9f",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "source-custody-receipt.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/source-custody-receipt.json",
+      "bytes": 4539,
+      "sha256": "fd713acba748d1d85e4c19c9ad3f4a6969b5e0726dcc1124378eb660c2e3d9f5",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave22d-durable-member-transport-delivery.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave22d-durable-member-transport-delivery.json",
+      "bytes": 8510,
+      "sha256": "a7d23e38bb0ed4461cb31a8b449b4f8ad59fb0541ed3bb737bb9ab2552050aea",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave22d-part01-transient-retirement.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave22d-part01-transient-retirement.json",
+      "bytes": 1145,
+      "sha256": "23892103c502461ef30b29de3cf01cb07a295cdb66401e1307a8f92bec67c7c8",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave22d-part02-transient-retirement.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave22d-part02-transient-retirement.json",
+      "bytes": 1145,
+      "sha256": "6e80f666efccdbe6fc1c09ec07de54f7b3467362587b78d57cfbad5cbbc54ff7",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave22d-part03-transient-retirement.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/wave22d-part03-transient-retirement.json",
+      "bytes": 1144,
+      "sha256": "9bf55cfda621b57d2ce854fedaf7f912426150691c5f6c96ec07e61016186ffd",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-original-critical-idb-and-wav-independent.json",
+      "source": "/tmp/team-b-b6-wave22d-full26-memory-review01/critical-idb-review.json",
+      "bytes": 15677,
+      "sha256": "4dcf327cb70b44d4f8494d40ea2797c7895894a9965006742ea8ce525d94995c",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "wave-analyst-additive-qualification.json",
+      "source": "/tmp/team-b-b6-wave22d-full26-memory-review01/analyst-checker-custody-and-additive-qualification.json",
+      "bytes": 2868,
+      "sha256": "bb8ca5e8e3afe32be77886bc283636b94ac334592fd379d11e853b51a344f875",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-owner-request.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-owner-contract-request-source01/OWNER-CONTRACT-REQUEST.json",
+      "bytes": 48471,
+      "sha256": "e1604c758ddcc3c3cf2e3e4b552a4a7122043008604b21fb8ff9e9a301d60991",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-owner-request-manifest.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-owner-contract-request-source01/manifest.json",
+      "bytes": 7691,
+      "sha256": "801afd04de5e32f54d343ee75cdbf7c5145a9be45f47aa5ed265d17525d71080",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-owner-request-source-self-check.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-owner-contract-request-source01/source-self-check.json",
+      "bytes": 2181,
+      "sha256": "4fe6a0e0413986075ee41d698ce4c70d4ce93bf202fee49e2e8cbcc2703fa3f2",
+      "wholeBodyReadbackEqual": true
+    },
+    {
+      "path": "motion-owner-request-peer.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/motion-owner-request-source-peer01/review.json",
+      "bytes": 12788,
+      "sha256": "9d85aed02725b304456cecfa907d8d964edd76fec8783f5880e945bae10b93c9",
+      "wholeBodyReadbackEqual": true
+    }
+  ],
+  "state": "COMPLETE_WHOLE_ORIGINAL_BODY_COPY_READBACK_AND_ALL_SEVEN_ZIP_CRC"
+}

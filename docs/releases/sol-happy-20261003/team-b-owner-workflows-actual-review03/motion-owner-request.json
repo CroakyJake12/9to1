@@ -1,0 +1,852 @@
+{
+  "schemaVersion": 1,
+  "status": "OWNER_SCHEMA_OPERATION_API_AND_PORT_REQUEST_NOT_IMPLEMENTED",
+  "requestID": "team-b-motion-canonical-owner-port-20261004",
+  "authoredAtUTC": "2026-10-04T15:42:50.623622+00:00",
+  "requestedOwner": "Actual Team A Motion/shared/native domain/API owner; root routes through real coordination. No external communication here.",
+  "proposedDestination": "apps/Web/Motion/OWNER-CONTRACT-REQUEST.json",
+  "actualSourceCommitWitness": "1a8cea03534e2b2767ec806f91dd2c454de94281",
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Motion/MotionProject.cs",
+      "bytes": 14526,
+      "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d",
+      "gitBlobSHA1": "95c9144e5956503250a74ae3c683471a942cb6aa"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "bytes": 5674,
+      "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6",
+      "gitBlobSHA1": "e5bda9e1f849206d3f9e70d6f2c854d696d9ae59"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143",
+      "gitBlobSHA1": "08ced0ab07a187b241463ac43cf6c640b15410ee"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionMediaAssetReferences.cs",
+      "bytes": 655,
+      "sha256": "0e0b301b419074c8331aab44f37a7d230dace76cad2fc8df247973b9a8bc5404",
+      "gitBlobSHA1": "6f3feb2f06bd3781257322210444d8774b48496f"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionRenderService.cs",
+      "bytes": 4241,
+      "sha256": "8978f16c4078a1d8472a9d37120cbc37b7790a554e35a825063c7b0d87a8e698",
+      "gitBlobSHA1": "f419e3ba1a408890e0682cd5071eb6dae89c8696"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionNativeRenderWorkflowTest.cs",
+      "bytes": 5751,
+      "sha256": "3143ba5167b1b609b10c215b10f25859b638a2ecbc984fbb73470b4283d05913",
+      "gitBlobSHA1": "8715a8374292ce56b8b7839bf58c99d4e57d085a"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Program.cs",
+      "bytes": 7900,
+      "sha256": "08d54f7c6b764eb6a6159472ba48c931911e1d41f10d2f7cf6058bd4bf6db4ca",
+      "gitBlobSHA1": "ba8b5eb046c3375e8230c235b150462c69b596f4"
+    },
+    {
+      "path": "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+      "bytes": 720,
+      "sha256": "f96c1e19cedaeee54fafb15ee4b9ebf55b6c781ea4e3c0cce312e4f0088eca2e",
+      "gitBlobSHA1": "9d4b1db37df315288c2e6a1649f8f27e515d04f5"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/GStreamer/source.binding.json",
+      "bytes": 237,
+      "sha256": "ec96c00cba2db0548e6ec0b3458f78a8bc01aab4816bfdc8434609809e6b4024",
+      "gitBlobSHA1": "cf81b07618dba13641a0ae15b3a776d4b9308e34"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/GES/source.binding.json",
+      "bytes": 236,
+      "sha256": "8c50830d0e5509a4435bb8828caff7833d9e2a3f6a6b58d368019db7a44ffae1",
+      "gitBlobSHA1": "1179c0a67bc22f58360f9eec6762e967495f00c7"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/DONOR-PROVENANCE.md",
+      "bytes": 1141,
+      "sha256": "581ae72aa54cbf58480932fb8488778a1a1cd54ef24e9b8ba4c831eb4cab2f31",
+      "gitBlobSHA1": "3be68558484655495caf5b1dfb78d7690440e689"
+    },
+    {
+      "path": "9to1 Workspace/Motion/PROVENANCE.md",
+      "bytes": 1648,
+      "sha256": "031be41092341e854cdae116d5df89d0305682b07a5287d63a62d1edd9935427",
+      "gitBlobSHA1": "383e77fbaa209be706787fdc8e3fa03cfd61eef3"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAssetReference.cs",
+      "bytes": 2295,
+      "sha256": "ac8a9619528774fda0d5f511a3468c21ac338248b7a1a19b9227ff65576fa645",
+      "gitBlobSHA1": "22299dbd0ae4f2f34df4e5767b0e83fc0a6c4e8f"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaContracts.cs",
+      "bytes": 13255,
+      "sha256": "1cac8a4e5cdbfc016b1a7872a3dbd0a7a50efc8e8cc4e006abccf86ade0865f0",
+      "gitBlobSHA1": "a78c1796eb5a4954005572f77ff12eb535964401"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaRenderContracts.cs",
+      "bytes": 2238,
+      "sha256": "b505821851bcb499ea30aea18c77e1583f9dc8c4a5579a235b52572e4488f9bf",
+      "gitBlobSHA1": "378e598bb7605408952edda51ad10d07f330d362"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAudioDecodeContracts.cs",
+      "bytes": 1687,
+      "sha256": "566d8a777df25ec5d63d0e411f7c6a5db5242361c05316090141a21ef44a71fa",
+      "gitBlobSHA1": "1c86501c792b50207264b60e53f06abb34dbbcd4"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/PreparedMediaAssetLease.cs",
+      "bytes": 2500,
+      "sha256": "ec732b19ec3a7d3e304a2f30e941bc2bd1ceb9a69ee3607f7c122ae2f02d2327",
+      "gitBlobSHA1": "e9aad3300b8bd486b8368f011a571376d9a1d6f1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaRenderLimits.cs",
+      "bytes": 808,
+      "sha256": "d791d2e2cd2a0abfa54646b7b35bab17b89d175eb227bf0ced8aded5e2c2175d",
+      "gitBlobSHA1": "90ade0ae65b8ffed61a474cadd562a0735478a34"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/GesTimelineRenderer.cs",
+      "bytes": 12660,
+      "sha256": "8b87abdf78d9aa25fa4ff2ce87a5433ae69fd1b9aa258f33bd7deb36dff02f76",
+      "gitBlobSHA1": "5296d794d6d1cdbe42d72a2b09c87c871d375b7d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/GStreamerMediaEngine.cs",
+      "bytes": 13529,
+      "sha256": "23221d5b5412f5753796143aec0ad4b34a4bcd0a726a5622e62f3ca1a41925a0",
+      "gitBlobSHA1": "8ced0a2c97a15ee7bf95692808e19ca272760d63"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/MediaAssetPreparationService.cs",
+      "bytes": 5674,
+      "sha256": "b64e3ceaf4bd94eb4e29c1e787c07515abe95df6af3450958afb91c7bb6034b8",
+      "gitBlobSHA1": "2291052f3d7afa5c6d55ebbbffb08bd34ee5137e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/GStreamerAudioDecoder.cs",
+      "bytes": 12837,
+      "sha256": "9de281aefa7843b09c68c010233834f3501c40cf1f412ac8aa2fe3c9af6b0927",
+      "gitBlobSHA1": "c30565c31221f4913c586f25f1c294874559c96a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "bytes": 375,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121",
+      "gitBlobSHA1": "a6996aa2c75031e77bf1c4d60861ff365ed1e386"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+      "bytes": 3619,
+      "sha256": "d36cc80e5f6319f8505867d271f77ccfc371fb5b0ee23e0b6cc606d3bdd462fe",
+      "gitBlobSHA1": "68197752ba4a9e05584ee9518bcdf278423dd5da"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "gitBlobSHA1": "76a5b6e697b64fec33efc1a7319d2d723163de83"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374",
+      "gitBlobSHA1": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc"
+    }
+  ],
+  "canonical": {
+    "path": "/workspace/attachments/518b5c81-69d8-458b-ad4a-3e2a80e09bca/9to1 Development Specification.txt",
+    "bytes": 1402519,
+    "sha256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08",
+    "revisionQualification": "Exact b24161 current plaintext; root modified witness2026-10-04T11:47:25.349Z; no new Docs structural revision fabricated",
+    "completeSectionReference": {
+      "startLine": 6824,
+      "endLine": 6996,
+      "requiredFullSectionRemainsActive": true
+    },
+    "selectedLiteralClauses": [
+      {
+        "line": 6827,
+        "text": "The canonical result of work in Motion is a structured MotionProject, not a rendered video. Normal edits such as trimming, crop, speed changes, transforms, masks, effects, colour changes, captions, keyframes, procedural animation and AI-assisted mutations MUST remain inspectable editable project state. Rendering, proxies, previews, caches and exports are derived outputs and MUST NOT silently replace canonical project state."
+      },
+      {
+        "line": 6829,
+        "text": "Motion MUST reuse shared 9to1 engines aggressively wherever the underlying capability belongs to more than one product. Shared capability MUST live in the appropriate shared engine/library rather than requiring another app UI process or duplicating private implementations."
+      },
+      {
+        "line": 6830,
+        "text": "Motion reuses the Wave/shared-media engine for audio clips, tracks, waveform/spectrogram analysis, effects, mixing, generated speech/music/SFX and audio rendering; Picture/shared visual primitives for compatible raster/vector composition, masks, paths, still-image effects and object-level image manipulation; Present/shared animation primitives for compatible easing, interpolation and timing concepts; the Shared Productivity Engine for compatible text, vector shape, drawing/ink and transform primitives; Rnote-derived drawing/path primitives for annotation, matte/mask drawing and rotoscoping assistance; Files for canonical asset identity; Dulche/model infrastructure for analysis and generation; the shared Node Graph Framework for advanced graphs; and CUI for the shell/navigation/interaction system."
+      },
+      {
+        "line": 6831,
+        "text": "Dependency direction MUST remain acyclic and engine-oriented. Motion MUST NOT require the Picture or Wave UI processes merely to crop an image or adjust audio. Picture, Wave and Motion consume compatible shared implementations. If Motion needs a capability that Picture, Wave, Present or another surface also materially needs, the implementation SHOULD be placed in the owning shared engine rather than copied."
+      },
+      {
+        "line": 6833,
+        "text": "MotionProject has stable ProjectID, Sequences[], AssetReferences[], GeneratedComponents[], GlobalSettings, ColourSettings, ProxyCacheSettings, CreatedAt, ModifiedAt and Revision."
+      },
+      {
+        "line": 6834,
+        "text": "Sequence has stable SequenceID, Width, Height, PixelAspectRatio, FrameRate/timebase, Duration, VideoTracks[], compatible AudioTracks[], Markers[], Guides/safe-area state where used, colour/HDR state and Revision."
+      },
+      {
+        "line": 6835,
+        "text": "VisualTrack has stable TrackID, name, ordered Elements[], visibility, lock state, compositing state where applicable and Revision. Audio tracks use compatible Wave/shared-media track primitives rather than a second incompatible audio model."
+      },
+      {
+        "line": 6836,
+        "text": "MotionElement has stable ElementID, ElementType, SourceAssetID or GeneratedComponentID where applicable, TrackID, TimelineStart, Duration, SourceRange, Transform, Crop, Opacity, BlendMode, Masks[], Effects[], ParameterAnimation[], graph references where applicable and Revision."
+      },
+      {
+        "line": 6837,
+        "text": "Masks, EffectInstances, AnimationTracks, Keyframes, Titles/TextObjects, CaptionTracks, CaptionCues, analysis records and Motion node-graph objects MUST have stable identity and revision-aware state where they are addressable/editable. AI, Automations, collaboration and undo/redo address canonical object IDs and properties rather than screen coordinates."
+      },
+      {
+        "line": 6841,
+        "text": "Direct manipulation in the Viewer/Canvas MUST mutate the same canonical properties and typed actions used by the Inspector, keyboard operations, APIs and AI. The viewer MUST NOT maintain a separate UI-only transform or mask state."
+      },
+      {
+        "line": 6843,
+        "text": "Motion MUST provide a professional multi-track NLE timeline with accurate frame/timecode semantics, in/out ranges, source/sequence viewing, snapping, multi-selection, markers, grouping, linked audio/video, track controls and nested sequences."
+      },
+      {
+        "line": 6844,
+        "text": "Minimum typed editing operations include insert, overwrite, append, blade/split, trim, ripple trim, roll, slip, slide, ripple delete, lift, extract, move, duplicate, group/ungroup, link/unlink audio and video, track lock, video visibility, audio mute/solo where applicable, range selection and nested-sequence creation/use."
+      },
+      {
+        "line": 6845,
+        "text": "Transport MUST support ordinary play/pause, frame stepping and efficient shuttle/scrub control, including keyboard-first operation such as J/K/L-style transport where appropriate. Editing operations MUST be deterministic at the sequence timebase and MUST NOT depend on pixel coordinates in the timeline UI."
+      },
+      {
+        "line": 6848,
+        "text": "Motion MUST separate canonical source media from proxy media, decode caches, analysis caches, preview renders and final render output. Editing against a proxy MUST preserve the same canonical source identity, timing, ElementID and project semantics."
+      },
+      {
+        "line": 6850,
+        "text": "Final render/export MUST use canonical source media at requested output quality unless the user explicitly chooses a proxy-derived or otherwise lower-quality source path. Missing or stale proxies/caches are recoverable derived-state problems and MUST NOT make the canonical project invalid."
+      },
+      {
+        "line": 6853,
+        "text": "Transform and visual-property edits MUST be represented by canonical property mutations. Source pixels/frames remain unchanged unless the user explicitly performs a destructive source-operation workflow outside normal Motion project editing."
+      },
+      {
+        "line": 6854,
+        "text": "Motion MUST support layered compositing with opacity, blend modes, alpha, masks, mattes, track mattes, chroma/luma keying, nesting/precomposition, adjustment layers and explicit compositing order where supported."
+      },
+      {
+        "line": 6857,
+        "text": "Keyframes have stable identity and support create, move, copy, duplicate, delete and value editing. Supported interpolation includes at least hold/step, linear and smooth/eased interpolation, with Bézier/value curves where meaningful. Motion MUST provide easing presets and a graph/curve editor for advanced editing."
+      },
+      {
+        "line": 6858,
+        "text": "Shared Present animation/timing primitives SHOULD be reused when semantics are compatible, while Motion remains authoritative for timeline/frame-based video state."
+      },
+      {
+        "line": 6860,
+        "text": "Motion MUST include a full visual node editor for advanced compositing, effects, transitions, motion graphics and procedural animation. It reuses the shared 9to1 Node Graph Framework for GraphID/NodeID/PortID identity, pan/zoom, selection, grouping, comments, typed ports, connection validation, copy/paste/duplicate, undo/redo, graph revisioning, AI graph mutation and execution-state visualisation."
+      },
+      {
+        "line": 6861,
+        "text": "Motion registers a rich Motion-specific node catalogue. Minimum families include media/sequence inputs, transform, crop, masks/mattes, compositing/blending, chroma/luma keying, colour processing, blur/sharpen, distortion/displacement, tracking data, procedural shapes, text/title generation, time offsets, retiming, parameter maths, curves, interpolation/easing, switching/conditions, generators and compatible particle/procedural systems where implemented."
+      },
+      {
+        "line": 6865,
+        "text": "Motion defines native reusable graph objects including MotionEffectGraph, MotionTransitionGraph, MotionAnimationGraph and MotionCompositionGraph. Each has stable identity, revision state, typed inputs/outputs, internal NodeGraph identity, exposed user parameters and provenance/origin metadata where applicable."
+      },
+      {
+        "line": 6869,
+        "text": "Transitions MUST support ordinary built-in transitions and reusable MotionTransitionGraph assets. A custom transition graph receives at least outgoing visual input, incoming visual input, normalised transition progress from 0 to 1, frame/time context, sequence dimensions and any declared exposed parameters."
+      },
+      {
+        "line": 6873,
+        "text": "MotionAnimationGraph can drive compatible properties without baking every frame into ordinary keyframes. Minimum useful node families include constants, vectors, arithmetic, clamp, map/remap range, curves, noise, oscillators, frame/time, velocity, distance, interpolation, easing, deterministic seeded random, tracking data, audio amplitude/frequency analysis and safe formula/expression nodes where supported."
+      },
+      {
+        "line": 6881,
+        "text": "Motion MUST include first-party colour correction/grading suitable for normal production. Minimum controls include exposure, contrast, highlights/shadows, temperature/tint, saturation and curves, plus channel/colour-wheel or equivalent advanced controls where implemented."
+      },
+      {
+        "line": 6886,
+        "text": "Lower thirds, callouts, captions and reusable title compositions can therefore remain editable. Complex title/graphic systems MAY use Motion node graphs while retaining the same canonical object identity."
+      },
+      {
+        "line": 6888,
+        "text": "Motion MUST support time-aligned transcription and first-class CaptionTrack/CaptionCue objects. Capabilities include transcript correction, generated captions, editable cue timing/text, split/merge, styling, multiple caption tracks/languages where supported and import/export of maintained subtitle formats such as SRT/WebVTT."
+      },
+      {
+        "line": 6892,
+        "text": "Motion audio tracks/clips use compatible Wave/shared-media primitives. Motion directly exposes normal video-production audio controls such as gain/volume, pan, fades, waveform display, effects, normalisation, automation and applicable dialogue cleanup."
+      },
+      {
+        "line": 6893,
+        "text": "Where supported, Motion can invoke the shared Enhance Audio, Denoise, Custom Censorship and Split Stems capabilities defined by Wave/shared media without creating incompatible private versions."
+      },
+      {
+        "line": 6894,
+        "text": "Open/Edit in Wave MUST preserve canonical asset/clip/timing references so advanced audio work can return to Motion without a lossy export-edit-import cycle. Wave remains the full audio-production surface; Motion provides the subset appropriate to video workflows."
+      },
+      {
+        "line": 6896,
+        "text": "Dulche operates Motion through typed Motion/shared-engine actions and NodeGraph actions, never by pretending to drag timeline or canvas UI when semantic actions exist."
+      },
+      {
+        "line": 6898,
+        "text": "AI-generated edits MUST remain inspectable, undoable/revisioned project state. AI MUST NOT render an opaque replacement video and declare the structured editing task complete when Motion can represent the requested result natively."
+      },
+      {
+        "line": 6907,
+        "text": "Files remains authoritative for source/export asset storage identity, move/rename/delete/recover/share and cloud/provider hydration. Motion projects reference stable FileID/AssetID identities rather than absolute paths."
+      },
+      {
+        "line": 6908,
+        "text": "Moving or renaming an underlying File MUST NOT detach a Motion reference. Unavailable source enters an explicit offline-media state and retains timeline/project identity. Relink resolves the existing reference rather than silently creating a new unrelated element."
+      },
+      {
+        "line": 6909,
+        "text": "Generated, proxy, cache and rendered assets MUST be distinguishable from canonical source identity and carry appropriate provenance/derivation metadata."
+      },
+      {
+        "line": 6911,
+        "text": "Motion import MUST support maintained video, image and audio formats exposed by the approved shared media backend. GStreamer/GStreamer Editing Services or an explicitly documented equivalent production-capable backend is approved for decode/encode/playback/timeline primitives. Backend-specific IDs MUST NOT leak into the canonical public Motion project contract."
+      },
+      {
+        "line": 6912,
+        "text": "Export MUST support sequence/project render, selected range, frame stills, audio-only output, caption/subtitle output and appropriate individual-clip/component exports. Options include maintained container/codec choices, resolution, frame rate, quality/bitrate, audio codec/rate/channels, hardware encoder selection or automatic acceleration and SDR/HDR/colour-space options where supported."
+      },
+      {
+        "line": 6913,
+        "text": "Motion MUST provide a render queue/background-job model with stable job identity, progress, cancellation, typed failure state and safe retry. Export/render MUST be pinned to the intended project/source revision and MUST NOT silently switch to newly edited state mid-job."
+      },
+      {
+        "line": 6916,
+        "text": "Write-capable AI changes Motion only through typed Motion/shared-engine/NodeGraph actions and respects normal permission, trust, revision and undo/audit contracts."
+      },
+      {
+        "line": 6918,
+        "text": "Motion's first-party API catalogue is exhaustive under the global API-parity rule. Minimum canonical entry points include:"
+      },
+      {
+        "line": 6951,
+        "text": "Automation and integration events"
+      },
+      {
+        "line": 6952,
+        "text": "Automations, Spaces, Dulche and other authorised clients can use the exhaustive Motion action catalogue. Long proxy, analysis, tracking, generation, render and export jobs expose stable progress, cancellation, retry/idempotency where relevant and typed result/error state."
+      },
+      {
+        "line": 6953,
+        "text": "Motion emits meaningful typed events such as project/revision changed, source offline/relinked, analysis completed, proxy ready, tracking completed, render/export completed/failed and graph/generated-component changed. It MUST NOT flood Automations with raw frame, pointer or realtime preview events."
+      },
+      {
+        "line": 6955,
+        "text": "Project/sequence/track/element/mask/effect/keyframe/graph/caption mutations are revision-aware. Independent object edits MAY merge when safe; incompatible concurrent edits to the same canonical object or property MUST surface conflict rather than blind last-write-wins."
+      },
+      {
+        "line": 6956,
+        "text": "Running proxy, tracking, generation, render and export jobs are pinned to their required source/project revisions. Their results MUST record which revision/input produced them."
+      },
+      {
+        "line": 6963,
+        "text": "GPU acceleration and hardware decode/encode SHOULD be used where safe and available, with explicit capability fallback. 4K/8K and otherwise heavy media remain workable through proxies, reduced preview quality, caching and tiling according to available hardware rather than an architecture that assumes full-resolution residency."
+      },
+      {
+        "line": 6964,
+        "text": "Interactive editing MUST remain responsive while background jobs run. Preview quality MAY adapt under load, but canonical time/frame calculations and final requested render quality MUST remain deterministic and source-based."
+      },
+      {
+        "line": 6966,
+        "text": "Project saves/autosaves MUST be crash-safe and preserve canonical project integrity. A crash or termination during proxy generation, analysis, tracking, generation, render or export MUST leave the project valid and the derived job recoverable/retryable where feasible."
+      },
+      {
+        "line": 6967,
+        "text": "Partial derived output MUST NOT be reported as complete. Failures expose typed state such as ProjectNotFound, SequenceNotFound, ElementNotFound, AssetOffline, CodecUnsupported, ProxyFailed, AnalysisFailed, TrackingFailed, GraphInvalid, NodeUnavailable, GenerationFailed, RenderFailed, ExportFailed, RevisionConflict, PermissionDenied and CapabilityUnavailable plus shared backend/model errors."
+      },
+      {
+        "line": 6968,
+        "text": "Undo/redo and revision history MUST restore structured project changes without requiring source media to be rewritten."
+      },
+      {
+        "line": 6970,
+        "text": "Windows, 9to1-OS and web preserve the same canonical Motion project/graph/generated-component model while capability-negotiating codecs, GPU/hardware acceleration, camera/device access, model availability and performance differences."
+      },
+      {
+        "line": 6971,
+        "text": "A platform may disable an unavailable codec, hardware encoder, node provider or model-backed feature with explicit CapabilityUnavailable state, but MUST NOT silently create an incompatible project schema."
+      },
+      {
+        "line": 6975,
+        "text": "* A multi-track project containing video, image, title and audio elements can be edited, closed/reopened and exported while preserving stable project/sequence/track/element identity."
+      },
+      {
+        "line": 6976,
+        "text": "* Insert/overwrite, split, trim, ripple trim, roll, slip, slide, ripple delete, lift/extract, linking and nested-sequence operations produce deterministic structured timeline state and remain undoable."
+      },
+      {
+        "line": 6977,
+        "text": "* Normal transforms, crop, masks, effects, colour and speed changes remain non-destructive and survive save/reopen."
+      },
+      {
+        "line": 6995,
+        "text": "* Windows, 9to1-OS and web preserve the same canonical project model while capability-negotiating backend/hardware/model differences."
+      },
+      {
+        "line": 6996,
+        "text": "* When Home is absent at process start, Motion follows the global Install Home/bootstrap contract."
+      }
+    ]
+  },
+  "ownerWorkRequests": [
+    {
+      "id": "canonical-schema",
+      "ownerPaths": [
+        "9to1 Workspace/Motion/MotionProject.cs"
+      ],
+      "observed": "Schema1 project has SchemaVersion/ProjectId/Sequences/AssetReferences/CreatedAt/ModifiedAt/Revision. Sequence has ID/dimensions/fpsNumerator/fpsDenominator/VideoTracks. Track has ID/Name/Elements. Element has ID/TrackId/AssetId/integralTimelineStart/Duration/SourceIn/SourceOut/ProxyAssetId.",
+      "missingRequiredFields": {
+        "MotionProject": [
+          "GeneratedComponents",
+          "GlobalSettings",
+          "ColourSettings",
+          "ProxyCacheSettings"
+        ],
+        "Sequence": [
+          "PixelAspectRatio",
+          "Duration",
+          "compatible AudioTracks",
+          "Markers",
+          "Guides/safe-area state where used",
+          "colour/HDR state",
+          "Revision"
+        ],
+        "VisualTrack": [
+          "visibility",
+          "lock state",
+          "compositing state where applicable",
+          "Revision"
+        ],
+        "MotionElement": [
+          "ElementType",
+          "generated-component source reference",
+          "Transform",
+          "Crop",
+          "Opacity",
+          "BlendMode",
+          "Masks",
+          "Effects",
+          "ParameterAnimation",
+          "graph references where applicable",
+          "Revision"
+        ],
+        "editableAddressableChildren": [
+          "Masks",
+          "EffectInstances",
+          "AnimationTracks",
+          "Keyframes",
+          "Titles/TextObjects",
+          "CaptionTracks/Cues",
+          "analysis records",
+          "Motion node-graph IDs/revisions"
+        ]
+      },
+      "request": "Extend the existing owner authority/schema, with explicit source-owned migration/unknown-field/version compatibility preserving stable IDs/timebase/history. No B parallel model or silent field loss/downgrade.",
+      "clauses": [
+        6827,
+        6833,
+        6834,
+        6835,
+        6836,
+        6837
+      ]
+    },
+    {
+      "id": "minimal-portable-codec-first",
+      "ownerPaths": [
+        "9to1 Workspace/Motion/MotionProject.cs",
+        "9to1 Workspace/Motion/HavenOS.Motion.csproj"
+      ],
+      "observed": "Model/edit rules pureBCL but strict JsonOptions private; serialization in native Save(path)/Load(path). Full ownerproject references Haven.Infrastructure including native/provider speech/PTY/platform closure. BCL test subset is not an owner portable library.",
+      "request": "Owner exposes source-maintained portable SAME MotionProject/edit/validated-codec library and owner-chosen path-free memory/stream encode/decode entrypoints. Native Save/Load delegate to same codec; preserve lock/Flush(true)/atomicMove/CAS adapter and original ID/revision decisions. Supply real project/reference+public signatures+metadata/trimming guarantees; library extraction must not fork algorithms/schema.",
+      "clauses": [
+        6827,
+        6829,
+        6830,
+        6831,
+        6966,
+        6970
+      ]
+    },
+    {
+      "id": "shared-time-audio",
+      "ownerPaths": [
+        "9to1 Workspace/Motion/MotionProject.cs",
+        "9to1 Workspace/Motion/MotionRenderService.cs",
+        "9to1 Workspace/shared/src/Haven.Core/Media/MediaContracts.cs"
+      ],
+      "observed": "Shared MediaTimebase/MediaTime/MediaTimelineClip/MediaTimelineEdits exist; renderer projects video IDs/frameclock into them. Selected MotionSequence has no AudioTracks/shared effects/transport/analysis.",
+      "request": "Provide actual shared compatible audio track/clip/effect/asset/time primitives and exact frame/sample conversion using existing owner types. Reuse compatible shared split/trim/move semantics; owner defines project/object revisions/source bounds. Wave↔Motion retains canonical clip/asset/timing; no second PCM/audio/effects model.",
+      "clauses": [
+        6830,
+        6831,
+        6834,
+        6835,
+        6845,
+        6892,
+        6893,
+        6894
+      ]
+    },
+    {
+      "id": "typed-catalog-history",
+      "ownerPaths": [
+        "9to1 Workspace/Motion/MotionProject.cs",
+        "9to1 Workspace/Motion/MotionProjectCommands.cs"
+      ],
+      "observed": "Actual native CLI create/open/insert/split/move/slip/trim/save; project-level expected revision only. No undo/history/per-object revision in selected model. CLI-private typed error JSON is not exhaustive public API parity.",
+      "request": "Supply literal31-entry API catalogue and remaining minimum edits/property/graph operations, revision-aware history/undo/redo and typed errors/events/progress/cancellation. Define expected project/object revisions, stale/refused no-effect behavior, safe merge/conflict and restore revision rules. UI/browser/API/AI/Automations call same owner actions; B must not declare absent commands enabled.",
+      "clauses": [
+        6837,
+        6841,
+        6843,
+        6844,
+        6845,
+        6896,
+        6898,
+        6916,
+        6918,
+        6951,
+        6952,
+        6953,
+        6955,
+        6967,
+        6968
+      ]
+    },
+    {
+      "id": "retained-files-authority",
+      "ownerPaths": [
+        "9to1 Workspace/Motion/MotionMediaAssetReferences.cs",
+        "9to1 Workspace/Motion/MotionRenderService.cs",
+        "9to1 Workspace/shared/src/Haven.Core/Media/MediaAssetReference.cs",
+        "9to1 Workspace/shared/src/Haven.Core/Media/PreparedMediaAssetLease.cs",
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Media/MediaAssetPreparationService.cs"
+      ],
+      "observed": "Asset FileId string/nullable SourceRevisionID; RetainedSource rejects nonGUID/absentrevision and returns real MediaAssetReference. Existing retainedResolver/preparation validate currentActor/sourceID/revision/integrity/lease; preparation currently needs localFileURI/budget. Native render fixture resolver is explicitly test-owned; original1 symbolic labels resolve nothing.",
+      "request": "Bind real existing Files GUID/AssetID/retained RevisionID under actual current resource actor/source authority and prepared leases. Supply approved browser retained materialization/transport/cancel/profile invalidation port, offline/relink sameidentity, explicit generated/proxy/cache/output. Local IDB storage tokens/hashes never become hosted Files ID/revision. No fakeactor/renderer/resolver/provider API.",
+      "clauses": [
+        6848,
+        6850,
+        6907,
+        6908,
+        6909,
+        6911,
+        6955,
+        6956
+      ]
+    },
+    {
+      "id": "derived-backend-jobs",
+      "ownerPaths": [
+        "9to1 Workspace/Motion/MotionRenderService.cs",
+        "9to1 Workspace/Motion/MotionNativeRenderWorkflowTest.cs",
+        "9to1 Workspace/shared/src/Haven.Core/Media/MediaRenderContracts.cs",
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Media/GesTimelineRenderer.cs",
+        "9to1 Workspace/Motion/Source/GStreamer/source.binding.json",
+        "9to1 Workspace/Motion/Source/GES/source.binding.json"
+      ],
+      "observed": "Actual RenderAsync snapshots arrays before await, expectedproject/source/lease pins and shared renderer JobID/SequenceID/revision with fixed WebmVp8. Original native render test requires actual configured GES+video fixture and uses test-only resolver; BCL1 does not exercise it.",
+      "request": "Actual owner shared backend/format capabilities, decode/play/proxy/cache/render queues, cancellation/retry/progress/source pins and donor build/version/licensing evidence. Reconcile exact GStreamer83e7/GESfc343 binding/source provenance before donor render acceptance. Native-only limitation may restrict genuine facilities, not eliminate model/edit/persistence/permissions/recovery/browser criteria.",
+      "clauses": [
+        6848,
+        6850,
+        6911,
+        6912,
+        6913,
+        6952,
+        6956,
+        6963,
+        6964,
+        6966,
+        6967,
+        6970,
+        6971
+      ]
+    },
+    {
+      "id": "shared-visual-animation-node",
+      "ownerPaths": [
+        "9to1 Workspace/Motion/MotionProject.cs"
+      ],
+      "observed": "Selected Motion model has no transform/crop/mask/effects/colour/keyframe/title/caption/NodeGraph state. Video render projection alone does not implement declared operations; no full NodeGraph contract established by selected-source inspection.",
+      "request": "Actual canonical compatible Picture/shared visual, Present timing/animation, Shared Productivity/Rnote text/path/shape and NodeGraph owner primitives/acyclic libraries. Preserve IDs/revisions/typed graph ports/inspectable edits/history across native/browser/API/AI. No B miniature pixel/vector/video/node replacement or dependency on another app UI process.",
+      "clauses": [
+        6830,
+        6831,
+        6836,
+        6837,
+        6853,
+        6854,
+        6857,
+        6858,
+        6860,
+        6861,
+        6865,
+        6869,
+        6873,
+        6881,
+        6886,
+        6888,
+        6898
+      ]
+    }
+  ],
+  "literalPublicAPICatalogue": [
+    {
+      "canonicalLine": 6919,
+      "literalSignature": "9to1.Motion.CreateProject(config);",
+      "existingOwnerSeam": "MotionProjectStore.Create",
+      "gap": "Partial native creation, not config-complete canonical/public API or source authority",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6920,
+      "literalSignature": "9to1.Motion.Open(projectOrFileID);",
+      "existingOwnerSeam": "MotionProjectStore.Load",
+      "gap": "Actual native JSON path load, not projectOrFileID authorized open",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6921,
+      "literalSignature": "9to1.Motion.CreateSequence(projectID, config);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6922,
+      "literalSignature": "9to1.Motion.AddAsset(projectID, fileOrAssetID, options?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6923,
+      "literalSignature": "9to1.Motion.AddTrack(sequenceID, type, config?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6924,
+      "literalSignature": "9to1.Motion.AddElement(sequenceID, trackID, source, placement);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6925,
+      "literalSignature": "9to1.Motion.Insert(sequenceID, source, placement);",
+      "existingOwnerSeam": "MotionProjectStore.Insert",
+      "gap": "Video/integral-frame subset, no catalogue API/undo",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6926,
+      "literalSignature": "9to1.Motion.Overwrite(sequenceID, source, placement);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6927,
+      "literalSignature": "9to1.Motion.Split(sequenceID, elementID, time);",
+      "existingOwnerSeam": "MotionProjectStore.Split",
+      "gap": "Native frame split with stable left/new rightID, no publiccatalog/undo",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6928,
+      "literalSignature": "9to1.Motion.Trim(sequenceID, elementID, sourceRange);",
+      "existingOwnerSeam": "MotionProjectStore.Trim",
+      "gap": "Non-ripple narrowing only; source-duration evidence needed to extend",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6929,
+      "literalSignature": "9to1.Motion.RippleTrim(sequenceID, elementID, edge, time);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6930,
+      "literalSignature": "9to1.Motion.Roll(sequenceID, leftElementID, rightElementID, time);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6931,
+      "literalSignature": "9to1.Motion.Slip(sequenceID, elementID, sourceRange);",
+      "existingOwnerSeam": "MotionProjectStore.Slip",
+      "gap": "Native integral-frame source-range mutation only",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6932,
+      "literalSignature": "9to1.Motion.Slide(sequenceID, elementID, placement);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6933,
+      "literalSignature": "9to1.Motion.Move(sequenceID, elementID, placement);",
+      "existingOwnerSeam": "MotionProjectStore.Move",
+      "gap": "Native integral-frame placement mutation only",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6934,
+      "literalSignature": "9to1.Motion.Delete(sequenceID, target, mode?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6935,
+      "literalSignature": "9to1.Motion.Nest(sequenceID, elementIDs, config?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6936,
+      "literalSignature": "9to1.Motion.SetProperty(projectID, targetID, property, value);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6937,
+      "literalSignature": "9to1.Motion.AddEffect(projectID, targetID, effect, config?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6938,
+      "literalSignature": "9to1.Motion.SetEffectParameter(projectID, effectID, parameter, value);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6939,
+      "literalSignature": "9to1.Motion.SetKeyframe(projectID, targetID, property, keyframe);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6940,
+      "literalSignature": "9to1.Motion.CreateMask(projectID, targetID, config);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6941,
+      "literalSignature": "9to1.Motion.UpdateMask(maskID, patch);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6942,
+      "literalSignature": "9to1.Motion.Track(projectID, target, mode, options?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6943,
+      "literalSignature": "9to1.Motion.Transcribe(projectID, target, options?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6944,
+      "literalSignature": "9to1.Motion.CreateCaptions(sequenceID, source, options?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6945,
+      "literalSignature": "9to1.Motion.CreateGraph(projectID, graphType, config);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6946,
+      "literalSignature": "9to1.Motion.AssignGraph(projectID, targetID, graphID, slot?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6947,
+      "literalSignature": "9to1.Motion.Generate(projectID, generationType, promptOrInputs, options?);",
+      "existingOwnerSeam": null,
+      "gap": "No corresponding implementation in inspected Motion model/store/CLI/render closure; request actual owner typed operation, not B fake handler",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6948,
+      "literalSignature": "9to1.Motion.Render(projectID, target, options);",
+      "existingOwnerSeam": "MotionRenderService.RenderAsync",
+      "gap": "Actual lease/sharedrenderer projection, fixed WebmVp8/nativepath; no full queue/options/browser capability",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    },
+    {
+      "canonicalLine": 6949,
+      "literalSignature": "9to1.Motion.Export(projectID, target, format, options);",
+      "existingOwnerSeam": "MotionRenderService.RenderAsync",
+      "gap": "One render path is not full format/range/audio/caption/still/export API",
+      "state": "OWNER_PORT_EXTENSION_REQUIRED_NOT_ACCEPTED"
+    }
+  ],
+  "nextSeam": "First source-owned portable SAME model/edit/validated-codec public reference. Native original serializer/store and B real browser/device adapters consume owner codec. Owner defines public names/signatures/modelversion/object/history/CAS rules; all missing canonical/schema/audio/visual/graph/action requirements remain required. No code or tentative API here is claimed implemented.",
+  "ownerReviewAcceptanceRequests": [
+    "Original1 local file/create/edit/CAS/refusal/reopen retained unchanged through codec extraction and schema migration; unknown/malformed extended schema handling explicit, no loss",
+    "Real native/browser SAME fullmodel ID/object revision/history/sharedaudio/timebase/source roundtrip, multitrack/edit/export and all literalMotion acceptance bullets",
+    "Actual retained Files/currentActor/sourceRevision/integrity/cancel/dispose tests with genuine owner ports; paths/URLs/hashes/fixtureGUIDs grant no authority",
+    "Actual concurrent writes/crash-interrupted save/derived jobs source/project pinned and actualbackend recoverability, not inferred from one original test"
+  ],
+  "existingActualEvidence": {
+    "sourceCommit": "896cfb59e71615e091354b7b2759e71e9006d8e5",
+    "workflow": 37213296964,
+    "originalWorkflowDiscoveredExecutedPassed": 1,
+    "assertions": null,
+    "returnCheckpointQualification": "24 original return-code checkpoints30..53 are not24 tests or measured assertions",
+    "primaryRecordedReview": {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-896-recorded-review01/review.json",
+      "bytes": 19254,
+      "sha256": "3b9824b502b93b117c5ab1dea2fad4d5bbf95d6d7f99b6b7bd7b401327348732"
+    },
+    "scope": "Actual original local model/CLI/temp-files only. No Files source/decode/renderer/browser/wholemodel/fullapp acceptance."
+  },
+  "boundaries": "Request source-only, no competing B Motion model/editor/engine/store, fakeprovider/symbolicFilesauthority, shared/native/UI edits, SDK/browser/native/provider invocation. Root sole publisher/committer; owner ACK is exact source/API/contract/reference, not declaration."
+}

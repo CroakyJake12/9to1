@@ -1,0 +1,223 @@
+{
+  "state": "RETRIEVABLE_SCOPED_RAW_AND_INDEPENDENT_REVIEW_ADDENDUM_NOT_FULL_APPLICATION_ACCEPTANCE",
+  "UTC": "2026-10-04T16:02:34.491841+00:00",
+  "previousArtifactHead": "f404351e6895854905d6dd3f3c096b42cfc3ca1f",
+  "currentBSourceHead": "5864fa22990df233fef9b30a27355a2ab722797f",
+  "files": [
+    {
+      "path": "accounts-critical-independent.json",
+      "bytes": 12362,
+      "sha256": "b8ef169c435f470e3821d3857594ee7e53af6ead6bf59021d793b8c068258abd"
+    },
+    {
+      "path": "accounts7-b6-independent-sealed22d-driver7f.zip",
+      "bytes": 32427,
+      "sha256": "f654419402bba00792a72143ff7304273f7739187154ae67a19b317b1aa89077"
+    },
+    {
+      "path": "canvas-maps-independent.json",
+      "bytes": 16602,
+      "sha256": "779ad9c762b558476bb9bbf078d2118f6ce16f15824678413ced4e4a11a7063b"
+    },
+    {
+      "path": "canvas-maps-primary.json",
+      "bytes": 53434,
+      "sha256": "7e257dc738a91a0627da886f180b7097a656b6774ea40e3c6888b0a99eefb922"
+    },
+    {
+      "path": "chat-local-independent.json",
+      "bytes": 4349,
+      "sha256": "ed55adc456543d24aca4f9b7dea4a1f77a44b7a9032a8f6e29b2118b49e2af16"
+    },
+    {
+      "path": "independent-wave-existing-causal-1a8cea.zip",
+      "bytes": 74869,
+      "sha256": "778da593d0dc0aec610cc4c024278319c975e47125fc4a229755063024c97897"
+    },
+    {
+      "path": "mail-independent.json",
+      "bytes": 11678,
+      "sha256": "ea17995ee6e6a9645939c6a5ffbe096ac139ca79a0e06681448efed7640313a3"
+    },
+    {
+      "path": "mail-primary.json",
+      "bytes": 157917,
+      "sha256": "ebf2dafaef1888d9e913118651a9fdc559d900d787a9b11aec3216480252a3f5"
+    },
+    {
+      "path": "mail-revision-owner-request.json",
+      "bytes": 2840,
+      "sha256": "ad34235302832d1cda8a80daca0c78ac80e78aea4906f57cd18b715d5c5df08a"
+    },
+    {
+      "path": "motion-independent.json",
+      "bytes": 8362,
+      "sha256": "4962b6840ebcfd85abf98ade3081ef208ff072f7ab83af7fd0c6d5fc0f1c3180"
+    },
+    {
+      "path": "motion-original-project-896-native.zip",
+      "bytes": 335412,
+      "sha256": "4830d9c0534ffe6370d23013a0788c6ce260c7bf7cb5a421cd2be499f8edbe06"
+    },
+    {
+      "path": "motion-owner-request-manifest.json",
+      "bytes": 7691,
+      "sha256": "801afd04de5e32f54d343ee75cdbf7c5145a9be45f47aa5ed265d17525d71080"
+    },
+    {
+      "path": "motion-owner-request-peer.json",
+      "bytes": 12788,
+      "sha256": "9d85aed02725b304456cecfa907d8d964edd76fec8783f5880e945bae10b93c9"
+    },
+    {
+      "path": "motion-owner-request-source-self-check.json",
+      "bytes": 2181,
+      "sha256": "4fe6a0e0413986075ee41d698ce4c70d4ce93bf202fee49e2e8cbcc2703fa3f2"
+    },
+    {
+      "path": "motion-owner-request.json",
+      "bytes": 48471,
+      "sha256": "e1604c758ddcc3c3cf2e3e4b552a4a7122043008604b21fb8ff9e9a301d60991"
+    },
+    {
+      "path": "motion-primary.json",
+      "bytes": 19254,
+      "sha256": "3b9824b502b93b117c5ab1dea2fad4d5bbf95d6d7f99b6b7bd7b401327348732"
+    },
+    {
+      "path": "motion-source-peer.json",
+      "bytes": 17443,
+      "sha256": "198cf8348962ff1a101b5d3fbc65b9f11b10d4774c205d03607d8ae1f1888875"
+    },
+    {
+      "path": "original-canvas8-d81762b9.zip",
+      "bytes": 449415,
+      "sha256": "d65b6e70f6d7f29605e1fe7c8df019352269305024e23fe4d5ce7f358a4421d7"
+    },
+    {
+      "path": "original-mail-durable-d81762b9.zip",
+      "bytes": 395847,
+      "sha256": "752871c015cea4dca45dee858d6f458689e862bfa2b92b9fc87520b3fba9c5ce"
+    },
+    {
+      "path": "original-maps6-d81762b9.zip",
+      "bytes": 446511,
+      "sha256": "a86537ebba23ecd7c846fba61f8b40ca1271e986c62ac2129e20bad079192d34"
+    },
+    {
+      "path": "picture-0424-admission01-retirement.zip",
+      "bytes": 355181,
+      "sha256": "b6a5bf8f4b861f4cd785ab5ae30759727e3c1968d3aae5c09281d45c82f04e34"
+    },
+    {
+      "path": "picture-negative-independent.json",
+      "bytes": 9328,
+      "sha256": "9eaa487d0fe8ee78be18a19260904ce5b69db7dd433d289202cca3db2c7196d9"
+    },
+    {
+      "path": "picture-negative-primary.json",
+      "bytes": 24775,
+      "sha256": "2afbf175db3221bd61f4e11c100d2d2d99fe656ac0ee3be482b1ebece858fc35"
+    },
+    {
+      "path": "root-copy-ledger.json",
+      "bytes": 44699,
+      "sha256": "f30f54f1bb115af108a34e3cb1ed764017d1fb1a402e3c321429e12922f89fcf"
+    },
+    {
+      "path": "source-custody-receipt.json",
+      "bytes": 4539,
+      "sha256": "fd713acba748d1d85e4c19c9ad3f4a6969b5e0726dcc1124378eb660c2e3d9f5"
+    },
+    {
+      "path": "wave-analyst-additive-qualification.json",
+      "bytes": 2868,
+      "sha256": "bb8ca5e8e3afe32be77886bc283636b94ac334592fd379d11e853b51a344f875"
+    },
+    {
+      "path": "wave-critical-independent.json",
+      "bytes": 15150,
+      "sha256": "244bd569f6fb7a50b0e8bc5d334346e30040de2c2f2dfb2a4a786093455afe80"
+    },
+    {
+      "path": "wave-critical-primary.json",
+      "bytes": 33060,
+      "sha256": "41025b04a74fa35d4ce426fc0361dc620cbf75fef6f9729a3f4f4500bbdcfa33"
+    },
+    {
+      "path": "wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4"
+    },
+    {
+      "path": "wave-narrow-visual-failure.json",
+      "bytes": 2163,
+      "sha256": "4aff8ff9cba6f5b6240fac2eb770145da011481b2782625081811e6d931b285b"
+    },
+    {
+      "path": "wave-narrow.png",
+      "bytes": 89184,
+      "sha256": "06307f05c08fe356aa1705364f4a5fa9270536471c49881b2557a5b68ad44cbd"
+    },
+    {
+      "path": "wave-original-causal-independent.json",
+      "bytes": 14952,
+      "sha256": "10df127d3bbc6991b9910a459feab422c9f13eb3a8af313fcaa25a2eaa3bfc47"
+    },
+    {
+      "path": "wave-original-critical-idb-and-wav-independent.json",
+      "bytes": 15677,
+      "sha256": "4dcf327cb70b44d4f8494d40ea2797c7895894a9965006742ea8ce525d94995c"
+    },
+    {
+      "path": "wave-original26-independent.json",
+      "bytes": 12304,
+      "sha256": "1abfddd455af6bd5bb5efc28f080dbd40ee206a68782ca9524d95290e5a27de4"
+    },
+    {
+      "path": "wave-original26-primary.json",
+      "bytes": 232333,
+      "sha256": "e615dc4c0a41e0106ac4ee2f69916cc5a710ca6891a377440d32db850dae5770"
+    },
+    {
+      "path": "wave-populated.png",
+      "bytes": 120917,
+      "sha256": "2bb12f5dd499b67cf63ce29c9949d6a25bcdf6a11b58b0a750871fc694cc1a9f"
+    },
+    {
+      "path": "wave22d-durable-member-transport-delivery.json",
+      "bytes": 8510,
+      "sha256": "a7d23e38bb0ed4461cb31a8b449b4f8ad59fb0541ed3bb737bb9ab2552050aea"
+    },
+    {
+      "path": "wave22d-part01-transient-retirement.json",
+      "bytes": 1145,
+      "sha256": "23892103c502461ef30b29de3cf01cb07a295cdb66401e1307a8f92bec67c7c8"
+    },
+    {
+      "path": "wave22d-part02-transient-retirement.json",
+      "bytes": 1145,
+      "sha256": "6e80f666efccdbe6fc1c09ec07de54f7b3467362587b78d57cfbad5cbbc54ff7"
+    },
+    {
+      "path": "wave22d-part03-transient-retirement.json",
+      "bytes": 1144,
+      "sha256": "9bf55cfda621b57d2ce854fedaf7f912426150691c5f6c96ec07e61016186ffd"
+    }
+  ],
+  "wholeFiles": 40,
+  "wholeBodyBytes": 3185289,
+  "rawArchives": 7,
+  "allRawZIPMembers": 152,
+  "countsQualification": "Canvas8/Maps6 unchangedoriginalcases; Mailoriginal1 plus3distinctlocalcriteria/6phaseexecutions/34checks; Motionunchangedoriginal1/assertionsnull; negativePicture13PASS2intendedobserverFAIL/notproductionacceptance; Accounts7+Wave14 are21uniquecriteria across original+independentreplay, not42/full31. Wholeprimary+B6reviewbodies included.",
+  "originalWaveFull26Transport": {
+    "head": "8874b8429772597056c9cfe3094f7c58b84800c6",
+    "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport",
+    "all3GitPartBodiesAnd26MembersAnd360NestedTraceMembersFullCRCAndSHA": true,
+    "originalActionsOuterIdentity": "METADATA_ONLY",
+    "criticalBodyProof": "27actualreadonlyreturnbodies/twostoreequalityafterquota/samependingretry7; audioBlob288044B sha71a6402a equalsrecordeddownloadSHA/fullPCMtail+silenprefixchecked. Downloadpathnameitselfnotarchived; no nonzero pan/fades/hardwareacceptance."
+  },
+  "actualFailures": "Original390Waveimage visibly clips rightcontrols/text: B5 concreteB-owned optionalfiniteviewportpolicy repair sourceinprogress; screenshot included. ExistingSpaceKey/GPSPreserve/sharedHome/guardedports/Forms/etc remainopen; oldfailurearchives unchanged.",
+  "ownerRequests": "Whole48KBMotionrequest/manifest/sourcepeer: sameownerportablecanonicalmodel/codec/action/history+actualFiles/media boundaries. Mailcanonicalrevision/CAS request included. Requests do notauthoriseA/sharedproductionedits.",
+  "scope": "No hostedprovider/issuer/actualactorACL/donor/fullAT/full31/integratedreleaseacceptance. TeamC soleintegrator; acceptedHeadnull. NewWrite9/native7+9 source5864adopted ordinaryCI37215109573inprogress, notyetaccepted."
+}

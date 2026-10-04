@@ -1,0 +1,455 @@
+{
+  "status": "CLEAR_FULL_ORIGINAL26_GIT_BODY_CUSTODY",
+  "reviewer": "B6 independent validation",
+  "UTC": "2026-10-04T15:48:00.852022+00:00",
+  "branch": "artifact/team-b-wave22d-member-transport-20261004",
+  "head": "8874b8429772597056c9cfe3094f7c58b84800c6",
+  "receiptSnapshotSha256": "a7d23e38bb0ed4461cb31a8b449b4f8ad59fb0541ed3bb737bb9ab2552050aea",
+  "transportParts": [
+    {
+      "part": 1,
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part01.zip",
+      "bytes": 19929162,
+      "sha256": "dd19dd27a040b100fe77c7b06a633f22014ee0655417a6691fc50453567bd05e",
+      "gitBlob": "45015a24ca2fc09c07c94b5883aafe5d6b784b4d"
+    },
+    {
+      "part": 2,
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part02.zip",
+      "bytes": 19929162,
+      "sha256": "c9a0623b29a5a65ae99567155c4b7ec91710c41723cd463484fa1b9ebb6f0a33",
+      "gitBlob": "53cbe21f1417905a16e558128159a6ca3af678cb"
+    },
+    {
+      "part": 3,
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part03.zip",
+      "bytes": 5368908,
+      "sha256": "08945cc1458e7070599cae922d89a23eea6b741cf460778add4f16c87424cbdb",
+      "gitBlob": "59ca0815c6d95e3be9ea6d9d0e6ecd348ef5dd78"
+    }
+  ],
+  "newContainer": {
+    "bytes": 45208578,
+    "sha256": "86db58e6f01876b94fb36f7e037708ac709ace62fad35043a84056f69f1a3f89",
+    "originalActionsOuterWholeByteIdentityVerified": false
+  },
+  "originalMembers": [
+    {
+      "path": "actual-browser-oracles.log",
+      "bytes": 247,
+      "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/browser-before-quota-restart.zip",
+      "bytes": 14226988,
+      "sha256": "968bfec0e3c6d6e84efdc18f4756cc957845f7694c0428c3018fa67eb45a37eb",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/browser-final.zip",
+      "bytes": 13324896,
+      "sha256": "4fb7dc093fda48b5da5973ded5bb8fadbd6871a946fae3a3580cdc2fb20467fd",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/browser-phase1.zip",
+      "bytes": 16908955,
+      "sha256": "9f06ad1398f1735a86c2f13579f0ed12dd15f87c3d2ae55a6a09b531e024ee38",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/native-ax-tree.json",
+      "bytes": 156457,
+      "sha256": "80bdca3dbb8e1d01b037eb61cd89ea0494d3694881efbb3531489138153183f5",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/results.json",
+      "bytes": 119874,
+      "sha256": "cfba7eebb31277bd1c0ba997bbebf0addb969d60a4a07953fd741de1d03a2be1",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/wave-narrow.png",
+      "bytes": 89184,
+      "sha256": "06307f05c08fe356aa1705364f4a5fa9270536471c49881b2557a5b68ad44cbd",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser/wave-populated.png",
+      "bytes": 120917,
+      "sha256": "2bb12f5dd499b67cf63ce29c9949d6a25bcdf6a11b58b0a750871fc694cc1a9f",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser-install.log",
+      "bytes": 18575,
+      "sha256": "9d8765545dbea28b114976dc69bb3738527223b952255670734e67fe83a19202",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser-path.log",
+      "bytes": 99,
+      "sha256": "60384b0ec8f7e1dea08aeb6274d17149bed379678f4440395b7e3ca0f2e6190c",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "browser-tool-identity.json",
+      "bytes": 362,
+      "sha256": "974864d4d1eb5211464db4a73df704efd21a7661c275fa36bb645bf0d2045744",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 13998,
+      "sha256": "21c8885ba4b7612ddedb064f11a898a5532f26ad9047570ed52f051f5c93bff7",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "driver-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "driver-clean-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "driver-git-head.log",
+      "bytes": 41,
+      "sha256": "865dab0f571dcf9ae9f2f19f1d42778d7ab53d23b7fa20ba192bb7b01583222d",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "execution-plan.json",
+      "bytes": 3624,
+      "sha256": "6f5862f15e1e6fc76836b54cb3b2adbc102d87175bfcd861ecca8b7caecec873",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "full-inventory-before.log",
+      "bytes": 708,
+      "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "full-inventory-final.log",
+      "bytes": 708,
+      "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "owned-family/owned-family-receipt.json",
+      "bytes": 15087,
+      "sha256": "8a826c8faafc169893bd137c022f246bcc537e5aefe64e777bf0a8f4c1c88931",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "owned-family/runner-safe-stdout.log",
+      "bytes": 86,
+      "sha256": "f8ef2ddb0a2270ade0d383edf2dd2bb0a6c40cc0762175522430c9951e6311b6",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "playwright-install.log",
+      "bytes": 24,
+      "sha256": "4aaef3acc3c4b16766abf61c4f4aa2d3bd413e2fe822d3edd6cfa9d7e7334efa",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "public-tool-pins.json",
+      "bytes": 113917,
+      "sha256": "b5abdf4d043eed6824b428093f8a6a00de572413312ad8ed8ff586e8237e126e",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "receipt-map.json",
+      "bytes": 648,
+      "sha256": "a5c9a46cf81df71d3fff9a887d6c0613fcd454aca37acd45c0143c9c875f7fea",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1646,
+      "sha256": "947a26e60027049059499de750f723c7c1c32cd167cedce6cc944a4848a49db5",
+      "CRC": true,
+      "mode": "100644"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 1977,
+      "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4",
+      "CRC": true,
+      "mode": "100644"
+    }
+  ],
+  "all20CausalBodiesEqualPreviouslyRead": true,
+  "nestedTraces": [
+    {
+      "path": "browser/browser-before-quota-restart.zip",
+      "nestedMembers": 112,
+      "memberIndexSha256": "c676d19f50c3b6c56606afc8d1ee25078ee367ecd1dbc7a369c8f9606ff8132e",
+      "allFullBodyCRCAndSHA": true,
+      "actions": 64,
+      "methods": {
+        "newPage": 2,
+        "goto": 3,
+        "waitForFunction": 11,
+        "evaluateExpression": 12,
+        "jsonValue": 4,
+        "waitForSelector": 8,
+        "fill": 2,
+        "isEnabled": 6,
+        "focus": 6,
+        "press": 6,
+        "innerText": 3,
+        "close": 1
+      },
+      "networkEvents": 174,
+      "HTTPStatuses": {
+        "200": 174
+      },
+      "requestMethods": {
+        "GET": 174
+      },
+      "responseBodyReferencesRehashed": 148,
+      "uniqueResponseBodies": 74,
+      "missingResponseBodies": 0,
+      "actionErrors": 0
+    },
+    {
+      "path": "browser/browser-final.zip",
+      "nestedMembers": 96,
+      "memberIndexSha256": "8187c4725760063266673effab093210966772e3a9b5958acc5aa14b1c73bfc6",
+      "allFullBodyCRCAndSHA": true,
+      "actions": 29,
+      "methods": {
+        "newPage": 1,
+        "newCDPSession": 1,
+        "goto": 1,
+        "waitForFunction": 5,
+        "evaluateExpression": 5,
+        "jsonValue": 3,
+        "waitForSelector": 3,
+        "fill": 1,
+        "isEnabled": 2,
+        "focus": 2,
+        "press": 2,
+        "innerText": 1,
+        "setViewportSize": 1,
+        "screenshot": 1
+      },
+      "networkEvents": 87,
+      "HTTPStatuses": {
+        "200": 87
+      },
+      "requestMethods": {
+        "GET": 87
+      },
+      "responseBodyReferencesRehashed": 74,
+      "uniqueResponseBodies": 74,
+      "missingResponseBodies": 0,
+      "actionErrors": 0
+    },
+    {
+      "path": "browser/browser-phase1.zip",
+      "nestedMembers": 152,
+      "memberIndexSha256": "6c6fef201915c3c7dd75959aafa28530d8fb42f469157d3486b5c21a22f9123a",
+      "allFullBodyCRCAndSHA": true,
+      "actions": 128,
+      "methods": {
+        "newPage": 1,
+        "goto": 5,
+        "waitForSelector": 20,
+        "queryCount": 2,
+        "innerText": 1,
+        "screenshot": 2,
+        "newCDPSession": 1,
+        "fill": 5,
+        "isEnabled": 14,
+        "focus": 14,
+        "press": 14,
+        "waitForFunction": 15,
+        "evaluateExpression": 19,
+        "jsonValue": 7,
+        "__waitInfo__": 3,
+        "ownerFrame": 2,
+        "setInputFiles": 2,
+        "waitForTimeout": 1
+      },
+      "networkEvents": 88,
+      "HTTPStatuses": {
+        "200": 87,
+        "206": 1
+      },
+      "requestMethods": {
+        "GET": 88
+      },
+      "responseBodyReferencesRehashed": 75,
+      "uniqueResponseBodies": 75,
+      "missingResponseBodies": 0,
+      "actionErrors": 0
+    }
+  ],
+  "PNGs": [
+    {
+      "path": "browser/wave-empty.png",
+      "width": 1100,
+      "height": 800,
+      "chunkCRC": true,
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IEND"
+      ],
+      "visualAcceptance": false
+    },
+    {
+      "path": "browser/wave-narrow.png",
+      "width": 390,
+      "height": 844,
+      "chunkCRC": true,
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IEND"
+      ],
+      "visualAcceptance": false
+    },
+    {
+      "path": "browser/wave-populated.png",
+      "width": 1100,
+      "height": 800,
+      "chunkCRC": true,
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IEND"
+      ],
+      "visualAcceptance": false
+    }
+  ],
+  "selectedIDBActionMetadata": {
+    "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/selected-idb-action-schema.json",
+    "bytes": 11128,
+    "sha256": "0e46b63cb2df4a7716b59c41b629ee7b8cc209253d2940dc2cb0e2929655e3d2"
+  },
+  "memoryOnlyLargeBodies": true,
+  "readersClosed": true,
+  "execution": "Read-only permanent Git blob GET/stdlib ZIP/trace/PNG parsing; no SDK/browser/helper import/extraction or archive-body disk copy",
+  "limits": [
+    "New exact extracted-member container; original Actions outerZIP identity remains metadata-only.",
+    "PNG structure is not visual/narrow-layout/AT acceptance.",
+    "WAV fixture/export bodies not uploaded; hardware audibility unverified.",
+    "Returned-store objects require separate strict semantic decoding; full CRC is not itself quota/CAS correctness.",
+    "No runtime rerun/provider/issuer/deployment/full31 acceptance; earlier failures/HOLD unchanged."
+  ]
+}

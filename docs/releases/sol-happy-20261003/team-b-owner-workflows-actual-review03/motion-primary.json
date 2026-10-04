@@ -1,0 +1,611 @@
+{
+  "recordedAtUTC": "2026-10-04T15:36:03.855620+00:00",
+  "method": "B3 primary full recorded raw CRC/SHA/source-body/process-receipt review only; no B3 SDK/native execution or independent replay",
+  "workflowRun": 37213296964,
+  "job": 111468634760,
+  "artifact": 11307243060,
+  "sourceCommit": "896cfb59e71615e091354b7b2759e71e9006d8e5",
+  "archive": {
+    "path": "/workspace/attachments/37bf779f-3985-445e-925e-43aca289b56a/motion-original-project-896-native.zip",
+    "bytes": 335412,
+    "sha256": "4830d9c0534ffe6370d23013a0788c6ce260c7bf7cb5a421cd2be499f8edbe06"
+  },
+  "status": "RECORDED_ORIGINAL_MOTION_PROJECT_WORKFLOW_1_PASS",
+  "actualNative": {
+    "scope": "Unchanged original Motion CLI/model real local-filesystem workflow only; no browser, Files resolution, source decode, donor render, provider, crash injection or full Motion acceptance",
+    "discovered": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "notRun": 0,
+    "name": "original-motion-project-cli-real-file-workflow",
+    "originalReturnCode": 0,
+    "failure": null,
+    "assertions": null,
+    "assertionCountQualification": "Original owner test is not instrumented; its return-code checkpoints are not separate discovered tests or measured assertion counts"
+  },
+  "members": [
+    {
+      "path": "binary-pins.json",
+      "bytes": 1370,
+      "sha256": "6f5eec09679c69f9fe1d41c0b540252255fbc00a0842befa7a46ea13611edc19",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "build.log",
+      "bytes": 275,
+      "sha256": "9a0e4d742b42d112518604329426289f8a3a37f70e00e7391f557bb33ed6ec4a",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "commands.json",
+      "bytes": 6158,
+      "sha256": "420159875c8921d96e316abe0c6187c30b5328062befc24b33f87fcaa1bdb7a2",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 2982,
+      "sha256": "38ba2d08337f8a3548872cb86279922e8a7ff874d3acfe1ead26dab245fbab6d",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "d715be19955709ad2736f7a54daa89fc873d3aca8a2f44a1f46e0b70e2319aa5",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 578,
+      "sha256": "50b43738158de6da0680c07546b779d15b15a36289ccb2b501800c673ca551fc",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "native.log",
+      "bytes": 105,
+      "sha256": "4a14b61f8eaa5ab9fed6aea7b60b0f86b2811edb968dcf46de30283eeabace52",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "restore.log",
+      "bytes": 155,
+      "sha256": "b3023451339424a74d3306ae1ee2dd957c6f1eaab13698e25652b89f551ca2dd",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "result.json",
+      "bytes": 1434,
+      "sha256": "7a56641a51b6132bab0a19d90146e8603a54e51dbf326516bde879dbcd72a378",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 280,
+      "sha256": "8a5c32b05c26a7ab680c95c0df134ec3542b29f1db4175913202bc7fe2130d43",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 310,
+      "sha256": "8ab7f749c3da4cb39173aca835c329185623ac4afc9931c4e4d7444106ad4f8d",
+      "fullCRCAndSHARead": true
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1304560,
+      "sha256": "37a4ceddc7e12de1efbad84a3a52d9782ae57b4db622a65373ba750e3b49bd8e",
+      "fullCRCAndSHARead": true
+    }
+  ],
+  "commands": [
+    {
+      "name": "git-head",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2566,
+          "birth": 12847,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.057,
+      "bytes": 41,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-before",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2567,
+          "birth": 12853,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.363,
+      "bytes": 0,
+      "familyClosed": true
+    },
+    {
+      "name": "tracked-source-tree",
+      "argv": [
+        "git",
+        "ls-tree",
+        "-r",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2587,
+          "birth": 12889,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.181,
+      "bytes": 1304560,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-version",
+      "argv": [
+        "dotnet",
+        "--version"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2588,
+          "birth": 12907,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.276,
+      "bytes": 9,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-info",
+      "argv": [
+        "dotnet",
+        "--info"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2596,
+          "birth": 12935,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.345,
+      "bytes": 2982,
+      "familyClosed": true
+    },
+    {
+      "name": "restore",
+      "argv": [
+        "dotnet",
+        "restore",
+        "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+        "--artifacts-path",
+        "/home/runner/work/_temp/team-b-motion-original-project/artifacts",
+        "-r",
+        "linux-x64",
+        "--configfile",
+        "/home/runner/work/9to1/9to1/NuGet.Config",
+        "--disable-build-servers",
+        "-p:Configuration=Release",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+        "-p:CreateHardLinksForCopyLocalIfPossible=false",
+        "-p:CreateHardLinksForPublishFilesIfPossible=false"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2604,
+          "birth": 12970,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 2.54,
+      "bytes": 155,
+      "familyClosed": true
+    },
+    {
+      "name": "build",
+      "argv": [
+        "dotnet",
+        "build",
+        "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+        "--no-restore",
+        "-c",
+        "Release",
+        "--artifacts-path",
+        "/home/runner/work/_temp/team-b-motion-original-project/artifacts",
+        "-r",
+        "linux-x64",
+        "--disable-build-servers",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+        "-p:CreateHardLinksForCopyLocalIfPossible=false",
+        "-p:CreateHardLinksForPublishFilesIfPossible=false"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2638,
+          "birth": 13224,
+          "gone": true
+        },
+        {
+          "pid": 2658,
+          "birth": 13309,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 3.059,
+      "bytes": 275,
+      "familyClosed": true
+    },
+    {
+      "name": "target-properties",
+      "argv": [
+        "dotnet",
+        "msbuild",
+        "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+        "-p:Configuration=Release",
+        "-p:RuntimeIdentifier=linux-x64",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=/home/runner/work/_temp/team-b-motion-original-project/artifacts",
+        "-nodeReuse:false",
+        "-getProperty:TargetPath,TargetFramework,RuntimeIdentifier,UseAppHost",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+        "-p:CreateHardLinksForCopyLocalIfPossible=false",
+        "-p:CreateHardLinksForPublishFilesIfPossible=false"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2677,
+          "birth": 13530,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.607,
+      "bytes": 310,
+      "familyClosed": true
+    },
+    {
+      "name": "native",
+      "argv": [
+        "/home/runner/work/_temp/team-b-motion-original-project/artifacts/bin/MotionProjectWorkflow.Tests/release_linux-x64/NineToOne.Motion.OriginalProjectWorkflow.Tests",
+        "/home/runner/work/_temp/team-b-motion-original-project/diagnostics/native-results.json"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2685,
+          "birth": 13591,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.208,
+      "bytes": 105,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-after",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2693,
+          "birth": 13612,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.348,
+      "bytes": 0,
+      "familyClosed": true
+    }
+  ],
+  "actualFamily": {
+    "commands": 10,
+    "recordedBirths": 11,
+    "allRecordedBirthsGone": true,
+    "normalExit0EOF_ECHILD": true,
+    "signals": 0
+  },
+  "build": {
+    "warnings": 0,
+    "errors": 0,
+    "log": {
+      "bytes": 275,
+      "sha256": "9a0e4d742b42d112518604329426289f8a3a37f70e00e7391f557bb33ed6ec4a"
+    },
+    "sdk": "10.0.401",
+    "targetProperties": {
+      "TargetPath": "/home/runner/work/_temp/team-b-motion-original-project/artifacts/bin/MotionProjectWorkflow.Tests/release_linux-x64/NineToOne.Motion.OriginalProjectWorkflow.Tests.dll",
+      "TargetFramework": "net10.0",
+      "RuntimeIdentifier": "linux-x64",
+      "UseAppHost": "true"
+    }
+  },
+  "actualSource": {
+    "sourceLedger": {
+      "path": "apps/Web/Tests/MotionProject/source-pins.json",
+      "bytes": 1463,
+      "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659"
+    },
+    "allEightPins": [
+      {
+        "path": "9to1 Workspace/Motion/MotionProject.cs",
+        "bytes": 14526,
+        "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d",
+        "actualGitAndCurrentWholeBodyEqual": true
+      },
+      {
+        "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+        "bytes": 5674,
+        "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6",
+        "actualGitAndCurrentWholeBodyEqual": true
+      },
+      {
+        "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+        "bytes": 12012,
+        "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143",
+        "actualGitAndCurrentWholeBodyEqual": true
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+        "actualGitAndCurrentWholeBodyEqual": true
+      },
+      {
+        "path": "NuGet.Config",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e",
+        "actualGitAndCurrentWholeBodyEqual": true
+      },
+      {
+        "path": "global.json",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b",
+        "actualGitAndCurrentWholeBodyEqual": true
+      },
+      {
+        "path": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+        "bytes": 935,
+        "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21",
+        "actualGitAndCurrentWholeBodyEqual": true
+      },
+      {
+        "path": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+        "bytes": 1635,
+        "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38",
+        "actualGitAndCurrentWholeBodyEqual": true
+      }
+    ],
+    "fullCapturedGitTreeMatchesActualCommit": true,
+    "gitTree": {
+      "bytes": 1304560,
+      "sha256": "37a4ceddc7e12de1efbad84a3a52d9782ae57b4db622a65373ba750e3b49bd8e"
+    },
+    "fiveAdoptionTargetsWholeBodyMatchProposal": [
+      {
+        "path": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+        "bytes": 935,
+        "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21",
+        "matchesProposalWholeBody": true
+      },
+      {
+        "path": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+        "bytes": 1635,
+        "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38",
+        "matchesProposalWholeBody": true
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-motion-original-project.py",
+        "bytes": 9130,
+        "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857",
+        "matchesProposalWholeBody": true
+      },
+      {
+        "path": ".github/workflows/team-b-motion-original-project.yml",
+        "bytes": 1147,
+        "sha256": "55273d26bdd31d9edcb055a8d8d922ffbb711a39d6aafa9c6f18a021d5e41524",
+        "matchesProposalWholeBody": true
+      },
+      {
+        "path": "apps/Web/Tests/MotionProject/source-pins.json",
+        "bytes": 1463,
+        "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659",
+        "matchesProposalWholeBody": true
+      }
+    ],
+    "sourceAfterQualification": "Recorded driver checks all8 selected source hashes/ledger and tracked gitdiff after runtime. Full captured commit tree matched here; no all-untracked/compiler/package-extracted full-body build provenance claimed."
+  },
+  "originalRunReview": {
+    "sourcePath": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+    "wholeBody": {
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+    },
+    "returnCodeCheckpointNumbers": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53
+    ],
+    "discoveredTests": 1,
+    "assertionCount": null,
+    "scope": "Full unchanged original Run invoked by thin entry;24 return-code checkpoints are not24 tests or measured assertions. Real original file/store/CLI create0\u2192insert1\u2192split2\u2192save3\u2192move4\u2192slip5\u2192trim6/reopen and byte-invariance after specified rejections; fractional30000/1001 persisted0\u21921\u21922 and near-long.MaxValue owner edits.",
+    "qualification": "Original test deletes its own fixture directory in finally. Generated project payloads/media bytes not uploaded; recorded completion and unchanged original oracle, not separately reread runtime project files. Symbolic file:source-video-42/file:fractional-source are unresolved fixture references, no Files/source authority."
+  },
+  "nativeBinaryEvidence": {
+    "inventory": [
+      {
+        "path": "bin/MotionProjectWorkflow.Tests/release_linux-x64/NineToOne.Motion.OriginalProjectWorkflow.Tests.dll",
+        "bytes": 52736,
+        "sha256": "80151c3234246cb8238f3caa3c7f080a4c7898a6fbfe79e450680e8cf9782fba"
+      },
+      {
+        "path": "bin/MotionProjectWorkflow.Tests/release_linux-x64/NineToOne.Motion.OriginalProjectWorkflow.Tests.pdb",
+        "bytes": 19944,
+        "sha256": "621a2ce9ad3aef308c25525a8151bcba65a63524ed27b7b687be7aeb64ee8b41"
+      },
+      {
+        "path": "obj/MotionProjectWorkflow.Tests/release_linux-x64/NineToOne.Motion.OriginalProjectWorkflow.Tests.dll",
+        "bytes": 52736,
+        "sha256": "80151c3234246cb8238f3caa3c7f080a4c7898a6fbfe79e450680e8cf9782fba"
+      },
+      {
+        "path": "obj/MotionProjectWorkflow.Tests/release_linux-x64/NineToOne.Motion.OriginalProjectWorkflow.Tests.pdb",
+        "bytes": 19944,
+        "sha256": "621a2ce9ad3aef308c25525a8151bcba65a63524ed27b7b687be7aeb64ee8b41"
+      },
+      {
+        "path": "obj/MotionProjectWorkflow.Tests/release_linux-x64/ref/NineToOne.Motion.OriginalProjectWorkflow.Tests.dll",
+        "bytes": 16384,
+        "sha256": "a56b6fd9eb13a741fc0ecc8a6dee8857331c923aa0526252bedbfe7160e157e8"
+      },
+      {
+        "path": "obj/MotionProjectWorkflow.Tests/release_linux-x64/refint/NineToOne.Motion.OriginalProjectWorkflow.Tests.dll",
+        "bytes": 16384,
+        "sha256": "a56b6fd9eb13a741fc0ecc8a6dee8857331c923aa0526252bedbfe7160e157e8"
+      }
+    ],
+    "inventoryBody": {
+      "bytes": 1370,
+      "sha256": "6f5eec09679c69f9fe1d41c0b540252255fbc00a0842befa7a46ea13611edc19"
+    },
+    "entryDLLSHA256": "80151c3234246cb8238f3caa3c7f080a4c7898a6fbfe79e450680e8cf9782fba",
+    "apphostSHA256": "9c56cb3935b78b5a85518ff5da7f6e62798fb75926dd6178eddae2ab6e399805",
+    "qualification": "Actual source-build recorded hashes before runtime; compiled bodies not uploaded or independently rehashed after runtime."
+  },
+  "preservedAnalysisFailure": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-896-recorded-review01/initial-analysis-failure.json",
+    "bytes": 845,
+    "sha256": "6ad342bd2bfa2ca5523101b935186c2fe27a259c64d4bbff6e7becab0441722d",
+    "meaning": "Analyst14-member count corrected to exact15 names; no native/source/behavior oracle changed."
+  },
+  "outstanding": "Full canonical Motion model/API/undo/audio/graph catalog, CUI/web/platform parity, real Files source/reference authority, decode/play/GES/export/jobs/concurrent stress/crash-injection remain separate NOT_RUN. One original workflow PASS does not certify full Motion."
+}

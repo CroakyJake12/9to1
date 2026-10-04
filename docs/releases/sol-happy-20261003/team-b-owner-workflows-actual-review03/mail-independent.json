@@ -1,0 +1,330 @@
+{
+  "status": "SCOPED_ORIGINAL_MAIL1_PLUS_LOCAL_DURABLE3_RECORDED_PASS",
+  "reviewer": "B6 independent validation",
+  "UTC": "2026-10-04T15:24:34.779464+00:00",
+  "run": 37212128320,
+  "job": 111465273271,
+  "artifact": 11306289917,
+  "commit": "d81762b9864335b42f475e055160a7e3e84674b5",
+  "execution": "Read-only full ZIP/XML/Git/source review, no SDK/native/replay/extraction",
+  "archive": {
+    "path": "/workspace/attachments/e0fb8e22-008c-4e60-958a-cefd92e182f7/original-mail-durable-d81762b9.zip",
+    "bytes": 395847,
+    "sha256": "752871c015cea4dca45dee858d6f458689e862bfa2b92b9fc87520b3fba9c5ce",
+    "fullCRCAndBodySHAMembers": 28
+  },
+  "source": {
+    "actualImmutableGitBodies": 489,
+    "beforeAfterLedgerEqual": true,
+    "wholeCapturedTreeExact": true,
+    "sixAdoptedBodies": [
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/Mail.OriginalDraft.Tests.csproj",
+        "bytes": 1305,
+        "sha256": "f663921a4401013527cc890783084168049aa3f007457267f1d4d4b61774d924"
+      },
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/Mail.LocalDurable.Tests.csproj",
+        "bytes": 769,
+        "sha256": "674cb06d28a6b6cdfdf6b4426488b48f3999891fe9cb044a82515c1a86afd4cc"
+      },
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/MailLocalDurableControls.cs",
+        "bytes": 11204,
+        "sha256": "f9722ee4e09c6abf75bb931076ae9f9370dcbaf7dbdc5a964c675b301e81644d"
+      },
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/ci/run-mail-original-durable.py",
+        "bytes": 17272,
+        "sha256": "a04893f22dea0be9105b71173cfd2822a9b34db6ddccb23fe123077a55fa984f"
+      },
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/ci/original-mail-acceptance.py",
+        "bytes": 5299,
+        "sha256": "73d0446a62cc5fd940c77726f503f956c5e76e25674ee03539d52cd1bf2e2101"
+      },
+      {
+        "path": ".github/workflows/team-b-original-mail-drafts.yml",
+        "bytes": 1878,
+        "sha256": "c3a6981fc668cc3fc46a55d0469b51a5d8219590daabfaf617a1b4fd8c5ed32f"
+      }
+    ],
+    "fullOriginalOwnerFixtureSourceRead": [
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/MailLocalDurableControls.cs",
+        "bytes": 11204,
+        "sha256": "f9722ee4e09c6abf75bb931076ae9f9370dcbaf7dbdc5a964c675b301e81644d"
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FileMailDraftStoreTests.cs",
+        "bytes": 3067,
+        "sha256": "6f75849582ced5a540f8d9ee9e72cebd08ebeac26d084e48b96c363d5d1a5427"
+      },
+      {
+        "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/FileMailDraftStore.cs",
+        "bytes": 4104,
+        "sha256": "b067b09159b7f7b34075cfe07abd7cd0ee798d11e60d3eb597d11405ca2b7070"
+      },
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/Mail.OriginalDraft.Tests.csproj",
+        "bytes": 1305,
+        "sha256": "f663921a4401013527cc890783084168049aa3f007457267f1d4d4b61774d924"
+      },
+      {
+        "path": "apps/Web/Productivity/Mail/Tests/Mail.LocalDurable.Tests.csproj",
+        "bytes": 769,
+        "sha256": "674cb06d28a6b6cdfdf6b4426488b48f3999891fe9cb044a82515c1a86afd4cc"
+      }
+    ]
+  },
+  "originalFact": {
+    "name": "Haven.Desktop.Tests.FileMailDraftStoreTests.UpsertAndGet_RoundTripsRichSemanticDraft",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "testId": "b8134999-428b-940b-2a2a-612043f70f32",
+    "executionId": "4a344702-d654-4cda-93d2-d23e75fe2433",
+    "freshTRXLinkChecked": true
+  },
+  "localControls": {
+    "distinctCriteria": 3,
+    "phaseExecutions": 6,
+    "seed": {
+      "mode": "seed",
+      "declared": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 16,
+      "outcomes": [
+        {
+          "name": "rich-semantic-drafts-and-attachment-identities-restart",
+          "state": "PASS",
+          "assertions": 4
+        },
+        {
+          "name": "same-id-update-and-denied-input-preserve-bytes",
+          "state": "PASS",
+          "assertions": 7
+        },
+        {
+          "name": "durable-delete-and-unreadable-draft-preserved-restart",
+          "state": "PASS",
+          "assertions": 5
+        }
+      ],
+      "exitCode": 0
+    },
+    "verify": {
+      "mode": "verify",
+      "declared": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 18,
+      "outcomes": [
+        {
+          "name": "rich-semantic-drafts-and-attachment-identities-restart",
+          "state": "PASS",
+          "assertions": 5
+        },
+        {
+          "name": "same-id-update-and-denied-input-preserve-bytes",
+          "state": "PASS",
+          "assertions": 8
+        },
+        {
+          "name": "durable-delete-and-unreadable-draft-preserved-restart",
+          "state": "PASS",
+          "assertions": 5
+        }
+      ],
+      "exitCode": 0
+    },
+    "assertionsAcrossPhases": 34,
+    "seedPID": 2900,
+    "verifyPID": 2914,
+    "sameApphostAndOwnedStoreArg": true
+  },
+  "closure": {
+    "normalEOFCommandFamilies": 16,
+    "goneBirthRecords": 25,
+    "signals": 0,
+    "allFinalECHILD": true,
+    "builds": {
+      "original": {
+        "exit": 0,
+        "warnings": 0,
+        "errors": 0
+      },
+      "probe": {
+        "exit": 0,
+        "warnings": 0,
+        "errors": 0
+      }
+    }
+  },
+  "runtimeMetadata": {
+    "rowsBeforeAfterEqual": 11,
+    "reportedBytes": 7244663,
+    "actualBinaryBodiesUploaded": false
+  },
+  "mapping": {
+    "original1": "Original FileMailDraftStore Fact semantic richdraft/IDs/body/provider-state/attachment exact fields.",
+    "rich": "Actual file-backed owner full canonical JSON equality incl all recipients/provider/type/Unicode HTML/attachment identity+bytes/timestamp/status; distinct account/local IDs; actual updatedAt sortedlist and fullseed receipt compared in fresh apphost. Accounts here are fixture IDs, not authorization.",
+    "update": "Actual same-LocalId replacement and onefileperID; pre-cancelled mutation and emptyID denied; exactold/new committed bytes+fileset equals, no leakedtemp.",
+    "deleteCorrupt": "Actual delete staysabsent across freshprocess; unrelated richdraft unchanged; controlled realownerfile corruption raises InvalidDataException on Get/GetAll and preserves exact corruptbytes.",
+    "backend": "Unchanged FileMailDraftStore with fixtureIAppPaths and genuine owner model. No scripted replacement backend."
+  },
+  "limits": [
+    "Three distinct new criteria are seed+verify repeated phase executions, not six independent Facts; original Xunit1 is separate.",
+    "Draft/seedidentity/corruptfile/binary/package bodies absent upload. Public source+rawassertions prove exercised checks, not independent persistedbody rehash.",
+    "No concurrent writer/revision-CAS/cross-client conflict/powerloss/autosave UI guarantees.",
+    "No provider send/MIME/OAuth/IMAP/SMTP/browser editor/HTML sanitization/Files authority/native Home issuer/fullMail or31app acceptance.",
+    "Original Space keyboard failure and Boards renderer/ownerfactory gaps remain unchanged."
+  ],
+  "members": [
+    {
+      "path": "diagnostics/build-probe.log",
+      "bytes": 614,
+      "sha256": "713656cd0ac7ed822abda0581d738a75b220e043f2eef8c25ec9991ab8e41311"
+    },
+    {
+      "path": "diagnostics/build.log",
+      "bytes": 617,
+      "sha256": "9b6170ec9ea47ba05eea42f37aec9fc0b7f51bff945c6ef4aa4ee9e7e15f7d8a"
+    },
+    {
+      "path": "diagnostics/commands.json",
+      "bytes": 11239,
+      "sha256": "4b7924d08cd7f39d1bdbe4265f8d87c1c4be3b1b7edb5ab7858bdcba62bbff15"
+    },
+    {
+      "path": "diagnostics/discovery-gate.json",
+      "bytes": 309,
+      "sha256": "92f1a79621b6c0cebd4e3601c934456eec080aa4891950f9dfa66306cc29ae92"
+    },
+    {
+      "path": "diagnostics/discovery.log",
+      "bytes": 307,
+      "sha256": "a8fedb735874cdbee2a77a972c4cd687665e3b4c339beb89452ba5657acc16f2"
+    },
+    {
+      "path": "diagnostics/dotnet-info.log",
+      "bytes": 2973,
+      "sha256": "26cbb0daf4870deb05b6095e379944559063f18dc1edc4365dfa3301bb06e55a"
+    },
+    {
+      "path": "diagnostics/dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "diagnostics/git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "diagnostics/git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "diagnostics/git-head.log",
+      "bytes": 41,
+      "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381"
+    },
+    {
+      "path": "diagnostics/native-seed.log",
+      "bytes": 171,
+      "sha256": "3768724e7b9daeff86a8b9709a67d99777f25338d5d0d3935ce7130229369c4b"
+    },
+    {
+      "path": "diagnostics/native-verify.log",
+      "bytes": 171,
+      "sha256": "3768724e7b9daeff86a8b9709a67d99777f25338d5d0d3935ce7130229369c4b"
+    },
+    {
+      "path": "diagnostics/original-mail-draft-fact.log",
+      "bytes": 475,
+      "sha256": "b447abd3bfef95768b1753c51fba24936e3208b40772aa8ae983dc397eb3846a"
+    },
+    {
+      "path": "diagnostics/original-trx-gate.json",
+      "bytes": 1405,
+      "sha256": "11624b592e972371624d089ccd183b9259103ed745f229ff8a1bb42b98700b92"
+    },
+    {
+      "path": "diagnostics/owned-files-tracked.log",
+      "bytes": 360,
+      "sha256": "2e217470472e0e9144e11051d0318f819bddaef87c723f3522f3ec037f863bbd"
+    },
+    {
+      "path": "diagnostics/restore-probe.log",
+      "bytes": 199,
+      "sha256": "92f55a31f7a331f46ff86ff4167519050df6091a8216ef9c6033816e3f4ee148"
+    },
+    {
+      "path": "diagnostics/restore.log",
+      "bytes": 474,
+      "sha256": "9d7b1ace498f8ab343384fb526ceceea6d1301a325325031f9c08d1b0b046ce2"
+    },
+    {
+      "path": "diagnostics/result.json",
+      "bytes": 2757,
+      "sha256": "6fe5e85f093f4bc4aa7a046e89738006ae9fa71fbb7bf8518bcc3aebddd02d37"
+    },
+    {
+      "path": "diagnostics/runtime-after.json",
+      "bytes": 1705,
+      "sha256": "0dfb3fd3d7312cb083075b9cdb87ad72073fc872e2defe5c14ee8224dbcdd4ef"
+    },
+    {
+      "path": "diagnostics/runtime-before.json",
+      "bytes": 1705,
+      "sha256": "0dfb3fd3d7312cb083075b9cdb87ad72073fc872e2defe5c14ee8224dbcdd4ef"
+    },
+    {
+      "path": "diagnostics/seed-results.json",
+      "bytes": 538,
+      "sha256": "9d5bc76db3c74d5635f613d85361c8a1252e076ca0e6bb4bb2c93d4f6ab80337"
+    },
+    {
+      "path": "diagnostics/source-pins-after.json",
+      "bytes": 96861,
+      "sha256": "390066ae1a00c1d8bce620ea1625e8f94991afbbac94ff8aa24e278d958dadc4"
+    },
+    {
+      "path": "diagnostics/source-pins-before.json",
+      "bytes": 96861,
+      "sha256": "390066ae1a00c1d8bce620ea1625e8f94991afbbac94ff8aa24e278d958dadc4"
+    },
+    {
+      "path": "diagnostics/source-tree-pins.log",
+      "bytes": 1304029,
+      "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673"
+    },
+    {
+      "path": "diagnostics/target-properties.json",
+      "bytes": 375,
+      "sha256": "009095c849f0f33da10d4cb537aa84dc3b8de52046e91938f8002964d2c4f2d1"
+    },
+    {
+      "path": "diagnostics/target-properties.log",
+      "bytes": 407,
+      "sha256": "795e833f98c23eb3c6f1198aa45c6950c578c0768072d5302c9c3ee2b7a7a8ed"
+    },
+    {
+      "path": "diagnostics/verify-results.json",
+      "bytes": 540,
+      "sha256": "e4d89235c3e74d771641892ec9b84dae7ad7a720c1c35074f2d08256fb15709d"
+    },
+    {
+      "path": "test-results/mail-original-draft.trx",
+      "bytes": 3017,
+      "sha256": "a4bc5074c360d93a6820d58900c787ab493fee0600295758c64bd8ff29396f16"
+    }
+  ]
+}

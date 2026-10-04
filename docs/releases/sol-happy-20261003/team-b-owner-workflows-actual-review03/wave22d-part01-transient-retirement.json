@@ -1,0 +1,22 @@
+{
+  "state": "ONLY_OWNED_TEMPORARY_PART01_RETIRED_EXACT_DURABLE_GIT_BODY_RETAINED",
+  "atUTC": "2026-10-04T15:31:41.807529+00:00",
+  "temporary": {
+    "part": 1,
+    "artifact": 11306676984,
+    "path": "docs/releases/sol-happy-20261003/team-b-wave22d-member-transport/part01.zip",
+    "bytes": 19929162,
+    "sha256": "dd19dd27a040b100fe77c7b06a633f22014ee0655417a6691fc50453567bd05e",
+    "gitBlob": "45015a24ca2fc09c07c94b5883aafe5d6b784b4d",
+    "fullRemoteBodyReadback": true,
+    "temporarySourcePath": "/workspace/attachments/4cc1aae9-1caa-4f3e-9f96-fc4d7f763be2/wave22d-member-transport-part01.zip",
+    "temporaryRetired": false
+  },
+  "durableHead": "9e162a4dff35023118c09888722a22ccdd1135ef",
+  "durableURL": "https://github.com/CroakyJake12/9to1/tree/9e162a4dff35023118c09888722a22ccdd1135ef/docs/releases/sol-happy-20261003/team-b-wave22d-member-transport",
+  "independentFullBodyPeer": "/tmp/team-b-b6-wave22d-durable-transport-peers/part01-review.json",
+  "peerSHA256": "f2e73489e9c1f1958b4618f8721ab464a4ebefe53aa2eef7fa5443e7f6b3d936",
+  "readerClosedACK": true,
+  "beforeFreeBytes": 279023616,
+  "afterFreeBytes": 298954752
+}

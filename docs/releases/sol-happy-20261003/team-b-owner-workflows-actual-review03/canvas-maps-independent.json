@@ -1,0 +1,400 @@
+{
+  "status": "SCOPED_ORIGINAL_CANVAS8_MAPS6_RECORDED_PASS",
+  "reviewer": "B6 independent validation",
+  "UTC": "2026-10-04T15:22:12.140405+00:00",
+  "run": 37212128247,
+  "commit": "d81762b9864335b42f475e055160a7e3e84674b5",
+  "execution": "Full read-only ZIP/XML/Git/source review; no SDK/native/replay/extraction",
+  "sources": {
+    "beforeAfterMapsEqualRows": 889,
+    "all889ImmutableGitBodiesVerified": true,
+    "mapsEqualAcrossSuites": true,
+    "fixtureBodiesFullRead": [
+      {
+        "path": "9to1 Workspace/Canvas/Tests/CanvasArtifactCodecTests.cs",
+        "sha256": "74d038a0c12e0f06e17fcee715e28fb6944d9abae66bbca273dde8eb17bb44d5",
+        "bytes": 6893
+      },
+      {
+        "path": "9to1 Workspace/Canvas/Tests/CanvasFilesArtifactBridgeTests.cs",
+        "sha256": "0503bd9c3b9ff7f4429339538034820004f879e7daaa62ee9de725656c8500a2",
+        "bytes": 11672
+      },
+      {
+        "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MapsJourneyAuthoringCaptureTests.cs",
+        "sha256": "24047ed038376ab19155d21fb8d3d01803c6eb2d1d982d54a2956ab4dd9c4b0b",
+        "bytes": 9314
+      }
+    ]
+  },
+  "suites": [
+    {
+      "suite": "canvas8",
+      "artifact": 11306807505,
+      "job": 111465273242,
+      "archive": {
+        "path": "/workspace/attachments/daf395a8-a721-4bf9-a047-bc53be82a6a1/original-canvas8-d81762b9.zip",
+        "bytes": 449415,
+        "sha256": "d65b6e70f6d7f29605e1fe7c8df019352269305024e23fe4d5ce7f358a4421d7",
+        "fullCRCBodySHAMembers": 23
+      },
+      "count": 8,
+      "freshTRXIdentityLinks": [
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasFilesArtifactBridgeTests.Canonical_Files_create_edit_restart_reopen_preserves_identity_and_rejects_stale_readonly_and_tampered_content",
+          "testId": "2965677f-23da-c414-4c2d-926984a468bd",
+          "executionId": "2a238b8f-33ba-4264-98ac-acd667e851e2"
+        },
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unknown_optional_fields_survive_decode_and_reencode",
+          "testId": "8b3ec5ec-0109-0c3f-04b2-6910e49c0f48",
+          "executionId": "56631348-775b-4ee8-8e26-5d583d454f16"
+        },
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unsupported_format_and_schema_versions_are_rejected_without_guessing",
+          "testId": "99d6d202-50d0-41f3-8313-06bad1569711",
+          "executionId": "204e4360-47fb-41c9-b0d7-35c7ae488bf5"
+        },
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Paged)",
+          "testId": "13b692ef-9f8a-cfd0-3570-a56a99b58edc",
+          "executionId": "b5a6602a-e2a1-4fd2-b8fd-17ebb76fde8d"
+        },
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Infinite)",
+          "testId": "0b774997-5338-1e4b-b513-2577da1dbb2e",
+          "executionId": "d46594a1-4f13-4f31-80e7-ed429d16e3d0"
+        },
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Invalid_page_object_and_layer_references_are_reported_as_typed_validation_issues",
+          "testId": "0f65f10f-46e8-6c0c-693b-1f3b7b4f3fc1",
+          "executionId": "851d40d6-4de5-4d3c-8e4e-e606d9a30035"
+        },
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Paged_mode_requires_explicit_positive_page_bounds",
+          "testId": "a3052592-db54-d9b0-79e9-9c60e40037f4",
+          "executionId": "f409849a-84ad-431e-82dd-baad611da37b"
+        },
+        {
+          "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Malformed_json_has_a_stable_invalid_document_error",
+          "testId": "0826a45e-caa4-c7db-3f75-f44617fd72b5",
+          "executionId": "33305751-afed-4dcd-a7a6-f1d4d44a3e39"
+        }
+      ],
+      "freshnessScope": "Driver start/mtime attestation with actual TRX identity and command log, not ZIP timestamp freshness",
+      "ordinaryCommandFamilies": 13,
+      "goneBirthRecords": 29,
+      "allEOFExit0ECHILDNoSignals": true,
+      "buildWarnings": 0,
+      "buildErrors": 0,
+      "runtimeRowsMetadataBeforeAfterEqual": 110,
+      "binaryOrStoreBodiesUploaded": false,
+      "members": [
+        {
+          "path": "build.log",
+          "bytes": 1484,
+          "sha256": "95dff2f2ac9465887737134eb1178b0d5c8050a6ed61521737b3fb3401a9cbf2"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 10206,
+          "sha256": "ac0757272e18c13d6395b8062423da69ab2a61ff5abcecaebc01710f7976dd2b"
+        },
+        {
+          "path": "discovery.json",
+          "bytes": 2215,
+          "sha256": "6964d2e516319014d41702c0af9777c5f757002f9454f6dd496b042605d73aa8"
+        },
+        {
+          "path": "discovery.log",
+          "bytes": 1235,
+          "sha256": "3e041bbeb9880a9e977b69363f45ae0b1cd163a6d04594843d799b2659811195"
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2968,
+          "sha256": "c82d7d69b3446ef8db8866a71f3143a2afd6b44ec973b41b5d2d1c2a71fd07f5"
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381"
+        },
+        {
+          "path": "git-status-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-status-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "native-test.log",
+          "bytes": 436,
+          "sha256": "fdbc5b323631b5c5ab0fc571ec39c26440138466bb06d3852922645441af1038"
+        },
+        {
+          "path": "restore.log",
+          "bytes": 1242,
+          "sha256": "f30316f98d6776543cb16a03c099e68b0349f8033525ca22ca0daf34219ad6eb"
+        },
+        {
+          "path": "result.json",
+          "bytes": 9872,
+          "sha256": "8043ab36503be47783d96c58131734b28a8f6eb7e7f9bdb4cb15f286624b05e8"
+        },
+        {
+          "path": "runtime-after.json",
+          "bytes": 18864,
+          "sha256": "c5d21501cdd7ecc71e431d4e1a319107ca50b6b66c0533e615aab291b26c5b04"
+        },
+        {
+          "path": "runtime-before.json",
+          "bytes": 18864,
+          "sha256": "c5d21501cdd7ecc71e431d4e1a319107ca50b6b66c0533e615aab291b26c5b04"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 352,
+          "sha256": "c298217aeb86f56e17a7217ada2289f8a6f5c8d87990db125108389d92c83df4"
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 384,
+          "sha256": "d558432a607b7545330db9500f04a7947ca0cd2bc6627a6d12e56e44d648ac30"
+        },
+        {
+          "path": "test-results/canvas8.trx",
+          "bytes": 13532,
+          "sha256": "e2cb71734523ed5d1c7a17426a28d314416e7911e85a1d9399471984fe42886f"
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1304029,
+          "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673"
+        },
+        {
+          "path": "trx-summary.json",
+          "bytes": 7248,
+          "sha256": "50d4516aa503a94c507af6fa77634495cbbec5779eee8a6aae7efcbee47052a3"
+        }
+      ]
+    },
+    {
+      "suite": "maps6",
+      "artifact": 11306807446,
+      "job": 111465273385,
+      "archive": {
+        "path": "/workspace/attachments/7c00ce77-31d6-4934-b527-365ec922e0da/original-maps6-d81762b9.zip",
+        "bytes": 446511,
+        "sha256": "a86537ebba23ecd7c846fba61f8b40ca1271e986c62ac2129e20bad079192d34",
+        "fullCRCBodySHAMembers": 23
+      },
+      "count": 6,
+      "freshTRXIdentityLinks": [
+        {
+          "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route",
+          "testId": "d7c484d6-9290-f074-1dd7-94d054a1eda9",
+          "executionId": "d81d5b67-1936-487c-a281-43838d76d9f4"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)",
+          "testId": "bf6f6642-5183-59b0-32d8-2350a6887837",
+          "executionId": "76679ec5-9ef5-4089-b703-8db8b0ff9cc9"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await",
+          "testId": "5d9cc8a9-52cc-a8fa-0cd6-80f5efceffc8",
+          "executionId": "63fbb4da-c620-478e-b6d3-e7870cabac0c"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)",
+          "testId": "e6aad019-cc7e-030a-e756-ce50f1d37ab5",
+          "executionId": "9e6c78d4-ae9f-423d-a302-d85b705980c2"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route",
+          "testId": "5493babf-c5ea-5699-1a8e-66adad3c4f1c",
+          "executionId": "3ef3f0e4-ed74-4977-99ae-f8b0976e4311"
+        },
+        {
+          "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision",
+          "testId": "4a6ac650-78fd-31f0-b28a-3609e80e37ca",
+          "executionId": "780d4a87-9d9b-4ef1-ae33-a4ae3fa2f4d5"
+        }
+      ],
+      "freshnessScope": "Driver start/mtime attestation with actual TRX identity and command log, not ZIP timestamp freshness",
+      "ordinaryCommandFamilies": 13,
+      "goneBirthRecords": 21,
+      "allEOFExit0ECHILDNoSignals": true,
+      "buildWarnings": 0,
+      "buildErrors": 0,
+      "runtimeRowsMetadataBeforeAfterEqual": 92,
+      "binaryOrStoreBodiesUploaded": false,
+      "members": [
+        {
+          "path": "build.log",
+          "bytes": 591,
+          "sha256": "f2720546e9451be7c87936bfae4fb6b2aebdb10573173408a4fb0e8c87623510"
+        },
+        {
+          "path": "discovery.json",
+          "bytes": 1889,
+          "sha256": "a85c978ea228a3c0398ba608e593e96b38c9c18e777b7c3ace419a181eae25ce"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 9570,
+          "sha256": "78cf674d017030ea59c20b2237b16b6fec4626ecd3a27b3ced5bfd857f81e5d9"
+        },
+        {
+          "path": "discovery.log",
+          "bytes": 1090,
+          "sha256": "2126e3f3d05d6bea263659dbe23ec339ee6c7a5528cabf72f342be4328520bc1"
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2966,
+          "sha256": "811f33ea8d4a95be842df1431e46b389d9dcc9ae44d60826a0b9b1c324800d71"
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381"
+        },
+        {
+          "path": "git-status-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-status-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "native-test.log",
+          "bytes": 451,
+          "sha256": "f1439900a0c1a692e240befcebe4470d9cee50a9f3f51223e4ac5c9c4f09465e"
+        },
+        {
+          "path": "restore.log",
+          "bytes": 487,
+          "sha256": "78221db1ad5174c1181da0c5f6b5f5d78cecf1768596e35fbc5442a6cce4c115"
+        },
+        {
+          "path": "result.json",
+          "bytes": 8550,
+          "sha256": "76e7010cfa91eb0d82f9d555ede423475044011cb0e622bbced772e8ceafbbb7"
+        },
+        {
+          "path": "runtime-after.json",
+          "bytes": 16332,
+          "sha256": "f8be59291fd07310fbc2bab9339eedbf670ebb8599cc4094119639c81a25fc03"
+        },
+        {
+          "path": "runtime-before.json",
+          "bytes": 16332,
+          "sha256": "f8be59291fd07310fbc2bab9339eedbf670ebb8599cc4094119639c81a25fc03"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 159912,
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "path": "target-properties.json",
+          "bytes": 369,
+          "sha256": "fdeaa5e9df606293976b08025a254884367a1f27572b40130936adc751691874"
+        },
+        {
+          "path": "target-properties.log",
+          "bytes": 401,
+          "sha256": "588e539a6f52610a456c4539f805b3b6379cbe775f7d5f3a4995b886a44dcfb9"
+        },
+        {
+          "path": "test-results/maps6.trx",
+          "bytes": 11011,
+          "sha256": "c46512a4c80a22931c94f0212adea376121f90d88ef7dfa133d2a05a9f14deb3"
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 1304029,
+          "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673"
+        },
+        {
+          "path": "trx-summary.json",
+          "bytes": 5973,
+          "sha256": "b98581157184057fc8a32f3241d6a3bded1702b06155804eba8e01cc1a43218a"
+        }
+      ]
+    }
+  ],
+  "total": {
+    "cases": 14,
+    "canvas8": 8,
+    "maps6": 6,
+    "commandFamilies": 26,
+    "goneBirthRecords": 50,
+    "signals": 0
+  },
+  "mapping": {
+    "canvasCodec": "Seven cases including Infinite/Paged theory: original structured ink/stable IDs/mode/extensions/unknown format+schema/reference/page bounds/malformed errors. Pure serialization controls.",
+    "canvasDurable": "One original actual DurableDriveProvider/CanvasArtifactSession/bridge workflow: canonical create/edit/save/reconstruct/reopen; revision-idempotency/stale+readonly/foreign artifact+actor/tamper refusals; Files structural rename/move versus immutable content/CAS revisions.",
+    "canvasAuthority": "TestActorSource+TestFilesResolver trusted controlled setup; actual durable provider/revision authority. Not real nativeOS/Home issuer/ACL grant.",
+    "maps": "Six cases from five original methods (lying path false/true theory). Real VersionedAtomicSettingsStore; held wrapper delays actual ExportAsync then forwards actual compare-exchange. Freeze caller intent/path, later mutation isolation, independent writer CAS winner, lying enumerable/invalid coordinates no actual file/state replacement."
+  },
+  "limits": [
+    "Real disk reopen is same-process provider/service reconstruction, not cold OS process.",
+    "No Rnote native pixels/stylus/canvas renderer/browser; no CoMaps routing/network/offline/navigation acceptance.",
+    "No binary/package/store bodies uploaded: runtime92/110 hashes are metadata attestations, not independently read executable or durable bytes.",
+    "Fourteen scoped original tests do not establish complete Canvas/Maps apps, hosted authority or full31 acceptance."
+  ]
+}

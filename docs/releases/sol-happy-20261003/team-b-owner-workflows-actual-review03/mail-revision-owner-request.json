@@ -1,0 +1,37 @@
+{
+  "state": "ORIGINAL_PUBLIC_OWNER_PORT_GAP_SOURCE_ONLY_NOT_REPRODUCED",
+  "sourcePins": [
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Application/MailAbstractions.cs",
+      "bytes": 10514,
+      "sha256": "4341fc1750443727f719eaed0a9e0bd8c5d55edb09bf50d0fc092b4ad2b1d84a"
+    },
+    {
+      "path": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Infrastructure/Mail/FileMailDraftStore.cs",
+      "bytes": 4104,
+      "sha256": "b067b09159b7f7b34075cfe07abd7cd0ee798d11e60d3eb597d11405ca2b7070"
+    }
+  ],
+  "clauses": [
+    {
+      "plainNonemptyLineOrdinal1": 1802,
+      "text": "Drafts MUST autosave and survive app/process restart. Local/provider draft conflicts MUST preserve both revisions or surface a conflict rather than silently overwriting newer user text.",
+      "coverage": "PARTIAL_NOT_RUN",
+      "boundedOracle": "PARTIAL: explicit actualstore writes and fresh-process sameID/content/timestamps/attachments; no autosave trigger, UI/process crash, providerdraft conflict/CAS authority."
+    },
+    {
+      "plainNonemptyLineOrdinal1": 1865,
+      "text": "9to1.Mail.Draft.Update(draftID, patch, expectedRevision?);",
+      "coverage": "PARTIAL_NOT_RUN",
+      "boundedOracle": "PARTIAL underlying sameID replacement only; expectedRevision absent from originalowner."
+    }
+  ],
+  "exactExistingPort": "IMailDraftStore Task UpsertAsync(MailDraft,CancellationToken), GetAsync(Guid,..), GetAllAsync(..), DeleteAsync(Guid,..). Canonical MailDraft has LocalId and UpdatedAt but no expected revision/commit receipt. FileMailDraftStore semaphore is instance-local and File.Move(overwrite:true) has no old-version comparison.",
+  "request": "Maintained owner must provide canonical guarded draft create/update/delete with stable DraftID/current revision and typed commit/conflict outcomes, durable local/provider revision conflict preservation, account/principal admission and pending-result reconciliation appropriate to existing model. Ask if a newer public maintained port exists. Preserve existing IMailDraftStore compatibility where needed. No B-owned private revision counter, lock/CAS fork or alternate draft model.",
+  "futureMeaningfulControls": [
+    "Two actualowner sessions load samerevision; firstsave then staleupdate denieswithoutchanging currentbyte/content/revision and preserves authored stale draft.",
+    "Local/provider divergentversions requireconflict/preserveboth, neverblindUpdatedAt latestwins.",
+    "Autosave triggered UI and dirtyclose/restart retain canonicaldraftidentity/content; revokedaccount access failclosed beforebackend effect."
+  ],
+  "currentSuiteQualification": "Suite executes underlying realstorage update/restart only; cannot promote this missing contract to PASS. No shared owner edits authorised."
+}

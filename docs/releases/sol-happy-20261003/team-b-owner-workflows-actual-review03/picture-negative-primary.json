@@ -1,0 +1,875 @@
+{
+  "recordedAtUTC": "2026-10-04T15:09:57.150204+00:00",
+  "method": "Read-only full ZIP CRC/SHA and recorded native result/commands/source-commit inspection; no B3 execution/replay",
+  "run": 37210629377,
+  "job": 111463094452,
+  "artifact": 11306079622,
+  "sourceCommit": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+  "archive": {
+    "path": "/workspace/attachments/c9d8be16-c4bd-4d9a-9539-8bdb859a8ae3/picture-0424-admission01-retirement.zip",
+    "bytes": 355181,
+    "sha256": "b6a5bf8f4b861f4cd785ab5ae30759727e3c1968d3aae5c09281d45c82f04e34"
+  },
+  "status": "ADMISSION01_SESSION_REPAIRED_MARKUP_AND_SAME_SESSION_RETIREMENT_CONTROL_RED_OBSERVED",
+  "negativeIsAcceptance": false,
+  "counters": {
+    "discovered": 15,
+    "executed": 15,
+    "passed": 13,
+    "failed": 2,
+    "notRun": 0,
+    "assertions": 133,
+    "timedOut": false,
+    "prerequisite": null
+  },
+  "outcomes": [
+    {
+      "Name": "independent-target-prepare-and-reject-preserve-active-bitmap-and-canonical",
+      "state": "PASS",
+      "assertions": 10
+    },
+    {
+      "Name": "invalid-route-refused-before-owner-or-device-effects",
+      "state": "PASS",
+      "assertions": 8
+    },
+    {
+      "Name": "controlled-target-read-failure-preserves-active-owner",
+      "state": "PASS",
+      "assertions": 6
+    },
+    {
+      "Name": "typed-input-before-navigation-and-close-is-retained",
+      "state": "PASS",
+      "assertions": 8
+    },
+    {
+      "Name": "typed-input-after-render-fences-native-admission",
+      "state": "PASS",
+      "assertions": 9
+    },
+    {
+      "Name": "acknowledged-owner-edit-after-render-fences-target",
+      "state": "PASS",
+      "assertions": 10
+    },
+    {
+      "Name": "forged-view-state-and-superseded-offer-have-no-authority",
+      "state": "PASS",
+      "assertions": 12
+    },
+    {
+      "Name": "cancelled-late-read-and-pending-close-preserve-owner",
+      "state": "PASS",
+      "assertions": 7
+    },
+    {
+      "Name": "disposal-during-read-fences-late-candidate-without-extra-release",
+      "state": "PASS",
+      "assertions": 6
+    },
+    {
+      "Name": "candidate-preview-does-not-write-native-cache-before-accept",
+      "state": "PASS",
+      "assertions": 9
+    },
+    {
+      "Name": "changed-native-cache-refuses-admission-without-overwrite",
+      "state": "PASS",
+      "assertions": 8
+    },
+    {
+      "Name": "old-retirement-cannot-clear-new-real-canonical-dirty-edit",
+      "state": "PASS",
+      "assertions": 10
+    },
+    {
+      "Name": "actual-raster-crop-history-save-close-reopen-and-pixel-export",
+      "state": "PASS",
+      "assertions": 14
+    },
+    {
+      "Name": "candidate-publication-cannot-write-detached-previous-input",
+      "state": "FAIL",
+      "assertions": 8,
+      "failure": "System.InvalidOperationException: Real synchronous candidate observer cannot write a soon-retired previous owner.\n   at Program.<>c__DisplayClass0_0.<<Main>$>g__Check|1(Boolean condition, String message) in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 40\n   at Program.<>c__DisplayClass0_0.<<<Main>$>b__23>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 256\n--- End of stack trace from previous location ---\n   at Program.<>c__DisplayClass0_7.<<<Main>$>b__41>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 297"
+    },
+    {
+      "Name": "candidate-observer-reentrant-navigation-waits-coherent-retirement",
+      "state": "FAIL",
+      "assertions": 8,
+      "failure": "System.InvalidOperationException: Reentrant route sees published candidate and waits actual old-session retirement; it cannot reject an unpublished candidate.\n   at Program.<>c__DisplayClass0_0.<<Main>$>g__Check|1(Boolean condition, String message) in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 40\n   at Program.<>c__DisplayClass0_0.<<<Main>$>b__24>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 274\n--- End of stack trace from previous location ---\n   at Program.<>c__DisplayClass0_7.<<<Main>$>b__41>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 297"
+    }
+  ],
+  "members": [
+    {
+      "path": "actual-native-binary-pins.json",
+      "bytes": 130652,
+      "sha256": "f0752b8147add641e055037c0a7615945d50690a04e3d52e36e020948e7a346a",
+      "crcVerified": true
+    },
+    {
+      "path": "build.log",
+      "bytes": 10104,
+      "sha256": "b93091afa0d887a0c09d0567d043e510e35ef194b58b38da433c520d8e7e556d",
+      "crcVerified": true
+    },
+    {
+      "path": "commands.json",
+      "bytes": 11873,
+      "sha256": "ce44c592fe4a14b3e2aa3ff42ec7bba8e127ad2434ca0c0ae867b0c08dcbea52",
+      "crcVerified": true
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 3022,
+      "sha256": "b086871c301dfeef9fbee85e76b5644203f572979ac5ea75d876a4709adfb04a",
+      "crcVerified": true
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+      "crcVerified": true
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "crcVerified": true
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "crcVerified": true
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "4a42023e329dfc924ebd41e4dd1afd93119257845b5ff0cd9179b7eb7268e3f7",
+      "crcVerified": true
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 67687,
+      "sha256": "a8351e69cda25a93fe38d766e910ec78161d29f158b2849fdb8e5fab1ba8bad8",
+      "crcVerified": true
+    },
+    {
+      "path": "native-submodule-pins.log",
+      "bytes": 202,
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999",
+      "crcVerified": true
+    },
+    {
+      "path": "native.log",
+      "bytes": 1907,
+      "sha256": "905d41d1aed971423d46920e931b2c3ccfa1324f303ef52df541bb5cbc3bae45",
+      "crcVerified": true
+    },
+    {
+      "path": "restore.log",
+      "bytes": 5565,
+      "sha256": "9da0682a68a0a6cbb48b64d244e641b44be35754b6da847ec44ac65085d2b898",
+      "crcVerified": true
+    },
+    {
+      "path": "result.json",
+      "bytes": 4384,
+      "sha256": "18683dcde7d3ed2a99c4d87488f76ddeb808256b10f2a75f92040f797e7c886f",
+      "crcVerified": true
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 500,
+      "sha256": "7441a6f3cee8c2e6de586214b121996dbfd4f0e79ab60d0e85028c3876109b5d",
+      "crcVerified": true
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 532,
+      "sha256": "bdf59d4ec3e6f04fcff8e0854895e6392ab5298cd788431a869d5c7b530fd94b",
+      "crcVerified": true
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1302653,
+      "sha256": "1d5d7be532a368f723a16f9041698369419c6ce2bd6022d0bdffd870664fd53f",
+      "crcVerified": true
+    }
+  ],
+  "sourceLedger": {
+    "path": "apps/Web/Tests/PictureAdmission/fixture-source-pins.json",
+    "bytes": 2244,
+    "sha256": "356801bf668b6c7c04afd85c170b2835798c8be48fb0af6e3e151502cdc035ba",
+    "allEntriesMatchActualCommit": true,
+    "checked": [
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/Picture.cui",
+        "bytes": 5315,
+        "sha256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3"
+      },
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserSession.cs",
+        "bytes": 25801,
+        "sha256": "24933899f9ea2f05ff0266588a4f87be183cb4441bce1587c7925cab1de63edb"
+      },
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserFeature.cs",
+        "bytes": 5561,
+        "sha256": "4709aafa462df1127ecdeb3aac9c61efafeabde2f107501d4873898f4b973451"
+      },
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/Picture.cui",
+        "bytes": 5315,
+        "sha256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3"
+      },
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserSession.cs",
+        "bytes": 31541,
+        "sha256": "b51a31b476755d0364084b1045b8d16f101ab9e2d00658a04a592b103ed7b8cf"
+      },
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserFeature.cs",
+        "bytes": 12715,
+        "sha256": "ac250d1a63bb70fee012b383d67a9427d2868af26e976a62a1958e0015144973"
+      },
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01SameSessionRetirement/PictureBrowserFeature.cs",
+        "bytes": 12785,
+        "sha256": "e96095a8a0631a0c51ab98af7cb2ca4c8b413532efade75f487465f2bb6e4a2b"
+      },
+      {
+        "path": "apps/Web/Picture/PictureBrowserFeature.cs",
+        "bytes": 13171,
+        "sha256": "86cc1c751e0217daa204c05fa57a1b7f7865a9b412e23c217b67373ec1726eec"
+      },
+      {
+        "path": "apps/Web/Picture/PictureBrowserSession.cs",
+        "bytes": 31704,
+        "sha256": "8f12c9b03cbda50ba1a9b0c65aa26649f07a8a9291d4920baaa5e83a44969a07"
+      },
+      {
+        "path": "apps/Web/Picture/Picture.cui",
+        "bytes": 5441,
+        "sha256": "2d408a38d204e9704a4f39491bf457355c38162d71a3f28fc9b9a83dc7a18402"
+      },
+      {
+        "path": "apps/Web/Tests/PictureAdmission/Fixtures/Picture8x6.png",
+        "bytes": 667,
+        "sha256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297"
+      }
+    ],
+    "sevenSnapshotsPreserved": true,
+    "newFeatureOnlyOneLineDiffFromOld": true
+  },
+  "actualTrackedTree": {
+    "bytes": 1302653,
+    "sha256": "1d5d7be532a368f723a16f9041698369419c6ce2bd6022d0bdffd870664fd53f",
+    "matchesCapturedFullTree": true
+  },
+  "commandCount": 11,
+  "recordedBirthCount": 59,
+  "allRecordedBirthsGone": true,
+  "allFamilyClosedEOF_ECHILD": true,
+  "signals": 0,
+  "commands": [
+    {
+      "name": "git-head",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2642,
+          "birth": 4212,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.047,
+      "bytes": 41,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-before",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2643,
+          "birth": 4216,
+          "gone": true
+        },
+        {
+          "pid": 2663,
+          "birth": 4218,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.132,
+      "bytes": 0,
+      "familyClosed": true
+    },
+    {
+      "name": "tracked-source-tree",
+      "argv": [
+        "git",
+        "ls-tree",
+        "-r",
+        "HEAD"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2665,
+          "birth": 4230,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.15,
+      "bytes": 1302653,
+      "familyClosed": true
+    },
+    {
+      "name": "native-submodule-pins",
+      "argv": [
+        "git",
+        "submodule",
+        "status",
+        "--recursive",
+        "--",
+        "framework/CUI/vendor/Avalonia/external/XamlX",
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2669,
+          "birth": 4245,
+          "gone": true
+        },
+        {
+          "pid": 2670,
+          "birth": 4245,
+          "gone": true
+        },
+        {
+          "pid": 2694,
+          "birth": 4247,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.072,
+      "bytes": 202,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-version",
+      "argv": [
+        "dotnet",
+        "--version"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2705,
+          "birth": 4252,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 4.522,
+      "bytes": 9,
+      "familyClosed": true
+    },
+    {
+      "name": "dotnet-info",
+      "argv": [
+        "dotnet",
+        "--info"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2712,
+          "birth": 4705,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 1.482,
+      "bytes": 3022,
+      "familyClosed": true
+    },
+    {
+      "name": "restore",
+      "argv": [
+        "dotnet",
+        "restore",
+        "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+        "--artifacts-path",
+        "/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/artifacts",
+        "-r",
+        "linux-x64",
+        "--configfile",
+        "/home/runner/work/9to1/9to1/NuGet.Config",
+        "--disable-build-servers",
+        "-p:Configuration=Release",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:PictureControlVariant=admission01-repaired-markup-and-same-session-retirement",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+        "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+        "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+        "-p:CreateHardLinksForCopyLocalIfPossible=false",
+        "-p:CreateHardLinksForPublishFilesIfPossible=false"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2720,
+          "birth": 4854,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 15.004,
+      "bytes": 5565,
+      "familyClosed": true
+    },
+    {
+      "name": "build",
+      "argv": [
+        "dotnet",
+        "build",
+        "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+        "--no-restore",
+        "-c",
+        "Release",
+        "--artifacts-path",
+        "/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/artifacts",
+        "-r",
+        "linux-x64",
+        "--disable-build-servers",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:PictureControlVariant=admission01-repaired-markup-and-same-session-retirement",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+        "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+        "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+        "-p:CreateHardLinksForCopyLocalIfPossible=false",
+        "-p:CreateHardLinksForPublishFilesIfPossible=false"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 2764,
+          "birth": 6354,
+          "gone": true
+        },
+        {
+          "pid": 2786,
+          "birth": 6723,
+          "gone": true
+        },
+        {
+          "pid": 2803,
+          "birth": 7241,
+          "gone": true
+        },
+        {
+          "pid": 2820,
+          "birth": 7393,
+          "gone": true
+        },
+        {
+          "pid": 2837,
+          "birth": 7509,
+          "gone": true
+        },
+        {
+          "pid": 2854,
+          "birth": 7645,
+          "gone": true
+        },
+        {
+          "pid": 2872,
+          "birth": 7782,
+          "gone": true
+        },
+        {
+          "pid": 2921,
+          "birth": 10156,
+          "gone": true
+        },
+        {
+          "pid": 2939,
+          "birth": 10369,
+          "gone": true
+        },
+        {
+          "pid": 2991,
+          "birth": 12207,
+          "gone": true
+        },
+        {
+          "pid": 3010,
+          "birth": 12496,
+          "gone": true
+        },
+        {
+          "pid": 3028,
+          "birth": 12804,
+          "gone": true
+        },
+        {
+          "pid": 3047,
+          "birth": 12988,
+          "gone": true
+        },
+        {
+          "pid": 3068,
+          "birth": 13299,
+          "gone": true
+        },
+        {
+          "pid": 3086,
+          "birth": 13473,
+          "gone": true
+        },
+        {
+          "pid": 3123,
+          "birth": 13763,
+          "gone": true
+        },
+        {
+          "pid": 3141,
+          "birth": 13920,
+          "gone": true
+        },
+        {
+          "pid": 3161,
+          "birth": 14783,
+          "gone": true
+        },
+        {
+          "pid": 3205,
+          "birth": 15875,
+          "gone": true
+        },
+        {
+          "pid": 3223,
+          "birth": 16140,
+          "gone": true
+        },
+        {
+          "pid": 3241,
+          "birth": 16401,
+          "gone": true
+        },
+        {
+          "pid": 3258,
+          "birth": 16588,
+          "gone": true
+        },
+        {
+          "pid": 3272,
+          "birth": 16625,
+          "gone": true
+        },
+        {
+          "pid": 3293,
+          "birth": 16914,
+          "gone": true
+        },
+        {
+          "pid": 3312,
+          "birth": 17155,
+          "gone": true
+        },
+        {
+          "pid": 3329,
+          "birth": 17430,
+          "gone": true
+        },
+        {
+          "pid": 3359,
+          "birth": 17968,
+          "gone": true
+        },
+        {
+          "pid": 3379,
+          "birth": 18274,
+          "gone": true
+        },
+        {
+          "pid": 3396,
+          "birth": 18428,
+          "gone": true
+        },
+        {
+          "pid": 3435,
+          "birth": 19017,
+          "gone": true
+        },
+        {
+          "pid": 3461,
+          "birth": 19488,
+          "gone": true
+        },
+        {
+          "pid": 3479,
+          "birth": 19694,
+          "gone": true
+        },
+        {
+          "pid": 3502,
+          "birth": 19857,
+          "gone": true
+        },
+        {
+          "pid": 3523,
+          "birth": 20489,
+          "gone": true
+        },
+        {
+          "pid": 3542,
+          "birth": 20648,
+          "gone": true
+        },
+        {
+          "pid": 3559,
+          "birth": 20885,
+          "gone": true
+        },
+        {
+          "pid": 3576,
+          "birth": 21041,
+          "gone": true
+        },
+        {
+          "pid": 3593,
+          "birth": 21227,
+          "gone": true
+        },
+        {
+          "pid": 3611,
+          "birth": 21409,
+          "gone": true
+        },
+        {
+          "pid": 3629,
+          "birth": 21628,
+          "gone": true
+        },
+        {
+          "pid": 3660,
+          "birth": 22137,
+          "gone": true
+        },
+        {
+          "pid": 3677,
+          "birth": 22335,
+          "gone": true
+        },
+        {
+          "pid": 3718,
+          "birth": 23426,
+          "gone": true
+        },
+        {
+          "pid": 3743,
+          "birth": 23728,
+          "gone": true
+        },
+        {
+          "pid": 3760,
+          "birth": 23969,
+          "gone": true
+        },
+        {
+          "pid": 3790,
+          "birth": 24396,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 182.91,
+      "bytes": 10104,
+      "familyClosed": true
+    },
+    {
+      "name": "target-properties",
+      "argv": [
+        "dotnet",
+        "msbuild",
+        "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+        "-p:Configuration=Release",
+        "-p:RuntimeIdentifier=linux-x64",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/artifacts",
+        "-nodeReuse:false",
+        "-getProperty:TargetPath,TargetFramework,RuntimeIdentifier,UseAppHost,AvaloniaBuildTasksLocation",
+        "-p:SelfContained=false",
+        "-p:UseSharedCompilation=false",
+        "-p:PictureControlVariant=admission01-repaired-markup-and-same-session-retirement",
+        "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+        "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+        "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+        "-p:CreateHardLinksForCopyLocalIfPossible=false",
+        "-p:CreateHardLinksForPublishFilesIfPossible=false"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3812,
+          "birth": 24645,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.607,
+      "bytes": 532,
+      "familyClosed": true
+    },
+    {
+      "name": "native",
+      "argv": [
+        "/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests",
+        "/home/runner/work/_temp/team-b-picture-admission01-repaired-markup-and-same-session-retirement/fixture-data/picture"
+      ],
+      "exit": 1,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3822,
+          "birth": 24734,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 1,
+      "seconds": 1.003,
+      "bytes": 1907,
+      "familyClosed": true
+    },
+    {
+      "name": "git-clean-after",
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "normalEOF": true,
+      "signals": [],
+      "error": null,
+      "births": [
+        {
+          "pid": 3833,
+          "birth": 24835,
+          "gone": true
+        }
+      ],
+      "finalECHILD": true,
+      "exitAfterDrain": 0,
+      "seconds": 0.108,
+      "bytes": 0,
+      "familyClosed": true
+    }
+  ],
+  "nativeResult": {
+    "bytes": 67687,
+    "sha256": "a8351e69cda25a93fe38d766e910ec78161d29f158b2849fdb8e5fab1ba8bad8"
+  },
+  "raster": {
+    "documentId": "9204b948-112e-4e4c-ae8e-2fe58f6204e9",
+    "pendingTypedInputStillUnsavedBeforeCrop": true,
+    "cropRevision": 1,
+    "crop": {
+      "type": "crop",
+      "x": 1,
+      "y": 2,
+      "width": 5,
+      "height": 3
+    },
+    "cropStoredDocumentExactlyEqualsCanonical": true,
+    "afterCropClean": true,
+    "sameSessionRetirement": "RanToCompletion",
+    "finalRevision": 3,
+    "sourceSHA256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297",
+    "rgbaSHA256": "a205e6ec1450a74b66e9de990d5816a79ffd13b54e9c920da7675d302795f39d",
+    "commitCalls": 4
+  },
+  "binaryInventory": {
+    "rows": 707,
+    "manifest": {
+      "bytes": 130652,
+      "sha256": "f0752b8147add641e055037c0a7615945d50690a04e3d52e36e020948e7a346a"
+    },
+    "qualification": "Manifest read; original DLL/PDB/native bodies not present in uploaded diagnostics ZIP and not independently rehashed here"
+  },
+  "warnings": [
+    "CS8602 actual15 harness line241 nullable warning; same retained current scope",
+    "CA1416 new old-admission Feature line43 BrowserPictureMedia browser-only constructor; native controlled fixture does not invoke Register"
+  ],
+  "history": "Original/parser-failed controls and prior admission01 repaired-markup 12PASS3FAIL remain separate; this new controlled variant alone closes exact two-observer negative proof. No browser/provider/IDB/GPS/full Picture acceptance."
+}

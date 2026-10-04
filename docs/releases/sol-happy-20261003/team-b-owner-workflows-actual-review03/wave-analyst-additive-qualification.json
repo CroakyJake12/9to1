@@ -1,0 +1,54 @@
+{
+  "UTC": "2026-10-04T15:54:19.626248+00:00",
+  "scope": "Preserved read-only analyst checker authoring failures; no browser/product test or runtime failed by these checker errors. Final source-only/recorded results remain additive.",
+  "analystFailures": [
+    {
+      "script": "check-before-local-audio-blob-network-qualification.py",
+      "observed": "HTTP-only request assumption rejected actual local audio Blob GET206; corrected exact http/blob local origin allowlist."
+    },
+    {
+      "script": "check-before-selected-metadata-size-qualification.py",
+      "observed": "Selected actual IDB serialized action metadata exceeded512000B output gate; no large metadata emitted. Compact11128B schema metadata produced instead."
+    },
+    {
+      "script": "check-critical-idb-before-actual-source-reference-key.py",
+      "observed": "Guessed clip SourceId key raised KeyError AFTER complete quota two-store equality assertions. Actual pinned model uses SourceReferenceId; exact decoder key corrected, no test or oracle changed."
+    }
+  ],
+  "scriptCustody": [
+    {
+      "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/check.py",
+      "bytes": 7486,
+      "sha256": "38ea1cca198bc1a96a8526d6317455845408264f116c5e5414c9ed11c2d59178"
+    },
+    {
+      "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/check-critical-idb.py",
+      "bytes": 13913,
+      "sha256": "6021c616de8f5b9bd5555b14f8865e36cfb7a52fe7549078a693ff2b43d4ad0c"
+    },
+    {
+      "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/check-before-local-audio-blob-network-qualification.py",
+      "bytes": 6984,
+      "sha256": "4e2cb1cecd9a4b8a1f6c4710ee5c866a1fb93578dbae43108f7d47350c56d927"
+    },
+    {
+      "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/check-before-selected-metadata-size-qualification.py",
+      "bytes": 7017,
+      "sha256": "d8351d84678545190a8c67b53d8c1911a81bb7dc381bf154b19206f08f483fc1"
+    },
+    {
+      "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/check-critical-idb-before-actual-source-reference-key.py",
+      "bytes": 10856,
+      "sha256": "82551e1ac67d06431ee80d3ee1bcb85832692dc6b793e1ff30400c9780f6120b"
+    }
+  ],
+  "completeTraceProof": {
+    "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/review.json",
+    "sha256": "1abfddd455af6bd5bb5efc28f080dbd40ee206a68782ca9524d95290e5a27de4"
+  },
+  "additiveCriticalLiteralBodyProof": {
+    "path": "/tmp/team-b-b6-wave22d-full26-memory-review01/critical-idb-review.json",
+    "sha256": "4dcf327cb70b44d4f8494d40ea2797c7895894a9965006742ea8ce525d94995c"
+  },
+  "qualification": "Earlier causal/full26 reports kept intact. WAV output file absent as top-level member, but actual trace audio Blob body recovered and matches recorded download full SHA and expected samples in additive proof. No pan other than0/hardwareaudibility/deployment/full31 acceptance."
+}

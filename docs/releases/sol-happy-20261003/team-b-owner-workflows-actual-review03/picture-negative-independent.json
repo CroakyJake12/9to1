@@ -1,0 +1,209 @@
+{
+  "status": "QUALIFIED_INTENDED_NEGATIVE_RECORDED_NOT_ACCEPTANCE",
+  "reviewer": "B6 independent validation",
+  "UTC": "2026-10-04T15:19:15.114284+00:00",
+  "scope": "Read-only full archive/Git/raw same15 source mapping; no local native/SDK/extraction",
+  "run": 37210629377,
+  "job": 111463094452,
+  "artifact": 11306079622,
+  "commit": "0424b292d435da3079e2c70b3fd0c3b3170e9ec6",
+  "archive": {
+    "path": "/workspace/attachments/c9d8be16-c4bd-4d9a-9539-8bdb859a8ae3/picture-0424-admission01-retirement.zip",
+    "bytes": 355181,
+    "sha256": "b6a5bf8f4b861f4cd785ab5ae30759727e3c1968d3aae5c09281d45c82f04e34",
+    "fullCRCAndBodySHA": 16
+  },
+  "counts": {
+    "discovered": 15,
+    "executed": 15,
+    "passed": 13,
+    "failed": 2,
+    "notRun": 0,
+    "assertions": 133
+  },
+  "nativeExit": 1,
+  "negativeIsAcceptance": false,
+  "failures": [
+    {
+      "Name": "candidate-publication-cannot-write-detached-previous-input",
+      "state": "FAIL",
+      "assertions": 8,
+      "failure": "System.InvalidOperationException: Real synchronous candidate observer cannot write a soon-retired previous owner.\n   at Program.<>c__DisplayClass0_0.<<Main>$>g__Check|1(Boolean condition, String message) in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 40\n   at Program.<>c__DisplayClass0_0.<<<Main>$>b__23>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 256\n--- End of stack trace from previous location ---\n   at Program.<>c__DisplayClass0_7.<<<Main>$>b__41>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 297"
+    },
+    {
+      "Name": "candidate-observer-reentrant-navigation-waits-coherent-retirement",
+      "state": "FAIL",
+      "assertions": 8,
+      "failure": "System.InvalidOperationException: Reentrant route sees published candidate and waits actual old-session retirement; it cannot reject an unpublished candidate.\n   at Program.<>c__DisplayClass0_0.<<Main>$>g__Check|1(Boolean condition, String message) in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 40\n   at Program.<>c__DisplayClass0_0.<<<Main>$>b__24>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 274\n--- End of stack trace from previous location ---\n   at Program.<>c__DisplayClass0_7.<<<Main>$>b__41>d.MoveNext() in /home/runner/work/9to1/9to1/apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs:line 297"
+    }
+  ],
+  "sameCaseSourceAsCurrent7f": true,
+  "sourceLedgerRows": [
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/Picture.cui",
+      "bytes": 5315,
+      "sha256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserSession.cs",
+      "bytes": 25801,
+      "sha256": "24933899f9ea2f05ff0266588a4f87be183cb4441bce1587c7925cab1de63edb"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserFeature.cs",
+      "bytes": 5561,
+      "sha256": "4709aafa462df1127ecdeb3aac9c61efafeabde2f107501d4873898f4b973451"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/Picture.cui",
+      "bytes": 5315,
+      "sha256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserSession.cs",
+      "bytes": 31541,
+      "sha256": "b51a31b476755d0364084b1045b8d16f101ab9e2d00658a04a592b103ed7b8cf"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserFeature.cs",
+      "bytes": 12715,
+      "sha256": "ac250d1a63bb70fee012b383d67a9427d2868af26e976a62a1958e0015144973"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01SameSessionRetirement/PictureBrowserFeature.cs",
+      "bytes": 12785,
+      "sha256": "e96095a8a0631a0c51ab98af7cb2ca4c8b413532efade75f487465f2bb6e4a2b"
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserFeature.cs",
+      "bytes": 13171,
+      "sha256": "86cc1c751e0217daa204c05fa57a1b7f7865a9b412e23c217b67373ec1726eec"
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserSession.cs",
+      "bytes": 31704,
+      "sha256": "8f12c9b03cbda50ba1a9b0c65aa26649f07a8a9291d4920baaa5e83a44969a07"
+    },
+    {
+      "path": "apps/Web/Picture/Picture.cui",
+      "bytes": 5441,
+      "sha256": "2d408a38d204e9704a4f39491bf457355c38162d71a3f28fc9b9a83dc7a18402"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Picture8x6.png",
+      "bytes": 667,
+      "sha256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297"
+    }
+  ],
+  "controlSourceSHA": {
+    "apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs": "96d90c4a7ce693517690261227cd33860c28f699f2f58d92b7f7dc2d30f14f26",
+    "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj": "e62e5643973f34e6b819b599134d73920433eb1c11f9b829fb809a9142639d17",
+    "apps/Web/Tests/ci/run-picture-native.py": "ee1b43b7aa61d58a3ddd3ce95f4b78db5ac744389f68a5271ad4409461a94502",
+    "apps/Web/Tests/ci/run-ordinary-native.py": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+    ".github/workflows/team-b-picture-native.yml": "938040d1ae53d43552db36d52833b264e97fa46f7db6ca4b2df80315800c2858"
+  },
+  "newControlOnlyDifference": "Exact one early same-session return; removing it restores entire original Admission01 Feature bytes. Original session remains b51a; current authored-ID markup2d408 is explicitly embedded.",
+  "nativeMarkupSHA": "2D408A38D204E9704A4F39491BF457355C38162D71A3F28FC9B9A83DC7A18402",
+  "markupDiagnostics": [],
+  "closure": {
+    "normalCommandFamilies": 11,
+    "goneBirthRecords": 59,
+    "signals": 0,
+    "allEOF_ECHILD": true,
+    "allOtherCommandsExit": 0,
+    "nativeNaturalExit": 1
+  },
+  "binaryScope": {
+    "reportedRows": 707,
+    "bodiesUploaded": false
+  },
+  "criteriaQualification": [
+    "Thirteen original criteria including actual raster/canonical crop/history/privacy export pass after same-session retirement prerequisite repair.",
+    "Two remaining exact synchronous observer/reentrant-navigation negatives fail with original source assertion messages; no broad exception or exit1 acceptance.",
+    "Actual Feature/Session/CUI/native Skia with controlled media boundary; not browser IDB, provider, permission/Files authority or durable restart acceptance.",
+    "Old original/admission01 fixtures and prior12PASS3FAIL/current14PASS1FAIL evidence remain distinct and unchanged.",
+    "Current7f independent15PASS is a separate production result, not inherited from this intended-negative control."
+  ],
+  "members": [
+    {
+      "path": "actual-native-binary-pins.json",
+      "bytes": 130652,
+      "sha256": "f0752b8147add641e055037c0a7615945d50690a04e3d52e36e020948e7a346a"
+    },
+    {
+      "path": "build.log",
+      "bytes": 10104,
+      "sha256": "b93091afa0d887a0c09d0567d043e510e35ef194b58b38da433c520d8e7e556d"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 11873,
+      "sha256": "ce44c592fe4a14b3e2aa3ff42ec7bba8e127ad2434ca0c0ae867b0c08dcbea52"
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 3022,
+      "sha256": "b086871c301dfeef9fbee85e76b5644203f572979ac5ea75d876a4709adfb04a"
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "4a42023e329dfc924ebd41e4dd1afd93119257845b5ff0cd9179b7eb7268e3f7"
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 67687,
+      "sha256": "a8351e69cda25a93fe38d766e910ec78161d29f158b2849fdb8e5fab1ba8bad8"
+    },
+    {
+      "path": "native-submodule-pins.log",
+      "bytes": 202,
+      "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999"
+    },
+    {
+      "path": "native.log",
+      "bytes": 1907,
+      "sha256": "905d41d1aed971423d46920e931b2c3ccfa1324f303ef52df541bb5cbc3bae45"
+    },
+    {
+      "path": "restore.log",
+      "bytes": 5565,
+      "sha256": "9da0682a68a0a6cbb48b64d244e641b44be35754b6da847ec44ac65085d2b898"
+    },
+    {
+      "path": "result.json",
+      "bytes": 4384,
+      "sha256": "18683dcde7d3ed2a99c4d87488f76ddeb808256b10f2a75f92040f797e7c886f"
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 500,
+      "sha256": "7441a6f3cee8c2e6de586214b121996dbfd4f0e79ab60d0e85028c3876109b5d"
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 532,
+      "sha256": "bdf59d4ec3e6f04fcff8e0854895e6392ab5298cd788431a869d5c7b530fd94b"
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1302653,
+      "sha256": "1d5d7be532a368f723a16f9041698369419c6ce2bd6022d0bdffd870664fd53f"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "state": "ACTUAL_RECORDED_NARROW_WAVE_VISUAL_LAYOUT_FAILURE",
+  "UTC": "2026-10-04T15:45:16.355489+00:00",
+  "source": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "driver": "7cdf8ca306ee7c0bd0e573d598651eb2c3327f7a",
+  "run": 37208724474,
+  "allThreeOriginalScreenshotsViewed": true,
+  "screenshots": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4",
+      "viewedThrough": "tools.view_image actuallocalPNG"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-narrow.png",
+      "bytes": 89184,
+      "sha256": "06307f05c08fe356aa1705364f4a5fa9270536471c49881b2557a5b68ad44cbd",
+      "viewedThrough": "tools.view_image actuallocalPNG"
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/wave22d-original-full-member-git-custody01/screenshots/wave-populated.png",
+      "bytes": 120917,
+      "sha256": "2bb12f5dd499b67cf63ce29c9949d6a25bcdf6a11b58b0a750871fc694cc1a9f",
+      "viewedThrough": "tools.view_image actuallocalPNG"
+    }
+  ],
+  "actualNarrowViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "finding": "Rightviewport clips channelinput/create action, longproject/openlabel, saveandclose/actionrow, transportcontrols, waveformdescription and canonicalselectionlabels. Required controls extend offrightedge; visibleverticalscrollbar only.",
+  "scopeQualification": "Static nativebrowser screenshots, no new runtime/DOM/layoutmeasurement. Wide screenshots are partialscrollpositions and do notestablishfullresponsive/AT acceptance. Historical14functionalcriteria explicitlyexcludednarrow/touch acceptance.",
+  "owner": "B-ownedWavecui layout unless requiredexistingCUI portableflow contractmissing, thenexactAseamrequest",
+  "action": "B5 assigned inspectactualWavecui+maintained layout contracts, freezebounded productrepair+genuine390/200% criteria; do not replaceCUI orrelaxexisting14."
+}

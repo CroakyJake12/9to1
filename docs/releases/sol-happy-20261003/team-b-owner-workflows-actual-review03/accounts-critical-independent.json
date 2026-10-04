@@ -1,0 +1,337 @@
+{
+  "status": "INDEPENDENT_SAME7_CRITICAL_REPRODUCTION_SCOPED_PASS",
+  "reviewer": "B6 independent validation",
+  "UTC": "2026-10-04T15:28:18.814269+00:00",
+  "run": 37212388505,
+  "job": 111466033442,
+  "artifact": 11306118889,
+  "event": "workflow_dispatch",
+  "driverCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "executor": "GitHub hosted existing ordinary workflow dispatched by B6; B6 read-only full raw review",
+  "archive": {
+    "path": "/workspace/attachments/b694b067-6e59-48fb-8ca8-1e53b02d97db/accounts7-b6-independent-sealed22d-driver7f.zip",
+    "bytes": 32427,
+    "sha256": "f654419402bba00792a72143ff7304273f7739187154ae67a19b317b1aa89077",
+    "fullCRCBodySHAMembers": 26
+  },
+  "counts": {
+    "discovered": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "notRun": 0
+  },
+  "outcomes": {
+    "actual-unconfigured-native-account-read": {
+      "status": "PASS",
+      "observed": {
+        "actualRenderReady": true,
+        "nullConfiguration": true,
+        "privateDataAbsent": true,
+        "signInUnavailable": true
+      }
+    },
+    "physical-check-truthful-unavailable": {
+      "status": "PASS",
+      "observed": {
+        "physicalNativeCheck": true,
+        "truthfulUnavailable": true,
+        "noPrivateGrant": true
+      }
+    },
+    "native-revoke-immediate-fence": {
+      "status": "PASS",
+      "observed": {
+        "immediateEmpty": true,
+        "immediateGeneration": 2,
+        "staleAccepted": false,
+        "settledEmpty": true
+      }
+    },
+    "retained-stale-native-peer-refused": {
+      "status": "PASS",
+      "observed": {
+        "oldPeerRefusedBeforeAndAfterFreshRoute": true,
+        "newOwnerGeneration": true,
+        "revokedSettingsUnavailable": true,
+        "explicitRootReplacement": true,
+        "noIdentityFabricated": true
+      }
+    },
+    "native-invalidation-fresh-owner-route": {
+      "status": "PASS",
+      "observed": {
+        "actualNativeInvalidationJoined": true,
+        "immediateEmpty": true,
+        "oldPeersRefused": true,
+        "newOwnerGeneration": true,
+        "freshCanonicalSettingsAvailable": true,
+        "noIdentityFabricated": true,
+        "brokerDrainNotClaimed": true
+      }
+    },
+    "terminal-close-true-native-and-JS-release": {
+      "status": "PASS",
+      "observed": {
+        "actualCloseReturnedTrue": true,
+        "nativeAXEmpty": true,
+        "JSProjectionRemoved": true,
+        "stalePeerRefused": true,
+        "terminalRouteCannotReopen": true,
+        "repeatCloseTrue": true
+      }
+    },
+    "exact-assets-runtime-cleanup-integrity": {
+      "status": "PASS",
+      "observed": {
+        "exactCustodyAndCleanup": true
+      }
+    }
+  },
+  "sourcePinsActualGitBodies": [
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    {
+      "path": "apps/Web/Tests/verify-publish-receipt.cjs",
+      "bytes": 4958,
+      "sha256": "e5481670b9647ccb7f8cfb6b1106d6a3ee1973b0e507e0ef77ec70e53bb31f8a"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/sealed-https-host-explicit-binding.cjs",
+      "bytes": 4164,
+      "sha256": "3b9c4e4adb44b18629619800335cc4041327588c05748d015b6c97281bc40b0c"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-account-replay01.py",
+      "bytes": 14198,
+      "sha256": "0dde0b377f5de784ff3e93a8d3edec40bd21a8dd12d7aa154be65910ba1cbf95"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-wave-browser-cold-quota.cjs",
+      "bytes": 35538,
+      "sha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-wave-replay01.py",
+      "bytes": 15709,
+      "sha256": "95f3a1519f761c2cc014dd8c027897b9c76565e622b88182249f943fedc01ba7"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-sealed-browser-replay.py",
+      "bytes": 19753,
+      "sha256": "9d1a08b247770646c93e2f12dcf0e70e190389e68b208e53cb129f4918956ed6"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-unconfigured-interop7-portable-ci02.cjs",
+      "bytes": 17712,
+      "sha256": "02b7f2ac22f383b8bd67e496ace3208e27d5d1a7340f380f2c6ba9a4a471027c"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/owned-kernel-child-proof01.py",
+      "bytes": 1370,
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/README.md",
+      "bytes": 5057,
+      "sha256": "94e7e94175825dce11df61a0704af4c9251f405a852b9b6e62caa66a73f96870"
+    }
+  ],
+  "sameAccountsSourceBodyAsOriginal7cdf": true,
+  "trueAwait": "All six callsites unchanged predicates use actual awaited page.evaluate with strict boolean true; absolute deadlines and timers cleared. False values retry; no inherited Promise-truthiness acceptance.",
+  "runtimeCustody": {
+    "sealStartEndEqual": {
+      "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+      "manifestSha256": "5e0a0c65df9f4e732b676b9e543659875619052e708149874a542a0af1ec7095",
+      "fileCount": 285
+    },
+    "recordedFull285BodiesBeforeAfter": true,
+    "bytes": 58424254,
+    "originalInnerSha": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+    "originalReceiptSha": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+    "rootOnlyReceiptRemap": "5e0a0c65df9f4e732b676b9e543659875619052e708149874a542a0af1ec7095",
+    "separateIndependent285FullBodyProof": "/tmp/team-b-b6-normal-web22d-inner-custody-review01/review.json SHA36d7f4cd8f31bb25fe636707a1d90339f2131a0e5c5897b554f738aa8087b10f",
+    "originalActionsOuterWholeBodyVerified": false
+  },
+  "closure": {
+    "ordinaryCommands": 15,
+    "goneOrdinaryBirths": 93,
+    "normalEOF": true,
+    "heldNativeIdentities": 11,
+    "allFDReadyBirthGoneRecorded": true,
+    "signals": 0,
+    "forcedCleanup": false,
+    "deadlineFailure": false,
+    "budgetFailure": false,
+    "finalECHILD": true,
+    "uniqueBoundTop": true,
+    "port5096RebindClosed": true,
+    "finalFootprintBytes": 291467
+  },
+  "unexpected": {
+    "pageError": 0,
+    "consoleError": 0,
+    "requestFailed": 0,
+    "nonClientRequests": 0
+  },
+  "tlsPublicProof": {
+    "san": "client.example.test",
+    "certSha256": "b120a310a90fdd9b7229a148c47a3bb46d4aacf9974996924edcddf8ea3c2151",
+    "spkiBase64Sha256": "PZOkqOKYErX42p7y2BOEHwUBj/7DY5deW7R2pWdZOtk=",
+    "keyBodyUploaded": false,
+    "issuerAuthority": false
+  },
+  "tlsProofScope": "SAN/date log and reported publiccertificateSHA/SPKI only; certificateDER/SPKI body not uploaded, issuerAuthority false.",
+  "mapping": [
+    "Actual null-config native CUI, disabled trusted-signin and absent named private fields.",
+    "Physical canvas/native bounds click for Check, actual native caption truthfully unavailable; no provider dispatch.",
+    "Real RevokePrivateContext synchronous AX-empty/generation advance/stale ID denial, awaited settledempty.",
+    "Bare revoked Settings route stays unavailable; explicit realnative PrivateContextInvalidated registers fresh null-contextowner. Retained old peer remains refused across realroute transitions.",
+    "Invalidation synchronous fence observed before await; actualjoin/newgeneration/canonicalSettings and botholdpeer denial, no privateidentity/brokerdrain claim.",
+    "Realnative CloseShell true/AXempty/JSprojectionremoved/staleIDrefusal; subsequenthashroutes inert/repeatclose true.",
+    "Cleanup/source/seal/full285 custody and normalheldfamily/port proof."
+  ],
+  "limits": [
+    "Only named private-caption absence/null public account config tested; not a complete memory-secret scan.",
+    "No issuer/provider/authenticated actor/private session/token/profile or active broker acceptance.",
+    "Controlled native lifecycle exports remain explicit interop controls; not physical sign-in or whole account operations.",
+    "No realBFCache/browserAT/deployment/full31 acceptance.",
+    "Outer public Actions archive whole-byte identity remains unverified; exact original inner285 body proof is separately established."
+  ],
+  "members": [
+    {
+      "path": "actual-browser-oracles.log",
+      "bytes": 247,
+      "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193"
+    },
+    {
+      "path": "anonymous-tls-public-proof.json",
+      "bytes": 245,
+      "sha256": "b6caee3148b67fe621677f940b9aceb618e684833ac78880d4fe3c7a8588a406"
+    },
+    {
+      "path": "browser/results.json",
+      "bytes": 2991,
+      "sha256": "95b62d5017a8ba703e2934d2c5fcabe5361625f4cc8ecd66d72cc532d71927ec"
+    },
+    {
+      "path": "browser-install.log",
+      "bytes": 18584,
+      "sha256": "03f451e0f18a14a6cd5eb2d2982fd8c3a3613d152500affb4024a718de6b3840"
+    },
+    {
+      "path": "browser-path.log",
+      "bytes": 102,
+      "sha256": "7fc19b87a4c9024fbff7610b08cf5296e92d2a1035e304fdc7eae2de5d2fbc26"
+    },
+    {
+      "path": "browser-tool-identity.json",
+      "bytes": 365,
+      "sha256": "b76befa8ac592ab101cdbe12b2a9a080b85a9939af5645a528a8d6cfa6e7f812"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 14924,
+      "sha256": "059681a17286df7b20ec4dae29e3443505da8d5e47df34b1b7125e563fd2a08b"
+    },
+    {
+      "path": "driver-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver-clean-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver-git-head.log",
+      "bytes": 41,
+      "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352"
+    },
+    {
+      "path": "execution-plan.json",
+      "bytes": 3939,
+      "sha256": "0725dfccdfce78ab40f06e878dd3f5e920c3c673344432cbe82428d169437245"
+    },
+    {
+      "path": "fixture-cert-san-and-dates.log",
+      "bytes": 131,
+      "sha256": "e8718577e3d340e8076b5f012307c439d2df9b1e6d679d991197d033ea06db01"
+    },
+    {
+      "path": "fixture-cert-unexpired.log",
+      "bytes": 28,
+      "sha256": "884cfe6153fc074f92defed83aaabbca814ec8e4f43e37b01e55ed76a86aaf8b"
+    },
+    {
+      "path": "fixture-public-key.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fixture-public-spki.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fixture-tls-create.log",
+      "bytes": 1950,
+      "sha256": "9f55568098087fff645039e3fb577dc228fb29e8016721385931ae915ccb1ac0"
+    },
+    {
+      "path": "full-inventory-before.log",
+      "bytes": 717,
+      "sha256": "d3b4ad3ad98b9a3da4e745736851dee4616797a0251ffc294bf89bbb7f4292a8"
+    },
+    {
+      "path": "full-inventory-final.log",
+      "bytes": 717,
+      "sha256": "d3b4ad3ad98b9a3da4e745736851dee4616797a0251ffc294bf89bbb7f4292a8"
+    },
+    {
+      "path": "openssl-version.log",
+      "bytes": 65,
+      "sha256": "54668ea977da3703d07ac46186e7c727c114a5243657f46b69a83c69ec005f34"
+    },
+    {
+      "path": "owned-family/owned-family-receipt.json",
+      "bytes": 5671,
+      "sha256": "477bd1d54822fbe2533fc09bf1c580936b18ccf6ef8791757288acdfd708c78c"
+    },
+    {
+      "path": "owned-family/runner-safe-stdout.log",
+      "bytes": 404,
+      "sha256": "cd54258ed89c3ab5fdbfd78a7f918d5a7603eeff0f60b466be4daeb87b36e92f"
+    },
+    {
+      "path": "playwright-install.log",
+      "bytes": 24,
+      "sha256": "65c731cd02e19c79f6f5a3e84a4dd64a49acd6c47d2ee551d7cc9da191e8c96c"
+    },
+    {
+      "path": "receipt-map.json",
+      "bytes": 651,
+      "sha256": "498f30ecfd2b9144ae20d0875e766e5be12af29c5c8590967207b27bb3ee0909"
+    },
+    {
+      "path": "public-tool-pins.json",
+      "bytes": 115940,
+      "sha256": "316c4dec494609fb8c851e10550489e42e0c9dd6c6d31c007bad4bfb6214e8f4"
+    },
+    {
+      "path": "result.json",
+      "bytes": 725,
+      "sha256": "1c4a8f99f206a22b7e02b642147a8cda309a1549b016179d9651afbf5fb28017"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 1977,
+      "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4"
+    }
+  ]
+}

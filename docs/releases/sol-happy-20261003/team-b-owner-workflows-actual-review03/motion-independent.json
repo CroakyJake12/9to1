@@ -1,0 +1,219 @@
+{
+  "status": "RECORDED_SCOPED_ORIGINAL_MOTION1_PASS",
+  "reviewer": "B6 independent validation",
+  "UTC": "2026-10-04T15:46:53.536130+00:00",
+  "execution": "Read-only full ZIP/source/Git/log review; no SDK/runtime/replay/extraction/helper import",
+  "run": 37213296964,
+  "job": 111468634760,
+  "artifact": 11307243060,
+  "sourceCommit": "896cfb59e71615e091354b7b2759e71e9006d8e5",
+  "archive": {
+    "path": "/workspace/attachments/37bf779f-3985-445e-925e-43aca289b56a/motion-original-project-896-native.zip",
+    "bytes": 335412,
+    "sha256": "4830d9c0534ffe6370d23013a0788c6ce260c7bf7cb5a421cd2be499f8edbe06",
+    "fullCRCAndBodyMembers": 15
+  },
+  "counts": {
+    "discovered": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "notRun": 0,
+    "assertions": null
+  },
+  "originalRun": "Whole unchanged MotionProjectWorkflowTest.Run invoked by thin entry; 24 return-code checkpoints30..53 are not24tests or measured assertions",
+  "sourceBodies": [
+    {
+      "path": "9to1 Workspace/Motion/MotionProject.cs",
+      "bytes": 14526,
+      "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d",
+      "gitBlob": "95c9144e5956503250a74ae3c683471a942cb6aa"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "bytes": 5674,
+      "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6",
+      "gitBlob": "e5bda9e1f849206d3f9e70d6f2c854d696d9ae59"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143",
+      "gitBlob": "08ced0ab07a187b241463ac43cf6c640b15410ee"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "gitBlob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0"
+    },
+    {
+      "path": "NuGet.Config",
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e",
+      "gitBlob": "24489cbd21c319685f8e7d5caee66965cd4a9e57"
+    },
+    {
+      "path": "global.json",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b",
+      "gitBlob": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+      "bytes": 935,
+      "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21",
+      "gitBlob": "a61facfb0e28d34d46be48cdefef31e419eea4cb"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+      "bytes": 1635,
+      "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38",
+      "gitBlob": "dc6f9ac93be8908282bdbe66ac1492cd4a418b11"
+    }
+  ],
+  "extraDriverWorkflowLedgerBodies": [
+    {
+      "path": "apps/Web/Tests/ci/run-motion-original-project.py",
+      "bytes": 9130,
+      "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857"
+    },
+    {
+      "path": ".github/workflows/team-b-motion-original-project.yml",
+      "bytes": 1147,
+      "sha256": "55273d26bdd31d9edcb055a8d8d922ffbb711a39d6aafa9c6f18a021d5e41524"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/source-pins.json",
+      "bytes": 1463,
+      "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659"
+    }
+  ],
+  "wholeRecordedTrackedGitTreeEqual": true,
+  "sourceAfter": "Driver recorded all8body recheck +clean tracked Git diff; no separate full source-after ledger uploaded",
+  "actualBuild": {
+    "SDK": "10.0.401",
+    "warnings": 0,
+    "errors": 0,
+    "ordinaryRestoreBuild": "Three genuine linked owner source units plus thin entry, no ProjectReference/PackageReference or fake store"
+  },
+  "nativeTargetProperties": {
+    "TargetPath": "/home/runner/work/_temp/team-b-motion-original-project/artifacts/bin/MotionProjectWorkflow.Tests/release_linux-x64/NineToOne.Motion.OriginalProjectWorkflow.Tests.dll",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "UseAppHost": "true"
+  },
+  "closure": {
+    "ordinaryCommandFamilies": 10,
+    "recordedGoneBirths": 11,
+    "allNormalEOF": true,
+    "allFinalECHILD": true,
+    "signals": 0
+  },
+  "criterionMapping": [
+    "Real temporary local-filesystem create revision0\u2192insert1\u2192split2\u2192open retains canonical project/element/asset IDs and exact source/timeline ranges.",
+    "Save3 refuses no-op/skippedrevision/changedprojectID with RevisionConflict and exact before/after file byte equality.",
+    "Malformed JSON/null shape and overflow edits refused; original file stays revision3/bytes unchanged.",
+    "Move4/slip5/non-rippletrim6 retain original asset/track/source identity and untouched other element; all seven invalid/stale edits preserve exact durable bytes.",
+    "Fractional30000/1001 frame clock and near-long.MaxValue integral edit bounds; actual new file persisted0\u21921\u21922 and reopened at timeline2002/sourceIn30000."
+  ],
+  "limits": [
+    "One original test PASS, assertionsnull; return checkpoint/loop checks not inflated to distinct discovered tests.",
+    "Original test finally deletes its own fixture folder. Runtime project/lock/temp bodies and compiled bodies not uploaded or independently reread.",
+    "Binary6inventory is recorded metadata; apphost/entryDLLbody custody not certified.",
+    "Symbolic file:source-video-42/file:fractional-source are unresolved opaque fixture references, not genuine Files canonical-ID resolution or source authority.",
+    "Same-process real local store/CLI JSON semantics, not cold-process/browser/media decode/playback/render/export/clock/Donor/issuer/concurrent/crash/fullMotion or full31 acceptance."
+  ],
+  "members": [
+    {
+      "path": "binary-pins.json",
+      "bytes": 1370,
+      "sha256": "6f5eec09679c69f9fe1d41c0b540252255fbc00a0842befa7a46ea13611edc19",
+      "CRC": true
+    },
+    {
+      "path": "build.log",
+      "bytes": 275,
+      "sha256": "9a0e4d742b42d112518604329426289f8a3a37f70e00e7391f557bb33ed6ec4a",
+      "CRC": true
+    },
+    {
+      "path": "commands.json",
+      "bytes": 6158,
+      "sha256": "420159875c8921d96e316abe0c6187c30b5328062befc24b33f87fcaa1bdb7a2",
+      "CRC": true
+    },
+    {
+      "path": "dotnet-info.log",
+      "bytes": 2982,
+      "sha256": "38ba2d08337f8a3548872cb86279922e8a7ff874d3acfe1ead26dab245fbab6d",
+      "CRC": true
+    },
+    {
+      "path": "dotnet-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+      "CRC": true
+    },
+    {
+      "path": "git-clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRC": true
+    },
+    {
+      "path": "git-clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "CRC": true
+    },
+    {
+      "path": "git-head.log",
+      "bytes": 41,
+      "sha256": "d715be19955709ad2736f7a54daa89fc873d3aca8a2f44a1f46e0b70e2319aa5",
+      "CRC": true
+    },
+    {
+      "path": "native-results.json",
+      "bytes": 578,
+      "sha256": "50b43738158de6da0680c07546b779d15b15a36289ccb2b501800c673ca551fc",
+      "CRC": true
+    },
+    {
+      "path": "native.log",
+      "bytes": 105,
+      "sha256": "4a14b61f8eaa5ab9fed6aea7b60b0f86b2811edb968dcf46de30283eeabace52",
+      "CRC": true
+    },
+    {
+      "path": "restore.log",
+      "bytes": 155,
+      "sha256": "b3023451339424a74d3306ae1ee2dd957c6f1eaab13698e25652b89f551ca2dd",
+      "CRC": true
+    },
+    {
+      "path": "result.json",
+      "bytes": 1434,
+      "sha256": "7a56641a51b6132bab0a19d90146e8603a54e51dbf326516bde879dbcd72a378",
+      "CRC": true
+    },
+    {
+      "path": "target-properties.json",
+      "bytes": 280,
+      "sha256": "8a5c32b05c26a7ab680c95c0df134ec3542b29f1db4175913202bc7fe2130d43",
+      "CRC": true
+    },
+    {
+      "path": "target-properties.log",
+      "bytes": 310,
+      "sha256": "8ab7f749c3da4cb39173aca835c329185623ac4afc9931c4e4d7444106ad4f8d",
+      "CRC": true
+    },
+    {
+      "path": "tracked-source-tree.log",
+      "bytes": 1304560,
+      "sha256": "37a4ceddc7e12de1efbad84a3a52d9782ae57b4db622a65373ba750e3b49bd8e",
+      "CRC": true
+    }
+  ]
+}

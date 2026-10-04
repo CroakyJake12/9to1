@@ -1,0 +1,1320 @@
+{
+  "classification": "RECORDED_ORDINARY_CI_CANVAS8_MAPS6_SCOPED_NATIVE_PASS_PRIMARY_FULL_RAW_REVIEW",
+  "recordedUTC": "2026-10-04T15:18:03.291245+00:00",
+  "githubRunID": 37212128247,
+  "runURL": "https://github.com/CroakyJake12/9to1/actions/runs/37212128247",
+  "actualSourceCommit": "d81762b9864335b42f475e055160a7e3e84674b5",
+  "source02Freeze": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/canvas-maps-original-owner-ci-source02/SOURCE-FREEZE02.json",
+    "bytes": 2587,
+    "sha256": "0ec421e34067887e8bd3ea4cb239d8182c3c18258ff34b33561bb3ed1cf9f6b9"
+  },
+  "final03Freeze": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/canvas-maps-original-owner-ci-source02/SOURCE-FREEZE03.json",
+    "bytes": 2726,
+    "sha256": "f2647ba08174c2ff55c9219324d4aa2cdd33d943fa97a6a2a446a83bb4b565b2"
+  },
+  "rootAdoptionReceipt": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/coordinator/canvas8-maps6-original-root-adoption.json",
+    "bytes": 1593,
+    "sha256": "a9a5944339083d5bbadde9ba9911cbbdd03c425c0d47bd45277b3879b3998182"
+  },
+  "sourceLedger": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b4/canvas-maps-original-owner-ci-source02/original-canvas-maps-source-pins.json",
+    "bytes": 171885,
+    "sha256": "bb470fd56b17fd14f4079e674e352f2c7bc7998861af721bf220544b6424020a"
+  },
+  "beforeAfter889AndActualGitBlobFullBytesVerified": true,
+  "allSixAdoptionBodiesByteExactAtCommit": true,
+  "all46ZIPMembersFullCRCAndSHARead": true,
+  "scopedActualCounts": {
+    "Canvas": {
+      "executed": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "notRun": 0
+    },
+    "Maps": {
+      "executed": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "notRun": 0
+    }
+  },
+  "actualCommandFamilies": 26,
+  "all50RecordedBirthsGone": true,
+  "allNormalEOFExit0FinalECHILDNoSignals": true,
+  "allCasesOriginalBodyUnchanged": true,
+  "suites": [
+    {
+      "suite": "maps6",
+      "githubArtifactID": 11306807446,
+      "githubJobID": 111465273385,
+      "originalZIP": {
+        "path": "/workspace/attachments/7c00ce77-31d6-4934-b527-365ec922e0da/original-maps6-d81762b9.zip",
+        "bytes": 446511,
+        "sha256": "a86537ebba23ecd7c846fba61f8b40ca1271e986c62ac2129e20bad079192d34"
+      },
+      "allMembersCRCFullBodyShaRead": true,
+      "members": [
+        {
+          "member": "build.log",
+          "bytes": 591,
+          "crc32": "cbfba1d9",
+          "sha256": "f2720546e9451be7c87936bfae4fb6b2aebdb10573173408a4fb0e8c87623510"
+        },
+        {
+          "member": "discovery.json",
+          "bytes": 1889,
+          "crc32": "a0fa35a3",
+          "sha256": "a85c978ea228a3c0398ba608e593e96b38c9c18e777b7c3ace419a181eae25ce"
+        },
+        {
+          "member": "commands.json",
+          "bytes": 9570,
+          "crc32": "c19f09e9",
+          "sha256": "78cf674d017030ea59c20b2237b16b6fec4626ecd3a27b3ced5bfd857f81e5d9"
+        },
+        {
+          "member": "discovery.log",
+          "bytes": 1090,
+          "crc32": "3373f43d",
+          "sha256": "2126e3f3d05d6bea263659dbe23ec339ee6c7a5528cabf72f342be4328520bc1"
+        },
+        {
+          "member": "dotnet-info.log",
+          "bytes": 2966,
+          "crc32": "c4879cb9",
+          "sha256": "811f33ea8d4a95be842df1431e46b389d9dcc9ae44d60826a0b9b1c324800d71"
+        },
+        {
+          "member": "dotnet-version.log",
+          "bytes": 9,
+          "crc32": "c22d2381",
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+        },
+        {
+          "member": "git-clean-after.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "git-clean-before.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "git-head.log",
+          "bytes": 41,
+          "crc32": "337b7d65",
+          "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381"
+        },
+        {
+          "member": "git-status-after.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "git-status-before.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "native-test.log",
+          "bytes": 451,
+          "crc32": "5b078a42",
+          "sha256": "f1439900a0c1a692e240befcebe4470d9cee50a9f3f51223e4ac5c9c4f09465e"
+        },
+        {
+          "member": "restore.log",
+          "bytes": 487,
+          "crc32": "3b6b69ea",
+          "sha256": "78221db1ad5174c1181da0c5f6b5f5d78cecf1768596e35fbc5442a6cce4c115"
+        },
+        {
+          "member": "result.json",
+          "bytes": 8550,
+          "crc32": "4f5dc2ac",
+          "sha256": "76e7010cfa91eb0d82f9d555ede423475044011cb0e622bbced772e8ceafbbb7"
+        },
+        {
+          "member": "runtime-after.json",
+          "bytes": 16332,
+          "crc32": "fb65f0a9",
+          "sha256": "f8be59291fd07310fbc2bab9339eedbf670ebb8599cc4094119639c81a25fc03"
+        },
+        {
+          "member": "runtime-before.json",
+          "bytes": 16332,
+          "crc32": "fb65f0a9",
+          "sha256": "f8be59291fd07310fbc2bab9339eedbf670ebb8599cc4094119639c81a25fc03"
+        },
+        {
+          "member": "source-after.json",
+          "bytes": 159912,
+          "crc32": "7d78deff",
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "member": "source-before.json",
+          "bytes": 159912,
+          "crc32": "7d78deff",
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "member": "target-properties.json",
+          "bytes": 369,
+          "crc32": "c7a2f308",
+          "sha256": "fdeaa5e9df606293976b08025a254884367a1f27572b40130936adc751691874"
+        },
+        {
+          "member": "target-properties.log",
+          "bytes": 401,
+          "crc32": "860e70af",
+          "sha256": "588e539a6f52610a456c4539f805b3b6379cbe775f7d5f3a4995b886a44dcfb9"
+        },
+        {
+          "member": "test-results/maps6.trx",
+          "bytes": 11011,
+          "crc32": "3d211318",
+          "sha256": "c46512a4c80a22931c94f0212adea376121f90d88ef7dfa133d2a05a9f14deb3"
+        },
+        {
+          "member": "tracked-source-tree.log",
+          "bytes": 1304029,
+          "crc32": "73f5e835",
+          "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673"
+        },
+        {
+          "member": "trx-summary.json",
+          "bytes": 5973,
+          "crc32": "3154fe74",
+          "sha256": "b98581157184057fc8a32f3241d6a3bded1702b06155804eba8e01cc1a43218a"
+        }
+      ],
+      "actualCompilerWarnings": 0,
+      "actualCompilerErrors": 0,
+      "actualNativeExit": 0,
+      "actualTRX": {
+        "member": "test-results/maps6.trx",
+        "bytes": 11011,
+        "sha256": "c46512a4c80a22931c94f0212adea376121f90d88ef7dfa133d2a05a9f14deb3",
+        "times": {
+          "creation": "2026-10-04T15:12:51.8712606+00:00",
+          "queuing": "2026-10-04T15:12:51.8712607+00:00",
+          "start": "2026-10-04T15:12:51.2537587+00:00",
+          "finish": "2026-10-04T15:12:51.8746633+00:00"
+        },
+        "summaryOutcome": "Completed",
+        "counters": {
+          "total": 6,
+          "executed": 6,
+          "passed": 6,
+          "failed": 0,
+          "error": 0,
+          "timeout": 0,
+          "aborted": 0,
+          "inconclusive": 0,
+          "passedButRunAborted": 0,
+          "notRunnable": 0,
+          "notExecuted": 0,
+          "disconnected": 0,
+          "warning": 0,
+          "completed": 0,
+          "inProgress": 0,
+          "pending": 0
+        },
+        "identityLinks": [
+          {
+            "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route",
+            "testId": "d7c484d6-9290-f074-1dd7-94d054a1eda9",
+            "executionId": "d81d5b67-1936-487c-a281-43838d76d9f4",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests",
+              "name": "Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)",
+            "testId": "bf6f6642-5183-59b0-32d8-2350a6887837",
+            "executionId": "76679ec5-9ef5-4089-b703-8db8b0ff9cc9",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests",
+              "name": "Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await",
+            "testId": "5d9cc8a9-52cc-a8fa-0cd6-80f5efceffc8",
+            "executionId": "63fbb4da-c620-478e-b6d3-e7870cabac0c",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests",
+              "name": "Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)",
+            "testId": "e6aad019-cc7e-030a-e756-ce50f1d37ab5",
+            "executionId": "9e6c78d4-ae9f-423d-a302-d85b705980c2",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests",
+              "name": "Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route",
+            "testId": "5493babf-c5ea-5699-1a8e-66adad3c4f1c",
+            "executionId": "3ef3f0e4-ed74-4977-99ae-f8b0976e4311",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests",
+              "name": "Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision",
+            "testId": "4a6ac650-78fd-31f0-b28a-3609e80e37ca",
+            "executionId": "780d4a87-9d9b-4ef1-ae33-a4ae3fa2f4d5",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests",
+              "name": "Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision"
+            },
+            "outcome": "Passed"
+          }
+        ],
+        "reportedFreshMtimeQualified": {
+          "startedWallNs": 1791126770831976863,
+          "mtimeNs": 1791126771883639577,
+          "qualification": "Exact nanosecond mtime is runner report; raw TRX body execution timestamps/member custody independently inspected. No current runner filesystem re-stat claim."
+        }
+      },
+      "actualDiscoveryNames": [
+        "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)",
+        "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)",
+        "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await",
+        "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route",
+        "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision",
+        "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route"
+      ],
+      "sourceRowsBothExactCommitBodies": 889,
+      "wholeGitTreeExactCommit": true,
+      "sixAdoptedBodyPinsExactCommit": true,
+      "actualSDK": "10.0.401",
+      "actualTarget": {
+        "TargetPath": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/Maps.OriginalAuthoring.Tests.dll",
+        "TargetDir": "/home/runner/work/_temp/original-maps6/artifacts/bin/Maps.OriginalAuthoring.Tests/release_linux-x64/",
+        "TargetFramework": "net10.0",
+        "RuntimeIdentifier": "linux-x64",
+        "IsTestProject": "true"
+      },
+      "runtimeRowsBeforeAfterStable": 92,
+      "runtimeBodyCustody": "Reported hashes only, binary bodies are absent from public artifact; no fullbinary portability claim.",
+      "normalCommandFamilies": 13,
+      "recordedBirthsGone": 21,
+      "commands": [
+        {
+          "name": "git-head",
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 41,
+          "rawSha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381",
+          "seconds": 0.028,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-clean-before",
+          "argv": [
+            "git",
+            "diff",
+            "--exit-code",
+            "HEAD",
+            "--"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.248,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-status-before",
+          "argv": [
+            "git",
+            "status",
+            "--porcelain",
+            "--untracked-files=all"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.266,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "tracked-source-tree",
+          "argv": [
+            "git",
+            "ls-tree",
+            "-r",
+            "HEAD"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 1304029,
+          "rawSha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673",
+          "seconds": 0.08,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "dotnet-version",
+          "argv": [
+            "dotnet",
+            "--version"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 9,
+          "rawSha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "seconds": 1.576,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "dotnet-info",
+          "argv": [
+            "dotnet",
+            "--info"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 2966,
+          "rawSha256": "811f33ea8d4a95be842df1431e46b389d9dcc9ae44d60826a0b9b1c324800d71",
+          "seconds": 0.574,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "restore",
+          "argv": [
+            "dotnet",
+            "restore",
+            "apps/Web/Productivity/Maps/Tests/Maps.OriginalAuthoring.Tests.csproj",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-maps6/artifacts",
+            "-r",
+            "linux-x64",
+            "--configfile",
+            "/home/runner/work/9to1/9to1/NuGet.Config",
+            "--disable-build-servers",
+            "-p:Configuration=Release",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 487,
+          "rawSha256": "78221db1ad5174c1181da0c5f6b5f5d78cecf1768596e35fbc5442a6cce4c115",
+          "seconds": 4.011,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "build",
+          "argv": [
+            "dotnet",
+            "build",
+            "apps/Web/Productivity/Maps/Tests/Maps.OriginalAuthoring.Tests.csproj",
+            "--no-restore",
+            "-c",
+            "Release",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-maps6/artifacts",
+            "-r",
+            "linux-x64",
+            "--disable-build-servers",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 591,
+          "rawSha256": "f2720546e9451be7c87936bfae4fb6b2aebdb10573173408a4fb0e8c87623510",
+          "seconds": 13.021,
+          "births": 5,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "target-properties",
+          "argv": [
+            "dotnet",
+            "msbuild",
+            "apps/Web/Productivity/Maps/Tests/Maps.OriginalAuthoring.Tests.csproj",
+            "-p:Configuration=Release",
+            "-p:RuntimeIdentifier=linux-x64",
+            "-p:UseArtifactsOutput=true",
+            "-p:ArtifactsPath=/home/runner/work/_temp/original-maps6/artifacts",
+            "-nodeReuse:false",
+            "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 401,
+          "rawSha256": "588e539a6f52610a456c4539f805b3b6379cbe775f7d5f3a4995b886a44dcfb9",
+          "seconds": 0.384,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "discovery",
+          "argv": [
+            "dotnet",
+            "test",
+            "apps/Web/Productivity/Maps/Tests/Maps.OriginalAuthoring.Tests.csproj",
+            "--no-build",
+            "--no-restore",
+            "-c",
+            "Release",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-maps6/artifacts",
+            "-r",
+            "linux-x64",
+            "--disable-build-servers",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false",
+            "--list-tests"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 1090,
+          "rawSha256": "2126e3f3d05d6bea263659dbe23ec339ee6c7a5528cabf72f342be4328520bc1",
+          "seconds": 1.161,
+          "births": 3,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "native-test",
+          "argv": [
+            "dotnet",
+            "test",
+            "apps/Web/Productivity/Maps/Tests/Maps.OriginalAuthoring.Tests.csproj",
+            "--no-build",
+            "--no-restore",
+            "-c",
+            "Release",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-maps6/artifacts",
+            "-r",
+            "linux-x64",
+            "--disable-build-servers",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false",
+            "--logger",
+            "trx;LogFileName=maps6.trx",
+            "--results-directory",
+            "/home/runner/work/_temp/original-maps6/diagnostics/test-results"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 451,
+          "rawSha256": "f1439900a0c1a692e240befcebe4470d9cee50a9f3f51223e4ac5c9c4f09465e",
+          "seconds": 1.191,
+          "births": 3,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-clean-after",
+          "argv": [
+            "git",
+            "diff",
+            "--exit-code",
+            "HEAD",
+            "--"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.027,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-status-after",
+          "argv": [
+            "git",
+            "status",
+            "--porcelain",
+            "--untracked-files=all"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.042,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        }
+      ],
+      "scope": "Actual existing original local owner only, no browser/Rnote/CoMaps/liveprovider/productionACL/issuer authority/fresh OS process."
+    },
+    {
+      "suite": "canvas8",
+      "githubArtifactID": 11306807505,
+      "githubJobID": 111465273242,
+      "originalZIP": {
+        "path": "/workspace/attachments/daf395a8-a721-4bf9-a047-bc53be82a6a1/original-canvas8-d81762b9.zip",
+        "bytes": 449415,
+        "sha256": "d65b6e70f6d7f29605e1fe7c8df019352269305024e23fe4d5ce7f358a4421d7"
+      },
+      "allMembersCRCFullBodyShaRead": true,
+      "members": [
+        {
+          "member": "build.log",
+          "bytes": 1484,
+          "crc32": "9f95734c",
+          "sha256": "95dff2f2ac9465887737134eb1178b0d5c8050a6ed61521737b3fb3401a9cbf2"
+        },
+        {
+          "member": "commands.json",
+          "bytes": 10206,
+          "crc32": "a25b048b",
+          "sha256": "ac0757272e18c13d6395b8062423da69ab2a61ff5abcecaebc01710f7976dd2b"
+        },
+        {
+          "member": "discovery.json",
+          "bytes": 2215,
+          "crc32": "661d7078",
+          "sha256": "6964d2e516319014d41702c0af9777c5f757002f9454f6dd496b042605d73aa8"
+        },
+        {
+          "member": "discovery.log",
+          "bytes": 1235,
+          "crc32": "d350ae6b",
+          "sha256": "3e041bbeb9880a9e977b69363f45ae0b1cd163a6d04594843d799b2659811195"
+        },
+        {
+          "member": "dotnet-info.log",
+          "bytes": 2968,
+          "crc32": "4d7031af",
+          "sha256": "c82d7d69b3446ef8db8866a71f3143a2afd6b44ec973b41b5d2d1c2a71fd07f5"
+        },
+        {
+          "member": "dotnet-version.log",
+          "bytes": 9,
+          "crc32": "c22d2381",
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+        },
+        {
+          "member": "git-clean-after.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "git-clean-before.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "git-head.log",
+          "bytes": 41,
+          "crc32": "337b7d65",
+          "sha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381"
+        },
+        {
+          "member": "git-status-after.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "git-status-before.log",
+          "bytes": 0,
+          "crc32": "00000000",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "member": "native-test.log",
+          "bytes": 436,
+          "crc32": "18a147b1",
+          "sha256": "fdbc5b323631b5c5ab0fc571ec39c26440138466bb06d3852922645441af1038"
+        },
+        {
+          "member": "restore.log",
+          "bytes": 1242,
+          "crc32": "89ef4e3c",
+          "sha256": "f30316f98d6776543cb16a03c099e68b0349f8033525ca22ca0daf34219ad6eb"
+        },
+        {
+          "member": "result.json",
+          "bytes": 9872,
+          "crc32": "8d02068d",
+          "sha256": "8043ab36503be47783d96c58131734b28a8f6eb7e7f9bdb4cb15f286624b05e8"
+        },
+        {
+          "member": "runtime-after.json",
+          "bytes": 18864,
+          "crc32": "4f4d180a",
+          "sha256": "c5d21501cdd7ecc71e431d4e1a319107ca50b6b66c0533e615aab291b26c5b04"
+        },
+        {
+          "member": "runtime-before.json",
+          "bytes": 18864,
+          "crc32": "4f4d180a",
+          "sha256": "c5d21501cdd7ecc71e431d4e1a319107ca50b6b66c0533e615aab291b26c5b04"
+        },
+        {
+          "member": "source-after.json",
+          "bytes": 159912,
+          "crc32": "7d78deff",
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "member": "source-before.json",
+          "bytes": 159912,
+          "crc32": "7d78deff",
+          "sha256": "6b4a210562cd152061c2a0857403a156c5c167df1ec1bbad41e7ce1a34600e29"
+        },
+        {
+          "member": "target-properties.json",
+          "bytes": 352,
+          "crc32": "15d8f5bf",
+          "sha256": "c298217aeb86f56e17a7217ada2289f8a6f5c8d87990db125108389d92c83df4"
+        },
+        {
+          "member": "target-properties.log",
+          "bytes": 384,
+          "crc32": "627dcc5d",
+          "sha256": "d558432a607b7545330db9500f04a7947ca0cd2bc6627a6d12e56e44d648ac30"
+        },
+        {
+          "member": "test-results/canvas8.trx",
+          "bytes": 13532,
+          "crc32": "15c07959",
+          "sha256": "e2cb71734523ed5d1c7a17426a28d314416e7911e85a1d9399471984fe42886f"
+        },
+        {
+          "member": "tracked-source-tree.log",
+          "bytes": 1304029,
+          "crc32": "73f5e835",
+          "sha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673"
+        },
+        {
+          "member": "trx-summary.json",
+          "bytes": 7248,
+          "crc32": "996b74d2",
+          "sha256": "50d4516aa503a94c507af6fa77634495cbbec5779eee8a6aae7efcbee47052a3"
+        }
+      ],
+      "actualCompilerWarnings": 0,
+      "actualCompilerErrors": 0,
+      "actualNativeExit": 0,
+      "actualTRX": {
+        "member": "test-results/canvas8.trx",
+        "bytes": 13532,
+        "sha256": "e2cb71734523ed5d1c7a17426a28d314416e7911e85a1d9399471984fe42886f",
+        "times": {
+          "creation": "2026-10-04T15:13:33.8745280+00:00",
+          "queuing": "2026-10-04T15:13:33.8745281+00:00",
+          "start": "2026-10-04T15:13:32.2993941+00:00",
+          "finish": "2026-10-04T15:13:33.8799271+00:00"
+        },
+        "summaryOutcome": "Completed",
+        "counters": {
+          "total": 8,
+          "executed": 8,
+          "passed": 8,
+          "failed": 0,
+          "error": 0,
+          "timeout": 0,
+          "aborted": 0,
+          "inconclusive": 0,
+          "passedButRunAborted": 0,
+          "notRunnable": 0,
+          "notExecuted": 0,
+          "disconnected": 0,
+          "warning": 0,
+          "completed": 0,
+          "inProgress": 0,
+          "pending": 0
+        },
+        "identityLinks": [
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasFilesArtifactBridgeTests.Canonical_Files_create_edit_restart_reopen_preserves_identity_and_rejects_stale_readonly_and_tampered_content",
+            "testId": "2965677f-23da-c414-4c2d-926984a468bd",
+            "executionId": "2a238b8f-33ba-4264-98ac-acd667e851e2",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasFilesArtifactBridgeTests",
+              "name": "Canonical_Files_create_edit_restart_reopen_preserves_identity_and_rejects_stale_readonly_and_tampered_content"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unknown_optional_fields_survive_decode_and_reencode",
+            "testId": "8b3ec5ec-0109-0c3f-04b2-6910e49c0f48",
+            "executionId": "56631348-775b-4ee8-8e26-5d583d454f16",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+              "name": "Unknown_optional_fields_survive_decode_and_reencode"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unsupported_format_and_schema_versions_are_rejected_without_guessing",
+            "testId": "99d6d202-50d0-41f3-8313-06bad1569711",
+            "executionId": "204e4360-47fb-41c9-b0d7-35c7ae488bf5",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+              "name": "Unsupported_format_and_schema_versions_are_rejected_without_guessing"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Paged)",
+            "testId": "13b692ef-9f8a-cfd0-3570-a56a99b58edc",
+            "executionId": "b5a6602a-e2a1-4fd2-b8fd-17ebb76fde8d",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+              "name": "Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Infinite)",
+            "testId": "0b774997-5338-1e4b-b513-2577da1dbb2e",
+            "executionId": "d46594a1-4f13-4f31-80e7-ed429d16e3d0",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+              "name": "Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Invalid_page_object_and_layer_references_are_reported_as_typed_validation_issues",
+            "testId": "0f65f10f-46e8-6c0c-693b-1f3b7b4f3fc1",
+            "executionId": "851d40d6-4de5-4d3c-8e4e-e606d9a30035",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+              "name": "Invalid_page_object_and_layer_references_are_reported_as_typed_validation_issues"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Paged_mode_requires_explicit_positive_page_bounds",
+            "testId": "a3052592-db54-d9b0-79e9-9c60e40037f4",
+            "executionId": "f409849a-84ad-431e-82dd-baad611da37b",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+              "name": "Paged_mode_requires_explicit_positive_page_bounds"
+            },
+            "outcome": "Passed"
+          },
+          {
+            "name": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Malformed_json_has_a_stable_invalid_document_error",
+            "testId": "0826a45e-caa4-c7db-3f75-f44617fd72b5",
+            "executionId": "33305751-afed-4dcd-a7a6-f1d4d44a3e39",
+            "method": {
+              "codeBase": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+              "adapterTypeName": "executor://xunit/VsTestRunner3/netcore/",
+              "className": "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests",
+              "name": "Malformed_json_has_a_stable_invalid_document_error"
+            },
+            "outcome": "Passed"
+          }
+        ],
+        "reportedFreshMtimeQualified": {
+          "startedWallNs": 1791126811536764193,
+          "mtimeNs": 1791126813895068997,
+          "qualification": "Exact nanosecond mtime is runner report; raw TRX body execution timestamps/member custody independently inspected. No current runner filesystem re-stat claim."
+        }
+      },
+      "actualDiscoveryNames": [
+        "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Infinite)",
+        "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink(mode: Paged)",
+        "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unknown_optional_fields_survive_decode_and_reencode",
+        "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Unsupported_format_and_schema_versions_are_rejected_without_guessing",
+        "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Invalid_page_object_and_layer_references_are_reported_as_typed_validation_issues",
+        "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Paged_mode_requires_explicit_positive_page_bounds",
+        "HavenOS.Apps.Canvas.Tests.CanvasArtifactCodecTests.Malformed_json_has_a_stable_invalid_document_error",
+        "HavenOS.Apps.Canvas.Tests.CanvasFilesArtifactBridgeTests.Canonical_Files_create_edit_restart_reopen_preserves_identity_and_rejects_stale_readonly_and_tampered_content"
+      ],
+      "sourceRowsBothExactCommitBodies": 889,
+      "wholeGitTreeExactCommit": true,
+      "sixAdoptedBodyPinsExactCommit": true,
+      "actualSDK": "10.0.401",
+      "actualTarget": {
+        "TargetPath": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/Canvas.Original.Tests.dll",
+        "TargetDir": "/home/runner/work/_temp/original-canvas8/artifacts/bin/Canvas.Original.Tests/release_linux-x64/",
+        "TargetFramework": "net10.0",
+        "RuntimeIdentifier": "linux-x64",
+        "IsTestProject": "true"
+      },
+      "runtimeRowsBeforeAfterStable": 110,
+      "runtimeBodyCustody": "Reported hashes only, binary bodies are absent from public artifact; no fullbinary portability claim.",
+      "normalCommandFamilies": 13,
+      "recordedBirthsGone": 29,
+      "commands": [
+        {
+          "name": "git-head",
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 41,
+          "rawSha256": "ad1da0e2e73d5a56ac43c3f6d68abe97e46b0c045843acc52428592455f7a381",
+          "seconds": 0.051,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-clean-before",
+          "argv": [
+            "git",
+            "diff",
+            "--exit-code",
+            "HEAD",
+            "--"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.152,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-status-before",
+          "argv": [
+            "git",
+            "status",
+            "--porcelain",
+            "--untracked-files=all"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.187,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "tracked-source-tree",
+          "argv": [
+            "git",
+            "ls-tree",
+            "-r",
+            "HEAD"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 1304029,
+          "rawSha256": "661523fa56f00b7e91a7133d128f2d639f18d77fdfad388a1064c2c9bbece673",
+          "seconds": 0.16,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "dotnet-version",
+          "argv": [
+            "dotnet",
+            "--version"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 9,
+          "rawSha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+          "seconds": 1.823,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "dotnet-info",
+          "argv": [
+            "dotnet",
+            "--info"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 2968,
+          "rawSha256": "c82d7d69b3446ef8db8866a71f3143a2afd6b44ec973b41b5d2d1c2a71fd07f5",
+          "seconds": 0.912,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "restore",
+          "argv": [
+            "dotnet",
+            "restore",
+            "apps/Web/Productivity/Canvas/Tests/Canvas.Original.Tests.csproj",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-canvas8/artifacts",
+            "-r",
+            "linux-x64",
+            "--configfile",
+            "/home/runner/work/9to1/9to1/NuGet.Config",
+            "--disable-build-servers",
+            "-p:Configuration=Release",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 1242,
+          "rawSha256": "f30316f98d6776543cb16a03c099e68b0349f8033525ca22ca0daf34219ad6eb",
+          "seconds": 5.869,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "build",
+          "argv": [
+            "dotnet",
+            "build",
+            "apps/Web/Productivity/Canvas/Tests/Canvas.Original.Tests.csproj",
+            "--no-restore",
+            "-c",
+            "Release",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-canvas8/artifacts",
+            "-r",
+            "linux-x64",
+            "--disable-build-servers",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 1484,
+          "rawSha256": "95dff2f2ac9465887737134eb1178b0d5c8050a6ed61521737b3fb3401a9cbf2",
+          "seconds": 49.318,
+          "births": 13,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "target-properties",
+          "argv": [
+            "dotnet",
+            "msbuild",
+            "apps/Web/Productivity/Canvas/Tests/Canvas.Original.Tests.csproj",
+            "-p:Configuration=Release",
+            "-p:RuntimeIdentifier=linux-x64",
+            "-p:UseArtifactsOutput=true",
+            "-p:ArtifactsPath=/home/runner/work/_temp/original-canvas8/artifacts",
+            "-nodeReuse:false",
+            "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 384,
+          "rawSha256": "d558432a607b7545330db9500f04a7947ca0cd2bc6627a6d12e56e44d648ac30",
+          "seconds": 0.641,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "discovery",
+          "argv": [
+            "dotnet",
+            "test",
+            "apps/Web/Productivity/Canvas/Tests/Canvas.Original.Tests.csproj",
+            "--no-build",
+            "--no-restore",
+            "-c",
+            "Release",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-canvas8/artifacts",
+            "-r",
+            "linux-x64",
+            "--disable-build-servers",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false",
+            "--list-tests"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 1235,
+          "rawSha256": "3e041bbeb9880a9e977b69363f45ae0b1cd163a6d04594843d799b2659811195",
+          "seconds": 2.168,
+          "births": 3,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "native-test",
+          "argv": [
+            "dotnet",
+            "test",
+            "apps/Web/Productivity/Canvas/Tests/Canvas.Original.Tests.csproj",
+            "--no-build",
+            "--no-restore",
+            "-c",
+            "Release",
+            "--artifacts-path",
+            "/home/runner/work/_temp/original-canvas8/artifacts",
+            "-r",
+            "linux-x64",
+            "--disable-build-servers",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:SelfContained=false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseAppHost=true",
+            "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+            "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+            "-p:CreateHardLinksForCopyLocalIfPossible=false",
+            "-p:CreateHardLinksForPublishFilesIfPossible=false",
+            "--logger",
+            "trx;LogFileName=canvas8.trx",
+            "--results-directory",
+            "/home/runner/work/_temp/original-canvas8/diagnostics/test-results"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 436,
+          "rawSha256": "fdbc5b323631b5c5ab0fc571ec39c26440138466bb06d3852922645441af1038",
+          "seconds": 2.517,
+          "births": 3,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-clean-after",
+          "argv": [
+            "git",
+            "diff",
+            "--exit-code",
+            "HEAD",
+            "--"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.05,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        },
+        {
+          "name": "git-status-after",
+          "argv": [
+            "git",
+            "status",
+            "--porcelain",
+            "--untracked-files=all"
+          ],
+          "exit": 0,
+          "exitAfterDrain": 0,
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.074,
+          "births": 1,
+          "normalEOF": true,
+          "familyClosed": true,
+          "finalECHILD": true,
+          "signals": []
+        }
+      ],
+      "scope": "Actual existing original local owner only, no browser/Rnote/CoMaps/liveprovider/productionACL/issuer authority/fresh OS process."
+    }
+  ],
+  "ownerWorkflowImplications": {
+    "Canvas": "Original codec Infinite/Paged structured ink/IDs/extensions/unknownversion/reference/malformed controls; actual canonical DurableDriveProvider/Canvas session create/open/rename/save/reconstruct/reopen/structural Files rename+move/CAS/idempotency/read-only/foreign-actor/artifact/tamper original workflow passed. Test actor/access resolver controlled unchanged; Home actor/browser ACL/group issuer success not established.",
+    "Maps": "Original ordered-intent/path snapshot before held actual atomic store await, caller mutation containment, real independent writer CAS winner and invalid/lying input preserved actual persisted state/bytes; six cases passed. Original held wrapper forwards actual durable settings owner; no mocked new model/backend.",
+    "reopen": "Existing tests reconstruct actual service/provider over real disk in same test process. No cold OS process claim.",
+    "donors": "No native Rnote, stylus/display pixel, CoMaps network/offline route provider/navigation donor cases executed.",
+    "appCompletion": "Test-only unregistered proposals do not establish usable full app/browser route, hosted authority, full donor/platform parity or any31-app denominator."
+  },
+  "failures": "No actual compiler or owner assertion failure in this first ordinary8+6 run; historical01 authored Maps missing global using inspection remains source-only, no fabricated red. Other shared owner/caller/private-authority/Forms/Boards/Picture failures retained separate.",
+  "reviewerActions": "Downloaded two existing public GitHub artifacts via connected app/file tool; full CRC/bodySHA/JSON/XML/rawlog/gitblob source read only. No local SDK/native/GUI/helper imports/rerun/dispatched workflow/production change.",
+  "independentReplay": "Not performed; separate independent artifact peer may be requested by root; this is primary recorded-actual review."
+}

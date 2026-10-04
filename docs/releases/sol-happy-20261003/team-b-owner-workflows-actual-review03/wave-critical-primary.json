@@ -1,0 +1,906 @@
+{
+  "status": "PASS_RECORDED_ACTUAL_WAVE14_RAW_CRITERIA_AND_CUSTODY_REVIEW",
+  "reviewerExecution": "Read-only original recorded artifacts/source bytes only; no replay/SDK/GUI/operator imports or new acquisition",
+  "exportRun": 37213508315,
+  "exportCommit": "1a8cea03534e2b2767ec806f91dd2c454de94281",
+  "originalReplayRun": 37212388505,
+  "originalDiagnosticArtifact": 11306648191,
+  "runtimeCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "driverCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "causalArtifact": {
+    "path": "/workspace/attachments/51a78efa-0334-4c8b-afcb-7e74c82b0b7e/independent-wave-existing-causal-1a8cea.zip",
+    "bytes": 74869,
+    "sha256": "778da593d0dc0aec610cc4c024278319c975e47125fc4a229755063024c97897",
+    "members": [
+      {
+        "path": "actual-browser-oracles.log",
+        "bytes": 247,
+        "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193",
+        "crc32": 1203085086
+      },
+      {
+        "path": "browser/native-ax-tree.json",
+        "bytes": 156457,
+        "sha256": "e995f8830542b0c0f41a9d5fe5deacbf8a3c289fc1fbf37ff1be5849a020da92",
+        "crc32": 3261394079
+      },
+      {
+        "path": "browser/results.json",
+        "bytes": 119871,
+        "sha256": "959ff3a7c1bde19ab7eda619703de0ec814b2e9b20cac6c0449f51a0e6685d0d",
+        "crc32": 1187777727
+      },
+      {
+        "path": "browser-install.log",
+        "bytes": 18575,
+        "sha256": "d07bc6ac81e8ad57948516549b4dc0de35346955f7563ccf312c835e43cd2062",
+        "crc32": 1540693390
+      },
+      {
+        "path": "browser-path.log",
+        "bytes": 99,
+        "sha256": "60384b0ec8f7e1dea08aeb6274d17149bed379678f4440395b7e3ca0f2e6190c",
+        "crc32": 1434799701
+      },
+      {
+        "path": "browser-tool-identity.json",
+        "bytes": 362,
+        "sha256": "974864d4d1eb5211464db4a73df704efd21a7661c275fa36bb645bf0d2045744",
+        "crc32": 1345678026
+      },
+      {
+        "path": "commands.json",
+        "bytes": 13176,
+        "sha256": "084c8cc5e9ad90cfee90ff050944d59d8069a1efed427360af73058300b2777d",
+        "crc32": 3855425156
+      },
+      {
+        "path": "driver-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": 0
+      },
+      {
+        "path": "driver-clean-final.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "crc32": 0
+      },
+      {
+        "path": "driver-git-head.log",
+        "bytes": 41,
+        "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+        "crc32": 710506255
+      },
+      {
+        "path": "execution-plan.json",
+        "bytes": 3624,
+        "sha256": "6f5862f15e1e6fc76836b54cb3b2adbc102d87175bfcd861ecca8b7caecec873",
+        "crc32": 3153245526
+      },
+      {
+        "path": "export-receipt.json",
+        "bytes": 24541,
+        "sha256": "dcad79d5d2192622176cecdb48b283df28a5499a5297ef50fd2c0dd718a2f33d",
+        "crc32": 478800480
+      },
+      {
+        "path": "full-inventory-before.log",
+        "bytes": 708,
+        "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+        "crc32": 3383287523
+      },
+      {
+        "path": "full-inventory-final.log",
+        "bytes": 708,
+        "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+        "crc32": 3383287523
+      },
+      {
+        "path": "owned-family/owned-family-receipt.json",
+        "bytes": 15087,
+        "sha256": "61ee699466420e6a0fe7920c8a9b285430188f8916a41a9242d71ee97e640bb7",
+        "crc32": 2991388310
+      },
+      {
+        "path": "owned-family/runner-safe-stdout.log",
+        "bytes": 86,
+        "sha256": "f8ef2ddb0a2270ade0d383edf2dd2bb0a6c40cc0762175522430c9951e6311b6",
+        "crc32": 2532345902
+      },
+      {
+        "path": "playwright-install.log",
+        "bytes": 24,
+        "sha256": "65c731cd02e19c79f6f5a3e84a4dd64a49acd6c47d2ee551d7cc9da191e8c96c",
+        "crc32": 3031824751
+      },
+      {
+        "path": "public-tool-pins.json",
+        "bytes": 113917,
+        "sha256": "b5abdf4d043eed6824b428093f8a6a00de572413312ad8ed8ff586e8237e126e",
+        "crc32": 4031928732
+      },
+      {
+        "path": "receipt-map.json",
+        "bytes": 648,
+        "sha256": "a5c9a46cf81df71d3fff9a887d6c0613fcd454aca37acd45c0143c9c875f7fea",
+        "crc32": 418359529
+      },
+      {
+        "path": "result.json",
+        "bytes": 1646,
+        "sha256": "6a221147d8a004d6faf7c06e8bde3011f794b6a9e44392e7375633da0fb622ca",
+        "crc32": 455435721
+      },
+      {
+        "path": "source-pins.json",
+        "bytes": 1977,
+        "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4",
+        "crc32": 3257732636
+      }
+    ],
+    "memberCount": 21,
+    "fullCrcBodyShaRead": true
+  },
+  "originalExtractedMemberCount": 26,
+  "originalExtractedBeforeAfterEqual": true,
+  "originalCausalBodiesLocallyReadAndMatched": 20,
+  "selectedCausalCount": 20,
+  "counts": {
+    "discovered": 14,
+    "executed": 14,
+    "passed": 14,
+    "failed": 0,
+    "notRun": 0
+  },
+  "outcomes": {
+    "real-cui-route-and-inputs": {
+      "outcome": "PASS",
+      "observed": {
+        "route": "http://127.0.0.1:18761/#/app.wave",
+        "realNativeSemantics": true
+      }
+    },
+    "create-canonical-local-project": {
+      "outcome": "PASS",
+      "observed": {
+        "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+        "trackId": "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+        "revision": 0,
+        "rejectedDeepLinksBeforeMissingEntityLookup": [
+          "",
+          "unsupported-local-route"
+        ]
+      }
+    },
+    "real-filechooser-import": {
+      "outcome": "PASS",
+      "observed": {
+        "clipId": "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+        "sourceId": "a4750d71-ef78-469f-9d78-535e7ec2f3a8",
+        "timelineStart": 24000,
+        "frames": 48000
+      }
+    },
+    "nondestructive-trim": {
+      "outcome": "PASS",
+      "observed": {
+        "revision": 2,
+        "sourceStart": 6000,
+        "frames": 36000
+      }
+    },
+    "persistent-undo-redo": {
+      "outcome": "PASS",
+      "observed": {
+        "reopenedHistory": true,
+        "revision": 5,
+        "persistentIds": [
+          "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+          "52ae6d0d-a6fb-400f-a801-00f8a50da211",
+          "3420fa37-8b52-46ad-8a72-d25e54263fd1",
+          "a4750d71-ef78-469f-9d78-535e7ec2f3a8"
+        ]
+      }
+    },
+    "exact-pcm-download": {
+      "outcome": "PASS",
+      "observed": {
+        "actualDownloadBytes": 288044,
+        "exactPcm": true,
+        "projectUnchanged": true
+      }
+    },
+    "real-browser-audio-transport": {
+      "outcome": "PASS",
+      "observed": {
+        "decodedDuration": 1.5,
+        "actualAdvancingPosition": 0.483405,
+        "hardwareAudibilityVerified": false
+      }
+    },
+    "wrong-format-preserves-state": {
+      "outcome": "PASS",
+      "observed": {
+        "refusedActual44100Source": true,
+        "durableBytesUnchanged": true
+      }
+    },
+    "browser-process-restart": {
+      "outcome": "PASS",
+      "observed": {
+        "actualBrowserProcessRestart": true,
+        "sameProfileSameOrigin": true,
+        "revision": 5
+      }
+    },
+    "actual-two-tab-revision-conflict": {
+      "outcome": "PASS",
+      "observed": {
+        "winnerRevision": 6,
+        "winnerTimeline": 12000,
+        "rejectedTabPreservedUnsavedTimeline": 36000
+      }
+    },
+    "failed-save-cannot-close-dirty-project": {
+      "outcome": "PASS",
+      "observed": {
+        "dirtyConflictCannotClose": true,
+        "durableWinnerUnchanged": true
+      }
+    },
+    "stored-source-integrity-negative-control": {
+      "outcome": "PASS",
+      "observed": {
+        "isolatedDurableSourceCorruptionDetected": true,
+        "originalPackageRestored": true
+      }
+    },
+    "actual-browser-quota-two-store-atomicity": {
+      "outcome": "PASS",
+      "observed": {
+        "genuineChromiumQuotaRefusal": true,
+        "bothDurableStoresUnchangedOnAbort": true,
+        "samePendingEditCommittedOnceAfterRecovery": true
+      }
+    },
+    "runtime-and-candidate-integrity": {
+      "outcome": "PASS",
+      "observed": {
+        "exactManifestSha256": "473023ba1a69881375c49eccb12688fb6dddd339ff3b3d64bcade1844aa83994",
+        "candidateCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+        "assetFiles": 285,
+        "unexpectedErrors": {
+          "consoleError": 0,
+          "managedRuntimeError": 0,
+          "pageError": 0,
+          "requestFailed": 0
+        }
+      }
+    }
+  },
+  "browserVersion": "151.0.7922.34",
+  "playwrightToolIdentity": {
+    "playwrightVersion": "1.62.0",
+    "packageJsonSha256": "638ab746b40d3986e16e13b08418beaa2262c47e8bc843b745589af15dead35b",
+    "browserPath": "/home/runner/work/_temp/team-b-sealed-22d/wave14/browser-tools/chromium-1234/chrome-linux64/chrome",
+    "browserBytes": 290614600,
+    "browserSha256": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71"
+  },
+  "runtimeDiagnostics": {
+    "counts": {
+      "consoleError": 0,
+      "managedRuntimeError": 0,
+      "pageError": 0,
+      "requestFailed": 0
+    },
+    "boundedSamples": [],
+    "sampleLimit": 80
+  },
+  "preservedConsoleWarnings": [
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x159c00130a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x159c00130a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x159c00130a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x159c00130a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3c240014fa00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3c240014fa00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3c240014fa00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3c240014fa00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x8fc00c57c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x8fc00c57c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x8fc00c57c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x8fc00c57c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ],
+  "readiness": [
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 0,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 0",
+      "status": "Opened local project \u00b7 revision 0",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 1,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 1",
+      "status": "Saved in this browser \u00b7 revision 1",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 2,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 2",
+      "status": "Saved in this browser \u00b7 revision 2",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 3,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 3",
+      "status": "Saved in this browser \u00b7 revision 3",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 4,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 4",
+      "status": "Saved in this browser \u00b7 revision 4",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 5,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 5",
+      "status": "Saved in this browser \u00b7 revision 5",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 5,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 5",
+      "status": "CodecUnsupported: CodecUnsupported: source is 44100 Hz/2 channel(s); this project requires 48000 Hz/2 channel(s).",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 5,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 5",
+      "status": "Opened local project \u00b7 revision 5",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 6,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 6",
+      "status": "Saved in this browser \u00b7 revision 6",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 6,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 6",
+      "status": "Opened local project \u00b7 revision 6",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 6,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 6",
+      "status": "Opened local project \u00b7 revision 6",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 6,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 6",
+      "status": "Opened local project \u00b7 revision 6",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 7,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 7",
+      "status": "StorageFull: Local browser storage is full. Your unsaved work has been preserved.",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    },
+    {
+      "projectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 7,
+      "ownerNotBusy": true,
+      "identity": "Project 63990a0d-314e-43a1-b95f-1e2d216f1ecf \u00b7 48000 Hz \u00b7 2 channels \u00b7 revision 7",
+      "status": "Saved in this browser \u00b7 revision 7",
+      "page": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf"
+    }
+  ],
+  "quota": {
+    "usage": 0,
+    "quota": 1,
+    "overrideActive": true,
+    "usageBreakdown": [
+      {
+        "storageType": "file_systems",
+        "usage": 0
+      },
+      {
+        "storageType": "indexeddb",
+        "usage": 0
+      },
+      {
+        "storageType": "cache_storage",
+        "usage": 0
+      },
+      {
+        "storageType": "service_workers",
+        "usage": 0
+      }
+    ]
+  },
+  "quotaRestart": {
+    "previousIdentity": {
+      "browserPid": 3378,
+      "version": {
+        "protocolVersion": "1.3",
+        "product": "Chrome/151.0.7922.34",
+        "revision": "@782af9cb30a53f54487e5d2e44738645a8ec457c",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+        "jsVersion": "15.1.206.8"
+      }
+    },
+    "restartedIdentity": {
+      "browserPid": 3496,
+      "version": {
+        "protocolVersion": "1.3",
+        "product": "Chrome/151.0.7922.34",
+        "revision": "@782af9cb30a53f54487e5d2e44738645a8ec457c",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+        "jsVersion": "15.1.206.8"
+      }
+    },
+    "previousBrowserDisconnected": true,
+    "order": "Original baseline in prior process; close/disconnect; new same-profile process; quota override BEFORE page navigation/production storage access; original owner project open; first owner mutation is Move.",
+    "beforeOverridePageUrls": [
+      "about:blank",
+      "about:blank"
+    ]
+  },
+  "deliberateBlankRestarts": [
+    {
+      "phase": "durable-project-restart",
+      "canonicalProjectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 5,
+      "pages": [
+        {
+          "beforeUrl": "about:blank",
+          "afterUrl": "about:blank",
+          "actualOwnerUnsaved": null
+        },
+        {
+          "beforeUrl": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+          "afterUrl": "about:blank",
+          "actualOwnerUnsaved": false
+        }
+      ],
+      "scope": "Actual blank navigation before process close prevents app URL restoration; no automatic tab/URL restoration acceptance."
+    },
+    {
+      "phase": "cold-quota-restart",
+      "canonicalProjectId": "63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+      "revision": 6,
+      "pages": [
+        {
+          "beforeUrl": "about:blank",
+          "afterUrl": "about:blank",
+          "actualOwnerUnsaved": null
+        },
+        {
+          "beforeUrl": "http://127.0.0.1:18761/#/app.wave?entityType=WaveProject&entityId=63990a0d-314e-43a1-b95f-1e2d216f1ecf",
+          "afterUrl": "about:blank",
+          "actualOwnerUnsaved": false
+        }
+      ],
+      "scope": "Actual blank navigation before process close prevents app URL restoration; no automatic tab/URL restoration acceptance."
+    }
+  ],
+  "downloadReceipt": [
+    {
+      "file": "/home/runner/work/_temp/team-b-sealed-22d/wave14/runtime-output/browser-export.wav",
+      "sha256": "71a6402a78f20031a04fd757749cc440f22db5c3ab8efad307b5426407b72882"
+    }
+  ],
+  "fixtureReceipt": {
+    "path": "/home/runner/work/_temp/team-b-sealed-22d/wave14/runtime-output/stereo-pcm16.wav",
+    "sha256": "077da5220c69b28c134f578508372681ad3c8b2c3a466edc9512eb67fda76b86",
+    "frames": 48000,
+    "channels": 2,
+    "sampleRate": 48000
+  },
+  "fullPublicInventoryBeforeAfterEqual": true,
+  "publicFiles": 285,
+  "publicBytes": 58424254,
+  "receiptMapping": {
+    "sourceCommit": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+    "originalReceiptSha256": "330d6031e32e9e60fa76afb81478d33d5bc540713fdff07ae6fe3ac61aee9343",
+    "originalSealSha256": "1b1b92c927ab4949cc9f42805db2a243f494af0248f9a0daae42da9f9f6b6f5a",
+    "originalInnerZipSha256": "b3257dfb72a1d69a933037fc10c4a4fe0a020a0f41ebe332ab55fc1aa3d3d65e",
+    "localReceiptSha256": "473023ba1a69881375c49eccb12688fb6dddd339ff3b3d64bcade1844aa83994",
+    "onlySemanticChangedField": "publishRoot",
+    "originalRoot": "/home/runner/work/_temp/team-b-web-publication/sdk-publish/wwwroot",
+    "localRoot": "/home/runner/work/_temp/team-b-sealed-22d/wave14/wwwroot"
+  },
+  "sourcePinsReviewedFromHistoricalDriverCommit": [
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "bytes": 19584,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/verify-publish-receipt.cjs",
+      "sha256": "e5481670b9647ccb7f8cfb6b1106d6a3ee1973b0e507e0ef77ec70e53bb31f8a",
+      "bytes": 4958,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/sealed-https-host-explicit-binding.cjs",
+      "sha256": "3b9c4e4adb44b18629619800335cc4041327588c05748d015b6c97281bc40b0c",
+      "bytes": 4164,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-account-replay01.py",
+      "sha256": "0dde0b377f5de784ff3e93a8d3edec40bd21a8dd12d7aa154be65910ba1cbf95",
+      "bytes": 14198,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-wave-browser-cold-quota.cjs",
+      "sha256": "8c8a133e2d1aea0e81152e70c4cd88e92fa926e14b7ade59c5a57749cce3955f",
+      "bytes": 35538,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-owned-wave-replay01.py",
+      "sha256": "95f3a1519f761c2cc014dd8c027897b9c76565e622b88182249f943fedc01ba7",
+      "bytes": 15709,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-sealed-browser-replay.py",
+      "sha256": "9d1a08b247770646c93e2f12dcf0e70e190389e68b208e53cb129f4918956ed6",
+      "bytes": 19753,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/run-unconfigured-interop7-portable-ci02.cjs",
+      "sha256": "02b7f2ac22f383b8bd67e496ace3208e27d5d1a7340f380f2c6ba9a4a471027c",
+      "bytes": 17712,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/owned-kernel-child-proof01.py",
+      "sha256": "f0f89ea9b0354b80dc21956d37a2e9e89a6f5aeb26d673f12466f448ad3a4fc2",
+      "bytes": 1370,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    },
+    {
+      "path": "apps/Web/Tests/ci/sealed-browser-replay/README.md",
+      "sha256": "94e7e94175825dce11df61a0704af4c9251f405a852b9b6e62caa66a73f96870",
+      "bytes": 5057,
+      "gitCommit": "7f69563623c7a9c9f55de2c50a418c38ab0e889b"
+    }
+  ],
+  "recordedPublicToolPinRows": 478,
+  "family": {
+    "scope": "Fresh owned explicitly pinned public Wave sequential browser family only; no account/legacy fixture custody",
+    "state": "CLOSED",
+    "deadlineFailure": false,
+    "budgetFailure": false,
+    "identityFailures": [],
+    "forcedCleanup": false,
+    "procNamespaceAgreement": true,
+    "prelaunchKernelOwnChildReceipt": {
+      "empty": true,
+      "flags": [
+        "WEXITED",
+        "WNOHANG",
+        "WNOWAIT",
+        "LINUX___WALL"
+      ],
+      "flagsValue": 1090519045,
+      "flagsAccepted": true,
+      "sigchldDisposition": "DEFAULT",
+      "nonreaping": true,
+      "status": "ECHILD"
+    },
+    "owner": {
+      "pid": 3244,
+      "ppid": 2521,
+      "pgrp": 3244,
+      "session": 3244,
+      "birth": 6506,
+      "state": "R"
+    },
+    "planSha256": "6f5862f15e1e6fc76836b54cb3b2adbc102d87175bfcd861ecca8b7caecec873",
+    "runnerExitCode": 0,
+    "allOwnedKernelIdentitiesExited": true,
+    "allOwnedBirthsDisappeared": true,
+    "finalPinsUnchanged": true,
+    "boundTopBrowserLauncherCount": 3,
+    "sequentialBoundTopBrowserLaunchers": true,
+    "temporaryAndOutputBytes": 60257339,
+    "recordedUTC": "2026-10-04T15:18:54.093979+00:00",
+    "originalChildStillLive": false,
+    "kernelOwnChildReceiptAfterWaitAndReap": {
+      "empty": true,
+      "flags": [
+        "WEXITED",
+        "WNOHANG",
+        "WNOWAIT",
+        "LINUX___WALL"
+      ],
+      "flagsValue": 1090519045,
+      "flagsAccepted": true,
+      "sigchldDisposition": "DEFAULT",
+      "nonreaping": true,
+      "status": "ECHILD"
+    },
+    "kernelOwnChildrenEmpty": true,
+    "custodyClean": true
+  },
+  "heldFamilyIdentities": 36,
+  "allSignalsZero": true,
+  "commands": [
+    {
+      "name": "driver-git-head",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 1,
+      "allBirthsGone": true,
+      "seconds": 0.072
+    },
+    {
+      "name": "driver-clean-before",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 1,
+      "allBirthsGone": true,
+      "seconds": 0.31
+    },
+    {
+      "name": "full-inventory-before",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 1,
+      "allBirthsGone": true,
+      "seconds": 0.149
+    },
+    {
+      "name": "playwright-install",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 1,
+      "allBirthsGone": true,
+      "seconds": 2.25
+    },
+    {
+      "name": "browser-install",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 65,
+      "allBirthsGone": true,
+      "seconds": 22.714
+    },
+    {
+      "name": "browser-path",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 1,
+      "allBirthsGone": true,
+      "seconds": 0.38
+    },
+    {
+      "name": "actual-browser-oracles",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 37,
+      "allBirthsGone": true,
+      "seconds": 38.69
+    },
+    {
+      "name": "full-inventory-final",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 1,
+      "allBirthsGone": true,
+      "seconds": 0.145
+    },
+    {
+      "name": "driver-clean-final",
+      "exit": 0,
+      "normalEOF": true,
+      "finalECHILD": true,
+      "signals": [],
+      "birthCount": 1,
+      "allBirthsGone": true,
+      "seconds": 0.301
+    }
+  ],
+  "commandBirthRows": 109,
+  "originalDiagnosticOuterFullBodyRead": false,
+  "newMemberContainer": {
+    "scope": "New container of exact official-extracted diagnostic member bodies, NOT byte identity of original GitHub outerZIP",
+    "sourceRun": 37212388505,
+    "sourceArtifact": 11306648191,
+    "originalOuterMetadataSha256": "1ef9cb1906e7521cb40cf46182430aba2fedf115e1cdea622ae0ec07026566b5",
+    "originalOuterWholeBodyIndependentlyReadHere": false,
+    "containerBytes": 45290761,
+    "containerSha256": "252fa5c350f631178bba5ada9110b6816314860b2d3d6d39e4fd06e47c2674f2",
+    "parts": [
+      {
+        "part": 1,
+        "bytes": 19922944,
+        "sha256": "5cf30223c4cdeb0d7ff8d66951663aedaacdbb82b000e5e6626a766c91528c1c",
+        "path": "part01/extracted-members.zip.part"
+      },
+      {
+        "part": 2,
+        "bytes": 19922944,
+        "sha256": "4dc73ed75c558ce71480d27b195f7196b48c38f7d410965d0fd08b2074048b4b",
+        "path": "part02/extracted-members.zip.part"
+      },
+      {
+        "part": 3,
+        "bytes": 5444873,
+        "sha256": "24053273d568e3f7fea236f71e3f0738eb9a5da355da43e9b6eb6b01992ab89b",
+        "path": "part03/extracted-members.zip.part"
+      }
+    ]
+  },
+  "traceAndScreenshotBodiesLocallyRead": false,
+  "traceMissingLocalBodies": [
+    {
+      "path": "browser/browser-before-quota-restart.zip",
+      "bytes": 14260480,
+      "sha256": "83508a01919ef705a1e3f01b1b8e1d4608b78b3132c8169d1f701cedbbeeec04",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/browser-final.zip",
+      "bytes": 13270304,
+      "sha256": "7492cd6b78991887019218297ce5fac2f909185c93044685a92ab9ace9dd682c",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/browser-phase1.zip",
+      "bytes": 17010581,
+      "sha256": "e7eb4c028d98228c0a74c279e7590f50049b78b5198ed9513a238d7ce7e0b928",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/wave-empty.png",
+      "bytes": 86362,
+      "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/wave-narrow.png",
+      "bytes": 91059,
+      "sha256": "191ba777d0ca1e11e65ede9be73b1db197bcae56a7f3bd60c789a531d5751d94",
+      "extractedMode": 420
+    },
+    {
+      "path": "browser/wave-populated.png",
+      "bytes": 121524,
+      "sha256": "b46623e6be2f9e76fbd2d0149ae509757047555c5dafaf655002f8ccb76c83e3",
+      "extractedMode": 420
+    }
+  ],
+  "scopeLimits": [
+    "Exact PCM download byte comparison was exercised and passed by unchanged strict runner; raw .wav download/fixture bodies were not uploaded in original diagnostic and were not independently re-read here.",
+    "Actual HTMLAudioElement decode/advancing position/Pause/Seek/Stop passed; hardware audibility is explicitly unverified.",
+    "Actual IDB project/history/source assertions, two-tab conflict and cold real CDP quota abort/recovery passed; no arbitrary-storage or cross-device/provider guarantee.",
+    "Controlled source corruption directly changed isolated test fixture state and restored original package; this is a negative control, not a normal app mutation or auth acceptance.",
+    "Restart deliberately blanks owned pages before normal process close; automatic restoration/real BFCache acceptance is not established.",
+    "Native semantic focus+Enter and fill/filechooser behavior passed; native pointer/touch/Tab ordering/narrow responsive geometry are not certified by this runner.",
+    "Original GitHub diagnostic outer ZIP 1ef9 fullbyte identity unverified. New container 252f denotes exact extracted members only and complete local trace/screens body reads remain pending root transport review.",
+    "No deployed/full31parity/issuer/provider/entitlement/cross-device acceptance."
+  ],
+  "allSourceCausalMembersUnchangedAfterReview": true
+}

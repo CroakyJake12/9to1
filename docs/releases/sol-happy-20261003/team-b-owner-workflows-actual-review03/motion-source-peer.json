@@ -1,0 +1,287 @@
+{
+  "status": "CLEAR_SOURCE_ONLY_FOR_ROOT_EXACT_ADOPTION_AND_FIRST_ORDINARY_CI_NARROW_ORIGINAL_WORKFLOW",
+  "manifest": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/manifest.json",
+    "bytes": 4417,
+    "sha256": "fef8c78f9dc8988675debae911e749f26e9e9dd779c945a72e7d612d88559682"
+  },
+  "plan": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/plan.json",
+    "bytes": 10496,
+    "sha256": "2d9a7083ee8204c91ae21be23821b62813906ce79e932818cf150ce31f4e2326"
+  },
+  "adoptionBodies": [
+    {
+      "destination": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/MotionProjectWorkflow.Tests.csproj",
+      "bytes": 935,
+      "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21"
+    },
+    {
+      "destination": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/OriginalWorkflowEntry.cs",
+      "bytes": 1635,
+      "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38"
+    },
+    {
+      "destination": "apps/Web/Tests/ci/run-motion-original-project.py",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/run-motion-original-project.py",
+      "bytes": 9130,
+      "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857"
+    },
+    {
+      "destination": ".github/workflows/team-b-motion-original-project.yml",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/team-b-motion-original-project.yml",
+      "bytes": 1147,
+      "sha256": "55273d26bdd31d9edcb055a8d8d922ffbb711a39d6aafa9c6f18a021d5e41524"
+    },
+    {
+      "destination": "apps/Web/Tests/MotionProject/source-pins.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/source-pins.json",
+      "bytes": 1463,
+      "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659"
+    }
+  ],
+  "ownerPins": [
+    {
+      "path": "9to1 Workspace/Motion/MotionProject.cs",
+      "bytes": 14526,
+      "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "bytes": 5674,
+      "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+    }
+  ],
+  "contextPins": [
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Program.cs",
+      "bytes": 7900,
+      "sha256": "08d54f7c6b764eb6a6159472ba48c931911e1d41f10d2f7cf6058bd4bf6db4ca"
+    },
+    {
+      "path": "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+      "bytes": 720,
+      "sha256": "f96c1e19cedaeee54fafb15ee4b9ebf55b6c781ea4e3c0cce312e4f0088eca2e"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionMediaAssetReferences.cs",
+      "bytes": 655,
+      "sha256": "0e0b301b419074c8331aab44f37a7d230dace76cad2fc8df247973b9a8bc5404"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionRenderService.cs",
+      "bytes": 4241,
+      "sha256": "8978f16c4078a1d8472a9d37120cbc37b7790a554e35a825063c7b0d87a8e698"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionNativeRenderWorkflowTest.cs",
+      "bytes": 5751,
+      "sha256": "3143ba5167b1b609b10c215b10f25859b638a2ecbc984fbb73470b4283d05913"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/GStreamer/source.binding.json",
+      "bytes": 237,
+      "sha256": "ec96c00cba2db0548e6ec0b3458f78a8bc01aab4816bfdc8434609809e6b4024"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/GES/source.binding.json",
+      "bytes": 236,
+      "sha256": "8c50830d0e5509a4435bb8828caff7833d9e2a3f6a6b58d368019db7a44ffae1"
+    },
+    {
+      "path": "9to1 Workspace/Motion/PROVENANCE.md",
+      "bytes": 1648,
+      "sha256": "031be41092341e854cdae116d5df89d0305682b07a5287d63a62d1edd9935427"
+    }
+  ],
+  "sourceLedger": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-workflow-ci-source01/source-pins.json",
+    "bytes": 1463,
+    "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659"
+  },
+  "sourceRowsVerified": 8,
+  "currentHeadWitness": "d81762b9864335b42f475e055160a7e3e84674b5",
+  "fullTextRead": [
+    "All5adoption bodies and fullplan/literal20canonicalquotes",
+    "All3originalsource bodies: MotionProject.cs/MotionProjectCommands.cs/MotionProjectWorkflowTest.cs",
+    "Context Program.cs/HavenOS.Motion.csproj/MotionMediaAssetReferences.cs/MotionRenderService.cs/MotionNativeRenderWorkflowTest.cs/donor source.binding metadata/PROVENANCE.md",
+    "Exact maintaineda57 Commands class/process custody and parse_sdk"
+  ],
+  "compileClosure": {
+    "literalCompileBodies": [
+      "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+      "9to1 Workspace/Motion/MotionProject.cs",
+      "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs"
+    ],
+    "projectReferences": 0,
+    "packageReferences": 0,
+    "onlyBCLTypesInSelectedOwnerSources": true,
+    "repositoryRootDefault": "Four parent directories from actual proposed apps/Web/Tests/MotionProject equals actual checkout root",
+    "ownerSourcesUnchanged": true,
+    "originalTestEntry": "MotionProjectWorkflowTest.Run() whole unchanged method, once",
+    "discovered": 1,
+    "assertionCount": null,
+    "originalReturnCodeCheckpoints": [
+      0,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53
+    ],
+    "checkpointsNotDistinctTests": true
+  },
+  "review": {
+    "model": "Original schema1 Project/Sequence/Track/Element/Asset record subset; typed stable GUIDs, integral timebase/ranges and revision metadata. No alternate model introduced. Array copy edits Insert/Split/Move/Slip/nonrippleTrim preserve tested sourceAsset/Track/selected/sibling identities.",
+    "storage": "Original actual JSON System.IO FileStream lock FileShare.None, storedexpectedrevision/identity/schema/nextrevision checks, same-directory temporary WriteThrough+Flush(true), actual File.Move overwrite and temporary cleanup. Original tests read exact bytes after specified rejected saves/commands. No injected crash, parallel writer stress or directory-sync acceptance inferred.",
+    "CLI": "Original create/open/insert/split/move/slip/trim/save; injected original TextReader/TextWriter solely preserves actualowner command contract/error JSON, not replacement backend. Errorcatch actual InvalidProject/RevisionConflict/etc; no swallowed successfulfailure. OriginalRun emits only wrapperSTART/PASS externally.",
+    "originalOracle": "Full originalRun directly creates real ownedtemp directory/file, invokes CLI create/insert/split/reopen/save, checks stable IDs/content/revision3, no-op/skipped/identity/shape/overflow refusal plus savedbytes, real Move/Slip/Trim CAS chain to revision6 with unchanged sibling and source reference, fractional30000/1001/near-longMax arithmetic and actual0->1->2save/reopen. Same-process reload, not independent processrestart.",
+    "entry": "START label before actualunchangedRun; originalnonzero or exception becomes failed1 with rawreturn/error, outerexit1. Actualreturn0 required for pass1. assertionsnull explicit, no numbered checkpoint inflation. Source-native compiler/execution stillNOTRUN.",
+    "driver": "Truehashchecked a57 Commands import, no copiedclass. independentgithub.sha exact40hex/actualHEAD and tracked gitdiff/tree; officialSDK10.0.401 ordinary source-onlyBCL restore/build, evaluated net10/linux-x64/UseAppHost plus containedactualentry/apphost/header, actualnative with120s bound. Preserve actual native-results before deferredcommandfailure; exact originalcode0/name/failure-null/1/1/1/0/0 and strict START/PASS stdout required. Before/finallyafter selected8body ledger andledgerrawhash/trackeddiff. Each successful Commands.run alreadyrequires no errors/signals, held-birth closure, EOF/ECHILD and exit0; forcedcleanup cannot pass.",
+    "workflow": "ActualUbuntu24.04 branchteam-b/** push or manualdispatch, contentsread, exactgithub.sha checkout no credentialpersistence, officialSDK setup/normal thin command/freshRUNNER_TEMP diagnostics, alwaysupload. No fixture/project/binary/privatebody upload specified. Missing diagnostics onlywarn atworkflowartifactstep; priorfailedcommand still leavesjobfailure, never evidencepass."
+  },
+  "canonicalQuotesVerified": [
+    {
+      "line": 6827,
+      "quote": "The canonical result of work in Motion is a structured MotionProject, not a rendered video. Normal edits such as trimming, crop, speed changes, transforms, masks, effects, colour changes, captions, keyframes, procedural animation and AI-assisted mutations MUST remain inspectable editable project state. Rendering, proxies, previews, caches and exports are derived outputs and MUST NOT silently replace canonical project state."
+    },
+    {
+      "line": 6833,
+      "quote": "MotionProject has stable ProjectID, Sequences[], AssetReferences[], GeneratedComponents[], GlobalSettings, ColourSettings, ProxyCacheSettings, CreatedAt, ModifiedAt and Revision."
+    },
+    {
+      "line": 6834,
+      "quote": "Sequence has stable SequenceID, Width, Height, PixelAspectRatio, FrameRate/timebase, Duration, VideoTracks[], compatible AudioTracks[], Markers[], Guides/safe-area state where used, colour/HDR state and Revision."
+    },
+    {
+      "line": 6835,
+      "quote": "VisualTrack has stable TrackID, name, ordered Elements[], visibility, lock state, compositing state where applicable and Revision. Audio tracks use compatible Wave/shared-media track primitives rather than a second incompatible audio model."
+    },
+    {
+      "line": 6836,
+      "quote": "MotionElement has stable ElementID, ElementType, SourceAssetID or GeneratedComponentID where applicable, TrackID, TimelineStart, Duration, SourceRange, Transform, Crop, Opacity, BlendMode, Masks[], Effects[], ParameterAnimation[], graph references where applicable and Revision."
+    },
+    {
+      "line": 6844,
+      "quote": "Minimum typed editing operations include insert, overwrite, append, blade/split, trim, ripple trim, roll, slip, slide, ripple delete, lift, extract, move, duplicate, group/ungroup, link/unlink audio and video, track lock, video visibility, audio mute/solo where applicable, range selection and nested-sequence creation/use."
+    },
+    {
+      "line": 6845,
+      "quote": "Transport MUST support ordinary play/pause, frame stepping and efficient shuttle/scrub control, including keyboard-first operation such as J/K/L-style transport where appropriate. Editing operations MUST be deterministic at the sequence timebase and MUST NOT depend on pixel coordinates in the timeline UI."
+    },
+    {
+      "line": 6955,
+      "quote": "Project/sequence/track/element/mask/effect/keyframe/graph/caption mutations are revision-aware. Independent object edits MAY merge when safe; incompatible concurrent edits to the same canonical object or property MUST surface conflict rather than blind last-write-wins."
+    },
+    {
+      "line": 6966,
+      "quote": "Project saves/autosaves MUST be crash-safe and preserve canonical project integrity. A crash or termination during proxy generation, analysis, tracking, generation, render or export MUST leave the project valid and the derived job recoverable/retryable where feasible."
+    },
+    {
+      "line": 6967,
+      "quote": "Partial derived output MUST NOT be reported as complete. Failures expose typed state such as ProjectNotFound, SequenceNotFound, ElementNotFound, AssetOffline, CodecUnsupported, ProxyFailed, AnalysisFailed, TrackingFailed, GraphInvalid, NodeUnavailable, GenerationFailed, RenderFailed, ExportFailed, RevisionConflict, PermissionDenied and CapabilityUnavailable plus shared backend/model errors."
+    },
+    {
+      "line": 6968,
+      "quote": "Undo/redo and revision history MUST restore structured project changes without requiring source media to be rewritten."
+    },
+    {
+      "line": 6970,
+      "quote": "Windows, 9to1-OS and web preserve the same canonical Motion project/graph/generated-component model while capability-negotiating codecs, GPU/hardware acceleration, camera/device access, model availability and performance differences."
+    },
+    {
+      "line": 6975,
+      "quote": "* A multi-track project containing video, image, title and audio elements can be edited, closed/reopened and exported while preserving stable project/sequence/track/element identity."
+    },
+    {
+      "line": 6976,
+      "quote": "* Insert/overwrite, split, trim, ripple trim, roll, slip, slide, ripple delete, lift/extract, linking and nested-sequence operations produce deterministic structured timeline state and remain undoable."
+    },
+    {
+      "line": 6907,
+      "quote": "Files remains authoritative for source/export asset storage identity, move/rename/delete/recover/share and cloud/provider hydration. Motion projects reference stable FileID/AssetID identities rather than absolute paths."
+    },
+    {
+      "line": 6829,
+      "quote": "Motion MUST reuse shared 9to1 engines aggressively wherever the underlying capability belongs to more than one product. Shared capability MUST live in the appropriate shared engine/library rather than requiring another app UI process or duplicating private implementations."
+    },
+    {
+      "line": 6927,
+      "quote": "9to1.Motion.Split(sequenceID, elementID, time);"
+    },
+    {
+      "line": 6928,
+      "quote": "9to1.Motion.Trim(sequenceID, elementID, sourceRange);"
+    },
+    {
+      "line": 6931,
+      "quote": "9to1.Motion.Slip(sequenceID, elementID, sourceRange);"
+    },
+    {
+      "line": 6933,
+      "quote": "9to1.Motion.Move(sequenceID, elementID, placement);"
+    }
+  ],
+  "causalRemainingScope": [
+    {
+      "source": "MotionProject.cs record declarations",
+      "gap": "Missing GeneratedComponents/GlobalSettings/ColourSettings/ProxyCacheSettings; sequenceDuration/audio/markers/PAR/colour/perobjectrevisions; elementtypes/transform/crop/masks/effects/animation/graphs. Originalsubsetpassing is not completecanonicalMotionmodel."
+    },
+    {
+      "source": "MotionMediaAssetReferences.RetainedSource / MotionRenderService.RenderAsync",
+      "gap": "Original fixture FileId labels file:source-video-42/file:fractional-source are opaque/unresolved, no retained GUID+SourceRevision. ActualrenderrequirescanonicalFiles GUID+readleases and cannotrenderthese fixturelabels. No actualFilespermission/providerauthority."
+    },
+    {
+      "source": "MotionNativeRenderWorkflowTest.RunAsync and full HavenOS.Motion.csproj",
+      "gap": "ActualnativeGES workflow requires explicit ASTRA_MOTION_FIXTURE and ASTRA_GES_EXECUTABLE plus real sharedMedia/Infrastructure graph. Not linked by narrow4compileproject; donors bindingmetadata is not nativeinstallation/renderproof."
+    },
+    {
+      "source": "Plan literalrequirements 6827/6844/6845/6955/6966/6968/6975/6976",
+      "gap": "Full editcatalogue/mixedmedia/undo/keyboardtransport/browser/derivedjobrender/export/crash-safe failure recovery/concurrency not demonstrated. Typedlocal testedoperations onlypartialparagraphcoverage."
+    }
+  ],
+  "nonblockingCustodyQualifications": [
+    "Driver has trackeddiff/tree checks but no untracked-file gitstatus guard. Explicit four Compile paths and separatelychecked8ledger bodies limit selectedsource; firstordinaryCI is freshcheckout. Do not describe it as an all-untracked/adversarialsource admission gate.",
+    "binary-pins.json hashes emittedDLL/PDBmetadata before native; apphost/hash inresult. No fullruntime-before/afterinventory orbinarybody custody. Nativebodymutation resistance/portableexecutablerestoration is not accepted by this proposal.",
+    "Wrapper preserves assertionsnull; driver does not separately assert thatfield but exactsource entry is pinned. Runtime assertioncountmustremainnull inreporting.",
+    "Original Run deletes its task-owned temporary project directory in finally asauthored; no fixturestore/persistedbody archive oractualcross-processreopen receipt.",
+    "Any compile/load/actualnativefailure mustretain firstlogs/normalexit/errorfacts and stayFAIL; no inferred run fromsource receipt."
+  ],
+  "findingsRequiringSourceChange": [],
+  "actualCompiler": "NOT_RUN",
+  "actualNative": "NOT_RUN",
+  "actualDiscoveredExecutedPassFail": "NOT_RUN: expected1only",
+  "reviewerActions": "No helperimports,SDK/native/GUI/providerexecution,sharededits,archive/delete or delegation. Source-only text/AST/XML/fullbody hashes and publicmetadata checks."
+}

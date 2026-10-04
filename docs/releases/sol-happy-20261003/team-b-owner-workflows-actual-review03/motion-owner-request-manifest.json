@@ -1,0 +1,181 @@
+{
+  "state": "SOURCE_ONLY_READY_FOR_OWNER_REVIEW_NOT_SENT_NOT_IMPLEMENTED",
+  "destinationMap": [
+    {
+      "destination": "apps/Web/Motion/OWNER-CONTRACT-REQUEST.json",
+      "source": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-owner-contract-request-source01/OWNER-CONTRACT-REQUEST.json",
+      "bytes": 48471,
+      "sha256": "e1604c758ddcc3c3cf2e3e4b552a4a7122043008604b21fb8ff9e9a301d60991"
+    }
+  ],
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Motion/MotionProject.cs",
+      "bytes": 14526,
+      "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d",
+      "gitBlobSHA1": "95c9144e5956503250a74ae3c683471a942cb6aa"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "bytes": 5674,
+      "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6",
+      "gitBlobSHA1": "e5bda9e1f849206d3f9e70d6f2c854d696d9ae59"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143",
+      "gitBlobSHA1": "08ced0ab07a187b241463ac43cf6c640b15410ee"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionMediaAssetReferences.cs",
+      "bytes": 655,
+      "sha256": "0e0b301b419074c8331aab44f37a7d230dace76cad2fc8df247973b9a8bc5404",
+      "gitBlobSHA1": "6f3feb2f06bd3781257322210444d8774b48496f"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionRenderService.cs",
+      "bytes": 4241,
+      "sha256": "8978f16c4078a1d8472a9d37120cbc37b7790a554e35a825063c7b0d87a8e698",
+      "gitBlobSHA1": "f419e3ba1a408890e0682cd5071eb6dae89c8696"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionNativeRenderWorkflowTest.cs",
+      "bytes": 5751,
+      "sha256": "3143ba5167b1b609b10c215b10f25859b638a2ecbc984fbb73470b4283d05913",
+      "gitBlobSHA1": "8715a8374292ce56b8b7839bf58c99d4e57d085a"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Program.cs",
+      "bytes": 7900,
+      "sha256": "08d54f7c6b764eb6a6159472ba48c931911e1d41f10d2f7cf6058bd4bf6db4ca",
+      "gitBlobSHA1": "ba8b5eb046c3375e8230c235b150462c69b596f4"
+    },
+    {
+      "path": "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+      "bytes": 720,
+      "sha256": "f96c1e19cedaeee54fafb15ee4b9ebf55b6c781ea4e3c0cce312e4f0088eca2e",
+      "gitBlobSHA1": "9d4b1db37df315288c2e6a1649f8f27e515d04f5"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/GStreamer/source.binding.json",
+      "bytes": 237,
+      "sha256": "ec96c00cba2db0548e6ec0b3458f78a8bc01aab4816bfdc8434609809e6b4024",
+      "gitBlobSHA1": "cf81b07618dba13641a0ae15b3a776d4b9308e34"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/GES/source.binding.json",
+      "bytes": 236,
+      "sha256": "8c50830d0e5509a4435bb8828caff7833d9e2a3f6a6b58d368019db7a44ffae1",
+      "gitBlobSHA1": "1179c0a67bc22f58360f9eec6762e967495f00c7"
+    },
+    {
+      "path": "9to1 Workspace/Motion/Source/DONOR-PROVENANCE.md",
+      "bytes": 1141,
+      "sha256": "581ae72aa54cbf58480932fb8488778a1a1cd54ef24e9b8ba4c831eb4cab2f31",
+      "gitBlobSHA1": "3be68558484655495caf5b1dfb78d7690440e689"
+    },
+    {
+      "path": "9to1 Workspace/Motion/PROVENANCE.md",
+      "bytes": 1648,
+      "sha256": "031be41092341e854cdae116d5df89d0305682b07a5287d63a62d1edd9935427",
+      "gitBlobSHA1": "383e77fbaa209be706787fdc8e3fa03cfd61eef3"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAssetReference.cs",
+      "bytes": 2295,
+      "sha256": "ac8a9619528774fda0d5f511a3468c21ac338248b7a1a19b9227ff65576fa645",
+      "gitBlobSHA1": "22299dbd0ae4f2f34df4e5767b0e83fc0a6c4e8f"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaContracts.cs",
+      "bytes": 13255,
+      "sha256": "1cac8a4e5cdbfc016b1a7872a3dbd0a7a50efc8e8cc4e006abccf86ade0865f0",
+      "gitBlobSHA1": "a78c1796eb5a4954005572f77ff12eb535964401"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaRenderContracts.cs",
+      "bytes": 2238,
+      "sha256": "b505821851bcb499ea30aea18c77e1583f9dc8c4a5579a235b52572e4488f9bf",
+      "gitBlobSHA1": "378e598bb7605408952edda51ad10d07f330d362"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaAudioDecodeContracts.cs",
+      "bytes": 1687,
+      "sha256": "566d8a777df25ec5d63d0e411f7c6a5db5242361c05316090141a21ef44a71fa",
+      "gitBlobSHA1": "1c86501c792b50207264b60e53f06abb34dbbcd4"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/PreparedMediaAssetLease.cs",
+      "bytes": 2500,
+      "sha256": "ec732b19ec3a7d3e304a2f30e941bc2bd1ceb9a69ee3607f7c122ae2f02d2327",
+      "gitBlobSHA1": "e9aad3300b8bd486b8368f011a571376d9a1d6f1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaRenderLimits.cs",
+      "bytes": 808,
+      "sha256": "d791d2e2cd2a0abfa54646b7b35bab17b89d175eb227bf0ced8aded5e2c2175d",
+      "gitBlobSHA1": "90ade0ae65b8ffed61a474cadd562a0735478a34"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/GesTimelineRenderer.cs",
+      "bytes": 12660,
+      "sha256": "8b87abdf78d9aa25fa4ff2ce87a5433ae69fd1b9aa258f33bd7deb36dff02f76",
+      "gitBlobSHA1": "5296d794d6d1cdbe42d72a2b09c87c871d375b7d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/GStreamerMediaEngine.cs",
+      "bytes": 13529,
+      "sha256": "23221d5b5412f5753796143aec0ad4b34a4bcd0a726a5622e62f3ca1a41925a0",
+      "gitBlobSHA1": "8ced0a2c97a15ee7bf95692808e19ca272760d63"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/MediaAssetPreparationService.cs",
+      "bytes": 5674,
+      "sha256": "b64e3ceaf4bd94eb4e29c1e787c07515abe95df6af3450958afb91c7bb6034b8",
+      "gitBlobSHA1": "2291052f3d7afa5c6d55ebbbffb08bd34ee5137e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Media/GStreamerAudioDecoder.cs",
+      "bytes": 12837,
+      "sha256": "9de281aefa7843b09c68c010233834f3501c40cf1f412ac8aa2fe3c9af6b0927",
+      "gitBlobSHA1": "c30565c31221f4913c586f25f1c294874559c96a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "bytes": 375,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121",
+      "gitBlobSHA1": "a6996aa2c75031e77bf1c4d60861ff365ed1e386"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+      "bytes": 3619,
+      "sha256": "d36cc80e5f6319f8505867d271f77ccfc371fb5b0ee23e0b6cc606d3bdd462fe",
+      "gitBlobSHA1": "68197752ba4a9e05584ee9518bcdf278423dd5da"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "gitBlobSHA1": "76a5b6e697b64fec33efc1a7319d2d723163de83"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374",
+      "gitBlobSHA1": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc"
+    }
+  ],
+  "canonical": {
+    "path": "/workspace/attachments/518b5c81-69d8-458b-ad4a-3e2a80e09bca/9to1 Development Specification.txt",
+    "bytes": 1402519,
+    "sha256": "b24161f4387fd91724b8f38c6d96742837c47bc0a085e43503785d46d9e5ad08"
+  },
+  "literalAPIEntries": 31,
+  "apiCountIsNotCompletion": true,
+  "actualOriginalWorkflowReview": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b3/motion-original-project-896-recorded-review01/review.json",
+    "bytes": 19254,
+    "sha256": "3b9824b502b93b117c5ab1dea2fad4d5bbf95d6d7f99b6b7bd7b401327348732"
+  }
+}
