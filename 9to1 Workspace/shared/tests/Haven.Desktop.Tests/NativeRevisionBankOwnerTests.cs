@@ -178,7 +178,11 @@ public sealed class NativeRevisionBankOwnerTests
                 Assert.Equal(1, calls);
                 Assert.True(Assert.IsAssignableFrom<Task>(actualOwner).IsCompletedSuccessfully);
                 Assert.False(original.IsCompleted);
-                Assert.Null(await profile.Reopen().ReadExistingAsync(profile.Space.Id, TestContext.Current.CancellationToken));
+                var archived = Assert.IsType<SpaceDefinition>(await profile.Reopen().ReadExistingAsync(
+                    profile.Space.Id, TestContext.Current.CancellationToken));
+                Assert.Equal(profile.Space.Id, archived.Id);
+                Assert.True(archived.IsArchived);
+                Assert.Equal(profile.Space.Revision + 1, archived.Revision);
                 var close = native.CloseOriginalBankAndDeleteActionsAsync();
                 Assert.Same(close, native.CloseOriginalBankAndDeleteActionsAsync());
                 Assert.False(close.IsCompleted);

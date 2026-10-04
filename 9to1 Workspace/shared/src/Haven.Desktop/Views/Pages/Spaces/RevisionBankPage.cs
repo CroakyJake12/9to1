@@ -22,6 +22,7 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
     private readonly Guid _spaceId;
     private volatile bool _retiring;
     private volatile bool _active = true;
+    private long _activationGeneration;
     private Task? _close;
     private RevisionBankSnapshot? _snapshot;
 
@@ -66,26 +67,40 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
     internal RevisionBankSnapshot? OriginalSnapshot => _snapshot;
     internal IReadOnlyList<Task> OriginalTasks { get { lock (_taskGate) return _originalTasks.ToArray(); } }
 
-    public Task ActivateAsync(CancellationToken cancellationToken) => RunOriginal(async () =>
+    public Task ActivateAsync(CancellationToken cancellationToken)
     {
-        _active = true;
-        await RefreshCoreAsync(cancellationToken).ConfigureAwait(true);
-    });
+        long generation;
+        lock (_taskGate)
+        {
+            if (_retiring) throw new ObjectDisposedException(nameof(RevisionBankPage));
+            generation = ++_activationGeneration;
+            _active = true; // Admission owns this state; a deferred body never reactivates it.
+        }
+        return RunOriginal(() => RefreshCoreAsync(cancellationToken, generation), generation);
+    }
 
     public void Deactivate()
     {
-        _active = false;
+        lock (_taskGate)
+        {
+            _active = false;
+            ++_activationGeneration;
+        }
         _scene.WithdrawFrame();
     }
 
-    public Task RefreshOriginalAsync(CancellationToken token = default) =>
-        RunOriginal(() => RefreshCoreAsync(token));
+    public Task RefreshOriginalAsync(CancellationToken token = default)
+    {
+        var generation = Interlocked.Read(ref _activationGeneration);
+        return RunOriginal(() => RefreshCoreAsync(token, generation), generation);
+    }
 
     public Task MutateOriginalAsync(RevisionBankMutation request, CancellationToken token = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         // Capture mutable caller arrays before admission or the first asynchronous boundary.
         var captured = request with { CategoryIds = request.CategoryIds?.ToArray() };
+        var generation = Interlocked.Read(ref _activationGeneration);
         return RunOriginal(async () =>
         {
             if (captured.SpaceId != _spaceId)
@@ -98,13 +113,14 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
             LastAcknowledgedOriginalMutation = acknowledged;
             if (_retiring) return;
             RequireOriginalOwner();
-            await RefreshCoreAsync(token).ConfigureAwait(false);
-            await PublishOriginalAsync(() => _scene.SetStatus("Revision Bank saved.")).ConfigureAwait(false);
-        });
+            await RefreshCoreAsync(token, generation).ConfigureAwait(false);
+            await PublishOriginalAsync(() => _scene.SetStatus("Revision Bank saved."), generation).ConfigureAwait(false);
+        }, generation);
     }
 
-    private async Task RefreshCoreAsync(CancellationToken token)
+    private async Task RefreshCoreAsync(CancellationToken token, long generation)
     {
+        if (!IsOriginalPublicationCurrent(generation)) return;
         RequireOriginalOwner();
         var space = await _originalOwner.Registry.ReadExistingAsync(_spaceId, token).ConfigureAwait(false)
             ?? throw new KeyNotFoundException("The acquired Space is unavailable.");
@@ -112,13 +128,13 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
             ?? throw new KeyNotFoundException("The acquired Revision Bank is unavailable.");
         if (space.Revision != bank.SpaceRevision)
             throw new SpaceRevisionConflictException(_spaceId, space.Revision, bank.SpaceRevision);
-        if (_retiring) return;
+        if (!IsOriginalPublicationCurrent(generation)) return;
         RequireOriginalOwner();
         _snapshot = bank;
-        await PublishOriginalAsync(() => _scene.Render(space, bank)).ConfigureAwait(false);
+        await PublishOriginalAsync(() => _scene.Render(space, bank), generation).ConfigureAwait(false);
     }
 
-    private Task RunOriginal(Func<Task> body)
+    private Task RunOriginal(Func<Task> body, long generation)
     {
         ArgumentNullException.ThrowIfNull(body);
         Task original;
@@ -129,7 +145,7 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
             _originalTasks.RemoveAll(task => task.IsCompletedSuccessfully);
             if (_originalTasks.Count >= _maximumOriginalTasks)
                 throw new InvalidOperationException("Revision Bank original task capacity is full; pending or failed originals were retained.");
-            original = RunCoreAsync(start.Task, body);
+            original = RunCoreAsync(start.Task, body, generation);
             _originalTasks.Add(original);
             LastOriginalTask = original;
         }
@@ -137,7 +153,7 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
         return original;
     }
 
-    private async Task RunCoreAsync(Task start, Func<Task> body)
+    private async Task RunCoreAsync(Task start, Func<Task> body, long generation)
     {
         await start.ConfigureAwait(true);
         try
@@ -152,24 +168,28 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
             var failures = new List<Exception> { primary };
             try
             {
-                await PublishOriginalAsync(() => _scene.SetStatus(primary.Message)).ConfigureAwait(false);
+                await PublishOriginalAsync(() => _scene.SetStatus(primary.Message), generation).ConfigureAwait(false);
             }
             catch (Exception diagnostic) { Add(failures, diagnostic); }
             Settle(failures);
         }
     }
 
-    private async Task PublishOriginalAsync(Action publication)
+    private async Task PublishOriginalAsync(Action publication, long generation)
     {
         void Publish()
         {
-            if (!IsOriginalPublicationCurrent()) return;
+            if (!IsOriginalPublicationCurrent(generation)) return;
             publication();
-            _ = IsOriginalPublicationCurrent();
+            _ = IsOriginalPublicationCurrent(generation);
         }
         if (Dispatcher.UIThread.CheckAccess()) Publish();
         else await Dispatcher.UIThread.InvokeAsync(Publish);
     }
+
+    private bool IsOriginalPublicationCurrent(long generation) =>
+        generation == Interlocked.Read(ref _activationGeneration) && IsOriginalPublicationCurrent() &&
+        generation == Interlocked.Read(ref _activationGeneration);
 
     private bool IsOriginalPublicationCurrent()
     {
@@ -192,8 +212,12 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
 
     public void RequestRetirement()
     {
-        _retiring = true;
-        _active = false;
+        lock (_taskGate)
+        {
+            _retiring = true;
+            _active = false;
+            ++_activationGeneration;
+        }
     }
 
     public Task CloseAndDrainAsync()
