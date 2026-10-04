@@ -1,0 +1,206 @@
+{
+  "branch": "artifact/team-b-wave22d-independent-member-transport-20261004",
+  "base": "f404351e6895854905d6dd3f3c096b42cfc3ca1f",
+  "parts": [
+    {
+      "part": 1,
+      "artifact": 11307263077,
+      "path": "docs/releases/sol-happy-20261003/team-b-wave22d-independent-member-transport/part01.zip",
+      "bytes": 19929162,
+      "sha256": "29cfe453de312b39fd7ccc416b07bf4f3912ea2e599169c10fc5b3c3c97490ff",
+      "gitBlob": "b7b0c27ab7133bdcc9171fe7722f8160f133f4af",
+      "fullRemoteBodyReadback": true,
+      "temporarySourcePath": "/workspace/attachments/85fe63a0-385e-412e-8835-2e6fc2fae386/wave-independent-member-transport-part01.zip",
+      "temporaryRetired": false
+    }
+  ],
+  "originalExtractedMemberTransportManifest": {
+    "scope": "New container of exact official-extracted diagnostic member bodies, NOT byte identity of original GitHub outerZIP",
+    "sourceRun": 37212388505,
+    "sourceArtifact": 11306648191,
+    "originalOuterMetadataSha256": "1ef9cb1906e7521cb40cf46182430aba2fedf115e1cdea622ae0ec07026566b5",
+    "originalOuterWholeBodyIndependentlyReadHere": false,
+    "containerBytes": 45290761,
+    "containerSha256": "252fa5c350f631178bba5ada9110b6816314860b2d3d6d39e4fd06e47c2674f2",
+    "members": [
+      {
+        "path": "actual-browser-oracles.log",
+        "bytes": 247,
+        "sha256": "97cc0a3887eeaf9e467959e27533af14170552225de09e47c43d50985c168193",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/browser-before-quota-restart.zip",
+        "bytes": 14260480,
+        "sha256": "83508a01919ef705a1e3f01b1b8e1d4608b78b3132c8169d1f701cedbbeeec04",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/browser-final.zip",
+        "bytes": 13270304,
+        "sha256": "7492cd6b78991887019218297ce5fac2f909185c93044685a92ab9ace9dd682c",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/browser-phase1.zip",
+        "bytes": 17010581,
+        "sha256": "e7eb4c028d98228c0a74c279e7590f50049b78b5198ed9513a238d7ce7e0b928",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/native-ax-tree.json",
+        "bytes": 156457,
+        "sha256": "e995f8830542b0c0f41a9d5fe5deacbf8a3c289fc1fbf37ff1be5849a020da92",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/results.json",
+        "bytes": 119871,
+        "sha256": "959ff3a7c1bde19ab7eda619703de0ec814b2e9b20cac6c0449f51a0e6685d0d",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/wave-empty.png",
+        "bytes": 86362,
+        "sha256": "5949dada521a7db864c83688f53ed6b5ecc074cb5baa47ac06026e0b4cb905f4",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/wave-narrow.png",
+        "bytes": 91059,
+        "sha256": "191ba777d0ca1e11e65ede9be73b1db197bcae56a7f3bd60c789a531d5751d94",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser/wave-populated.png",
+        "bytes": 121524,
+        "sha256": "b46623e6be2f9e76fbd2d0149ae509757047555c5dafaf655002f8ccb76c83e3",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser-install.log",
+        "bytes": 18575,
+        "sha256": "d07bc6ac81e8ad57948516549b4dc0de35346955f7563ccf312c835e43cd2062",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser-path.log",
+        "bytes": 99,
+        "sha256": "60384b0ec8f7e1dea08aeb6274d17149bed379678f4440395b7e3ca0f2e6190c",
+        "extractedMode": 420
+      },
+      {
+        "path": "browser-tool-identity.json",
+        "bytes": 362,
+        "sha256": "974864d4d1eb5211464db4a73df704efd21a7661c275fa36bb645bf0d2045744",
+        "extractedMode": 420
+      },
+      {
+        "path": "commands.json",
+        "bytes": 13176,
+        "sha256": "084c8cc5e9ad90cfee90ff050944d59d8069a1efed427360af73058300b2777d",
+        "extractedMode": 420
+      },
+      {
+        "path": "driver-clean-before.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "extractedMode": 420
+      },
+      {
+        "path": "driver-clean-final.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "extractedMode": 420
+      },
+      {
+        "path": "driver-git-head.log",
+        "bytes": 41,
+        "sha256": "ff4c7e1076ba05c5f84da9d17a3df96a6a5a95ee916f1b649009f8b301e14352",
+        "extractedMode": 420
+      },
+      {
+        "path": "execution-plan.json",
+        "bytes": 3624,
+        "sha256": "6f5862f15e1e6fc76836b54cb3b2adbc102d87175bfcd861ecca8b7caecec873",
+        "extractedMode": 420
+      },
+      {
+        "path": "full-inventory-before.log",
+        "bytes": 708,
+        "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+        "extractedMode": 420
+      },
+      {
+        "path": "full-inventory-final.log",
+        "bytes": 708,
+        "sha256": "e8ee6bb36e46ecd5e5ad4bea484c156f53ed02fe291a3a14a2d0844ae8d64283",
+        "extractedMode": 420
+      },
+      {
+        "path": "owned-family/owned-family-receipt.json",
+        "bytes": 15087,
+        "sha256": "61ee699466420e6a0fe7920c8a9b285430188f8916a41a9242d71ee97e640bb7",
+        "extractedMode": 420
+      },
+      {
+        "path": "owned-family/runner-safe-stdout.log",
+        "bytes": 86,
+        "sha256": "f8ef2ddb0a2270ade0d383edf2dd2bb0a6c40cc0762175522430c9951e6311b6",
+        "extractedMode": 420
+      },
+      {
+        "path": "playwright-install.log",
+        "bytes": 24,
+        "sha256": "65c731cd02e19c79f6f5a3e84a4dd64a49acd6c47d2ee551d7cc9da191e8c96c",
+        "extractedMode": 420
+      },
+      {
+        "path": "public-tool-pins.json",
+        "bytes": 113917,
+        "sha256": "b5abdf4d043eed6824b428093f8a6a00de572413312ad8ed8ff586e8237e126e",
+        "extractedMode": 420
+      },
+      {
+        "path": "receipt-map.json",
+        "bytes": 648,
+        "sha256": "a5c9a46cf81df71d3fff9a887d6c0613fcd454aca37acd45c0143c9c875f7fea",
+        "extractedMode": 420
+      },
+      {
+        "path": "result.json",
+        "bytes": 1646,
+        "sha256": "6a221147d8a004d6faf7c06e8bde3011f794b6a9e44392e7375633da0fb622ca",
+        "extractedMode": 420
+      },
+      {
+        "path": "source-pins.json",
+        "bytes": 1977,
+        "sha256": "8eaa9aef5d111a6529749ae4a525a53ccae8987a5ad0c000f4e24474a89093f4",
+        "extractedMode": 420
+      }
+    ],
+    "parts": [
+      {
+        "part": 1,
+        "bytes": 19922944,
+        "sha256": "5cf30223c4cdeb0d7ff8d66951663aedaacdbb82b000e5e6626a766c91528c1c",
+        "path": "part01/extracted-members.zip.part"
+      },
+      {
+        "part": 2,
+        "bytes": 19922944,
+        "sha256": "4dc73ed75c558ce71480d27b195f7196b48c38f7d410965d0fd08b2074048b4b",
+        "path": "part02/extracted-members.zip.part"
+      },
+      {
+        "part": 3,
+        "bytes": 5444873,
+        "sha256": "24053273d568e3f7fea236f71e3f0738eb9a5da355da43e9b6eb6b01992ab89b",
+        "path": "part03/extracted-members.zip.part"
+      }
+    ]
+  },
+  "scope": "Exact official-extracted independent Wave26 diagnostic members. New transport container; original Actions outer ZIP identity unverified. No runtime rerun or provider acceptance.",
+  "state": "PARTIAL_1_OF_THREE_PRESERVED"
+}
