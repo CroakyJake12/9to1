@@ -1,0 +1,171 @@
+{
+  "status": "SOURCE_ONLY_DEPENDENCY_REQUEST_NOT_RUN",
+  "owner": "Team A shared mathematical domain and original Forms authoring/response contracts; B4 browser Forms consumer boundary respected",
+  "baseline": "Current maintained checked-out sources; ask newer maintained delivery first",
+  "source_pins": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormProject.cs",
+      "sha256": "8fc5a2d3ceb5c36e948ce6daae7fb19e583364267509e884220848ed4973ad6e"
+    },
+    {
+      "path": "9to1 Workspace/Forms/CUI/FormNativePreview.cs",
+      "sha256": "1ebe93993396a46c32516bd4ee88bad7d86e6a5243e22849748d17c6661eaf2f"
+    },
+    {
+      "path": "9to1 Workspace/Forms/CUI/FormNativeResponseSurface.cs",
+      "sha256": "d5cdbc0700854b094b7012dcf5df945f34c4cdb24d7243be7a21a50aba8dd195"
+    },
+    {
+      "path": "9to1 Workspace/Forms/CUI/FormNativePublicationValidator.cs",
+      "sha256": "a0f4e8f8dff191abc0429fc2c8fdf011268682efad2e3adaaf7aa6709a011505"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+      "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+      "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+      "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+      "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362"
+    }
+  ],
+  "canonical": {
+    "revision": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+    "criteria": [
+      {
+        "text": "Forms MUST provide first-class mathematical authoring. MathExpression uses LaTeX-compatible canonical representation but can be edited through a visual equation editor so authors/respondents are not required to know LaTeX.",
+        "startIndex": 744117,
+        "endIndex": 744339,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4943,
+        "one_based_ordinal": 4944
+      },
+      {
+        "text": "The editor supports fractions, powers/indices, roots, logarithms, trigonometry, calculus notation, sigma/product notation, vectors, matrices, inequalities, sets, piecewise expressions, probability/statistics notation, Greek/special symbols and aligned expressions where supported.",
+        "startIndex": 744340,
+        "endIndex": 744620,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4944,
+        "one_based_ordinal": 4945
+      },
+      {
+        "text": "Visual and LaTeX modes edit the same expression and remain bidirectionally synchronised. Invalid LaTeX produces an explicit recoverable editing error rather than losing the prior valid expression.",
+        "startIndex": 744621,
+        "endIndex": 744817,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4945,
+        "one_based_ordinal": 4946
+      },
+      {
+        "text": "MathAnswer types include numeric, algebraic expression, equation, inequality, interval, coordinate, vector, matrix, set, multiple expressions and free-working response. Numeric rules can configure exact value, absolute/percentage tolerance, significant figures, decimal places and units where applicable.",
+        "startIndex": 744818,
+        "endIndex": 745122,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4946,
+        "one_based_ordinal": 4947
+      },
+      {
+        "text": "Graph plotter and graph-response questions",
+        "startIndex": 745123,
+        "endIndex": 745165,
+        "tabId": "t.0",
+        "namedStyleType": "HEADING_3",
+        "isListItem": false,
+        "zero_based_ordinal": 4947,
+        "one_based_ordinal": 4948
+      },
+      {
+        "text": "Forms MUST include a native mathematical graph plotter/editor for quiz/test content. Authors can define functions, equations, inequalities, points, coordinate tables, regions, axes, grid/domain/range configuration and other supported 2D graph primitives.",
+        "startIndex": 745166,
+        "endIndex": 745420,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4948,
+        "one_based_ordinal": 4949
+      },
+      {
+        "text": "GraphResponse questions can ask respondents to place points, draw a line/curve, submit coordinates, enter a function/equation for plotting, identify a region or manipulate an existing graph according to declared tools.",
+        "startIndex": 745421,
+        "endIndex": 745639,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4949,
+        "one_based_ordinal": 4950
+      },
+      {
+        "text": "Graph answers remain structured GraphDefinition/GraphResponse data, not screenshots. Marking compares the submitted mathematical/graph representation using configured tolerances/equivalence rules where supported.",
+        "startIndex": 745640,
+        "endIndex": 745852,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4950,
+        "one_based_ordinal": 4951
+      },
+      {
+        "text": "MathExpression, GraphDefinition and related primitives SHOULD be reusable shared mathematical objects across Forms, Write, Present and other 9to1 surfaces rather than privately reinvented.",
+        "startIndex": 745853,
+        "endIndex": 746041,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false,
+        "zero_based_ordinal": 4951,
+        "one_based_ordinal": 4952
+      }
+    ]
+  },
+  "observed_contract": "Original FormField Kind includes Mathematical/Graph with generic ResponseSchema; no typed MathExpression/GraphDefinition reference/authoring parameters found. Original FormComponent generic Configuration is not a published typed math schema. Original native renderer/publication capability rejects unsupported field types; no source acceptance exemption.",
+  "requests": [
+    {
+      "id": "MA-01",
+      "seam": "Maintained typed Forms mathematical field authoring and response contract",
+      "needed": "Publish versioned owner argument/result schemas to attach existing canonical MathExpression/GraphDefinition to real FieldID, capture/view/edit the same object via visual/source and original graph controls, define response MathAnswer/GraphResponse validation plus declared tools and exact shared object references/revisions. Provide original CUI embedding/capability registration; no consumer invents JSON keys or a parallel math schema."
+    },
+    {
+      "id": "MA-02",
+      "seam": "Original Forms codec/durable owner publication and submission closure",
+      "needed": "Same existing FormProjectCodec/nativepackage and owning repository must round-trip all typed math/graph data, IDs/revisions and draft error/recovery state where applicable; publish exact revision-safe commit/receipt/readback/reopen interfaces and current caller authority/admission rules. A generic opaque config or successful MathObjectCodec Encode/Decode is not host durability. Include malformed/unknown schema, stale conflicting edit, cancelled/failed publication and no side-effect permission denial controls."
+    },
+    {
+      "id": "MA-03",
+      "seam": "Original native mathematics input/lifetime/persistence notification contract",
+      "needed": "Provide owner-reviewed control hosting of readonly/busy/presentation admission/dirty/close/recovery with actual typed canonical mutation events; freeze all nativeCUI/text/point input before awaiting durable save; consumers gate host input without private editor/renderer. Define original expression/graph revisions versus actual host storage CAS, rather than using local revision as storage authority."
+    },
+    {
+      "id": "MA-04",
+      "seam": "Browser maintained math codec/render backend capability",
+      "needed": "Review source-owned serialization metadata for actual reflection-disabled/trimming browser MathObjectCodec and original CSharpMath/Skia/ScottPlot+font/resource closure. Provide configured actual symbolic evaluator provenance/capability if available; current unavailableSymbolicPrimitiveIDs must remain explicit. No fake evaluated curves or lossy image/math answer substitutions."
+    }
+  ],
+  "future_fixture": "Tests/OwnerMath.Tests.csproj links15unchanged original methods plus4unchanged native control files; original owner Core/Application/HomeNativeUI/CUI.Runtime referenced. Isolated headless host infrastructure only. Authored; no restore/build/discovery/runtime. Two theory methods imply prospective22cases, actual discovery must be recorded.",
+  "scope_limits": "All canonical mandatory/should clauses retained. This request is not new app.math authority, host integration, donor or fullMath acceptance. No owner source modified."
+}
