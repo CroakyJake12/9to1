@@ -24,7 +24,7 @@
       "record": "team-b.json"
     },
     "C": {
-      "registration": "REGISTERED_SUCCESSOR_GENUINE_BLOCKERS_REMAIN",
+      "registration": "REGISTERED_SUCCESSOR_ACTIVE",
       "ownership": "hosted services/infrastructure, billing, sole global release integration",
       "workers": [
         "C1",
@@ -34,7 +34,7 @@
         "C5",
         "C6"
       ],
-      "writerState": "SOLE_SUCCESSOR_INTEGRATOR_NO_BACKGROUND_EXECUTION_ASSERTED"
+      "writerState": "ACTIVE_SUCCESSOR_SOLE_INTEGRATOR"
     }
   },
   "transportProtocol": "Fetch current coord branch before each update; each team edits only its own records; commit and non-force push. On non-fast-forward fetch and rebase disjoint records; verify remote readback. Team C alone edits index.json and accepted-head.json.",
@@ -62,7 +62,7 @@
     "textEquivalentPreviousRevision": "ANLCKQlZuLSuopoik2qJHrWoQxliYXJ0xjJfH2ncI9frS-Tm7sLiDFLwVdoLZ3-gbZ4aB1qDkX6j9nGYYpvqrgULBc32eKABkwDZNo2d3v8",
     "finalContinuity": "Atomic final get_document_text revision agreed with get_document; entire1383780B SHAa48cf... byte-identical to21:04 snapshot.8534paragraphs notrequirements. No text scope/default change, reason for revision change not inferred. Historical maps/results retain original sources."
   },
-  "candidateStatus": "PROVISIONAL_REVIEWED_SOURCE_ISOLATED_HOSTED_IDENTITY_PASS_GLOBAL_ACCEPTANCE_BLOCKED",
+  "candidateStatus": "UNACCEPTED_PROVISIONAL_COMBINED_SOURCE_RECEIVING_AND_WINDOWS_TESTS_ACTIVE",
   "incomingCandidate": {
     "team": "A",
     "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -170,7 +170,7 @@
     "sites": "C1 exact663B/7708... narrow explicitUseArtifactsOutput=true SOURCE_ACK5d63ef2e; freshcut/evaluatedownerroots/originalcontrols required before execution; noadoption",
     "files": "C4 currente0c guardedsource receipt9a0e74c2 consumed; async originalsession/readpublication and LE07 paid/allocation/quota/transfer ports remain OPEN;12transport NOT_RUN"
   },
-  "updatedUTC": "2026-10-04T12:21:29.828983+00:00",
+  "updatedUTC": "2026-10-04T13:00:22.156618+00:00",
   "historicalReadOnlyCloudflareConnection": {
     "state": "AUTHENTICATED_READ_ONLY_ACCOUNT_API_VERIFIED",
     "accountMatch": true,
@@ -179,7 +179,7 @@
     "browser": "Post-restart available connector MCP SSE HTTP404; no DOM control",
     "qualification": "No write/CLI/deployment/paid entitlement/allocation/quota/service journey/fullrelease acceptance; resources unchanged"
   },
-  "executionStatus": "AUTHORIZED_HOSTED_IDENTITY_COMPLETE_OWNER_AND_ACCEPTANCE_BLOCKERS_REMAIN",
+  "executionStatus": "ACTIVE_IMPLEMENTATION_INTEGRATION_AND_REAL_WINDOWS_VALIDATION",
   "currentOwnerRequests": {
     "workersAiMetadata": {
       "owner": "Team A maintained provider and current test-project closure",
@@ -257,7 +257,14 @@
       "request": "ACK narrow exact source adoption or supply bounded rebase onto current selected owner body, preserving all existing issuer/account/client/session/organisation/quote/funding guards. No stale whole-source replacement. Provide remote actor/current authority/registered-client mapping separately before hosted activation.",
       "productionHead": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
       "publicationQualification": "Original47 narrow-integration payloads and new9 cleanup payloads are separate; peer491e5432 corrects prior874c9944 scope metadata without changing raw test evidence.",
-      "sourceAndEvidenceRequest": "release b1beba064b238455a15702d35660a240a9767e2f:docs/releases/sol-happy-20261003/current-source-owner-integration-requests.json"
+      "sourceAndEvidenceRequest": "release b1beba064b238455a15702d35660a240a9767e2f:docs/releases/sol-happy-20261003/current-source-owner-integration-requests.json",
+      "receivingProvisionalComposition": {
+        "head": "f7b65b8c3854d7ca107b6d076b5334f0b1421329",
+        "integratedHead": "6bc25076",
+        "branch": "integration/team-c-unaccepted-20261004",
+        "results": "Accounts.Specs+OrgPools.Specs Debug/Release actual receiving build/run0; C6 exact31 pins+two immutable Release DLL runs0",
+        "remaining": "Original remote actor final-current authority/auth_revision/client/resource/envelope ports and owner source adoption; no replacement public grant."
+      }
     },
     "nativeSites": {
       "owner": "Team A selected native authoring/build source; C1/C4 receiving hosted composition",
@@ -291,24 +298,41 @@
       "nativeImportBoundary": "Importer CAS exists, but native intent/coordinator/session has no import action; direct ImportPageAsync is not approved authority composition. TeamA owner/lifetime/import action work required before hosted enablement."
     },
     "durableCancellation": {
-      "status": "REFERENCE_FIX_BODY_OWNER_SOURCE_ACK_REQUIRED_NOT_PRODUCTION_EDIT",
+      "status": "PROVISIONAL_CAS_FIX_TESTED_EXACT_OWNER_ADOPTION_AND_NORMAL_SUITE_OPEN",
       "basis": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/UnifiedExecutionRepositories.cs",
       "basisSHA256": "5c2bbaac4ea3a51969d1580325f9544b7fad6d6199f427ea61309e845d8e59cc",
       "proposedEntireSourceSHA256": "18391188f0652003b80aa594733d88deaf576481f8fcb6b4be350eff72b76317",
       "proposedMethodSHA256": "a62be9720e6bdd4cc0c7d927825c70a89465af59ad24749e7afebd40bee00cd5",
       "methodReference": "docs/releases/sol-happy-20261003/durable-cancel-regression/proposed-TryCancelAsync.cs.txt",
       "changes": "Read exactoriginal persistedpayload once; deserializeforowner/status validation; atomicUPDATE id+owner+exactrawpayload text+current terminalstatus guards. Returnaffectedrowcount1; no retry/upsert or comparisonwithreserializedexpectedJSON.",
-      "ownership": "Freshcoordfb374911 grep no explicit matchingfile/class/method claim; that doesnotprove absenceofcurrentTeamAoverlap or sourceequality. Require named current owner sourceclaim/ACK before sharedsource patch.",
+      "ownership": "Direct current user authorizes isolated prepared minimal repair before adoption; active native/shared owner files were not edited. Exact owner adoption/single-writer review still required.",
       "privacy": "PhysicalSQLite originalartifacts remainprivateexternal. Publicobservations nowstatus/resultpresence/idempotencypresence/hashes only. Previous3b8 recordprojections were synthetic generatedtestrows only, no realuser/session/providercredentials; no historyrewrite.",
-      "request": "TeamA ACK exactcurrentUnifiedExecutionRepositories basis/claim and minimalrawpayloadCAS patch, or supplyselectedbody/rebase. Existingcancellationrace falsifiescompletion/resultdurability; retainfailingregression, rerunaffectedrepository/service/restart controls afterfix.",
+      "request": "Team A single-writer ACK exact eec/A63 UnifiedExecutionRepositories basis and adopt a4be raw-payload CAS source/tests or supply bounded current-source rebase. Entire production hash18391188 and unchanged regression552b11de retained; no interface/schema change. Normal global/shared adoption remains provisional until ACK and affected full-suite acceptance.",
       "proposalHead": "15f71c7d6b61e42f45caf66fd4a51696aa6d1bb6",
       "evidence": "durable-cancel-regression/proposal.json +c6/final-bounded-handoff-review/audit.json",
       "actualResults": {
+        "Debug": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "Release": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "independent": "C6 separately rebuilt/executed12Debug+12Release exacta4be; full normal receiving suite running"
+      },
+      "preservedOriginalResults": {
         "pass": 2,
         "fail": 1,
         "skip": 0,
         "exit": 1
-      }
+      },
+      "proposalSourceHead": "a4be0cd0fd8af22ccde5fb609e5af70ee0ace271",
+      "proposalEvidenceHead": "67636bb0b4d15b764128d19b9fdf091113e53019",
+      "provisionalGlobalBranch": "integration/team-c-unaccepted-20261004",
+      "provisionalGlobalHead": "4db960ea"
     },
     "protectedDrive": {
       "owner": "TeamA canonicalFiles/TeamC hostedcomposition",
@@ -347,7 +371,7 @@
   },
   "successorContinuation": {
     "threadId": "01a106a9-b836-76d2-9311-6df01774f059",
-    "state": "SOLE_TEAM_C_INTEGRATOR_AT_GENUINE_OWNER_AND_ACCEPTANCE_BLOCKERS",
+    "state": "SOLE_TEAM_C_SUCCESSOR_ACTIVE_IMPLEMENTATION",
     "startedUTC": "2026-10-04T11:32:36.287098+00:00",
     "fetchedCoordinationHead": "5a25eb5bd75d42b0d103b0424030c5beb86b146d",
     "fetchedReleaseHead": "7f0b1dde7af29dec421d6c0bffc099b3e008e06a",
@@ -362,9 +386,9 @@
       "C6 independent validation"
     ],
     "modelAssignment": "Inherited current session model; no explicit GPT-6.1 model override requested in current user instruction",
-    "next": "BLOCKED: exact current Team A source/authority and Windows package handovers; preserve independent A/B work and tested identity evidence. No persistent background task asserted.",
+    "next": "Continue actual Windows builds/diagnosis, receiving normal suite verification, final billing peer correction and provisional integration; publish owner decisions through existing requests. No background execution asserted after a session stop.",
     "acceptedHead": null,
-    "latestCoordinationRead": "a88c272f75d12027958a9b9b50fafe97658541d2",
+    "latestCoordinationRead": "7f1d50716a6fe7e76dc7470c9d68d87af9914e09",
     "candidate": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
     "goalStarted": false
   },
@@ -424,14 +448,16 @@
     "source": "a88c272f75d12027958a9b9b50fafe97658541d2:coordination/sol-happy-20261003/user-delivery-priority-20261004-2000.md",
     "targetUTC": "2026-10-04T19:00:00Z",
     "targetEuropeLondon": "2026-10-04T20:00:00+01:00",
-    "globalProvisionalCandidate": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+    "globalProvisionalCandidate": "4db960ea",
     "nativeOwnerSource": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
     "reviewedSourceOwnerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
-    "windowsPackageBaseline": "NOT_SELECTED_OR_DELIVERED_BY_NATIVE_OWNER",
-    "windowsAcceptedApps": "DENOMINATOR_AND_RESULTS_NOT_ESTABLISHED; no all-app percentage inferred",
-    "request": "Team A publish all Pass1 Windows app inventory and nominate exact source/package/Home/runtime baseline, real Windows execution/clean-profile acceptance route, target architectures and authorized delivery path. Existing windows-latest Debug workflow is a potential runner route only; do not use patch-and-main-push workflows. No unrelated Linux/Android gate imposed on independently testable Windows scope.",
+    "windowsPackageBaseline": "eec owner delivery + reviewed C-owned Windows probe e2effba4; owner final package/Home tuple not yet ACKed",
+    "windowsAcceptedApps": "0/29 acceptance-verified; 0/29 delivered",
+    "request": "Team A ACK exact eec/A63 Windows build basis or bounded successor; publish each29 canonical installed app/shared-host entrypoint, Home service/ABI/AppID/version/publisher tuple and donor sidecars. Supply authorized clean no-SDK Windows desktop/laptop acceptance caller and PC delivery destination. Seven exploratory GUI probes now actually executing; library/CLI projects are not substituted as app packages.",
     "evidence": "release 7254ca4ee535839a2c9ef3f52fed6f5f51c0034a:docs/releases/sol-happy-20261003/resume-20261004/windows-continuation.json",
-    "qualification": "Repository directive records context; no additional PC mutation/spending/main promotion authority inferred. No Windows build/package/acceptance/PC delivery asserted."
+    "qualification": "Repository directive records context; no additional PC mutation/spending/main promotion authority inferred. No Windows build/package/acceptance/PC delivery asserted.",
+    "acknowledgedUTC": "2026-10-04T13:00:22.156618+00:00",
+    "actualRun": 37203799923
   },
   "historicalCloudflareConnectionBeforeResume": {
     "state": "AUTHENTICATED_APPROVED_ISOLATED_WRITES_AND_READBACK_VERIFIED",
@@ -454,5 +480,75 @@
     "existingServices": "Existingcake/migrationpreview/DNS/WordPress unchanged by root pass",
     "browser": "Latest actual browseragent_list_tabs retry HTTP429/UNAVAILABLE; earlier HTTP404 historical. No DOM/control/nativebrowser acceptance or authentication/cause inference.",
     "qualification": "No CLIcredential/currentpaidusageheadroom/nativeproviderjourney/fullrelease acceptance inferred"
+  },
+  "currentImplementation20261004": {
+    "status": "ACTIVE_IMPLEMENTATION_INTEGRATION_AND_REAL_WINDOWS_VALIDATION",
+    "recordedUTC": "2026-10-04T13:00:22.156618+00:00",
+    "userRequest": "Direct pasted implementation request received in successor chat; supersedes prior stop at hosted-identity blocker.",
+    "provisionalCandidate": {
+      "branch": "integration/team-c-unaccepted-20261004",
+      "head": "4db960ea",
+      "base": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+      "state": "PUSHED_UNACCEPTED_OWNER_ADOPTION_AND_RECEIVING_ACCEPTANCE_OPEN",
+      "contents": [
+        "31 exact reviewed Accounts core/spec bodies from f7b65b8c",
+        "Durable cancellation CAS source/test a4be0cd0 plus retained 67636bb0 evidence",
+        "161 exact Team B apps/Web additions from aef50b9b, including baseline8041",
+        "Reviewed local recovery source67a46825 and evidence5a5b8cee"
+      ],
+      "qualification": "No active Team A/B files edited; no main promotion; no acceptance inferred from composition."
+    },
+    "windows": {
+      "requiredProductGroups": 29,
+      "acceptanceVerified": 0,
+      "delivered": 0,
+      "actualRunner": "GitHub Actions windows-2022",
+      "source": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+      "parent": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+      "run": 37203799923,
+      "url": "https://github.com/CroakyJake12/9to1/actions/runs/37203799923",
+      "observed": "Home and Boards package steps executing; five further targets queued. No outcome inferred.",
+      "targets": [
+        "Home",
+        "Boards",
+        "CanvasHost",
+        "AIStudio",
+        "Present",
+        "Picture",
+        "legacy shared desktop host"
+      ],
+      "allAppInventory": ".github/validation/windows-package-owner-request.json on e2effba4",
+      "deliveryRoute": "GitHub versioned Actions artifacts when bytes exist; actual authorized desktop/laptop clean no-SDK acceptance and local PC delivery unavailable."
+    },
+    "functionalResults": {
+      "durableCancellation": "C5 12 Debug/12 Release PASS; independent C6 12 Debug/12 Release PASS on exact a4be source. Original3-case failure retained. Current receiving normal owning suite running separately.",
+      "accounts": "Actual receiving Accounts.Specs and OrgPools.Specs build/run Debug+Release exit0; C6 all31 body hashes and two immutable Release DLL executions exit0. No remote/native authority acceptance.",
+      "recovery": "C4 and independent C6 each14 original/new controls PASS; original equal-count main and WAL drift false successes retained. No provider restore acceptance.",
+      "billing": "New adapter peer uncovered typed external-error diagnostic disclosure; original failure retained; corrected f3529fd2 local21 controls pass, independent final review running. No live requests or effects.",
+      "browser": "Exact selected apps/Web composed; original Team B native98 and BFcache6 retained at their original source/platform. New receiving Files17/Sites18 actual normal build/run lane started."
+    },
+    "workerLogs": {
+      "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+      "url": "https://docs.google.com/document/d/1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+      "writer": "Team C sole successor integrator",
+      "directUserWriteAuthorization": true,
+      "checkpoints": "13:56 Europe/London appended under all three existing pass sections; preserved templates/history. H1/bold/body/indents independently read back.",
+      "formatQualification": "Next checkpoint will preserve required semicolons and begin BLOCKED for open gated scope; first actual entries omitted trailing semicolons and led with continuing independent actions. History retained."
+    },
+    "next": "Continue actual Windows builds/diagnosis, receiving normal suite verification, final billing peer correction and provisional integration; publish owner decisions through existing requests. No background execution asserted after a session stop.",
+    "acceptedHead": null,
+    "mainMerged": false,
+    "preservedReleaseHead": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a"
+  },
+  "progressReportingAcknowledgement": {
+    "source": "coordination/sol-happy-20261003/user-progress-reporting.md",
+    "acknowledgedUTC": "2026-10-04T13:00:22.156618+00:00",
+    "directUserRequest": true,
+    "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+    "allSixExistingWorkersRelayed": true,
+    "singleWriter": "Team C",
+    "firstActualCombinedCheckpoint": "13:56 Europe/London",
+    "documentReadback": "Three H1 checkpoints; NORMAL_TEXT bold bodies and separate18pt-indented progress paragraphs verified; original templates preserved."
   }
 }
