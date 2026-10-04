@@ -42,7 +42,7 @@ public sealed class DenAgentChatExecutionAdapterTests
         var copied = new AgentExecutionStep(started.Run.AgentRunId, started.Run.CurrentAttemptId, started.Run.Objective,
             started.Run.CallerId, started.Run.SessionId, new("ollama", started.Run.SessionId, "exact-model", "ollama",
                 new HashSet<string>(), true), new HashSet<string>(), new HashSet<string>(), new(), [], new HashSet<string>(), 1, null);
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Adapter.ExecuteStepAsync(copied, (_, _) => ValueTask.CompletedTask).AsTask());
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Adapter.ExecuteStepAsync(copied, (_, _) => ValueTask.CompletedTask, cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
         Assert.Equal(before, f.Client.InventoryReads); Assert.Equal(0, f.Client.Streams);
         Assert.Equal(started.Revision, (await f.State.ReadAsync(started.Run.AgentRunId))!.Revision);
         Assert.Single(await f.Den.ListAsync<AgentRunRecord>("personal"));
@@ -318,7 +318,7 @@ public sealed class DenAgentChatExecutionAdapterTests
         Assert.Null(created.Error); f.Issuer.CancelOriginalLifetime();
         Assert.Equal(AgentFailureCode.PermissionDenied,
             (await f.Factory.OpenCurrentAsync(reference, f.Invocation, f.Issuer.OriginalLifetime)).Error!.Code);
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => session.GetAsync(created.Value!.Run.AgentRunId).AsTask());
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => session.GetAsync(created.Value!.Run.AgentRunId, cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
         Assert.Same(original, session.StartAsync(request).AsTask());
         Assert.Equal(created.Value!.Run.AgentRunId, (await session.StartAsync(request)).Value!.Run.AgentRunId);
         Assert.Equal(0, f.Client.Streams); Assert.Single(await f.Den.ListAsync<AgentRunRecord>("personal"));

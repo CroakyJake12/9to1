@@ -27,7 +27,7 @@ public sealed class DenAgentExecutionStateStoreTests
             Assert.Equal(initial.Revision, repeated.Revision);
             Assert.Single(repeated.Events);
             var staleCreation = await Assert.ThrowsAsync<DenException>(() => adapter.CommitAsync(new(run.AgentRunId,
-                0, "create:stale", Run: run, Events: [Event(run, 1, "duplicate")])).AsTask());
+                0, "create:stale", Run: run, Events: [Event(run, 1, "duplicate")]), cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
             Assert.Equal(DenErrorCode.Conflict, staleCreation.Code);
             var output = new AgentOutputReference("canonical-output", "Files", "artifact", "original-file", 4);
             var next = await adapter.CommitAsync(new(run.AgentRunId, initial.Revision, "result:original",
@@ -36,7 +36,7 @@ public sealed class DenAgentExecutionStateStoreTests
                 CompletedConsequentialActionIds: new HashSet<string> { "original-action" }));
             Assert.Equal(2, next.Revision);
             var staleNext = await Assert.ThrowsAsync<DenException>(() => adapter.CommitAsync(new(run.AgentRunId,
-                initial.Revision, "result:stale", Events: [Event(run, 2, "duplicate-next")])).AsTask());
+                initial.Revision, "result:stale", Events: [Event(run, 2, "duplicate-next")]), cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
             Assert.Equal(DenErrorCode.Conflict, staleNext.Code);
             Assert.Equal(next.Revision, (await adapter.ReadAsync(run.AgentRunId))!.Revision);
             Assert.Equal(2, next.LastEventSequence);
@@ -79,14 +79,14 @@ public sealed class DenAgentExecutionStateStoreTests
                 var accepted = await first.CommitAsync(new(run.AgentRunId, stale.Revision, "event:accepted",
                     Events: [Event(run, 2, "original-event")]));
                 var error = await Assert.ThrowsAsync<DenException>(() => second.CommitAsync(new(run.AgentRunId,
-                    stale.Revision, "event:stale", Events: [Event(run, 2, "stale-event")])).AsTask());
+                    stale.Revision, "event:stale", Events: [Event(run, 2, "stale-event")]), cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
                 Assert.Equal(DenErrorCode.Conflict, error.Code);
                 var replay = await second.CommitAsync(creation);
                 Assert.Equal(accepted.Revision, replay.Revision);
                 Assert.Equal(2, replay.Events.Count);
                 Assert.Equal("original-event", replay.Events[1].Kind);
                 var mismatched = await Assert.ThrowsAsync<DenException>(() => second.CommitAsync(
-                    creation with { Run = run with { Objective = "different invocation" } }).AsTask());
+                    creation with { Run = run with { Objective = "different invocation" } }, cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
                 Assert.Equal(DenErrorCode.IdempotencyMismatch, mismatched.Code);
                 var unchanged = Assert.IsType<AgentExecutionSnapshot>(await first.ReadAsync(run.AgentRunId));
                 Assert.Equal(accepted.Revision, unchanged.Revision);
@@ -109,7 +109,7 @@ public sealed class DenAgentExecutionStateStoreTests
             policy.ExecuteChecks = 0; policy.RevokeOnExecuteCheck = 3;
             var change = new AgentExecutionChangeSet(run.AgentRunId, initial.Revision, "event:revoked",
                 Events: [Event(run, 2, "actual-next-event")]);
-            var error = await Assert.ThrowsAsync<DenException>(() => adapter.CommitAsync(change).AsTask());
+            var error = await Assert.ThrowsAsync<DenException>(() => adapter.CommitAsync(change, cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
             Assert.Equal(DenErrorCode.Forbidden, error.Code);
             Assert.Equal(3, policy.ExecuteChecks);
             var unchanged = Assert.IsType<AgentExecutionSnapshot>(await adapter.ReadAsync(run.AgentRunId));
@@ -133,13 +133,13 @@ public sealed class DenAgentExecutionStateStoreTests
             var initial = await adapter.CommitAsync(new(run.AgentRunId, 0, "create:original", Run: run,
                 Events: [Event(run, 1, "queued")]));
             var foreign = new DenAgentExecutionStateStore(den, "organisation");
-            var denied = await Assert.ThrowsAsync<DenException>(() => foreign.ReadAsync(run.AgentRunId).AsTask());
+            var denied = await Assert.ThrowsAsync<DenException>(() => foreign.ReadAsync(run.AgentRunId, cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
             Assert.Equal(DenErrorCode.Forbidden, denied.Code);
             var invalidSequence = await Assert.ThrowsAsync<DenException>(() => adapter.CommitAsync(new(run.AgentRunId,
-                initial.Revision, "event:gap", Events: [Event(run, 3, "gap")])).AsTask());
+                initial.Revision, "event:gap", Events: [Event(run, 3, "gap")]), cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
             Assert.Equal(DenErrorCode.InvalidRecord, invalidSequence.Code);
             var invalidRoot = await Assert.ThrowsAsync<DenException>(() => adapter.CommitAsync(new(run.AgentRunId,
-                initial.Revision, "event:foreign", Events: [Event(run, 2, "foreign") with { RootRequestId = "foreign-run" }])).AsTask());
+                initial.Revision, "event:foreign", Events: [Event(run, 2, "foreign") with { RootRequestId = "foreign-run" }]), cancellationToken: DulcheOriginalTestCancellation.Current).AsTask());
             Assert.Equal(DenErrorCode.InvalidRecord, invalidRoot.Code);
             Assert.Equal(initial.Revision, (await adapter.ReadAsync(run.AgentRunId))!.Revision);
             Assert.Single(await den.ListAsync<AgentRunRecord>("personal"));

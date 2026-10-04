@@ -33,7 +33,7 @@ public sealed class RuntimeTests
     {
         var adapter = new FakeAdapter();
         var runtime = new DulcheRuntime([adapter]);
-        var endpoint = await runtime.StartLocalAsync(adapter.ProviderId, 9477, new("fake", "model-a"));
+        var endpoint = await runtime.StartLocalAsync(adapter.ProviderId, 9477, new("fake", "model-a"), cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.True(endpoint.Succeeded);
         Assert.Equal(EndpointState.Ready, endpoint.Value!.State);
         var firstSession = runtime.CreateSession(endpoint.Value.EndpointId).Value!;
@@ -57,14 +57,14 @@ public sealed class RuntimeTests
     {
         var adapter = new FakeAdapter(delayMilliseconds: 60);
         var runtime = new DulcheRuntime([adapter]);
-        var endpoint = (await runtime.StartLocalAsync(adapter.ProviderId, 9478)).Value!;
+        var endpoint = (await runtime.StartLocalAsync(adapter.ProviderId, 9478, cancellationToken: DulcheOriginalTestCancellation.Current)).Value!;
         var one = runtime.Submit(new("first"), endpoint.EndpointId).Value!;
         var two = runtime.Submit(new("second"), endpoint.EndpointId).Value!;
         var result = await Task.WhenAll(one.AwaitResult(CancellationToken.None), two.AwaitResult(CancellationToken.None));
         Assert.All(result, item => Assert.Equal(RequestState.Completed, item.Status));
         Assert.Equal(1, adapter.MaximumConcurrent);
-        Assert.True((await runtime.StopResponseAsync(one.RequestId)).Succeeded);
-        Assert.True((await runtime.StopResponseAsync(one.RequestId)).Succeeded);
+        Assert.True((await runtime.StopResponseAsync(one.RequestId, cancellationToken: DulcheOriginalTestCancellation.Current)).Succeeded);
+        Assert.True((await runtime.StopResponseAsync(one.RequestId, cancellationToken: DulcheOriginalTestCancellation.Current)).Succeeded);
     }
 
     [Fact]
@@ -72,10 +72,10 @@ public sealed class RuntimeTests
     {
         var adapter = new FakeAdapter(delayMilliseconds: 90);
         var runtime = new DulcheRuntime([adapter]);
-        var endpoint = (await runtime.StartLocalAsync(adapter.ProviderId, 9479)).Value!;
+        var endpoint = (await runtime.StartLocalAsync(adapter.ProviderId, 9479, cancellationToken: DulcheOriginalTestCancellation.Current)).Value!;
         var request = runtime.Submit(new("old"), endpoint.EndpointId).Value!;
-        await adapter.FirstGenerationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var replacement = await runtime.ReplacePromptAsync(request.RequestId, "new");
+        await adapter.FirstGenerationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken: DulcheOriginalTestCancellation.Current);
+        var replacement = await runtime.ReplacePromptAsync(request.RequestId, "new", cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.True(replacement.Succeeded);
         Assert.Equal(request.RequestId, replacement.Value!.RequestId);
         var result = await replacement.Value.AwaitResult(CancellationToken.None);
@@ -89,7 +89,7 @@ public sealed class RuntimeTests
     {
         var adapter = new FakeAdapter(delayMilliseconds: 70);
         var runtime = new DulcheRuntime([adapter]);
-        var endpoint = (await runtime.StartLocalAsync(adapter.ProviderId, 9480)).Value!;
+        var endpoint = (await runtime.StartLocalAsync(adapter.ProviderId, 9480, cancellationToken: DulcheOriginalTestCancellation.Current)).Value!;
         Assert.Equal(DulcheErrorCode.InvalidArgument, runtime.SetFutureSettings(endpoint.EndpointId, new(Temperature: 3)).Error!.Code);
         var stops = new List<string> { "END" };
         Assert.True(runtime.SetFutureSettings(endpoint.EndpointId, new(Temperature: .4, StopSequences: stops)).Succeeded);
@@ -121,10 +121,10 @@ public sealed class RuntimeTests
         var registry = new StubRegistry([local, cloud]);
         var resolver = new ModelRouteResolver(registry);
         var route = new ModelRoute("active", 1, [new("cloud", "cloud"), new("local", "local")], new(AllowCloud: true, RequiredCapabilities: new HashSet<string> { "WebSearch" }));
-        var result = await resolver.ResolveAsync(route, null);
+        var result = await resolver.ResolveAsync(route, null, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.True(result.Succeeded);
         Assert.Equal("cloud:cloud:current", result.Value!.Model.StableKey);
-        var denied = await resolver.ResolveAsync(route with { Policy = route.Policy with { AllowPrivateContextToCloud = false } }, null, containsPrivateContext: true);
+        var denied = await resolver.ResolveAsync(route with { Policy = route.Policy with { AllowPrivateContextToCloud = false } }, null, containsPrivateContext: true, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal(DulcheErrorCode.PermissionDenied, denied.Error!.Code);
     }
 
@@ -136,15 +136,15 @@ public sealed class RuntimeTests
         var registry = new ModelRouteRegistry(registryProvider, repository, new ModelRouteResolver(registryProvider));
         var route = new ConfiguredModelRoute("agent-chat", 0, ModelRouteScope.Agent, "agent:writer", ModelCapabilityCategory.Chat,
             [new(new("cloud", "cloud"), false, 0), new(new("local", "local"), true, 1)], new(AllowCloud: false));
-        var saved = await registry.SaveRouteAsync(route, expectedRevision: 0);
+        var saved = await registry.SaveRouteAsync(route, expectedRevision: 0, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.NotNull(saved.Route);
         Assert.Equal(1, saved.Route!.Revision);
-        var stale = await registry.SaveRouteAsync(route, expectedRevision: 0);
+        var stale = await registry.SaveRouteAsync(route, expectedRevision: 0, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal(DulcheErrorCode.Conflict, stale.Error!.Code);
-        var preview = await registry.PreviewAsync(saved.Route);
+        var preview = await registry.PreviewAsync(saved.Route, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal("local:local:current", preview.Selection!.Model.StableKey);
         Assert.Contains(preview.Trace, item => item.Contains("disabled by user", StringComparison.Ordinal));
-        Assert.Equal(2, (await registry.GetCatalogueAsync()).Count);
+        Assert.Equal(2, (await registry.GetCatalogueAsync(cancellationToken: DulcheOriginalTestCancellation.Current)).Count);
     }
 
     private static ProviderModelDescriptor Descriptor(string name, bool local, IReadOnlySet<ToolCapability> capabilities) =>

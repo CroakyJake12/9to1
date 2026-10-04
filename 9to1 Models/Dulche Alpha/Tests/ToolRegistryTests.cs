@@ -16,9 +16,9 @@ public sealed class ToolRegistryTests
     [Fact] public async Task SemanticOutcomeResolutionAndTypedCompositionDoNotNeedActionName()
     {
         var registry = new DulcheToolRegistry(new Authority());
-        await registry.RegisterAsync("home", Tool("time", "automations", "time.trigger"));
-        await registry.RegisterAsync("image", Tool("render", "image", "image.generate", outputs: ["image.reference"]));
-        await registry.RegisterAsync("present", Tool("insert", "present", "slide.insert", inputs: ["image.reference"], outputs: ["slide.reference"]));
+        await registry.RegisterAsync("home", Tool("time", "automations", "time.trigger"), cancellationToken: DulcheOriginalTestCancellation.Current);
+        await registry.RegisterAsync("image", Tool("render", "image", "image.generate", outputs: ["image.reference"]), cancellationToken: DulcheOriginalTestCancellation.Current);
+        await registry.RegisterAsync("present", Tool("insert", "present", "slide.insert", inputs: ["image.reference"], outputs: ["slide.reference"]), cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Single(registry.Search("remind me tomorrow at 4 PM", Context));
         var result = registry.Resolve([Intent("create an image"), Intent("slide.insert")], Context);
         Assert.Null(result.Failure);
@@ -29,39 +29,39 @@ public sealed class ToolRegistryTests
     [Fact] public async Task ExplicitInvocationPrioritisesAndPermissionAndConfigurationRemainDistinct()
     {
         var registry = new DulcheToolRegistry(new Authority());
-        await registry.RegisterAsync("image", Tool("a", "image", "image.generate"));
-        await registry.RegisterAsync("plugin", Tool("b", "plugin", "image.generate"));
+        await registry.RegisterAsync("image", Tool("a", "image", "image.generate"), cancellationToken: DulcheOriginalTestCancellation.Current);
+        await registry.RegisterAsync("plugin", Tool("b", "plugin", "image.generate"), cancellationToken: DulcheOriginalTestCancellation.Current);
         var explicitContext = Context with { ExplicitOwnerInvocations = new HashSet<string> { "plugin" } };
         Assert.Equal("b", Assert.Single(registry.Resolve([Intent("image.generate")], explicitContext).Plans).Steps[0].CapabilityId);
         Assert.Equal(ResolutionFailureKind.PermissionBlocked, registry.Resolve([Intent("image.generate")], Context with { PermissionScopes = new HashSet<string>() }).Failure);
-        await registry.RegisterAsync("image", Tool("a", "image", "image.generate", state: CapabilityReadiness.AccountConnectionRequired));
-        await registry.RemoveAsync("plugin", "b");
+        await registry.RegisterAsync("image", Tool("a", "image", "image.generate", state: CapabilityReadiness.AccountConnectionRequired), cancellationToken: DulcheOriginalTestCancellation.Current);
+        await registry.RemoveAsync("plugin", "b", cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal(ResolutionFailureKind.MissingPrerequisite, registry.Resolve([Intent("image.generate")], Context).Failure);
     }
     [Fact] public async Task RegistryChangesInvalidatePriorResolutionAndUntrustedRegistrationFails()
     {
         var registry = new DulcheToolRegistry(new Authority());
-        Assert.False((await registry.RegisterAsync("model-output", Tool("a", "image", "image.generate"))).Succeeded);
-        await registry.RegisterAsync("image", Tool("a", "image", "image.generate"));
+        Assert.False((await registry.RegisterAsync("model-output", Tool("a", "image", "image.generate"), cancellationToken: DulcheOriginalTestCancellation.Current)).Succeeded);
+        await registry.RegisterAsync("image", Tool("a", "image", "image.generate"), cancellationToken: DulcheOriginalTestCancellation.Current);
         var resolved = registry.Resolve([Intent("image.generate")], Context);
         Assert.NotNull(registry.ExplainResolution(resolved.ResolutionId, Context));
-        await registry.RemoveAsync("image", "a");
+        await registry.RemoveAsync("image", "a", cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Null(registry.ExplainResolution(resolved.ResolutionId, Context));
         Assert.Equal(ResolutionFailureKind.NoMatchingCapability, registry.Resolve([Intent("image.generate")], Context).Failure);
     }
     [Fact] public async Task ComputerUseIsAbsentWithoutExplicitInvocation()
     {
         var registry = new DulcheToolRegistry(new Authority());
-        await registry.RegisterAsync("computer", Tool("computer", "computer", "ui.operate", source: CapabilitySourceType.ComputerUse));
+        await registry.RegisterAsync("computer", Tool("computer", "computer", "ui.operate", source: CapabilitySourceType.ComputerUse), cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Empty(registry.List(Context).Entries);
         Assert.Single(registry.List(Context with { ComputerUseInvocationId = "explicit-1" }).Entries);
     }
     [Fact] public async Task Resolves_recursive_inputs_ranked_alternatives_and_rejects_cycles_or_invented_arguments()
     {
         var registry = new DulcheToolRegistry(new Authority());
-        await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", outputs: ["image.reference"]));
-        await registry.RegisterAsync("plugin", Tool("slide-a", "plugin", "slide.insert", inputs: ["image.reference"]));
-        await registry.RegisterAsync("present", Tool("slide-b", "present", "slide.insert", inputs: ["image.reference"]));
+        await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", outputs: ["image.reference"]), cancellationToken: DulcheOriginalTestCancellation.Current);
+        await registry.RegisterAsync("plugin", Tool("slide-a", "plugin", "slide.insert", inputs: ["image.reference"]), cancellationToken: DulcheOriginalTestCancellation.Current);
+        await registry.RegisterAsync("present", Tool("slide-b", "present", "slide.insert", inputs: ["image.reference"]), cancellationToken: DulcheOriginalTestCancellation.Current);
         var result = registry.Resolve([Intent("slide.insert")], Context);
         Assert.Equal(2, result.Plans.Count);
         Assert.All(result.Plans, plan =>
@@ -69,10 +69,10 @@ public sealed class ToolRegistryTests
             Assert.Equal("image-a", plan.Steps[0].CapabilityId);
             Assert.Equal("step-1", Assert.Single(plan.Steps[1].Dependencies));
         });
-        await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", inputs: ["image.reference"], outputs: ["image.reference"]));
+        await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", inputs: ["image.reference"], outputs: ["image.reference"]), cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal(ResolutionFailureKind.MissingPrerequisite, registry.Resolve([Intent("slide.insert")], Context).Failure);
         await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", outputs: ["image.reference"]) with
-        { ParameterSchemaJson = "{\"type\":\"object\",\"required\":[\"prompt\"],\"properties\":{\"prompt\":{\"type\":\"string\"}}}" });
+        { ParameterSchemaJson = "{\"type\":\"object\",\"required\":[\"prompt\"],\"properties\":{\"prompt\":{\"type\":\"string\"}}}" }, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal(ResolutionFailureKind.MissingPrerequisite, registry.Resolve([Intent("slide.insert")], Context).Failure);
         var bound = Intent("slide.insert") with { PrerequisiteArguments = new Dictionary<string, JsonElement>
             { ["image-a"] = JsonSerializer.SerializeToElement(new { prompt = "User requested image" }) } };

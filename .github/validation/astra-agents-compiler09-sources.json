@@ -1,0 +1,2990 @@
+{
+  "status": "SOURCE_ONLY_WHOLE_JOINT_GATE_NOT_EXECUTED",
+  "normalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "sourceStatus": "JOINT05_REVIEWED_SOURCE_ONLY_UNCOMPILED_UNRUN",
+  "sources": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Chat/IChatExecutionAdmission.cs",
+      "bytes": 7923,
+      "sha256": "7452899f5df0f45699178e5ac0240a8a3561e86e3aba55c2cb4ce651d767cc5d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatSessionService.cs",
+      "bytes": 82309,
+      "sha256": "ea55504530955a0b4180d162f8226651498facf4f96e765f2a0c719a1a9886b5"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Chat/ChatExecutionTracker.cs",
+      "bytes": 10287,
+      "sha256": "b44769bf78e69d8ae08f5f0d361011aa57bc3c6d9868ed9caaf3a11a8bb65e3b"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalExecutionAdmissionTests.cs",
+      "bytes": 40817,
+      "sha256": "1354ddb72227f7a598c7f6d4718ddd20fe2c4f2c6b528d78fbacd7913f773843"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalEtaDrainTests.cs",
+      "bytes": 3357,
+      "sha256": "18d48436b138198ca9ae1d912eda405e27b1e9324cad04024979dc9a30f59f86"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionAdmissions.cs",
+      "bytes": 72664,
+      "sha256": "abb0a1ff6e3909855097763d56d205d76bcb4b55d2dd203486d0cf301f0cd788"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentExecutionAdmissionsTests.cs",
+      "bytes": 67834,
+      "sha256": "6b653ec4422501aa5878aacde03f742f184b38909d3568db810acfa4bb8fad7c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "bytes": 832,
+      "sha256": "d8f49a96efd101159e30823bd07c7fd06200222fcb5270d43c1ef7f4cea8410a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/CapabilityEntities.cs",
+      "bytes": 1296,
+      "sha256": "01c33dba971d5c3bd03057881c53cfcfada37a4719330eba87ae28db671b3e7a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Capabilities/CapabilityRegistryService.cs",
+      "bytes": 1700,
+      "sha256": "b2049692ada069c26b8d7e5882f833e6f4052b30d57d890444a126811d8cd551"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Capabilities/CapabilityHostPlatform.cs",
+      "bytes": 708,
+      "sha256": "bfab363452d271e4be7ecdc1b97436f41818a43f951a6d308a3f4872168554e3"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/CapabilityConcretePlatformTests.cs",
+      "bytes": 4170,
+      "sha256": "dc32e0d7e167c56bcbb833d3c38a424f482be1408095a67dc4ff5c713ddd5dcd"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentDependencyCatalogService.cs",
+      "bytes": 14171,
+      "sha256": "c9404d73dd82e75b97d90d07e202cd4fd4c5084c2cbf5fa67bb35e1e20eaf031"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/AgentDependencyCatalogServiceTests.cs",
+      "bytes": 17953,
+      "sha256": "7348ef283218e284f80316040f7809a437335b2c81bd9946b3e99f05254db0d3"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Extensions/ExtensionModels.cs",
+      "bytes": 6194,
+      "sha256": "10b1a6aedc92954408ed33e345e8e1a8193a9afe889f666ac87890e06c910108"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/NativePluginRuntime.cs",
+      "bytes": 18979,
+      "sha256": "440caeae7ae6f0cdb8e73f7329552be9f16a55294cca7eb4d0809b13564c3a50"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenPersistentAgentCatalog.cs",
+      "bytes": 16391,
+      "sha256": "c66aa22ce4244eb4cafd166d1957dd001e59146a61869b5275b16a0b50a01bc6"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenPersistentAgentCatalogTests.cs",
+      "bytes": 16049,
+      "sha256": "135af8fb0efb4af9cde4f1d31bf661b70a382706650d82c07a66bc1300eb05c0"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentChatExecutionAdapter.cs",
+      "bytes": 23050,
+      "sha256": "e9751b013daf0736e474d69403600c92e7a00eef9f4651d376232f9559e48d15"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentChatExecutionAdapterTests.cs",
+      "bytes": 52032,
+      "sha256": "b1dd797d6c35afd4a949073e941641bc4e7c46246928b45f8114a8f460c50157"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/AgentSavedPolicyValidation.cs",
+      "bytes": 1878,
+      "sha256": "ae10d19a37c5fe9a2030bd84e556b2a4f46f0e8b93eceb7999f7354f62683e97"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/IDenAgentExecutionSessionFactory.cs",
+      "bytes": 2213,
+      "sha256": "7f5def22c10ff427fa7918637aea13c6b5548d34de2ef2887ed2fe9fce4cc447"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentExecutionSessionFactory.cs",
+      "bytes": 17463,
+      "sha256": "ff8ac9c20d66ab3eff6e36e61100b1f42622e56e976ec333b573a1c8573c9131"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Domain/DenRecords.cs",
+      "bytes": 22007,
+      "sha256": "1385f1396274bdfb5e4e220c5341b8b983a7577e0f452d1a2e2b1172d1cd41c7"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/DenCanonicalAgentBuilderAdapter.cs",
+      "bytes": 21107,
+      "sha256": "7992f6fd798694ac91865431b412c87fdb1afd05e6473b7ecd3db76ceafc56cd"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeApplication.cs",
+      "bytes": 5063,
+      "sha256": "eee265fcc626050b4b1ffa3e109a093a83c6a98065b022737efc619590a9c358"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeWindow.cs",
+      "bytes": 40825,
+      "sha256": "1c6090cd4f1ad329529e7d943c8975c1e751a258557a895aa8243fdb0173f526"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/UI/StudioHost.cui",
+      "bytes": 8080,
+      "sha256": "619db352f2948229ab4a74c10aa4a03bacaea8088cedf814a7c6ba65ded17c32"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/DenCanonicalAgentBuilderTests.cs",
+      "bytes": 18067,
+      "sha256": "3b82822121b376af711ab3dd273cb3b4fc1603b3111ac8685f70c62076a4623f"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioSessionBoundaries.cs",
+      "bytes": 3037,
+      "sha256": "0e3fa9026e0a38c7556f50236c7aa54dfcc1e18a7d66ae17e4a23a8e24918108"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioAuthoredTextObservation.cs",
+      "bytes": 2384,
+      "sha256": "54d4b020dd9b89c5b859c997c008551ca48481c60efea744e68459c97e003d53"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs",
+      "bytes": 35433,
+      "sha256": "23b0bab59d4a6c5b442724ef0215c6e19d6bfaa317c039d18384f4f0f42a7364"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Domain/AgentAuthoringDefinition.cs",
+      "bytes": 3037,
+      "sha256": "0b187d6b2eb19d117be51b198241c6ccdca1980dbd7730d359e10f4d496d56d0"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Domain/DenAgentAuthoringFields.cs",
+      "bytes": 11482,
+      "sha256": "05b4d130995b27234d7dda87589ff1cb2d073ceee46c0829bde4af5d92dbdb7a"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/DenAgentBuilderAuthoringDeclarationsTests.cs",
+      "bytes": 14121,
+      "sha256": "f64eb0a2f3d22e34fe037c36b0c87d2e7ae9087d995939a2c2eca40c382f278e"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Domain/AgentPresentationActivity.cs",
+      "bytes": 2239,
+      "sha256": "b62a1d81e0c8594d0b800bb830efd46d00f836cbb859eb6148787c2443ca88ee"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Services/AgentPresentationPlayback.cs",
+      "bytes": 5250,
+      "sha256": "21de6e08a3a4b078c2b13c693fe7dac934c943f9113bd217b3cf57bba29e78f9"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Services/AgentPresentationService.cs",
+      "bytes": 5990,
+      "sha256": "0a710c6f0cf20d37690b70e21018ee5a49d3e2b48cc992bb54d6c9cb604d9a25"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AgentAvatarBuilder.cs",
+      "bytes": 4810,
+      "sha256": "e2c9d87de2019ddb4587b218b2bd324b1f11bd894f134f2255f5dc5e23c84320"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AgentAvatarEditor.cs",
+      "bytes": 9893,
+      "sha256": "8fc5c42875c5ba4d7ad6c3417165fe4002090573af962edc0950a8710bfd22f0"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/UI/Studio.cui",
+      "bytes": 6111,
+      "sha256": "fee79a2eff7fc41ebd33010a55b9c0fc42023b802f70961bef502716fe8de894"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentPresentationPlaybackTests.cs",
+      "bytes": 14204,
+      "sha256": "78d3c0cd0aaa5b97eb03e985f4b2bf0ced26013a50f5779b409464574888961c"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioDenLifetime.cs",
+      "bytes": 8186,
+      "sha256": "308bde6193f447378bbc3e8253fec4f3628e615fb4af2417cc9ab599a92e17ec"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioDenLifetimeTests.cs",
+      "bytes": 14845,
+      "sha256": "99a8eae9d8dd684a0b04448e27cfb2408c89bedabfda4400cb2ec06b9fb5c735"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/AgentExecutionPorts.cs",
+      "bytes": 21218,
+      "sha256": "c299d92b14d0de5b5a382fa2adc91a7948611aaf32e4fa444c34cfe59f37440a"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/DenAgentReference.cs",
+      "bytes": 359,
+      "sha256": "133f37839af0e120383ea5bb7efd05beafd2c42b5b95e9efdad3902e3bb2adaa"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/DenAgentCurrentRuntimeContext.cs",
+      "bytes": 1838,
+      "sha256": "43c720cd0f870154c7200e14f80b73b1932da42d72cd2533986f663ee4764cae"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentExecutionStateStore.cs",
+      "bytes": 14954,
+      "sha256": "9ceb80ba6d377e8bde41615b1cd48c4ee74f35215c97c99e3a48d75ff335c143"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentExecutionStateStoreTests.cs",
+      "bytes": 14447,
+      "sha256": "fa33587319aa47b3bdd77634c025ce3101dafe94669d48d1aa11439e3e31ca0c"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/AgentAdapters/DenAgentRuntimeValidator.cs",
+      "bytes": 11771,
+      "sha256": "2a870d936747f1af269aec37ab556bc96e2f030313cea5d7e8946b223c8a9739"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentRuntimeValidatorTests.cs",
+      "bytes": 11666,
+      "sha256": "278173c6658d5d44980c3d941c6a624c0c6943d566e824951b1690a945cd78e3"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Agents/AgentExecutionService.cs",
+      "bytes": 31458,
+      "sha256": "d9f29bc0a8e06adce5c9eab7b16768145769b0450a9613aaa0c35e2b5af024f7"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/AgentOriginalContextBindingTests.cs",
+      "bytes": 13632,
+      "sha256": "abb6035eb57c98e0a1a4572e3a9c77ffbdaeff380f755a39d603274292c1ee0e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentTaskRuntimeService.cs",
+      "bytes": 17286,
+      "sha256": "70eaa8d16f410e20081f26aa80993b75d54ce066b25c8a10d6a04b4a4846a052"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Agents/AgentTaskRuntimeService.CanonicalDenStep.cs",
+      "bytes": 8047,
+      "sha256": "4eb7e18f002fc554dfddddbf83aec8c3071c14a6725d3f9be118123dd060b7f7"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/ModelGovernance/ModelGovernance.cs",
+      "bytes": 12117,
+      "sha256": "b965a4e9cc1db8cd842372e28eb3b11fe11ff971ca3ef6e3e6da811a267a48f3"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FilesOriginalModelPermissionTests.cs",
+      "bytes": 2815,
+      "sha256": "9af0eb42ffb7df66997745ca0e91dc6ea11e87806cb4ed0242f289c7d2bfb7df"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/Program.cs",
+      "bytes": 1021,
+      "sha256": "e7dc48c67575ea696c3258511c1a766bb46f2f25d7fb40aecd8f32b23a1375f0"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioOriginalTaskDrain.cs",
+      "bytes": 7647,
+      "sha256": "4f1fa71ef3c05fb7cb2ae008b65aab9844a7d801ed75798f316e488972326072"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioOriginalTaskDrainTests.cs",
+      "bytes": 12437,
+      "sha256": "2c2bc369c4dc50cf6127735ea090e51c98ee6d99c1ebc13db30e9ab2c110472e"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeShutdownTests.cs",
+      "bytes": 9225,
+      "sha256": "78cf1b6e0f6008029e3493446bf7dbfe8df924b162c8cad0ffca2dd389489a83"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.OriginalStructuralReceipts.cs",
+      "bytes": 2618,
+      "sha256": "eadaf3d2471ccc96a002eb37771f7e951a8ce45e7bad91f6c783b781ee15aa00"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.cs",
+      "bytes": 15052,
+      "sha256": "e4bf664776fb62ac77980943b66cece3eebc21a94b31a4fa2b23a06b13d6d5c4"
+    },
+    {
+      "path": "9to1 Workspace/Files/CUI/Services/FilesCommitAuthorityGuard.cs",
+      "bytes": 1876,
+      "sha256": "f489bf53d1c5618d7e23ddcf255b0bd0bdbf63f726d3f91545082a61116f58c8"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesAgentOriginalToolDispatcher.cs",
+      "bytes": 18804,
+      "sha256": "6bf67826305882b3296e240832749881f7690ae4c92a40f47e63b265610e8724"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesArtifactResourceResolver.cs",
+      "bytes": 19337,
+      "sha256": "b65db3c51a602766491d4d594880f938d65d655d34f074d82bce35dd22ba2be9"
+    },
+    {
+      "path": "9to1 Workspace/Files/NativeHost/FilesOriginalAgentToolComposition.cs",
+      "bytes": 1794,
+      "sha256": "bb2ba162abe4a422650b9bf29c14b9887490f0e8c694d4b3fee613cf3d3bdbe4"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Tools/IWorkspaceOriginalToolDispatcher.cs",
+      "bytes": 1522,
+      "sha256": "fc51a6371de07f13d442c8f8bd280a1393881c995eab63393a18064698a4d1cc"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Tools/ToolAvailability.cs",
+      "bytes": 22792,
+      "sha256": "3b5879ce30ffb95a9fb608caf1544070b945c4a7e81f4912c243691b0f27280f"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Tools/WorkspaceToolRuntime.cs",
+      "bytes": 28565,
+      "sha256": "e0b82974538eaa92e4e16e65338dcfb1aec0c7e9eac680bed46e48bd437dda99"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalAgentRenameTests.cs",
+      "bytes": 22114,
+      "sha256": "db64e0f47dcb9fe535d5bbe9e784b669fb6e7285b22ce3a55b0f8a6ab5c7acf1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
+      "bytes": 24899,
+      "sha256": "d4729b9fe7b16c96bb5f8d0c8fd38dfb1a21b51fd7b63a768557a3dff57dc1cc"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionHost.cs",
+      "bytes": 13728,
+      "sha256": "832c42cc6bf14aa9070698822395900e68febdf1d873ab3357143f36245016a1"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentExecutionHostContracts.cs",
+      "bytes": 2877,
+      "sha256": "b3647cbc1eb07e27ff263694e5af77350cefe3cc60e3afc6dcebdcaf2849a684"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeAgentOriginalWork.cs",
+      "bytes": 4887,
+      "sha256": "28b419d93be4b2c62d69567b96b977a27c1dc06880eb63c793243fd4084b78c9"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentOriginalWorkTests.cs",
+      "bytes": 6071,
+      "sha256": "81125083e8fa5f5201df90f4eeaa83269df498bd3fe74cfc3b9a49fc6dc7e69f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreAgentConnection.cs",
+      "bytes": 4660,
+      "sha256": "23cff91037dd7bbf642e3d769ff54bf09fa0ad7daf8c25a313c88d2e691bde50"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.cs",
+      "bytes": 28065,
+      "sha256": "945e578d2c771e7719ffd06025016f7c9e62c095c920235445452696ab6362c8"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeOriginalAgentDiTests.cs",
+      "bytes": 2562,
+      "sha256": "0f28b021d40c6b89b06c60b2d0cc456afc85d15d0b1eb26bcd3b8bc322349fbc"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/HomeOriginalAgentServiceCollectionExtensions.cs",
+      "bytes": 6956,
+      "sha256": "b3e81fb64a9ef0bdc8526aa42c1b89bb63f243e2a7ec6d9e69160cd178366992"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+      "bytes": 3733,
+      "sha256": "e8831199f64ba0d07e6142772597480364a9c514c73e52b1a49645f7054efb36"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalWorkspaceEvidenceTests.cs",
+      "bytes": 14545,
+      "sha256": "67d1e2e896d61087b4b8e14b088c176479dabb4f353af3ee358ca62f6e2f6f33"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentOriginalConnectionDrainTests.cs",
+      "bytes": 16516,
+      "sha256": "e0b2f06fd89b1fa2fbf90122b00a98200549617b0517fef364fb9935579d79f8"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreServiceReadActionPolicies.cs",
+      "bytes": 885,
+      "sha256": "d1c834f038ef6772ac60842407303a8f2e2080564e7890fb1787af5fbff684c5"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeCoreApiSessionTests.cs",
+      "bytes": 29836,
+      "sha256": "98e4f7c1569f6d6333be58c84a1151e6ce9f475f3cb0e5d31fa82466a9d26138"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
+      "bytes": 48284,
+      "sha256": "f8770b858d87ac9f02b46308ed387f9411d0cb928fe514a5879a5ae83d2636f7"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs",
+      "bytes": 33463,
+      "sha256": "a9d89a7261548a595fd83f814d54ff0b24f68e0abb23edb224a0f3795d90dcfc"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiSceneHost.cs",
+      "bytes": 8532,
+      "sha256": "9ae0005b0cf037c1b2b7fd3167f4c8bfa2cd7fbb215b027d15e23fd5aa16e647"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Controls/HomeApprovalCuiSurface.cs",
+      "bytes": 20587,
+      "sha256": "3b25c9ca4a8ec86b66f4cb0c7189c869a64388c04ae86457e8f76b534aa83300"
+    },
+    {
+      "path": "framework/CUI/Runtime.Tests/CuiSceneActionCompletionObservationTests.cs",
+      "bytes": 7720,
+      "sha256": "e9ba23e0dc9dec3b5693a8bf7537d0d99caafc0b4f1e897b8d8ea43fd1a4b749"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeScene.cs",
+      "bytes": 1939,
+      "sha256": "2d0f62459ebce5c76bdc6d48b2ad26772e3a6cc1610fd82112d88fde7e9c97bf"
+    },
+    {
+      "path": "9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AgentAvatarPreviewControl.cs",
+      "bytes": 11343,
+      "sha256": "8f0a7b05a9107714b6518da669211f54a536d0b6c4df6d9970cc73d2fd306ee1"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentAvatarOriginalCallbackTests.cs",
+      "bytes": 16035,
+      "sha256": "0983ba9466351cf99c815a6b64540aa99dde8f9770756bb04a441c2bbc5d498a"
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentAvatarAnimationTests.cs",
+      "bytes": 9097,
+      "sha256": "2356f6389efac15d25dfc65a258073424c1f7e121647f014c2e1239a1286686f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.ReplyCurrentness.cs",
+      "bytes": 2490,
+      "sha256": "6f45711457d42cd5bfc494a583b87ac454fc9d5357d77ea819a2f54fccb361cc"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeOriginalReplyPublicationTests.cs",
+      "bytes": 9364,
+      "sha256": "538935381b042aa3455112d8484dff2f960a71c6e488e361a3f23ddd25a405e3"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreClient.cs",
+      "bytes": 9568,
+      "sha256": "5b4d0372103b78a3b80cbcce3929fbeadda5615c22003e7fd518c3aa5c4256aa"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreProtocol.cs",
+      "bytes": 5400,
+      "sha256": "ba41142c984d991354c365e63c5947c1ffd26f41645fcc5dfc88c0d7216989db"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreTransport.cs",
+      "bytes": 11041,
+      "sha256": "67bf91e74749292cca24851e9372dfd2890b3f7054a3517130189a15e0e1229b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeUnixCoreTransportTests.cs",
+      "bytes": 35918,
+      "sha256": "ccf732fa1b5c66083377db85ec8009ee064165b74114cc677a356ee64d0df13d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixDiscoveryTransport.cs",
+      "bytes": 4110,
+      "sha256": "1a4a73c5eec8a7d32f14acd15589308aa7bcf322c051262afe899c9d23513892"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/IHomeNativeInstalledPeerOriginalActorVerifier.cs",
+      "bytes": 682,
+      "sha256": "42ab66ef4846f3ca49a4a09d488ee1d49fb3e0d2fe6d299541c53fb5d487a2ca"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/ToolRegistryTests.cs",
+      "bytes": 7509,
+      "sha256": "8cb27a275fcb17fdb9df0f5e9df0a9994c96b1a5e7231c4fff5396ef1b60b269"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/RuntimeTests.cs",
+      "bytes": 13648,
+      "sha256": "1c55af5259eaefb405fb378f5415cce50a3163957b9944b8604c64241dab9c0b"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "bytes": 915,
+      "sha256": "e0fe03c1fed3aedcbc20ca270e7bb9357937902de1244e49b82fe7b92a22b91a"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DulcheOriginalTestCancellation.cs",
+      "bytes": 503,
+      "sha256": "7cbda98e7234ddc269a5a574bdc732016c56a6c3accd5387ed173febecd29af4"
+    }
+  ],
+  "helpers": [
+    {
+      "path": ".github/scripts/astra-joint-sdk-original-session-drain.py",
+      "bytes": 3791,
+      "sha256": "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be"
+    },
+    {
+      "path": ".github/scripts/astra-joint-sdk-restore-evidence.py",
+      "bytes": 10043,
+      "sha256": "d3681c1578ba683a40f200028bd567fd7d21b47643053adccb08cbdac5624ee3"
+    },
+    {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "bytes": 3680,
+      "sha256": "f7f4ac108d287f211eb43e26c5602a2646f149382af0bc8f3fcfff9c4a1d98c8"
+    },
+    {
+      "path": ".github/scripts/astra-joint-sdk-test-inventory.py",
+      "bytes": 2783,
+      "sha256": "04d301b990202b2101a0042074b5d515cf4721f303f56693ae8fdf3ab643cb09"
+    },
+    {
+      "path": ".github/scripts/astra_joint_sdk_profile_caller.py",
+      "bytes": 11611,
+      "sha256": "5042d2c9b14a7965b56decab41915330729bf8ee2fcf55b8802bc5e38f726bb7"
+    },
+    {
+      "path": ".github/scripts/astra-joint-sdk-ephemeral-profile.py",
+      "bytes": 8631,
+      "sha256": "64ff4aca1aba22f20941fecdb4867c4e07c69abe9c362d52d8ec9ecfa87447c7"
+    },
+    {
+      "path": ".github/scripts/astra-files-native-prerequisites.py",
+      "bytes": 9969,
+      "sha256": "97ad408cc0ec585e3a19208b36a5717bafc976e3f43adac9e1ca74394bcfccdc"
+    },
+    {
+      "path": ".github/scripts/astra_mail_original_caller_session.py",
+      "bytes": 3859,
+      "sha256": "e28bda6ebcc9c46aeabf8d29cbf1e310b6cba0d6887ee749540fd6e3cfa460ae"
+    },
+    {
+      "path": ".github/scripts/astra_original_native_session_drain.py",
+      "bytes": 3791,
+      "sha256": "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be"
+    },
+    {
+      "path": ".github/scripts/astra-files-artifact-parts.py",
+      "bytes": 4616,
+      "sha256": "59fb5063f2a063504b135fd1fc9bb288880bb9b44886392fa88c64d54ee23f30"
+    },
+    {
+      "path": ".github/scripts/astra-mail-trusted-tls.py",
+      "bytes": 20650,
+      "sha256": "aa69116192607dd907383c0f6d4c5bd4251f46ba41eae1057dbf65b28a8526fd"
+    }
+  ],
+  "materializedGitlinks": [
+    {
+      "path": "9to1 Workspace/Terminal/Source/libvterm",
+      "commit": "934bc2fbf21800ac3458a499df8820ca5fb45fd3",
+      "mode": "160000"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "commit": "864a05282841bf04006890f04d11d60d1a046aa9",
+      "mode": "160000"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+      "commit": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52",
+      "mode": "160000"
+    }
+  ],
+  "entryProjects": [
+    {
+      "name": "entry-00",
+      "project": "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-01",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-02",
+      "project": "9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-03",
+      "project": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-04",
+      "project": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-05",
+      "project": "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-06",
+      "project": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-07",
+      "project": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "kind": "executable"
+    },
+    {
+      "name": "entry-08",
+      "project": "9to1 OS/apps/9to1-shell/NineToOne.Os.Shell.csproj",
+      "kind": "executable"
+    },
+    {
+      "name": "entry-09",
+      "project": "framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj",
+      "kind": "test"
+    },
+    {
+      "name": "entry-10",
+      "project": "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+      "kind": "console"
+    }
+  ],
+  "originalCommandTemplates": [
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 OS/apps/9to1-shell/NineToOne.Os.Shell.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "build",
+      "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "--no-restore",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "build",
+      "9to1 OS/apps/9to1-shell/NineToOne.Os.Shell.csproj",
+      "--no-restore",
+      "--nologo"
+    ]
+  ],
+  "frozenCommandTemplates": [
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 OS/apps/9to1-shell/NineToOne.Os.Shell.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "restore",
+      "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "test",
+      "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+      "--no-restore",
+      "--nologo",
+      "--logger",
+      "trx"
+    ],
+    [
+      "dotnet",
+      "build",
+      "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "--no-restore",
+      "--nologo"
+    ],
+    [
+      "dotnet",
+      "build",
+      "9to1 OS/apps/9to1-shell/NineToOne.Os.Shell.csproj",
+      "--no-restore",
+      "--nologo"
+    ]
+  ],
+  "requiredSdkConfigurations": [
+    "Debug",
+    "Release"
+  ],
+  "owningPrerequisiteIndices": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70
+  ],
+  "testFixtures": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalExecutionAdmissionTests.cs",
+      "sha256": "1354ddb72227f7a598c7f6d4718ddd20fe2c4f2c6b528d78fbacd7913f773843",
+      "methods": [
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Missing_or_forged_issuer_token_refuses_before_provider_discovery_or_context_work",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Zero_original_tool_budget_refuses_the_actual_callback_before_any_write",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Cumulative_actual_callbacks_consume_original_budget_and_second_dispatch_cannot_write",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Revocation_after_original_model_result_refuses_before_the_actual_tool_callback",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Actual_fallback_model_identity_requires_fresh_original_admission",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Original_issuer_lifetime_cancels_the_same_inflight_model_request_even_with_independent_caller_token",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Legacy_local_null_authority_path_preserves_actual_tool_loop_behavior",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Original_tool_result_revocation_preserves_actual_write_but_refuses_result_publication",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Awaited_original_checkpoint_revocation_refuses_dispatch_without_spending_a_second_call",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Deterministic_GenUI_publication_requires_current_original_admission",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Stream_publication_rechecks_after_the_actual_awaited_safety_boundary",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Actual_main_model_failure_and_original_timer_event_failure_both_survive_consumer_cleanup",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Same_actual_call_and_result_settle_before_the_next_original_callback",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Unconfirmed_original_settlement_retains_the_write_and_refuses_second_tool_or_publication",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Original_tool_exception_and_distinct_settlement_failure_both_survive_the_actual_loop",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Original_lifetime_retirement_after_actual_write_still_forwards_same_outcome_and_refuses_more_work",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalExecutionAdmissionTests",
+          "method": "Original_argument_mutation_after_awaited_checkpoint_refuses_dispatch_and_retains_frozen_body",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalEtaDrainTests.cs",
+      "sha256": "18d48436b138198ca9ae1d912eda405e27b1e9324cad04024979dc9a30f59f86",
+      "methods": [
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalEtaDrainTests",
+          "method": "Original_ETA_callback_remains_owned_until_same_cleanup_settles_and_cancel_failure_survives",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentExecutionAdmissionsTests.cs",
+      "sha256": "6b653ec4422501aa5878aacde03f742f184b38909d3568db810acfa4bb8fad7c",
+      "methods": [
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Personal_ownership_without_the_actual_Home_decision_cannot_admit_execution",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Same_real_decision_admits_only_the_private_context_and_exact_saved_Agent",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Actual_Den_run_and_same_step_get_a_private_token_while_matching_copies_fail",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Actual_caller_block_retires_the_original_step_without_another_grant_or_run",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Actual_authentication_revision_change_denies_retained_context",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Actual_saved_definition_revision_change_denies_retained_step",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Zero_actual_call_budget_denies_before_the_owning_tool_policy_or_any_new_request",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Held_lease_retirement_denies_the_original_step",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Shutdown_awaits_the_same_original_read_cleanup_before_retiring_issuer_and_audit",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Exact_issuer_thrown_pending_request_can_pause_while_copied_exception_and_decided_request_refuse",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Original_host_lifetime_cancellation_is_carried_into_the_private_step_token",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Actual_current_Text_feature_retirement_denies_the_same_bound_run_and_token",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Actual_saved_required_feature_retirement_denies_without_provider_or_model_identity_change",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Noncanonical_saved_feature_tokens_refuse_the_actual_committed_run",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Genuine_fresh_Empty_time_admits_then_original_elapsed_limit_and_unknown_or_prior_usage_refuse",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Original_inherited_route_preview_retains_its_snapshot_but_final_current_feature_retirement_refuses",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Exact_original_owner_receipt_settles_real_broker_while_copied_call_result_and_replay_refuse",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Missing_original_owner_receipt_blocks_next_call_and_original_close_records_partial",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Exact_original_failure_receipt_records_failed_without_success_from_tool_text",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Original_arguments_changed_during_same_held_review_refuse_before_Begin_and_keep_approved_snapshot",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Same_frozen_dispatch_survives_document_disposal_and_original_order_changes_but_changed_body_refuses",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Already_admitted_original_receipt_records_after_host_cancellation_or_caller_revocation",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Saved_policy_narrows_original_permissions_without_changing_consequential_approval",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Unknown_saved_policy_property_refuses_before_creating_a_Home_run_request",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Same_original_terminal_run_is_audited_once_and_repeated_read_retains_the_recorded_outcome",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Recorded_partial_child_survives_retirement_in_same_original_terminal_root_audit",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Registered_current_Den_resolver_borrows_same_Store_and_refuses_duplicates_or_changed_actor",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentExecutionAdmissionsTests",
+          "method": "Caller_cancellation_held_in_original_read_finally_survives_later_host_close",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/CapabilityConcretePlatformTests.cs",
+      "sha256": "dc32e0d7e167c56bcbb833d3c38a424f482be1408095a67dc4ff5c713ddd5dcd",
+      "methods": [
+        {
+          "fullClass": "Haven.Application.Tests.CapabilityConcretePlatformTests",
+          "method": "Historical_platform_values_and_names_remain_stable_and_new_hosts_have_distinct_identities",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.CapabilityConcretePlatformTests",
+          "method": "Concrete_registry_filter_preserves_actual_platform_declarations",
+          "minimumPassedCases": 5,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.CapabilityConcretePlatformTests",
+          "method": "A_union_or_unknown_host_is_not_a_concrete_discovery_identity",
+          "minimumPassedCases": 4,
+          "kind": "Theory"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/AgentDependencyCatalogServiceTests.cs",
+      "sha256": "7348ef283218e284f80316040f7809a437335b2c81bd9946b3e99f05254db0d3",
+      "methods": [
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "Current_canonical_UUID_key_and_implementation_share_one_observation_without_granting_aliases",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "Ambiguous_route_and_MCP_category_mismatch_refuse_before_any_runtime_invocation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "A_configured_MCP_connection_is_only_eligible_metadata_and_disabled_connection_is_refused",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "A_registry_change_during_lookup_returns_explicit_unresolved_observation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "Unsupported_concrete_platform_does_not_borrow_another_platform_catalogue",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "Uninstalled_package_and_unknown_Skill_are_not_reported_as_resolved_draft_dependencies",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "Cancellation_and_noncanonical_scope_stop_lookup_before_discovery",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "A_new_concrete_platform_uses_only_declared_current_metadata_and_rejects_late_revocation",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "A_final_new_alias_collision_refuses_the_original_exact_Tool_or_MCP_declaration",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "Maintained_Skill_resolver_ABA_package_snapshot_cannot_mismatch_catalogue_provenance",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Haven.Application.Tests.AgentDependencyCatalogServiceTests",
+          "method": "Maintained_Skill_resolver_same_original_package_retains_exact_content_and_witness",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenPersistentAgentCatalogTests.cs",
+      "sha256": "135af8fb0efb4af9cde4f1d31bf661b70a382706650d82c07a66bc1300eb05c0",
+      "methods": [
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Current_Den_revision_changes_both_runtime_projections_without_a_catalog_copy",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Same_ID_in_another_namespace_or_Den_cannot_select_a_foreign_definition",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Revoked_execution_permission_is_rechecked_after_original_Den_reads",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Unsupported_string_ID_and_malformed_policy_fail_without_minting_an_identity",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Saved_capability_policy_narrows_original_permissions_and_retains_denials_and_approval",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Saved_delegation_is_validated_detached_and_never_inferred_from_absence",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Invalid_saved_typed_policy_is_refused_from_the_actual_current_Den_record",
+          "minimumPassedCases": 5,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenPersistentAgentCatalogTests",
+          "method": "Availability_narrows_original_scope_and_preserves_null_versus_empty_without_granting_foreign_access",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentChatExecutionAdapterTests.cs",
+      "sha256": "b1dd797d6c35afd4a949073e941641bc4e7c46246928b45f8114a8f460c50157",
+      "methods": [
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Real_Den_run_uses_original_Chat_model_and_same_session_without_a_second_run_registry",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Copied_original_step_is_denied_before_model_or_canonical_run_write",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Actual_Den_definition_change_during_original_compatibility_inventory_denies_model_dispatch",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Finite_unmeasured_token_budget_is_explicitly_refused_without_model_work_or_invented_usage",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_changed_original_compatibility_model_family_is_refused_before_model_work",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_real_Den_stop_or_pause_during_final_projection_cannot_be_overwritten_by_the_original_result",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_real_Den_stop_after_result_read_is_refused_at_the_original_atomic_commit_revision",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Only_the_same_private_pending_approval_pauses_the_actual_Den_run_and_uncheckpointed_resume_is_refused",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "An_unregistered_original_runtime_error_cannot_fabricate_an_approval_pause",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "An_approval_pause_committed_after_the_original_resume_read_cannot_be_overwritten_or_replayed",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "An_unregistered_session_factory_denies_even_matching_observed_identifiers",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Composed_original_session_uses_the_existing_Chat_and_one_Den_run_while_same_request_joins_the_original_start",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Session_composition_refuses_copied_context_foreign_namespace_and_unrelated_lifetime_before_run_creation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Original_agent_idempotency_collision_is_not_hidden_by_the_private_session_boundary",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_retired_definition_denies_a_previously_open_session_without_reading_or_dispatching_its_run",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_retired_original_lifetime_denies_new_session_work_but_keeps_the_same_known_creation_receipt",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_changed_actual_attempt_cannot_reuse_the_opened_original_session_for_reads_or_dispatch",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_real_attempt_rotation_during_final_admission_cannot_read_dispatch_or_pause_the_later_attempt",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "A_real_attempt_rotation_after_the_actual_Get_read_refuses_original_result_publication",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Saved_surface_availability_is_consumed_by_actual_target_admission_before_model_work",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentChatExecutionAdapterTests",
+          "method": "Unintegrated_saved_owning_routes_are_explicitly_blocked_before_original_model_work",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/DenCanonicalAgentBuilderTests.cs",
+      "sha256": "3b82822121b376af711ab3dd273cb3b4fc1603b3111ac8685f70c62076a4623f",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Create_open_edit_and_reopen_use_one_Den_record_and_preserve_avatar_and_execution_declarations",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Schema_denial_revoked_write_and_cancellation_do_not_create_a_duplicate_or_mutate_the_Den",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "A_bound_adapter_refuses_actor_or_selected_store_replacement_and_does_not_follow_a_copied_UUID",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Authoring_does_not_claim_registry_validation_preview_activation_or_sharing_authority",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Cancellation_after_successful_create_retains_known_ID_and_revision_without_an_ordinary_retry_failure",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Actor_change_after_successful_update_retains_known_revision_without_returning_definition_content",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Post_list_actor_or_same_ID_store_switch_never_returns_a_publishable_observation",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Original_host_failure_still_drains_original_preview_and_retains_every_distinct_failure",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenCanonicalAgentBuilderTests",
+          "method": "Opened_agent_session_refuses_a_same_actor_same_Den_ID_replacement_store",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs",
+      "sha256": "23b0bab59d4a6c5b442724ef0215c6e19d6bfaa317c039d18384f4f0f42a7364",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioNativeHostTests",
+          "method": "Actual_configuration_scene_creates_owned_Den_and_explicit_Agent_then_mounts_editor",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioNativeHostTests",
+          "method": "Actual_picker_import_preserves_bytes_in_owned_Den_and_native_authoring_saves_reference",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioNativeHostTests",
+          "method": "Immediate_authored_native_input_is_saved_and_reopened_by_the_original_create_and_save_buttons",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioNativeHostTests",
+          "method": "Immediate_native_avatar_input_saves_coding_and_joke_states_on_the_same_Agent_and_reopens_with_static_fallback",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/DenAgentBuilderAuthoringDeclarationsTests.cs",
+      "sha256": "f64eb0a2f3d22e34fe037c36b0c87d2e7ae9087d995939a2c2eca40c382f278e",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenAgentBuilderAuthoringDeclarationsTests",
+          "method": "Canonical_authoring_declarations_survive_create_edit_reopen_on_one_ID_with_avatar_and_dependency_provenance",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenAgentBuilderAuthoringDeclarationsTests",
+          "method": "Absent_and_empty_availability_remain_distinct_and_creation_never_activates_or_grants_sharing",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.DenAgentBuilderAuthoringDeclarationsTests",
+          "method": "Current_read_of_saved_declarations_refuses_invalid_policy_or_canonical_extension_overwrite_without_a_save",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentPresentationPlaybackTests.cs",
+      "sha256": "78d3c0cd0aaa5b97eb03e985f4b2bf0ced26013a50f5779b409464574888961c",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentPresentationPlaybackTests",
+          "method": "Coding_and_joke_use_one_agent_and_repeated_observation_does_not_repeat_transition",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentPresentationPlaybackTests",
+          "method": "Reduced_motion_and_missing_animation_use_accessible_static_fallback_without_forgetting_state",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentPresentationPlaybackTests",
+          "method": "Wrong_context_replayed_revision_and_changed_configuration_are_visible_refusals_or_resets",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentPresentationPlaybackTests",
+          "method": "Revoked_den_permission_or_revision_change_during_observation_never_publishes_a_frame",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentPresentationPlaybackTests",
+          "method": "Typed_builder_preview_assign_and_reopen_preserve_identity_and_original_execution_fields",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentPresentationPlaybackTests",
+          "method": "Unavailable_activity_does_not_erase_the_same_context_sequence_high_water_mark",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioDenLifetimeTests.cs",
+      "sha256": "99a8eae9d8dd684a0b04448e27cfb2408c89bedabfda4400cb2ec06b9fb5c735",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioDenLifetimeTests",
+          "method": "Selected_actual_Den_binds_in_same_Home_graph_and_replacement_retires_old_session",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioDenLifetimeTests",
+          "method": "Existing_Den_requires_actual_Home_review_and_exact_retained_request",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioDenLifetimeTests",
+          "method": "Acknowledged_import_audit_recovery_never_reimports_Den",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioDenLifetimeTests",
+          "method": "Selected_factory_borrows_the_same_actual_Store_and_never_grants_Execute_or_Admin",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioDenLifetimeTests",
+          "method": "Existing_selected_factory_cannot_bypass_actual_Home_ownership_review",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioDenLifetimeTests",
+          "method": "Selected_factory_handoff_cancellation_replacement_and_disposal_keep_original_provider_fences",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentExecutionStateStoreTests.cs",
+      "sha256": "fa33587319aa47b3bdd77634c025ce3101dafe94669d48d1aa11439e3e31ca0c",
+      "methods": [
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentExecutionStateStoreTests",
+          "method": "Original_Den_run_reopens_with_whole_snapshot_and_contiguous_events_without_another_registry",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentExecutionStateStoreTests",
+          "method": "Independent_original_Den_instances_refuse_stale_revision_and_mismatched_replay_without_duplicate_event",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentExecutionStateStoreTests",
+          "method": "Execute_revocation_at_original_Den_write_admission_refuses_publication_then_current_permission_can_retry",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentExecutionStateStoreTests",
+          "method": "Foreign_namespace_and_noncontiguous_or_foreign_root_events_cannot_mutate_original_run",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAgentRuntimeValidatorTests.cs",
+      "sha256": "278173c6658d5d44980c3d941c6a624c0c6943d566e824951b1690a945cd78e3",
+      "methods": [
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentRuntimeValidatorTests",
+          "method": "Read_only_authoring_validation_observes_the_same_saved_revision_without_Execute_or_a_run",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentRuntimeValidatorTests",
+          "method": "Unknown_dependencies_do_not_become_valid_from_a_saved_Enabled_flag",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentRuntimeValidatorTests",
+          "method": "A_real_Den_revision_change_during_model_inventory_invalidates_the_observation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentRuntimeValidatorTests",
+          "method": "Actual_read_revocation_during_model_IO_refuses_final_publication",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentRuntimeValidatorTests",
+          "method": "Foreign_namespace_stale_revision_and_missing_inherited_selection_are_explicit_without_model_work",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentRuntimeValidatorTests",
+          "method": "Finite_unmeasured_token_or_cost_budget_is_identified_before_model_work",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.DenAgentRuntimeValidatorTests",
+          "method": "Mutable_model_feature_revocation_during_final_inventory_cannot_mutate_the_original_observation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/AgentOriginalContextBindingTests.cs",
+      "sha256": "abb6035eb57c98e0a1a4572e3a9c77ffbdaeff380f755a39d603274292c1ee0e",
+      "methods": [
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.AgentOriginalContextBindingTests",
+          "method": "Exact_original_context_and_owner_step_are_passed_to_issuer_while_copied_step_cannot_get_admission",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.AgentOriginalContextBindingTests",
+          "method": "Persisted_run_identifiers_and_capabilities_cannot_restore_original_context_after_coordinator_restart",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.AgentOriginalContextBindingTests",
+          "method": "Missing_original_issuer_refuses_even_observed_capabilities_and_reports_known_durable_creation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Agents.Tests.AgentOriginalContextBindingTests",
+          "method": "Refused_rebinding_of_existing_idempotent_run_preserves_original_state_and_never_dispatches",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FilesOriginalModelPermissionTests.cs",
+      "sha256": "9af0eb42ffb7df66997745ca0e91dc6ea11e87806cb4ed0242f289c7d2bfb7df",
+      "methods": [
+        {
+          "fullClass": "Haven.Core.Tests.FilesOriginalModelPermissionTests",
+          "method": "Configured_EditFiles_denial_applies_to_original_rename_and_current_policy_refresh_preserves_defaults",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioOriginalTaskDrainTests.cs",
+      "sha256": "2c2bc369c4dc50cf6127735ea090e51c98ee6d99c1ebc13db30e9ab2c110472e",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioOriginalTaskDrainTests",
+          "method": "Same_operation_is_published_before_cancellation_reentry_and_retirement_waits_for_original_child",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioOriginalTaskDrainTests",
+          "method": "Throwing_owned_cancel_still_awaits_the_same_pending_task_and_preserves_all_cleanup_failures",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioOriginalTaskDrainTests",
+          "method": "Capture_refusal_is_retained_and_never_claims_original_task_settlement",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioOriginalTaskDrainTests",
+          "method": "Every_original_retirement_starts_before_waiting_and_distinct_same_object_failures_are_retained_once",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioOriginalTaskDrainTests",
+          "method": "Replacing_validation_context_cancels_its_original_gate_wait_and_a_new_context_remains_usable",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioOriginalTaskDrainTests",
+          "method": "Earlier_caller_cancellation_is_not_reclassified_as_owned_shutdown_cancellation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioOriginalTaskDrainTests",
+          "method": "Earlier_caller_cancellation_remains_the_same_refusal_when_owned_close_overlaps_its_original_finally",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeShutdownTests.cs",
+      "sha256": "78cf1b6e0f6008029e3493446bf7dbfe8df924b162c8cad0ffca2dd389489a83",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.StudioNativeHostTests",
+          "method": "Ordinary_native_close_cancels_and_settles_the_original_avatar_save_before_the_same_Den_is_disposed",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalAgentRenameTests.cs",
+      "sha256": "db64e0f47dcb9fe535d5bbe9e784b669fb6e7285b22ce3a55b0f8a6ab5c7acf1",
+      "methods": [
+        {
+          "fullClass": "Haven.Desktop.Tests.FilesOriginalAgentRenameTests",
+          "method": "Original_rename_commits_one_canonical_revision_and_exact_receipt_rejects_copies",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Desktop.Tests.FilesOriginalAgentRenameTests",
+          "method": "Original_definition_observations_require_current_private_admission_and_actual_tools_model",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Desktop.Tests.FilesOriginalAgentRenameTests",
+          "method": "Cancellation_after_real_commit_retains_original_partial_receipt_and_refuses_next_dispatch",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Desktop.Tests.FilesOriginalAgentRenameTests",
+          "method": "Revocation_at_final_owning_check_preserves_original_bytes_and_has_no_journal_commit",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Desktop.Tests.FilesOriginalAgentRenameTests",
+          "method": "Current_revision_and_unknown_or_copied_route_are_denied_before_real_provider_mutation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Desktop.Tests.FilesOriginalAgentRenameTests",
+          "method": "SafeMode_at_final_original_commit_preserves_real_store_and_refuses_current_routes",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentOriginalWorkTests.cs",
+      "sha256": "81125083e8fa5f5201df90f4eeaa83269df498bd3fe74cfc3b9a49fc6dc7e69f",
+      "methods": [
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentOriginalWorkTests",
+          "method": "Closing_waits_for_the_same_original_finally_and_coalesces_reentrant_cancel",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentOriginalWorkTests",
+          "method": "Cancellation_callback_failure_does_not_skip_same_original_body_failure_or_drain",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeOriginalAgentDiTests.cs",
+      "sha256": "0f28b021d40c6b89b06c60b2d0cc456afc85d15d0b1eb26bcd3b8bc322349fbc",
+      "methods": [
+        {
+          "fullClass": "Haven.Infrastructure.Tests.HomeOriginalAgentDiTests",
+          "method": "Canonical_registration_resolves_one_same_admission_for_host_Chat_and_owning_dispatchers",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ChatOriginalWorkspaceEvidenceTests.cs",
+      "sha256": "67d1e2e896d61087b4b8e14b088c176479dabb4f353af3ee358ca62f6e2f6f33",
+      "methods": [
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalWorkspaceEvidenceTests",
+          "method": "Original_registered_route_without_workspace_reports_exact_runtime_return_and_settles_same_dispatch",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Haven.Core.Tests.ChatOriginalWorkspaceEvidenceTests",
+          "method": "Configured_EditFiles_model_denial_blocks_original_rename_before_admission_or_owner_dispatch",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAgentOriginalConnectionDrainTests.cs",
+      "sha256": "e0b2f06fd89b1fa2fbf90122b00a98200549617b0517fef364fb9935579d79f8",
+      "methods": [
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentOriginalConnectionDrainTests",
+          "method": "Owned_cancellation_through_same_Core_connection_preserves_provenance_and_drains_original_finally",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentOriginalConnectionDrainTests",
+          "method": "Caller_cancellation_in_same_Core_connection_survives_later_original_Work_close",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeAgentOriginalConnectionDrainTests",
+          "method": "Unrelated_or_unrequested_cancellation_preserves_exact_failure_in_same_bound_connection",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeNativeCoreApiSessionTests.cs",
+      "sha256": "98e4f7c1569f6d6333be58c84a1151e6ce9f475f3cb0e5d31fa82466a9d26138",
+      "methods": [
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Public_caller_records_and_unavailable_installed_verification_cannot_issue_authority",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Exact_broker_approval_executes_original_read_but_equal_copies_and_replay_remain_denied",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Original_authority_change_during_real_read_prevents_response_publication",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Actual_persistent_grant_revocation_before_original_read_publication_is_enforced",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Original_connection_retirement_cancels_and_drains_the_same_read_task_and_audits_cancellation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Newly_created_actual_grant_is_bound_to_the_same_original_approved_request",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Compatibility_binds_verified_app_and_detaches_requirements_before_awaited_review",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Actual_service_reads_project_only_installed_allowlist_and_undeclared_queries_do_no_work",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Installed_allowlist_change_during_actual_read_refuses_original_publication",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Issuer_shutdown_retains_same_task_and_waits_for_original_read_cleanup_before_retirement",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeNativeCoreApiSessionTests",
+          "method": "Session_retirement_started_first_remains_in_issuer_custody_until_original_read_cleanup_settles",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentAvatarOriginalCallbackTests.cs",
+      "sha256": "0983ba9466351cf99c815a6b64540aa99dde8f9770756bb04a441c2bbc5d498a",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarOriginalCallbackTests",
+          "method": "Actual_native_tick_close_waits_the_same_held_den_read_before_bitmap_and_store_retirement",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarOriginalCallbackTests",
+          "method": "Actual_tick_failure_and_reentrant_native_detach_failure_are_both_retained",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarOriginalCallbackTests",
+          "method": "Foreign_thread_retirement_refuses_before_poisoning_the_native_control",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarOriginalCallbackTests",
+          "method": "Actual_native_refresh_notification_close_prevents_later_frame_publication",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/AgentAvatarAnimationTests.cs",
+      "sha256": "2356f6389efac15d25dfc65a258073424c1f7e121647f014c2e1239a1286686f",
+      "methods": [
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarAnimationTests",
+          "method": "Nonloop_ends_at_real_decoder_boundary_and_reduced_motion_uses_static_fallback",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarAnimationTests",
+          "method": "Each_loop_frame_rechecks_actual_den_acl_and_reference_revision",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarAnimationTests",
+          "method": "Mounted_native_control_advances_timed_frames_then_stops_without_looping",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.AIStudio.Tests.AgentAvatarAnimationTests",
+          "method": "Cancelled_frame_retires_native_session_clears_presentation_and_can_reopen_authorized_asset",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeOriginalReplyPublicationTests.cs",
+      "sha256": "538935381b042aa3455112d8484dff2f960a71c6e488e361a3f23ddd25a405e3",
+      "methods": [
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeOriginalReplyPublicationTests",
+          "method": "Retired_actor_or_installation_refuses_the_original_reply_fence",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeOriginalReplyPublicationTests",
+          "method": "Same_reply_currentness_read_and_original_finally_remain_owned_by_session_and_issuer_close",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeUnixCoreTransportTests.cs",
+      "sha256": "ccf732fa1b5c66083377db85ec8009ee064165b74114cc677a356ee64d0df13d",
+      "methods": [
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Legacy_first_frame_keeps_original_default_discovery_without_a_second_socket_read",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Same_Core_connection_preserves_pending_review_across_genuine_65_second_idle_and_original_retry",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Four_read_operations_use_the_canonical_private_session_and_actual_pending_broker",
+          "minimumPassedCases": 4,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Current_authority_retirement_during_actual_read_prevents_data_publication",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Disconnect_drains_same_actual_read_finally_before_original_server_and_issuer_close",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Versioned_or_forged_authority_fields_are_refused_before_any_Core_broker_admission",
+          "minimumPassedCases": 3,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Partial_header_or_payload_has_one_real_absolute_five_second_bound",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Authenticated_client_rechecks_original_host_after_reply_and_retires_failed_exchange",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Serialized_original_reply_is_not_written_after_actor_or_installation_fence_refusal",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Admitted_original_socket_write_and_its_held_finally_survive_owned_close_until_exact_release",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Elapsed_original_partial_socket_deadline_is_retained_after_later_owner_close",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "HavenOS.Home.Tests.HomeUnixCoreTransportTests",
+          "method": "Earlier_foreign_API_cancellation_survives_held_original_finally_and_owned_Rig_close",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "framework/CUI/Runtime.Tests/CuiSceneActionCompletionObservationTests.cs",
+      "sha256": "e9ba23e0dc9dec3b5693a8bf7537d0d99caafc0b4f1e897b8d8ea43fd1a4b749",
+      "methods": [
+        {
+          "fullClass": "CakeOS.Cui.Runtime.Tests.CuiSceneActionCompletionObservationTests",
+          "method": "Uninitialized_and_disposed_scene_refuse_new_completion_snapshot",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "CakeOS.Cui.Runtime.Tests.CuiSceneActionCompletionObservationTests",
+          "method": "Captured_original_scene_action_waits_for_cleanup_after_disposal_or_replacement",
+          "minimumPassedCases": 2,
+          "kind": "Theory"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/ToolRegistryTests.cs",
+      "sha256": "8cb27a275fcb17fdb9df0f5e9df0a9994c96b1a5e7231c4fff5396ef1b60b269",
+      "methods": [
+        {
+          "fullClass": "ToolRegistryTests",
+          "method": "SemanticOutcomeResolutionAndTypedCompositionDoNotNeedActionName",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "ToolRegistryTests",
+          "method": "ExplicitInvocationPrioritisesAndPermissionAndConfigurationRemainDistinct",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "ToolRegistryTests",
+          "method": "RegistryChangesInvalidatePriorResolutionAndUntrustedRegistrationFails",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "ToolRegistryTests",
+          "method": "ComputerUseIsAbsentWithoutExplicitInvocation",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "ToolRegistryTests",
+          "method": "Resolves_recursive_inputs_ranked_alternatives_and_rejects_cycles_or_invented_arguments",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/RuntimeTests.cs",
+      "sha256": "1c55af5259eaefb405fb378f5415cce50a3163957b9944b8604c64241dab9c0b",
+      "methods": [
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "CanonicalLanguageResolutionDoesNotGuessUnknownOrAutoLanguage",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "MissingTranslationVoicePairEvidenceRemainsUnknown",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "EndpointSessionStreamingAndMetricsAreScoped",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "RequestsOnOneEndpointAreSerializedAndStopIsIdempotent",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "ReplaceKeepsLogicalRequestIdAndCreatesNewAttempt",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "SettingsAreValidatedAndSnapshottedForQueuedWork",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "ReasoningMappingAndMetricJsonPreserveNaNullAndZero",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "RouteFiltersCapabilitiesAndCloudPolicyBeforePriority",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        },
+        {
+          "fullClass": "Dulche.Runtime.Tests.RuntimeTests",
+          "method": "ScopedRoutesUseRevisionChecksAndPreviewTrace",
+          "minimumPassedCases": 1,
+          "kind": "Fact"
+        }
+      ]
+    }
+  ],
+  "baselineGuards": [
+    {
+      "path": ".github/scripts/astra-auth-restore-evidence.py",
+      "bytes": 9406,
+      "sha256": "0d32ceb294373de2d6b97bd43a9a3c54938d033a278668fdaa28ede406f6a7c8"
+    },
+    {
+      "path": ".github/scripts/astra-desktop-visible-owning.py",
+      "bytes": 37009,
+      "sha256": "fdb327ad3f73618333cbc2f7ec7b8115abe0c32931ba6457287f7e3ff9805dda"
+    },
+    {
+      "path": ".github/scripts/astra-desktop-visible-regression.py",
+      "bytes": 22175,
+      "sha256": "08933a5eb1aecc3bd27220b9521ebc3ccc9f4d5c1093de12ee7f34c92e5716a2"
+    },
+    {
+      "path": ".github/scripts/astra-desktop-visible-resource.py",
+      "bytes": 26969,
+      "sha256": "e376d20e21f62c398d0e782b461a263f6191caa6002a8467ec8a0f5350da4abc"
+    },
+    {
+      "path": ".github/scripts/astra-files-artifact-parts.py",
+      "bytes": 4616,
+      "sha256": "59fb5063f2a063504b135fd1fc9bb288880bb9b44886392fa88c64d54ee23f30"
+    },
+    {
+      "path": ".github/scripts/astra-files-ephemeral-profile.py",
+      "bytes": 7933,
+      "sha256": "56f36f125c6ca1c4f4b269b0a25a8da0ae88fb85bdbc27c3eaa8874a6055b27c"
+    },
+    {
+      "path": ".github/scripts/astra-files-native-prerequisites.py",
+      "bytes": 9969,
+      "sha256": "97ad408cc0ec585e3a19208b36a5717bafc976e3f43adac9e1ca74394bcfccdc"
+    },
+    {
+      "path": ".github/scripts/astra-files-owned-native-maps.py",
+      "bytes": 6039,
+      "sha256": "6f1f105817e7cead42b2cc9ad2d9b3e7038a785163ccb5ef7fa61cb5eb2480a8"
+    },
+    {
+      "path": ".github/scripts/astra-home-original-native-compiled-sources.py",
+      "bytes": 4027,
+      "sha256": "115fdff51a42367a7b8747fa9eff7e94c8a82a2a5938c2e3a2967bab40b16bb1"
+    },
+    {
+      "path": ".github/scripts/astra-home-original-native-probe.py",
+      "bytes": 20773,
+      "sha256": "8cc24f1ba179bda4e8ffcc4c59ae6969dd7d5319aa0be6b8ca63063be7095148"
+    },
+    {
+      "path": ".github/scripts/astra-home-original-native-restore-evidence.py",
+      "bytes": 9539,
+      "sha256": "1930941a25ed7b35ebe86db13ea7daa37b196f780c38bd87943e84a6b0b79ab9"
+    },
+    {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "bytes": 3680,
+      "sha256": "f7f4ac108d287f211eb43e26c5602a2646f149382af0bc8f3fcfff9c4a1d98c8"
+    },
+    {
+      "path": ".github/scripts/astra-home-prompt-compiled-sources.py",
+      "bytes": 4492,
+      "sha256": "2fd9467cfa71be3f88ce960f4dae13dd61fc7d13bb936c25f41dda31c1161277"
+    },
+    {
+      "path": ".github/scripts/astra-mail-local-crl-server.py",
+      "bytes": 2465,
+      "sha256": "d63a7e15fad8a386b88bc45f753c1c0f3a3bebe8c3e5fadcd27d7f959d552211"
+    },
+    {
+      "path": ".github/scripts/astra-mail-trusted-tls.py",
+      "bytes": 20650,
+      "sha256": "aa69116192607dd907383c0f6d4c5bd4251f46ba41eae1057dbf65b28a8526fd"
+    },
+    {
+      "path": ".github/scripts/astra-native-probe-profile.py",
+      "bytes": 2260,
+      "sha256": "970be7dafe6f19f47f5e094a1f59d6d4ab3f5bd45f542a425914b383df2cd6d7"
+    },
+    {
+      "path": ".github/scripts/astra-sites-compiled-sources.py",
+      "bytes": 3556,
+      "sha256": "2ca73bef21b47af09eba8138b8f89c212e7928976ce0a666be8844588a6b98ce"
+    },
+    {
+      "path": ".github/scripts/astra_mail_original_caller_session.py",
+      "bytes": 3859,
+      "sha256": "e28bda6ebcc9c46aeabf8d29cbf1e310b6cba0d6887ee749540fd6e3cfa460ae"
+    },
+    {
+      "path": ".github/scripts/astra_original_native_session_drain.py",
+      "bytes": 3791,
+      "sha256": "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be"
+    },
+    {
+      "path": ".github/scripts/haven-android-smoke.sh",
+      "bytes": 6997,
+      "sha256": "d9f51cf3093bdb0069d6730cc6318722649f026efd42cc5619f8eea7d15d8b7f"
+    },
+    {
+      "path": ".github/validation/astra-desktop-visible-owning-classes.json",
+      "bytes": 108417,
+      "sha256": "d84a36ad732713997ab33a1ea3efd07967277f62752f5118a580b88a19f57476"
+    },
+    {
+      "path": ".github/validation/astra-desktop-visible-regression-classes.json",
+      "bytes": 12718,
+      "sha256": "666e7ad40777d33a7169538878c782ea540a2df92a752a934b8b983b3587b782"
+    },
+    {
+      "path": ".github/validation/astra-desktop-visible-resource-classes.json",
+      "bytes": 40023,
+      "sha256": "86aa2e8198092538f4b67c6e819e202c50efcd97cc3ea94ac505fce9eafb4875"
+    },
+    {
+      "path": ".github/validation/astra-home-native-probe.targets",
+      "bytes": 772,
+      "sha256": "3cbac8d0db43c0056834198a4380ba459cd47d0885a7f9f95b9301734cf7c434"
+    },
+    {
+      "path": ".github/validation/astra-home-resource-expected-case-methods.json",
+      "bytes": 44010,
+      "sha256": "85c24284b8f28af728bafd0c4375cad223f6dff2623aba23c62072a659a78a57"
+    },
+    {
+      "path": ".github/validation/astra-mail-expected-case-methods.json",
+      "bytes": 181886,
+      "sha256": "5e9ee1ce7a4f2b07de08904367f17590edbc5a0dfdb51fd11f9565b49558feca"
+    },
+    {
+      "path": ".github/validation/picture-bwrap-upstream-abi4.profile",
+      "bytes": 1968,
+      "sha256": "a964037f6cf0df1099f14226b037eaedde6237c86e715188e93eb460b30be859"
+    },
+    {
+      "path": ".github/workflows/apply-beta-chat-orchestration.yml",
+      "bytes": 4756,
+      "sha256": "c5c9730b6c5dfd6557131c077c7dea7c0f8010c9a416afd3d056830e493b314b"
+    },
+    {
+      "path": ".github/workflows/apply-new-haven-beta-pass.yml",
+      "bytes": 3350,
+      "sha256": "d721978471086c89861db58c20869e6967960331094fa268478cceb97ecf11d1"
+    },
+    {
+      "path": ".github/workflows/apply-reasoning-runtime-profile.yml",
+      "bytes": 4044,
+      "sha256": "c60f12840216aef0df558a83bbb870a226a7957d836fb4b7c37f7eba6de89eeb"
+    },
+    {
+      "path": ".github/workflows/book4edge-qemu-smoke.yml",
+      "bytes": 2827,
+      "sha256": "c08d27d1c05a1df88496ee30c19b2f13a54301e80008dbcce16e6401e89e7262"
+    },
+    {
+      "path": ".github/workflows/book4edge-static-iso-validation.yml",
+      "bytes": 2551,
+      "sha256": "89ad1e55cef687e139aa67a1bb101cdc90338e4bd2e84a2f385115e14eac7331"
+    },
+    {
+      "path": ".github/workflows/build-haven-android.yml",
+      "bytes": 9011,
+      "sha256": "161297a256c7469fa86ab781db9a36c7a49314493c7900c32f2b87348d09cde9"
+    },
+    {
+      "path": ".github/workflows/canvas-rnote-poc.yml",
+      "bytes": 3711,
+      "sha256": "9fb6e301ec8212653fc5fc7e09f4d973fc145fbed40e63c96d3466abb6f21c1e"
+    },
+    {
+      "path": ".github/workflows/cohort-packages.yml",
+      "bytes": 2783,
+      "sha256": "0dd49332c2274017af584ef26707f331c3bd9d46602a49ea6a19a1647a180d47"
+    },
+    {
+      "path": ".github/workflows/component-packaging.yml",
+      "bytes": 4904,
+      "sha256": "ce4f12aa0ea23f7c1ac935fdf905b63c837fc4df02456330a6066f90ef056bbf"
+    },
+    {
+      "path": ".github/workflows/data-first-slice.yml",
+      "bytes": 11272,
+      "sha256": "db34cdb2ee8b021cdbcd57eb05e2f61ea0082748f0e9baf78c90a5f2e36ce88d"
+    },
+    {
+      "path": ".github/workflows/diagnose-haven-mobile-patch.yml",
+      "bytes": 265,
+      "sha256": "cddbaa1c93992eb10493fa6db54134765e4ad1c79c160c3244525c59788dba2b"
+    },
+    {
+      "path": ".github/workflows/emergency-boards-arm64.yml",
+      "bytes": 5084,
+      "sha256": "8f89f7ade2d4d52b8ea286a3bc5e9231f3ebc6c1ace6892f0d750908ec639d11"
+    },
+    {
+      "path": ".github/workflows/emergency-boards.yml",
+      "bytes": 3750,
+      "sha256": "c30d97e398ad81e0fd0907a3d78afb121542e2bcb102e74eb2b1eb9148754fbd"
+    },
+    {
+      "path": ".github/workflows/emergency-canvas-arm64.yml",
+      "bytes": 4084,
+      "sha256": "cae34ac6991d3baa7d5afdf56229a494e49a3b06ed624e13920f09ee8fb89e52"
+    },
+    {
+      "path": ".github/workflows/emergency-canvas.yml",
+      "bytes": 3390,
+      "sha256": "342ba7d98f7d8af513adff54da52825519257e2c29bd1c85415259c4abc5fbeb"
+    },
+    {
+      "path": ".github/workflows/emergency-dtb-book4edge.yml",
+      "bytes": 2471,
+      "sha256": "6eceedcb31fdd074a65d78dff5b3e4a75957e8a295f6d0010dc8d3b246431d73"
+    },
+    {
+      "path": ".github/workflows/emergency-image-arm64.yml",
+      "bytes": 11170,
+      "sha256": "da9468a63b03c8630786934dd13d200af82d09e6a10da4111c7144ede427a824"
+    },
+    {
+      "path": ".github/workflows/emergency-iso.yml",
+      "bytes": 3101,
+      "sha256": "fd91efccc05e6a3050f36ae219b496715834325ca2208aaa955b7b75dc89203c"
+    },
+    {
+      "path": ".github/workflows/export-mobile-smoke-evidence.yml",
+      "bytes": 1259,
+      "sha256": "4097c568848c45ca0204973fbcee40bd0fadd9aa310812d7c8a2dc101be575c6"
+    },
+    {
+      "path": ".github/workflows/havenos-linux-package.yml",
+      "bytes": 2145,
+      "sha256": "457462fe13b9b1676ce91affa4de7450987029ff5d1d643e59a408ecb6a89e58"
+    },
+    {
+      "path": ".github/workflows/llamacpp-slice0.yml",
+      "bytes": 22362,
+      "sha256": "444d8a9f9e6e2396dbc300fdc4acd09c46a703401e05570d2630df71c39d1d55"
+    },
+    {
+      "path": ".github/workflows/present-engine.yml",
+      "bytes": 10255,
+      "sha256": "318efc9f132c950527f17aa9b6ec3cf527a82b154cd6ad0a44e7c4f330b7187c"
+    },
+    {
+      "path": ".github/workflows/present-geometry-probe.yml",
+      "bytes": 2373,
+      "sha256": "0616cbe1cc51ea71acf52948aef907659434a8338d265b03b0714ea299a676b5"
+    },
+    {
+      "path": ".github/workflows/present-selection.yml",
+      "bytes": 4880,
+      "sha256": "0151e964a1ec84001d91a920ef31118f3953f4f08b80015bda20ab4509daefa0"
+    },
+    {
+      "path": ".github/workflows/repair-beta-feature-pass.yml",
+      "bytes": 4886,
+      "sha256": "b6bf1895d30d7495b2a708c31883538a645fe6e2374b878ab6809d0cd547a06e"
+    },
+    {
+      "path": ".github/workflows/validate-android-pr.yml",
+      "bytes": 3177,
+      "sha256": "310037775cac4d553ed1aa4a7838697eaec0aeb7a1a8c4bf89be5fa921ddf425"
+    },
+    {
+      "path": ".github/workflows/validate-write-libreoffice-poc.yml",
+      "bytes": 21572,
+      "sha256": "100821424d5e90822acfdb805d02ea0f777a0c8a0ddf9f88fa3630b56d44a834"
+    }
+  ],
+  "typeOnlyPdbExceptions": [
+    "9to1 Workspace/shared/src/Haven.Core/Entities/CapabilityEntities.cs",
+    "9to1 Workspace/shared/src/Haven.Core/Extensions/ExtensionModels.cs",
+    "9to1 Models/Dulche Alpha/Domain/AgentAuthoringDefinition.cs",
+    "9to1 Models/Dulche Alpha/Agents/DenAgentReference.cs",
+    "9to1 Workspace/shared/src/Haven.Application/Authorization/IHomeNativeInstalledPeerOriginalActorVerifier.cs"
+  ],
+  "qualification": "No source/discovery skip. Actual Debug/Release matrix runs eight complete xUnit suites, one original full Files console, and builds two product executables. Full source cut, per-configuration evaluated graph, source-built task/restore/physical PE-PDB/actual emitted documents and original creator/session/drain evidence remain mandatory. Five pure enum/record/interface declaration files remain exact evaluated Compile/hash bound; missing sequence-point documents are explicitly recorded, never fabricated. Managed/headless/Linux fixtures do not establish installed native/Home bootstrap/current actor/provider/Agent routes. Every original215/12/48 native cohort and its unchanged old22 default-configuration templates remain separately mandatory. Genuine profile/native decoder/Skia/font/trusted-TLS prerequisites remain required. SDK05 source corrections are uncompiled/unrun; original SDK04 failed.",
+  "consoleHarness": {
+    "project": "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+    "sources": [
+      {
+        "path": "9to1 Workspace/Files/CUI.Tests/Program.cs",
+        "bytes": 7893,
+        "sha256": "b837c0a84fc24fff5e9093577e46147bb8690a74b9d3530a8aea75767f9e050d",
+        "object": "edd28d249cc790efff74ab5f7f4c7e55ed674c32"
+      },
+      {
+        "path": "9to1 Workspace/Files/CUI.Tests/FilesDomainContractTests.cs",
+        "bytes": 58467,
+        "sha256": "12e43fb491b30922b34cf64ae4b268c01c0fc38fe0bfaf2d05eb80a69f063882",
+        "object": "2efe265829c52b44cf2bd50ab5d8f6a890934dcb"
+      }
+    ],
+    "orderedDomainCalls": [
+      {
+        "method": "HostedIdentitySurvivesRenameAndMoveProjections",
+        "awaited": false
+      },
+      {
+        "method": "ProviderCapabilitiesRequireTheEntireRequestedSet",
+        "awaited": false
+      },
+      {
+        "method": "DragContractPreservesStableHostedIdentityAndIntent",
+        "awaited": false
+      },
+      {
+        "method": "FolderColorValidationAcceptsOnlyRgbHex",
+        "awaited": false
+      },
+      {
+        "method": "ActionCatalogDeclaresPurgeAsDestructiveAndPagesItsActions",
+        "awaited": false
+      },
+      {
+        "method": "ProviderRegistryReportsUnavailableAndUnsupportedOperations",
+        "awaited": false
+      },
+      {
+        "method": "OperationJournalPersistsAndDeduplicatesOnlyIdenticalRequests",
+        "awaited": true
+      },
+      {
+        "method": "SyncCursorPersistsAndCannotRegress",
+        "awaited": true
+      },
+      {
+        "method": "FolderColorMetadataUsesStableIdentityAndResets",
+        "awaited": true
+      },
+      {
+        "method": "MaterializationRegistryPreservesCanonicalIdentityAndProtectsLocalChanges",
+        "awaited": true
+      },
+      {
+        "method": "StateStoreRejectsAnUnknownSchemaVersion",
+        "awaited": true
+      },
+      {
+        "method": "DurableDriveSurvivesRestartAndRejectsStaleMutations",
+        "awaited": true
+      },
+      {
+        "method": "DurableDriveBroadcastsAcrossProviderInstances",
+        "awaited": true
+      },
+      {
+        "method": "WorkspaceDirectoryBindingsRemainCanonicalAcrossRestart",
+        "awaited": true
+      },
+      {
+        "method": "OwningArtifactRevisionsPreserveIdentityAndRejectStaleOrChangedReplays",
+        "awaited": true
+      },
+      {
+        "method": "LocalProfileDirectoryBindingsDoNotCreateAccountIdentity",
+        "awaited": true
+      },
+      {
+        "method": "GuardedUploadsRejectChangedOrMissingDependenciesWithoutPublishing",
+        "awaited": true
+      },
+      {
+        "method": "ImportedArtifactsPublishBothIdentitiesAtomically",
+        "awaited": true
+      },
+      {
+        "method": "CreatedArtifactsPublishIdentityAndContentAtomically",
+        "awaited": true
+      },
+      {
+        "method": "DurableRevisionChecksRawSourcePreconditionsBeforePublication",
+        "awaited": true
+      },
+      {
+        "method": "ExistingStoreEvidenceDoesNotCreateAdoptOrRewriteState",
+        "awaited": true
+      },
+      {
+        "method": "CompoundImportAndUploadedContentRetainOriginalStoreIdentity",
+        "awaited": true
+      }
+    ],
+    "successMarker": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery.",
+    "qualification": "Original zero-argument Program runs all22 domain calls then actual interprocess lease/CAS/cancellation/recovery; no invented per-case TRX."
+  },
+  "nativeDonors": [
+    {
+      "path": "9to1 Workspace/Canvas/Source/Rnote",
+      "commit": "1a728d6a85db3528f9c79dc0990700e91b22696f"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Source/glycin",
+      "commit": "84bed7782d1ae4486068a9ffbde691290c119909"
+    }
+  ],
+  "compilerVerification": {
+    "status": "ISOLATED_COMPILER_SOURCE_ONLY_UNCONSTRUCTED_UNRUN",
+    "actualParent": {
+      "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "tree": "de2e74830fe71ac2af4858a4551c4ee89f0bf1b6",
+      "cutSha256": "a865a55212a8eed45596cc4b6e8423eb582064c95bd5abe3dbd41ea7a279733e"
+    },
+    "baselineCatalogue": {
+      "path": ".github/validation/astra-joint-native-sdk01-sources.json",
+      "bytes": 81891,
+      "sha256": "1b45daf017b35f801f3f172f3fafc38f30914bdaf38a9d1f6f85b65dd7403703"
+    },
+    "correctiveSources": [
+      {
+        "path": "9to1 Models/Dulche Alpha/Tests/ToolRegistryTests.cs",
+        "source": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/ToolRegistryTests.cs",
+        "bytes": 7509,
+        "sha256": "8cb27a275fcb17fdb9df0f5e9df0a9994c96b1a5e7231c4fff5396ef1b60b269",
+        "expectedActual": {
+          "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+          "bytes": 6565,
+          "sha256": "f20c6ee8afc40fffd5787b95485ea793a560a9b2c407aaf7007bc9a8b530a444",
+          "gitBlob": "2c96de2ee6179ca705653037a75e127d6c5bef23"
+        }
+      },
+      {
+        "path": "9to1 Models/Dulche Alpha/Tests/RuntimeTests.cs",
+        "source": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/RuntimeTests.cs",
+        "bytes": 13648,
+        "sha256": "1c55af5259eaefb405fb378f5415cce50a3163957b9944b8604c64241dab9c0b",
+        "expectedActual": {
+          "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+          "bytes": 12824,
+          "sha256": "d6dbcab9da84caf209bb135c51b27c756634e740789610ca7296fcd6da168f10",
+          "gitBlob": "1882421e92d5cb379f0e4769e6b7f4de9f8c989d"
+        }
+      },
+      {
+        "path": "9to1 Models/Dulche Alpha/Tests/AgentOriginalContextBindingTests.cs",
+        "source": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/AgentOriginalContextBindingTests.cs",
+        "bytes": 13632,
+        "sha256": "abb6035eb57c98e0a1a4572e3a9c77ffbdaeff380f755a39d603274292c1ee0e",
+        "expectedActual": {
+          "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+          "bytes": 13043,
+          "sha256": "d52b72ed84c504f0cd34763c5ba79c0f481a1d14ae29edde2bf19f5c31429929",
+          "gitBlob": "74acf7109a294332f19da83715f7cc5de4f927bc"
+        }
+      },
+      {
+        "path": "9to1 Models/Dulche Alpha/Tests/DenAgentExecutionStateStoreTests.cs",
+        "source": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/DenAgentExecutionStateStoreTests.cs",
+        "bytes": 14447,
+        "sha256": "fa33587319aa47b3bdd77634c025ce3101dafe94669d48d1aa11439e3e31ca0c",
+        "expectedActual": {
+          "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+          "bytes": 13975,
+          "sha256": "47fe2b6ab02a21bd3ee887934b9cca5163c74fa4ba4a983f0e66e8e753a0b8fd",
+          "gitBlob": "2004ac06fa3d68a6abc42eb5fef8681f89cf4d7d"
+        }
+      },
+      {
+        "path": "9to1 Models/Dulche Alpha/Tests/DenAgentChatExecutionAdapterTests.cs",
+        "source": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/DenAgentChatExecutionAdapterTests.cs",
+        "bytes": 52032,
+        "sha256": "b1dd797d6c35afd4a949073e941641bc4e7c46246928b45f8114a8f460c50157",
+        "expectedActual": {
+          "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+          "bytes": 51914,
+          "sha256": "d4a9379a3afb93884c3a6ae481232640dadacc3d165b241d9f3c67825fdaf141",
+          "gitBlob": "d3e43ec5b8673aa2c2ac4d7760222e90ec4fa3fc"
+        }
+      },
+      {
+        "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+        "source": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/Dulche.Agents.Tests.csproj",
+        "bytes": 915,
+        "sha256": "e0fe03c1fed3aedcbc20ca270e7bb9357937902de1244e49b82fe7b92a22b91a",
+        "expectedActual": {
+          "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+          "bytes": 835,
+          "sha256": "b784f05850efac8b4218592ab13f9a8eb6c0fd4e4827d74c5ff6a918bf9b8755",
+          "gitBlob": "8a56c2f28cde6e8db84ca9ef99dbd63f023ab520"
+        }
+      },
+      {
+        "path": "9to1 Models/Dulche Alpha/Tests/DulcheOriginalTestCancellation.cs",
+        "source": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/DulcheOriginalTestCancellation.cs",
+        "bytes": 503,
+        "sha256": "7cbda98e7234ddc269a5a574bdc732016c56a6c3accd5387ed173febecd29af4",
+        "expectedActual": {
+          "commit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+          "absent": true
+        }
+      }
+    ],
+    "caller": {
+      "path": ".github/scripts/astra-agents-compiler09-caller.py",
+      "bytes": 13941,
+      "sha256": "45c6d2b75d12bddea482ddc231be329a22593dde8649858465c1115ee7ee45b6"
+    },
+    "lanes": [
+      {
+        "comparison": "baseline",
+        "branch": "v2",
+        "configuration": "Debug"
+      },
+      {
+        "comparison": "baseline",
+        "branch": "v2",
+        "configuration": "Release"
+      },
+      {
+        "comparison": "corrected",
+        "branch": "v3",
+        "configuration": "Debug"
+      },
+      {
+        "comparison": "corrected",
+        "branch": "v3",
+        "configuration": "Release"
+      },
+      {
+        "comparison": "corrected",
+        "branch": "v2",
+        "configuration": "Debug"
+      },
+      {
+        "comparison": "corrected",
+        "branch": "v2",
+        "configuration": "Release"
+      }
+    ],
+    "baselineProject": {
+      "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Runtime.Tests.csproj",
+      "bytes": 1043,
+      "sha256": "257c52aea6d00c3ab0a54e694f7daffa51e514714aa4e4235e52f528754090ae"
+    },
+    "controls": "Source parses and whole source inverses reviewed only. No new controls, actual compiler, tests, SDK/native or payload invoked by owner.",
+    "qualification": "Six independent original compiler lanes, each with an isolated checkout/output/task context. Exact unchanged xUnit v2 baseline Debug/Release; corrected v2/v3 Debug/Release. Actual reference resolution, DefineConstants, evaluated Compile and physical original PE/PortablePDB required. Legacy HintPath failures remain real failures; no aliases, analyzer suppression, fabricated API or test/native/full-SDK acceptance."
+  }
+}

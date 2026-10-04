@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
-  "programTree": "27f0642a657dc45a098731e783ab1df286858ced",
+  "baselineCommit": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+  "programTree": "a1495094b0e463f0bfdeb591d6faf4a85c940f3f",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -18,6 +18,20 @@
       "object": "672fcc6f2b4fcce0f80eae27c883bc5c19239279",
       "bytes": 35,
       "sha256": "3a1d1dcb4ed7c98614dd922a04be1e3690f6388f899c3801348e88b3ba4f1d75"
+    },
+    {
+      "path": ".github/scripts/astra-agents-compiler09-caller.py",
+      "mode": "100644",
+      "object": "42aae23b2af8c6dc9d478373cf6c2d33acbe8f0e",
+      "bytes": 13941,
+      "sha256": "45c6d2b75d12bddea482ddc231be329a22593dde8649858465c1115ee7ee45b6"
+    },
+    {
+      "path": ".github/scripts/astra-agents-compiler09-original.py",
+      "mode": "100644",
+      "object": "a87af4b3b1d19c79af7f89fab3332fb36f2fdb43",
+      "bytes": 47038,
+      "sha256": "c4158277366fbef5604f3ac844a76776dec230fc705b13603641f5e4b6ba86bf"
     },
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
@@ -200,6 +214,13 @@
       "object": "a17f0247da08a499ae2193bc1f3c288af7d883e0",
       "bytes": 6997,
       "sha256": "d9f51cf3093bdb0069d6730cc6318722649f026efd42cc5619f8eea7d15d8b7f"
+    },
+    {
+      "path": ".github/validation/astra-agents-compiler09-sources.json",
+      "mode": "100644",
+      "object": "2cec81b673a500a4ec3504703df13fafa76a9633",
+      "bytes": 115830,
+      "sha256": "227ef11f50a9f6b749ebd69557b8a12460b172553b0f5986c55302eb8cebefd6"
     },
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
@@ -393,9 +414,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "7725883cc0b1bfa3b98995c4f0ee39d7a86bb58a",
-      "bytes": 18602,
-      "sha256": "c6212457040ee98e0772bd5560ebe1b15d86f8d1e905390c64453ece401b72ab"
+      "object": "23464488ef782b219b0d33aca7bbf73b8c8c15db",
+      "bytes": 29688,
+      "sha256": "50c56d25904dfd275e7ad67e883482fa8824ae8f3fab9059806ac3d989eac4aa"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -1471,23 +1492,23 @@
     {
       "path": "9to1 Models/Dulche Alpha/Tests/AgentOriginalContextBindingTests.cs",
       "mode": "100644",
-      "object": "74acf7109a294332f19da83715f7cc5de4f927bc",
-      "bytes": 13043,
-      "sha256": "d52b72ed84c504f0cd34763c5ba79c0f481a1d14ae29edde2bf19f5c31429929"
+      "object": "d079e3bfe7e53f054727ab9a0c5a1cabdeffd851",
+      "bytes": 13632,
+      "sha256": "abb6035eb57c98e0a1a4572e3a9c77ffbdaeff380f755a39d603274292c1ee0e"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Tests/DenAgentChatExecutionAdapterTests.cs",
       "mode": "100644",
-      "object": "d3e43ec5b8673aa2c2ac4d7760222e90ec4fa3fc",
-      "bytes": 51914,
-      "sha256": "d4a9379a3afb93884c3a6ae481232640dadacc3d165b241d9f3c67825fdaf141"
+      "object": "4ac0ac24534a91f679c7dc3478845df8337b6638",
+      "bytes": 52032,
+      "sha256": "b1dd797d6c35afd4a949073e941641bc4e7c46246928b45f8114a8f460c50157"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Tests/DenAgentExecutionStateStoreTests.cs",
       "mode": "100644",
-      "object": "2004ac06fa3d68a6abc42eb5fef8681f89cf4d7d",
-      "bytes": 13975,
-      "sha256": "47fe2b6ab02a21bd3ee887934b9cca5163c74fa4ba4a983f0e66e8e753a0b8fd"
+      "object": "d7725289066644e4a5b8e0ac9b2336edd8785f8e",
+      "bytes": 14447,
+      "sha256": "fa33587319aa47b3bdd77634c025ce3101dafe94669d48d1aa11439e3e31ca0c"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Tests/DenAgentRuntimeValidatorTests.cs",
@@ -1506,9 +1527,9 @@
     {
       "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
       "mode": "100644",
-      "object": "8a56c2f28cde6e8db84ca9ef99dbd63f023ab520",
-      "bytes": 835,
-      "sha256": "b784f05850efac8b4218592ab13f9a8eb6c0fd4e4827d74c5ff6a918bf9b8755"
+      "object": "d33832c0edf2b034bf43040bd5db67c60e31a445",
+      "bytes": 915,
+      "sha256": "e0fe03c1fed3aedcbc20ca270e7bb9357937902de1244e49b82fe7b92a22b91a"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Runtime.Tests.csproj",
@@ -1518,18 +1539,25 @@
       "sha256": "257c52aea6d00c3ab0a54e694f7daffa51e514714aa4e4235e52f528754090ae"
     },
     {
+      "path": "9to1 Models/Dulche Alpha/Tests/DulcheOriginalTestCancellation.cs",
+      "mode": "100644",
+      "object": "125f74e555a7623dc02ffc65359ebdfada54566a",
+      "bytes": 503,
+      "sha256": "7cbda98e7234ddc269a5a574bdc732016c56a6c3accd5387ed173febecd29af4"
+    },
+    {
       "path": "9to1 Models/Dulche Alpha/Tests/RuntimeTests.cs",
       "mode": "100644",
-      "object": "1882421e92d5cb379f0e4769e6b7f4de9f8c989d",
-      "bytes": 12824,
-      "sha256": "d6dbcab9da84caf209bb135c51b27c756634e740789610ca7296fcd6da168f10"
+      "object": "cc82ab4881c87f32bf70121d36f4469a814d4b3e",
+      "bytes": 13648,
+      "sha256": "1c55af5259eaefb405fb378f5415cce50a3163957b9944b8604c64241dab9c0b"
     },
     {
       "path": "9to1 Models/Dulche Alpha/Tests/ToolRegistryTests.cs",
       "mode": "100644",
-      "object": "2c96de2ee6179ca705653037a75e127d6c5bef23",
-      "bytes": 6565,
-      "sha256": "f20c6ee8afc40fffd5787b95485ea793a560a9b2c407aaf7007bc9a8b530a444"
+      "object": "feee8021c13f42fd2f5f75d2aa4b1c4b9a057d10",
+      "bytes": 7509,
+      "sha256": "8cb27a275fcb17fdb9df0f5e9df0a9994c96b1a5e7231c4fff5396ef1b60b269"
     },
     {
       "path": "9to1 Models/Dulche Alpha/ToolRegistry.cs",
@@ -66867,19 +66895,17 @@
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
   "limits": [
-    "Root selects exact failed SDK07 e0c0310e parent/tree and current semantic program tree only after complete source/custody/package peers; unchanged54ac constructor and643 launcher. No owner Git, build, SDK or native invocation.",
-    "Four actual compiler-cause product paths only: restore approved exact prompt display acknowledgement atop current C2 grant/identity service; actual IReadOnlyList/DenPermission/collection assertions; fourteen+two current xUnit3 tokens. Entire actual e0c source inverses and all original fixture bodies/assertions required.",
-    "All102 canonical source targets/29 source fixture files/190 methods/237 authored minima and38 prerequisites remain; four source hashes and three fixture hashes only change. Source minima are not executed results; all188/235 historical SDK04 minima remain mandatory.",
-    "Original215 owning/12 regression/48 resource class tables/callers/method/native/TLS/CRL/Java/task/compiled/PDB/restores/profile/shutdown/drains stay byte exact. These four product targets intersect none of the three original cohort class-source tables.",
-    "Mandatory evaluated Debug and Release matrix:22 entry restores,16 full xUnit runs,2 full original Files console executions,4 product executable builds plus source-built tasks/analyzers/full graph builds and discovery. Original22 default-configuration command templates stay exact historical recipes.",
-    "Physical actual TargetPath/AssemblyName/PE plus actual embedded-or-external Portable PDB CodeView/#Pdb identity and EVERY document hash/evaluated Compile/source byte required. Exact five pure type-only declarations retain only existing narrow exceptions with Compile/hash/full owning PE proof.",
-    "Current SDK07 task PE physical witness contains221 documents with217 evaluated Compile items, two SDK generated and two DevGenerator documents. Actual generated physical-file availability was not measured before consumer build refusal; no missing-file outcome, C counts, producer flag edit or document waiver is inferred.",
-    "Entire source-built Avalonia task target/output closure, generated/materialized source retention and independent actual restored graph/NuGet physical hash/metadata closure remain equal before/after. Original guarded creator PID/pidfd/session/strict all-command ledgers plus primary/close/persistence/post-pin errors retained.",
-    "SDK07 complete original causal archive independently validates572 safeCRC members,604 family+path file rows,537 piece descriptors and568 locally reproduced full evidence bodies. Thirty-six binary/nontext rows and221 task symbol documents are original custody-reader witnesses rather than separate local raw-part/binary replay.",
-    "Actual SDK07 joint99 original commands:98 exit0 and Home build exit1,all99 recorded seals true plus59 observed inner attempts/profile restoration. Distinct owning16 Application analyzer errors prevent later native probe; preallocated future-native marker remains false although real managed Mail caller5862 is drained.",
-    "256MiB retained evidence,16MiB command log,1200s per original command and180min SDK job remain acceptance bounds. Whole original indexed multipart transport has26MiB payload/29MiB inner/<32MiB outer/at most12 parts; no filtering or fabricated external PDB.",
-    "Every discovered full actual case/no skips plus original native outcomes remain mandatory. No ordinary installed Home/bootstrap/current actor/provider/Agent route/native UI/Dulche/Files receipt/Windows/macOS/Android/iOS acceptance from source or compiler correction.",
-    "No OS222/module lifecycle, new privacy/attachment policy, Terra pass-start, hosted/Cloud/paid-provider activation or unrelated product scope is selected by this corrective recipe."
+    "Root alone may seed the unique isolated branch to exact actual4f parent after all source/config/workflow/control and custody peers, using unchanged strong54ac constructor and643 launcher. No owner Git/build/test/restore/network/SDK invocation.",
+    "Six independent compiler-only lanes: unchanged actual4f sibling v2 Debug/Release baseline in its own checkout/output/task context, corrected v3 Debug/Release and corrected v2 Debug/Release. No tests/native or full SDK acceptance; old jobs/guards/215-12-48 cohort callers stay byte-exact and skip this isolated branch.",
+    "Seven cause-specific Agents targets only: five current fixture source bodies, v3-only DefineConstants marker and new conditional maintained-context accessor. Exactly51 analyzer sites16+14+11+8+2; explicit None/owned/retired cancellation assertions preserved, no warnings suppression or framework migration.",
+    "Full later joint catalogue106 source rows/31 fixtures/204 methods251 authored minima and38 prerequisites preserved as source-only inventory. Four new explicit inherited rows add14 existing cases; zero new methods or test cases. This job compiles only actual selected v2/v3 dependency graph, not all106 sources or11 suites.",
+    "Before and after whole issued corrective/source cuts,22 Gitlinks/three exact materialized source dependencies, all tracked source/blob bytes and selected source/owner pins must match. Unchanged baseline helper must be genuinely absent; actual4f sourcecut/catalogue exact. Separate immutable baseline does not receive any correction or prepared HintPath alias.",
+    "Each actual project/configuration evaluates Compile/DefineConstants/ReferencePath and actual physical resolved reference bytes, complete owning graph output PE plus embedded-or-external PortablePDB identity/EVERY source document, and source-built Avalonia task/restored graph/package closure. Original finite MPDB version/raw-deflate/CodeView/#Pdb checks and original strict generated file availability remain unchanged.",
+    "Actual v3 marker must be present and v2 marker absent; each successfully built branch must compile the five whole original affected fixtures plus corrected helper where selected and place every affected code-bearing source in its genuine PDB. Real baseline/HintPath/build/reference failures stay nonzero and attributed, no fake class/alias/TestContext.",
+    "All original guarded execvp/G handshake/creator PIDfd/SAME OriginalSession/strict EVERY expected and pending command directory/parent/birth/disappearance seals plus independent body/close/persistence/post-pin faults remain. Shared Mail/profile helpers remain byte exact; SDK-only caller class/current shape fix preserved.",
+    "256MiB retained child evidence/16MiB log/1200s command/10800s caller bounds maintained. Whole original compiler/caller evidence uses source-pinned splitter26MiB payload29MiB inner/<32MiB outer/at most12 parts. Periodic budget checks are refusal guards, not hard allocation guarantees.",
+    "Full eventual joint Debug/Release16 xUnit+2 Files console+4 product executable and original215/12/48 native cohorts remain independent mandatory gates. Original owning26 Home failures and regression causes are not treated as corrected or retested by this compiler verification.",
+    "No production association/privacy/Cloud/destination/export/bootstrap/installed actor/provider/OS225/Terra or unrelated source activation."
   ],
   "inputManifests": [
     {
@@ -67091,6 +67117,66 @@
       "path": "/workspace/astra-source/worker2-joint05-sdk-native-package07-exact-caller-catalog-descriptor/manifest.json",
       "bytes": 41681,
       "sha256": "c21472d90db8b6b7d4076bc8e035cb18282b8ce586a187d5e2d5e83a9afa0d25"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/manifest.json",
+      "bytes": 30078,
+      "sha256": "348039e5523ce074934cf1be01170cb1d623f11bab4428a383fd3896eeb89051"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/ToolRegistryTests.cs",
+      "bytes": 7509,
+      "sha256": "8cb27a275fcb17fdb9df0f5e9df0a9994c96b1a5e7231c4fff5396ef1b60b269"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/RuntimeTests.cs",
+      "bytes": 13648,
+      "sha256": "1c55af5259eaefb405fb378f5415cce50a3163957b9944b8604c64241dab9c0b"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/AgentOriginalContextBindingTests.cs",
+      "bytes": 13632,
+      "sha256": "abb6035eb57c98e0a1a4572e3a9c77ffbdaeff380f755a39d603274292c1ee0e"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/DenAgentExecutionStateStoreTests.cs",
+      "bytes": 14447,
+      "sha256": "fa33587319aa47b3bdd77634c025ce3101dafe94669d48d1aa11439e3e31ca0c"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/DenAgentChatExecutionAdapterTests.cs",
+      "bytes": 52032,
+      "sha256": "b1dd797d6c35afd4a949073e941641bc4e7c46246928b45f8114a8f460c50157"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/Dulche.Agents.Tests.csproj",
+      "bytes": 915,
+      "sha256": "e0fe03c1fed3aedcbc20ca270e7bb9357937902de1244e49b82fe7b92a22b91a"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sdk08-actual-agents-test-cancellation-source01-v3-and-preserved-v2/DulcheOriginalTestCancellation.cs",
+      "bytes": 503,
+      "sha256": "7cbda98e7234ddc269a5a574bdc732016c56a6c3accd5387ed173febecd29af4"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/astra-agents-compiler09-original.py",
+      "bytes": 47038,
+      "sha256": "c4158277366fbef5604f3ac844a76776dec230fc705b13603641f5e4b6ba86bf"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/astra-agents-compiler09-caller.py",
+      "bytes": 13941,
+      "sha256": "45c6d2b75d12bddea482ddc231be329a22593dde8649858465c1115ee7ee45b6"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/astra-agents-compiler09-sources.json",
+      "bytes": 115830,
+      "sha256": "227ef11f50a9f6b749ebd69557b8a12460b172553b0f5986c55302eb8cebefd6"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sdk09-agents-isolated-compiler-source01/haven-chat-model-ci.yml",
+      "bytes": 29688,
+      "sha256": "50c56d25904dfd275e7ad67e883482fa8824ae8f3fab9059806ac3d989eac4aa"
     }
   ],
   "sharedCakeIdContract": null

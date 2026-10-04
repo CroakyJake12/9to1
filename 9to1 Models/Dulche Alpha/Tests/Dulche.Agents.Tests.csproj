@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DefineConstants>$(DefineConstants);ASTRA_DULCHE_XUNIT_V3</DefineConstants>
     <Deterministic>true</Deterministic>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>

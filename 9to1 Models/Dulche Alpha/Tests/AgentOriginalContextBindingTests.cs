@@ -14,18 +14,18 @@ public sealed class AgentOriginalContextBindingTests
         var issuer = new OriginalReferenceIssuer(context, lifetime.Token);
         var store = new SyntheticState(); var catalog = new SyntheticCatalog(); var loop = new RecordedLoop(issuer);
         var coordinator = new AgentExecutionService(store, catalog, issuer, loop);
-        var started = await coordinator.StartAsync(Request(context));
+        var started = await coordinator.StartAsync(Request(context), cancellationToken: DulcheOriginalTestCancellation.Current);
         var committed = Assert.IsType<AgentExecutionSnapshot>(started.Value);
         Assert.Null(started.Error);
         Assert.Same(context, issuer.BoundContext);
         Assert.Same(committed.Run, issuer.BoundRun);
-        var completed = await coordinator.ExecuteNextStepAsync(committed.Run.AgentRunId);
+        var completed = await coordinator.ExecuteNextStepAsync(committed.Run.AgentRunId, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Null(completed.Error);
         Assert.Equal(AgentRunState.Completed, Assert.IsType<AgentExecutionSnapshot>(completed.Value).Run.State);
         Assert.Equal(1, loop.Calls);
         Assert.Same(context, issuer.StepContext);
         Assert.Same(issuer.OriginalStep, loop.OriginalStep);
-        var copied = await issuer.GetOriginalStepAdmissionAsync(Assert.IsType<AgentExecutionStep>(loop.OriginalStep) with { });
+        var copied = await issuer.GetOriginalStepAdmissionAsync(Assert.IsType<AgentExecutionStep>(loop.OriginalStep) with { }, ct: DulcheOriginalTestCancellation.Current);
         Assert.Equal(AgentFailureCode.PermissionDenied, copied.Error?.Code);
     }
 
@@ -37,14 +37,14 @@ public sealed class AgentOriginalContextBindingTests
         var issuer = new OriginalReferenceIssuer(context, lifetime.Token);
         var store = new SyntheticState(); var catalog = new SyntheticCatalog(); var loop = new RecordedLoop(issuer);
         var original = new AgentExecutionService(store, catalog, issuer, loop);
-        var started = Assert.IsType<AgentExecutionSnapshot>((await original.StartAsync(Request(context))).Value);
+        var started = Assert.IsType<AgentExecutionSnapshot>((await original.StartAsync(Request(context), cancellationToken: DulcheOriginalTestCancellation.Current)).Value);
         var restarted = new AgentExecutionService(store, catalog, issuer, loop);
-        var refused = await restarted.ExecuteNextStepAsync(started.Run.AgentRunId);
+        var refused = await restarted.ExecuteNextStepAsync(started.Run.AgentRunId, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal(AgentRunState.Failed, Assert.IsType<AgentExecutionSnapshot>(refused.Value).Run.State);
         Assert.Equal(AgentFailureCode.PermissionDenied.ToString(), refused.Value!.Run.LastErrorCode);
         Assert.Equal(0, loop.Calls);
         Assert.Null(issuer.OriginalStep);
-        Assert.Single(await store.ListRunsAsync("canonical-agent", 10));
+        Assert.Single(await store.ListRunsAsync("canonical-agent", 10, ct: DulcheOriginalTestCancellation.Current));
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class AgentOriginalContextBindingTests
         var issuer = new ObservationsOnlyBroker(); var store = new SyntheticState();
         var loop = new RecordedLoop(issuer);
         var coordinator = new AgentExecutionService(store, new SyntheticCatalog(), issuer, loop);
-        var refused = await coordinator.StartAsync(Request(context));
+        var refused = await coordinator.StartAsync(Request(context), cancellationToken: DulcheOriginalTestCancellation.Current);
         var actual = Assert.IsType<AgentExecutionSnapshot>(refused.Value);
         var error = Assert.IsType<AgentFailure>(refused.Error);
         Assert.Equal(AgentFailureCode.PermissionDenied, error.Code);
@@ -62,7 +62,7 @@ public sealed class AgentOriginalContextBindingTests
         Assert.Equal("true", error.Details!["canonicalRunCreated"]);
         Assert.Equal("false", error.Details["executionAdmitted"]);
         Assert.Equal(AgentRunState.Failed, actual.Run.State);
-        Assert.Equal(actual.Run.AgentRunId, Assert.Single(await store.ListRunsAsync("canonical-agent", 10)).AgentRunId);
+        Assert.Equal(actual.Run.AgentRunId, Assert.Single(await store.ListRunsAsync("canonical-agent", 10, ct: DulcheOriginalTestCancellation.Current)).AgentRunId);
         Assert.Equal(0, loop.Calls);
     }
 
@@ -75,12 +75,12 @@ public sealed class AgentOriginalContextBindingTests
         var store = new SyntheticState(); var loop = new RecordedLoop(issuer);
         var coordinator = new AgentExecutionService(store, new SyntheticCatalog(), issuer, loop);
         var request = Request(context) with { IdempotencyKey = "same-original-request" };
-        var started = Assert.IsType<AgentExecutionSnapshot>((await coordinator.StartAsync(request)).Value);
+        var started = Assert.IsType<AgentExecutionSnapshot>((await coordinator.StartAsync(request, cancellationToken: DulcheOriginalTestCancellation.Current)).Value);
         issuer.RefuseBinding = true;
-        var refused = await coordinator.StartAsync(request);
+        var refused = await coordinator.StartAsync(request, cancellationToken: DulcheOriginalTestCancellation.Current);
         Assert.Equal(AgentFailureCode.PermissionDenied, refused.Error?.Code);
         Assert.Equal("false", refused.Error?.Details?["canonicalRunCreated"]);
-        var current = Assert.IsType<AgentExecutionSnapshot>(await store.ReadAsync(started.Run.AgentRunId));
+        var current = Assert.IsType<AgentExecutionSnapshot>(await store.ReadAsync(started.Run.AgentRunId, ct: DulcheOriginalTestCancellation.Current));
         Assert.Equal(started.Revision, current.Revision);
         Assert.Equal(AgentRunState.Queued, current.Run.State);
         Assert.Single(current.Events);
