@@ -111,6 +111,8 @@ public sealed partial class SpaceRegistry
     {
         var operations = state.Deletions ?? [];
         if (state.Spaces is null || operations.Count > 10000) throw new InvalidDataException("Space deletion progress exceeds the supported registry bounds.");
+        if (state.Version < 4 && state.Spaces.Any(space => space.RevisionBank is not null))
+            throw new InvalidDataException("Revision Bank metadata requires Spaces registry schema 4.");
         if (state.Version < 3 && operations.Count != 0)
             throw new InvalidDataException("Deletion progress requires Spaces registry schema 3.");
         var ids = new HashSet<Guid>(); var pending = new HashSet<Guid>();

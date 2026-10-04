@@ -128,7 +128,8 @@ public sealed record SpaceDefinition(
     IReadOnlyList<SpaceCapabilityBinding>? CapabilityBindings = null,
     SpaceInheritancePolicy? Inheritance = null,
     IReadOnlyList<SpaceContextReference>? ContextReferences = null,
-    IReadOnlyList<SpaceShareGrant>? Shares = null)
+    IReadOnlyList<SpaceShareGrant>? Shares = null,
+    RevisionBankData? RevisionBank = null)
 {
     /// <summary>Origin is derived from the protected registry bit and is not independently mutable.</summary>
     public SpaceOrigin Origin => IsBuiltIn ? SpaceOrigin.BuiltIn : SpaceOrigin.UserCreated;
