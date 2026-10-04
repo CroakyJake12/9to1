@@ -366,6 +366,31 @@ public static class CanvasStandardUiAutomationProviderClient {
 function Test-OwnedDefaultButtonSnapshot($Snapshot) {
     return $Snapshot.nativeWindowHandle -ne 0 -and $Snapshot.nativeProcessId -eq $process.Id -and $Snapshot.nativeIsPickerChild -and $Snapshot.nativeClass -ceq 'Button' -and $Snapshot.nativeCaptionMatchesSelectFolder -and $Snapshot.uiaProcessId -eq $process.Id -and $Snapshot.uiaWindowHandle -eq $Snapshot.nativeWindowHandle -and $Snapshot.uiaRole -ceq 'ControlType.Button' -and $Snapshot.uiaNameMatchesSelectFolder
 }
+function Test-OwnedPickerValueBinding($Snapshot) {
+    return $Snapshot.editorProcessId -eq $process.Id -and $Snapshot.focusProcessId -eq $process.Id -and $Snapshot.editorRole -ceq 'ControlType.Edit' -and $Snapshot.focusRole -ceq 'ControlType.Edit' -and $Snapshot.editorEnabled -and -not $Snapshot.editorOffscreen -and $Snapshot.editorWidth -gt 0 -and $Snapshot.editorHeight -gt 0 -and $Snapshot.focusSameEditor -and $Snapshot.editorInDialog -and $Snapshot.foregroundIsOwnedPicker -and $Snapshot.processLive -and $Snapshot.pickerProcessId -eq $process.Id -and $Snapshot.pickerRole -ceq 'ControlType.Window' -and $Snapshot.pickerHandleMatchesExpected
+}
+function Read-BoundedPickerValueWitness([string]$Value,[string]$Expected,[bool]$Diagnostics=$false) {
+    $s=[ordered]@{exactValue=$false;valueLength=$null;expectedLength=$null;valueSha256=$null;expectedSha256=$null;readRefusal=$null}
+    if($Diagnostics){$s.valueLength=$Value.Length;$s.expectedLength=$Expected.Length}
+    if($Value.Length -gt 32768 -or $Expected.Length -gt 32768){$s.readRefusal='BoundedValueLengthRefusal';return $s}
+    $s.exactValue=$Value -ceq $Expected
+    if($Diagnostics){
+        # Failure-only metadata never returns either private text value.
+        $sha=[Security.Cryptography.SHA256]::Create()
+        try{$s.valueSha256=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Value)))).Replace('-','').ToLowerInvariant();$s.expectedSha256=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Expected)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+    }
+    return $s
+}
+function Read-OwnedPickerValueObservation($Editor,$Dialog,[IntPtr]$PickerHandle,[string]$Expected,[bool]$Diagnostics=$false) {
+    $c=$Editor.Current;$focus=[System.Windows.Automation.AutomationElement]::FocusedElement;$f=$focus.Current;$r=$c.BoundingRectangle;$dc=$Dialog.Current
+    $s=[ordered]@{editorProcessId=$c.ProcessId;focusProcessId=$f.ProcessId;editorRole=$c.ControlType.ProgrammaticName;focusRole=$f.ControlType.ProgrammaticName;editorEnabled=$c.IsEnabled;editorOffscreen=$c.IsOffscreen;editorWidth=$r.Width;editorHeight=$r.Height;focusSameEditor=$Editor.Equals($focus);editorInDialog=(Is-InSurface $Editor $Dialog);foregroundIsOwnedPicker=([CanvasPackageInput]::ForegroundMatches($PickerHandle) -and [CanvasPackageInput]::WindowPid($PickerHandle) -eq $process.Id);processLive=-not $process.HasExited;pickerProcessId=$dc.ProcessId;pickerRole=$dc.ControlType.ProgrammaticName;pickerHandleMatchesExpected=$PickerHandle -ne [IntPtr]::Zero -and [IntPtr]$dc.NativeWindowHandle -eq $PickerHandle;bindingAdmitted=$false;exactValue=$false;valueLength=$null;expectedLength=$null;valueSha256=$null;expectedSha256=$null;readRefusal=$null}
+    if(-not(Test-OwnedPickerValueBinding $s)){return $s}
+    $s.bindingAdmitted=$true
+    $value=$Editor.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value
+    $witness=Read-BoundedPickerValueWitness $value $Expected $Diagnostics
+    foreach($key in $witness.Keys){$s[$key]=$witness[$key]}
+    return $s
+}
 function Choose-OwnFolder {
     Invoke-Button 'Set up Canvases'
     $dialog=Observe-OwnedPicker
@@ -381,7 +406,17 @@ function Choose-OwnFolder {
     Require-OwnedControl $address 'ControlType.Edit'
     Check (Is-InSurface $address $dialog) 'Actual focused folder-address editor belongs to exact native picker tree'
     [CanvasPackageInput]::TypeText($filesRoot)
-    Check ($address.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value -ceq $filesRoot) 'Actual picker typed exact private empty fixture path'
+    try{
+        # SendInput queues real native input; observe the same exact owned field
+        # and value with the existing bound before the original current-value Check.
+        [void](Wait-Observed {$observation=Read-OwnedPickerValueObservation $address $dialog $handle $filesRoot;$observation.bindingAdmitted -and $observation.exactValue} 'Actual picker typed exact private empty fixture path')
+        Check ($address.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value -ceq $filesRoot) 'Actual picker typed exact private empty fixture path'
+    }catch{
+        $originalTypedValueFailure=$_
+        try{$result.pickerTypedValueFailureObservation=Read-OwnedPickerValueObservation $address $dialog $handle $filesRoot $true;Write-Result}
+        catch{$result.pickerTypedValueDiagnosticFailure=$_.Exception.GetType().FullName}
+        throw $originalTypedValueFailure
+    }
     [CanvasPackageInput]::Press(0x0D)
     [void](Wait-Observed {
         $condition=New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty,$process.Id)

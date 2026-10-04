@@ -165,3 +165,26 @@ Independent C6 reviewed setup success is necessary groundwork, not proof that
 actual Edit/Value/Button/Invoke or the owning native workflow now succeeds. The
 same original immutable package and all original criteria must be observed in
 one new real Windows run after source peer review/root sole invocation.
+
+
+Original9bbe native run37227144629 restores genuine Edit/Value and Button/Invoke
+with successful typed standard provider setup. It retains71PASS/1FAIL among72
+recorded checks: the immediate exact private address-value Check fails after one
+TypeText. The exact value is unobserved; the screenshot shows the controlled
+fixture-path tail/caret but cannot prove equality or an asynchronous-input cause.
+No folder choice/request/Canvas state occurs. Genuine own Cancel closes and the
+app failure cleanup exits0 with two bounded drains/no forced cleanup; original
+first-launch normal-close fields remain false/null and workflow remains failed.
+
+This successor sends TypeText once, then uses the existing20-second observation
+bound for the SAME live owned address peer, current Edit role/PID/visible geometry,
+exact focused peer via the public UIA Equals identity, dialog ancestry and exact
+owned foreground modal before reading its genuine Value pattern. Exact expected
+value equality and the original current-value Check remain unchanged. No repeated
+input, replacement editor, guessed locator, prefix/normalization/value fallback,
+request retry or weaker role/ownership rule is admitted. A refusal retains the
+original timeout/Check error even if diagnostics/output fail. Failure-only metadata
+contains current binding booleans/role/PID plus bounded32768-character value/
+expected lengths/SHA/equality, never either text or private paths. Real async
+input/value timing is a hypothesis pending actual observation; new native success
+still requires all original package/setup/approval/stroke/durability/reopen gates.
