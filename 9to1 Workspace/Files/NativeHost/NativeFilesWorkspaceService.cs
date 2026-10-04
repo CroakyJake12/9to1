@@ -56,6 +56,11 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
         ReferenceEquals(profiles, expectedProfiles) && HomeLocalReadComposition.IsBound(
             home as FileHomeCoreStateStore, expectedProfiles, expectedOwnership as HomeResourceStoreOwnershipAuthority);
 
+    /// <summary>Exact composition identity only; never a storage/read or permission grant.</summary>
+    public bool IsBoundToOriginalLocalComposition(HomeLocalProfileIdentity expectedProfiles,
+        IResourceStoreOwnershipAuthority expectedOwnership)
+        => IsOriginalReadComposition(expectedProfiles, expectedOwnership);
+
     internal ValueTask<Func<CancellationToken, ValueTask<bool>>> CaptureOriginalReadConfigurationCheckAsync(
         NativeFilesWorkspace original, CancellationToken cancellationToken)
     {
@@ -202,6 +207,13 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
 public sealed class NativeFilesWorkspaceAuthority(NativeFilesWorkspaceService workspaces, HomeLocalProfileIdentity profiles,
     IResourceStoreOwnershipAuthority ownership)
 {
+    /// <summary>Exact borrowed owner identities only; this never returns a workspace or grant.</summary>
+    public bool IsBoundToOriginalComposition(NativeFilesWorkspaceService expectedWorkspaces,
+        HomeLocalProfileIdentity expectedProfiles, IResourceStoreOwnershipAuthority expectedOwnership)
+        => ReferenceEquals(workspaces, expectedWorkspaces) && ReferenceEquals(profiles, expectedProfiles)
+            && ReferenceEquals(ownership, expectedOwnership)
+            && workspaces.IsBoundToOriginalLocalComposition(expectedProfiles, expectedOwnership);
+
     public async Task<string?> ResolveAppDirectoryAsync(string appId, CancellationToken cancellationToken = default)
     {
         var workspace = await GetCurrentAsync(cancellationToken).ConfigureAwait(false);

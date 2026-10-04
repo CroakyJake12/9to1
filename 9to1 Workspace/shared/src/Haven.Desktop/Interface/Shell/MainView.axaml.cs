@@ -460,18 +460,30 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         get => _currentPage;
         private set
         {
+            CheckPendingOriginalFilesPublication();
             if (!SetProperty(ref _currentPage, value)) return;
+            CheckPendingOriginalFilesPublication();
             if (PageContent is not null)
                 PageContent.Content = value;
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsChatVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsPageVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsBrowseMode));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsTrainingMode));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsSidebarVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(HasFullSidebar));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(HasCompactSidebar));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsWorkspaceHeaderVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(ProductName));
+            CheckPendingOriginalFilesPublication();
         }
     }
 
@@ -480,6 +492,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         get => _selectedTab;
         set
         {
+            CheckPendingOriginalFilesPublication();
             if (ReferenceEquals(_selectedTab, value) || value is null) return;
             if (ReferenceEquals(_secondaryTab, value))
             {
@@ -489,18 +502,25 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (_selectedTab is not null)
             {
                 _selectedTab.IsSelected = false;
+                CheckPendingOriginalFilesPublication();
                 if (_selectedTab.Page is IActivatablePage previous) previous.Deactivate();
+                CheckPendingOriginalFilesPublication();
             }
             if (!SetProperty(ref _selectedTab, value)) return;
+            CheckPendingOriginalFilesPublication();
             value.IsSelected = true;
+            CheckPendingOriginalFilesPublication();
             ApplySelectedTab(value);
+            CheckPendingOriginalFilesPublication();
             RefreshTopRailTabs();
+            CheckPendingOriginalFilesPublication();
             QueueWorkspaceSessionSave();
         }
     }
 
     private void ApplySelectedTab(WorkspaceTabViewModel value)
     {
+        CheckPendingOriginalFilesPublication();
         if (value.Page is ChatPage chat)
         {
             CurrentChat = chat;
@@ -521,9 +541,13 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         }
 
         CurrentPage = value.Page;
+        CheckPendingOriginalFilesPublication();
         NavigateBackCommand.RaiseCanExecuteChanged();
+        CheckPendingOriginalFilesPublication();
         NavigateForwardCommand.RaiseCanExecuteChanged();
+        CheckPendingOriginalFilesPublication();
         RaiseShellProperties();
+        CheckPendingOriginalFilesPublication();
         if (value.Page is IActivatablePage activatable)
             _ = activatable.ActivateAsync(CancellationToken.None);
     }
@@ -1640,6 +1664,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (openInNewTab) AddFallbackTab();
             OpenBrowser();
         }
+        else if (route.Kind == HavenAppRouteKind.Files)
+        {
+            await OpenFilesAsync(openInNewTab);
+        }
         else if (route.Kind == HavenAppRouteKind.Plan)
         {
             if (openInNewTab) AddFallbackTab();
@@ -1764,6 +1792,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                     break;
                 case HavenSurface.Browse:
                     OpenBrowser();
+                    break;
+                case HavenSurface.Files:
+                    await OpenFilesAsync();
                     break;
                 case HavenSurface.Plan:
                     OpenPlan();
@@ -2676,16 +2707,22 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         HavenSurface? surface = null,
         bool forceNewTab = false)
     {
+        CheckPendingOriginalFilesPublication();
         var resolvedSurface = surface ?? InferSurface(page);
         var existing = OpenTabs.FirstOrDefault(item => item.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
         if (existing is not null)
         {
             if (!ReferenceEquals(existing.Page, page)) existing.ReplacePage(page);
+            CheckPendingOriginalFilesPublication();
             existing.Title = title;
+            CheckPendingOriginalFilesPublication();
             existing.SetSurface(resolvedSurface);
+            CheckPendingOriginalFilesPublication();
             if (ReferenceEquals(SelectedTab, existing)) ApplySelectedTab(existing);
             else SelectedTab = existing;
+            CheckPendingOriginalFilesPublication();
             RefreshTopRailTabs();
+            CheckPendingOriginalFilesPublication();
             return;
         }
 
@@ -2695,14 +2732,19 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             SelectedTab.NavigateTo(key, title, page, closeable, resolvedSurface);
             ApplySelectedTab(SelectedTab);
             RefreshTopRailTabs();
+            CheckPendingOriginalFilesPublication();
             return;
         }
 
         var tab = new WorkspaceTabViewModel(key, title, page, closeable, resolvedSurface);
         OpenTabs.Add(tab);
+        CheckPendingOriginalFilesPublication();
         SelectedTab = tab;
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsHorizontalTabsVisible));
+        CheckPendingOriginalFilesPublication();
         RefreshTopRailTabs();
+        CheckPendingOriginalFilesPublication();
         QueueWorkspaceSessionSave();
     }
 
@@ -3515,6 +3557,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private void RefreshTopRailTabs()
     {
+        CheckPendingOriginalFilesPublication();
         if (TopRail is null) return;
         var visibleTabs = OpenTabs.Where(tab => !tab.IsGroupCollapsed || ReferenceEquals(tab, SelectedTab) ||
             (tab.GroupId is { } groupId && ReferenceEquals(tab, OpenTabs.First(item => item.GroupId == groupId))));
@@ -3529,9 +3572,11 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             tab.GroupId,
             tab.GroupName,
             tab.IsGroupCollapsed)).ToArray());
+        CheckPendingOriginalFilesPublication();
         TopRail.SetNavigationAvailability(
             SelectedTab?.CanGoBack == true,
             SelectedTab?.CanGoForward == true);
+        CheckPendingOriginalFilesPublication();
         if (AllCommandItems.Count > 0) RefreshContextualActions();
     }
 
@@ -3550,18 +3595,25 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private void ApplyShellVisualState()
     {
+        CheckPendingOriginalFilesPublication();
         if (PageContent is null) return;
         PageContent.Content = CurrentPage;
+        CheckPendingOriginalFilesPublication();
         SidebarControl.IsVisible = _edition == HavenShellEdition.Classic && HasFullSidebar && !IsSplitView;
+        CheckPendingOriginalFilesPublication();
         NativeSidebarHost.IsVisible = _edition == HavenShellEdition.New
                                       && CurrentSurface == HavenSurface.Chat
                                       && IsSidebarOpen
                                       && !IsSplitView;
+        CheckPendingOriginalFilesPublication();
         ShellContextBar.IsVisible = false;
+        CheckPendingOriginalFilesPublication();
         StoredChatDropdown.IsVisible = _edition == HavenShellEdition.New
                                        && CurrentPage is NewChatPage newChatPage
                                        && !newChatPage.HasStarted;
+        CheckPendingOriginalFilesPublication();
         GoModeLabel.Text = CurrentPage is NewDashboardPage ? "Dashboard" : CurrentPage is NewChatPage ? "Chat" : "Go";
+        CheckPendingOriginalFilesPublication();
         TopRail.SetModelSummary(
             CurrentPage switch
             {
@@ -3570,48 +3622,87 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                 _ => CurrentChat?.SelectedModel?.Name ?? _preferences.DefaultModel
             },
             EffortPercentage(_preferences.DefaultEffort));
+        CheckPendingOriginalFilesPublication();
         RefreshTopRailTabs();
     }
 
     private void RaiseShellProperties()
     {
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(CurrentSurface));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(CurrentMode));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsStudy));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsChatProduct));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasContainers));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasAnyContainers));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsDuo));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ProductName));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(NewItemLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(FileNewLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(FileNewContainerLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContainerHeading));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ProjectMenuHeader));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(WorkspaceEyebrow));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(WorkspaceTitle));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ShowTemporaryHeaderAction));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ShowContextHeaderWidget));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(TemporaryHeaderActionLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextPercent));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextRemainingPercent));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextRemainingLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(RecentHeading));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContainerSettingsLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(OllamaStatus));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(DuoLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ChatTypeLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsProjectOpen));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ShowNoProjectChats));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsConversationSidebar));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsConversationCommands));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsEditingCommands));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsSidebarVisible));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasFullSidebar));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasCompactSidebar));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsBrowseMode));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsTrainingMode));
+        CheckPendingOriginalFilesPublication();
         ApplyShellVisualState();
     }
 
@@ -3671,6 +3762,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     {
         if (IsDisposed) return;
         IsDisposed = true;
+        // The native window owner awaits this SAME retained task before its scope can be released.
+        _ = BeginOriginalFilesClose();
         _reminderTimer.Stop();
         StopAutomationScheduler();
         lock (_goSuggestionRefreshes)
