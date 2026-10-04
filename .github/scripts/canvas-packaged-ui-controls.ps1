@@ -522,6 +522,23 @@ function Choose-OwnFolder {
     $defaults[0].GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     [void](Wait-Observed {Test-Path -LiteralPath (Join-Path $filesRoot '.9to1-files/drive.json') -PathType Leaf} 'Actual Files owner created private workspace after native picker choice')
 }
+function Test-OwnedSetupRootSnapshot($Snapshot) {
+    return (-not $Snapshot.processExited -and $Snapshot.expectedProcessId -gt 0 -and $Snapshot.currentHandle -gt 0 -and $Snapshot.originalHandle -gt 0 -and $Snapshot.currentHandle -eq $Snapshot.originalHandle -and $Snapshot.kernelProcessId -eq $Snapshot.expectedProcessId -and $Snapshot.uiaProcessId -eq $Snapshot.expectedProcessId -and $Snapshot.uiaHandle -eq $Snapshot.currentHandle -and $Snapshot.uiaRole -ceq 'ControlType.Window' -and $Snapshot.ownedForeground)
+}
+function Observe-OwnedFilesSetupCompletion {
+    $completed=Wait-Observed {
+        $process.Refresh()
+        if($process.HasExited){throw 'Owned Canvas exited before setup completion.'}
+        $currentHandle=$process.MainWindowHandle;$originalHandle=[long]$window.Current.NativeWindowHandle
+        if($currentHandle -eq [IntPtr]::Zero -or $currentHandle.ToInt64() -ne $originalHandle -or [CanvasPackageInput]::WindowPid($currentHandle) -ne $process.Id){throw 'Owned Canvas setup root changed.'}
+        $currentRoot=[System.Windows.Automation.AutomationElement]::FromHandle($currentHandle);$c=$currentRoot.Current
+        $snapshot=@{processExited=$process.HasExited;expectedProcessId=$process.Id;currentHandle=$currentHandle.ToInt64();originalHandle=$originalHandle;kernelProcessId=[CanvasPackageInput]::WindowPid($currentHandle);uiaProcessId=$c.ProcessId;uiaHandle=[long]$c.NativeWindowHandle;uiaRole=$c.ControlType.ProgrammaticName;ownedForeground=[CanvasPackageInput]::OwnsForeground($process.Id)}
+        if(-not(Test-OwnedSetupRootSnapshot $snapshot)){throw 'Current owned Canvas setup root refused.'}
+        Find-Unique 'No Canvas documents on this page. Create a canvas to begin.' 'ControlType.Text' $false $currentRoot
+    } 'Actual native Files setup completed before first canonical Home read'
+    Require-OwnedControl $completed 'ControlType.Text'
+    return $completed
+}
 function Read-OwnedFilesConfigurationCompletion([bool]$Diagnostics=$false) {
     $observedState=Read-BoundedJson $homePath
     $currentProfiles=@($observedState.records | Where-Object {$_.recordId -ceq 'home.local-profile'})
@@ -707,6 +724,7 @@ public static class CanvasPackageInput {
     Check (@(Get-ChildItem -LiteralPath $filesRoot -Force).Count -eq 0) 'Own explicitly selected Files fixture starts empty'
     $result.stage='actual-native-files-setup';$window=Start-Canvas 'first-launch';Position-Window
     Choose-OwnFolder
+    [void](Observe-OwnedFilesSetupCompletion)
     $observedHomeState=Read-BoundedJson $homePath;$profiles=@($observedHomeState.records | Where-Object {$_.recordId -ceq 'home.local-profile'})
     Check ($profiles.Count -eq 1 -and [Guid]$profiles[0].payload.ProfileId -ne [Guid]::Empty) 'Actual OS-backed canonical Home profile exists after native initialization'
     $privateProfileId=[Guid]$profiles[0].payload.ProfileId
