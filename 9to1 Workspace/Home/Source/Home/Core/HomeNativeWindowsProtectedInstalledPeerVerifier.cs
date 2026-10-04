@@ -74,9 +74,10 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
         if (host is not null && (host.AppId != _configuration.Package.AppId ||
             host.OperatingSystemApplicationId != _configuration.Package.OsApplicationId)) return null;
         HomeNativeWindowsProtectedPeerEvidence? original = null;
-        HomeNativeInstalledPeer? installed = null;
-        List<Exception> failures = [];
-        try
+        return await HomeNativeWindowsOriginalEvidenceLifetime.VerifyAsync(
+            ReadOriginalAsync, () => original?.Dispose()).ConfigureAwait(false);
+
+        async ValueTask<HomeNativeInstalledPeer?> ReadOriginalAsync()
         {
             var actor = await _profiles.GetCurrentAsync(ct).ConfigureAwait(false);
             if (actor is null || expectedActor is not null && actor != expectedActor ||
@@ -147,25 +148,10 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             original.RequireSame();
             if (!original.ReadBounded(descriptorFile, 1024 * 1024).AsSpan().SequenceEqual(descriptorBytes) ||
                 !original.ReadBounded(receiptFile, 2 * 1024 * 1024).AsSpan().SequenceEqual(receiptBytes)) return null;
-            installed = new(descriptor.AppId, receipt.InstalledApplicationId, receipt.InstallationRevision,
+            return new HomeNativeInstalledPeer(descriptor.AppId, receipt.InstalledApplicationId, receipt.InstallationRevision,
                 imageDigest, receipt.AllowedServiceIds.ToFrozenSet(StringComparer.Ordinal))
                 { Roles = receipt.Roles.ToFrozenSet(StringComparer.Ordinal) };
         }
-        catch (Exception error) when (error is UnauthorizedAccessException or InvalidDataException or
-            JsonException or CryptographicException or System.ComponentModel.Win32Exception or IOException)
-        {
-            // Refusal stays unavailable. Independent descriptor cleanup faults below remain
-            // faults, rather than silently turning a failed cleanup into successful admission.
-            installed = null;
-        }
-        catch (Exception error) { failures.Add(error); }
-        finally
-        {
-            try { original?.Dispose(); } catch (Exception error) { failures.Add(error); }
-        }
-        if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
-        if (failures.Count > 1) throw new AggregateException("Original Windows peer verification and close failed.", failures);
-        return installed;
     }
 
     private async ValueTask RequireActorAsync(AuthenticatedResourceActor original, CancellationToken ct)
@@ -433,5 +419,62 @@ public sealed class HomeNativeWindowsProtectedInstalledPeerVerifier :
             }, root, original.DescriptorRelativePath, original.ReceiptRelativePath,
                 keys.ToFrozenDictionary(StringComparer.Ordinal), publishers, writers, roles);
         }
+    }
+}
+
+internal static class HomeNativeWindowsOriginalEvidenceLifetime
+{
+    internal static async ValueTask<T?> VerifyAsync<T>(Func<ValueTask<T?>> body, Action close)
+        where T : class
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(close);
+        T? result = null;
+        Exception? refusal = null;
+        List<Exception> errors = [];
+        try { result = await body().ConfigureAwait(false); }
+        catch (Exception error) when (IsRefusal(error)) { refusal = error; }
+        catch (Exception error) { Add(errors, error); }
+        finally
+        {
+            try { close(); } catch (Exception error) { Add(errors, error); }
+        }
+        // An ordinary refusal returns unavailable only after successful cleanup.
+        // A failed close retains that SAME refusal as well as the independent close.
+        if (refusal is not null && errors.Count != 0) errors.Insert(0, refusal);
+        ThrowOriginals(errors);
+        return result;
+    }
+
+    internal static void RunWithCleanup(Action body, Action close)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(close);
+        List<Exception> errors = [];
+        try { body(); } catch (Exception error) { Add(errors, error); }
+        finally
+        {
+            try { close(); } catch (Exception error) { Add(errors, error); }
+        }
+        ThrowOriginals(errors);
+    }
+
+    internal static void ThrowWithCleanup(Exception original, Action close) =>
+        RunWithCleanup(() => ExceptionDispatchInfo.Capture(original).Throw(), close);
+
+    private static bool IsRefusal(Exception error) => error is UnauthorizedAccessException or
+        InvalidDataException or JsonException or CryptographicException or
+        System.ComponentModel.Win32Exception or IOException;
+
+    private static void Add(List<Exception> errors, Exception error)
+    {
+        if (!errors.Any(previous => ReferenceEquals(previous, error))) errors.Add(error);
+    }
+
+    private static void ThrowOriginals(List<Exception> errors)
+    {
+        if (errors.Count == 1) ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        if (errors.Count > 1)
+            throw new AggregateException("Original Windows peer evidence and independent cleanup failed.", errors);
     }
 }

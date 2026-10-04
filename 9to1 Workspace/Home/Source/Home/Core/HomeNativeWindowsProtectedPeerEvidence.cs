@@ -46,7 +46,11 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
                 throw new UnauthorizedAccessException("The original protected-owner policy is invalid.");
         }
         var process = OpenProcess(0x00100000 | 0x00001000, false, checked((uint)pid));
-        if (process.IsInvalid) { process.Dispose(); throw NativeFailure("Open original peer"); }
+        if (process.IsInvalid)
+        {
+            var failure = NativeFailure("Open original peer");
+            HomeNativeWindowsOriginalEvidenceLifetime.ThrowWithCleanup(failure, process.Dispose);
+        }
         try
         {
             if (GetProcessId(process) != pid || WaitForSingleObject(process, 0) != 258)
@@ -60,7 +64,7 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
                 throw new UnauthorizedAccessException("The process image is not absolute.");
             return new(process, pid, principal, start, Path.GetFullPath(image), owners);
         }
-        catch { process.Dispose(); throw; }
+        catch (Exception error) { HomeNativeWindowsOriginalEvidenceLifetime.ThrowWithCleanup(error, process.Dispose); throw; }
     }
 
     internal SafeFileHandle OpenProtected(string path, bool directory = false)
@@ -73,7 +77,11 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
         var share = directory ? 7u : 1u;
         var handle = CreateFile(path, access, share, IntPtr.Zero, 3,
             0x00200000u | (directory ? 0x02000000u : 0u), IntPtr.Zero);
-        if (handle.IsInvalid) { handle.Dispose(); throw NativeFailure("Open original protected path"); }
+        if (handle.IsInvalid)
+        {
+            var failure = NativeFailure("Open original protected path");
+            HomeNativeWindowsOriginalEvidenceLifetime.ThrowWithCleanup(failure, handle.Dispose);
+        }
         try
         {
             var identity = Identity(handle);
@@ -84,7 +92,7 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
             _files.Add((path, handle, identity));
             return handle;
         }
-        catch { handle.Dispose(); throw; }
+        catch (Exception error) { HomeNativeWindowsOriginalEvidenceLifetime.ThrowWithCleanup(error, handle.Dispose); throw; }
     }
 
     internal byte[] ReadBounded(SafeFileHandle handle, int maximumBytes)
@@ -206,15 +214,19 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
 
     private void RequireProtectedAcl(SafeFileHandle handle)
     {
-        var result = GetSecurityInfo(handle, 1, 0x1 | 0x4,
-            out _, out _, out _, out _, out var descriptor);
-        if (result != 0) throw new Win32Exception((int)result, "Original protected ACL could not be read.");
-        try
+        IntPtr descriptor = IntPtr.Zero;
+        HomeNativeWindowsOriginalEvidenceLifetime.RunWithCleanup(() =>
         {
+            var result = GetSecurityInfo(handle, 1, 0x1 | 0x4,
+                out _, out _, out _, out _, out descriptor);
+            if (result != 0)
+                throw new Win32Exception((int)result, "Original protected ACL could not be read.");
+            if (descriptor == IntPtr.Zero || !IsValidSecurityDescriptor(descriptor))
+                throw new UnauthorizedAccessException("Original protected ACL is missing or invalid.");
             var length = GetSecurityDescriptorLength(descriptor);
             if (length is < 1 or > 65536)
                 throw new UnauthorizedAccessException("Original protected ACL exceeds its bound.");
-            var bytes = new byte[length];
+            var bytes = new byte[checked((int)length)];
             Marshal.Copy(descriptor, bytes, 0, bytes.Length);
             var acl = new RawSecurityDescriptor(bytes, 0);
             if (acl.Owner is null || !_protectedOwners.Contains(acl.Owner.Value) ||
@@ -230,12 +242,11 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
                     (ace.AccessMask & writes) != 0 && !_protectedOwners.Contains(ace.SecurityIdentifier.Value))
                     throw new UnauthorizedAccessException("Original protected path admits a foreign writer.");
             }
-        }
-        finally
+        }, () =>
         {
-            if (LocalFree(descriptor) != IntPtr.Zero)
+            if (descriptor != IntPtr.Zero && LocalFree(descriptor) != IntPtr.Zero)
                 throw new IOException("Original protected security descriptor could not be released.");
-        }
+        });
     }
 
     private static FileIdentity Identity(SafeFileHandle handle)
@@ -326,6 +337,8 @@ internal sealed class HomeNativeWindowsProtectedPeerEvidence : IDisposable
     [DllImport("advapi32.dll")] private static extern uint GetSecurityInfo(SafeFileHandle handle, uint type, uint requested,
         out IntPtr owner, out IntPtr group, out IntPtr dacl, out IntPtr sacl, out IntPtr descriptor);
     [DllImport("advapi32.dll")] private static extern uint GetSecurityDescriptorLength(IntPtr descriptor);
+    [DllImport("advapi32.dll")] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsValidSecurityDescriptor(IntPtr descriptor);
     [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr handle);
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern uint WinVerifyTrust(IntPtr window, ref Guid action, ref TrustData data);
     [DllImport("wintrust.dll", ExactSpelling = true)] private static extern IntPtr WTHelperProvDataFromStateData(IntPtr state);
