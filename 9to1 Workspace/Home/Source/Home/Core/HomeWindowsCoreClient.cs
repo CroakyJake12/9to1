@@ -6,7 +6,7 @@ using Haven.Application;
 namespace HavenOS.Home.Core;
 
 /// <summary>Borrowed original Windows pipe; one retained request/reader. No listener, lease, profile, provider or grant is created.</summary>
-public sealed class HomeWindowsCoreClient : IAsyncDisposable
+public sealed partial class HomeWindowsCoreClient : IAsyncDisposable
 {
     private readonly NamedPipeClientStream _pipe;
     private readonly IHomeNativeSessionHostVerifier _verifier;

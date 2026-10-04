@@ -6,7 +6,7 @@ namespace HavenOS.Home.Core;
 
 /// <summary>The app owns one physical connection. The supplied host requirement and app/service
 /// descriptor must come from trusted composition; routing names or public reply fields confer no trust.</summary>
-public sealed class HomeNativeWindowsAppConnection : IAsyncDisposable
+public sealed partial class HomeNativeWindowsAppConnection : IAsyncDisposable
 {
     private readonly NamedPipeClientStream _pipe;
     private readonly CancellationTokenSource _lifetime;
@@ -159,6 +159,9 @@ public sealed class HomeNativeWindowsAppConnection : IAsyncDisposable
         catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
         try { if (originalStartupClose is not null) await originalStartupClose.ConfigureAwait(false); }
         catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
+        foreach (var originalFiles in CaptureOriginalFilesRequests())
+            try { await originalFiles.ConfigureAwait(false); }
+            catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
         try { await _pipe.DisposeAsync().ConfigureAwait(false); }
         catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
         try { _lifetime.Dispose(); } catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }

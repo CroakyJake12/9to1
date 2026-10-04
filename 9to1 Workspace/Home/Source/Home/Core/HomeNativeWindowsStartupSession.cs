@@ -7,7 +7,7 @@ namespace HavenOS.Home.Core;
 /// <summary>Checks the actual connected Home host and canonical compatibility API. The platform
 /// owns the pipe; this object retains/drains its original client and never creates a Home host,
 /// lease, current actor, service provider or installation action.</summary>
-public sealed class HomeNativeWindowsStartupSession : IHomeNativeStartupSession, IAsyncDisposable
+public sealed partial class HomeNativeWindowsStartupSession : IHomeNativeStartupSession, IAsyncDisposable
 {
     private readonly HomeWindowsCoreClient _client;
     private readonly HomeCompatibilityRequest _request;

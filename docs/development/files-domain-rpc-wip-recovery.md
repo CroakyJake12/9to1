@@ -1,26 +1,11 @@
-# Files domain RPC recovery snapshot
+# Files domain RPC recovery checkpoint 02
 
-Status: UNSELECTED WIP, not fully reviewed, compiled, tested or installed.
+This isolated source checkpoint is UNSELECTED, UNREVIEWED, UNCOMPILED and UNRUN. It is a successor of e2847b2722978ef5a4d8f63a42d955ca196c8f9e; the original six reconstructed bodies carry no older RAM peer result.
 
-This isolated recovery commit preserves complete source literals for the accepted Windows pipe's Files/1 extension. Parent is receiving union 876d79229984a0b8f164bff108f814f0192f8b8b. The reviewed Files native route remains PR13 at 531c8600eb6af644df477f16c1779d32dabe943f; this snapshot does not replace its review or claim package completion.
+The added client path uses the SAME authenticated Windows pipe, original Home Core client request slot and startup requirements. Files requires the actual installed app declaration of files.native. Compatibility and Core.Read do not grant Files resources or writes. The app retains up to 64 original Files tasks and joins them before disposing the physical pipe. The Home composition captures a configured owner factory once and supplies the same private session issuer; null remains unavailable. The configured candidate service depends on home.state and permissions.trust.
 
-The extension retains the first Core.Read/1 admission, the same continuing pipe reader, private accepted actor/installed peer/context, session gate, original lifetime and owner close. Only a trusted configured factory can supply a Files domain owner. Wire page/item IDs and copied metadata carry no resource admission. The candidate files.native descriptor is explicitly configured availability; its canonical dependencies are home.state and permissions.trust. It is not an existing installed service declaration. Core discovery approval is separate from files.browser.read manual Home broker approval.
+The genuine NativeHost broker handler, store-root resolver and native consumer are being restored. They are not provided by this checkpoint. No package, installation, protected peer verifier, manual approval, store binding or native acceptance is claimed. The source is recoverable while implementation continues; it must receive whole A1/A6 source/API/lifetime review and actual owning Windows validation before selection.
 
-Remaining work and review boundaries:
+Relevant owning project: 9to1 Workspace/Home/HavenOS.Home.csproj. Owning validation: dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" -c Debug, and Release, with actual Windows pipe fixtures. No command was invoked for this checkpoint.
 
-- NativeHost broker-backed owner/store resolver drafts remain unselected and require full source review and original task/audit/currentness tests before adoption. The intended owner uses the actual configured workspace, exact DurableDrive store revision, genuine original actor, canonical Resources and manual Authorize/Begin/Claim/Complete broker handles.
-- The Windows app client extension must share the SAME existing client pending-operation slot and pipe reader. No client or native consumer adapter is selected in this snapshot.
-- Composition owner-stage/Runtime registration and actual app initializer/entrypoint must be coherently reviewed and wired; no copied Home provider or raw Home object may cross process boundaries.
-- Strict generated/source/physical assembly checks and meaningful real Windows unready/denied/held-close/binding-retirement/native publication cases are unrun. Existing seven Files native tests remain uncompiled and unrun.
-- The protected installed peer verifier and configured canonical Files store remain genuine implementation prerequisites. Default unavailable verification and Ready/GetServices cannot issue Files authority.
-- No mutations, package extraction, cloud deployment, signing change, new runtime job or global integration is authorized by this recovery branch.
-
-The original larger draft packet and NativeHost draft literals are preserved in the existing owner handoff conversation/tool-call record. The resume cleared ephemeral RAM stores; these recovered Core files have been reconstituted as complete code and are deliberately not represented as the byte-identical or fully peered earlier candidate.
-
-Owning validation entrypoint, not executed:
-
-```powershell
-dotnet test "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj" -c Debug -f net10.0-windows10.0.19041.0 -p:Platform=x64
-```
-
-No usable Windows Files package acceptance follows from this source checkpoint.
+Known held source category: the reconstructed e284 final publication fence awaits the owner after its issuer actor/installed-peer check and then performs only context/lifetime checks. A1 and A6 identified that actor/installed-peer retirement during the held owner check is not reobserved. Await-order swapping does not fix both owners. The required coupled current witness is being derived; this snapshot remains HELD and cannot be selected.

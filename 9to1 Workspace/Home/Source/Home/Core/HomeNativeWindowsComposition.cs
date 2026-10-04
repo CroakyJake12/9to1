@@ -80,7 +80,8 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
         IEnumerable<IHomeActionPolicySource>? originalActionPolicies = null,
         Func<HomeNativeWindowsOwnerComponents, IReadOnlyDictionary<Type, object>>? configureOriginalOwners = null,
         Func<HomeNativeWindowsIdentityComponents, HomeNativeWindowsStoreRegistrations>? configureOriginalStores = null,
-        Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null)
+        Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null,
+        Func<HomeNativeWindowsOwnerComponents, Func<HomeNativeCoreApiSessions, IHomeNativeFilesDomainOwner?>?>? configureOriginalFilesOwner = null)
     {
         if (!OperatingSystem.IsWindows())
             throw new PlatformNotSupportedException("The Windows Home producer requires Windows.");
@@ -115,14 +116,27 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
         }
         Resources = new(Profiles, resolvers);
         Broker = new(Resources, Permissions);
+        var ownerComponents = new HomeNativeWindowsOwnerComponents(StateStore, Profiles, Permissions,
+            Resources, Ownership, Broker);
+        var originalOwners = new Dictionary<Type, object>();
+        if (configureOriginalOwners is not null)
+            AddRegistrations(originalOwners, configureOriginalOwners(ownerComponents)
+                ?? throw new InvalidOperationException("The original Home-domain registration returned no components."));
+        // Trusted factories are captured before private issuance; wire frames cannot supply either callback.
+        var originalFilesOwner = configureOriginalFilesOwner?.Invoke(ownerComponents);
         var installed = protectedInstalledPeerVerifier ?? new UnavailableHomeNativeInstalledPeerVerifier();
         InstalledPeerAdmissionConfigured = installed is IHomeNativeInstalledPeerOriginalActorVerifier;
         HomeCoreApi? api = null;
         Sessions = new(Permissions, Profiles, installed,
-            () => api ?? throw new InvalidOperationException("The original Home API has not been constructed."));
+            () => api ?? throw new InvalidOperationException("The original Home API has not been constructed."),
+            originalFilesOwner);
         Productivity = new();
         var permissionsService = new HomePermissionsCoreService(Permissions, Profiles);
-        Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity], Sessions);
+        var originalCoreServices = new List<IHomeCoreService>
+            { new HomeCoreStateService(StateStore), permissionsService, Productivity };
+        var originalFilesService = Sessions.CreateOriginalFilesCoreService();
+        if (originalFilesService is not null) originalCoreServices.Add(originalFilesService);
+        Runtime = new(originalCoreServices, Sessions);
         Api = api = new(Runtime, Sessions, Profiles);
         var components = new Dictionary<Type, object>
         {
@@ -150,10 +164,7 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
             [typeof(IAppPaths)] = _paths
         };
         AddRegistrations(components, stageServices);
-        if (configureOriginalOwners is not null)
-            AddRegistrations(components,
-                configureOriginalOwners(new(StateStore, Profiles, Permissions, Resources, Ownership, Broker))
-                    ?? throw new InvalidOperationException("The original Home-domain registration returned no components."));
+        AddRegistrations(components, originalOwners);
         Services = new OriginalProvider(components.ToFrozenDictionary());
 
         HomePermissionActionPolicy? ResolvePolicy(string appId, string actionId)
