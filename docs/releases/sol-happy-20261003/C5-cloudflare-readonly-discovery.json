@@ -1,0 +1,184 @@
+{
+  "scope": "Authenticated read-only GETs only; no inference, email, resource writes or activation",
+  "observedDateUTC": "2026-10-04",
+  "accountId": "8aea00ca3c4635410861efcc6a5f593b",
+  "actualResponses": [
+    {
+      "path": "/accounts/8aea00ca3c4635410861efcc6a5f593b/ai/models/search",
+      "success": true,
+      "result": [
+        {
+          "id": "9b9c87c6-d4b7-494c-b177-87feab5904db",
+          "source": 1,
+          "name": "@cf/meta/llama-3.1-8b-instruct-fp8",
+          "description": "Llama 3.1 8B quantized to FP8 precision",
+          "task": {
+            "id": "c329a1f9-323d-4e91-b2aa-582dd4188d34",
+            "name": "Text Generation",
+            "description": "Family of generative text models, such as large language models (LLM), that can be adapted for a variety of natural language tasks."
+          },
+          "created_at": "2024-07-25 17:28:43.328",
+          "tags": [],
+          "properties": [
+            {
+              "property_id": "price",
+              "value": [
+                {
+                  "unit": "per M input tokens",
+                  "price": 0.152,
+                  "currency": "USD"
+                },
+                {
+                  "unit": "per M output tokens",
+                  "price": 0.287,
+                  "currency": "USD"
+                }
+              ]
+            },
+            {
+              "property_id": "context_window",
+              "value": "32000"
+            },
+            {
+              "property_id": "terms",
+              "value": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/LICENSE"
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "messages": [],
+      "result_info": {
+        "count": 1,
+        "page": 1,
+        "per_page": 10,
+        "total_count": 321
+      },
+      "status": 200
+    },
+    {
+      "path": "/accounts/8aea00ca3c4635410861efcc6a5f593b/email/sending/limits",
+      "result": {
+        "quota": null,
+        "usage": null
+      },
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "status": 200
+    },
+    {
+      "path": "/zones",
+      "status": 200,
+      "success": true,
+      "result": [
+        {
+          "id": "b9f0d2d09a3a1df1419f9de290a782e3",
+          "name": "9to1.uk",
+          "status": "active"
+        },
+        {
+          "id": "58ecd23a38d235fa9622c577dd01df60",
+          "name": "cakemods.com",
+          "status": "active"
+        }
+      ],
+      "result_info": {
+        "page": 1,
+        "per_page": 50,
+        "total_pages": 1,
+        "count": 2,
+        "total_count": 2
+      }
+    }
+  ],
+  "emailZoneObservations": [
+    {
+      "zone": "9to1.uk",
+      "zoneId": "b9f0d2d09a3a1df1419f9de290a782e3",
+      "sendingSubdomains": [],
+      "sendingStatus": 200,
+      "routingEnabled": false,
+      "routingStatus": "unconfigured",
+      "routingHTTP": 200
+    },
+    {
+      "zone": "cakemods.com",
+      "zoneId": "58ecd23a38d235fa9622c577dd01df60",
+      "sendingSubdomains": [],
+      "sendingStatus": 200,
+      "routingEnabled": false,
+      "routingStatus": "unconfigured",
+      "routingHTTP": 200
+    }
+  ],
+  "actualModelSchema": {
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8",
+    "HTTP": 200,
+    "messages": true,
+    "stream": true,
+    "max_tokens": {
+      "type": "integer",
+      "default": 256
+    },
+    "usage": [
+      "prompt_tokens",
+      "completion_tokens",
+      "total_tokens"
+    ],
+    "qualification": "Native /ai/models/schema metadata, not actual OpenAI transport acceptance or enabled/free inference proof"
+  },
+  "funding": "C3 account subscriptions read authentication error; standard Workers usage model is not plan/free allowance proof. Public daily allowance is conditional, not current balance. No paid or free execution authorized.",
+  "sourceBindings": [
+    {
+      "sourceCommit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+      "bytes": 29923,
+      "sha256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+      "workingBytesEqual": true
+    },
+    {
+      "sourceCommit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "9to1 Workspace/shared/src/Haven.Application/Abstractions.cs",
+      "bytes": 28609,
+      "sha256": "2c0ad3163afa1a6c3bcdff1f0476a57d04871ac3de0d9fa2b0a2cc8a9e15c588",
+      "workingBytesEqual": true
+    },
+    {
+      "sourceCommit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.cs",
+      "bytes": 14083,
+      "sha256": "89c673378bae8f3b43000db93414a3a869a3bfcd25de50ffe6e585a252ed0caf",
+      "workingBytesEqual": true
+    },
+    {
+      "sourceCommit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/src/auth.ts",
+      "bytes": 6604,
+      "sha256": "2a6c5baacb77ac4480e11f0ddcb86e0005ea627e569931ea6478cf1faf6f9576",
+      "workingBytesEqual": true
+    },
+    {
+      "sourceCommit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/src/env.ts",
+      "bytes": 339,
+      "sha256": "23df0c3c8e220d5848c8082887cf57456ae3665c238f327a45d5df202493ca18",
+      "workingBytesEqual": true
+    }
+  ],
+  "concreteProposedProviderBinding": {
+    "providerID": "openai-compatible",
+    "kind": "OpenAICompatible",
+    "endpoint": "https://api.cloudflare.com/client/v4/accounts/8aea00ca3c4635410861efcc6a5f593b/ai/v1/",
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8",
+    "enabled": "Only after owner/funding/session/execution approval; not activated",
+    "credential": "Existing IProviderSecretStore api-key port; no token copied from connector or placed in source",
+    "route": "Existing canonical router/funding job dispatch; no parallel service or balance",
+    "holds": [
+      "Exact-cloudflare metadata GetModels/health path and result-name/property adapter needs provider-owner acknowledgement.",
+      "GenerationOptions has no output token cap; payload lacks max_tokens. Do not reinterpret ActionLimit/ContextLimit or invent shared request contract.",
+      "Native model schema/catalogue does not establish OpenAI SSE EOF/usage, tools, vision, cancellation or current inference entitlement.",
+      "Cloud routing and provider credentials remain separately authorized from storage identity/locality."
+    ]
+  }
+}
