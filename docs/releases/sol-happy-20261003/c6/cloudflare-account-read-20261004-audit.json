@@ -1,0 +1,47 @@
+{
+  "observedAt": "2026-10-04T07:47:16.607Z",
+  "method": "Independent Cloudflare OpenAPI search then authenticated GET /accounts via connector; response filtered before tool return",
+  "request": {
+    "method": "GET",
+    "path": "/accounts",
+    "query": {
+      "page": 1,
+      "per_page": 50
+    }
+  },
+  "response": {
+    "success": true,
+    "status": 200,
+    "accountCount": 1,
+    "accountIds": [
+      "8aea00ca3c4635410861efcc6a5f593b"
+    ],
+    "result_info": {
+      "page": 1,
+      "per_page": 50,
+      "total_pages": 1,
+      "count": 1,
+      "total_count": 1
+    },
+    "errors": [],
+    "messages": []
+  },
+  "selectedDashboardAccount": "8aea00ca3c4635410861efcc6a5f593b",
+  "accountMatch": true,
+  "status": "Authenticated account read VERIFIED",
+  "notVerified": [
+    "write capability",
+    "CAKE ID deployed issuer",
+    "application/service operability",
+    "entitlements",
+    "browser DOM access",
+    "full release acceptance"
+  ],
+  "limitations": [
+    "Connector response metadata, not full HTTP wire capture.",
+    "No resource writes, secrets or resource data-content reads.",
+    "Earlier 404/429/auth-request transitions remain historical and are not erased.",
+    "Release gates remain unchanged; previous absence of authenticated read access is superseded for this endpoint only."
+  ],
+  "privateFilteredResponsePath": "/workspace/team-c/evidence/c6/cloudflare-account-read-20261004.json"
+}
