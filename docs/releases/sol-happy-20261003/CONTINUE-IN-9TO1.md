@@ -1,3 +1,15 @@
+Current successor result — 2026-10-04
+
+The user-created successor took sole Team C integration after publishing its named claim. The current result is `resume-20261004/status.json`; sections below retain the original predecessor handoff and historical environment observations. Existing approvals remain unchanged. No persistent Goal/background execution is asserted.
+
+Actual isolated hosted identity now passes anonymous138 assertions/22 requests and authenticated165 assertions/39 requests on Worker version0f6ad115-42f8-4137-808f-997a80b4c97b, deploymente9774b5d-c858-4988-866a-7c15d8e71030. A metadata-only reviewed `global_fetch_strictly_public` flag fixes the hosted self-JWKS path, with both original deployed module byte hashes verified unchanged and CPU1000 retained. Source integration33dc89b1b2367d3cc5f712f58f9d32748229e16c also validates/records explicit deployment pins in both drivers. Any future run must pass the actual provider version as the final CLI argument; do not reuse the historical default713 pin against version0f6. Original authenticated401 and immediate new-version discovery404 remain separate failed evidence; no test weakening or exact404 cause inference.
+
+Fresh fictional fixtures were seeded/read back, tested once, exactly cleaned and reconciled. All fixture user/account/session/client/link/consent/access/refresh/verification counts are0; issuer resource/JWKS1 and limiter buckets3 intentionally remain, reserved ownerNULL. Worker/previews are both disabled. Real Node HTTPS is verified; browser UI/native/registration/mail/admin/auth_revision/full release acceptance is open.
+
+Fresh coordinationa88c272f75d12027958a9b9b50fafe97658541d2 selects TeamA currentExecution1017 and preserves original A63 source/conditional ACKs. Durable cancellation still fails untouched Debug and Release2PASS/1FAIL; current owner source ACK/adoption, Accounts/billing authority, native Sites/Files ports and AI current project custody remain genuine blockers. The 20:00 London delivery-priority document is read as repository context; Windows baseline/packages/real Windows environment/delivery route still need TeamA's exact handoff. Main98a08827 is untouched, acceptedHeadNULL, PR3 stays draft. Continue from current evidence and exact owner handovers; do not rerun completed hosted phases without new changes or unresolved evidence.
+
+Original predecessor handoff follows
+
 Continue Team C in the newly published 9to1 cloud environment
 
 The user explicitly requested on 2026-10-04: "9to1, just spin up a new cloud codex chat in the environment and hand your remaining work to it." This file records the existing task and its handoff. It does not grant additional external actions.

@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"recordedUTC\": \"2026-10-04T11:56:17.000Z\",\n  \"response\": {\n    \"result\": {\n      \"enabled\": true,\n      \"previews_enabled\": false\n    },\n    \"success\": true,\n    \"errors\": [],\n    \"messages\": [],\n    \"status\": 200\n  }\n}"
+    }
+  ],
+  "isError": false
+}

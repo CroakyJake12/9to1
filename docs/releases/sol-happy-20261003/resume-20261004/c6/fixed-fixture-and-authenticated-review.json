@@ -1,0 +1,62 @@
+{
+  "observedUTC": "2026-10-04T12:07:25.254918+00:00",
+  "reviewer": "C6 independent validation",
+  "state": "PASS_FRESH_FIXTURE_AND_REAL_NODE_AUTHENTICATED_PHASE",
+  "freshSeed": "6exact1rowstatements and exactpublicreadback;UUIDsdisjointfromoriginalfixture",
+  "authenticated": {
+    "result": "PASS",
+    "assertions": 165,
+    "requests": 39,
+    "passwordLogins": 3,
+    "operatorPinnedDeploymentVersion": "0f6ad115-42f8-4137-808f-997a80b4c97b"
+  },
+  "scopeReviewed": [
+    "Real server-signed consent via maintainedclient hooks",
+    "S256wrongverifier denial401+codeconsumption400+freshgenuine exchange200",
+    "Actual maintained JWKS ID/accesssignature issuer/distinctaudience nonce account sid claims",
+    "Genuineaccess current200, IDtoken denied401, reducedscopeprofiledenied401",
+    "Profile update200+revisionCAS409 and realrefreshrotation200",
+    "Twofictionalaccounts isolation/crossrevoke404",
+    "Revokeother204 preservescurrent, oldcookie401/current200",
+    "Signout204 then401, currentsessionrevoke204 then401+refresh400invalidgrant"
+  ],
+  "cleanup": "PASS rootreconciliation+independentactualclosedreadback12:09:30Z. Identity/session/client/tokens/consents/verification all0; retainedresource1/JWKS1/limiter3/reservedownerNULL; foreign_key_checkempty. No sharedcountererase orfullD1restorationclaim.",
+  "qualification": "Real Node HTTPS identity transport only with seededfictional identities/client aspreconditions; no browsercallbackrequest/UI/native/registration/mail/admin/organisation/auth_revision or fullrelease acceptance. Original713authenticated401 and immediate0f6discovery404 preserved. All39public observations inspected against exactsource; no secrets/privatefixtures/diagnostics read, no C6providermutations. Fullrelease remainsBLOCKED acceptedHeadNULL.",
+  "evidence": [
+    {
+      "path": "/workspace/team-c-resume-evidence/https/fixed-fixture-preparation.json",
+      "bytes": 992,
+      "sha256": "bcc8311f9f27823401faaf6e08904ce99d620161e246ff8d8048787d6a22fac0"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/fixed-fixture-seed-receipt.json",
+      "bytes": 3483,
+      "sha256": "49128c9e28b9ed87978a9ecf3e17427a985c1fbbd3645cf8d8fa21b35f38c290"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/fixed-fixture-readback.json",
+      "bytes": 4745,
+      "sha256": "20f8444324f4781d29910f177041b709aa82b70cad3d2140fa279a085216ea3e"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/fixed-ready-anonymous-result.json",
+      "bytes": 3937,
+      "sha256": "56d121208ff09877db5ff1b944a17c1d832194699383e36e4ae0492094efe809"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/config-actual-module-hashes.json",
+      "bytes": 781,
+      "sha256": "0bacad521d3b3e96714a19db86dab0223670097b37c652ff198f0f9477d6f68f"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/fixed-authenticated-result.json",
+      "bytes": 4206,
+      "sha256": "2883dfc91c140fa7e93659d9121f005c9d55e28712b6b194ccb83a984146dbd0"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/https/fixed-authenticated.log",
+      "bytes": 37,
+      "sha256": "3e57356a5d619e61986a102f32c5e94df0e948fa794f13da87f1892d6a5a0071"
+    }
+  ]
+}

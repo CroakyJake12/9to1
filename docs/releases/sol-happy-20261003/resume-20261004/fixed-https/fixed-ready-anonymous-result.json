@@ -1,0 +1,163 @@
+{
+  "result": "passed",
+  "assertions": 138,
+  "observations": [
+    {
+      "path": "/api/auth/.well-known/openid-configuration",
+      "method": "GET",
+      "status": 200,
+      "acao": "https://cake-id-release-validation.jcbailey008.workers.dev",
+      "acac": null
+    },
+    {
+      "path": "/api/auth/jwks",
+      "method": "GET",
+      "status": 200,
+      "acao": "https://cake-id-release-validation.jcbailey008.workers.dev",
+      "acac": null
+    },
+    {
+      "path": "/api/auth/.well-known/openid-configuration",
+      "method": "OPTIONS",
+      "status": 204,
+      "acao": "https://cake-id-release-validation.jcbailey008.workers.dev",
+      "acac": null
+    },
+    {
+      "path": "/api/auth/.well-known/openid-configuration",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/.well-known/openid-configuration",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/.well-known/openid-configuration",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/jwks",
+      "method": "OPTIONS",
+      "status": 204,
+      "acao": "https://cake-id-release-validation.jcbailey008.workers.dev",
+      "acac": null
+    },
+    {
+      "path": "/api/auth/jwks",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/jwks",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/jwks",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/sign-in",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/sign-up",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/forgot-password",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/reset-password",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/account/current",
+      "method": "GET",
+      "status": 401,
+      "acao": "https://cake-id-release-validation.jcbailey008.workers.dev",
+      "acac": "true"
+    },
+    {
+      "path": "/api/auth/jwks/extra",
+      "method": "GET",
+      "status": 404,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/oauth2/token/extra",
+      "method": "GET",
+      "status": 404,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/get-session",
+      "method": "GET",
+      "status": 200,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/oauth2/token",
+      "method": "OPTIONS",
+      "status": 204,
+      "acao": "https://cake-id-release-validation.jcbailey008.workers.dev",
+      "acac": null
+    },
+    {
+      "path": "/api/auth/oauth2/token",
+      "method": "POST",
+      "status": 403,
+      "acao": null,
+      "acac": null
+    },
+    {
+      "path": "/api/auth/oauth2/token",
+      "method": "POST",
+      "status": 400,
+      "acao": "https://cake-id-release-validation.jcbailey008.workers.dev",
+      "acac": null
+    },
+    {
+      "path": "/api/auth/reset-password",
+      "method": "POST",
+      "status": 400,
+      "acao": null,
+      "acac": null
+    }
+  ],
+  "issuer": "https://cake-id-release-validation.jcbailey008.workers.dev/api/auth",
+  "operatorPinnedDeploymentVersion": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+  "qualification": "Anonymous deployed HTTPS phase only; deployment version is operator-pinned, not observed by HTTP. Root must bind same-time provider readback. No users/client provisioning, email delivery, valid OAuth tokens, session journeys or native interoperability accepted."
+}
