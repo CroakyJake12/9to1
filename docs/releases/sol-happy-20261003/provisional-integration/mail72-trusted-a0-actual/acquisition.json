@@ -1,0 +1,234 @@
+{
+  "repo": "CroakyJake12/9to1",
+  "runId": 37229860186,
+  "attempt": 1,
+  "sourceCommit": "a0c8748196b90e2c43885e174b5835a7fe2c33e3",
+  "officialArtifactId": 11312354741,
+  "officialZIPBytes": 68736,
+  "officialZIPDigest": "d8ba2ba5b62a432003903e93784ec11edb7873fa0610ec3807037f1409b3e6df",
+  "fileCount": 44,
+  "uncompressedBytes": 317497,
+  "originalFiles": [
+    {
+      "path": "build.log",
+      "bytes": 756,
+      "sha256": "6c13209acfd8700eafe59775ed5dd22e2732975d84dc22f86c77418ca0d8d78e"
+    },
+    {
+      "path": "artifact-index.json",
+      "bytes": 7250,
+      "sha256": "7f96d2ef2de099badc2c0d107949cff9e0ae200048f3cb9b532e80df0f072e62"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 8133,
+      "sha256": "dcc19c424f4df224fd193ad30a160dcc547d62d747cc1edb7ae3d9256fe0be77"
+    },
+    {
+      "path": "evaluated-inputs.json",
+      "bytes": 9966,
+      "sha256": "e71ac30293bbe959f43ac235e6aea056e327ac4c924a17ae016d9691976c8f88"
+    },
+    {
+      "path": "evaluated-project-0.json",
+      "bytes": 9676,
+      "sha256": "c921178434e97211ee3f209c81f775eaa8d4c1fc41e27c94003bd04044c984d7"
+    },
+    {
+      "path": "evaluated-project-0.log",
+      "bytes": 9676,
+      "sha256": "c921178434e97211ee3f209c81f775eaa8d4c1fc41e27c94003bd04044c984d7"
+    },
+    {
+      "path": "evaluated-project-1.json",
+      "bytes": 4510,
+      "sha256": "5eb7b063f8613c6e1e39532fc76e5f42ad2cff7748b19498048ccf8959a55c2d"
+    },
+    {
+      "path": "evaluated-project-1.log",
+      "bytes": 4510,
+      "sha256": "5eb7b063f8613c6e1e39532fc76e5f42ad2cff7748b19498048ccf8959a55c2d"
+    },
+    {
+      "path": "evaluated-project-2.json",
+      "bytes": 6691,
+      "sha256": "8f1e11d8fe767f2527a33b490ad81eb9041f2ab5f89c70be71e0350448d63eff"
+    },
+    {
+      "path": "evaluated-project-2.log",
+      "bytes": 6691,
+      "sha256": "8f1e11d8fe767f2527a33b490ad81eb9041f2ab5f89c70be71e0350448d63eff"
+    },
+    {
+      "path": "evaluated-project-3.json",
+      "bytes": 4287,
+      "sha256": "aeb58d06ab1d069d7b37c884906bd1fe91c1a41450066c36c7a167b6cc8eb0d7"
+    },
+    {
+      "path": "evaluated-project-3.log",
+      "bytes": 4287,
+      "sha256": "aeb58d06ab1d069d7b37c884906bd1fe91c1a41450066c36c7a167b6cc8eb0d7"
+    },
+    {
+      "path": "evaluated-project-4.json",
+      "bytes": 2716,
+      "sha256": "b389a4cf49796ac931b3e40bc3eb0805983d5e0fcc86c8a542d1a4e9b5db1f0c"
+    },
+    {
+      "path": "evaluated-project-4.log",
+      "bytes": 2716,
+      "sha256": "b389a4cf49796ac931b3e40bc3eb0805983d5e0fcc86c8a542d1a4e9b5db1f0c"
+    },
+    {
+      "path": "fixture-final-summary.json",
+      "bytes": 669,
+      "sha256": "885c24536ef71858891f86727affd0d3d9d985855b292550e960007b8467954a"
+    },
+    {
+      "path": "mail-actual-strict-tls-readiness.json",
+      "bytes": 1209,
+      "sha256": "3d5e5644d751c2a1c326d60675c7757553e8b8115ef32f7d398c2637854abc35"
+    },
+    {
+      "path": "mail-java-version.txt",
+      "bytes": 183,
+      "sha256": "e40657fb41262d4529adc95d6416430203c8a6df9a2f485ab8707fd7e777342c"
+    },
+    {
+      "path": "mail-maintained-release-tag.json",
+      "bytes": 3342,
+      "sha256": "3d76c22d45713ce2ed409189f318adec4c2ae21f9605ee5de0535e6df280750d"
+    },
+    {
+      "path": "mail-maintained-server-producer.json",
+      "bytes": 894,
+      "sha256": "3b7f376b89928d9f6432ae94ee77ee2428bc50ed968d2fdd749b9a97c3f29e8e"
+    },
+    {
+      "path": "mail-original-caller-session/3612-pending.json",
+      "bytes": 983,
+      "sha256": "aeb65b8516e0cf5c5e93c728e16419f67d7296d5bc9227ae1ba45e92354e30fa"
+    },
+    {
+      "path": "mail-original-caller-session/expected-managed-launch.json",
+      "bytes": 100,
+      "sha256": "7eec76faf999f48a18cbd1c14232e335674391448c08df5842b2a4ba366ab2f4"
+    },
+    {
+      "path": "mail-original-caller-session/inner-native-delegation.json",
+      "bytes": 227,
+      "sha256": "98e2cdccd08b1ac22f03091bbeb64fae406733643a1989f2be64ba276e56a0b6"
+    },
+    {
+      "path": "mail-original-crl-session/3557-pending.json",
+      "bytes": 151,
+      "sha256": "12bbd7eebef326f9575388ba54ae5cb7614cdff590a9f8129bb7e678d00405fa"
+    },
+    {
+      "path": "mail-original-crl-session/expected-managed-launch.json",
+      "bytes": 100,
+      "sha256": "045497fd5fce180c6ed8cf75eaf00ed23a7e7fbac9683be5a8eed5c1e66cfb25"
+    },
+    {
+      "path": "mail-original-java-session/3558-pending.json",
+      "bytes": 151,
+      "sha256": "dc6df725386ae6e1e69629dd495090689066be4877315a58afd7d332d89dbe7f"
+    },
+    {
+      "path": "mail-original-java-session/expected-managed-launch.json",
+      "bytes": 100,
+      "sha256": "4319902ce06b8e7ed68dea14320b640c71e0fb049f43e2def536dec94ab04eea"
+    },
+    {
+      "path": "mail-original-public-crl-distribution.json",
+      "bytes": 990,
+      "sha256": "8e1f4d2aa6fc7a74cff9cb46436d53274d217d98ffe8945b1a29ff628de55dce"
+    },
+    {
+      "path": "mail-owned-public-crl.der",
+      "bytes": 576,
+      "sha256": "a9b026b90ab9c062bc059b55ba3c74d04c2864416972bb8df50b82b12f15e789"
+    },
+    {
+      "path": "mail-owned-public-ca.pem",
+      "bytes": 1724,
+      "sha256": "f0f54d597183f20877012ea1eb0a0e5ad08b26e5d577b945a56c21853907f6da"
+    },
+    {
+      "path": "mail-owned-public-crl.pem",
+      "bytes": 828,
+      "sha256": "4c8d40d5467bb9a58a977932cd1cb509a19ae69692569bf951cc5f6099c5ae91"
+    },
+    {
+      "path": "mail-owned-public-server.pem",
+      "bytes": 1724,
+      "sha256": "46cf4bfc3e585eb1e2b79887aaf2334fe7c4fdd502396d1af88ec32d16a1a783"
+    },
+    {
+      "path": "normal-mail72-result.json",
+      "bytes": 9876,
+      "sha256": "fd748985166a22565682c9bb473f3794400235cf71a5144dda800cc3c2fa9395"
+    },
+    {
+      "path": "restore-assets.json",
+      "bytes": 2678,
+      "sha256": "e00ee1e88e273fc31fe1dc122df7c127f434ad2e7e07333519c81e602d9e0267"
+    },
+    {
+      "path": "restore.log",
+      "bytes": 517,
+      "sha256": "2a5e0651065c9e872424ab551e52b68ef76579f0a42edb15b890b68ba6076789"
+    },
+    {
+      "path": "runtime-after.json",
+      "bytes": 17739,
+      "sha256": "1abcd1b6ce84bcf02c553aca9f7221f51651eb4061747058c0d4908375a2c308"
+    },
+    {
+      "path": "sdk-version.log",
+      "bytes": 9,
+      "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "path": "runtime-before.json",
+      "bytes": 17739,
+      "sha256": "1abcd1b6ce84bcf02c553aca9f7221f51651eb4061747058c0d4908375a2c308"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 13409,
+      "sha256": "144045f26cdcd4565dfec53ad27b4d4e2481944394bfacbcd46baa41c2b15392"
+    },
+    {
+      "path": "test-results/mail72.trx",
+      "bytes": 111208,
+      "sha256": "401704e012d43920daff460c1f8460f2300df4100d92f6dde3d2e7d8438bc51b"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 13409,
+      "sha256": "144045f26cdcd4565dfec53ad27b4d4e2481944394bfacbcd46baa41c2b15392"
+    },
+    {
+      "path": "whole-discovery.json",
+      "bytes": 10083,
+      "sha256": "c39e1601716d30bb0a79b8aaaa2d861272a49f104e7c2e71ebe17e0269b95741"
+    },
+    {
+      "path": "whole-discovery.log",
+      "bytes": 9901,
+      "sha256": "82a705f5d2a43ac3b462d2930b4a371d8057daf52bd7de1243e4c0a2261cb14a"
+    },
+    {
+      "path": "whole-trx-readback.json",
+      "bytes": 14667,
+      "sha256": "fcb02466124965d8d1679a815f36e4090198b922f08753727294e8f5c92b6893"
+    },
+    {
+      "path": "whole-unfiltered-mail72.log",
+      "bytes": 446,
+      "sha256": "32a92be27e77f3721aec7c74c501e564c0700cb8d4367f8abe6c1ad30b5ba570"
+    }
+  ],
+  "noSignedDownloadURLRetained": true
+}
