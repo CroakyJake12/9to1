@@ -80,6 +80,58 @@ public sealed class PlannerStructuredEntityService(IPlannerStructuredEntityRepos
             "PlannerCountdownChanged", cancellationToken);
     }
 
+    public async Task<PlannerStructuredEntityEnvelope> CompleteAssignmentAsync(Guid assignmentId, long expectedRevision,
+        bool overrideIncompleteRequiredItems = false, CancellationToken cancellationToken = default)
+    {
+        var assignment = await RequireAssignmentAsync(assignmentId, expectedRevision, cancellationToken).ConfigureAwait(false);
+        var completed = assignment.Complete(DateTimeOffset.UtcNow, overrideIncompleteRequiredItems) with { Revision = expectedRevision };
+        return await SaveAssignmentAsync(completed, expectedRevision, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<PlannerStructuredEntityEnvelope> ReopenAssignmentAsync(Guid assignmentId, long expectedRevision,
+        CancellationToken cancellationToken = default)
+    {
+        var assignment = await RequireAssignmentAsync(assignmentId, expectedRevision, cancellationToken).ConfigureAwait(false);
+        return await SaveAssignmentAsync(assignment with { Status = PlannerAssignmentStatus.InProgress, CompletedAt = null,
+            ModifiedAt = DateTimeOffset.UtcNow }, expectedRevision, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<PlannerStructuredEntityEnvelope> SetAssignmentItemCompleteAsync(Guid assignmentId, Guid itemId,
+        bool completed, long expectedRevision, CancellationToken cancellationToken = default)
+    {
+        var assignment = await RequireAssignmentAsync(assignmentId, expectedRevision, cancellationToken).ConfigureAwait(false);
+        var item = assignment.Items.FirstOrDefault(item => item.AssignmentItemId == itemId)
+            ?? throw new KeyNotFoundException("Assignment item was not found.");
+        var now = DateTimeOffset.UtcNow;
+        var updated = item with { IsComplete = completed, Revision = checked(item.Revision + 1), ModifiedAt = now };
+        var items = assignment.Items.Select(value => value.AssignmentItemId == itemId ? updated : value).ToArray();
+        var status = assignment.Status;
+        // Undoing required work reopens the same assignment rather than leaving a false Completed status.
+        if (!completed && item.Kind == PlannerAssignmentItemKind.Required && status == PlannerAssignmentStatus.Completed)
+            status = PlannerAssignmentStatus.InProgress;
+        return await SaveAssignmentAsync(assignment with { Items = items, Status = status,
+            CompletedAt = status == PlannerAssignmentStatus.Completed ? assignment.CompletedAt : null, ModifiedAt = now },
+            expectedRevision, cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<PlannerStructuredEntityEnvelope> DeleteAsync(PlannerStructuredEntityKind kind, Guid id,
+        long expectedRevision, CancellationToken cancellationToken = default) =>
+        repository.SetDeletedAsync(kind, id, expectedRevision, DateTimeOffset.UtcNow, cancellationToken);
+
+    public Task<PlannerStructuredEntityEnvelope> RestoreAsync(PlannerStructuredEntityKind kind, Guid id,
+        long expectedRevision, CancellationToken cancellationToken = default) =>
+        repository.SetDeletedAsync(kind, id, expectedRevision, null, cancellationToken);
+
+    private async Task<PlannerAssignment> RequireAssignmentAsync(Guid assignmentId, long expectedRevision,
+        CancellationToken cancellationToken)
+    {
+        var assignment = await GetAssignmentAsync(assignmentId, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Assignment was not found.");
+        if (assignment.Revision != expectedRevision)
+            throw new PlannerRevisionConflictException(PlannerStructuredEntityKind.Assignment, assignmentId, expectedRevision, assignment.Revision);
+        return assignment;
+    }
+
     private Task<PlannerStructuredEntityEnvelope> SaveAsync<T>(Guid id, PlannerStructuredEntityKind kind, string name,
         int? status, DateTimeOffset? dueAt, long revision, DateTimeOffset createdAt, DateTimeOffset modifiedAt,
         T aggregate, long? expectedRevision, string eventType, CancellationToken cancellationToken)

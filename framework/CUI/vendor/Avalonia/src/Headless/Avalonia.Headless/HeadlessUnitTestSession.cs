@@ -226,8 +226,11 @@ public sealed class HeadlessUnitTestSession : IDisposable, IAsyncDisposable
         var queue = new BlockingCollection<(Action, ExecutionContext?)>();
 
         Task? task = null;
-        task = Task.Run(() =>
+        var launch = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        task = Task.Run(async () =>
         {
+            // The worker can otherwise publish a session before Task.Run's return value is assigned.
+            await launch.Task.ConfigureAwait(false);
             try
             {
                 var appBuilder = AppBuilder.Configure(entryPointType);
@@ -273,6 +276,7 @@ public sealed class HeadlessUnitTestSession : IDisposable, IAsyncDisposable
             }
         });
 
+        launch.SetResult();
         return tcs.Task.GetAwaiter().GetResult();
     }
 

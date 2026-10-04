@@ -57,12 +57,16 @@ public sealed record ShelfLibrary(int SchemaVersion, long Revision, IReadOnlyLis
             errors.Add("Shelf lists cannot contain null entries.");
             return errors;
         }
-        if (Items.Any(item => item is null || item.Id == Guid.Empty || string.IsNullOrWhiteSpace(item.Name) || !IsValidTarget(item.Target)))
+        if (Items.Any(item => item.Id == Guid.Empty || string.IsNullOrWhiteSpace(item.Name) || !IsValidTarget(item.Target)
+            || !Enum.IsDefined(item.Behaviour) || item.Tags?.Any(string.IsNullOrWhiteSpace) == true))
             errors.Add("Shelf contains a launch item with a missing ID, name or valid canonical target.");
         if (Items.Select(item => item.Id).Distinct().Count() != Items.Count)
             errors.Add("Shelf contains duplicate launch item IDs.");
         if (Collections.Any(collection => collection is null || collection.Id == Guid.Empty || string.IsNullOrWhiteSpace(collection.Name)
-            || (collection.Kind == ShelfCollectionKind.Smart) != (collection.Criteria is not null)))
+            || !Enum.IsDefined(collection.Kind) || !Enum.IsDefined(collection.Presentation)
+            || (collection.Kind == ShelfCollectionKind.Smart) != (collection.Criteria is not null)
+            || collection.Criteria?.TargetKinds?.Any(kind => !Enum.IsDefined(kind)) == true
+            || collection.Criteria?.RequiredTags?.Any(string.IsNullOrWhiteSpace) == true))
             errors.Add("Shelf contains an invalid collection identity or smart-collection criteria.");
         if (Collections.Select(collection => collection.Id).Distinct().Count() != Collections.Count)
             errors.Add("Shelf contains duplicate collection IDs.");
@@ -71,7 +75,7 @@ public sealed record ShelfLibrary(int SchemaVersion, long Revision, IReadOnlyLis
         if (Memberships.Any(membership => !collectionIds.Contains(membership.CollectionId) || !itemIds.Contains(membership.LaunchItemId)
             || Collections.First(collection => collection.Id == membership.CollectionId).Kind != ShelfCollectionKind.Manual))
             errors.Add("Shelf membership references a missing item or collection, or assigns an item to a smart collection.");
-        if (Memberships.Distinct().Count() != Memberships.Count)
+        if (Memberships.Select(membership => (membership.CollectionId, membership.LaunchItemId)).Distinct().Count() != Memberships.Count)
             errors.Add("Shelf contains duplicate collection memberships.");
         return errors;
     }

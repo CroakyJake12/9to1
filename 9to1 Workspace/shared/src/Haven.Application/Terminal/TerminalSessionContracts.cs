@@ -179,6 +179,9 @@ public interface ITerminalActionBroker
 {
     Task<TerminalResolvedAction> ResolveAsync(Guid sessionId, TerminalEnvironmentId environmentId, string request, CancellationToken cancellationToken = default);
     Task<TerminalActionExecutionResult> ExecuteAsync(TerminalResolvedAction action, string? verificationToken = null, CancellationToken cancellationToken = default);
+    /// <summary>Retries only a host-retained audit for an already-consumed action. It must never execute a process operation.</summary>
+    Task<TerminalActionExecutionResult> RetryAuditAsync(Guid actionId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new TerminalActionExecutionResult(false, "Unavailable", "This host does not support retained action audit recovery."));
 }
 
 public sealed record TerminalActionExecutionResult(

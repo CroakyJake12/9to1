@@ -119,6 +119,7 @@ public sealed record ExtensionPackageManifest(
     string? UpdateMetadataJson = null)
 {
     [JsonExtensionData] public Dictionary<string, JsonElement>? ExtensionData { get; init; }
+    public IReadOnlyList<ExtensionSidebarContribution>? SidebarContributions { get; init; }
 }
 
 public sealed record InstalledExtensionPackage(

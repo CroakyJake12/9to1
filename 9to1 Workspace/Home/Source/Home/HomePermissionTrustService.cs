@@ -9,6 +9,11 @@ namespace HavenOS.Home.PermissionsTrustNotifications;
 /// </summary>
 public sealed class HomePermissionTrustService
 {
+    internal bool IsBoundToStore(IHomeCoreStateStore candidate) => ReferenceEquals(_stateStore, candidate);
+    // Trusted configured catalog only; no request/page metadata supplies a policy.
+    internal HomePermissionActionPolicy? ResolveTrustedActionPolicy(string appId, string actionId)
+    { try { return _resolvePolicy(appId, actionId); } catch { return null; } }
+
     private static readonly TimeSpan AcceptAndTrustLifetime = TimeSpan.FromDays(30);
     private const int AuditPageSize = 100;
     private const string StateRecordId = "home.permissions-trust";
@@ -153,6 +158,64 @@ public sealed class HomePermissionTrustService
         }
     }
 
+    /// <summary>Owner transaction gate for an already consumed approval; this never starts or renews execution.</summary>
+    public async Task<bool> IsExecutionCurrentAsync(string requestId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var request = state.Requests.SingleOrDefault(item => item.RequestId == requestId);
+            if (request is null || request.State != HomePermissionRequestState.Executing ||
+                state.BlockedCallerIds.Contains(request.Caller.CallerId, StringComparer.Ordinal)) return false;
+            if (request.AppliedGrantId is not { } grantId) return true;
+            return state.Grants.Any(grant => grant.GrantId == grantId && !grant.IsRevoked &&
+                grant.Caller.CallerId == request.Caller.CallerId && grant.Caller.IdentityVersion == request.Caller.IdentityVersion &&
+                ScopeEquals(grant.Scope, request.Scope) &&
+                (grant.ExpiresAt is null || grant.ExpiresAt > _timeProvider.GetUtcNow()));
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Actual durable request observation only. No creation, expiration write or approval grant.
+    /// Collections are detached so callers cannot mutate the producer's loaded state.</summary>
+    public async Task<HomePermissionRequest?> ReadRequestObservationAsync(string requestId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var request = state.Requests.SingleOrDefault(item => item.RequestId == requestId);
+            return request is null ? null : request with
+            {
+                Scope = request.Scope with { Objects = Array.AsReadOnly(request.Scope.Objects.ToArray()) },
+                Impact = request.Impact with
+                {
+                    AffectedObjectTypes = Array.AsReadOnly(request.Impact.AffectedObjectTypes.ToArray()),
+                    KnownObjects = Array.AsReadOnly(request.Impact.KnownObjects.ToArray()),
+                    ResourceBinding = request.Impact.ResourceBinding is { } binding
+                        ? binding with { Scopes = Array.AsReadOnly(binding.Scopes.ToArray()) } : null
+                }
+            };
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Reads the decision for an existing request without creating a new action or reusing trust.</summary>
+    public async Task<HomePermissionAuthorization> GetAuthorizationAsync(string requestId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var request = state.Requests.SingleOrDefault(r => r.RequestId == requestId);
+            return request is null
+                ? new(HomePermissionRequestState.Denied, "HOME_PERMISSION_REQUEST_NOT_FOUND", "The request was not found.", requestId, null)
+                : Authorization(request);
+        }
+        finally { _gate.Release(); }
+    }
+
     public async Task<HomePermissionOperationResult> MarkAlwaysTrustWarningShownAsync(
         string requestId,
         CancellationToken cancellationToken = default)
@@ -279,6 +342,7 @@ public sealed class HomePermissionTrustService
         ArgumentNullException.ThrowIfNull(outcome);
         try { outcome.Validate(); }
         catch (ArgumentException exception) { return Failure("HOME_EXECUTION_OUTCOME_INVALID", exception.Message); }
+        outcome = outcome with { AffectedObjects = Array.AsReadOnly(outcome.AffectedObjects.ToArray()) };
         var now = _timeProvider.GetUtcNow();
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -288,7 +352,14 @@ public sealed class HomePermissionTrustService
             if (index < 0) return Failure("HOME_PERMISSION_REQUEST_NOT_FOUND", "The audited permission request was not found.");
             var request = state.Requests[index];
             if (request.State is not (HomePermissionRequestState.Approved or HomePermissionRequestState.Executing))
+            {
+                var recorded = state.Audit.LastOrDefault(item => item.RequestId == requestId && item.Kind == HomePermissionAuditKind.ExecutionCompleted);
+                if (request.State == outcome.State && request.ResultCode == outcome.Code && request.ResultMessage == outcome.Message &&
+                    recorded is not null && recorded.RequestState == outcome.State && recorded.ResultCode == outcome.Code &&
+                    recorded.ResultMessage == outcome.Message && recorded.AffectedObjects.SequenceEqual(outcome.AffectedObjects))
+                    return Success("HOME_EXECUTION_ALREADY_AUDITED", "The exact owner outcome was already recorded.");
                 return Failure("HOME_PERMISSION_NOT_AUTHORIZED", "The target action cannot execute without an approved request.");
+            }
             if (request.Policy.RequiresPerActionApproval && request.AppliedTrustLevel == HomeTrustLevel.AlwaysTrust)
                 return Failure("HOME_TARGET_POLICY_REQUIRES_CONFIRMATION", "The target action policy requires an explicit approval for this execution.");
 
@@ -506,7 +577,7 @@ public sealed class HomePermissionTrustService
     private async Task ExpireGrantsAsync(PersistedState state, DateTimeOffset now, CancellationToken cancellationToken)
     {
         foreach (var grant in state.Grants.Where(item => !item.IsRevoked &&
-                     item.ExpiresAt <= now).ToArray())
+                     (item.ExpiresAt <= now || item.TrustLevel == HomeTrustLevel.TemporaryAlwaysTrust && item.RemainingActions is <= 0)).ToArray())
             await ExpireTemporaryGrantAsync(state, grant, now, cancellationToken).ConfigureAwait(false);
     }
 

@@ -101,4 +101,10 @@ public sealed record ToolActivity(
     TimeSpan Duration,
     DateTimeOffset Timestamp,
     int LinesAdded = 0,
-    int LinesRemoved = 0);
+    int LinesRemoved = 0)
+{
+    /// <summary>Exact owning-dispatch facts. Null denotes an unsupported legacy observation.</summary>
+    public IReadOnlyList<ToolInvocationEvidence>? InvocationEvidence { get; init; }
+    /// <summary>Registered continuations may invoke again after the enclosing chat stream finishes.</summary>
+    public bool HasDeferredInvocations { get; init; }
+}

@@ -146,6 +146,7 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
     public Task<PlayApiResult<PlayGameDefinition>> CreateGameAsync(PlayGameDefinition definition, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(definition);
+        definition = Detached(definition); // Capture nested caller-owned lists before any owner await.
         return MutateAsync(library =>
         {
             var now = DateTimeOffset.UtcNow;
@@ -176,8 +177,19 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         return CreateGameAsync(game, cancellationToken);
     }
 
-    public Task<PlayApiResult<PlayGameDefinition>> UpdateGameAsync(PlayGameDefinition updated, int expectedRevision, CancellationToken cancellationToken) =>
-        MutateAsync(library =>
+    public Task<PlayApiResult<PlayGameDefinition>> UpdateGameAsync(Guid gameDefinitionId, PlayGameDefinition updated, int expectedRevision, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(updated);
+        if (gameDefinitionId == Guid.Empty || updated.GameDefinitionId != gameDefinitionId)
+            return Task.FromResult(Error<PlayGameDefinition>("InvalidGameDefinition", "The update must target the same canonical game definition identity.", "UpdateGame"));
+        return UpdateGameAsync(updated, expectedRevision, cancellationToken);
+    }
+
+    public Task<PlayApiResult<PlayGameDefinition>> UpdateGameAsync(PlayGameDefinition updated, int expectedRevision, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(updated);
+        updated = Detached(updated);
+        return MutateAsync(library =>
         {
             var current = library.Games.Where(game => game.GameDefinitionId == updated.GameDefinitionId).MaxBy(game => game.Revision);
             if (current is null) return Failed<PlayGameDefinition>("GameNotFound", "The game definition was not found.", "UpdateGame", true);
@@ -188,6 +200,7 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
             if (library.Games.Count >= MaximumGames) return Failed<PlayGameDefinition>("LimitReached", "The saved game revision limit has been reached.", "UpdateGame");
             return Updated(library with { Games = library.Games.Append(next).ToArray() }, PlayApiResult<PlayGameDefinition>.Success(next));
         }, cancellationToken);
+    }
 
     public async Task<PlayApiResult<string>> ValidateGameAsync(Guid id, int? revision, CancellationToken cancellationToken)
     {
@@ -423,10 +436,12 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         if (contestantId is null && !match.PinnedGame.AllowsSpectators) return Error<PlayRoundSnapshot>("ContestantViewDenied", "Spectator access is not allowed for this game.", "GetRound");
         var index = roundIndex ?? match.MatchState.RoundIndex;
         if (index < 0 || index >= match.PinnedGame.Questions.Count) return Error<PlayRoundSnapshot>("RoundNotActive", "The requested round is unavailable.", "GetRound", true);
+        if (index > match.MatchState.RoundIndex)
+            return Error<PlayRoundSnapshot>("ContestantViewDenied", "Future round content is sealed until its round begins.", "GetRound");
         var revealed = match.MatchState.Reveals.Any(item => item.QuestionIndex == index);
         var question = revealed ? null : match.PinnedGame.Questions[index];
         return PlayApiResult<PlayRoundSnapshot>.Success(new(matchId, index, revealed ? PlayRoundPhase.Revealed : match.MatchState.Phase,
-            question?.Prompt, question?.Options ?? [], index == match.MatchState.RoundIndex ? match.MatchState.PresentedAt : null,
+            question?.Prompt, question?.Options.ToArray() ?? [], index == match.MatchState.RoundIndex ? match.MatchState.PresentedAt : null,
             index == match.MatchState.RoundIndex ? match.MatchState.Deadline : null,
             revealed || index != match.MatchState.RoundIndex ? 0 : match.MatchState.Submissions.Count, revealed));
     }
@@ -528,7 +543,7 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
                 return PlayApiResult<T>.Success((T)(object)PublicMatch(matchSnapshot));
             if (result.Value is PlayCheckpoint checkpoint)
                 return PlayApiResult<T>.Success((T)(object)(checkpoint with { Snapshot = PublicMatch(checkpoint.Snapshot) }));
-            return result;
+            return Detached(result); // Returned collection interfaces must not alias canonical state.
         }
         catch (OperationCanceledException) { throw; }
         catch (JsonException) { return Error<T>("InvalidStoredData", "Saved Play data is invalid; no change was written.", "Mutate"); }
@@ -579,20 +594,28 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         var submitted = contestant is not null && match.MatchState.Submissions.ContainsKey(contestant.ContestantId);
         var teamState = contestant?.TeamId is Guid teamId && match.MatchState.TeamPrivateState.TryGetValue(teamId, out var state) ? state : null;
         return new(match.MatchId, contestant?.ContestantId ?? Guid.Empty, match.PinnedGame.Title, index, match.MatchState.Phase,
-            question?.Prompt, question?.Options ?? [], submitted, match.MatchState.Deadline,
+            question?.Prompt, question?.Options.ToArray() ?? [], submitted, match.MatchState.Deadline,
             match.Contestants.ToDictionary(item => item.ContestantId, item => item.Score), teamState, spectator);
     }
 
-    private static PlayGameDefinition PublicGame(PlayGameDefinition game) => game with
+    private static PlayGameDefinition PublicGame(PlayGameDefinition game) => Detached(game with
     {
         Questions = game.Questions.Select(question => question with { CorrectOption = -1, Explanation = string.Empty }).ToArray()
-    };
+    });
 
-    private static PlayMatchSnapshot PublicMatch(PlayMatchSnapshot match) => match with
+    private static PlayMatchSnapshot PublicMatch(PlayMatchSnapshot match) => Detached(match with
     {
-        PinnedGame = PublicGame(match.PinnedGame),
+        PinnedGame = PublicGame(match.PinnedGame) with
+        {
+            Questions = match.PinnedGame.Questions.Select((question, index) => index <= match.MatchState.RoundIndex
+                ? question with { CorrectOption = -1, Explanation = string.Empty }
+                : question with { Prompt = string.Empty, Options = [], CorrectOption = -1, Explanation = string.Empty }).ToArray()
+        },
         MatchState = match.MatchState with { Submissions = new Dictionary<Guid, PlaySubmission>(), TeamPrivateState = new Dictionary<Guid, string>() }
-    };
+    });
+
+    private static T Detached<T>(T value) where T : class => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value))
+        ?? throw new JsonException("Play snapshot could not be detached.");
 
     private static string? Validate(PlayGameDefinition game)
     {

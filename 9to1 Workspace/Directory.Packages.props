@@ -9,6 +9,9 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="CSharpMath" Version="[1.0.0-pre.1]" />
+    <PackageVersion Include="CSharpMath.Rendering" Version="[1.0.0-pre.1]" />
+    <PackageVersion Include="CSharpMath.SkiaSharp" Version="[1.0.0-pre.1]" />
     <PackageVersion Include="Avalonia" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Android" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.0.1" />
@@ -21,6 +24,7 @@
     <PackageVersion Include="SQLitePCLRaw.provider.winsqlite3" Version="3.0.3" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />

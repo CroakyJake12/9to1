@@ -4,7 +4,7 @@ using Haven.Core;
 namespace Haven.Application;
 
 /// <summary>Adapts discovered MCP tools into Haven's existing provider-neutral tool loop.</summary>
-public sealed class McpToolRuntime(IExternalConnectionRepository connections, IMcpConnectionClient client)
+public sealed class McpToolRuntime(IExternalConnectionRepository connections, IMcpConnectionClient client, IMcpInvocationAuthorizer? authorizer = null)
 {
     private sealed record Route(Guid ConnectionId, string RemoteToolName, string SnapshotVersion, McpActionRisk Risk, JsonElement InputSchema, JsonElement? OutputSchema);
     private readonly Dictionary<string, Route> _routes = new(StringComparer.Ordinal);
@@ -72,8 +72,17 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
                 new ToolFailureDescriptor("MCP_INVALID_INPUT", ToolFailureKind.InvalidInput,
                     "MCP arguments were rejected by the advertised input schema.", ExternalConnectionNaming.CapabilityKey(connection.Id),
                     ExternalConnectionNaming.PluginName(connection.Name), RiskFor(route.Risk), false, ProviderName: connection.Name));
+        if (authorizer is null || !await authorizer.AuthorizeAsync(connection, route.RemoteToolName, input, cancellationToken).ConfigureAwait(false))
+            return Failure(call.Name, "Home did not authorise this exact MCP connection, tool and argument scope.", started,
+                PermissionFailure(connection, route.Risk, "Home approval is required."));
+        connection = await connections.GetAsync(route.ConnectionId, cancellationToken).ConfigureAwait(false);
+        if (connection is null || !connection.IsEnabled || connection.State != ExternalConnectionState.Ready)
+            return Failure(call.Name, "The MCP connection was revoked or became unavailable before dispatch.", started);
         try
         {
+            var dispatchSnapshot = await client.DiscoverCapabilitiesAsync(connection, cancellationToken).ConfigureAwait(false);
+            if (dispatchSnapshot.SnapshotVersion != route.SnapshotVersion)
+                return Failure(call.Name, "The MCP capability schema changed while approval was pending; refresh and review the action again.", started);
             var result = await client.InvokeAsync(connection, route.RemoteToolName, call.Arguments, cancellationToken).ConfigureAwait(false);
             if (result.Succeeded && result.StructuredContent is { } structured && route.OutputSchema is { } outputSchema &&
                 !ValidateSchema(outputSchema, structured, out _))

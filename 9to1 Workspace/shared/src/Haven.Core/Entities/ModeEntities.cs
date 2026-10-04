@@ -1,5 +1,9 @@
 namespace Haven.Core;
 
+public enum AppOperabilityClassification { Unknown, OrdinaryApplication, Game, AntiCheatProtected }
+public enum AppOperabilityPath { TypedApi, ComputerUseRequired, TypedApiAndComputerUse }
+public sealed record AppOperability(AppOperabilityClassification Classification, AppOperabilityPath Path);
+
 /// <summary>
 /// Represents a mode definition.
 /// </summary>
@@ -22,7 +26,11 @@ public sealed record ModeDefinition(
     string TagsJson,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    bool IsEnabled = true);
+    bool IsEnabled = true)
+{
+    /// <summary>Canonical package declaration; absence remains unknown and cannot authorise invocation.</summary>
+    public AppOperability? InvocationOperability { get; init; }
+}
 
 /// <summary>
 /// Represents a mode version.

@@ -14,6 +14,8 @@
     <Compile Include="Source\Home\HomePermissionModels.cs" />
     <Compile Include="Source\Home\HomePermissionTrustService.cs" />
     <Compile Include="Source\Home\Core\*.cs" />
+    <Compile Include="Source\Home\Apps\*.cs" />
+    <Compile Include="Source\Home\Discover\*.cs" />
     <Compile Include="Source\Home\ModelPicker\*.cs" />
     <Compile Include="Source\Home\PermissionsTrustNotifications\*.cs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
@@ -28,4 +30,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup><ProjectReference Include="../../framework/CUI/AI/NineToOne.Cui.AI.csproj" /></ItemGroup>
 </Project>

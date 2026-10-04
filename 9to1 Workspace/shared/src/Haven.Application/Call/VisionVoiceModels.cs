@@ -104,7 +104,7 @@ public sealed record LiveTranslateLanguageSet(
     IReadOnlyList<LiveTranslateOutputPreference> Outputs,
     IReadOnlyList<string> GlossaryIds);
 
-/// <summary>Tracks the resumable outline and current position of a Monologue run.</summary>
+/// <summary>Tracks the resumable outline. Position is an offset within CurrentSection; advancing to a later section may reset this offset.</summary>
 public sealed record MonologueRun(
     Guid RunId,
     string Objective,
@@ -113,7 +113,27 @@ public sealed record MonologueRun(
     int CurrentSection,
     TimeSpan Position,
     bool IsPaused,
-    IReadOnlyList<string> SourceRefs);
+    IReadOnlyList<string> SourceRefs)
+{
+    /// <summary>Exact last acknowledged native checkpoint operation; not audio or source authority.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public MonologuePlaybackReceipt? PlaybackReceipt { get; init; }
+
+    /// <summary>Checks a deterministic resumable plan, without starting audio or authorising referenced sources.</summary>
+    public string? Validate()
+    {
+        if (RunId == Guid.Empty || string.IsNullOrWhiteSpace(Objective)) return "A Monologue plan requires a stable RunID and objective.";
+        if (TargetDuration is { } duration && duration <= TimeSpan.Zero) return "A target duration must be positive.";
+        if (Sections is null || Sections.Count == 0 || Sections.Any(string.IsNullOrWhiteSpace)) return "A Monologue plan requires nonempty ordered sections.";
+        if (CurrentSection < 0 || CurrentSection >= Sections.Count || Position < TimeSpan.Zero) return "The Monologue playback position is outside its original plan.";
+        if (SourceRefs is null || SourceRefs.Any(string.IsNullOrWhiteSpace)) return "Monologue source references must be explicit and nonempty when supplied.";
+        if (PlaybackReceipt is { } receipt && (receipt.OperationId == Guid.Empty || receipt.PlaybackId == Guid.Empty
+            || string.IsNullOrWhiteSpace(receipt.VoiceId) || receipt.VoiceId.Length > 512 || receipt.OriginalRevision < 0
+            || receipt.Section < 0 || receipt.Section >= Sections.Count || receipt.Position < TimeSpan.Zero))
+            return "The retained native checkpoint receipt is invalid.";
+        return null;
+    }
+}
 
 /// <summary>One useful derived event from contextual ambient listening.</summary>
 public sealed record LiveListenerEvent(
@@ -155,6 +175,9 @@ public sealed record MultimodalSession(
     {
         if (SessionId == Guid.Empty) return "A multimodal session requires a stable SessionID.";
         if (ConversationId == Guid.Empty) return "A multimodal session requires its canonical ConversationID.";
+        if (SpaceId == Guid.Empty) return "An optional canonical SpaceID cannot be empty.";
+        if (!Enum.IsDefined(VoiceMode) || !Enum.IsDefined(State) || !Enum.IsDefined(MicrophoneState))
+            return "The session contains an unsupported voice, lifecycle or microphone state.";
         if (Revision < 1) return "A multimodal session revision must be positive.";
         if (string.IsNullOrWhiteSpace(EffectiveModelPolicy)) return "A multimodal session requires an effective model policy.";
         if (Retention is null) return "A multimodal session requires an explicit retention policy.";
@@ -162,8 +185,10 @@ public sealed record MultimodalSession(
             (Retention.RetainAudio || Retention.RetainTranscript) && Retention.ExplicitlyEnabledAt is null)
             return "Ambient audio or transcript retention requires a separate explicit opt-in timestamp.";
         if (VisualSources is null) return "VisualSources must be an explicit collection, including when empty.";
-        if (VisualSources.Any(source => source.SourceId == Guid.Empty || string.IsNullOrWhiteSpace(source.Provenance)))
+        if (VisualSources.Any(source => source is null || source.SourceId == Guid.Empty || string.IsNullOrWhiteSpace(source.Provenance)))
             return "Each visual source requires a stable identity and provenance.";
+        if (VisualSources.Any(source => !Enum.IsDefined(source.Type) || !Enum.IsDefined(source.State)))
+            return "The session contains an unsupported visual source type or state.";
         if (VisualSources.Select(source => source.SourceId).Distinct().Count() != VisualSources.Count)
             return "Visual source identities must be unique within a session.";
         if (VisualSources.Any(source => source.IsContinuous && !source.IsEphemeral &&
@@ -171,9 +196,14 @@ public sealed record MultimodalSession(
             return "Continuous camera and screen frames must remain ephemeral.";
         if (VoiceMode == VisionVoiceMode.LiveTranslate)
         {
-            var languageError = LiveTranslateLanguages?.Validate();
+            if (LiveTranslateLanguages is null) return "Live Translate requires an explicit selected language set.";
+            var languageError = LiveTranslateLanguages.Validate();
             if (languageError is not null) return languageError;
         }
+        if (Monologue is { } outline && outline.Validate() is { } invalidOutline)
+            return invalidOutline;
+        if (LiveTranslateLanguages is { } retainedLanguages && retainedLanguages.Validate() is { } retainedError)
+            return retainedError;
         if (VoiceMode == VisionVoiceMode.Monologue && Monologue is { RunId: var runId } && runId == Guid.Empty)
             return "A Monologue run requires a stable RunID.";
         return null;
@@ -187,6 +217,9 @@ public static class LiveTranslateLanguageSetRules
     public static string? Validate(this LiveTranslateLanguageSet languages)
     {
         ArgumentNullException.ThrowIfNull(languages);
+        if (languages.Locales is null || languages.Outputs is null || languages.GlossaryIds is null)
+            return "Language, output and glossary selections must be explicit collections.";
+        if (languages.Outputs.Any(output => output is null)) return "Translated output preferences cannot be null.";
         if (languages.Locales.Any(string.IsNullOrWhiteSpace)) return "Selected language locales cannot be empty.";
         if (languages.Locales.Distinct(StringComparer.OrdinalIgnoreCase).Count() != languages.Locales.Count)
             return "Selected language locales must be unique.";
