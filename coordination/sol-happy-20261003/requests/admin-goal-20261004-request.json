@@ -1,0 +1,64 @@
+{
+  "schema": "9to1-admin-goal-coordination-request/v1",
+  "status": "REQUESTED_NOT_ACKNOWLEDGED",
+  "requestedAtUTC": "2026-10-04T16:46:34.971189+00:00",
+  "userAuthorization": "User selected carrying out the attached 02-9to1-admin.txt assignment after scope clarification; assignment explicitly authorises coordination messages to Teams A/B/C and existing disjoint coordination records.",
+  "recipients": [
+    "Team A / Astra la Vista / A3 worker4_resume",
+    "Team A / A1 shared Home foundation / A5 installation",
+    "Team A A6 or another non-author independent reviewer",
+    "Team C / Sol Excited / C1 C3 C6"
+  ],
+  "scope": "Windows/native Pass 1 9to1 Admin only; existing ownership, shared-service authority and Team C global integration preserved. This is a disjoint request, not a source path allocation, handover, workflow dispatch or release promotion.",
+  "coordinationBasis": "b9c035fa0a67be470550f62e4e061a56fd415770",
+  "sourceInspection": {
+    "originalWorkspace": "/workspace/9to1",
+    "originalBranch": "work",
+    "originalHead": "98a08827c9fbc486fe987da73f4aee8398120d31",
+    "originalState": "CLEAN_ADMIN_ABSENT",
+    "historicalWorkspace": "/workspace/9to1-admin-inspection",
+    "historicalHandoff": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "historicalTree": "c612dd3058a3101ece13e3d389ad9def43496fa4",
+    "state": "UNCHANGED_DETACHED_INSPECTION_AND_BUILD_ONLY_UNACCEPTED_NO_OWNER_BASELINE_SELECTED",
+    "sourceChanges": 0,
+    "proposedSourceScope": "9to1 Workspace/Admin/**",
+    "proposedSourceBranch": "app-goals/9to1-admin-windows-20261004",
+    "proposedAllocatedRecord": "coordination/sol-happy-20261003/app-goals/9to1-admin.json",
+    "proposalsCreatedOrClaimed": false
+  },
+  "requests": [
+    "Team A/A3: select exact current Admin source/dependency commit and acknowledge bounded path-by-path handover for 9to1 Workspace/Admin/**, or identify continuing owner/overlapping drafts. Confirm proposed source branch and app-goals record allocation before they are created.",
+    "Team A/A1/A5: supply approved authenticated Windows Home discovery/transport and current CAKE session acquisition/revocation contract, installed Home/AppID/version/publisher/ABI/service tuple, and absent/incompatible/damaged bootstrap/update/repair/signing arrangements. Current Admin Program always returns HomeBridgeUnavailable; no Ready/config-token/private-service bypass will be introduced.",
+    "Team A/domain owners: identify current canonical management API contracts for all ADM action families so native UI calls existing account/resource/device/Agent services. Preserve explicit OPEN seat reservation, carryover, retention and endpoint-version decisions.",
+    "Team A/A6: appoint a non-author reviewer and exact source/reproduction slot. Local independent source inspection exists, but no Team A appointment or release verification ACK is claimed.",
+    "Team C/C1/C3/C6: agree exact Admin source/package target and real Windows capacity/runner route before owned workflow dispatch/edit. Current affected-three workflow covers Boards/Present/Studio. Supply clean no-development-SDK validation, independent reproduction, accessible artifact destination and authorised Jacob-PC delivery/receipt route.",
+    "Team A/C: acknowledge receipt and return the exact baseline/handover/runtime/reviewer/runner answers through current coordination. Request publication is not ACK."
+  ],
+  "observedResults": {
+    "liveSpecificationRevision": "AHj4eMQsTIT4NLLbffjytUtKvQ-c1NMJ6tAnLf2xD7xcs-AQ188ZHRg49KZ1J4b6z3M3jKMEB_V2tUwEQH26Gd4GBo8MmIUircsD02y-a_0",
+    "cloudEnvironmentId": "ccarenv_b64_Y2NhcmVudl85NjQ2MTVhNTMzMmM4MTkxYmI4YTFmOWFmYzg5MzcyNg",
+    "requiredNameModelEffortGoalMetadata": "Friendly environment name, GPT-6.1 Sol/Ultra and Goal ID/state not exposed by current tools; none assumed or substituted. Required Develop/Sandbox contract/preflight and send_message_to_thread unavailable.",
+    "maintainedAdminTests": "7 passed, 0 failed, 0 skipped in Release; Debian 13 Linux x64 SDK 10.0.401; original mock account/selection and headless CUI/readiness fixtures unchanged.",
+    "originalFailures": "Missing pinned XamlX/DBus dependencies and subsequent private-artifacts Avalonia build-task path failure retained; exact declared submodules acquired; supported AvaloniaBuildTasksLocation selected without source/oracle edits.",
+    "runtimeSource": "Admin Program.cs:4-14 never constructs live authenticated controller and returns HomeBridgeUnavailable unconditionally; AdminCuiController.cs:40-85 exposes only four read actions. Native complete management/navigation/AI/structured-failure/pagination workflows remain missing.",
+    "package": {
+      "state": "HISTORICAL_UNACCEPTED_LINUX_CROSS_PUBLISH_ONLY_WINDOWS_NOT_EXECUTED",
+      "source": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+      "filename": "9to1-admin-win-x64-historical-unaccepted.zip",
+      "localPath": "/workspace/9to1-admin-evidence/windows-build/9to1-admin-win-x64-historical-unaccepted.zip",
+      "bytes": 80454268,
+      "sha256": "e5fb67ada4f09dd374e4c6625d58f78e542de8cbebb566e002dcc9a1a1e4023b",
+      "publishedFiles": 318,
+      "executable": "NineToOne.Admin.exe",
+      "machine": "AMD64",
+      "executableSha256": "2c0d0b1f3637eeda13348982edd0279c17003487eac235e8dc14967081849d10",
+      "qualification": "Self-contained publish and archive hashes verified. No signing, installed Home, Windows launch, full ADM acceptance, shared-host accessible download or Jacob-PC delivery. Local paths are not cross-host delivery links."
+    },
+    "localEvidence": "/workspace/9to1-admin-evidence/REPORT.md, verification.json, attempt-03 raw command/log/TRX, windows-build full publish/file manifest and prepared OWNER-REQUEST.md.",
+    "requiredWindowsAcceptanceGatesExecuted": 0,
+    "sourceOwnerHandoverToThisChat": false,
+    "reviewerAppointed": false
+  },
+  "deadline": "2026-10-04T20:00:00+01:00",
+  "checkpoint": "17:30 candidate milestone missed; deadline is not an acceptance waiver."
+}
