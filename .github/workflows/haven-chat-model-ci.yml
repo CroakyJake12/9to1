@@ -353,3 +353,554 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           retention-days: 14
+
+  sdk08-owning-original-custody:
+    name: SDK08 owning original evidence custody only
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/validation/sol-happy-sdk08-owning-original-custody-20261004' && inputs.expected_commit == github.sha && inputs.cut_manifest_sha256 == '9f884948319d06e9d302390c19974b810dfe4e7e072c1cc1209e928921c45d7f'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Verify root-owned reader source and replay only six pinned original artifacts
+        timeout-minutes: 20
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import base64, hashlib, json, os, re, sys, urllib.request
+          class Refusal(Exception):
+              pass
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, message, headers, newurl):
+                  return None
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def settle(errors):
+              if len(errors) == 1:
+                  raise errors[0]
+              if errors:
+                  raise BaseExceptionGroup('Trusted reader bootstrap and independent IO failures.', errors)
+          def safe(errors):
+              result=[]
+              for error in errors:
+                  row={'type':type(error).__name__,'code':'BOOTSTRAP_OR_FINAL_IO_FAILURE'}
+                  if isinstance(error, BaseExceptionGroup):
+                      row['causes']=safe(error.exceptions)
+                  result.append(row)
+              return result
+          def unique(pairs):
+              output={}
+              for key,value in pairs:
+                  require(key not in output,'BOOTSTRAP_DUPLICATE_JSON')
+                  output[key]=value
+              return output
+          requests_attempted=0
+          bytes_reserved=0
+          def source(path, expected_bytes, expected_sha):
+              global requests_attempted,bytes_reserved
+              require(requests_attempted<2,'BOOTSTRAP_REQUEST_CAP')
+              requests_attempted+=1
+              bytes_reserved+=131072
+              require(bytes_reserved<=262144,'BOOTSTRAP_ATTEMPT_BYTES_CAP')
+              require(os.environ.get('GITHUB_REPOSITORY')=='CroakyJake12/9to1' and os.environ.get('GITHUB_REF')=='refs/heads/validation/sol-happy-sdk08-owning-original-custody-20261004' and os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch','BOOTSTRAP_CONTEXT_REFUSED')
+              revision=os.environ['GITHUB_SHA']
+              require(re.fullmatch('[0-9a-f]{40}',revision) is not None,'BOOTSTRAP_OWN_COMMIT_REFUSED')
+              token=os.environ.get('GH_TOKEN','')
+              require(token and '\n' not in token and '\r' not in token,'BOOTSTRAP_API_TOKEN_REFUSED')
+              url='https://api.github.com/repos/CroakyJake12/9to1/contents/'+path+'?ref='+revision
+              request=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'sol-happy-sdk08-trusted-reader-bootstrap','Accept-Encoding':'identity'})
+              opener=urllib.request.build_opener(NoRedirect())
+              response=None;errors=[];raw=None
+              try:
+                  response=opener.open(request,timeout=60)
+                  require(response.status==200 and response.headers.get('Content-Encoding','identity').lower()=='identity','BOOTSTRAP_API_RESPONSE_REFUSED')
+                  held=bytearray()
+                  while True:
+                      part=response.read(min(65536,131072-len(held)+1))
+                      if not part:
+                          break
+                      held.extend(part)
+                      require(len(held)<=131072,'BOOTSTRAP_SOURCE_JSON_CAP')
+                  value=json.loads(bytes(held).decode('utf-8',errors='strict'),object_pairs_hook=unique)
+                  require(value['type']=='file' and value['path']==path and value['size']==expected_bytes and value['encoding']=='base64','BOOTSTRAP_SOURCE_DESCRIPTOR_REFUSED')
+                  encoded=''.join(value['content'].split())
+                  raw=base64.b64decode(encoded,validate=True)
+                  require(len(raw)==expected_bytes and hashlib.sha256(raw).hexdigest()==expected_sha,'BOOTSTRAP_SOURCE_WHOLE_HASH_REFUSED')
+                  require(hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==value['sha'],'BOOTSTRAP_SOURCE_GIT_BLOB_REFUSED')
+              except BaseException as error:
+                  if response is None and isinstance(error,urllib.error.HTTPError):
+                      response=error
+                  add(errors,error)
+              if response is not None:
+                  try:
+                      response.close()
+                  except BaseException as error:
+                      add(errors,error)
+              settle(errors)
+              return raw
+          errors=[]
+          namespace=None
+          try:
+              require(sys.version_info>=(3,11) and sys.flags.optimize==0,'BOOTSTRAP_PYTHON_REFUSED')
+              code=source('.github/scripts/sol-happy-sdk08-owning-original-custody.py',54134,'728699197236e0c284720537342720a8391b82225198fd3797cbdc3cca5e1df0')
+              configuration=source('.github/validation/sol-happy-sdk08-owning-original-custody.json',5218,'9f884948319d06e9d302390c19974b810dfe4e7e072c1cc1209e928921c45d7f')
+              namespace={'__name__':'sol_happy_owned_original_custody_reader'}
+              # Only exact root-owned reader source is executed; original artifact payloads are data.
+              exec(compile(code,'root-owned-sdk08-owning-original-custody-reader','exec'),namespace)
+              namespace['main'](json.loads(configuration.decode('utf-8',errors='strict'),object_pairs_hook=unique))
+          except BaseException as error:
+              add(errors,error)
+          if errors:
+              try:
+                  project=namespace['projections'](errors) if namespace is not None and 'projections' in namespace else safe(errors)
+                  print(json.dumps({'status':'SDK08_ORIGINAL_CUSTODY_REFUSED','originalCauses':project,'bootstrapRequestsAttempted':requests_attempted,'bootstrapBytesReserved':bytes_reserved},ensure_ascii=True,sort_keys=True),flush=True)
+              except BaseException as error:
+                  add(errors,error)
+              # Never allow Python to print raw network exceptions, tracebacks or temporary signed URLs.
+              sys.exit(1)
+          PY
+      - name: Retain complete original causal text and replay diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-sdk08-owning-original-custody-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/sdk08-owning-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish bounded exact complete causal upload paths
+        id: causal_paths
+        if: ${{ always() }}
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import hashlib, json, os, re, stat, sys
+          class Refusal(Exception):
+              pass
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def project(errors):
+              return [{'type':type(error).__name__, 'code':str(error) if isinstance(error, Refusal) else 'SELECTOR_METADATA_IO_FAILURE'} for error in errors]
+          relative_paths = [
+              "diagnostic.json",
+              "replay-report.json",
+              "originals/owning/manifest.json",
+              "originals/owning/actual-native-loaded.log",
+              "originals/owning/ai-build.log",
+              "originals/owning/ai-compiled.json",
+              "originals/owning/ai-restore-after.json",
+              "originals/owning/ai-restore-before.json",
+              "originals/owning/ai-target-path.stderr",
+              "originals/owning/ai-target-path.stdout",
+              "originals/owning/ai.log",
+              "originals/owning/application-build.log",
+              "originals/owning/application-compiled.json",
+              "originals/owning/application-restore-after.json",
+              "originals/owning/application-restore-before.json",
+              "originals/owning/application-target-path.stderr",
+              "originals/owning/application-target-path.stdout",
+              "originals/owning/application.log",
+              "originals/owning/avalonia-build-tasks-build.log",
+              "originals/owning/avalonia-build-tasks-compiled-after.json",
+              "originals/owning/avalonia-build-tasks-compiled-before.json",
+              "originals/owning/avalonia-build-tasks-restore.log",
+              "originals/owning/avalonia-build-tasks-target.stderr",
+              "originals/owning/avalonia-build-tasks-target.stdout",
+              "originals/owning/cargo-build.log",
+              "originals/owning/cargo-test.log",
+              "originals/owning/cargo-tree.log",
+              "originals/owning/cargo-version.txt",
+              "originals/owning/compiled/ai/NineToOne.Cui.AI.Tests.deps.json",
+              "originals/owning/compiled/ai/NineToOne.Cui.AI.Tests.runtimeconfig.json",
+              "originals/owning/compiled/application/Haven.Application.Tests.deps.json",
+              "originals/owning/compiled/application/Haven.Application.Tests.runtimeconfig.json",
+              "originals/owning/compiled/avalonia-build-tasks/Avalonia.Build.Tasks.deps.json",
+              "originals/owning/compiled/core/Haven.Core.Tests.deps.json",
+              "originals/owning/compiled/core/Haven.Core.Tests.runtimeconfig.json",
+              "originals/owning/compiled/cui-domain/HavenOS.Files.CUI.Tests.deps.json",
+              "originals/owning/compiled/cui-domain/HavenOS.Files.CUI.Tests.runtimeconfig.json",
+              "originals/owning/compiled/files-desktop/Haven.Desktop.Tests.deps.json",
+              "originals/owning/compiled/files-desktop/Haven.Desktop.Tests.runtimeconfig.json",
+              "originals/owning/compiled/home-full/HavenOS.Home.Tests.deps.json",
+              "originals/owning/compiled/home-full/HavenOS.Home.Tests.runtimeconfig.json",
+              "originals/owning/compiled/infrastructure/Haven.Infrastructure.Tests.deps.json",
+              "originals/owning/compiled/infrastructure/Haven.Infrastructure.Tests.runtimeconfig.json",
+              "originals/owning/compiled/mail-full/HavenOS.Mail.Tests.deps.json",
+              "originals/owning/compiled/mail-full/HavenOS.Mail.Tests.runtimeconfig.json",
+              "originals/owning/compiled/os/NineToOne.Os.Shell.Tests.deps.json",
+              "originals/owning/compiled/os/NineToOne.Os.Shell.Tests.runtimeconfig.json",
+              "originals/owning/compiled/studio/HavenOS.AIStudio.Tests.deps.json",
+              "originals/owning/compiled/studio/HavenOS.AIStudio.Tests.runtimeconfig.json",
+              "originals/owning/console-receipt.json",
+              "originals/owning/core-build.log",
+              "originals/owning/core-compiled.json",
+              "originals/owning/core-restore-after.json",
+              "originals/owning/core-restore-before.json",
+              "originals/owning/core-target-path.stderr",
+              "originals/owning/core-target-path.stdout",
+              "originals/owning/core.log",
+              "originals/owning/cui-domain-build.log",
+              "originals/owning/cui-domain-compiled.json",
+              "originals/owning/cui-domain-restore-after.json",
+              "originals/owning/cui-domain-restore-before.json",
+              "originals/owning/cui-domain-target-path.stderr",
+              "originals/owning/cui-domain-target-path.stdout",
+              "originals/owning/cui-domain.log",
+              "originals/owning/files-desktop-build.log",
+              "originals/owning/files-desktop-compiled.json",
+              "originals/owning/files-desktop-owned-native-map-receipt.json",
+              "originals/owning/files-desktop-restore-after.json",
+              "originals/owning/files-desktop-restore-before.json",
+              "originals/owning/files-desktop-target-path.stderr",
+              "originals/owning/files-desktop-target-path.stdout",
+              "originals/owning/files-desktop.log",
+              "originals/owning/font-packages.log",
+              "originals/owning/fontconfig.log",
+              "originals/owning/fresh-glycin-loaded.py",
+              "originals/owning/glycin-build.log",
+              "originals/owning/home-full-build.log",
+              "originals/owning/home-full-compiled.json",
+              "originals/owning/home-full-restore-after.json",
+              "originals/owning/home-full-restore-before.json",
+              "originals/owning/home-full-target-path.stderr",
+              "originals/owning/home-full-target-path.stdout",
+              "originals/owning/home-full.log",
+              "originals/owning/home-source-pairs/files-desktop/receipt.json",
+              "originals/owning/home-source-pairs/home-full/receipt.json",
+              "originals/owning/infrastructure-build.log",
+              "originals/owning/infrastructure-compiled.json",
+              "originals/owning/infrastructure-restore-after.json",
+              "originals/owning/infrastructure-restore-before.json",
+              "originals/owning/infrastructure-target-path.stderr",
+              "originals/owning/infrastructure-target-path.stdout",
+              "originals/owning/infrastructure.log",
+              "originals/owning/ldd-glycin-image-rs.log",
+              "originals/owning/ldd-libglycin.so.log",
+              "originals/owning/mail-actual-strict-tls-readiness.json",
+              "originals/owning/mail-full-build.log",
+              "originals/owning/mail-full-compiled.json",
+              "originals/owning/mail-full-restore-after.json",
+              "originals/owning/mail-full-restore-before.json",
+              "originals/owning/mail-full-target-path.stderr",
+              "originals/owning/mail-full-target-path.stdout",
+              "originals/owning/mail-full.log",
+              "originals/owning/mail-java-version.txt",
+              "originals/owning/mail-maintained-configuration-source/GreenMailStandaloneRunner.java",
+              "originals/owning/mail-maintained-configuration-source/PropertiesBasedGreenMailConfigurationBuilder.java",
+              "originals/owning/mail-maintained-configuration-source/PropertiesBasedServerSetupBuilder.java",
+              "originals/owning/mail-maintained-release-tag.json",
+              "originals/owning/mail-maintained-server-producer.json",
+              "originals/owning/mail-original-caller-session/5892-pending.json",
+              "originals/owning/mail-original-caller-session/expected-managed-launch.json",
+              "originals/owning/mail-original-caller-session/inner-native-delegation.json",
+              "originals/owning/mail-original-crl-session/5859-pending.json",
+              "originals/owning/mail-original-crl-session/expected-managed-launch.json",
+              "originals/owning/mail-original-java-session/5860-pending.json",
+              "originals/owning/mail-original-java-session/expected-managed-launch.json",
+              "originals/owning/mail-original-public-crl-distribution.json",
+              "originals/owning/mail-owned-public-ca.pem",
+              "originals/owning/mail-owned-public-crl.pem",
+              "originals/owning/mail-owned-public-server.pem",
+              "originals/owning/main-restore-CakeOS.Cui.Runtime.Tests.log",
+              "originals/owning/main-restore-Haven.Application.Tests.log",
+              "originals/owning/main-restore-Haven.Core.Tests.log",
+              "originals/owning/main-restore-Haven.Desktop.Tests.log",
+              "originals/owning/main-restore-Haven.Infrastructure.Tests.log",
+              "originals/owning/main-restore-HavenOS.AIStudio.Tests.log",
+              "originals/owning/main-restore-HavenOS.Files.CUI.Tests.log",
+              "originals/owning/main-restore-HavenOS.Forms.CUI.Tests.log",
+              "originals/owning/main-restore-HavenOS.Home.Tests.log",
+              "originals/owning/main-restore-HavenOS.Mail.Tests.log",
+              "originals/owning/main-restore-HavenOS.Sites.Tests.log",
+              "originals/owning/main-restore-NineToOne.Cui.AI.Tests.log",
+              "originals/owning/main-restore-NineToOne.Os.Shell.Tests.log",
+              "originals/owning/native-environment.json",
+              "originals/owning/native-hosted-packages.txt",
+              "originals/owning/native-load-probe.py",
+              "originals/owning/native-loaded-identity.log",
+              "originals/owning/native-needed.log",
+              "originals/owning/nm-glycin-image-rs.log",
+              "originals/owning/nm-libglycin.so.log",
+              "originals/owning/os-build.log",
+              "originals/owning/os-compiled.json",
+              "originals/owning/os-restore-after.json",
+              "originals/owning/os-restore-before.json",
+              "originals/owning/os-target-path.stderr",
+              "originals/owning/os-target-path.stdout",
+              "originals/owning/os.log",
+              "originals/owning/profile-correction/actual-bwrap-version.stderr",
+              "originals/owning/profile-correction/actual-bwrap-version.stdout",
+              "originals/owning/profile-correction/actual-kernel.stderr",
+              "originals/owning/profile-correction/actual-kernel.stdout",
+              "originals/owning/profile-correction/actual-packages.stderr",
+              "originals/owning/profile-correction/actual-packages.stdout",
+              "originals/owning/profile-correction/actual-parser-version.stderr",
+              "originals/owning/profile-correction/actual-parser-version.stdout",
+              "originals/owning/profile-correction/actual-restricted-child.stderr",
+              "originals/owning/profile-correction/actual-restricted-child.stdout",
+              "originals/owning/profile-correction/cleanup-receipt.json",
+              "originals/owning/profile-correction/commands.json",
+              "originals/owning/profile-correction/exact-abi4-dry-parse.stderr",
+              "originals/owning/profile-correction/exact-abi4-dry-parse.stdout",
+              "originals/owning/profile-correction/exact-profile-preprocessed.stderr",
+              "originals/owning/profile-correction/exact-profile-preprocessed.stdout",
+              "originals/owning/profile-correction/load-exact-two-profiles.stderr",
+              "originals/owning/profile-correction/load-exact-two-profiles.stdout",
+              "originals/owning/profile-correction/original-native-session-drain/22687-pending.json",
+              "originals/owning/profile-correction/original-native-session-drain/expected-managed-launch.json",
+              "originals/owning/profile-correction/policy-precondition-receipt.json",
+              "originals/owning/profile-correction/profiles-after-cleanup.stderr",
+              "originals/owning/profile-correction/profiles-after-cleanup.stdout",
+              "originals/owning/profile-correction/profiles-after-load.stderr",
+              "originals/owning/profile-correction/profiles-after-load.stdout",
+              "originals/owning/profile-correction/profiles-before.stderr",
+              "originals/owning/profile-correction/profiles-before.stdout",
+              "originals/owning/profile-correction/remove-only-introduced-profiles.stderr",
+              "originals/owning/profile-correction/remove-only-introduced-profiles.stdout",
+              "originals/owning/profile-correction/same-genuine-true-probe.stderr",
+              "originals/owning/profile-correction/same-genuine-true-probe.stdout",
+              "originals/owning/readelf-dynamic.log",
+              "originals/owning/readelf-glycin-image-rs.log",
+              "originals/owning/readelf-libglycin.so.log",
+              "originals/owning/readelf-symbols.log",
+              "originals/owning/receipt.json",
+              "originals/owning/restore-diagnostics/03bea216b72099c398c8690d5421ec68d39e528eec9b849a1df4aeaf148fb718.json",
+              "originals/owning/restore-diagnostics/0d6c7d871436b6a8be69d020646b04a038a09a9848b2815703ea13ebb30d6649.json",
+              "originals/owning/restore-diagnostics/11fbd02f8bb6cc5cb4ed593ad2014c5d06a0aca4c3a1318ae25aa922ee3da70e.json",
+              "originals/owning/restore-diagnostics/125c3f8c0a217cf0e2075830e1c9d3bc08b76c526e9968f61e0fbd7a5dd99613.json",
+              "originals/owning/restore-diagnostics/14ad10814ca2c83ef3671ed581418b312d13813d0e570afcf684949b0fb62cb1.json",
+              "originals/owning/restore-diagnostics/162efc729683f2b94cb41a24f04503b0ffba1571cd06234c1efa7d80d7e462e0.json",
+              "originals/owning/restore-diagnostics/19803cb2570f36d2cf7d1d8e697617f41ecccf5b40a7c8e6be93bd7acd226e30.json",
+              "originals/owning/restore-diagnostics/27a9e3455eea0f1403dc3f03529870accdb01ea39637edb389d200f692a917e2.json",
+              "originals/owning/restore-diagnostics/2a66545f579d2443e8b9a21bab9b52207a84647f0a328ad1263af4222f51347d.json",
+              "originals/owning/restore-diagnostics/2b4c677d57754b4d79641bd393e96331764ccf16689e20495242ada22811cff6.json",
+              "originals/owning/restore-diagnostics/2b95c19529f4cb7262b863c53ddb1a308257511b511284c5e139fcbea190fabb.json",
+              "originals/owning/restore-diagnostics/37d365bf40e1ddf71eb3d25ad61b2128ec2c5b892055754560d34bf8d06a8c61.json",
+              "originals/owning/restore-diagnostics/394c8cb01f66d3a659e6c2a6d1b5095416b8bcd0a28a1b8b4b286460525a86e2.json",
+              "originals/owning/restore-diagnostics/3dc17a3938335422200bf0ffa3560a0f1fe9fd098674af4927a9be04e3e0aef1.json",
+              "originals/owning/restore-diagnostics/40e33ba1cd969481a561da6b259d3c0ee0df4776de4a71323095dc672c61b003.json",
+              "originals/owning/restore-diagnostics/510b1494a8637d729e5a695d7b45c372e041d624f97f6da3f7ac0f8cacf0b4b8.json",
+              "originals/owning/restore-diagnostics/53cfb5e9ed78d1de72cc84681ee76cc5ca89d7aad0eafbb02bb7fed233f276d9.json",
+              "originals/owning/restore-diagnostics/553e8de7294c480558362b37f15bf2e7862d1b60cd6f398de8c7b69c37e52653.json",
+              "originals/owning/restore-diagnostics/5a56337954a700566c6c2d093895f47fac30a5407e8bc1c78c1213158f060542.json",
+              "originals/owning/restore-diagnostics/5c9c938813ef3b27d862eca3657255bf8f0e056d6be1974d89a2957ae4d20406.json",
+              "originals/owning/restore-diagnostics/5f32c5078ccf87edcd58869e15fa4b5cb36e41f9cefa6fae729a0ba53f74bffa.json",
+              "originals/owning/restore-diagnostics/645a7b973f55fa4f523af73a80d925a11de9ddc7014b3888706a947390df9f49.json",
+              "originals/owning/restore-diagnostics/69478ff6dacb0551a2e74268e7713c05c655aaa9d5d5ccaaaa5308604cca7341.json",
+              "originals/owning/restore-diagnostics/6a8a3163b60a94d92d480fe53ef7f3c440c66727560df747f845f5696f4b9dc2.json",
+              "originals/owning/restore-diagnostics/6f365f1cd8b63644447e56556634d96a1dc6c857d0f9ed52cd69930ec113e7fa.json",
+              "originals/owning/restore-diagnostics/6f77561bdd8021e540cd0e784b94d73ac269698fb13c5dac99995b25d69e78fd.json",
+              "originals/owning/restore-diagnostics/717454af805f3ea82b73b14bba0de4b0e8bdbbacd5ab6a67542d1bbbc564a5ba.json",
+              "originals/owning/restore-diagnostics/73ba1d87ca0b7c59d34d7ba5570ffd922f947f79dbdecc0b966fa13462e1564c.json",
+              "originals/owning/restore-diagnostics/74acc8ff124bf3e671be4271439867486612f2c4c0cf7c6bafecd19ce68562e1.json",
+              "originals/owning/restore-diagnostics/787ec1615853bab1f3cd9f10fd3ee409209f187eda82fe9cb459c49f6c884e89.json",
+              "originals/owning/restore-diagnostics/78882e1b5b4ce0998806e656a1243f8fce716a691927dfcc74fb09593cd7f7a4.json",
+              "originals/owning/restore-diagnostics/807612443c84cc6038d2345daa439e16738669fa6562a4c32c38016d26698da5.json",
+              "originals/owning/restore-diagnostics/82c60b7cca846aace427face1a8804441c9a7b055d21a994a5225d0f5dc68b91.json",
+              "originals/owning/restore-diagnostics/84e2cad9aa01f340998d81ffe6d52e548f43faeb93a4ad73bfddc4ac5b8d901d.json",
+              "originals/owning/restore-diagnostics/8526ff823292836ec7471cbac7b709880eb8944e2638aa2294699e457fd85353.json",
+              "originals/owning/restore-diagnostics/8992925cde57d1c1d423e626845be7e12cbddd31bff1e78652af33bd76c36082.json",
+              "originals/owning/restore-diagnostics/8d500612c9a7b3d415e4530cb1a6c0cc1a39c7bbd7bff7c28342d69f4c5d61fe.json",
+              "originals/owning/restore-diagnostics/9000c425bfe03836735cc7c0bda5c64530fda9d58182f6583625ec1dc77eaa84.json",
+              "originals/owning/restore-diagnostics/92f520c81848be29721fc58502661844116b79f02676400d95d5147a5206f853.json",
+              "originals/owning/restore-diagnostics/974610c0dcc5699bfc0a824851dde2592101c0eaf766da8527884f3c6c71c11b.json",
+              "originals/owning/restore-diagnostics/9c48dea3a9b8d1210ac4bd1852df8c02efdba02e19cfb2ffcd104117d1810e00.json",
+              "originals/owning/restore-diagnostics/9d70fd07bd32ca4115cde193ee3e6ec7863ffcd8055d38a9ad78b76b6012a884.json",
+              "originals/owning/restore-diagnostics/a0f2a664f9cf1c551a9b6c39da81255eb0297917847099d105994cbe4c951aab.json",
+              "originals/owning/restore-diagnostics/a20db6c89b4910df29aa8913e3cf836f23b590cc3562be41ad085f0a8feee656.json",
+              "originals/owning/restore-diagnostics/a31991135604d67f04b7d060e29cd25b5fd502b56a282e25c5175fe967d4d7bd.json",
+              "originals/owning/restore-diagnostics/a84f5a9dbff6be4c70ec79342b79623eac0a342cb3fbc0f77e2dd2ba953580a5.json",
+              "originals/owning/restore-diagnostics/a852172ea79d0dbb9dd468c4cab5343a8554b5ffd77914d2aa89b0de76bcf49a.json",
+              "originals/owning/restore-diagnostics/a936890aaf6c1c1c27c205c0671e192c1be4aacc471eae2946fd39acbae704c7.json",
+              "originals/owning/restore-diagnostics/adb3a5e2f4c3459e15766be27ea44d6b913ca3ed0e11622dc8fa5b4563f4bcf6.json",
+              "originals/owning/restore-diagnostics/aef06fada3a07008e75274f8dc2c8520f9416f979afaf0d705267ad3fb43b9e6.json",
+              "originals/owning/restore-diagnostics/afdaadf16418ecfc8b5c92240f8561a2299538a95a5c8680fdc3fd12b9c2f133.json",
+              "originals/owning/restore-diagnostics/b45abc4caba10e380ef082b9d99440af0ab6da4332a603099981fef580002662.json",
+              "originals/owning/restore-diagnostics/b574347af479693a657fb7f02a78382563f315f8ee643a3d44ad1fdead785712.json",
+              "originals/owning/restore-diagnostics/b67877662c4d732d1aa1c3eecc2a4d5cba2d09a022e38e602b531fa43e039f0c.json",
+              "originals/owning/restore-diagnostics/b817e04cb9ea889f6ba0d71e1fa4efeef7c6238f1f0eca9755441c358938c746.json",
+              "originals/owning/restore-diagnostics/b8369c94e5b561e5860f6abdc3b26f9c8abbd00e9862d279ce07e33713b64b0a.json",
+              "originals/owning/restore-diagnostics/c17daa5c7898c3e80fbeb3681aff17fb0df5d47d6f7266cbdb9d34b481c901bf.json",
+              "originals/owning/restore-diagnostics/c255de021da423004925a2fd5d58c0a9a50a481a6d3bd610e636158234c0fb73.json",
+              "originals/owning/restore-diagnostics/c534b164a00a9ff2d1eaadb27860deae96355fd57c600bb32929ea55c3d90e85.json",
+              "originals/owning/restore-diagnostics/ca0336639a89baa6444b4ce2bbf81779c9c8e074229d41f9af867633ebcfaf36.json",
+              "originals/owning/restore-diagnostics/ca0d92e8ee3a4840b94f8c7d0af36a76437395d7629d3f2e53cd5bc26fba66dd.json",
+              "originals/owning/restore-diagnostics/cc34d6b88a1c54694cec89cc30f2c6d0b5255003175629998e467a1ac116fd5c.json",
+              "originals/owning/restore-diagnostics/ccffc3b9e7a1207b1323846b82b1d021ade53482f1a17fe6d3bb59d4693ac622.json",
+              "originals/owning/restore-diagnostics/ce0ba562d5e25491f81ee62e45fc4576d6693de07e878fd99cc822d272729f46.json",
+              "originals/owning/restore-diagnostics/d1b632b8c9a83868b620f43972074de980385c44d9f37573a16c677468b7e9f7.json",
+              "originals/owning/restore-diagnostics/d44983995ea8ff3ee3538a193c6187781127c37b225f0cec5ecc15f6cf8d210a.json",
+              "originals/owning/restore-diagnostics/d75ced2471f81138140d5109f8e9d6078034928f873125eb77d9b56ae9ba3e01.json",
+              "originals/owning/restore-diagnostics/d785910df07fd48fb3cae5cfd8bad802b9be724a801bebfc0e67447f6877015e.json",
+              "originals/owning/restore-diagnostics/e0611b340ac0d6fda0b02490b847f5b0351d3bd79e2879cc390f4ff639079c91.json",
+              "originals/owning/restore-diagnostics/e0ba2104a9a795fc5510f0782e1cf69843e6b37ce9a21f4525dac534a1b396fc.json",
+              "originals/owning/restore-diagnostics/e56477699c4deac5ee39da40c23c46b0334804d841238ac715fd389c4512bff4.json",
+              "originals/owning/restore-diagnostics/e5ae91e4f9d24728a1f525025f8aa7e55ada7188a8fda3b08297ebf9fea223d1.json",
+              "originals/owning/restore-diagnostics/ed531854bf1f84f2db56646520c2aae7f0a9ccf2a0a2e7e4f680d5b002f5a0f9.json",
+              "originals/owning/restore-diagnostics/ef9f1b0954990cb746baab4dbe7257c7dff366e28f36f02e7b68ab38a039a008.json",
+              "originals/owning/restore-diagnostics/f1138bb0f658265d3bdb49896401be802bb68cade78cbd750958670172186c80.json",
+              "originals/owning/restore-diagnostics/f3e12ccd67c011adb0d2404b5486d6bcf1059826e796fe34281efd5049ae98d2.json",
+              "originals/owning/restore-diagnostics/f6f5114d31b66da30ba172343d1859581c4b16ed47f345c13896317ff0efdeb6.json",
+              "originals/owning/restore-diagnostics/fa12847593613cf5293d294ef10b1367f68bbb55de2faa11130ecef9e1a4f17c.json",
+              "originals/owning/restore-diagnostics/fadb04bc51ab7222f9d09ebbc2d4337112e3fdb64b27f1b409a9a2e18c18d7ef.json",
+              "originals/owning/rustc-version.txt",
+              "originals/owning/sites-source-pairs/files-desktop/receipt.json",
+              "originals/owning/studio-build.log",
+              "originals/owning/studio-compiled.json",
+              "originals/owning/studio-restore-after.json",
+              "originals/owning/studio-restore-before.json",
+              "originals/owning/studio-target-path.stderr",
+              "originals/owning/studio-target-path.stdout",
+              "originals/owning/studio.log",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CSharp.stderr",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CSharp.stdout",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stderr",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stdout",
+              "originals/owning/tool-framework-Avalonia.Analyzers.VisualBasic.stderr",
+              "originals/owning/tool-framework-Avalonia.Analyzers.VisualBasic.stdout",
+              "originals/owning/tool-framework-Avalonia.DBus.Generators.stderr",
+              "originals/owning/tool-framework-Avalonia.DBus.Generators.stdout",
+              "originals/owning/tool-framework-Avalonia.Generators.stderr",
+              "originals/owning/tool-framework-Avalonia.Generators.stdout",
+              "originals/owning/tool-framework-DevAnalyzers.stderr",
+              "originals/owning/tool-framework-DevAnalyzers.stdout",
+              "originals/owning/tool-framework-DevGenerators.stderr",
+              "originals/owning/tool-framework-DevGenerators.stdout",
+              "originals/owning/tool-restore-Avalonia.Analyzers.CSharp.log",
+              "originals/owning/tool-restore-Avalonia.Analyzers.CodeFixes.CSharp.log",
+              "originals/owning/tool-restore-Avalonia.Analyzers.VisualBasic.log",
+              "originals/owning/tool-restore-Avalonia.DBus.Generators.log",
+              "originals/owning/tool-restore-Avalonia.Generators.log",
+              "originals/owning/tool-restore-DevAnalyzers.log",
+              "originals/owning/tool-restore-DevGenerators.log",
+              "originals/owning/toolchain.log",
+              "originals/owning/trx/ai.trx",
+              "originals/owning/trx/application.trx",
+              "originals/owning/trx/core.trx",
+              "originals/owning/trx/files-desktop.trx",
+              "originals/owning/trx/home-full.trx",
+              "originals/owning/trx/infrastructure.trx",
+              "originals/owning/trx/mail-full.trx",
+              "originals/owning/trx/os.trx",
+              "originals/owning/trx/studio.trx",
+              "originals/owning/workloads.log",
+          ]
+          expected_count = 302
+          expected_sha = '85c78872420fa08c8a19f2080b988c0a52f380a9eb20fe4482686ee871000f3e'
+          lane = 'sdk08-owning'
+          branch = 'validation/sol-happy-sdk08-owning-original-custody-20261004'
+          errors = []
+          handles = []
+          reserved_bytes = 0
+          write_attempts = 0
+          payload = None
+          try:
+              require(sys.version_info >= (3, 11) and sys.flags.optimize == 0, 'SELECTOR_PYTHON_REFUSED')
+              require(len(relative_paths) == expected_count and len(set(relative_paths)) == expected_count, 'SELECTOR_COUNT_REFUSED')
+              require(hashlib.sha256(('\n'.join(relative_paths)+'\n').encode()).hexdigest() == expected_sha, 'SELECTOR_WHOLE_LIST_REFUSED')
+              require(all(p and not p.startswith('/') and '\\' not in p and '\x00' not in p and all(x not in ('', '.', '..') for x in p.split('/')) for p in relative_paths), 'SELECTOR_PATH_REFUSED')
+              require(os.environ.get('GITHUB_REPOSITORY') == 'CroakyJake12/9to1' and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch' and os.environ.get('GITHUB_REF') == 'refs/heads/'+branch, 'SELECTOR_CONTEXT_REFUSED')
+              require(re.fullmatch('[0-9a-f]{40}', os.environ.get('GITHUB_SHA', '')) is not None, 'SELECTOR_COMMIT_REFUSED')
+              run_id = os.environ.get('GITHUB_RUN_ID', '')
+              attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '')
+              require(re.fullmatch('[1-9][0-9]{0,19}', run_id) is not None and re.fullmatch('[1-9][0-9]{0,9}', attempt) is not None, 'SELECTOR_RUN_REFUSED')
+              root = os.environ.get('RUNNER_TEMP', '')
+              output = os.environ.get('GITHUB_OUTPUT', '')
+              require(root and len(root) <= 4096 and os.path.isabs(root) and os.path.normpath(root) == root and '\x00' not in root, 'SELECTOR_ROOT_REFUSED')
+              require(output and len(output) <= 4096 and os.path.isabs(output) and os.path.normpath(output) == output and os.path.commonpath([root, output]) == root and output != root, 'SELECTOR_OUTPUT_LOCATION_REFUSED')
+              parts = os.path.relpath(output, root).split(os.sep)
+              require(1 <= len(parts) <= 8 and all(x not in ('', '.', '..') and '\\' not in x for x in parts), 'SELECTOR_PARENT_REFUSED')
+              prefix = root+'/'+lane+'-original-custody-'+run_id+'-'+attempt+'/'
+              require('\n' not in prefix and '\r' not in prefix, 'SELECTOR_LINE_REFUSED')
+              delimiter = 'SOL_HAPPY_EXACT_CAUSAL_PATHS_V1'
+              payload_size = len(('paths<<'+delimiter+'\n'+delimiter+'\n').encode())+len(prefix.encode())*expected_count+sum(len(p.encode())+1 for p in relative_paths)
+              require(payload_size <= 65536, 'SELECTOR_METADATA_CAP_REFUSED')
+              payload = ('paths<<'+delimiter+'\n'+'\n'.join(prefix+p for p in relative_paths)+'\n'+delimiter+'\n').encode()
+              require(len(payload) == payload_size, 'SELECTOR_METADATA_SIZE_REFUSED')
+              # Single complete metadata-write reservation before any opening/writing; no refund/retry.
+              # Separate from unchanged original-evidence writer budgets; no originals are copied/read.
+              reserved_bytes = 65536
+              write_attempts = 1
+              print(json.dumps({'status':'SELECTOR_METADATA_WRITE_ATTEMPT','reservedBytes':reserved_bytes,'writeAttempts':write_attempts,'payloadBytes':payload_size,'completePaths':expected_count}), flush=True)
+              require(all(hasattr(os, option) for option in ('O_NOFOLLOW', 'O_DIRECTORY', 'O_CLOEXEC')), 'SELECTOR_NOFOLLOW_UNAVAILABLE')
+              root_fd = os.open(root, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+              handles.append((root_fd, None, root, True))
+              observed = os.fstat(root_fd)
+              require(stat.S_ISDIR(observed.st_mode) and observed.st_uid == os.geteuid(), 'SELECTOR_ROOT_OWNER_REFUSED')
+              free = os.fstatvfs(root_fd)
+              require(free.f_bavail*free.f_frsize >= 943718400+reserved_bytes, 'SELECTOR_FIXED_FLOOR_REFUSED')
+              parent = root_fd
+              for part in parts[:-1]:
+                  fd = os.open(part, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC, dir_fd=parent)
+                  handles.append((fd, parent, part, True))
+                  observed = os.fstat(fd)
+                  require(stat.S_ISDIR(observed.st_mode) and observed.st_uid == os.geteuid(), 'SELECTOR_PARENT_OWNER_REFUSED')
+                  parent = fd
+              fd = os.open(parts[-1], os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC, dir_fd=parent)
+              handles.append((fd, parent, parts[-1], False))
+              observed = os.fstat(fd)
+              require(stat.S_ISREG(observed.st_mode) and observed.st_uid == os.geteuid() and observed.st_nlink == 1 and observed.st_size == 0, 'SELECTOR_FRESH_CONTROL_FILE_REFUSED')
+              offset = 0
+              while offset < len(payload):
+                  n = os.write(fd, payload[offset:])
+                  require(n > 0, 'SELECTOR_CONTROL_WRITE_REFUSED')
+                  offset += n
+              os.fsync(fd)
+              os.lseek(fd, 0, os.SEEK_SET)
+              readback = bytearray()
+              while len(readback) <= len(payload):
+                  chunk = os.read(fd, min(65536, len(payload)+1-len(readback)))
+                  if not chunk:
+                      break
+                  readback.extend(chunk)
+              require(bytes(readback) == payload and os.fstat(fd).st_size == len(payload), 'SELECTOR_SAME_FD_READBACK_REFUSED')
+          except BaseException as error:
+              add(errors, error)
+          finally:
+              for fd, parent, leaf, directory in handles:
+                  try:
+                      held = os.fstat(fd)
+                      linked = os.stat(leaf, dir_fd=parent, follow_symlinks=False) if parent is not None else os.stat(leaf, follow_symlinks=False)
+                      require((held.st_dev, held.st_ino, held.st_uid, stat.S_IFMT(held.st_mode)) == (linked.st_dev, linked.st_ino, linked.st_uid, stat.S_IFMT(linked.st_mode)), 'SELECTOR_CURRENT_LINK_REFUSED')
+                  except BaseException as error:
+                      add(errors, error)
+                  if directory:
+                      try:
+                          os.fsync(fd)
+                      except BaseException as error:
+                          add(errors, error)
+              for fd, _, _, _ in reversed(handles):
+                  try:
+                      os.close(fd)
+                  except BaseException as error:
+                      add(errors, error)
+          try:
+              print(json.dumps({'status':'SELECTOR_METADATA_REFUSED' if errors else 'SELECTOR_METADATA_PUBLISHED','reservedBytes':reserved_bytes,'writeAttempts':write_attempts,'payloadBytes':len(payload) if payload is not None else None,'completePaths':expected_count,'originalsReadCopiedReplayed':0,'originalCauses':project(errors)}), flush=True)
+          except BaseException as error:
+              add(errors, error)
+          if errors:
+              sys.exit(1)
+          PY
+      - name: Retain complete SDK08 owning causal originals for separate bounded admission
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-sdk08-owning-complete-causal-originals-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.causal_paths.outputs.paths }}
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14

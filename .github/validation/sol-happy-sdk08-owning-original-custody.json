@@ -1,0 +1,161 @@
+{
+  "schema": 1,
+  "repository": "CroakyJake12/9to1",
+  "head": "4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+  "tree": "de2e74830fe71ac2af4858a4551c4ee89f0bf1b6",
+  "runId": 37169483364,
+  "runAttempt": 1,
+  "sourceBranch": "validation/astra-desktop-visible-joint05-root30-native01",
+  "artifacts": [
+    {
+      "lane": "owning",
+      "role": "index",
+      "id": 11291720739,
+      "name": "astra-files-owning-manifest-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 24946,
+      "sha256": "dbf5d5ee292c0cacee1e90b59e5ca6362b4008f58fa6c797739a475b4d16cdf8",
+      "member": "manifest.json",
+      "innerBytes": 172823,
+      "innerSha256": "a9eeb0f97022811fd17dc5cf944200800b9f3fe2a0bd8d90e20277ee92f3d43b"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "part": 0,
+      "id": 11290883159,
+      "name": "astra-files-owning-bundle-00-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 27274798,
+      "sha256": "d1b1bd72209f48c09b824d7e5cd6b61411a48cab912af3068b075ae8826c3eb0",
+      "member": "bundle-00.zip",
+      "innerBytes": 27274658,
+      "innerSha256": "7cff327c20cbac49d43f833a97de0f7a0a0eaeb918e62fefe59b78f67c59ea06"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "part": 1,
+      "id": 11291625830,
+      "name": "astra-files-owning-bundle-01-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 27265008,
+      "sha256": "fad7878fb8b4076e4d6ce9e62b19421d3edd1416b562aa12a3e8a00658c9b842",
+      "member": "bundle-01.zip",
+      "innerBytes": 27264868,
+      "innerSha256": "dd0199432330479efcbc699b2c648aac468cd827831b5e858aa57691163065e5"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "part": 2,
+      "id": 11292035003,
+      "name": "astra-files-owning-bundle-02-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 27268308,
+      "sha256": "c204dab70a38f5a331a79001c1793d40a9de5da88655a33013988ace9a3067b6",
+      "member": "bundle-02.zip",
+      "innerBytes": 27268168,
+      "innerSha256": "efccef4ae4d585064bf6375069c831e525eb71a65a257480dc9b23b19f1e948b"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "part": 3,
+      "id": 11290629773,
+      "name": "astra-files-owning-bundle-03-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 27276008,
+      "sha256": "c52a399adb17981bff392951873de1313237e8e9d25c2846386d0bb502569b96",
+      "member": "bundle-03.zip",
+      "innerBytes": 27275868,
+      "innerSha256": "9dd75fe104601b07e54828ed9d83be3d464244cd52b649997262a3ff673fa310"
+    },
+    {
+      "lane": "owning",
+      "role": "part",
+      "part": 4,
+      "id": 11291900405,
+      "name": "astra-files-owning-bundle-04-4f600855d624ad4c9f781958bc1b39e0008e8ae1",
+      "bytes": 26481488,
+      "sha256": "7a4ab7e4cf4284d11a1bfa5b51ef1e5a4d7d1465e9fad62ec646012e363794d1",
+      "member": "bundle-04.zip",
+      "innerBytes": 26481348,
+      "innerSha256": "1895da19176ff8ff28db9c65c4cae14f6709e09b1b3026773ca6b581fbd45fbb"
+    }
+  ],
+  "expectedCounts": {
+    "owning": {
+      "files": 358,
+      "pieces": 326,
+      "nonempty": 322,
+      "bytes": 135528940
+    }
+  },
+  "required": {
+    "owning": [
+      "home-full.log",
+      "receipt.json",
+      "console-receipt.json",
+      "avalonia-build-tasks-compiled-before.json",
+      "avalonia-build-tasks-target.stdout",
+      "profile-correction/commands.json",
+      "profile-correction/original-native-session-drain/expected-managed-launch.json",
+      "profile-correction/cleanup-receipt.json"
+    ]
+  },
+  "taskPe": {
+    "lane": "owning",
+    "path": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "bytes": 754176,
+    "sha256": "74b78c3cc45150a8fb6571e053693e0c215cfb4cb30bb711fb87a9b889ed67d9"
+  },
+  "limits": {
+    "archiveAttemptBytes": 167772160,
+    "expandedAttemptBytes": 536870912,
+    "ramWorkingSetBytes": 536870912,
+    "ramAvailableFloorBytes": 536870912,
+    "filesystemFreeFloorBytes": 943718400,
+    "outputAttemptBytes": 33554432,
+    "outputAllocationReservationBytes": 50331648,
+    "maxOutputFiles": 768,
+    "apiBodyBytes": 131072,
+    "apiAttempts": 16,
+    "pdbExpandedBytes": 16777216,
+    "reportSlotBytes": 2097152,
+    "diagnosticSlotBytes": 262144
+  },
+  "downloadHosts": {
+    "regex": "^productionresultssa[0-9]{1,3}\\.blob\\.core\\.windows\\.net$",
+    "pathPrefix": "/actions-results/",
+    "redirectsAllowed": 1,
+    "authorizationForwarded": false
+  },
+  "selection": {
+    "wholeSuffixes": [
+      ".log",
+      ".json",
+      ".stdout",
+      ".stderr",
+      ".txt",
+      ".xml",
+      ".trx",
+      ".py",
+      ".cs",
+      ".props",
+      ".targets",
+      ".yml",
+      ".yaml",
+      ".pem"
+    ],
+    "wholePrefixes": [
+      "profile-correction/",
+      "mail-maintained-configuration-source/"
+    ],
+    "binarySuffixesNotPublished": [
+      ".dll",
+      ".pdb",
+      ".so",
+      ".a",
+      ".der",
+      ".exe",
+      ".zip"
+    ],
+    "qualification": "All358 exact owning full files must replay before text publication; all59 unselected binary bodies remain fully hashed and represented. All299 selected texts retained whole. Original inherited caller stdout not present in this index remains unavailable separately. No original body is executed."
+  }
+}
