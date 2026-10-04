@@ -1,0 +1,80 @@
+{
+  "d1Create": {
+    "summary": "Create D1 Database",
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "jurisdiction": {
+                "description": "Specify the location to restrict the D1 database to run and store data. If this option is present, the location hint is ignored.",
+                "type": "string",
+                "example": "eu",
+                "enum": [
+                  "eu",
+                  "fedramp",
+                  "us"
+                ],
+                "x-auditable": true
+              },
+              "name": {
+                "description": "D1 database name.",
+                "type": "string",
+                "example": "my-database",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]*$",
+                "x-auditable": true
+              },
+              "primary_location_hint": {
+                "description": "Specify the region to create the D1 primary, if available. If this option is omitted, the D1 will be created as close as possible to the current user.",
+                "type": "string",
+                "example": "wnam",
+                "enum": [
+                  "wnam",
+                  "enam",
+                  "weur",
+                  "eeur",
+                  "apac",
+                  "oc"
+                ],
+                "x-auditable": true
+              },
+              "read_replication": {
+                "description": "Configuration for D1 read replication.",
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "description": "The read replication mode for the database. Use 'auto' to create replicas and allow D1 automatically place them around the world, or 'disabled' to not use any database replicas (it can take a few hours for all replicas to be deleted).",
+                    "type": "string",
+                    "example": "auto",
+                    "enum": [
+                      "auto",
+                      "disabled"
+                    ],
+                    "x-auditable": true
+                  }
+                },
+                "required": [
+                  "mode"
+                ],
+                "x-stainless-terraform-configurability": "computed_optional"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "accountSubscriptionMutations": [
+    "get",
+    "post"
+  ],
+  "workersSettingsMutations": [
+    "get",
+    "put"
+  ]
+}

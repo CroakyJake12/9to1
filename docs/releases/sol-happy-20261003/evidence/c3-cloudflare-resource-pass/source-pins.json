@@ -1,0 +1,119 @@
+{
+  "hostedSource": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+  "draftContracts": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "draftQualification": "Existing unaccepted Astra implementation, not remote main or fully accepted product baseline",
+  "files": [
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/wrangler.local.jsonc",
+      "bytes": 738,
+      "sha256": "b4508e97ae649e1ceb1a9cf850d19d9dd1970f7d5e0e4ba27668b6f99b0564be",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/wrangler.password-test.jsonc",
+      "bytes": 232,
+      "sha256": "3231e96e7c8b19b0cf90f88e43080a9a3f0fe978872a8b0c28695fd51bb821f5",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/src/env.ts",
+      "bytes": 339,
+      "sha256": "23df0c3c8e220d5848c8082887cf57456ae3665c238f327a45d5df202493ca18",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/src/worker-configuration.d.ts",
+      "bytes": 623467,
+      "sha256": "8aa63811d8d500ab4d0fb5e5991f489118a108395ec988693bea1f50108c7a3c",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/src/auth.ts",
+      "bytes": 6604,
+      "sha256": "2a6c5baacb77ac4480e11f0ddcb86e0005ea627e569931ea6478cf1faf6f9576",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/README.md",
+      "bytes": 8278,
+      "sha256": "c4fb2354c83970797d5bdcf3284c3ac374c3a0b82479a13cc51bb59fbccb29c4",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/cake-id-auth/HANDOFF.md",
+      "bytes": 5053,
+      "sha256": "33e0a95cc4e0ed5fca6a5a069e0c9f6f704e0c0471b0f1c7c537481483c4104b",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/billing/README.md",
+      "bytes": 4238,
+      "sha256": "7847266dcfa8a512ddaa4ad7ee775777effb2dd4ed1369baed0a6bde175e81e8",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/billing/src/stripe-webhook.mjs",
+      "bytes": 4730,
+      "sha256": "bd0e3eab1a62efefee08b578f6985a4ed817c72f9fc06dd785d9020084a3325f",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+      "path": "cloud/billing/schema/0001-stripe-inbox.sql",
+      "bytes": 572,
+      "sha256": "6cefdd1d93f66439d3041cd02d31eb0e3a622027149de416441bc74ad84ff95e",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Accounts/SubscriptionBuilder.cs",
+      "bytes": 11281,
+      "sha256": "c106647472a1f522815c4d3125eb87ac236951ecbf278c71189f9f2198067b52",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Accounts/SubscriptionQuotes.cs",
+      "bytes": 1539,
+      "sha256": "67d553bf585f30f225734d5f74f90d124018996028667c00c0efa0d054aff70c",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Accounts/SubscriptionPurchases.cs",
+      "bytes": 8935,
+      "sha256": "fa32580d216a882513c7a7b07b3cfb5df7c5f28ec3af3dd2693ea3ac936b7984",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Accounts/AccountLedger.cs",
+      "bytes": 8618,
+      "sha256": "92c3125e66653b5237d077ff2dabc21921f98071085294ff033381924394a117",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Accounts/OrganisationBilling.cs",
+      "bytes": 5438,
+      "sha256": "2b90b0b16c4c7a60c7c9ac27f128a0f58e4000f9d6e6b165a04ad1191c96a629",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    },
+    {
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "path": "9to1 Workspace/Accounts/OrganisationUsageContracts.cs",
+      "bytes": 2778,
+      "sha256": "cc4119aa05a80fb78acd997493a712cbb57bf342cb021bdfdfdc4eba1e770f35",
+      "status": "source-reviewed; runtime/deployment acceptance not inferred"
+    }
+  ]
+}

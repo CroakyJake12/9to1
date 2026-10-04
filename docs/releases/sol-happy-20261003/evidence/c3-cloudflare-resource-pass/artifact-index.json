@@ -1,0 +1,39 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1665,
+      "sha256": "e85cb373316c190258f2cc9d7543c2f6212a50436fbd9d3d7dba711bcabc10ae"
+    },
+    {
+      "path": "create-schema-read-only.json",
+      "bytes": 2628,
+      "sha256": "e79283224b9bbe50c435259e1e866ca575b295907be3fc791cf5cc7cbba4bd67"
+    },
+    {
+      "path": "metadata-read-only.json",
+      "bytes": 2028,
+      "sha256": "fd62b4ac40bd756c8e2ab813ec1ed859ed3d27831454ae59c6bd4c991ae060da"
+    },
+    {
+      "path": "public-docs-selected.json",
+      "bytes": 20452,
+      "sha256": "bbafdce2787cef6128c96df70ba6ea61a26d4d7403df71879dcc48738447bd20"
+    },
+    {
+      "path": "result.json",
+      "bytes": 3259,
+      "sha256": "5451bf4086736eec061308259b79829f1e6998a76406c4b997eaf9e9aefb7702"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 5278,
+      "sha256": "980da4a82b4b745be2ab639d1c83222905ab330c8366accf41f88aa471d2d002"
+    },
+    {
+      "path": "supported-configuration-contracts.json",
+      "bytes": 4014,
+      "sha256": "5772ae27907f983c483bc08bb6f86e45674b9141243a5b708977265b6508e956"
+    }
+  ]
+}

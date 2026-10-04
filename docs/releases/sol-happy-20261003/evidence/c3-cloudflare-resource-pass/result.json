@@ -1,0 +1,42 @@
+{
+  "scope": "Authenticated read-only provider-resource metadata and current public docs; no resource writes/activation/model inference/email send/charges",
+  "observedUTC": "2026-10-04 08:09:25 UTC",
+  "currentAccountWorkersPlan": "BLOCKED: account/user subscription APIs return10000Authentication error; standard account/default usage model does not identify paid/free plan",
+  "D1Actual": "VERIFIED empty list total_count0; storage/query headroom not metered, actual creation first database would be new resource",
+  "workersActual": "VERIFIED2existing scripts from successful list; account-wide request headroom not observed because billingusage read denied",
+  "R2Actual": "VERIFIED sitesbucket exists; plan/subscription/storage_class/free remaining usage UNVERIFIED",
+  "conditionalPublicFreeBoundary": {
+    "workers": "WorkersFree100000account requests/day,10msCPU/invocation; daily quota exceeded1027; use fail-closed for security routes",
+    "d1": "WorkersFree5Mrowreads/day+100000rowwrites/day+5GBtotalstorage; since2026-09-01 exceedingdailyreads/writes errorsuntilmidnightUTC; account subscription cannot be inferred",
+    "r2": "Public Standard free tier10GB-month/1MClassA/10MClassB monthly; existingbucket does not establish unused allowance or no bills; auth/receipt source has noR2binding"
+  },
+  "newBillableActivationConclusion": "NOT_ESTABLISHED from available metadata. Minimal auth resources are Worker+D1; no source requirement to upgrade Workers or enable R2/AI/email. Isolated DB/Worker create would be a provider write and remains root-only after plan/limits/CPU/config evidence; no free-resource guarantee issued.",
+  "requiredDecisions": [
+    {
+      "item": "Authoritative current WorkersFree/Paid subscription and included-usage/overage status",
+      "basis": "Subscriptionreadsdenied10000; require permittedread/dashboardplan evidence, not accounttype/usage_model inference"
+    },
+    {
+      "item": "Actual account-wide current request allowance/headroom and intended-runtime auth CPU",
+      "basis": "TwoexistingWorkers shareaccountrequestbudget; maintainedscrypt CPU unqualified; no weakeningallowed"
+    },
+    {
+      "item": "Exact isolated Worker/DB names, remote bindingID, HTTPSissuer/resource/origins/registeredclients and local-generated-types regeneration",
+      "basis": "No remote config; existing localplaceholderuuid cannot deploy"
+    },
+    {
+      "item": "Actual emaildelivery adapter/domain policy and signing/auth_revision owner contract",
+      "basis": "Current nonlocalemailfailclosed, auth consumer compatibility remains separate"
+    },
+    {
+      "item": "Commercial versioned quote/currency/Dust/funding/period/storage/lifecycle policies before paid provider/Stripeintegration",
+      "basis": "Existing trustedports require owner-approved data, receiptfoundationalonecannotapplybillingeffects"
+    }
+  ],
+  "negativeEvidence": [
+    "Initial parallel metadata call aborted on subscription authentication error; each subsequent endpoint isolated",
+    "User subscription and bounded billingusage GET independently denied10000",
+    "Direct complete documentation HTTPS fetches refused proxyTunnel403; public docs connector snippets retained, no full-page fetch claimed"
+  ],
+  "writes": 0
+}

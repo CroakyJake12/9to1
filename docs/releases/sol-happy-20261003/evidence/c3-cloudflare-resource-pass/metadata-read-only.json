@@ -1,0 +1,84 @@
+{
+  "observedUTC": "2026-10-04 08:09:25 UTC",
+  "scope": "One authenticated account; personal account name/email, payment fields, invoice details and tokens never selected",
+  "accounts": {
+    "count": 1,
+    "type": "standard",
+    "billingPlanInference": "FORBIDDEN"
+  },
+  "responses": [
+    {
+      "endpoint": "subscriptions",
+      "requestFailed": true,
+      "error": "Error: Cloudflare API error: 10000: Authentication error"
+    },
+    {
+      "endpoint": "workers/account-settings",
+      "success": true,
+      "status": 200,
+      "errors": [],
+      "result": {
+        "default_usage_model": "standard",
+        "green_compute": false
+      }
+    },
+    {
+      "endpoint": "workers/scripts",
+      "success": true,
+      "status": 200,
+      "errors": [],
+      "result": [
+        {
+          "id": "cake",
+          "usage_model": "standard",
+          "logpush": false,
+          "has_modules": true
+        },
+        {
+          "id": "cakemods-migration-preview",
+          "usage_model": "standard",
+          "logpush": false,
+          "has_modules": false
+        }
+      ]
+    },
+    {
+      "endpoint": "d1/database",
+      "success": true,
+      "status": 200,
+      "errors": [],
+      "result_info": {
+        "count": 0,
+        "page": 1,
+        "per_page": 100,
+        "total_count": 0
+      },
+      "result": []
+    },
+    {
+      "endpoint": "r2/buckets",
+      "success": true,
+      "status": 200,
+      "errors": [],
+      "result": {
+        "buckets": [
+          {
+            "name": "sites"
+          }
+        ]
+      }
+    }
+  ],
+  "additionalDeniedReads": [
+    {
+      "endpoint": "/user/subscriptions",
+      "error": "Cloudflare API error 10000 Authentication error"
+    },
+    {
+      "endpoint": "/accounts/{account_id}/billing/usage",
+      "error": "Cloudflare API error 10000 Authentication error"
+    }
+  ],
+  "firstBatchFailure": "Promise.all aborted by subscription authentication error; endpoint-isolated second batch preserved each actual result",
+  "writes": 0
+}

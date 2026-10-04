@@ -1,0 +1,65 @@
+{
+  "auth": {
+    "status": "PRODUCTION_CONFIGURATION_MISSING",
+    "source": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+    "entryPoint": "cloud/cake-id-auth/src/index.ts",
+    "localOnlyEntryPointNeverRemote": "cloud/cake-id-auth/src/local.ts",
+    "binding": {
+      "name": "DB",
+      "interface": "D1Database",
+      "databaseID": "UNASSIGNED; current authenticated database list empty"
+    },
+    "explicitConfiguration": [
+      "AUTH_BASE_URL absolute HTTPS origin for nonlocal operation",
+      "API_RESOURCE distinct absolute HTTPS resource",
+      "ALLOWED_WEB_ORIGINS approved exact origin list",
+      "AUTH_SECRET secret reference",
+      "LOGIN_LIMITER_KEY secret reference",
+      "APP_MODE nonlocal policy value must be owning-configured; generated types currently literal local-test-only",
+      "EMAIL_CAPTURE local-only true is not external mail delivery"
+    ],
+    "knownBlockers": [
+      "No remote Wrangler configuration or deploy script exists",
+      "Generated Cloudflare.Env describes only local-test-only binding/vars; owner must regenerate against genuine selected remote config",
+      "Nonlocal verification/recovery delivery throws unconfigured until actual approved mail adapter exists",
+      "Maintained scrypt CPU fit to WorkersFree10ms not measured on intended deployed runtime",
+      "Signing key and genuine auth_revision contracts require separate owner resolution"
+    ],
+    "servicesNotRequiredByThisAuthSource": [
+      "R2",
+      "WorkersAI",
+      "Queues",
+      "Containers",
+      "new paid plan subscription"
+    ]
+  },
+  "billingReceipt": {
+    "status": "FOUNDATION_ONLY_NOT_DEPLOYED_BILLING",
+    "source": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+    "entryPoint": "cloud/billing/src/stripe-webhook.mjs",
+    "binding": "BILLING_DB explicit D1-compatible binding; separate from auth DB",
+    "requiredConfiguration": [
+      "STRIPE_MODE explicit test/live",
+      "STRIPE_WEBHOOK_SECRET isolated secret reference",
+      "SIGNATURE_TOLERANCE_SECONDS positive safe integer",
+      "MAX_WEBHOOK_BYTES positive safe integer"
+    ],
+    "environmentSeparation": "Distinct database and secret per test/live environment; no current provider resources/IDs guessed",
+    "limits": [
+      "No consumer/scheduler/reconciliation adapter",
+      "Receipt status never payment/entitlement/provisioning state",
+      "D1 production architecture remains OPEN underSH13; binding interface alone does not accept DB choice",
+      "No deployed Stripe acceptance, no prices/currencies invented"
+    ]
+  },
+  "authoritativeExistingPorts": {
+    "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "qualification": "Existing provisional source; not live deployed adapter or commercial policy",
+    "subscriptionQuotes": "Server-owned account/org quote stores and revalidates QuoteID under durable lock; SubscriptionBuilder requires approved versioned complete cost model; blockers instead of guessed defaults",
+    "purchase": "ITrustedBillingSettlementVerifier + IEntitlementMonthlyPricePolicy mandatory; authoritative ledger activates only verified account-bound settlement; no provider implementation established here",
+    "businessLifecycle": "ITrustedBusinessBillingVerifier verifies signature/merchant/subscription/account/org/settlement and policy; existing state transition replay+revision checks persist with audit",
+    "organisationFunding": "IOrganisationCostQuoteAuthority.ResolveAsync; IOrganisationAllocationFundingAuthority.ResolveAsync; IOrganisationCloudFundingAuthority.ReserveAsync/RecheckDispatchAsync/SettleObservedAsync/CancelAsync",
+    "observedUsage": "OrganisationObservedUsage ActualDust + unique ProviderUsageReference is trusted gateway observation, never client counter",
+    "providerMetadataBoundary": "Actual provider model pricing/allowance metadata can only inform approved versioned trusted quote/provider adapter and observed usage conversion; cannot itself grant Dust/subscription/pools or duplicate canonical ledger"
+  }
+}
