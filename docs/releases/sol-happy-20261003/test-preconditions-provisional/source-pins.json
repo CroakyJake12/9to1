@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "71f8014e2cbe57ab45a2b7a1a062f30eed25f88f",
+  "baseCommit": "127c8e1a61298522bc06b4484db806777d41bac2",
+  "changedFiles": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs",
+      "bytes": 26057,
+      "sha256": "e6de9ec2d7e05464d552d409c901379edc6d06f0158179678a19272bdb6f9d6e",
+      "baseBytes": 25516,
+      "baseSHA256": "9f7d9f2dd71bab04ec444a41a8e00944493eb24544b31cbf54abbac3932888d8"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs",
+      "bytes": 19919,
+      "sha256": "12b38e1fcac6c9b5c44b7f7417aa55d43b8464393bdb8158d225c4dada924e17",
+      "baseBytes": 19703,
+      "baseSHA256": "e98b698ee46de19a6faf77b9d19079bbeed5bc95c28cbecac6d75a37f7f1771d"
+    }
+  ],
+  "trackedFileCount": 15292,
+  "qualification": "Only two testfixture bodies changed. All original assertion lines retained; production, shared API, package and permission policy bytes unchanged."
+}

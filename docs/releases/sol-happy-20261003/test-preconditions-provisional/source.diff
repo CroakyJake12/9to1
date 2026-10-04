@@ -1,0 +1,39 @@
+diff --git a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs
+index 5e00cb15..7e7cff69 100644
+--- a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs	
++++ b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs	
+@@ -287,7 +287,13 @@ public sealed class ExtensionPluginEndToEndTests
+ 
+         await manager.AddSourceAsync(source, CancellationToken.None);
+         var candidate = Assert.Single(await manager.RefreshAsync(source.Id, CancellationToken.None));
+-        var installed = await manager.InstallAsync(candidate, CancellationToken.None);
++        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
++            manager.InstallAsync(candidate, CancellationToken.None));
++        Assert.Empty(await extensionRepository.GetInstalledAsync(CancellationToken.None));
++        var installed = await manager.InstallAsync(candidate, RequiredPermissions, CancellationToken.None);
++        Assert.Equal(RequiredPermissions, installed.GrantedPermissions);
++        await manager.SetGrantedPermissionsAsync(installed.Id, ExtensionPermission.None, CancellationToken.None);
++        installed = Assert.Single(await extensionRepository.GetInstalledAsync(CancellationToken.None));
+         Assert.False(installed.IsEnabled);
+         Assert.Equal(ExtensionPermission.None, installed.GrantedPermissions);
+         await manager.SetGrantedPermissionsAsync(installed.Id, RequiredPermissions, CancellationToken.None);
+diff --git a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs
+index 11bcd973..a35f8f6a 100644
+--- a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs	
++++ b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs	
+@@ -220,6 +220,7 @@ public sealed class PresentProductionTests : IDisposable
+         var document = PresentDocument.Create("Export deck");
+         var first = document.Slides[0];
+         first.Title = "Opening & evidence";
++        first.SpeakerNotes = "Explain the evidence before moving to the conclusion.";
+         first.GetOrCreateBodyText().Text = "First line\nSecond line";
+         first.Elements.Add(new PresentElement
+         {
+@@ -276,6 +277,7 @@ public sealed class PresentProductionTests : IDisposable
+         var report = new PresentPptxExportService().PreviewExport(document, destination);
+         Assert.Contains(report.Issues, issue => issue.FeatureType == "object-type" && issue.SourceTargetId == first.Elements[1].Id);
+         Assert.Contains(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == first.Id);
++        Assert.DoesNotContain(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == second.Id);
+         Assert.False(report.HasBlockingIssues);
+     }
+ 

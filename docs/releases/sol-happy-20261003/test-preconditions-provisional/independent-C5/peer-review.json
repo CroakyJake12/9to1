@@ -1,0 +1,115 @@
+{
+  "status": "C5_EXACT_SOURCE_AND_INDEPENDENT_MAINTAINED_NORMAL_RELEASE_TWO_CLASS_ACK",
+  "reviewer": "C5",
+  "sourceCommit": "71f8014e2cbe57ab45a2b7a1a062f30eed25f88f",
+  "parent": "127c8e1a61298522bc06b4484db806777d41bac2",
+  "sourceTree": "36895043ed65a32c3b2fed17d1d4065a523ce629",
+  "worktree": "/workspace/team-c-c5-test-preconditions-review",
+  "sourceReview": {
+    "onlyTwoExistingFixturePathsChanged": true,
+    "wholePluginTestFileRecoveredByReversingOnlyNewExplicitPermissionPreconditionBlock": true,
+    "wholePresentTestFileRecoveredByRemovingOnlyTwoNewFixtureAndNegativeLines": true,
+    "allOriginalAssertionsPreserved": true,
+    "allProductionContractsAndImplementationsUnchanged": true,
+    "plugin": "Actual InstallCoreAsync requires exactly requested grants before writes. New no-grant failure proves no installed rows; actual explicitly granted install/assert then real revoke toNone/reload restores original disabled/None state. Original regrant,enable,tamper integrity/no-process marker,Running/Failed,noCompleted,disable/reenable refusal,persisted disabled assertions retained. No permission weakening or fake transport/runtime.",
+    "present": "Actual PresentSlide defaults notes empty and PreviewExport emits speaker-notes warning only for nonempty notes. First slide now contains real notes; second remains empty. Original nonempty-note warning stays; extra empty-note absence assertion prevents invented warnings. Original package/content/report assertions retained."
+  },
+  "actualValidation": {
+    "configuration": "Release",
+    "maintainedNormalProject": "Haven.Infrastructure.Tests.csproj",
+    "selection": "Both whole original ExtensionPluginEndToEndTests and PresentProductionTests classes",
+    "exit": 0,
+    "counts": {
+      "total": "16",
+      "executed": "16",
+      "passed": "16",
+      "failed": "0",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    },
+    "tests": [
+      {
+        "name": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Recovered_editor_cannot_replace_a_newer_valid_current",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Repository_round_trip_preserves_slides_notes_and_haven_elements",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Editor_transforms_multi_selection_atomically_and_undoes_the_direct_gesture",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Invalid_and_underdeclared_manifests_are_rejected_before_installation",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Infrastructure_registers_present_repository_and_exporter",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.GitHub_style_discovery_and_permission_review_are_atomic",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Native_package_refuses_to_omit_an_unavailable_asset",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Repository_recovers_previous_valid_deck_and_preserves_backup_when_recommitted",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Repository_rejects_stale_revision_without_overwriting_or_advancing_stale_copy",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Duplicating_slide_allocates_new_slide_and_notes_identities",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Native_package_round_trips_presentation_state_and_embedded_assets",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Legacy_slide_without_notes_id_has_stable_identity_across_reopens",
+        "outcome": "Passed"
+      },
+      {
+        "name": "Haven.Infrastructure.Tests.PresentProductionTests.Saving_unreadable_current_requires_explicit_recovery_and_preserves_its_bytes",
+        "outcome": "Passed"
+      }
+    ],
+    "commandRecord": "normal-Release/command.json",
+    "logSHA256": "a2897e935279ca380331a46e7b2f9b6c0b3535744f997dfad9f4ed0c90cc2b9b",
+    "trxSHA256": "a432f468595025fb2524bf300f3ba570c1f79ac66a4554610e9ac34920a15188",
+    "compileWarnings": 0,
+    "compileErrors": 0
+  },
+  "sourceCustody": "Clean exact detached source before and after; all before-pinned test/project/production bodies unchanged, additional actual owning repository/runtime body pins verified to frozen source/unchanged parent.",
+  "qualification": "Independent two complete owning-class Release16/16 scope only; not whole Infrastructure acceptance. Earlier Mesh sourcec996 full normalRelease428/425pass/3fail remains separately retained. No current owner adoption/global native/Windows/runtime/package/fullrelease acceptance inferred.",
+  "recordedUTC": "2026-10-04T14:03:47.033343+00:00"
+}

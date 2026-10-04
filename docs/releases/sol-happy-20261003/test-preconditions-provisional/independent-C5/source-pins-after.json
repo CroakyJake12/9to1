@@ -1,0 +1,94 @@
+{
+  "sourceCommit": "71f8014e2cbe57ab45a2b7a1a062f30eed25f88f",
+  "parent": "127c8e1a61298522bc06b4484db806777d41bac2",
+  "sourceStatus": "CLEAN",
+  "pins": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs",
+      "bytes": 26057,
+      "sha256": "e6de9ec2d7e05464d552d409c901379edc6d06f0158179678a19272bdb6f9d6e",
+      "gitBlob": "7e7cff694249a56e99e2ad8aad1a25df54adf9e2",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs",
+      "bytes": 19919,
+      "sha256": "12b38e1fcac6c9b5c44b7f7417aa55d43b8464393bdb8158d225c4dada924e17",
+      "gitBlob": "a35f8f6ad1b42a89cc081a4a2b3f15a37c995a64",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/ExtensionManager.cs",
+      "bytes": 30456,
+      "sha256": "3e2311fa45fc0a6755d7be712c50147927d2017dbdab7ebd3437a5e3270353b0",
+      "gitBlob": "3702178f6493b34690884a70108bf2c79e09d262",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentPptxExportService.cs",
+      "bytes": 24112,
+      "sha256": "f200a432faa4f88657c3295f75de81461fddb803ddfebe0d67e64db795331069",
+      "gitBlob": "83aa1a25a82887f449e6c9f0c8ae5ec33a801b7d",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentDocument.cs",
+      "bytes": 11759,
+      "sha256": "debb6570efe7c653aa7d625ebe495350a20fa4ed62732f487a7e37341f109b75",
+      "gitBlob": "ae91aa98c1d4389eeeda9a2be756752b07e51ab0",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "bytes": 1115,
+      "sha256": "967c5763d7d0f1423ab21b51368a07f6038a886c4a56ff501de7361407b1f4c2",
+      "gitBlob": "5d4ae9ca85e64ad0c8cd27f07842db6efa6d3ffe",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "gitBlob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "bytes": 2581,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
+      "gitBlob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/UnifiedExecutionRepositories.cs",
+      "bytes": 23371,
+      "sha256": "18391188f0652003b80aa594733d88deaf576481f8fcb6b4be350eff72b76317",
+      "gitBlob": "3fa2e925387fe5d30aa43ce4bace1b4b43e4ea60",
+      "unchangedAfterRun": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/UnifiedStateRepositories.cs",
+      "bytes": 12874,
+      "sha256": "011b80b0f5187daebc2f93c87d7c8c622b01c38ace90b32c3d33ddd6240f58b7",
+      "gitBlob": "516ee0a120ac588e5f253e30b0d7f46fed515204",
+      "unchangedProductionAcrossParentAndCandidate": true,
+      "pinTiming": "Frozen canonical Git body explicitly verified after run; complete source worktree was clean before and after."
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Extensions/NativePluginRuntime.cs",
+      "bytes": 18676,
+      "sha256": "092eb33b9ac514df2433ad23b5018b7f2e96bcaa44e408e2073224df05ade7f0",
+      "gitBlob": "56e0a7f0c94cc04f9f4eb01e3b59116a8615f18b",
+      "unchangedProductionAcrossParentAndCandidate": true,
+      "pinTiming": "Frozen canonical Git body explicitly verified after run; complete source worktree was clean before and after."
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Extensions/NativePluginProcessFactory.cs",
+      "bytes": 6593,
+      "sha256": "bfbd1a66a3e54fa252cd6305d8f07e8ffefff338580d752cfebc8346b69e520d",
+      "gitBlob": "fef0b6fd17ddd8d4311e7d53ad95f2373217a0c3",
+      "unchangedProductionAcrossParentAndCandidate": true,
+      "pinTiming": "Frozen canonical Git body explicitly verified after run; complete source worktree was clean before and after."
+    }
+  ]
+}

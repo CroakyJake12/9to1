@@ -1,0 +1,41 @@
+{
+  "sourceCommit": "71f8014e2cbe57ab45a2b7a1a062f30eed25f88f",
+  "basisCommit": "127c8e1a61298522bc06b4484db806777d41bac2",
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "test",
+    "/workspace/team-c-c5-test-preconditions-review/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+    "-c",
+    "Release",
+    "--artifacts-path",
+    "/workspace/team-c-resume-evidence/c5-test-preconditions-peer/artifacts",
+    "-p:NuGetAudit=false",
+    "--filter",
+    "FullyQualifiedName~ExtensionPluginEndToEndTests|FullyQualifiedName~PresentProductionTests",
+    "--logger",
+    "trx;LogFileName=normal-classes.trx",
+    "--results-directory",
+    "/workspace/team-c-resume-evidence/c5-test-preconditions-peer/normal-Release/results"
+  ],
+  "cwd": "/workspace/team-c-c5-test-preconditions-review",
+  "normalProjectCompilation": true,
+  "wholeTwoMaintainedOwningClasses": true,
+  "filterQualification": "Both whole original ExtensionPluginEndToEndTests and PresentProductionTests classes, not whole Infrastructure suite.",
+  "environmentOverrides": {
+    "DOTNET_CLI_HOME": "/workspace/team-c-resume-evidence/c5-test-preconditions-peer/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/.tools/nuget/packages",
+    "XDG_CONFIG_HOME": "/workspace/team-c-resume-evidence/c5-test-preconditions-peer/xdg-config",
+    "AVALONIA_TELEMETRY_OPTOUT": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false",
+    "C5_DURABLE_JOB_EVIDENCE": "/workspace/team-c-resume-evidence/c5-test-preconditions-peer/normal-Release/databases",
+    "PATH": "/workspace/.tools/dotnet:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback"
+  },
+  "startedUTC": "2026-10-04T14:01:34.267093+00:00",
+  "timeoutSeconds": 300,
+  "exit": 0,
+  "status": "COMPLETE",
+  "finishedUTC": "2026-10-04T14:01:55.273198+00:00",
+  "seconds": 21.006
+}
