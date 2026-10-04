@@ -1,0 +1,13 @@
+{
+  "scope": "Unchanged original Motion CLI/model real local-filesystem workflow only; no browser, Files resolution, source decode, donor render, provider, crash injection or full Motion acceptance",
+  "discovered": 1,
+  "executed": 1,
+  "passed": 1,
+  "failed": 0,
+  "notRun": 0,
+  "name": "original-motion-project-cli-real-file-workflow",
+  "originalReturnCode": 0,
+  "failure": null,
+  "assertions": null,
+  "assertionCountQualification": "Original owner test is not instrumented; its return-code checkpoints are not separate discovered tests or measured assertion counts"
+}

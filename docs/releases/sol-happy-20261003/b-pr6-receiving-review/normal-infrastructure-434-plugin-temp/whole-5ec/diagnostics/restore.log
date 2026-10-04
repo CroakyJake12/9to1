@@ -1,0 +1,8 @@
+  Determining projects to restore...
+  Restored /tmp/team-c-c5-full-infra-5ec-20261004/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 83 ms).
+  Restored /tmp/team-c-c5-full-infra-5ec-20261004/9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj (in 956 ms).
+  Restored /tmp/team-c-c5-full-infra-5ec-20261004/9to1 Workspace/shared/tests/Haven.PluginFixture/Haven.PluginFixture.csproj (in 1 ms).
+  Restored /tmp/team-c-c5-full-infra-5ec-20261004/9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj (in 2 ms).
+  Restored /tmp/team-c-c5-full-infra-5ec-20261004/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj (in 27 ms).
+  Restored /tmp/team-c-c5-full-infra-5ec-20261004/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 2 ms).
+  Restored /tmp/team-c-c5-full-infra-5ec-20261004/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 1 ms).

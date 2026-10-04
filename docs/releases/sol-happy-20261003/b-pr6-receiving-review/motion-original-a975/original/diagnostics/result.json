@@ -1,0 +1,30 @@
+{
+  "status": "ORIGINAL_MOTION_LOCAL_PROJECT_WORKFLOW_PASS",
+  "expected": 1,
+  "discovered": 1,
+  "executed": 1,
+  "passed": 1,
+  "failed": 0,
+  "notRun": 0,
+  "scope": "Original Motion local file/model/CLI only; browser, Files identity resolution, media decoding/rendering, provider, crash injection and full Motion NOT_RUN",
+  "sourceCommit": "a975e539fa5e8bf045104e6931f5e5e15d3c8695",
+  "nativeStarted": true,
+  "entryDLLSHA256": "3901f861bc396805c132c53ca24d8538ee15561e014ef53af6e81dace3494ded",
+  "apphostSHA256": "9c56cb3935b78b5a85518ff5da7f6e62798fb75926dd6178eddae2ab6e399805",
+  "sourceLedgerSHA256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659",
+  "nativeResultSHA256": "50b43738158de6da0680c07546b779d15b15a36289ccb2b501800c673ca551fc",
+  "actualNativeResult": {
+    "scope": "Unchanged original Motion CLI/model real local-filesystem workflow only; no browser, Files resolution, source decode, donor render, provider, crash injection or full Motion acceptance",
+    "discovered": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "notRun": 0,
+    "name": "original-motion-project-cli-real-file-workflow",
+    "originalReturnCode": 0,
+    "failure": null,
+    "assertions": null,
+    "assertionCountQualification": "Original owner test is not instrumented; its return-code checkpoints are not separate discovered tests or measured assertion counts"
+  },
+  "sourceAfterUnchanged": true
+}

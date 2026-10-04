@@ -1,0 +1,342 @@
+{
+  "state": "ACK_EXACT_CURRENT_SOURCE_PUBLICATION_TRANSPORT_AND_BROWSER_NINE",
+  "sourceCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "runId": 37217686116,
+  "officialWholeArtifactRetained": {
+    "created_at": "2026-10-04T16:48:18Z",
+    "digest": "sha256:01ecea77e8d87ca0c381957656dc5a4f496b5510c2c24eaf84beaa3b8cdcfaff",
+    "expired": false,
+    "id": 11308274250,
+    "name": "team-c-public-web-publication-df547b5c7492050dc2ad2bdd99e250358cf444fc",
+    "size_in_bytes": 35964419,
+    "workflow_run": {
+      "head_branch": "team-c/sol-happy-global-web-picture-20261004",
+      "head_repository_id": 1378313608,
+      "head_sha": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "id": 37217686116,
+      "repository_id": 1378313608
+    }
+  },
+  "wholeArtifactDownloadQualification": "Official whole three-file artifact retained on GitHub;36MBcontainer exceeds32MiB file download cap. Original manifest/seal and exact original ZIP read back through both reviewed <=19MiB parts with equal metadata and ordered whole checksum.",
+  "artifactCustody": [
+    {
+      "kind": "part01",
+      "artifactId": 11308169581,
+      "archiveBytes": 19977649,
+      "archiveSha256": "47ab5ccbb216431c640345d6f7365bd06b70a591bc1c1b44fd39867c96f9ff92",
+      "originalArchiveLocalPath": "/workspace/attachments/64bf0e65-05ba-47e7-978c-2ceb0167a20e/team-c-df547-part01.zip",
+      "members": [
+        {
+          "path": "parts-manifest.json",
+          "bytes": 976,
+          "sha256": "51e3113357122d405c9daf0a71aee3bc6c98387e756ce9994a810fcd2e57ba11"
+        },
+        {
+          "path": "publish-manifest.json",
+          "bytes": 52814,
+          "sha256": "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d"
+        },
+        {
+          "path": "seal.json",
+          "bytes": 395,
+          "sha256": "7a109f44f92cc21625ba55c25a775d1fcbb89ee77e0acd35a831f6f6da7ac520"
+        },
+        {
+          "path": "wwwroot.zip.part",
+          "bytes": 19922944,
+          "sha256": "fb5508037ea3183bf6545f13f05d15336578b5605ee12bace1c9984a8344b0d0"
+        }
+      ]
+    },
+    {
+      "kind": "part02",
+      "artifactId": 11308139722,
+      "archiveBytes": 16170895,
+      "archiveSha256": "1312a2d50fbe4bf44ca20ab12d450bff7c9677b9119253af4368694c725202e2",
+      "originalArchiveLocalPath": "/workspace/attachments/4a24a41d-bf0f-4133-9650-232d3b34f920/team-c-df547-part02.zip",
+      "members": [
+        {
+          "path": "publish-manifest.json",
+          "bytes": 52814,
+          "sha256": "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d"
+        },
+        {
+          "path": "parts-manifest.json",
+          "bytes": 976,
+          "sha256": "51e3113357122d405c9daf0a71aee3bc6c98387e756ce9994a810fcd2e57ba11"
+        },
+        {
+          "path": "seal.json",
+          "bytes": 395,
+          "sha256": "7a109f44f92cc21625ba55c25a775d1fcbb89ee77e0acd35a831f6f6da7ac520"
+        },
+        {
+          "path": "wwwroot.zip.part",
+          "bytes": 16116190,
+          "sha256": "08edc8a266ba1288daee9b85f18a52ec88fc08324f3636f0f201df9d4fc03aca"
+        }
+      ]
+    },
+    {
+      "kind": "publisher",
+      "artifactId": 11308889500,
+      "archiveBytes": 1620619,
+      "archiveSha256": "e453f524af96cf9c5e15b0191d3308ada1fb2fb929a12747932bef699d206a17",
+      "originalArchiveLocalPath": "/workspace/attachments/e8a5dcbb-80d8-441d-8d66-6727b4704732/team-c-df547-publisher.zip",
+      "members": [
+        {
+          "path": "actual-runtime-and-native-inputs.json",
+          "bytes": 1041,
+          "sha256": "863db6010889712441617a86f3cdb1074b664b053cdb3b3cb17ff1318ea238d2"
+        },
+        {
+          "path": "build.log",
+          "bytes": 20993,
+          "sha256": "28eaadcac30c9d4458fdf0fd89402caccd8656976a3d9dcfea314d34373d410e"
+        },
+        {
+          "path": "bun-tool-install.log",
+          "bytes": 130,
+          "sha256": "76ffff4195a1a79bed46576508389beebb64bb57b3dbcf66c6af8fc5fe18f5ba"
+        },
+        {
+          "path": "bun-version.log",
+          "bytes": 6,
+          "sha256": "e0a72941ba72e471c37b0bce5e8c292659befc51dbf1c7ceea354b26642c39c3"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 18747,
+          "sha256": "e50829dc43401a204c327523edce923fcf958bb28b42591b69149a9cb069cdda"
+        },
+        {
+          "path": "dotnet-info.log",
+          "bytes": 2962,
+          "sha256": "8cf22d13c329c0bf3bc3e2e5659b093ff306a050a0ebe3be66a0783953f178a5"
+        },
+        {
+          "path": "dotnet-version.log",
+          "bytes": 9,
+          "sha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+        },
+        {
+          "path": "git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-clean-final.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "git-head-after.log",
+          "bytes": 41,
+          "sha256": "4442ae636736f87f74daa0331657616aa792ba858b1b6b0954b2ccffbd2194a6"
+        },
+        {
+          "path": "git-head.log",
+          "bytes": 41,
+          "sha256": "4442ae636736f87f74daa0331657616aa792ba858b1b6b0954b2ccffbd2194a6"
+        },
+        {
+          "path": "locked-assets-install.log",
+          "bytes": 501,
+          "sha256": "c7c70cbc5787b2e6f3a3afbfcfdfe173cafe1d05c6b42cc3590394a83dde0d7f"
+        },
+        {
+          "path": "native-submodule-pins.log",
+          "bytes": 202,
+          "sha256": "3981c3c5b761d921fcb366af69eea0d016dca86419c3f74c0618377da7d79999"
+        },
+        {
+          "path": "owner-assets-build.log",
+          "bytes": 9,
+          "sha256": "b33e48dc0ef555a56f86e0477dd74ee7eca926a57266cb64b6dde060b0b7a63b"
+        },
+        {
+          "path": "owner-built-assets.json",
+          "bytes": 1272,
+          "sha256": "3cba4f74f796c7f0637d64ca1313e36928caa6fa2625d1902d7f8e379e20b1a2"
+        },
+        {
+          "path": "publish.log",
+          "bytes": 328409,
+          "sha256": "10337c60dd6cd8ab9dbcb19a46eb11644da9e5fe795fa63a69c1ceda454e3acf"
+        },
+        {
+          "path": "receipt-verify.log",
+          "bytes": 700,
+          "sha256": "5eb966f7368e4184110bf3e249ed9b905c29a23d35ed7c19ba65d831f4d44a23"
+        },
+        {
+          "path": "restore.log",
+          "bytes": 6080,
+          "sha256": "5de01c5aa291f16bfe22f4576821b17939c3712b9c9cdca6c3606de0099a3c9d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 638,
+          "sha256": "5ad839aab321cd732abf381dc2d92e52f70d60233517388ddeb3ef137675f2ee"
+        },
+        {
+          "path": "runtime-pack-properties.json",
+          "bytes": 4877,
+          "sha256": "eb62a32fefe260f5bd1db7689dc29ec18616d4450eed9b1da22492f5935b235e"
+        },
+        {
+          "path": "source-after-final.json",
+          "bytes": 1194538,
+          "sha256": "85aa205dd54992727b6e715b5cd05585b311b040dffc35284b13eb905fafcc94"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 1194538,
+          "sha256": "85aa205dd54992727b6e715b5cd05585b311b040dffc35284b13eb905fafcc94"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 1194538,
+          "sha256": "85aa205dd54992727b6e715b5cd05585b311b040dffc35284b13eb905fafcc94"
+        },
+        {
+          "path": "tracked-source-tree.log",
+          "bytes": 2611835,
+          "sha256": "f9ef458e1f1b43801939acc1f6c9251bf851795b112ddd67d7517d5fa37ef578"
+        },
+        {
+          "path": "wasm-tools-install.log",
+          "bytes": 1995,
+          "sha256": "0f68b785fcbd7367ebe17d79410d3e42cb4d6c63960326dec49cbb38bba5e712"
+        },
+        {
+          "path": "wasm-tools-list.log",
+          "bytes": 330,
+          "sha256": "9f8024f2d8e0470e23b3d57b7f233bcfa9d5f062de1d843a87fe09d29453aa5d"
+        }
+      ]
+    },
+    {
+      "kind": "browser",
+      "artifactId": 11309450284,
+      "archiveBytes": 28783550,
+      "archiveSha256": "b25f6492d04f3a6e40c5f72e75918c55fcfbe81b5f7969ee828338664984ca0c",
+      "originalArchiveLocalPath": "/workspace/attachments/fd4ee934-6e10-4bc9-ae17-1a5c7ea8c750/team-c-df547-browser.zip",
+      "members": [
+        {
+          "path": "diagnostics/chromium-path.log",
+          "bytes": 78,
+          "sha256": "94dc7d669e3d3966bf82ee64f3ae62d074e8d1302c5c4686e5bff330c7879cb2"
+        },
+        {
+          "path": "diagnostics/commands.json",
+          "bytes": 5221,
+          "sha256": "9fdc6a2f79824d957e0fad6c80bccae2d3ec03f527957b251dba5092e18caa23"
+        },
+        {
+          "path": "diagnostics/git-clean-after.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "diagnostics/git-clean-before.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "diagnostics/git-head-after.log",
+          "bytes": 41,
+          "sha256": "4442ae636736f87f74daa0331657616aa792ba858b1b6b0954b2ccffbd2194a6"
+        },
+        {
+          "path": "diagnostics/git-head.log",
+          "bytes": 41,
+          "sha256": "4442ae636736f87f74daa0331657616aa792ba858b1b6b0954b2ccffbd2194a6"
+        },
+        {
+          "path": "diagnostics/output-custody-before-final-receipt.json",
+          "bytes": 38647,
+          "sha256": "020f89adc2e39aae89769c35b915ae11e3993baa2a6133b77cacf4612da0f5ea"
+        },
+        {
+          "path": "diagnostics/picture-browser-nine.log",
+          "bytes": 115,
+          "sha256": "4cb08067aba5464fd0494a80dd517de8ba89fafaadc8ae5d5e8502e82a4cac81"
+        },
+        {
+          "path": "diagnostics/playwright-version.log",
+          "bytes": 7,
+          "sha256": "bc43ef34a131fd2f99047a8aca491f24fa0a36010dcb90166e73c49f58a1928d"
+        },
+        {
+          "path": "diagnostics/result.json",
+          "bytes": 497,
+          "sha256": "65646dd031ddb45e794fc1dd97a25ed7d5d2f5697bf893553ed0f6bf9ceccd8d"
+        },
+        {
+          "path": "raw/results.json",
+          "bytes": 126092,
+          "sha256": "5ad7b1f92ad73b08986cd7e12eca5aa6b636c0e2b1e0bf8cb67791d73a1c8e96"
+        },
+        {
+          "path": "raw/picture-original.png",
+          "bytes": 77145,
+          "sha256": "08c394e995c33946b30b765ea42171e118236094eeb3bebbd9f13b8c64d07f24"
+        },
+        {
+          "path": "raw/actual-crop-remove-all.png",
+          "bytes": 102,
+          "sha256": "fe12d24bc5643fee474c1930d902348493ffdf5f323000537f292ed6ba3f0e13"
+        },
+        {
+          "path": "raw/picture-first-process.zip",
+          "bytes": 14407860,
+          "sha256": "a934562c784ba0927fd39fd7732d6f50943d5ca7d751a5c49f1e2ac706675d48"
+        },
+        {
+          "path": "raw/picture-final-process.zip",
+          "bytes": 14376174,
+          "sha256": "7a775e1865221acd2331942a015a926d0286a88d96ed722daa62f267b6adcbde"
+        }
+      ]
+    }
+  ],
+  "originalManifestPath": "/tmp/team-c-c5-web-df547-20261004/original-publication/publish-manifest.json",
+  "originalManifestBytes": 52814,
+  "originalManifestSha256": "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d",
+  "originalSealPath": "/tmp/team-c-c5-web-df547-20261004/original-publication/seal.json",
+  "originalSealBytes": 395,
+  "originalSealSha256": "7a109f44f92cc21625ba55c25a775d1fcbb89ee77e0acd35a831f6f6da7ac520",
+  "originalZipPath": "/tmp/team-c-c5-web-df547-20261004/original-publication/wwwroot.zip",
+  "originalZipBytes": 36039134,
+  "originalZipSha256": "443ff20704e09f0cf74796976c25f49b70ef5ed68637ea3f5248bf54178cde10",
+  "sourceBeforePath": "/tmp/team-c-c5-web-df547-20261004/publisher/source-before.json",
+  "sourceAfterPath": "/tmp/team-c-c5-web-df547-20261004/publisher/source-after.json",
+  "sourceCatalogueBytes": 1194538,
+  "sourceCatalogueSha256": "85aa205dd54992727b6e715b5cd05585b311b040dffc35284b13eb905fafcc94",
+  "sourceInputs": 4548,
+  "allActualGitBodiesVerified": true,
+  "publishFileCount": 285,
+  "publishBytes": 59201582,
+  "allZipMembersAndManifestHashesVerified": true,
+  "browserCounts": {
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "commandFamilies": 26,
+  "allNormalEOF_ECHILD_FamilyClosed_NoSignals": true,
+  "qualifications": [
+    "Exact df547 source producer identity retained; not relabeled as later global Motion27dd.",
+    "Original7ded success and ce50 failure preserved separately.",
+    "No publishRoot rewriting or consumer rebinding here; original manifest/seal/ZIP bytes retained.",
+    "Nine local Picture browser groups and source publication only; no provider/deploy/full parity release acceptance."
+  ]
+}

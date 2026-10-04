@@ -1,0 +1,12 @@
+diff --git a/9to1 Workspace/shared/src/Haven.Infrastructure/Extensions/NativePluginProcessFactory.cs b/9to1 Workspace/shared/src/Haven.Infrastructure/Extensions/NativePluginProcessFactory.cs
+index fef0b6fd..c9d124e1 100644
+--- a/9to1 Workspace/shared/src/Haven.Infrastructure/Extensions/NativePluginProcessFactory.cs	
++++ b/9to1 Workspace/shared/src/Haven.Infrastructure/Extensions/NativePluginProcessFactory.cs	
+@@ -53,6 +53,7 @@ internal sealed class NativePluginProcess(InstalledExtensionPackage package) : I
+         var temporaryDirectory = Path.GetTempPath();
+         start.Environment["TEMP"] = temporaryDirectory;
+         start.Environment["TMP"] = temporaryDirectory;
++        start.Environment["TMPDIR"] = temporaryDirectory;
+         start.Environment["HAVEN_PLUGIN_ID"] = package.Manifest.PackageId;
+         start.Environment["HAVEN_PLUGIN_PERMISSIONS"] = ((int)package.GrantedPermissions).ToString(System.Globalization.CultureInfo.InvariantCulture);
+         using var process = Process.Start(start) ?? throw new InvalidOperationException("Plugin process could not be started.");
