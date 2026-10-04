@@ -24,6 +24,7 @@ internal sealed class SpacesHavenScene : IDisposable
     private readonly List<SpaceExamplePair> _examples = [];
     private SpaceDefinition? _selected;
     private bool _editWithHavenAvailable;
+    private bool _revisionBankAvailable;
     private bool _disposed;
 
     public SpacesHavenScene()
@@ -62,6 +63,7 @@ internal sealed class SpacesHavenScene : IDisposable
         ShowArchived = Get<HavenButton>("ShowArchived");
         Save = Get<HavenButton>("Save");
         Launch = Get<HavenButton>("Launch");
+        RevisionBank = Get<HavenButton>("RevisionBank");
         NewConversation = Get<HavenButton>("NewConversation");
         Fork = Get<HavenButton>("Fork");
         Archive = Get<HavenButton>("Archive");
@@ -83,6 +85,7 @@ internal sealed class SpacesHavenScene : IDisposable
         ShowArchived.Invoked += OnShowArchived;
         Save.Invoked += OnSave;
         Launch.Invoked += OnLaunch;
+        RevisionBank.Invoked += OnRevisionBank;
         NewConversation.Invoked += (_, _) => { if (_selected is { } space) NewConversationRequested?.Invoke(this, space.Id); };
         Fork.Invoked += OnFork;
         Archive.Invoked += OnArchive;
@@ -129,6 +132,7 @@ internal sealed class SpacesHavenScene : IDisposable
     public HavenButton ShowArchived { get; }
     public HavenButton Save { get; }
     public HavenButton Launch { get; }
+    public HavenButton RevisionBank { get; }
     public HavenButton NewConversation { get; }
     public HavenButton Fork { get; }
     public HavenButton Archive { get; }
@@ -144,6 +148,7 @@ internal sealed class SpacesHavenScene : IDisposable
     public event EventHandler<Guid>? SpaceSelected;
     public event EventHandler<SpaceEditorDraft>? SaveRequested;
     public event EventHandler<Guid>? LaunchRequested;
+    public event EventHandler<Guid>? RevisionBankRequested;
     public event EventHandler<Guid>? ConversationSelected;
     public event EventHandler<Guid>? NewConversationRequested;
     public event EventHandler<Guid>? ForkRequested;
@@ -241,6 +246,7 @@ internal sealed class SpacesHavenScene : IDisposable
     public void SetSpace(SpaceDefinition? space)
     {
         _selected = space;
+        RevisionBank.SetValue(HavenProperties.Enabled, _revisionBankAvailable && space is { IsArchived: false });
         if (space is null)
         {
             EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
@@ -297,6 +303,12 @@ internal sealed class SpacesHavenScene : IDisposable
         if (!available) Launch.Content = "Opening will be available when Spaces is connected to the shell";
     }
 
+    public void SetRevisionBankAvailable(bool available)
+    {
+        _revisionBankAvailable = available;
+        RevisionBank.SetValue(HavenProperties.Enabled, available && _selected is { IsArchived: false });
+    }
+
     public void SetLayoutEditorAvailable(bool available)
     {
         ManageLayout.SetValue(HavenProperties.Enabled, available);
@@ -337,6 +349,15 @@ internal sealed class SpacesHavenScene : IDisposable
         AddExample.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
         ApplySuggestedEdit.SetValue(HavenProperties.Enabled, !busy && _editWithHavenAvailable && _selected is not null);
         if (_selected is { IsBuiltIn: false }) Delete.SetValue(HavenProperties.Enabled, !busy);
+    }
+
+    internal void SetOriginalActionStatus(string? value, Func<bool> originalCurrent)
+    {
+        if (!originalCurrent()) return;
+        Status.Content = value ?? string.Empty;
+        if (!originalCurrent()) return;
+        Status.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        _ = originalCurrent();
     }
 
     public void SetStatus(string? value)
@@ -426,6 +447,12 @@ internal sealed class SpacesHavenScene : IDisposable
     private void OnLaunch(object? sender, EventArgs e)
     {
         if (_selected is not null) LaunchRequested?.Invoke(this, _selected.Id);
+    }
+
+    private void OnRevisionBank(object? sender, EventArgs e)
+    {
+        if (_revisionBankAvailable && _selected is { IsArchived: false } selected)
+            RevisionBankRequested?.Invoke(this, selected.Id);
     }
 
     private void OnFork(object? sender, EventArgs e)
@@ -570,6 +597,7 @@ internal sealed class SpacesHavenScene : IDisposable
                       <Button Name="Fork" Column="2" Variant="Tertiary" Content="Fork" MinHeight="36px" />
                       <Button Name="Archive" Column="3" Variant="Tertiary" Content="Archive" MinHeight="36px" />
                     </Container>
+                    <Button Name="RevisionBank" Variant="Tertiary" Content="Revision Bank" MinHeight="36px" Enabled="false" />
                     <Container Layout="Vertical" Gap="6px" Width="100%"><Text Content="Conversations" Level="H2" /><Button Name="NewConversation" Variant="Tertiary" Content="New chat" MinHeight="36px" /><Container Name="Conversations" Layout="Vertical" Gap="6px" Width="100%" /></Container>
                     <Container Layout="Vertical" Gap="7px" Padding="14px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="16px">
                       <Text Content="Describe a Space change" Level="H2" />
@@ -625,6 +653,7 @@ internal sealed class SpacesHavenScene : IDisposable
         ShowArchived.Invoked -= OnShowArchived;
         Save.Invoked -= OnSave;
         Launch.Invoked -= OnLaunch;
+        RevisionBank.Invoked -= OnRevisionBank;
         Fork.Invoked -= OnFork;
         Archive.Invoked -= OnArchive;
         Delete.Invoked -= OnDelete;

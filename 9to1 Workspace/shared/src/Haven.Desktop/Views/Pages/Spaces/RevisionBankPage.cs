@@ -36,9 +36,10 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
         _maximumOriginalTasks = maximumOriginalTasks;
         RequireOriginalOwner();
         _scene = new RevisionBankScene(IsOriginalPublicationCurrent);
-        Scene = new HavenSceneControl { Root = _scene.Root };
+        Scene = new HavenSceneControl();
         try
         {
+            Scene.Root = _scene.Root;
             AutomationProperties.SetAutomationId(this, "HavenNativeRevisionBankPage");
             AutomationProperties.SetName(this, "Revision Bank");
             Content = Scene;
@@ -57,6 +58,7 @@ public sealed class RevisionBankPage : UserControl, IActivatablePage, IDisposabl
 
     public HavenSceneControl Scene { get; }
     public bool IsRetiring => _retiring;
+    public Task? OriginalCloseTask { get { lock (_taskGate) return _close; } }
     public Task? LastOriginalTask { get; private set; }
     public Task<RevisionBankMutationResult>? LastOriginalMutationTask { get; private set; }
     public RevisionBankMutationResult? LastAcknowledgedOriginalMutation { get; private set; }

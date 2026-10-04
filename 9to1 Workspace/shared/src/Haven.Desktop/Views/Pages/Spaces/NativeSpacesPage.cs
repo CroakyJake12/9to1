@@ -20,6 +20,11 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     private readonly Func<SpaceDefinition, Task>? _launchSpace;
     private readonly Func<Guid, Task>? _deleteSpace;
     private readonly Func<SpaceDefinition, Task>? _manageLayout;
+    private readonly Func<SpaceDefinition, Task>? _openRevisionBank;
+    private readonly object _originalActionGate = new();
+    private readonly List<Task> _originalBankAndDeleteTasks = [];
+    private volatile bool _originalActionsRetiring;
+    private Task? _originalActionsClose;
     private readonly SpaceGeneratedSurfaceRenderer? _generatedSurfaceRenderer;
     private readonly SpaceEditPlanner? _editPlanner;
     private readonly SpacesHavenScene _scene;
@@ -34,8 +39,9 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         Func<SpaceDefinition, Task>? launchSpace = null,
         Func<SpaceDefinition, Task>? manageLayout = null,
         IConversationRepository? conversations = null,
-        Func<Conversation, Task>? openConversation = null)
-        : this(registry, null, null, launchSpace, null, manageLayout, conversations, openConversation)
+        Func<Conversation, Task>? openConversation = null,
+        Func<SpaceDefinition, Task>? openRevisionBank = null)
+        : this(registry, null, null, launchSpace, null, manageLayout, conversations, openConversation, openRevisionBank)
     {
     }
 
@@ -47,7 +53,8 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         Func<Guid, Task>? deleteSpace = null,
         Func<SpaceDefinition, Task>? manageLayout = null,
         IConversationRepository? conversations = null,
-        Func<Conversation, Task>? openConversation = null)
+        Func<Conversation, Task>? openConversation = null,
+        Func<SpaceDefinition, Task>? openRevisionBank = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _conversations = conversations;
@@ -57,9 +64,11 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _launchSpace = launchSpace;
         _deleteSpace = deleteSpace;
         _manageLayout = manageLayout;
+        _openRevisionBank = openRevisionBank;
         _scene = new SpacesHavenScene();
         _scene.SetLaunchAvailable(_launchSpace is not null);
         _scene.SetLayoutEditorAvailable(_manageLayout is not null);
+        _scene.SetRevisionBankAvailable(_openRevisionBank is not null);
         _scene.SetEditWithHavenAvailable(_editPlanner is not null);
         Scene = new HavenSceneControl { Root = _scene.Root };
         AutomationProperties.SetAutomationId(this, "HavenNativeSpacesPage");
@@ -79,6 +88,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _scene.ForkRequested += OnForkRequested;
         _scene.ArchiveRequested += OnArchiveRequested;
         _scene.DeleteRequested += OnDeleteRequested;
+        _scene.RevisionBankRequested += OnRevisionBankRequested;
         _scene.AddFileRequested += OnAddFileRequested;
         _scene.RemoveFileRequested += OnRemoveFileRequested;
         _scene.ManageLayoutRequested += OnManageLayoutRequested;
@@ -86,6 +96,8 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     }
 
     public HavenSceneControl Scene { get; }
+    public Task? LastOriginalBankOrDeleteTask { get; private set; }
+    public Task? LastOriginalDeleteOwnerTask { get; private set; }
 
     public Task ActivateAsync(CancellationToken cancellationToken) => RefreshAsync(cancellationToken);
 
@@ -261,21 +273,112 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         }, current.IsArchived ? "restore Space" : "archive Space");
     }
 
-    private async void OnDeleteRequested(object? sender, Guid id)
+    private void OnDeleteRequested(object? sender, Guid id) => _ = DeleteOriginalSpaceAsync(id);
+
+    internal Task DeleteOriginalSpaceAsync(Guid id) => RunOriginalBankOrDeleteAsync(async () =>
     {
-        await RunMutationAsync(async () =>
+        if (_deleteSpace is not null)
         {
-            if (_deleteSpace is not null) await _deleteSpace(id);
-            if (_deleteSpace is not null)
-                await _deleteSpace(id);
-            else
+            var originalOwnerTask = _deleteSpace(id);
+            LastOriginalDeleteOwnerTask = originalOwnerTask;
+            await originalOwnerTask.ConfigureAwait(true);
+        }
+        else
+        {
+            if (_conversations is not null) await _conversations.DetachSpaceAsync(id, CancellationToken.None);
+            var originalOwnerTask = _registry.DeleteAsync(id, CancellationToken.None);
+            LastOriginalDeleteOwnerTask = originalOwnerTask;
+            await originalOwnerTask.ConfigureAwait(true);
+        }
+        if (_disposed || _originalActionsRetiring) return;
+        if (_selectedId == id) _selectedId = null;
+        await RefreshAsync().ConfigureAwait(true);
+    });
+
+    private void OnRevisionBankRequested(object? sender, Guid id) => _ = OpenOriginalRevisionBankAsync(id);
+
+    internal Task OpenOriginalRevisionBankAsync(Guid id) => RunOriginalBankOrDeleteAsync(async () =>
+    {
+        var space = _spaces.SingleOrDefault(item => item.Id == id)
+            ?? throw new KeyNotFoundException("The selected canonical Space is unavailable.");
+        if (space.IsArchived || _openRevisionBank is null)
+            throw new UnauthorizedAccessException("The configured original Revision Bank route is unavailable.");
+        await _openRevisionBank(space).ConfigureAwait(true);
+    });
+
+    // This is the selected Bank/delete cohort only; it is not a full lifetime port for the
+    // unchanged legacy async handlers, generated surface or shared provider.
+    private Task RunOriginalBankOrDeleteAsync(Func<Task> body)
+    {
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task original;
+        lock (_originalActionGate)
+        {
+            if (_disposed || _originalActionsRetiring) throw new ObjectDisposedException(nameof(NativeSpacesPage));
+            _originalBankAndDeleteTasks.RemoveAll(task => task.IsCompletedSuccessfully);
+            if (_originalBankAndDeleteTasks.Count >= 64)
+                throw new InvalidOperationException("Original Spaces action capacity is full; all failed or pending tasks remain retained.");
+            original = Core(start.Task);
+            _originalBankAndDeleteTasks.Add(original);
+            LastOriginalBankOrDeleteTask = original;
+        }
+        start.SetResult();
+        return original;
+
+        async Task Core(Task admission)
+        {
+            await admission.ConfigureAwait(true);
+            try
             {
-                if (_conversations is not null) await _conversations.DetachSpaceAsync(id, CancellationToken.None);
-                await _registry.DeleteAsync(id, CancellationToken.None);
+                if (_disposed || _originalActionsRetiring) throw new ObjectDisposedException(nameof(NativeSpacesPage));
+                await body().ConfigureAwait(true);
             }
-            if (_selectedId == id) _selectedId = null;
-            await RefreshAsync();
-        }, "delete Space");
+            catch (Exception primary)
+            {
+                try
+                {
+                    void Show() => _scene.SetOriginalActionStatus(primary.Message, () => !_disposed && !_originalActionsRetiring);
+                    if (Dispatcher.UIThread.CheckAccess()) Show();
+                    else await Dispatcher.UIThread.InvokeAsync(Show);
+                }
+                catch (Exception diagnostic) when (!ReferenceEquals(primary, diagnostic))
+                {
+                    throw new AggregateException(primary, diagnostic);
+                }
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
+            }
+        }
+    }
+
+    public Task CloseOriginalBankAndDeleteActionsAsync()
+    {
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task original;
+        lock (_originalActionGate)
+        {
+            if (_originalActionsClose is not null) return _originalActionsClose;
+            original = Drain(start.Task);
+            _originalActionsClose = original;
+            _originalActionsRetiring = true;
+        }
+        start.SetResult();
+        return original;
+
+        async Task Drain(Task admission)
+        {
+            await admission.ConfigureAwait(false);
+            Task[] tasks;
+            lock (_originalActionGate) tasks = _originalBankAndDeleteTasks.ToArray();
+            var failures = new List<Exception>();
+            foreach (var task in tasks)
+            {
+                try { await task.ConfigureAwait(false); }
+                catch (Exception error) { if (!failures.Any(previous => ReferenceEquals(previous, error))) failures.Add(error); }
+            }
+            lock (_originalActionGate) _originalBankAndDeleteTasks.RemoveAll(task => task.IsCompletedSuccessfully);
+            if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+            if (failures.Count > 1) throw new AggregateException(failures);
+        }
     }
 
     private async void OnAddFileRequested(object? sender, SpaceFilePermission permission)
@@ -419,6 +522,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _scene.ForkRequested -= OnForkRequested;
         _scene.ArchiveRequested -= OnArchiveRequested;
         _scene.DeleteRequested -= OnDeleteRequested;
+        _scene.RevisionBankRequested -= OnRevisionBankRequested;
         _scene.AddFileRequested -= OnAddFileRequested;
         _scene.RemoveFileRequested -= OnRemoveFileRequested;
         _scene.ManageLayoutRequested -= OnManageLayoutRequested;
