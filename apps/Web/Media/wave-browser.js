@@ -11,6 +11,25 @@ const beforeUnload = event => { if (dirty) { event.preventDefault(); event.retur
 globalThis.addEventListener?.('beforeunload', beforeUnload);
 
 function fault(code, message) { const error = new Error(message); error.code = code; return error; }
+// Own module faults retain their documented string codes; native DOMException.code is numeric.
+const moduleFaultCodes = new Set(['InvalidArgument', 'CapacityExceeded', 'RevisionConflict', 'StorageFailed',
+    'StorageBlocked', 'OperationBusy', 'OperationCancelled', 'CapabilityUnavailable', 'ProjectNotFound', 'InvalidTimeRange']);
+function browserFailure(error) {
+    const fallback = { ok: false, code: 'StorageFailed', message: 'The browser operation failed. Your prior saved project is intact.' };
+    try {
+        const ownCode = error?.code;
+        const custom = typeof ownCode === 'string' && moduleFaultCodes.has(ownCode);
+        const name = custom ? undefined : error?.name;
+        const ownMessage = custom ? error?.message : undefined;
+        const code = custom ? ownCode : name === 'QuotaExceededError' ? 'StorageFull'
+            : name === 'NotAllowedError' || name === 'SecurityError' ? 'PermissionDenied'
+            : name === 'NotSupportedError' ? 'CodecUnsupported' : 'StorageFailed';
+        return { ok: false, code, message: custom && typeof ownMessage === 'string' ? ownMessage
+            : code === 'PermissionDenied' ? 'The browser refused this operation. Your saved project is intact.'
+            : code === 'StorageFull' ? 'Local browser storage is full. Your unsaved work has been preserved.'
+            : fallback.message };
+    } catch { return fallback; }
+}
 function openDatabase() {
     if (!globalThis.indexedDB) throw fault('CapabilityUnavailable', 'This browser cannot store local Wave projects.');
     if (database) return Promise.resolve(database);
@@ -172,12 +191,6 @@ export async function invoke(action, argumentsJson) {
         }
         return JSON.stringify({ ok: true, value });
     } catch (error) {
-        const code = error.code ?? (error.name === 'QuotaExceededError' ? 'StorageFull'
-            : error.name === 'NotAllowedError' || error.name === 'SecurityError' ? 'PermissionDenied'
-            : error.name === 'NotSupportedError' ? 'CodecUnsupported' : 'StorageFailed');
-        return JSON.stringify({ ok: false, code, message: error.code ? error.message
-            : code === 'PermissionDenied' ? 'The browser refused this operation. Your saved project is intact.'
-            : code === 'StorageFull' ? 'Local browser storage is full. Your unsaved work has been preserved.'
-            : 'The browser operation failed. Your prior saved project is intact.' });
+        return JSON.stringify(browserFailure(error));
     }
 }
