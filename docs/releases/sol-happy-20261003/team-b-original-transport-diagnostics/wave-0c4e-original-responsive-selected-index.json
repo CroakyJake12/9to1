@@ -1,0 +1,84 @@
+{
+  "schema": "TEAM_B_SELECTED_ORIGINAL_RAW_CUSTODY_1",
+  "recordedAtUTC": "2026-10-04T21:55:54.200973+00:00",
+  "original": {
+    "source": "0c4e0a5626abe7d6d9af41b1e802d7d4ef880be2",
+    "run": 37235516659,
+    "artifact": 11315935797,
+    "bytes": 2002238,
+    "sha256": "9a2ca854cc3370e00b8410e238c4e378230962d7bc3dfd3ad4a304af46abde55"
+  },
+  "export": {
+    "source": "c8ca8c4d6f2a2fe0b975f0a43a49a0ca46c469bb",
+    "run": 37237075743,
+    "job": 111538236059,
+    "artifact": 11315876836,
+    "bytes": 7358,
+    "sha256": "06db567517128086adc1cf9296fb3634a1c0074f128263ae987cd21878cfe21c",
+    "all53OriginalMemberCRCVerifiedInExporter": true,
+    "selectedDecodedBytes": 10411,
+    "selectedPaths": [
+      "wr-run/raw/results.json",
+      "wr-run/diagnostics/wave-responsive-real-browser.log",
+      "wr-run/diagnostics/commands.json"
+    ],
+    "canonical53MapSHA256": "f384d03ef0abe6487c95fb201855cab2f1537e758aae98c92672af5178b2b926"
+  },
+  "permanentZIP": "docs/releases/sol-happy-20261003/team-b-original-transport-diagnostics/wave-0c4e-original-responsive-selected-diagnostics.zip",
+  "entries": [
+    {
+      "path": "original-members.json",
+      "bytes": 10006,
+      "sha256": "67e968d72d1785f6c5c2ff8dc796108d07224d0ec9d4548e251f7e05a0d1173a",
+      "crc32": 3088240703
+    },
+    {
+      "path": "result.json",
+      "bytes": 979,
+      "sha256": "1b75ac21ee66398ac98b738c4383c7430ee79a6502c13d159bd230924c79a526",
+      "crc32": 151257013
+    },
+    {
+      "path": "selected-source-diagnostics.json",
+      "bytes": 15289,
+      "sha256": "7dbfc51fd6b11832f84c9cf8a493b4413b6a84efcec9ba927e2d87676c6718e0",
+      "crc32": 819662436
+    }
+  ],
+  "actualResult": {
+    "original14": "14PASS",
+    "responsive": {
+      "discovered": 3,
+      "executed": 0,
+      "passed": 0,
+      "failed": 0,
+      "notRun": 3
+    },
+    "failure": {
+      "active": "setup",
+      "step": "setup",
+      "type": "Error"
+    },
+    "messageAndStack": "ABSENT_IN_ORIGINAL",
+    "logBytes": 0,
+    "exit": 1,
+    "normalEOF": true,
+    "finalECHILD": true,
+    "familyClosed": true,
+    "births": 12,
+    "allBirthsGone": true,
+    "signals": [],
+    "portRebind": true,
+    "originalRecordedCause": "UNESTABLISHED"
+  },
+  "rootFullBytesCRCDecodeReview": "COMPLETE_READER_CLOSED",
+  "independentFullReview": "PENDING",
+  "temporary": {
+    "path": "/workspace/attachments/09597a78-4397-45e1-ac26-bd721c361b15/wave-0c4e-original-responsive-selected-diagnostics.zip",
+    "rootOnlyLocalReader": true,
+    "readerClosed": true,
+    "retirement": "HELD_UNTIL_FULL_INDEPENDENT_ACK_DURABLE_AND_FRESH_BODY_VERIFICATION"
+  },
+  "wholeOriginalReceivedLocally": false,
+  "acceptance": "FAIL_OR_INCOMPLETE"
+}
