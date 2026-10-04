@@ -1,0 +1,54 @@
+{
+  "status": "READ_ONLY_PROVIDER_OBSERVATION_WIRING_PROPOSAL_NOT_DEPLOYED",
+  "observedUTCDate": "2026-10-04",
+  "bucket": "sites",
+  "metadata": {
+    "status": 200,
+    "location": "WEUR",
+    "storageClass": "Standard",
+    "jurisdiction": "default"
+  },
+  "cors": {
+    "apiError": 10059,
+    "meaning": "configuration does not exist"
+  },
+  "customDomains": {
+    "status": 200,
+    "domains": []
+  },
+  "managedDomain": {
+    "status": 200,
+    "enabled": false,
+    "domain": "pub-3db2f12d34ed49579291ec3950ccf647.r2.dev"
+  },
+  "accountAccessApplications": {
+    "status": 200,
+    "count": 0,
+    "totalCount": 0,
+    "qualification": "account scope only; no assertion about zones/WAF/token policies"
+  },
+  "boundedObjectList": {
+    "status": 200,
+    "perPage": 1,
+    "returnedArrayCount": 0,
+    "qualification": "bounded API observation; not independent inventory/completeness proof"
+  },
+  "bucketOwnership": "UNRESOLVED; no app/account namespace inferred",
+  "sourceCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs",
+      "bytes": 4280,
+      "sha256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+      "bytes": 27211,
+      "sha256": "fe154610329537d49ac6ddae80534f9249af4674d471750817c17399ca085e51"
+    }
+  ],
+  "wireAdopted": false,
+  "providerMutations": 0,
+  "endpointIntegrity": "NOT_RUN: public endpoint disabled and no authorised immutable object/artifact selected",
+  "ownerPorts": "Current guard ACK supplies local personal-owner metadata commit only; no remote session/read-publication/quota/byte-transfer authority supplied."
+}
