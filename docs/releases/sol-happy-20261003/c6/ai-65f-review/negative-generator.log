@@ -1,0 +1,11 @@
+fd162747b5b95cb02bb5ca2e47cf7c596353d92a30551080622f265e24cbebd0 /workspace/team-c/evidence/c6/ai-65f/owner-before.cs
+371df9ef4ec65689fa3843a53e5f1b64c538d75bc4b509d1747c91169b10e15f /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ProviderToolTurnCorrelation.cs
+67af612926d56ff1ab2e63b959cdfd86a705623c122f7c03e35999a64f12c966 /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Application/ModelProviderAbstractions.cs
+9fcae62998ce231789cfae22fb7e934cad2ad53ab399952fc92c3e8c8fcc98fa /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Application/UsageAbstractions.cs
+7a4db7e89535112817c495bca06bfe75bea721df7503ec57b63b612403d9d9c5 /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs
+e6ca3a28dc9b784d8640030a3a783b31cceeb552958b6b1feebd536def3ce7b7 /workspace/team-c/evidence/c6/ai-65f/negative/EndpointLocalitySubset.cs
+5932695712fd1685aa885b8f82a8908f9b11931ca4b4ae1c94d17d4bff19e94a /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/OllamaClient.cs
+0a81baf1a0d03414aa2ddcee749023d55b86ed05f9faee74a94ac1c2507b663b /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/OllamaModelProvider.cs
+ff79738a76c7cccd6952c4922c3edf0fde129107427acb44140d151731ee8074 /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Application/Abstractions.cs
+3bf306530e1cb848336dc08856cd39ffc44ea0efd7d6c3cdf1247def02dcbc1a /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ModelUsageRepository.cs
+74fd31c55ee32e67509c4b3c8266a557421940d3e5b12f14d38024591c03cac4 /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ProviderEndpointSecurityTests.cs

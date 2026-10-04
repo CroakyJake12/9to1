@@ -1,0 +1,161 @@
+{
+  "sourceCommit": "65f23458328ab38458ffbfbd4743ea197e49d50f",
+  "base": "57ebc7e202f65d489493e6c2a71a6436dfd8a696",
+  "ownerAck": "64be595e99a0683ba53f713016176115edc7847b",
+  "sourceBindingsVerified": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+      "bytes": 35576,
+      "sha256": "b3fec98daa588c0d2d8e2afa8f3ac3e4ecf996c725e2af77c4cea6d10e0e111b"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs",
+      "bytes": 10151,
+      "sha256": "7a4db7e89535112817c495bca06bfe75bea721df7503ec57b63b612403d9d9c5"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Fixtures/cloudflare-workers-ai-catalogue-20261004.json",
+      "bytes": 1339,
+      "sha256": "205f4540c97e1ff91cb21b274f3582adc2214d0cb1e37b23a349f3abd2785ba5"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ProviderEndpointSecurityTests.cs",
+      "bytes": 5655,
+      "sha256": "74fd31c55ee32e67509c4b3c8266a557421940d3e5b12f14d38024591c03cac4"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "bytes": 1572,
+      "sha256": "e8be919ba2eb6ef84279e200854cdb96bfdbbf0470b5fd870a03c7023771df9e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/OllamaClient.cs",
+      "bytes": 18612,
+      "sha256": "5932695712fd1685aa885b8f82a8908f9b11931ca4b4ae1c94d17d4bff19e94a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/OllamaModelProvider.cs",
+      "bytes": 5672,
+      "sha256": "0a81baf1a0d03414aa2ddcee749023d55b86ed05f9faee74a94ac1c2507b663b"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/c5-workers-ai-harness.py",
+      "bytes": 6641,
+      "sha256": "1b6fd41c136a6dbf14594b3ae575a672920f31b16e4279364856b8eb95231276"
+    }
+  ],
+  "evidencePayloadsVerified": 19,
+  "forwardAndWholeInverse": "Exact two approved spans on30593B owner basis yield35576B SHA b3fec98daa588c0d2d8e2afa8f3ac3e4ecf996c725e2af77c4cea6d10e0e111b; reverse restores entire basis.",
+  "independentCounts": {
+    "independent-Release.trx": {
+      "total": "32",
+      "executed": "32",
+      "passed": "32",
+      "failed": "0",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    },
+    "independent-negative.trx": {
+      "total": "31",
+      "executed": "31",
+      "passed": "20",
+      "failed": "11",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    },
+    "independent-Debug.trx": {
+      "total": "32",
+      "executed": "32",
+      "passed": "32",
+      "failed": "0",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    }
+  },
+  "exits": {
+    "Debug": 0,
+    "Release": 0,
+    "negative": 1
+  },
+  "execution": "Fresh generated --production-project harness, actual fullInfrastructure reference and original two whole test files. Debug/Release --configuration CONFIG -p:UseArtifactsOutput=true -p:ArtifactsPath=/workspace/team-c/evidence/c6/ai-65f/artifacts --logger trx --results-directory /workspace/team-c/evidence/c6/ai-65f/results. Negative source-linked --locality-subset with immutable57eb provider only; DI case explicitly excluded from31negative cohort.",
+  "sdk": "10.0.401",
+  "sourceReview": "Full new metadata spans and unchanged current endpoint tests read; additive metadata tests/fixture exact previously reviewed09067. Strict Cloudflare nativeHTTPS endpoint recognition, confirmed schema/identity, row/request bounds, Text-only descriptors. Existing generation/tool/stream/usage bytes preserved.",
+  "holds": [
+    "Owner1665B/c04 test project missing; actual1572B/e8be left unchanged; normalresource inclusion blocked.",
+    "Current owner source cut/RAM/whole normal test project/fullcohort/native not accepted; preservedA63 dependency runtime basis.",
+    "Historical24 cohort omits8 current endpoint cases; reproduced32 includes them without stub. HistoricalrootCanvas511 prediscovery failure unchanged identity.",
+    "WholeHTTP response bytes unbounded; no inference/output-token/pricing/funding/provider/paid activation grant."
+  ],
+  "artifacts": [
+    {
+      "path": "Debug.log",
+      "bytes": 2747,
+      "sha256": "8ed3a5bce29825b811bfc8baee06ae8883e9be33e1160d593189323bf3cae710"
+    },
+    {
+      "path": "ProductionHarness.csproj.txt",
+      "bytes": 1444,
+      "sha256": "6e58832e8f761eb688fea1a20b092472f269486c66dd04a3853c23ae890ce6ad"
+    },
+    {
+      "path": "Release.log",
+      "bytes": 1647,
+      "sha256": "86981b5793738f04ab0cd12b333c0ced25ea8318d6887bca0525432eca4da56f"
+    },
+    {
+      "path": "independent-Debug.trx",
+      "bytes": 50858,
+      "sha256": "a50344953da85d292c3bf0e55a50a5afb917ce122a2f329c5dfef46f0eb974cc"
+    },
+    {
+      "path": "independent-Release.trx",
+      "bytes": 50986,
+      "sha256": "8680b566282fdbbfc9877ab5401703551b5d3fb94ec6cf779382422e9579d73c"
+    },
+    {
+      "path": "independent-negative.trx",
+      "bytes": 66513,
+      "sha256": "558dd813d0c730388c5d1fa1f465774282b797be63e02dc69de67e8fcf136f72"
+    },
+    {
+      "path": "negative-generator.log",
+      "bytes": 1953,
+      "sha256": "58a2faabc721e1b8e68fcf63c648c66afc70d5efe72e21c7879adee7f565c758"
+    },
+    {
+      "path": "negative.log",
+      "bytes": 9972,
+      "sha256": "ac2c50021b02f1ea390cf7f1bb2f98e5a7c756e2c6541e6c0e6660165c270c8e"
+    }
+  ]
+}
