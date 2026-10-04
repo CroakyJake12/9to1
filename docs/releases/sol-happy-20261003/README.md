@@ -14,6 +14,12 @@ both succeeded. Current deployment is `2f2e8251-d404-4fe4-8e5e-43dd179fd1a6`.
 [Provider receipts and limits](cloudflare-provider-pass/README.md) preserve the
 upload, schema, recovery and source/configuration identities. HTTPS journeys are
 NOT_RUN while the managed environment lacks the Worker hostname allowance.
+The [anonymous HTTPS driver](../../../cloud/cake-id-auth/deployment/https/README.md)
+is now integrated and independently reviewed, with seven offline refusal and
+failure-preservation controls passing. It is ready for live discovery/JWKS/CORS
+and unauthenticated-denial checks once the published hostname policy reaches this
+chat. It provisions no accounts, clients or email; full authenticated journeys
+remain separate.
 
 The [billing preparation](evidence/c3-billing-hosted-local/README.md) preserves the
 existing production D1 adapter. Its local native D1 cohort passed 43 assertions,
