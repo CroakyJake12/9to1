@@ -1,0 +1,519 @@
+{
+  "schemaVersion": 1,
+  "sourceBasis": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+  "homeProductionPin": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+  "proposalPaths": [
+    ".github/workflows/team-c-home-windows-original-shutdown.yml",
+    ".github/scripts/home-windows-original-shutdown.ps1",
+    ".github/validation/home-windows-original-shutdown.json"
+  ],
+  "sourcePins": [
+    {
+      "path": ".gitmodules",
+      "bytes": 3970,
+      "sha256": "4f8c5945b3ad2cdad05fa79bf6e9e2f5c1b02074f7f8b8391ae3a58494d3d5b9"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Den.csproj",
+      "bytes": 525,
+      "sha256": "65b775f22ea951c66b762fc14c5cb752b2aaf0760da059c121dad2208ec12afa"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Dulche.Runtime.csproj",
+      "bytes": 1160,
+      "sha256": "6815183be9c760e769070254b86cd2689c7d3e0006a7b2b5366c6d0f6c9ea80d"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "bytes": 2581,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+    },
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "bytes": 1745,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/FileHomeCoreStateStore.cs",
+      "bytes": 17413,
+      "sha256": "7477d619f22c350cdd15ddfa732ba56b259f9a27f42266d82b4b3c1d483ced35"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+      "bytes": 7402,
+      "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "bytes": 26062,
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreStateService.cs",
+      "bytes": 1340,
+      "sha256": "8b12dc8cb184428442e2990b1c3a0c57f39d5c9437a2d5ce76094aec526faebb"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeProductivityEngine.cs",
+      "bytes": 36577,
+      "sha256": "b137ac2a2e6594aa3c7a5dcd3562ebf8f685a9b7487231ae60fbda4e37f3311a"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeCuiScene.cs",
+      "bytes": 35989,
+      "sha256": "8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806"
+    },
+    {
+      "path": "9to1 Workspace/Home/UI/Home.cui",
+      "bytes": 11861,
+      "sha256": "13c80c592b71831a21cfe9bec065f901c6d7d3df35575ff77def6c079e0a59fc"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+      "bytes": 1922,
+      "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "bytes": 700,
+      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "bytes": 375,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
+    },
+    {
+      "path": "NuGet.Config",
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+      "bytes": 2315,
+      "sha256": "ab1a0ab1fa185d4b66ef6f75d66546be457481947cc655cb164a9842a6b5344c"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "bytes": 4607,
+      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "bytes": 13971,
+      "sha256": "b1fd87d2d04fc49b5e1efae86c776d18044e0ddee1be49fd961edc62985d5a9d"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+      "bytes": 580,
+      "sha256": "c982787059aa506a2ff687ce1a178d6e6212d158e410408a2839a09392a7fdba"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "bytes": 12801,
+      "sha256": "f0c4c86cf65aeed50112e5cae6f7c5ef0ffd5e9dd7558a3b9cbc70f0f96230d6"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "bytes": 11653,
+      "sha256": "1554ba89446e238ad4aba99ed7043e0bc1d9f85daf0a0cad2567aad0c4458d1c"
+    },
+    {
+      "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+      "bytes": 453,
+      "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504"
+    },
+    {
+      "path": "framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CakeOS.Cui.Build.Tasks.csproj",
+      "bytes": 768,
+      "sha256": "461a2da8c03cd55545638080e3594829f80ea515c376866c345e39b361f82b57"
+    },
+    {
+      "path": "framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj",
+      "bytes": 1070,
+      "sha256": "f4ec1368c3f9563d3e6fcad54704dad08249e2f9e38786a4c33950d994549434"
+    },
+    {
+      "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+      "bytes": 495,
+      "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0"
+    },
+    {
+      "path": "framework/CUI/DevTools/src/Haven.CUI.DevTools.csproj",
+      "bytes": 624,
+      "sha256": "4995da61f6dd48bf8f60ab2e62df8b5b56be2d68e09d83411ae8d266c6407501"
+    },
+    {
+      "path": "framework/CUI/Directory.Packages.props",
+      "bytes": 429,
+      "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+    },
+    {
+      "path": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+      "bytes": 405,
+      "sha256": "38bb6257791a2ca650635f1b75b0ab186c70c99504220d7ef49223dd14dfdd36"
+    },
+    {
+      "path": "framework/CUI/NuGet.Config",
+      "bytes": 418,
+      "sha256": "0197c948f13e2b8d0e1f52d33687185ed29bc7c01892526985dac04a79e48f81"
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90822,
+      "sha256": "aabc12960e3bbc7579da6c840cefa45dff5bee0b397dde7279e34df96a6ed157"
+    },
+    {
+      "path": "framework/CUI/Themes/CakeOS.Cui.Themes.csproj",
+      "bytes": 690,
+      "sha256": "448c242f70873c71b4ec3d6e05cebe032c678f3f7356a667acba5de4bc821de6"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/Directory.Build.props",
+      "bytes": 1496,
+      "sha256": "e3417886b5acf82051e39a84e890bd94c700b242c4bff6e91779843a30e48ef0"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/Directory.Build.targets",
+      "bytes": 208,
+      "sha256": "52a2848bddd7efaeffced859a851d20bdff591579dd1dffda6a92a6c9d60fb43"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/Directory.Packages.props",
+      "bytes": 5112,
+      "sha256": "e49b9733247305ea12e3acae176b34ceedb8cc549423169b68cd264972d26eb5"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/NuGet.Config",
+      "bytes": 881,
+      "sha256": "d3fd147f2b7d433f0059fdb1ce74946d1087d65a42019958ce0626a33e49727e"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj",
+      "bytes": 4348,
+      "sha256": "01bcaf5a6d9829ded172e0f9eb1ac61a28f15b8f1ff8485d345f116f8f3fac16"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "bytes": 4911,
+      "sha256": "3dc8f5c1912653db614982f501d85bdafac2cb200a4d6957920570b825797f1a"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Input/IKeyboardDevice.cs",
+      "bytes": 888,
+      "sha256": "e44fde43fde5eb018eb16ea20ca5602627017bff0760ec0bc235dec464905c99"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.Invoke.cs",
+      "bytes": 31379,
+      "sha256": "7a0d50b80f261a3779363b5b57164792ca620f3ffdbe45b50175d9c0ccd22d29"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.MainLoop.cs",
+      "bytes": 6839,
+      "sha256": "d8efc8770c0afa72c207debf6aee54b0cad86d36cc135fbb17475c9d87e25c30"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/Dispatcher.cs",
+      "bytes": 5568,
+      "sha256": "4ebf10c67ec14c51c1efe2401965288cb935651924f5772b5172665f5d7e8602"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Threading/DispatcherOperation.cs",
+      "bytes": 14393,
+      "sha256": "cfcff802dec0a4dbf673503f1bd02c30b30f2a3129e609e9453425588823c6cf"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "bytes": 7712,
+      "sha256": "60e3a5c83a59dfe656f93d266890a95019f5dc50002287d296a860b549ed49ab"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ClassicDesktopStyleApplicationLifetime.cs",
+      "bytes": 10518,
+      "sha256": "09c0afba6fe4004c671217ac430e86c0ea0d8dace1e722cb6a83a83c56b8225a"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IClassicDesktopStyleApplicationLifetime.cs",
+      "bytes": 2930,
+      "sha256": "b9ff25759fe821bf96bb1ae2d149fea132295173967fbd12a07094124cb68408"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/IControlledApplicationLifetime.cs",
+      "bytes": 902,
+      "sha256": "de3778330edc8556c40429a559b93f95d2d7a4e380852a8b747ae2d447acff10"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ApplicationLifetimes/ShutdownRequestedEventArgs.cs",
+      "bytes": 305,
+      "sha256": "ae9ec93a6a6544121eb17eea013c2146cf011510c282eec538afeb7d2a533768"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj",
+      "bytes": 2661,
+      "sha256": "585fc69d868dc41657a901c9b63b804453dbdf84aaa37c291ccad08b5552925c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj",
+      "bytes": 825,
+      "sha256": "0ee7b483e6b0109f6c630d09e71dbe99c0bc29fc58519ca3dba8184d6fc95355"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj",
+      "bytes": 892,
+      "sha256": "e08808c6fe4379354af6d1f260ea4d5ca7d4a82a5c1c55d1f4df83ec5bdce3fb"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj",
+      "bytes": 496,
+      "sha256": "48219608db2b7a276ad8c21457b457eb301e7634f22fe9a67339f06a6e641501"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
+      "bytes": 3088,
+      "sha256": "83673ae1ee3859b875aa1b91e6469b978ddf36848e2ee186742f966cdc332435"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj",
+      "bytes": 2288,
+      "sha256": "6cedd5f053b4bca3bfe1389b58c9232e95a06cf3e5524734a65b6db805a11804"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj",
+      "bytes": 580,
+      "sha256": "e8674f3b68341ab7700443e30038de65768242144b28b6fe0c6cdbc7e1e47117"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+      "bytes": 574,
+      "sha256": "8fa5bd2315a68f5baf930fefd73be437110bedb663a25425756cab7a781a17cc"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj",
+      "bytes": 1511,
+      "sha256": "1382b15489d80637e1880307e334a7515a4fe00f2cdbca4fc5df1ec59643d0f0"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj",
+      "bytes": 814,
+      "sha256": "9d290786824bf201dd0f4c496c34b58cc60dc7810d778fb131d1ceb2bdf57453"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj",
+      "bytes": 762,
+      "sha256": "a72e9a35c6a735e48973e5129e01e5f80e1a3f9d016231921bbef0edd9d663f0"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj",
+      "bytes": 807,
+      "sha256": "cf11ea0e4211ecf947cfde57afbf2d83d68564a74c853ceb5576731ef204a935"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj",
+      "bytes": 765,
+      "sha256": "0e93a888d1657cfa52a144ab6f42850b5f91155237b5a6993292c0f3b10d8088"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj",
+      "bytes": 1274,
+      "sha256": "5946ac56ea972919e672d8aa793dfedf166268939369c2f4f6a24cf8dd0bd936"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "bytes": 316,
+      "sha256": "1bf7806839ad3ee73d0f6fe52fa20fb2dc769d07056b891259f7691acea503ee"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
+      "bytes": 1084,
+      "sha256": "a35af8f3ecb1dbf40a9e71428e0427d91f3cb7a8c8ba8db6c5075bacb43df242"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj",
+      "bytes": 1862,
+      "sha256": "071fa8b77582e8de24d63c4d5e8ace5c49170891214f5ad2dd29d0a4fff6ce98"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj",
+      "bytes": 4584,
+      "sha256": "54ecc1584f5f7504e17b1388ff683c6ada93cc6204eb784fcc49dd57f2da4cf1"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj",
+      "bytes": 1411,
+      "sha256": "cf467012d8dde584f87b58060cc22315f23b7b11dc839e0369d8069cdb9a84b3"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+      "bytes": 1643,
+      "sha256": "9f928d1f0f55adfe47910e0e30893a3b26cdd77a4450f46623d8b2ca7057dc75"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj",
+      "bytes": 896,
+      "sha256": "d396b2c58b745d7b2eda7ec82d26c67eb99a8cfd7505e850e1901549ba84691f"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+      "bytes": 3027,
+      "sha256": "967071bb22cca3a0d531a87b7301cbd8d4b7029f692c15a6bf92be438a66ff22"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
+      "bytes": 808,
+      "sha256": "293663ec6575c1c32b18d4c4ad5fa232f984dbbd42e309b78dbebacb01c3c9f1"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj",
+      "bytes": 954,
+      "sha256": "3740d7b8c569040dd1ab4ef25395bcf242906c0842b5acba6441dd397df6950a"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj",
+      "bytes": 1105,
+      "sha256": "a70d943298590acecca70dd89693d1d86fe42d4d0522844937d1abb1cb1992cb"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj",
+      "bytes": 1014,
+      "sha256": "33166e06a9189dc564bf298fd25594dc9b3ed5ddb1739beafbbd82fa70ad0a3c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj",
+      "bytes": 1586,
+      "sha256": "d583e2ebb01116f2d777cd79c80f40214da58aac5860c5811e88428a4dc7d76d"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/tools/Directory.Build.props",
+      "bytes": 143,
+      "sha256": "e45c5ee4cb7630d40067d4213ae38c7d28c5d411883e21e33d8bc6f8a3c8da08"
+    },
+    {
+      "path": "global.json",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    }
+  ],
+  "requiredGitlinks": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+      "commit": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "commit": "864a05282841bf04006890f04d11d60d1a046aa9"
+    }
+  ],
+  "ordinaryTests": {
+    "project": "apps/Home/tests/AvaloniaHome.Tests/AvaloniaHome.Tests.csproj",
+    "total": 6,
+    "originalRender": 1,
+    "originalLifetimeNewCases": 5,
+    "measuredAssertions": null,
+    "sourceAssertionCallsNewClass": 54,
+    "originalMethods": [
+      "Native_home_host_loads_canonical_cui_into_a_measured_window",
+      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit",
+      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services",
+      "Original_close_is_published_before_Core_callback_reentry",
+      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close"
+    ],
+    "casesByMethod": {
+      "Native_home_host_loads_canonical_cui_into_a_measured_window": 1,
+      "Held_original_work_and_actual_Core_stop_settle_before_desktop_exit": 1,
+      "Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services": 2,
+      "Original_close_is_published_before_Core_callback_reentry": 1,
+      "Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close": 1
+    }
+  },
+  "originalForcedFailure": {
+    "source": "7e3e6f272c4353daf15fb00c5fbc3eb5388eea20",
+    "run": 37205981853,
+    "job": 111447135076,
+    "forcedCleanup": true,
+    "exitCode": -1,
+    "status": "RETAINED_ORIGINAL_FAILURE_NO_ACCEPTANCE",
+    "retainedSeparateFirstCompilerRun": 37224785297
+  },
+  "qualification": "Root-owned disposable Windows source compile and original native explicit quit only; ordinary closed-window external reopen/activation, installed authority/signing/clean-PC/donor/full Home acceptance remain NOT_RUN.",
+  "resourceBounds": {
+    "jobMinutes": 60,
+    "requiredOutputDriveFreeBytes": 8589934592,
+    "perLogPostCompletionMaximumBytes": 8388608,
+    "maximumRawZipParts": 8,
+    "rawPartMaximumBytes": 19922944,
+    "nativeVisibleWindowSeconds": 45,
+    "nativeFocusSeconds": 5,
+    "nativeShutdownSeconds": 45,
+    "automaticAggregateDiskGrowthOrRSSMonitor": false,
+    "forcedShutdownPermitted": false,
+    "nativeOutputDrainSeconds": 5
+  },
+  "initialHomeWholeSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+  "currentHomeSourceDelivery": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+  "currentHomeSourcePeerSHA256": "c4d8ae485d7b2131f747bf6f379a1add9538776ef7540b98c9ed0885306e687e",
+  "currentWholeHomeBodies": [
+    {
+      "path": "apps/Home/src/AvaloniaHome/Program.cs",
+      "currentRootCommit": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+      "wholeCanonicalSource": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+      "bytes": 13971,
+      "sha256": "b1fd87d2d04fc49b5e1efae86c776d18044e0ddee1be49fd961edc62985d5a9d"
+    },
+    {
+      "path": "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs",
+      "currentRootCommit": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+      "wholeCanonicalSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+      "bytes": 4607,
+      "sha256": "517391077a92d590bdbe9d4ad665d65df08d12db2f31289d54ba89ec94859f72"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+      "currentRootCommit": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+      "wholeCanonicalSource": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+      "bytes": 12801,
+      "sha256": "f0c4c86cf65aeed50112e5cae6f7c5ef0ffd5e9dd7558a3b9cbc70f0f96230d6"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs",
+      "currentRootCommit": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+      "wholeCanonicalSource": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+      "bytes": 26062,
+      "sha256": "f678976034b1c7b24deb3d802168ed81d4829076be724ac3f884a07d10a766d1"
+    },
+    {
+      "path": "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs",
+      "currentRootCommit": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+      "wholeCanonicalSource": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+      "bytes": 11653,
+      "sha256": "1554ba89446e238ad4aba99ed7043e0bc1d9f85daf0a0cad2567aad0c4458d1c"
+    }
+  ],
+  "historicalHomeRecipe": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40 plus separate source-only AvaloniaTask correction0d1d64a5; original372247 MSB4062 retained. New current producer never relabels olde1/df or externalfa7PR9 runtime.",
+  "retainedCurrentHomeFirstNativeControlFailure": {
+    "source": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+    "run": 37228835003,
+    "job": 111514012449,
+    "managedSix": "PASS_SCOPED",
+    "nativePackage": "BUILT_SEALED_UNACCEPTED",
+    "firstNativeQuit": "FAIL_RETAINED",
+    "observedWindowTitle": "Actual launched executable path, not source-defined 9-1 Home GUI title",
+    "originalCuiOutputTransport": "Actual original stdout recorded ASCII hyphen for source em-dash; successor still requires canonical StackPanel root marker and current unique native GUI title",
+    "secondProcessAndProfileReopen": "NOT_RUN"
+  }
+}
