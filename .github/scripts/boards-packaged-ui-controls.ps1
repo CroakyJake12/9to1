@@ -203,7 +203,8 @@ function Observe-SaveLabel([string]$StatusPrefix, [bool]$Exact = $true) {
             $result.storageStatusFailureDiagnostic = $diagnostic
             Capture-Window 'storage-status-diagnostic-window.png'
         } catch { $result.storageStatusDiagnosticFailure = [ordered]@{ type = $_.Exception.GetType().FullName; message = $_.Exception.Message } }
-        Write-Result
+        try { Write-Result }
+        catch { $result.storageStatusDiagnosticWriteFailure = [ordered]@{ type = $_.Exception.GetType().FullName; message = $_.Exception.Message } }
         throw $statusObservationFailure
     }
     Check (-not $process.HasExited -and $observed.element.Current.ProcessId -eq $process.Id) 'Observed save-state text belongs to the exact live packaged app'
