@@ -1,0 +1,142 @@
+{
+  "artifacts": [
+    {
+      "bytes": 40226,
+      "id": 11295956952,
+      "innerBytes": 277060,
+      "innerSha256": "8700862cc1cb3e1a945e81e463b7c7f5204b52950a306b5c29cafff7fd02a766",
+      "lane": "owning",
+      "member": "manifest.json",
+      "name": "astra-linux-native-owning-manifest-5b62ae68469459d88f16360233768058346d5695",
+      "role": "index",
+      "sha256": "604b820a6277115fe94667788567206f701f54ca0abfc9085fcd0a4d0579f1d1"
+    },
+    {
+      "bytes": 27279638,
+      "id": 11296340866,
+      "innerBytes": 27279498,
+      "innerSha256": "2d08c315840933c7f43d191e8cce44cc8fbf0d29dfc4ee119fdf2f03efaeba9d",
+      "lane": "owning",
+      "member": "bundle-00.zip",
+      "name": "astra-linux-native-owning-bundle-00-5b62ae68469459d88f16360233768058346d5695",
+      "part": 0,
+      "role": "part",
+      "sha256": "1e4e79e6589562ab31121ac7d65be67c9f41c28c6aa08bc67826aa4a58dbecdd"
+    },
+    {
+      "bytes": 20571352,
+      "id": 11296211239,
+      "innerBytes": 20571212,
+      "innerSha256": "9a36029429ce1d1d822b807a32e8c3157743e05027ecf5b3136baddbd4dd6216",
+      "lane": "owning",
+      "member": "bundle-01.zip",
+      "name": "astra-linux-native-owning-bundle-01-5b62ae68469459d88f16360233768058346d5695",
+      "part": 1,
+      "role": "part",
+      "sha256": "ba6d7f0a3c4fbc7be798e30ee6dd0c02c0c20ac5aa6c2dbe84e958b5deb634ec"
+    }
+  ],
+  "downloadHosts": {
+    "authorizationForwarded": false,
+    "pathPrefix": "/actions-results/",
+    "redirectsAllowed": 1,
+    "regex": "^productionresultssa[0-9]{1,3}\\.blob\\.core\\.windows\\.net$"
+  },
+  "expectedCounts": {
+    "owning": {
+      "bytes": 47794126,
+      "files": 558,
+      "nonempty": 513,
+      "pieces": 514
+    }
+  },
+  "head": "5b62ae68469459d88f16360233768058346d5695",
+  "limits": {
+    "apiAttempts": 16,
+    "apiBodyBytes": 131072,
+    "archiveAttemptBytes": 134217728,
+    "diagnosticSlotBytes": 262144,
+    "expandedAttemptBytes": 402653184,
+    "filesystemFreeFloorBytes": 943718400,
+    "maxOutputFiles": 768,
+    "outputAllocationReservationBytes": 67108864,
+    "outputAttemptBytes": 67108864,
+    "pdbExpandedBytes": 16777216,
+    "ramAvailableFloorBytes": 536870912,
+    "ramWorkingSetBytes": 536870912,
+    "reportSlotBytes": 2097152
+  },
+  "repository": "CroakyJake12/9to1",
+  "required": {
+    "owning": [
+      "receipt.json",
+      "whole-caller-receipt.json",
+      "root-build.log",
+      "root-process/root-test.log",
+      "root-process/trx/root.trx",
+      "root-process/23507-pending.json",
+      "root-process/expected-managed-launch.json",
+      "root-process/root-process-receipt.json",
+      "synthetic-setup-public-proof/setup-receipt.json",
+      "synthetic-setup-public-proof/protected-state-cleanup.json",
+      "synthetic-setup-public-proof/hosted-desktop-parent-permission-restoration.json",
+      "synthetic-setup-public-proof/cleanup-exact-user.stderr",
+      "native-compile-receipt.json",
+      "atomic-spawn.c",
+      "actual-sdk-input-pins.json",
+      "actual-generated-output-pins.json",
+      "trx/home.trx",
+      "trx/os.trx",
+      "synthetic-setup-public-proof/hosted-credential-policy-after-root-drain.json",
+      "synthetic-setup-public-proof/hosted-credential-policy-attempt.json",
+      "synthetic-setup-public-proof/hosted-credential-policy-before-root-tests.json",
+      "synthetic-setup-public-proof/hosted-credential-policy-original.json",
+      "synthetic-setup-public-proof/hosted-credential-policy-protection.json",
+      "synthetic-setup-public-proof/hosted-credential-policy-restoration.json",
+      "hosted-credential-policy-inert-controls.log"
+    ]
+  },
+  "runAttempt": 1,
+  "runId": 37181076906,
+  "schema": 1,
+  "selection": {
+    "binarySuffixesNotPublished": [
+      ".dll",
+      ".pdb",
+      ".so",
+      ".a",
+      ".der",
+      ".exe",
+      ".zip"
+    ],
+    "qualification": "All558 original owning full files and514 pieces must replay before full selected text publication. Each of19 nontext original binary bodies remains fully hashed and represented, never executed or emitted. Regression/resource families and unavailable additional source are not admitted. Complete original task physical symbol witness is observational only.",
+    "wholePrefixes": [],
+    "wholeSuffixes": [
+      ".log",
+      ".json",
+      ".stdout",
+      ".stderr",
+      ".txt",
+      ".xml",
+      ".trx",
+      ".py",
+      ".cs",
+      ".props",
+      ".targets",
+      ".yml",
+      ".yaml",
+      ".pem",
+      ".c",
+      ".desktop",
+      ".9to1-install"
+    ]
+  },
+  "sourceBranch": "validation/astra-linux-native-signed-current22-full-21",
+  "taskPe": {
+    "bytes": 754176,
+    "lane": "owning",
+    "path": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "sha256": "dc3689183fc370354837ae315bcb48f24cace153c27c7b69cb87f22d80a227d8"
+  },
+  "tree": "3592a15b899c89d0a44b98ea3b2dd983e5f0c57b"
+}

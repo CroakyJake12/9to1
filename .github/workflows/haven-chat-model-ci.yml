@@ -191,3 +191,452 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+
+  linux21-original-custody:
+    name: Linux21 original evidence custody only
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/validation/sol-happy-linux21-original-custody-20261004' && inputs.expected_commit == github.sha && inputs.cut_manifest_sha256 == '51727ffe16feae532cb6c6e4fc8f3883663975b8dcb8d309ee1325e0d4fadc90'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Verify root-owned reader source and replay only three pinned original artifacts
+        timeout-minutes: 20
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import base64, hashlib, json, os, re, sys, urllib.request
+          class Refusal(Exception):
+              pass
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, message, headers, newurl):
+                  return None
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def settle(errors):
+              if len(errors) == 1:
+                  raise errors[0]
+              if errors:
+                  raise BaseExceptionGroup('Trusted reader bootstrap and independent IO failures.', errors)
+          def safe(errors):
+              result=[]
+              for error in errors:
+                  row={'type':type(error).__name__,'code':'BOOTSTRAP_OR_FINAL_IO_FAILURE'}
+                  if isinstance(error, BaseExceptionGroup):
+                      row['causes']=safe(error.exceptions)
+                  result.append(row)
+              return result
+          def unique(pairs):
+              output={}
+              for key,value in pairs:
+                  require(key not in output,'BOOTSTRAP_DUPLICATE_JSON')
+                  output[key]=value
+              return output
+          requests_attempted=0
+          bytes_reserved=0
+          def source(path, expected_bytes, expected_sha):
+              global requests_attempted,bytes_reserved
+              require(requests_attempted<2,'BOOTSTRAP_REQUEST_CAP')
+              requests_attempted+=1
+              bytes_reserved+=131072
+              require(bytes_reserved<=262144,'BOOTSTRAP_ATTEMPT_BYTES_CAP')
+              require(os.environ.get('GITHUB_REPOSITORY')=='CroakyJake12/9to1' and os.environ.get('GITHUB_REF')=='refs/heads/validation/sol-happy-linux21-original-custody-20261004' and os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch','BOOTSTRAP_CONTEXT_REFUSED')
+              revision=os.environ['GITHUB_SHA']
+              require(re.fullmatch('[0-9a-f]{40}',revision) is not None,'BOOTSTRAP_OWN_COMMIT_REFUSED')
+              token=os.environ.get('GH_TOKEN','')
+              require(token and '\n' not in token and '\r' not in token,'BOOTSTRAP_API_TOKEN_REFUSED')
+              url='https://api.github.com/repos/CroakyJake12/9to1/contents/'+path+'?ref='+revision
+              request=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'sol-happy-linux21-trusted-reader-bootstrap','Accept-Encoding':'identity'})
+              opener=urllib.request.build_opener(NoRedirect())
+              response=None;errors=[];raw=None
+              try:
+                  response=opener.open(request,timeout=60)
+                  require(response.status==200 and response.headers.get('Content-Encoding','identity').lower()=='identity','BOOTSTRAP_API_RESPONSE_REFUSED')
+                  held=bytearray()
+                  while True:
+                      part=response.read(min(65536,131072-len(held)+1))
+                      if not part:
+                          break
+                      held.extend(part)
+                      require(len(held)<=131072,'BOOTSTRAP_SOURCE_JSON_CAP')
+                  value=json.loads(bytes(held).decode('utf-8',errors='strict'),object_pairs_hook=unique)
+                  require(value['type']=='file' and value['path']==path and value['size']==expected_bytes and value['encoding']=='base64','BOOTSTRAP_SOURCE_DESCRIPTOR_REFUSED')
+                  encoded=''.join(value['content'].split())
+                  raw=base64.b64decode(encoded,validate=True)
+                  require(len(raw)==expected_bytes and hashlib.sha256(raw).hexdigest()==expected_sha,'BOOTSTRAP_SOURCE_WHOLE_HASH_REFUSED')
+                  require(hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==value['sha'],'BOOTSTRAP_SOURCE_GIT_BLOB_REFUSED')
+              except BaseException as error:
+                  if response is None and isinstance(error,urllib.error.HTTPError):
+                      response=error
+                  add(errors,error)
+              if response is not None:
+                  try:
+                      response.close()
+                  except BaseException as error:
+                      add(errors,error)
+              settle(errors)
+              return raw
+          errors=[]
+          namespace=None
+          try:
+              require(sys.version_info>=(3,11) and sys.flags.optimize==0,'BOOTSTRAP_PYTHON_REFUSED')
+              code=source('.github/scripts/sol-happy-linux21-original-custody.py',54089,'bb74778d2e342820fdc9c0208ec0b3bf8cfc9f1d100acf922bf7e35699574ea4')
+              configuration=source('.github/validation/sol-happy-linux21-original-custody.json',4864,'51727ffe16feae532cb6c6e4fc8f3883663975b8dcb8d309ee1325e0d4fadc90')
+              namespace={'__name__':'sol_happy_owned_original_custody_reader'}
+              # Only exact root-owned reader source is executed; original artifact payloads are data.
+              exec(compile(code,'root-owned-linux21-original-custody-reader','exec'),namespace)
+              namespace['main'](json.loads(configuration.decode('utf-8',errors='strict'),object_pairs_hook=unique))
+          except BaseException as error:
+              add(errors,error)
+          if errors:
+              try:
+                  project=namespace['projections'](errors) if namespace is not None and 'projections' in namespace else safe(errors)
+                  print(json.dumps({'status':'Linux21_ORIGINAL_CUSTODY_REFUSED','originalCauses':project,'bootstrapRequestsAttempted':requests_attempted,'bootstrapBytesReserved':bytes_reserved},ensure_ascii=True,sort_keys=True),flush=True)
+              except BaseException as error:
+                  add(errors,error)
+              # Never allow Python to print raw network exceptions, tracebacks or temporary signed URLs.
+              sys.exit(1)
+          PY
+      - name: Retain complete original causal text and replay diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-linux21-original-custody-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/linux21-original-custody-${{ github.run_id }}-${{ github.run_attempt }}/
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish bounded exact complete causal upload paths
+        id: causal_paths
+        if: ${{ always() }}
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import hashlib, json, os, re, stat, sys
+          class Refusal(Exception):
+              pass
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          def add(errors, error):
+              if all(error is not old for old in errors):
+                  errors.append(error)
+          def project(errors):
+              return [{'type':type(error).__name__, 'code':str(error) if isinstance(error, Refusal) else 'SELECTOR_METADATA_IO_FAILURE'} for error in errors]
+          relative_paths = [
+              "diagnostic.json",
+              "replay-report.json",
+              "originals/owning/manifest.json",
+              "originals/owning/actual-native-compiler-version.log",
+              "originals/owning/actual-native-kernel.log",
+              "originals/owning/actual-native-required16.log",
+              "originals/owning/actual-synthetic-root-setup.log",
+              "originals/owning/atomic-spawn.c",
+              "originals/owning/avalonia-build-tasks-build.log",
+              "originals/owning/avalonia-build-tasks-compiled-after.json",
+              "originals/owning/avalonia-build-tasks-compiled-before.json",
+              "originals/owning/avalonia-build-tasks-restore.log",
+              "originals/owning/avalonia-build-tasks-target.stderr",
+              "originals/owning/avalonia-build-tasks-target.stdout",
+              "originals/owning/fixture-tool-actual-published-payload.json",
+              "originals/owning/fixture-tool-publish-build.log",
+              "originals/owning/fixture-tool-publish-query.json",
+              "originals/owning/fixture-tool-publish-query.log",
+              "originals/owning/fixture-tool-publish.log",
+              "originals/owning/fresh-native-helper-compile.log",
+              "originals/owning/home-actual-entry-compile.json",
+              "originals/owning/home-actual-matching-pdb.json",
+              "originals/owning/home-build.log",
+              "originals/owning/home-compiled.json",
+              "originals/owning/home-target-path.stderr",
+              "originals/owning/home-target-path.stdout",
+              "originals/owning/home.log",
+              "originals/owning/hosted-credential-policy-inert-controls.log",
+              "originals/owning/main-restore-HavenOS.Home.Tests.log",
+              "originals/owning/main-restore-NineToOne.Os.Shell.Tests.log",
+              "originals/owning/main-restore-NineToOne.Os.Supervisor.Root.Tests.log",
+              "originals/owning/native-compile-receipt.json",
+              "originals/owning/native-hosted-packages.txt",
+              "originals/owning/native-required16/result.json",
+              "originals/owning/ordinary-process-drain/home/18958-pending.json",
+              "originals/owning/ordinary-process-drain/home/expected-managed-launch.json",
+              "originals/owning/ordinary-process-drain/os/14927-pending.json",
+              "originals/owning/ordinary-process-drain/os/expected-managed-launch.json",
+              "originals/owning/os-actual-entry-compile.json",
+              "originals/owning/os-actual-matching-pdb.json",
+              "originals/owning/os-build.log",
+              "originals/owning/os-compiled.json",
+              "originals/owning/os-target-path.stderr",
+              "originals/owning/os-target-path.stdout",
+              "originals/owning/os.log",
+              "originals/owning/prebuild-input-admission.json",
+              "originals/owning/protected-cleanup.log",
+              "originals/owning/publish-restore-NineToOne.Os.Shell.log",
+              "originals/owning/publish-restore-NineToOne.Os.Supervisor.FixtureTools.log",
+              "originals/owning/publish-tool-framework-Avalonia.Analyzers.CSharp.stderr",
+              "originals/owning/publish-tool-framework-Avalonia.Analyzers.CSharp.stdout",
+              "originals/owning/publish-tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stderr",
+              "originals/owning/publish-tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stdout",
+              "originals/owning/publish-tool-framework-Avalonia.Analyzers.VisualBasic.stderr",
+              "originals/owning/publish-tool-framework-Avalonia.Analyzers.VisualBasic.stdout",
+              "originals/owning/publish-tool-framework-Avalonia.DBus.Generators.stderr",
+              "originals/owning/publish-tool-framework-Avalonia.DBus.Generators.stdout",
+              "originals/owning/publish-tool-framework-Avalonia.Generators.stderr",
+              "originals/owning/publish-tool-framework-Avalonia.Generators.stdout",
+              "originals/owning/publish-tool-framework-DevAnalyzers.stderr",
+              "originals/owning/publish-tool-framework-DevAnalyzers.stdout",
+              "originals/owning/publish-tool-framework-DevGenerators.stderr",
+              "originals/owning/publish-tool-framework-DevGenerators.stdout",
+              "originals/owning/publish-tool-restore-Avalonia.Analyzers.CSharp.log",
+              "originals/owning/publish-tool-restore-Avalonia.Analyzers.CodeFixes.CSharp.log",
+              "originals/owning/publish-tool-restore-Avalonia.Analyzers.VisualBasic.log",
+              "originals/owning/publish-tool-restore-Avalonia.DBus.Generators.log",
+              "originals/owning/publish-tool-restore-Avalonia.Generators.log",
+              "originals/owning/publish-tool-restore-DevAnalyzers.log",
+              "originals/owning/publish-tool-restore-DevGenerators.log",
+              "originals/owning/publish-tool-restores.json",
+              "originals/owning/receipt.json",
+              "originals/owning/root-actual-entry-compile.json",
+              "originals/owning/root-actual-matching-pdb.json",
+              "originals/owning/root-build.log",
+              "originals/owning/root-compiled.json",
+              "originals/owning/root-process/23507-pending.json",
+              "originals/owning/root-process/expected-managed-launch.json",
+              "originals/owning/root-process/root-process-receipt.json",
+              "originals/owning/root-process/root-test.log",
+              "originals/owning/root-process/trx/root.trx",
+              "originals/owning/root-target-path.stderr",
+              "originals/owning/root-target-path.stdout",
+              "originals/owning/root-wrapper.log",
+              "originals/owning/shell-actual-published-payload.json",
+              "originals/owning/shell-publish-build.log",
+              "originals/owning/shell-publish-query.json",
+              "originals/owning/shell-publish-query.log",
+              "originals/owning/shell-publish.log",
+              "originals/owning/synthetic-setup-public-proof/actual-target-user-home-path.stderr",
+              "originals/owning/synthetic-setup-public-proof/actual-target-user-home-path.stdout",
+              "originals/owning/synthetic-setup-public-proof/caller-drain-authorized.json",
+              "originals/owning/synthetic-setup-public-proof/cleanup-exact-user.stderr",
+              "originals/owning/synthetic-setup-public-proof/cleanup-exact-user.stdout",
+              "originals/owning/synthetic-setup-public-proof/commands.json",
+              "originals/owning/synthetic-setup-public-proof/fixture-tool-stage-ownership.json",
+              "originals/owning/synthetic-setup-public-proof/fresh-target-user.stderr",
+              "originals/owning/synthetic-setup-public-proof/fresh-target-user.stdout",
+              "originals/owning/synthetic-setup-public-proof/hosted-credential-policy-after-root-drain.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-credential-policy-attempt.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-credential-policy-before-root-tests.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-credential-policy-original.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-credential-policy-protection.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-credential-policy-restoration.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-desktop-parent-original-modes.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-desktop-parent-permission-restoration.json",
+              "originals/owning/synthetic-setup-public-proof/hosted-desktop-parent-protection.json",
+              "originals/owning/synthetic-setup-public-proof/maintained-first-install-helper.stderr",
+              "originals/owning/synthetic-setup-public-proof/maintained-first-install-helper.stdout",
+              "originals/owning/synthetic-setup-public-proof/maintained-first-install-home.stderr",
+              "originals/owning/synthetic-setup-public-proof/maintained-first-install-home.stdout",
+              "originals/owning/synthetic-setup-public-proof/maintained-first-install-owner.stderr",
+              "originals/owning/synthetic-setup-public-proof/maintained-first-install-owner.stdout",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/actual-target-user-home-path/22377-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/actual-target-user-home-path/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/cleanup-exact-user/25770-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/cleanup-exact-user/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/fresh-target-user/22368-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/fresh-target-user/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-helper/22357-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-helper/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-home/22334-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-home/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-owner/22346-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-owner/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/public-all-three-test-policies-before-preparation/22333-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/public-all-three-test-policies-before-preparation/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/public-test-policy-directory/22332-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/public-test-policy-directory/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/root-immutable-runtime-directory/22382-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/root-immutable-runtime-directory/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-helper/22324-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-helper/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-home/22306-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-home/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-owner/22315-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-owner/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/target-user-xdg-directories/22376-pending.json",
+              "originals/owning/synthetic-setup-public-proof/owned-session-drain/target-user-xdg-directories/expected-managed-launch.json",
+              "originals/owning/synthetic-setup-public-proof/protected-directory-before-enrollment.json",
+              "originals/owning/synthetic-setup-public-proof/protected-state-cleanup.json",
+              "originals/owning/synthetic-setup-public-proof/protected-state-ownership.json",
+              "originals/owning/synthetic-setup-public-proof/public-all-three-test-policies-before-preparation.stderr",
+              "originals/owning/synthetic-setup-public-proof/public-all-three-test-policies-before-preparation.stdout",
+              "originals/owning/synthetic-setup-public-proof/public-test-policy-directory.stderr",
+              "originals/owning/synthetic-setup-public-proof/public-test-policy-directory.stdout",
+              "originals/owning/synthetic-setup-public-proof/root-immutable-runtime-directory.stderr",
+              "originals/owning/synthetic-setup-public-proof/root-immutable-runtime-directory.stdout",
+              "originals/owning/synthetic-setup-public-proof/setup-receipt.json",
+              "originals/owning/synthetic-setup-public-proof/staged-fixture-tool-payload.json",
+              "originals/owning/synthetic-setup-public-proof/synthetic-helper/9to1-os-atomic-spawn-supervisor.desktop",
+              "originals/owning/synthetic-setup-public-proof/synthetic-helper/producer-receipt.json",
+              "originals/owning/synthetic-setup-public-proof/synthetic-helper/synthetic-atomic-helper.9to1-install",
+              "originals/owning/synthetic-setup-public-proof/synthetic-helper/synthetic-test-trust.json",
+              "originals/owning/synthetic-setup-public-proof/synthetic-home/9to1-os-shell.desktop",
+              "originals/owning/synthetic-setup-public-proof/synthetic-home/producer-receipt.json",
+              "originals/owning/synthetic-setup-public-proof/synthetic-home/synthetic-home.9to1-install",
+              "originals/owning/synthetic-setup-public-proof/synthetic-home/synthetic-test-trust.json",
+              "originals/owning/synthetic-setup-public-proof/synthetic-owner/9to1-os-installed-application-widget-owner.desktop",
+              "originals/owning/synthetic-setup-public-proof/synthetic-owner/producer-receipt.json",
+              "originals/owning/synthetic-setup-public-proof/synthetic-owner/synthetic-test-trust.json",
+              "originals/owning/synthetic-setup-public-proof/synthetic-owner/synthetic-widget-owner.9to1-install",
+              "originals/owning/synthetic-setup-public-proof/synthetic-sign-helper.stderr",
+              "originals/owning/synthetic-setup-public-proof/synthetic-sign-helper.stdout",
+              "originals/owning/synthetic-setup-public-proof/synthetic-sign-home.stderr",
+              "originals/owning/synthetic-setup-public-proof/synthetic-sign-home.stdout",
+              "originals/owning/synthetic-setup-public-proof/synthetic-sign-owner.stderr",
+              "originals/owning/synthetic-setup-public-proof/synthetic-sign-owner.stdout",
+              "originals/owning/synthetic-setup-public-proof/synthetic-three-public-policies.json",
+              "originals/owning/synthetic-setup-public-proof/target-user-xdg-directories.stderr",
+              "originals/owning/synthetic-setup-public-proof/target-user-xdg-directories.stdout",
+              "originals/owning/synthetic-setup-receipt.json",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CSharp.stderr",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CSharp.stdout",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stderr",
+              "originals/owning/tool-framework-Avalonia.Analyzers.CodeFixes.CSharp.stdout",
+              "originals/owning/tool-framework-Avalonia.Analyzers.VisualBasic.stderr",
+              "originals/owning/tool-framework-Avalonia.Analyzers.VisualBasic.stdout",
+              "originals/owning/tool-framework-Avalonia.DBus.Generators.stderr",
+              "originals/owning/tool-framework-Avalonia.DBus.Generators.stdout",
+              "originals/owning/tool-framework-Avalonia.Generators.stderr",
+              "originals/owning/tool-framework-Avalonia.Generators.stdout",
+              "originals/owning/tool-framework-DevAnalyzers.stderr",
+              "originals/owning/tool-framework-DevAnalyzers.stdout",
+              "originals/owning/tool-framework-DevGenerators.stderr",
+              "originals/owning/tool-framework-DevGenerators.stdout",
+              "originals/owning/tool-restore-Avalonia.Analyzers.CSharp.log",
+              "originals/owning/tool-restore-Avalonia.Analyzers.CodeFixes.CSharp.log",
+              "originals/owning/tool-restore-Avalonia.Analyzers.VisualBasic.log",
+              "originals/owning/tool-restore-Avalonia.DBus.Generators.log",
+              "originals/owning/tool-restore-Avalonia.Generators.log",
+              "originals/owning/tool-restore-DevAnalyzers.log",
+              "originals/owning/tool-restore-DevGenerators.log",
+              "originals/owning/toolchain.log",
+              "originals/owning/trx/home.trx",
+              "originals/owning/trx/os.trx",
+              "originals/owning/trx/root.trx",
+              "originals/owning/whole-caller-receipt.json",
+              "originals/owning/whole-caller.log",
+              "originals/owning/workloads.log"
+          ]
+          expected_count = 200
+          expected_sha = '8348015e06dc1eedca386700dfd258c9cbbf531c9c5fe6877a0e1273228fbfa4'
+          lane = 'linux21'
+          branch = 'validation/sol-happy-linux21-original-custody-20261004'
+          errors = []
+          handles = []
+          reserved_bytes = 0
+          write_attempts = 0
+          payload = None
+          try:
+              require(sys.version_info >= (3, 11) and sys.flags.optimize == 0, 'SELECTOR_PYTHON_REFUSED')
+              require(len(relative_paths) == expected_count and len(set(relative_paths)) == expected_count, 'SELECTOR_COUNT_REFUSED')
+              require(hashlib.sha256(('\n'.join(relative_paths)+'\n').encode()).hexdigest() == expected_sha, 'SELECTOR_WHOLE_LIST_REFUSED')
+              require(all(p and not p.startswith('/') and '\\' not in p and '\x00' not in p and all(x not in ('', '.', '..') for x in p.split('/')) for p in relative_paths), 'SELECTOR_PATH_REFUSED')
+              require(os.environ.get('GITHUB_REPOSITORY') == 'CroakyJake12/9to1' and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch' and os.environ.get('GITHUB_REF') == 'refs/heads/'+branch, 'SELECTOR_CONTEXT_REFUSED')
+              require(re.fullmatch('[0-9a-f]{40}', os.environ.get('GITHUB_SHA', '')) is not None, 'SELECTOR_COMMIT_REFUSED')
+              run_id = os.environ.get('GITHUB_RUN_ID', '')
+              attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '')
+              require(re.fullmatch('[1-9][0-9]{0,19}', run_id) is not None and re.fullmatch('[1-9][0-9]{0,9}', attempt) is not None, 'SELECTOR_RUN_REFUSED')
+              root = os.environ.get('RUNNER_TEMP', '')
+              output = os.environ.get('GITHUB_OUTPUT', '')
+              require(root and len(root) <= 4096 and os.path.isabs(root) and os.path.normpath(root) == root and '\x00' not in root, 'SELECTOR_ROOT_REFUSED')
+              require(output and len(output) <= 4096 and os.path.isabs(output) and os.path.normpath(output) == output and os.path.commonpath([root, output]) == root and output != root, 'SELECTOR_OUTPUT_LOCATION_REFUSED')
+              parts = os.path.relpath(output, root).split(os.sep)
+              require(1 <= len(parts) <= 8 and all(x not in ('', '.', '..') and '\\' not in x for x in parts), 'SELECTOR_PARENT_REFUSED')
+              prefix = root+'/'+lane+'-original-custody-'+run_id+'-'+attempt+'/'
+              require('\n' not in prefix and '\r' not in prefix, 'SELECTOR_LINE_REFUSED')
+              delimiter = 'SOL_HAPPY_EXACT_CAUSAL_PATHS_V1'
+              payload_size = len(('paths<<'+delimiter+'\n'+delimiter+'\n').encode())+len(prefix.encode())*expected_count+sum(len(p.encode())+1 for p in relative_paths)
+              require(payload_size <= 65536, 'SELECTOR_METADATA_CAP_REFUSED')
+              payload = ('paths<<'+delimiter+'\n'+'\n'.join(prefix+p for p in relative_paths)+'\n'+delimiter+'\n').encode()
+              require(len(payload) == payload_size, 'SELECTOR_METADATA_SIZE_REFUSED')
+              # Single complete metadata-write reservation before any opening/writing; no refund/retry.
+              # Separate from unchanged original-evidence writer budgets; no originals are copied/read.
+              reserved_bytes = 65536
+              write_attempts = 1
+              print(json.dumps({'status':'SELECTOR_METADATA_WRITE_ATTEMPT','reservedBytes':reserved_bytes,'writeAttempts':write_attempts,'payloadBytes':payload_size,'completePaths':expected_count}), flush=True)
+              require(all(hasattr(os, option) for option in ('O_NOFOLLOW', 'O_DIRECTORY', 'O_CLOEXEC')), 'SELECTOR_NOFOLLOW_UNAVAILABLE')
+              root_fd = os.open(root, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+              handles.append((root_fd, None, root, True))
+              observed = os.fstat(root_fd)
+              require(stat.S_ISDIR(observed.st_mode) and observed.st_uid == os.geteuid(), 'SELECTOR_ROOT_OWNER_REFUSED')
+              free = os.fstatvfs(root_fd)
+              require(free.f_bavail*free.f_frsize >= 943718400+reserved_bytes, 'SELECTOR_FIXED_FLOOR_REFUSED')
+              parent = root_fd
+              for part in parts[:-1]:
+                  fd = os.open(part, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC, dir_fd=parent)
+                  handles.append((fd, parent, part, True))
+                  observed = os.fstat(fd)
+                  require(stat.S_ISDIR(observed.st_mode) and observed.st_uid == os.geteuid(), 'SELECTOR_PARENT_OWNER_REFUSED')
+                  parent = fd
+              fd = os.open(parts[-1], os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC, dir_fd=parent)
+              handles.append((fd, parent, parts[-1], False))
+              observed = os.fstat(fd)
+              require(stat.S_ISREG(observed.st_mode) and observed.st_uid == os.geteuid() and observed.st_nlink == 1 and observed.st_size == 0, 'SELECTOR_FRESH_CONTROL_FILE_REFUSED')
+              offset = 0
+              while offset < len(payload):
+                  n = os.write(fd, payload[offset:])
+                  require(n > 0, 'SELECTOR_CONTROL_WRITE_REFUSED')
+                  offset += n
+              os.fsync(fd)
+              os.lseek(fd, 0, os.SEEK_SET)
+              readback = bytearray()
+              while len(readback) <= len(payload):
+                  chunk = os.read(fd, min(65536, len(payload)+1-len(readback)))
+                  if not chunk:
+                      break
+                  readback.extend(chunk)
+              require(bytes(readback) == payload and os.fstat(fd).st_size == len(payload), 'SELECTOR_SAME_FD_READBACK_REFUSED')
+          except BaseException as error:
+              add(errors, error)
+          finally:
+              for fd, parent, leaf, directory in handles:
+                  try:
+                      held = os.fstat(fd)
+                      linked = os.stat(leaf, dir_fd=parent, follow_symlinks=False) if parent is not None else os.stat(leaf, follow_symlinks=False)
+                      require((held.st_dev, held.st_ino, held.st_uid, stat.S_IFMT(held.st_mode)) == (linked.st_dev, linked.st_ino, linked.st_uid, stat.S_IFMT(linked.st_mode)), 'SELECTOR_CURRENT_LINK_REFUSED')
+                  except BaseException as error:
+                      add(errors, error)
+                  if directory:
+                      try:
+                          os.fsync(fd)
+                      except BaseException as error:
+                          add(errors, error)
+              for fd, _, _, _ in reversed(handles):
+                  try:
+                      os.close(fd)
+                  except BaseException as error:
+                      add(errors, error)
+          try:
+              print(json.dumps({'status':'SELECTOR_METADATA_REFUSED' if errors else 'SELECTOR_METADATA_PUBLISHED','reservedBytes':reserved_bytes,'writeAttempts':write_attempts,'payloadBytes':len(payload) if payload is not None else None,'completePaths':expected_count,'originalsReadCopiedReplayed':0,'originalCauses':project(errors)}), flush=True)
+          except BaseException as error:
+              add(errors, error)
+          if errors:
+              sys.exit(1)
+          PY
+      - name: Retain complete Linux21 causal originals for separate bounded admission
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-happy-linux21-complete-causal-originals-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.causal_paths.outputs.paths }}
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 14
