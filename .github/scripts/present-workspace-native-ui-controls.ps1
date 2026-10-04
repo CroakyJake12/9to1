@@ -345,7 +345,7 @@ public static class PresentPackageInput {
     $result.expectedEdits = [ordered]@{ title = $editedTitle; speakerNotes = $editedNotes }
     Type-Text $title $editedTitle
     $add = Wait-Observed { Find-Control $window 'Present.Slide.Add' } 'Visible native Add slide control'
-    Invoke-Button $add '+ Slide'
+    Invoke-Button $add '+ Add slide'
     [void](Wait-Observed { @(Rail-Buttons $window).Count -eq 2 } 'Actual native slide rail contains two slide identities')
     $notes = Wait-Edit $window 'Present.Slide.Notes' 'Visible native notes editor'
     [void](Observe-Edit $notes 'Speaker notes')
@@ -384,7 +384,7 @@ public static class PresentPackageInput {
     Check ($titleValue.Current.Value -ceq $editedTitle) 'Normal process reopen displays the saved native presentation title'
     $railId = 'Present.Rail.' + ([Guid]$slideId).ToString('N')
     $slide = Wait-Observed { Find-Control $window $railId } 'Reopened native added-slide selector'
-    Invoke-Button $slide 'Slide 2: Untitled slide'
+    Invoke-Button $slide 'Slide 2: Slide 2'
     $notes = Wait-Edit $window 'Present.Slide.Notes' 'Reopened native notes editor'
     $notesValue = Observe-Edit $notes 'Speaker notes'
     Check ($notesValue.Current.Value -ceq $editedNotes -and @(Rail-Buttons $window).Count -eq 2) 'Native process reopen displays saved notes and both canonical slides'
@@ -403,7 +403,7 @@ public static class PresentPackageInput {
     $titleValue = Observe-Edit $title 'Presentation title'
     Check ($titleValue.Current.Value -ceq $editedTitle) 'Native library Open displays the exact saved presentation title'
     $slide = Wait-Observed { Find-Control $window $railId } 'Library-opened added-slide selector'
-    Invoke-Button $slide 'Slide 2: Untitled slide'
+    Invoke-Button $slide 'Slide 2: Slide 2'
     $notes = Wait-Edit $window 'Present.Slide.Notes' 'Library-opened speaker notes'
     $notesValue = Observe-Edit $notes 'Speaker notes'
     Check ($notesValue.Current.Value -ceq $editedNotes) 'Actual native library Open restores saved speaker notes'
