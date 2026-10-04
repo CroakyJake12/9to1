@@ -1,0 +1,35 @@
+{
+  "payloads": [
+    {
+      "path": "README.md",
+      "bytes": 1343,
+      "sha256": "1c64f96131057dfb7d4a158ab47b0b4bbcd976c117f35e3ffb2180a825fd6b93"
+    },
+    {
+      "path": "cloudflare-paid-month-fresh-success.json",
+      "bytes": 804,
+      "sha256": "7fa6d0f778b175132e87295bc53c56d34d52c4990964901004c6d677e431b00b"
+    },
+    {
+      "path": "cloudflare-paid-month-fresh.json",
+      "bytes": 608,
+      "sha256": "74c7894fb4395ac698d6631170e78d1ea78e188a30e0affca94eb3331e8fcee3"
+    },
+    {
+      "path": "cloudflare-paid-month-observation.json",
+      "bytes": 5537,
+      "sha256": "44689b589cb1f75e4fb5a3b60a64eab91f782093ab67fc2e50d8cfdbc3e35628"
+    },
+    {
+      "path": "cloudflare-paid-pricing-projection.json",
+      "bytes": 14315,
+      "sha256": "469a474631f93e5101c23241523d56eed8cd4cb52a340e7345ebe35454fe8220"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1373,
+      "sha256": "47cf183c89f8b332e30c07de34d64de0cf2bbcc7a4e3f139a4fd2f06dd5507f9"
+    }
+  ],
+  "exclusions": []
+}
