@@ -13,14 +13,16 @@ import zipfile
 COMMON_SHA256 = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 PUBLIC_LIMIT = 128 * 1024 * 1024
 SOURCE_ROOTS = ["apps/Web", "framework/CUI", "9to1 Workspace/Home", "9to1 Workspace/shared/src",
-                "9to1 Workspace/Wave", "9to1 Workspace/Write", "Directory.Build.props",
+                "9to1 Workspace/Wave", "9to1 Workspace/Write", "9to1 Workspace/Picture", "Directory.Build.props",
                 "Directory.Build.targets", "global.json", "NuGet.Config"]
 SOURCE_EXT = {".cs", ".csproj", ".cui", ".axaml", ".props", ".targets", ".json", ".mjs", ".js",
               ".lock", ".ttf", ".otf", ".png", ".svg", ".woff", ".woff2", ".html", ".css",
               ".py", ".txt", ".yml", ".yaml"}
 LINKED_CUTS = ["9to1 Workspace/Wave/WaveProject.cs", "9to1 Workspace/Wave/WaveProjectEdits.cs",
                "9to1 Workspace/Wave/WaveTimelineAnnotations.cs", "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
-               "9to1 Workspace/Wave/Program.cs", "apps/Web/Wave/Engine/generate-owner-decoder.py"]
+               "9to1 Workspace/Wave/Program.cs", "apps/Web/Wave/Engine/generate-owner-decoder.py",
+               "9to1 Workspace/Picture/PictureDocument.cs", "9to1 Workspace/Picture/PictureCropService.cs",
+               "9to1 Workspace/Picture/ImageViewportState.cs"]
 
 
 def sha(path):
@@ -53,9 +55,18 @@ def runtime_selection(evaluated):
     for item in evaluated["Items"]["ResolvedRuntimePack"]:
         directory = Path(item["PackageDirectory"])
         if directory.parent.name.lower() == "microsoft.netcore.app.runtime.mono.browser-wasm":
-            selected.append(directory)
-    if len(selected) != 1 or selected[0].name != "10.0.12" or not (selected[0] / "runtimes/browser-wasm/native/dotnet.js").is_file():
-        raise RuntimeError("Actual resolved official browser runtime pack10.0.12 absent")
+            selected.append((directory, item["NuGetPackageVersion"]))
+    if len(selected) != 1 or selected[0][0].name != "10.0.12" or selected[0][1] != "10.0.12":
+        raise RuntimeError("Actual unique selected browser runtime pack10.0.12 absent")
+    directory = selected[0][0]
+    if properties["_WasmRuntimePackVersion"] != "10.0.12" or Path(properties["MicrosoftNetCoreAppRuntimePackDir"]).resolve() != directory.resolve():
+        raise RuntimeError("Actual WASM build-selected runtime version/path differs")
+    native_directory = directory / "runtimes/browser-wasm/native"
+    if Path(properties["MicrosoftNetCoreAppRuntimePackRidNativeDir"]).resolve() != native_directory.resolve():
+        raise RuntimeError("Actual WASM native runtime directory differs")
+    runtime_js = native_directory / "dotnet.js"
+    if not runtime_js.is_file():
+        raise RuntimeError("Actual selected runtime dotnet.js absent")
     native = []
     for item in evaluated["Items"]["NativeFileReference"]:
         path = Path(item["FullPath"])
@@ -65,7 +76,9 @@ def runtime_selection(evaluated):
             native.append({"path": str(path), "bytes": path.stat().st_size, "sha256": sha(path)})
     if not {"libSkiaSharp", "libHarfBuzzSharp"}.issubset(Path(x["path"]).stem for x in native):
         raise RuntimeError("Genuine source/native library closure missing")
-    return {"runtimePack": str(selected[0]), "nativeLibraries": native}
+    return {"runtimePack": str(directory), "runtimeVersion": selected[0][1],
+            "runtimeLoader": {"path": str(runtime_js), "bytes": runtime_js.stat().st_size, "sha256": sha(runtime_js)},
+            "nativeLibraries": native}
 
 
 def source_snapshot(root, tree_log):
@@ -215,15 +228,15 @@ def main():
         libraries = json.loads(assets.read_text())["libraries"]
         if "Microsoft.NET.Sdk.WebAssembly.Pack/10.0.12" not in libraries:
             raise RuntimeError("Actual SDK WebAssembly pack must be10.0.12")
-        commands.run("build", ["dotnet", "build", project, "--no-restore", "-c", "Release",
-                     "--artifacts-path", str(artifacts), "--disable-build-servers", "-m:1", "-nodeReuse:false"] + props, 600)
-        # Resolve genuine workload runtime pack path after build; no NuGet/native
-        # stub or binary selection override is introduced by this driver.
-        evaluated = sdk_json(commands.run("runtime-pack-properties", ["dotnet", "msbuild", project,
+        # Query only after the genuine public Build graph has initialized the
+        # selected WASM runtime; ResolveRuntimePackAssets alone was insufficient.
+        # This is the single ordinary no-restore source build, not a second build
+        # or a private-target/runtime-path substitute.
+        evaluated = sdk_json(commands.run("build", ["dotnet", "msbuild", project,
                      "-p:Configuration=Release", "-p:UseArtifactsOutput=true", "-p:ArtifactsPath=" + str(artifacts),
-                     "-target:ResolveRuntimePackAssets", "-getItem:ResolvedRuntimePack,NativeFileReference",
-                     "-getProperty:RuntimeFrameworkVersion,TargetFramework,RuntimeIdentifier,NETCoreSdkVersion",
-                     "-nodeReuse:false"] + props, 30))
+                     "-target:Build", "-getItem:ResolvedRuntimePack,NativeFileReference",
+                     "-getProperty:TargetFramework,RuntimeIdentifier,NETCoreSdkVersion,MicrosoftNetCoreAppRuntimePackDir,MicrosoftNetCoreAppRuntimePackRidNativeDir,_WasmRuntimePackVersion",
+                     "-m:1", "-nodeReuse:false"] + props, 600))
         write_json(diagnostics / "runtime-pack-properties.json", evaluated)
         write_json(diagnostics / "actual-runtime-and-native-inputs.json", runtime_selection(evaluated))
         public_root = output / "sdk-publish"

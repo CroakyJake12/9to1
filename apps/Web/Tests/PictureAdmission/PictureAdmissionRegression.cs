@@ -11,6 +11,7 @@ using Avalonia.Platform;
 using Avalonia.Skia;
 using Avalonia.Threading;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using HavenOS.Home.Core;
 using HavenOS.Images;
