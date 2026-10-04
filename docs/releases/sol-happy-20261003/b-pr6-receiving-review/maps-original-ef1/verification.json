@@ -1,0 +1,30 @@
+{
+  "state": "ACK_FIRST_ACTUAL_ORIGINAL_MAPS_SIX_SOURCE_RUNTIME_TRX_VERIFIED",
+  "sourceCommit": "ef1d3a7546c130ef5948fab0711ef5d9feca9381",
+  "actualNormalDriverExitCode": 0,
+  "originalDiscoveredExecutedPassed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "allOriginalFactTheoryIdentities": true,
+  "sourceInputs": 485,
+  "allSourceRowsEqualActualGitBodies": true,
+  "sourceBeforeAfterExact": true,
+  "sourceSnapshotSha256": "79c1b82c42bf7b6e6861403124e8c37dfd36b6811d6031b64f1835ee1b92dd89",
+  "nativeRuntimeMetadataFiles": 91,
+  "runtimeBeforeAfterActualBodiesEqual": true,
+  "runtimeSnapshotSha256": "2b7e70e3626b616097a93070b86f744c793789f8a92e92d24d0771c7889c90b7",
+  "trxBytes": 11231,
+  "trxSha256": "f673ccbf198dabe5bfe0a2f60dfd7e645531f036a79c95bae3c5af7d0ffcaf8f",
+  "commandFamilies": 12,
+  "allNormalEOF_ECHILD_FamilyClosed_NoSignals": true,
+  "buildWarnings": 0,
+  "buildErrors": 0,
+  "fixed889CombinedDriver": "NOT_IMPORTED_OR_REBOUND",
+  "initialOrchestrationState": "NOT_RUN_ORCHESTRATION_SETUP_ZERO_COMMANDS_TESTS_PRESERVED",
+  "qualifications": [
+    "Six unchanged original managed authoring/capture/file-store/CAS tests only; no Maps native Home/CoMaps/provider/actor/Windows/browser/full parity acceptance.",
+    "No filter or skip, copied test DLL, original source assertion edit, helper binding edit or package policy change.",
+    "Initial mkdir collision was corrected only in task-local setup before any dotnet/native test; original first script/log/metadata remain.",
+    "Temporary physical test fixtures are created/read/reopened/asserted/deleted by the unchanged original tests; no fixture or runtime body publication."
+  ]
+}

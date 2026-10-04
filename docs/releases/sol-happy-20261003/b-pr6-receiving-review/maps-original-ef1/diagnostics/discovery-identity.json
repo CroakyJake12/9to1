@@ -1,0 +1,20 @@
+{
+  "expected": [
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route"
+  ],
+  "actual": [
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision",
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route"
+  ],
+  "discovered": 6,
+  "equal": true
+}
