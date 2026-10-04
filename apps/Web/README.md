@@ -134,10 +134,36 @@ installed outside the checkout:
 /workspace/team-b-tooling/bun/bun build.js
 
 # From the repository root:
-/workspace/.tools/dotnet/dotnet publish apps/Web/NineToOne.Web.csproj -c Release
+# Select a new output path for each exact source revision. Refuse reuse: SDK
+# publication into an old directory can retain stale fingerprinted assets.
+B1_PUBLISH_DIR=/tmp/nine-to-one-browser-new-revision
+if [ -e "$B1_PUBLISH_DIR" ]; then
+  echo 'Choose a new publication directory; this one already exists.' >&2
+  exit 1
+fi
+/workspace/.tools/dotnet/dotnet publish apps/Web/NineToOne.Web.csproj -c Release --output "$B1_PUBLISH_DIR"
 ```
 
-Serve the actual `apps/Web/bin/Release/net10.0/publish/wwwroot` output read-only.
+Serve the actual `$B1_PUBLISH_DIR/wwwroot` output read-only and preserve its exact
+coordinator publication receipt. For a reviewed receipt, supply the expected
+commit and receipt SHA-256 independently; do not derive trusted values from the
+receipt being checked:
+
+```bash
+node apps/Web/Tests/verify-publish-receipt.cjs <receipt.json> <actual-wwwroot> <expected40hexCommit> <expectedReceiptSHA256>
+```
+
+This read-only check compares every file, size and SHA-256, rejects extra/missing
+files and links, and requires a successful publication with unchanged source
+inputs. It permits relocating an exact bundle and reports the original output
+path. It verifies artifact transport, not signatures, package authority, browser
+compatibility or runtime acceptance. The filesystem regression runner uses a
+new evidence directory and isolated copies of three bootstrap files:
+
+```bash
+node apps/Web/Tests/publish-receipt.test.cjs <receipt.json> <actual-wwwroot> <expected40hexCommit> <expectedReceiptSHA256> <new-evidence-directory>
+```
+
 Do not copy a source shell over incomplete build output or substitute runtime
 modules. Successful compilation or local publication does not establish
 deployment or product parity.
