@@ -34,6 +34,10 @@
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
     <!-- During Phase 2 this desktop project is the Avalonia backend/host for platform-neutral Haven.UI. -->
     <ProjectReference Include="..\Haven.UI\Haven.UI.csproj" />
+    <!-- The original Sites authority adapter consumes the existing typed Files/Home ownership modules. -->
+    <ProjectReference Include="../../../Sites/HavenOS.Sites.csproj" />
+    <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <Using Include="HavenOS.Files.NativeHost" />
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />

@@ -23,7 +23,7 @@ public sealed class PresentWorkspaceCompositionTests
             var root = Assert.IsType<HavenSceneControl>(host.Page.Content).Root!;
             var firstId = Assert.IsType<PresentDocument>(host.Document).Id;
             AssertVisible(Element(root, "Present.MenuBar"));
-            AssertVisible(Element(root, "Present.Workspace"));
+            AssertVisible(CanonicalWorkspace(root));
             AssertCollapsed(Element(root, "Present.Library"));
 
             InvokeFileAction(root, "New presentation");
@@ -48,7 +48,7 @@ public sealed class PresentWorkspaceCompositionTests
             InvokeFileAction(root, "Back to presentations");
             await WaitUntilAsync(() => host.Document is null);
             AssertVisible(Element(root, "Present.Library"));
-            AssertCollapsed(Element(root, "Present.Workspace"));
+            AssertCollapsed(CanonicalWorkspace(root));
             AssertCollapsed(Element(root, "Present.MenuBar"));
             var search = Assert.IsType<Input>(Element(root, "Present.Library.Search"));
             Assert.Equal("Search local presentation titles", search.Accessibility.AccessibleName);
@@ -58,7 +58,7 @@ public sealed class PresentWorkspaceCompositionTests
             Invoke(Assert.IsType<HavenButton>(Element(root, $"Present.Library.Open.{documentId:N}")));
             await WaitUntilAsync(() => host.Document?.Id == documentId);
             AssertVisible(Element(root, "Present.MenuBar"));
-            AssertVisible(Element(root, "Present.Workspace"));
+            AssertVisible(CanonicalWorkspace(root));
             Assert.Equal("Workspace composition control", host.Document!.Title);
             Assert.Equal(2, host.Document.Slides.Count);
             Assert.True(await host.TrySaveBeforeCloseAsync());
@@ -89,7 +89,7 @@ public sealed class PresentWorkspaceCompositionTests
         Assert.True(host.Page.IsDirty);
         Assert.Equal(documentId, host.Document!.Id);
         Assert.Equal("Keep this unsaved edit", host.Document.Title);
-        AssertVisible(Element(root, "Present.Workspace"));
+        AssertVisible(CanonicalWorkspace(root));
         AssertCollapsed(Element(root, "Present.Library"));
         Assert.Equal("Untitled presentation", (await repository.LoadAsync(documentId, CancellationToken.None))!.Title);
 
@@ -103,6 +103,15 @@ public sealed class PresentWorkspaceCompositionTests
 
     private static HavenElement Element(HavenElement root, string name) =>
         Assert.Single(root.DescendantsAndSelf().Where(element => element.Name == name));
+
+    private static Container CanonicalWorkspace(HavenElement root)
+    {
+        // The collapsed compatibility container retains its old name. Select
+        // the actual mounted stage's parent rather than that hidden mirror.
+        var workspace = Assert.IsType<Container>(Element(root, "Present.Stage").Parent);
+        Assert.Equal("Present.Workspace", workspace.Name);
+        return workspace;
+    }
 
     private static void AssertVisible(HavenElement element)
     {
