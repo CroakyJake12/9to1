@@ -1,0 +1,103 @@
+{
+  "candidate": "2ecd9d80ba6d36ea5c7467d60b446a93cbc2aa48",
+  "status": "HELD",
+  "scope": "Source-only bounded billing local Workerd/D1 tooling proposal; no deployment/provider acceptance",
+  "sourceBindings": [
+    {
+      "path": "cloud/billing/DEPLOYMENT.md",
+      "bytes": 2812,
+      "sha256": "a95e181babcdaaeef5d92234e351bc37f6f61d4126293c9aeead2b26780e27fd"
+    },
+    {
+      "path": "cloud/billing/package-lock.json",
+      "bytes": 49541,
+      "sha256": "38de8a06f05e299962197f72f82b9dbfc4407b66dfec90454c0ac45c8a21c69c"
+    },
+    {
+      "path": "cloud/billing/package.json",
+      "bytes": 279,
+      "sha256": "3625267282555e7618b0296f7d45bb3ac386265822883d40572fcd24985e23f2"
+    },
+    {
+      "path": "cloud/billing/scripts/deployment-config.mjs",
+      "bytes": 2016,
+      "sha256": "2e506c77fc0685fe7c1d48560345626560466d340d8869c067a1fbe498b888e9"
+    },
+    {
+      "path": "cloud/billing/scripts/prepare-deployment.mjs",
+      "bytes": 2469,
+      "sha256": "d7fe06125a7eb7711e1aa3d0c0efabe8bfe6ca53eaa136187afbc28f2d4009bc"
+    },
+    {
+      "path": "cloud/billing/test/deployment-config.test.mjs",
+      "bytes": 1347,
+      "sha256": "f6c1bc3987778e20e99d69f7ce2d721536473238128c8d6b302199a0b08e1734"
+    },
+    {
+      "path": "cloud/billing/test/run-workerd.mjs",
+      "bytes": 2932,
+      "sha256": "fa977e77cfff4994b428e7dc6bc858a0ef5ba0cc0dfb87305191d98dd02be05b"
+    },
+    {
+      "path": "cloud/billing/test/workerd-control.mjs",
+      "bytes": 479,
+      "sha256": "4186c886371760f44f687ea3bbd8f1abef8f8e20ca0718011e5b125acadaad51"
+    },
+    {
+      "path": "cloud/billing/test/workerd-d1.mjs",
+      "bytes": 5336,
+      "sha256": "2bdf27820e31dc4ddc301f73021fa7b4a2a31ed506bc8ba3685b9e7b84902d32"
+    }
+  ],
+  "finding": {
+    "path": "cloud/billing/test/run-workerd.mjs",
+    "line": 41,
+    "behavior": "passed:true emitted before finishFixtureRelease and exclusive stdout/stderr evidence writes; later collector failure exits1 after success marker",
+    "requiredCorrection": "Emit final success only after independent cleanup and recording collectors all succeed. Preserve original failure and add actual filesystem collision negative."
+  },
+  "independentTests": {
+    "command": "node --test test/*.test.mjs",
+    "cwd": "/workspace/team-c/c3-billing-hosted/cloud/billing",
+    "exit": 0,
+    "pass": 14,
+    "fail": 0
+  },
+  "reviewedNativeEvidence": {
+    "positive": {
+      "path": "/workspace/team-c/evidence/c3/billing-workerd-Hlnzu6/custody.json",
+      "checks": 43,
+      "strictReaped": true,
+      "originalsDisappeared": true,
+      "rootCode": 1,
+      "rootStatus": 0
+    },
+    "negative": {
+      "path": "/workspace/team-c/evidence/c3/billing-workerd-eR2X7W/custody.json",
+      "checks": 1,
+      "outerExit": 1,
+      "strictReaped": true,
+      "originalsDisappeared": true,
+      "rootCode": 1,
+      "rootStatus": 1
+    }
+  },
+  "lockReview": {
+    "packagesIncludingRoot": 92,
+    "allNonrootResolved": "https://registry.npmjs.org/",
+    "allNonrootIntegrity": "sha512",
+    "allNonrootDev": true,
+    "installScripts": [
+      "esbuild",
+      "fsevents (optional Darwin)",
+      "workerd"
+    ],
+    "qualification": "Exact resolution and metadata review, not dependency security audit or registry content acceptance"
+  },
+  "productionUnchangedAgainst": "db463042bdefda5697d6ec7d461dda12ebc1dcc6",
+  "qualifications": [
+    "Native results are reviewed C3 evidence, not independent C5 runtime rerun.",
+    "Independent unit tests use maintained source; native local D1 is not remote Cloudflare or Stripe acceptance.",
+    "Original custody helper and control source reviewed; no changes adopted globally.",
+    "Successor review pending actual collector-failure control."
+  ]
+}
