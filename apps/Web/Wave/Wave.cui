@@ -29,7 +29,7 @@
       </Border>
       <WaveText id="wave-project-identity" text="{Binding ProjectIdentity}" text-wrapping="Wrap" max-width="760" accessible-name="Canonical Wave project identity and revision" />
       <WrapPanel>
-        <Button id="wave-import" action="Import"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Import WAV"><WaveCaption id="wave-button-caption-07" text="Import WAV" text-wrapping="Wrap" /></Button>
+        <WaveImport id="wave-import" action="Import"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Import WAV"><WaveCaption id="wave-button-caption-07" text="Import WAV" text-wrapping="Wrap" /></WaveImport>
         <Button action="AddTrack"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Add named track"><WaveCaption id="wave-button-caption-08" text="Add named track" text-wrapping="Wrap" /></Button>
         <Button id="wave-undo" action="Undo"  IsEnabled="{Binding CanUndo}" margin="0 0 8 4" accessible-name="Undo"><WaveCaption id="wave-button-caption-09" text="Undo" text-wrapping="Wrap" /></Button>
         <Button id="wave-redo" action="Redo"  IsEnabled="{Binding CanRedo}" margin="0 0 8 4" accessible-name="Redo"><WaveCaption id="wave-button-caption-10" text="Redo" text-wrapping="Wrap" /></Button>

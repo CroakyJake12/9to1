@@ -2,8 +2,8 @@
   "state": "SOURCE_ONLY_FUTURE_ADOPTION_REQUIREMENTS",
   "sourceFiles": {
     "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs": {
-      "bytes": 25295,
-      "sha256": "8e7d960b62f14ba5e10f36d0c553ada0f65c841ab82f948891c4b0a83ae4e7a9"
+      "bytes": 25352,
+      "sha256": "60beb88876d0913cc3cad5f212bb7c52de37dd0149f0a1c10298d9aac2179157"
     },
     "apps/Web/Tests/WaveResponsiveBrowser/zoom-extension/manifest.json": {
       "bytes": 164,
@@ -22,12 +22,12 @@
       "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
     },
     "apps/Web/Wave/WaveBrowserFeature.cs": {
-      "bytes": 4898,
-      "sha256": "23cc46b999b2acd4e45f320d3d20f043f8e82a4d6b9eb01aaf5d182b3f76400d"
+      "bytes": 5080,
+      "sha256": "9b614ac89cf89cc6f0f7c39910b7ea31b2bf84d5021a7fd109d29ae119da7cc1"
     },
     "apps/Web/Wave/Wave.cui": {
-      "bytes": 14496,
-      "sha256": "92336061a95e2d622a3243395fc28a8a9c19ed8738e3de87be6417f9dbe625b4"
+      "bytes": 14504,
+      "sha256": "0e80d1cc3bffea5d5a9d3db6854339fd00b4bc6a1285501088a14dac3ff1586d"
     },
     "apps/Web/Tests/ci/run-ordinary-native.py": {
       "bytes": 19584,
@@ -50,8 +50,8 @@
       "sha256": "467d0667ef7df79722f424acb7465161beb89366c0b2bd1f8a34528f6713abcd"
     },
     "apps/Web/Media/wave-browser.js": {
-      "bytes": 11896,
-      "sha256": "33661bb83b3fbf2b965b2c4b37c0f20924e5c49428808463da446286712b491a"
+      "bytes": 15940,
+      "sha256": "1e0d65775847cecd42218485f2fde15c0d8380597c5c9d775c7dde3457fc934c"
     },
     "apps/Web/NineToOne.Web.csproj": {
       "bytes": 4978,
@@ -70,8 +70,12 @@
       "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
     },
     "apps/Web/Wave/WaveNativePresentation.cs": {
-      "bytes": 1393,
-      "sha256": "2c9871d0426ed2fd04c3737bf6b86bc3e1f511514dcac5e1429d785942a96a7a"
+      "bytes": 6249,
+      "sha256": "01e6d8e19f7aa7b99f8069a98c7adeb2791ac857441a4941b8fcef93c6479a06"
+    },
+    "apps/Web/Media/BrowserWaveMedia.cs": {
+      "bytes": 1656,
+      "sha256": "a4d41e8523c961cb1b36a0a1e874108d69e37d227e4ce362cf5ac5660757afbc"
     }
   },
   "qualification": "Whole fresh git HEAD/tree/clean plus maintained publisher full source-beforeafter and full asset inventory required. Pins include exact proposed production bodies, not current adoption claim."

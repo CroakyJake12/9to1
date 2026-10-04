@@ -9,6 +9,96 @@ let dirty = false;
 let pendingPicker;
 const maximumBytes = 32 * 1024 * 1024;
 
+// One-use Wave input focus authority only; never a project/audio/source revision.
+// Empty/unknown ownership denies. Browser/chrome handoff cannot be undone by re-enable.
+let focusVersion = 0;
+let focusObservers;
+let focusClaim;
+let focusExhausted = false;
+
+function revokeFocusClaim() {
+    focusClaim = undefined;
+    if (focusVersion >= Number.MAX_SAFE_INTEGER) focusExhausted = true;
+    else focusVersion++;
+}
+function releaseFocusClaims() {
+    revokeFocusClaim();
+    const state = focusObservers;
+    focusObservers = undefined;
+    if (!state) return;
+    for (const [target, name, listener] of state.listeners) {
+        try { target.removeEventListener(name, listener, true); } catch { focusExhausted = true; }
+    }
+}
+function ownsWaveHost(state) {
+    const doc = state.document;
+    const active = doc.activeElement;
+    return doc === globalThis.document && doc.hasFocus() === true && doc.visibilityState === 'visible'
+        && state.native.isConnected === true && state.semantic.isConnected === true
+        && state.native.ownerDocument === doc && state.semantic.ownerDocument === doc
+        && doc.getElementById('nine-to-one-root') === state.native
+        && doc.getElementById('native-control-semantics') === state.semantic
+        && !!active && (state.native.contains(active) || state.semantic.contains(active));
+}
+function observeFocusClaims() {
+    if (focusObservers) return focusObservers;
+    const doc = globalThis.document;
+    if (!doc || typeof doc.hasFocus !== 'function' || typeof doc.getElementById !== 'function'
+        || typeof doc.addEventListener !== 'function' || typeof doc.removeEventListener !== 'function'
+        || typeof globalThis.addEventListener !== 'function' || typeof globalThis.removeEventListener !== 'function')
+        return undefined;
+    const native = doc.getElementById('nine-to-one-root');
+    const semantic = doc.getElementById('native-control-semantics');
+    if (!native || !semantic || typeof native.contains !== 'function' || typeof semantic.contains !== 'function')
+        return undefined;
+    const state = { document: doc, native, semantic, listeners: [] };
+    focusObservers = state;
+    const install = (target, name, listener) => {
+        // Record before installation so any partial setup can be retired fail-closed.
+        state.listeners.push([target, name, listener]);
+        target.addEventListener(name, listener, true);
+    };
+    try {
+        install(doc, 'pointerdown', revokeFocusClaim);
+        install(doc, 'keydown', revokeFocusClaim);
+        install(doc, 'focusin', event => {
+            try { if (!native.contains(event.target) && !semantic.contains(event.target)) revokeFocusClaim(); }
+            catch { revokeFocusClaim(); }
+        });
+        install(globalThis, 'blur', revokeFocusClaim);
+        install(doc, 'visibilitychange', () => {
+            try { if (doc.visibilityState !== 'visible') revokeFocusClaim(); } catch { revokeFocusClaim(); }
+        });
+        install(globalThis, 'pagehide', releaseFocusClaims);
+        return state;
+    } catch {
+        releaseFocusClaims();
+        return undefined;
+    }
+}
+export function captureFocusClaim() {
+    try {
+        revokeFocusClaim();
+        if (focusExhausted) return '';
+        const state = observeFocusClaims();
+        if (!state || !ownsWaveHost(state)) return '';
+        const token = 'wave-focus:' + focusVersion;
+        focusClaim = { token, version: focusVersion, state };
+        return token;
+    } catch { releaseFocusClaims(); return ''; }
+}
+export function validateFocusClaim(token) {
+    // Consume before native Focus can cause a reentrant DOM/native focus event.
+    const claim = focusClaim;
+    focusClaim = undefined;
+    try {
+        return typeof token === 'string' && token.length !== 0 && !focusExhausted
+            && !!claim && token === claim.token && claim.version === focusVersion
+            && claim.state === focusObservers && ownsWaveHost(claim.state);
+    } catch { releaseFocusClaims(); return false; }
+}
+
+
 const beforeUnload = event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } };
 globalThis.addEventListener?.('beforeunload', beforeUnload);
 
@@ -156,7 +246,7 @@ function download({ name, base64, mime }) {
 }
 
 export function setDirty(value) { dirty = value === true; }
-export function release() { pendingPicker?.(); stopAudio(); dirty = false; }
+export function release() { releaseFocusClaims(); pendingPicker?.(); stopAudio(); dirty = false; }
 
 export async function invoke(action, argumentsJson) {
     try {
