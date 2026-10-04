@@ -504,5 +504,16 @@
       "sha256": "1554ba89446e238ad4aba99ed7043e0bc1d9f85daf0a0cad2567aad0c4458d1c"
     }
   ],
-  "historicalHomeRecipe": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40 plus separate source-only AvaloniaTask correction0d1d64a5; original372247 MSB4062 retained. New current producer never relabels olde1/df or externalfa7PR9 runtime."
+  "historicalHomeRecipe": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40 plus separate source-only AvaloniaTask correction0d1d64a5; original372247 MSB4062 retained. New current producer never relabels olde1/df or externalfa7PR9 runtime.",
+  "retainedCurrentHomeFirstNativeControlFailure": {
+    "source": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+    "run": 37228835003,
+    "job": 111514012449,
+    "managedSix": "PASS_SCOPED",
+    "nativePackage": "BUILT_SEALED_UNACCEPTED",
+    "firstNativeQuit": "FAIL_RETAINED",
+    "observedWindowTitle": "Actual launched executable path, not source-defined 9-1 Home GUI title",
+    "originalCuiOutputTransport": "Actual original stdout recorded ASCII hyphen for source em-dash; successor still requires canonical StackPanel root marker and current unique native GUI title",
+    "secondProcessAndProfileReopen": "NOT_RUN"
+  }
 }

@@ -92,6 +92,7 @@ function Same-Catalog($Left, $Right) {
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 public static class HomeOriginalNativeInput {
     [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
@@ -99,6 +100,33 @@ public static class HomeOriginalNativeInput {
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int key);
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr window, int command);
+    private delegate bool WindowVisitor(IntPtr window, IntPtr state);
+    [DllImport("user32.dll")] private static extern bool EnumWindows(WindowVisitor visitor, IntPtr state);
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)] private static extern int GetWindowText(IntPtr window, StringBuilder text, int capacity);
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)] private static extern int GetClassName(IntPtr window, StringBuilder text, int capacity);
+    [StructLayout(LayoutKind.Sequential)] private struct WindowRect { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr window, out WindowRect bounds);
+    public static string WindowTitle(IntPtr window) { var text = new StringBuilder(512); GetWindowText(window, text, text.Capacity); return text.ToString(); }
+    public static string WindowClass(IntPtr window) { var text = new StringBuilder(512); GetClassName(window, text, text.Capacity); return text.ToString(); }
+    public static int[] WindowBounds(IntPtr window) {
+        if (!GetWindowRect(window, out WindowRect bounds)) throw new InvalidOperationException();
+        return new[] { bounds.Left, bounds.Top, bounds.Right, bounds.Bottom };
+    }
+    public static bool IsOriginalHomeWindow(IntPtr window, uint processId) {
+        GetWindowThreadProcessId(window, out uint owner);
+        return owner == processId && IsWindowVisible(window)
+            && GetWindowRect(window, out WindowRect bounds) && bounds.Right > bounds.Left && bounds.Bottom > bounds.Top
+            && String.Equals(WindowTitle(window), "9-1 Home", StringComparison.Ordinal)
+            && !String.Equals(WindowClass(window), "ConsoleWindowClass", StringComparison.Ordinal);
+    }
+    public static IntPtr FindOriginalHomeWindow(uint processId) {
+        IntPtr found = IntPtr.Zero; int matches = 0;
+        bool completed = EnumWindows((window, state) => {
+            if (IsOriginalHomeWindow(window, processId)) { found = window; matches++; }
+            return true;
+        }, IntPtr.Zero);
+        return completed && matches == 1 ? found : IntPtr.Zero;
+    }
     [StructLayout(LayoutKind.Explicit, Size=40)] public struct Input {
         [FieldOffset(0)] public uint Type;
         [FieldOffset(8)] public ushort VirtualKey;
@@ -120,21 +148,23 @@ function Invoke-OriginalNativeQuit([string]$Label, [string]$Exe) {
     try {
         $nativeProcess = Start-Process -FilePath $Exe -WorkingDirectory ([IO.Path]::GetDirectoryName($Exe)) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
         $observed.pid = $nativeProcess.Id; $observed.sessionId = $nativeProcess.SessionId; $observed.startedUTC = [DateTime]::UtcNow.ToString('o')
+        $birthTicks = $nativeProcess.StartTime.ToUniversalTime().Ticks; $observed.processBirthUTC = $nativeProcess.StartTime.ToUniversalTime().ToString('o')
         $observed.phase = 'visible-own-window'
         $until = [DateTime]::UtcNow.AddSeconds(45)
         $window = [IntPtr]::Zero
         do {
             $nativeProcess.Refresh()
             if ($nativeProcess.HasExited) { throw 'Original native process exited before its visible window appeared.' }
-            $window = $nativeProcess.MainWindowHandle
-            if ($window -ne [IntPtr]::Zero -and [HomeOriginalNativeInput]::IsWindowVisible($window)) { break }
+            $window = [HomeOriginalNativeInput]::FindOriginalHomeWindow([uint32]$nativeProcess.Id)
+            if ($window -ne [IntPtr]::Zero) { break }
             Start-Sleep -Milliseconds 100
         } while ([DateTime]::UtcNow -lt $until)
-        if ($window -eq [IntPtr]::Zero -or -not [HomeOriginalNativeInput]::IsWindowVisible($window)) { throw 'No actual visible original Home window was observed.' }
+        if ($window -eq [IntPtr]::Zero -or -not [HomeOriginalNativeInput]::IsOriginalHomeWindow($window, [uint32]$nativeProcess.Id)) { throw 'No unique actual visible process-owned canonical Home GUI window was observed.' }
         [uint32]$ownerPid = 0
         [void][HomeOriginalNativeInput]::GetWindowThreadProcessId($window, [ref]$ownerPid)
         if ($ownerPid -ne $nativeProcess.Id) { throw 'Native HWND does not belong to this exact launched process.' }
-        $observed.windowVisible = $true; $observed.ownHWND = $true; $observed.windowTitle = $nativeProcess.MainWindowTitle
+        $observed.windowVisible = $true; $observed.ownHWND = $true; $observed.windowTitle = [HomeOriginalNativeInput]::WindowTitle($window); $observed.windowClass = [HomeOriginalNativeInput]::WindowClass($window)
+        $observed.windowBounds = [HomeOriginalNativeInput]::WindowBounds($window)
         $observed.phase = 'own-window-focus'
         [void][HomeOriginalNativeInput]::ShowWindow($window, 9)
         [void][HomeOriginalNativeInput]::SetForegroundWindow($window)
@@ -142,9 +172,11 @@ function Invoke-OriginalNativeQuit([string]$Label, [string]$Exe) {
         while ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window -and [DateTime]::UtcNow -lt $until) { Start-Sleep -Milliseconds 100 }
         if ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window) { throw 'Actual own window foreground could not be verified; no keyboard event sent.' }
         $observed.foregroundVerified = $true
+        $nativeProcess.Refresh()
+        if ($nativeProcess.HasExited -or $nativeProcess.StartTime.ToUniversalTime().Ticks -ne $birthTicks) { throw 'Original native process birth or liveness changed before owned input.' }
         foreach ($key in @(0x10,0x11,0x12)) { if (([HomeOriginalNativeInput]::GetAsyncKeyState($key) -band 0x8000) -ne 0) { throw 'Existing modifier key is held; do not alter unrelated desktop input.' } }
         $observed.phase = 'owned-input'
-        if ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window -or -not [HomeOriginalNativeInput]::IsWindowVisible($window)) { throw 'Own visible foreground changed before original input; no key event sent.' }
+        if ([HomeOriginalNativeInput]::GetForegroundWindow() -ne $window -or -not [HomeOriginalNativeInput]::IsOriginalHomeWindow($window, [uint32]$nativeProcess.Id)) { throw 'Own canonical visible GUI foreground changed before original input; no key event sent.' }
         try { $observed.inputEventsSent = [HomeOriginalNativeInput]::QuitChord() }
         finally { $observed.releaseEventsSent = [HomeOriginalNativeInput]::ReleaseChordKeys() }
         if ($observed.releaseEventsSent -ne 3) { throw 'Win32 did not admit all owned modifier release events.' }
@@ -164,7 +196,7 @@ function Invoke-OriginalNativeQuit([string]$Label, [string]$Exe) {
         $observed.outputDrained = $true
         $observed.phase = 'original-cui-root-outcome'
         $text = Get-Content -LiteralPath $stdout -Raw
-        $observed.originalCuiRootReported = $text -match '\[9-1 Home\] Root: .+ — CUI loaded into window'
+        $observed.originalCuiRootReported = $text -match '\[9-1 Home\] Root: StackPanel (?:—|-) CUI loaded into window'
         if ($observed.exitCode -ne 0) { throw 'Actual original process returned a nonzero shutdown outcome.' }
         if (-not $observed.originalCuiRootReported) { throw 'Original process did not report its canonical CUI root; a window title is insufficient.' }
         $observed.phase = 'complete'
