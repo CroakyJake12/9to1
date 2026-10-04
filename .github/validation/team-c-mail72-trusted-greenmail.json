@@ -44,23 +44,23 @@
     {
       "path": ".github/scripts/team-c-mail72-trusted-tls.py",
       "mode": "100644",
-      "gitBlob": "de14de8674b08d7c62f938903e7cffc11a90e5c3",
-      "bytes": 21437,
-      "sha256": "8acfef6356bc3071983fd565f31c0c10d25b576bf66b1fd920562efc5a65e111"
+      "gitBlob": "52cf17c709000d5f33fb9566e7a442e045dc8dce",
+      "bytes": 21455,
+      "sha256": "ee6f32da31f2285278a6e1eaab5b4f5933e16ec31a93386c8f1f2b3a5659191c"
     },
     {
       "path": ".github/scripts/team_c_mail72_source_guard.py",
       "mode": "100644",
-      "gitBlob": "04792da4e92f8596f9b6894257037eb3a012d4a9",
-      "bytes": 7715,
-      "sha256": "b971a0284fbfc0c1ed8050649eda07a217382230f4329742acea9619a2505414"
+      "gitBlob": "ecb7f9ac34137c95bafa6b417478d5c633ba961d",
+      "bytes": 7880,
+      "sha256": "f9f682b48de7bce553bca1bd22e077f784b1cb742f0421ffd24ab5b5944f769b"
     },
     {
       "path": ".github/workflows/team-c-mail72-trusted-greenmail.yml",
       "mode": "100644",
-      "gitBlob": "447450ce347c6268103b0eb6dc07c2f80525054e",
-      "bytes": 2091,
-      "sha256": "9ce59116b866a1e727cf2201c212a4232ce15af25f50defedfc3fccf115367d4"
+      "gitBlob": "fab09796f4dbfe92e213cafaccbd79e232ad7fc3",
+      "bytes": 2108,
+      "sha256": "044966f87c854ec0ce8261a1f31d7ba356a6c4f985ff80ab226281dcf936b296"
     },
     {
       "path": ".gitmodules",
@@ -240,9 +240,9 @@
     {
       "path": "eng/release-validation/mail72-trusted-greenmail/README.md",
       "mode": "100644",
-      "gitBlob": "89599645a1435250681379dacad23001e40ee2fd",
-      "bytes": 3473,
-      "sha256": "b409ea2944995fdee7eddfb5afa3dd184eb8a97990b5af5ea942417680b91d9e"
+      "gitBlob": "dba674d95876a608e42dd92108a893c246632795",
+      "bytes": 3516,
+      "sha256": "3061d5f023256389365f9748ef8680ae3d00e988193eed690123837f2477be3e"
     },
     {
       "path": "framework/CUI/AI/ActionJsonSchemaValidator.cs",
@@ -503,5 +503,5 @@
     "jarSHA256": "0381392f3a44e4d8ae78051778440f58820d01acaf5757c3f43649deda8c1d23",
     "upstreamCommit": "cdde8bb9488f11763df0737d69a892cf131b9445"
   },
-  "scope": "Reviewed UNACCEPTED source proposal; root sole push/invocation. Original full72/real trusted loopback TLS fixture only. All29 fullrelease groups remain0verified0delivered."
+  "scope": "Reviewed UNACCEPTED source proposal; root sole push/invocation. Original full72/real trusted loopback TLS fixture only. All30 current groups remain0verified0delivered; original29 inventory stays historical."
 }

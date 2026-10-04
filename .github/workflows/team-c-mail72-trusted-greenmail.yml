@@ -22,7 +22,6 @@ jobs:
       DOTNET_NOLOGO: "1"
       MSBUILDDISABLENODEREUSE: "1"
       PYTHONDONTWRITEBYTECODE: "1"
-      TEAM_C_MAIL_OUTPUT: ${{ runner.temp }}/team-c-mail72-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,6 +40,8 @@ jobs:
       - name: Run unchanged normal full72 with approved strict TLS and signed CRL
         id: probe
         shell: bash
+        env:
+          TEAM_C_MAIL_OUTPUT: ${{ runner.temp }}/team-c-mail72-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
           catalog=.github/validation/team-c-mail72-trusted-greenmail.json

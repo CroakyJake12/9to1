@@ -37,7 +37,7 @@ def retain_declared_public_diagnostics():
   result=json.loads(resultPath.read_text()) if resultPath.is_file() else {'status':'NOT_RUN'}
   summary={'sourceCommit':expectedCommit,'runId':os.environ.get('GITHUB_RUN_ID'),'runAttempt':os.environ.get('GITHUB_RUN_ATTEMPT'),'normalMailStatus':result['status'],'javaAttempted':javaAttempted,'callerAttempted':callerAttempted,'crlAttempted':crlAttempted,'javaFamilyDrained':drained,'callerFamilyDrained':callerDrained,'crlFamilyDrained':crlDrained,'introducedRunnerTrustRemoved':not trusted,'primaryFailureType':None if primary is None else type(primary).__name__,'cleanupFailureTypes':[type(x).__name__ for x in globals().get('cleanup',[])],'qualification':'Sampled original Linux family custody; synthetic loopback real TLS and normal managed72 only, no native GUI/Home/provider/Windows/full release acceptance.'}
   summary['fullScopedPass']=result['status']=='PASS_FULL_NORMAL_MAIL72_WITH_REAL_LOOPBACK_TRUSTED_TLS_UNACCEPTED' and drained and callerDrained and crlDrained and not trusted and primary is None and not globals().get('cleanup',[])
-  collect_public(output,expectedCommit,secret,summary)
+  collect_public(output,expectedCommit,(password,storePassword),summary)
   destination=os.environ.get('GITHUB_OUTPUT')
   if not destination:raise RuntimeError('Actual workflow output channel absent')
   with open(destination,'a') as stream:stream.write('public_ready=true\n')

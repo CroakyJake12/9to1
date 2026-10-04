@@ -89,7 +89,8 @@ def collect_public(output, source_commit, secret, fixture_summary):
     output = Path(output)
     raw = output / "diagnostics"
     public = output / "public-diagnostics"
-    if public.exists() or not secret or raw.is_symlink() or not raw.is_dir():
+    secrets = (secret,) if isinstance(secret, str) else tuple(secret)
+    if public.exists() or not secrets or any(not isinstance(value, str) or not value for value in secrets) or raw.is_symlink() or not raw.is_dir():
         raise RuntimeError("Fresh declared public diagnostics required")
     exact = {"normal-mail72-result.json", "source-before.json", "source-after.json", "commands.json", "restore-assets.json", "runtime-before.json", "runtime-after.json", "evaluated-inputs.json", "whole-discovery.json", "whole-trx-readback.json", "mail-actual-strict-tls-readiness.json", "mail-maintained-server-producer.json", "mail-java-version.txt", "mail-original-public-crl-distribution.json", "mail-maintained-release-tag.json"}
     logs = {"sdk-version.log", "restore.log", "build.log", "whole-discovery.log", "whole-unfiltered-mail72.log"}
@@ -105,7 +106,7 @@ def collect_public(output, source_commit, secret, fixture_summary):
         if not allowed:
             continue
         data = path.read_bytes()
-        if secret.encode() in data or any(marker in data for marker in (b"-----BEGIN PRIVATE KEY-----", b"-----BEGIN RSA PRIVATE KEY-----", b"-----BEGIN ENCRYPTED PRIVATE KEY-----")):
+        if any(value.encode() in data for value in secrets) or any(marker in data for marker in (b"-----BEGIN PRIVATE KEY-----", b"-----BEGIN RSA PRIVATE KEY-----", b"-----BEGIN ENCRYPTED PRIVATE KEY-----")):
             raise RuntimeError("Private credential or key bytes refuse public diagnostics")
         rows.append({"path": relative, "bytes": len(data), "sha256": digest(data)})
         bodies.append((path, relative, data))
