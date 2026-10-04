@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "scope": "Selected C6 independent Mesh/Boards/preview actual controls, native proposals/affected Windows source reviews, native navigation/emoji actual readback and fixture/native R2 source conservation. Private fixture/profile/cache/binary files excluded. Original Windows/identity and both prior C6 indexes retained, no superseded negative replacement.",
+  "previousFrozenIndexes": [
+    {
+      "path": "public-artifact-index.json",
+      "sha256": "b912bb63746649c328c2b9de525ed3e037bb1247205a734448a30b8f7f08641c"
+    },
+    {
+      "path": "supplemental-public-artifact-index.json",
+      "sha256": "19c09ebc7a345a0a78a6a42780eec8c0c388272c359b49086770bcdc84795bbb"
+    }
+  ],
+  "selectedFiles": [
+    {
+      "path": "mesh-filename/source-inputs.json",
+      "bytes": 776,
+      "sha256": "66d25075b6cb9d210f86b619210b7d0da23c48bd655781e982c25a7db6cb8414"
+    },
+    {
+      "path": "mesh-filename/independent-review.json",
+      "bytes": 1428,
+      "sha256": "4b41cfbf7ae026f592243572d8789a034df6516e375fb847bc188d99d9a9cb25"
+    },
+    {
+      "path": "mesh-filename/run.log",
+      "bytes": 2992,
+      "sha256": "032c95b735d875b8a5f24bc4da0ad17db7bad67bc88d43091be1611193c9404e"
+    },
+    {
+      "path": "mesh-filename/results/mesh-tests.trx",
+      "bytes": 28223,
+      "sha256": "8c08fcfa78bf8911f47013e143629c28ad629f29aa2a3a19c62032289cee6fe2"
+    },
+    {
+      "path": "native-proposals/studio-ui-retirement-source-review.json",
+      "bytes": 1366,
+      "sha256": "4af8429c61b0f20d9e820e688908062fe1d5cdb20ae6e6f621b51e51e70311d2"
+    },
+    {
+      "path": "native-proposals/present-theme-bootstrap-source-review.json",
+      "bytes": 1658,
+      "sha256": "606bfa3f8b89f0ed2fb75fcc5276ba062122862156df0f7554b9f5b25cee22ca"
+    },
+    {
+      "path": "native-proposals/affected-three-windows-source-review.json",
+      "bytes": 8185,
+      "sha256": "517ff2493a5db5e39d76909ab70f368ec9999fa59174f16368cc6f39c613df53"
+    },
+    {
+      "path": "native-proposals/affected-three-metadata-successor-review.json",
+      "bytes": 1268,
+      "sha256": "61a3506871b23ed6567e9e2ec410b0348888dc95178574d1a88c165201910e2c"
+    },
+    {
+      "path": "native-proposals/present-independent-runtime/independent-review.json",
+      "bytes": 1782,
+      "sha256": "ba2fd9d5e83093ee3b229e87a65c40e665964637cb3a4db0038ba642ef496ea8"
+    },
+    {
+      "path": "native-proposals/present-independent-runtime/run.log",
+      "bytes": 1058,
+      "sha256": "165eb47542f307f50859f717f66e859a078768f31106ab331976f6298bba1524"
+    },
+    {
+      "path": "native-proposals/present-independent-runtime/results/present-critical.trx",
+      "bytes": 6017,
+      "sha256": "f8eb2eb1889b32a4d51151b9ab82732c73d0c14af2d507b4ea807d2092c6e61f"
+    },
+    {
+      "path": "native-proposals/studio-independent-runtime/independent-review.json",
+      "bytes": 1643,
+      "sha256": "069a09d32f54481392432dd36db952addfbee0468023bfee3f890ec133b5f6b3"
+    },
+    {
+      "path": "native-proposals/studio-independent-runtime/run.log",
+      "bytes": 1054,
+      "sha256": "7fe6b790981f81ac9cc1aa89f9da75974012d5da0078e19106f0401d844740d2"
+    },
+    {
+      "path": "native-proposals/studio-independent-runtime/results/studio-critical.trx",
+      "bytes": 4648,
+      "sha256": "74045c2795c6805b102e381efb865e8df62e743727d9b6fa924f550bc1c46cda"
+    },
+    {
+      "path": "boards-startup/independent-review.json",
+      "bytes": 3175,
+      "sha256": "e27309d7e36ef8e387d8bdfcb878ff7047e3be12ea56c5fc81a8584536f37fea"
+    },
+    {
+      "path": "boards-startup/source-inputs.json",
+      "bytes": 5371,
+      "sha256": "aec77a1059946378b4da47532208f9c079f64cb188cb551f6a3efd92f3e14365"
+    },
+    {
+      "path": "boards-startup/build.log",
+      "bytes": 1191,
+      "sha256": "47a5b700418a7fdd997014917e21ac2cdb0d02b551ba0fb8a5cf89361b120f5b"
+    },
+    {
+      "path": "boards-startup/cases.json",
+      "bytes": 1728,
+      "sha256": "7e07eaecccf6ea1b559eaecf3ffee94ea487d938a3e55a2016a52f9ccf9a7159"
+    },
+    {
+      "path": "preview-environment/source-inputs.json",
+      "bytes": 526,
+      "sha256": "8459e11cd5ddab6bae967757bc75a7dd9d0ac5726a799af821f820d0300a0b95"
+    },
+    {
+      "path": "preview-environment/independent-review.json",
+      "bytes": 1971,
+      "sha256": "d75069042ce00718b8a328d8f635d031fb0fdea403d324a5c1b8796ae3086198"
+    },
+    {
+      "path": "preview-environment/run.log",
+      "bytes": 3003,
+      "sha256": "0646effe96ff27c7abc233d8c9cb61274b8b82c6f2ed0c6c7de5fe41302e0be7"
+    },
+    {
+      "path": "preview-environment/results/preview-tests.trx",
+      "bytes": 4752,
+      "sha256": "5925413d4fb0724933d08bfd15ac8b68b42fb28c639aa69b82f55f5d42fa63a8"
+    },
+    {
+      "path": "dependency-closure/navigation5-3b0b-independent-readback.json",
+      "bytes": 2292,
+      "sha256": "69fda6035f13574b622e4bcc3279902c02126617b54aa3b55864805c2e41d70f"
+    },
+    {
+      "path": "dependency-closure/emoji-canonical-carrier-source-review.json",
+      "bytes": 741,
+      "sha256": "0b2eb024acebb1270a0688d5c836b153236b56c8e692038ee231bf89c141176b"
+    },
+    {
+      "path": "dependency-closure/emoji-canonical-runtime-independent-readback.json",
+      "bytes": 3391,
+      "sha256": "5d6dfa83a1b37abde8a35c8f1be02a3ccc61b713c143f5518d48da846a29ec8b"
+    },
+    {
+      "path": "dependency-closure/native-r2-receiving-source-review.json",
+      "bytes": 4034,
+      "sha256": "e49065c63c303f48aa0e21317a04b312f811e5ba8f389f71916eab36c9168dcd"
+    },
+    {
+      "path": "test-preconditions-source-review.json",
+      "bytes": 1378,
+      "sha256": "262d65f6434ef86080da7dc5d23cfcb33bf547ab8b838ff80d5dba53ea8f35f8"
+    },
+    {
+      "path": "boards-startup/fresh-default.log",
+      "bytes": 191,
+      "sha256": "0a25be0f1d10bc41b6ca58a6cdf5e5ce02749e99a84bbe435011436e8eada563"
+    },
+    {
+      "path": "boards-startup/existing-default.log",
+      "bytes": 194,
+      "sha256": "f713b9ac17d1bf8aaa528657a59bf8245a7bfbb417fd8a21c951390cb5e0164e"
+    },
+    {
+      "path": "boards-startup/backup-only.log",
+      "bytes": 189,
+      "sha256": "8a83be47b7c2d7fc6f0d7167c69c22c75f4d5d7a53710ca528e94e03c5b17e5d"
+    },
+    {
+      "path": "boards-startup/corrupt-primary-good-backup.log",
+      "bytes": 205,
+      "sha256": "68601cc5847387cc3e08108190a98e091922271eaefccf928ca363089b1ee4e8"
+    },
+    {
+      "path": "boards-startup/corrupt-default-refuses.log",
+      "bytes": 201,
+      "sha256": "c8e8fb31891ac589398688e5b5d7fed212239368b8c52949e5e634a5627cf50e"
+    },
+    {
+      "path": "boards-startup/future-default-refuses.log",
+      "bytes": 200,
+      "sha256": "35c88b9e3625a54fd38f93c5b54545317bbf0d1b9f3240f8ee50c927c46535b3"
+    },
+    {
+      "path": "boards-startup/cancelled-fresh-default.log",
+      "bytes": 201,
+      "sha256": "3b92259235c12ca195da5f18cf28e5db234592a18d13ac239193e919e5736ac6"
+    },
+    {
+      "path": "boards-startup/default-path-is-directory.log",
+      "bytes": 203,
+      "sha256": "9186f1cd2600412a09ecb480c272b1bc20e389c915acdb401430f96f01326c21"
+    },
+    {
+      "path": "boards-startup/explicit-open-preserved.log",
+      "bytes": 201,
+      "sha256": "5db11948a53751f93fade660e3753f921a158f7ff8485b98cddb89a95e9b0f8e"
+    }
+  ],
+  "fileCount": 36,
+  "totalBytes": 97436,
+  "qualification": "Bounded source/control evidence only. Actual Windows successor execution and complete application/donor/29 acceptance remain required; native R2 runtime pending/no provider activation. Studio avatar decoder and Present Linux real render failures remain explicit in original owner evidence."
+}

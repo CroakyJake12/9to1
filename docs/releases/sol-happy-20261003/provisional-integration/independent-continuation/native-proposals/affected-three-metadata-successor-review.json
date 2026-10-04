@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "frozenCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "previousFrozenCommit": "d149c4fa9f9c2a5b5e131ff8a9c2d53e7611cef0",
+  "changedPath": ".github/validation/windows-package-probe.json",
+  "catalogSha256": "5ee83a10ea8da3f69463a1ec8f1b3ae5947ea0bee2107872f7bace2daac94096",
+  "correctedReference": {
+    "pullRequest": 5,
+    "pullRequestUrl": "https://github.com/CroakyJake12/9to1/pull/5",
+    "globalCandidateAtOriginalRequest": "127c8e1a61298522bc06b4484db806777d41bac2",
+    "globalCandidateLatestAtMetadataCorrection": "1c7784a08314e9ea9b9eef4b64ed6f1dab229526",
+    "globalReleaseLineageBase": "7254ca4ee535839a2c9ef3f52fed6f5f51c0034a",
+    "nativeSourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "qualification": "Root global draft release evidence is separate from this exact isolated receiving native source graph; newer global Mesh/fixture source does not alter this Windows candidate. No automatic source adoption."
+  },
+  "review": "ACK metadata-only global reference correction, all remaining catalogue/native26pins/9frozen native bodies/harness bytes unchanged. Previous exact source/harness review remains applicable.",
+  "qualification": "Actual affected Windows run pending; no acceptance inferred."
+}
