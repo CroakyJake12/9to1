@@ -1,0 +1,68 @@
+name: Team B existing independent Wave part02 smaller readonly transport
+on:
+  workflow_dispatch:
+  push:
+    branches: ["custody/team-b-wave-independent-part02-subtransport-20261004"]
+    paths:
+      - .github/workflows/team-b-wave-independent-part02-subtransport.yml
+      - apps/Web/Tests/ci/sealed-browser-replay/export-independent-wave-part02-subtransport.py
+      - apps/Web/Tests/ci/sealed-browser-replay/wave-independent-original-transport-manifest.json
+permissions:
+  contents: read
+  actions: read
+jobs:
+  split-existing-part02:
+    if: github.ref == 'refs/heads/custody/team-b-wave-independent-part02-subtransport-20261004'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Receive only exact existing part02 from its original export run
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: "11307686670"
+          run-id: "37213508315"
+          repository: CroakyJake12/9to1
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/wave-independent-existing-part02/input
+      - name: Verify original two bodies and split exact half payloads
+        run: >-
+          python3 apps/Web/Tests/ci/sealed-browser-replay/export-independent-wave-part02-subtransport.py
+          --input "$RUNNER_TEMP/wave-independent-existing-part02/input"
+          --output "$RUNNER_TEMP/wave-independent-existing-part02/output"
+      - name: Retain bounded full verification diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-independent-wave-part02-subtransport-diagnostics-11307686670-${{ github.sha }}
+          path: ${{ runner.temp }}/wave-independent-existing-part02/output/diagnostics
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain verified exact first half and both manifests
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-independent-wave-part02-subpart01-11307686670-${{ github.sha }}
+          path: ${{ runner.temp }}/wave-independent-existing-part02/output/subparts/subpart01
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain verified exact second half and both manifests
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-independent-wave-part02-subpart02-11307686670-${{ github.sha }}
+          path: ${{ runner.temp }}/wave-independent-existing-part02/output/subparts/subpart02
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
