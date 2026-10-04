@@ -1,5 +1,5 @@
 {
-  "recordedUTC": "2026-10-04T09:03:56.949019+00:00",
+  "recordedUTC": "2026-10-04T10:04:40.433436+00:00",
   "releaseStatus": "FULL_ACCEPTANCE_PENDING_ACTIVE_CLOUDFLARE_PASS",
   "acceptedHead": null,
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
@@ -239,8 +239,10 @@
       "path": "c1-sites-artifact-isolation-owner-review.md",
       "proposalBytes": 663,
       "proposalSha256": "7708aabec29de94d5e2fd1f0423f04570a643d8590653af0ee3ad43ca15afe9c",
-      "status": "SOURCE_ACK_ONLY/explicit early UseArtifactsOutput=true; false/unset legacy unchanged",
-      "qualification": "ArtifactsPath-only auto-opt-in outside ACK. Proposal unadopted/unrun; requires fresh complete cut, evaluated owner roots and original source/PE/PDB/document/task/restore/drain controls. SDK10.0.401 variance explicit."
+      "status": "EXACT_663_BYTE_SOURCE_ADOPTED_EIGHT_PROPERTY_EVALS_PASS_WHOLE_SDK_OPEN",
+      "qualification": "Actual explicit earlytrue/unset/false property evaluations only; ArtifactsPath-only outside ACK. Original producer/source/PDB/document/task/restore/drain controls remain required; no new frozen full validation issuance.",
+      "sourceCommit": "fb4358cf9785ed029e85ab0a289ac0364c7b5cdc",
+      "sourceReceipt": "sites-props-owner-source-ack.json"
     },
     "filesGuard": {
       "sourceCommit": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
@@ -415,5 +417,32 @@
     "sourceSHA256": "232e07d75975ceb29ef479d4b7e34fced32da30a801d6ba3ac9fa9d6fbf1ecb3",
     "state": "SOURCE_CAPTURE_AND_OPTIMIZED_GUARDS_VERIFIED_CANONICAL_AUTHORITY_PARITY_UNBOUND",
     "qualification": "Seven exact public page bodies preserved. Independent optimized tamper and duplicate-ID refusals occur before output; original utility failures retained as negative controls. No canonical identities/editable theme/full asset/runtime build/activation inferred."
+  },
+  "currentSourceOwnerIntegrationRequests": "current-source-owner-integration-requests.json",
+  "currentBoundedEvidenceCustody": "current-bounded-evidence-custody.json",
+  "currentNetworkBoundary": "current-network-boundary.json",
+  "currentAccountsProposal": {
+    "sourceHead": "29e33a1a019f51c83ef16bb8810ad381526fb8c4",
+    "productionHead": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+    "ownerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "state": "NARROW_PROPOSAL_TESTED_EXACT_CURRENT_OWNER_ADOPTION_ACK_OPEN",
+    "tests": "Whole Accounts/OrgPools Debug+Release pass; original key/cancellation mutation failures retained. Test-only body-failure drainage independently verified Debug+Release.",
+    "evidence": "evidence/c3-accounts-narrow-integration/artifact-index.json +evidence/c3-accounts-cancellation-cleanup/artifact-index.json +c6/accounts-29e-review/audit.json",
+    "qualification": "31 exact delivered core/spec paths; no Remote/Web/legacy issuer or hosted actor/session/client bridge activation. Nine cleanup payloads separate from historical47. No whole SDK/provider/current owner source adoption inferred."
+  },
+  "currentNativeArtifactReaderProposal": {
+    "sourceHead": "b7b4b4ee5cf7b77e75e1bdca0b4a48a22c7ea95b",
+    "branch": "team-c/sol-happy-c4",
+    "state": "CORRECTED_BOUNDED_SOURCE_ACK_ACTUAL_NATIVE_CLOSURE_ADOPTION_OPEN",
+    "independentResults": "21pass; original14 provenance probes pass; hash omission2fail/19pass. Original failures retained.",
+    "evidence": "evidence/c5-native-r2-b7b4/index.json +cloudflare/native-sites-prerequisite-review.json",
+    "qualification": "Actual isolated e0c native types; receiving root requires selected pipeline/authoring/guarded-store closure preserving authority. No duplicate manifest records, real R2/fullSites/Files acceptance."
+  },
+  "currentWorkersAiMetadataOwnerAck": {
+    "coordinationHead": "64be595e99a0683ba53f713016176115edc7847b",
+    "state": "CONDITIONAL_EXACT_TWO_SPAN_METADATA_REBASE_TEST_PROJECT_CUSTODY_OPEN",
+    "ownerAck": "workers-ai-current-owner-ack.json",
+    "proposalEvidence": "workers-ai-historical-evidence-custody.json",
+    "qualification": "Historical24 tests separate from newer eight endpoint cases; no wholecurrent project/runtime, inference/funding/paidactivation or provider adoption."
   }
 }

@@ -496,10 +496,37 @@ open; source delivery supplies no runtime acceptance.
 
 The [Sites artifact isolation review](c1-sites-artifact-isolation-owner-review.md)
 acknowledges only the exact 663-byte proposal with explicit early
-`UseArtifactsOutput=true`; false/unset legacy behavior is preserved. The proposal
-remains unadopted and unrun. A fresh complete owning cut and evaluated roots with
-the original source, PE/PDB, document, task, restore and drain controls are needed
-before execution; ArtifactsPath-only opt-in is outside this ACK.
+`UseArtifactsOutput=true`; false/unset legacy behavior is preserved. The exact
+663-byte source is now adopted at `fb4358cf`. Eight independent actual SDK property
+evaluations pass; [source receipt](sites-props-owner-source-ack.json) records the
+registered cut. Whole owning validation still requires the original source,
+PE/PDB, document, task, restore and drain controls; ArtifactsPath-only opt-in is
+outside this ACK.
+
+The standalone Accounts proposal imports the exact 31-file owner delivery and
+preserves the canonical authority. The control-character correction and six
+cancellation checks pass whole local Accounts/OrgPools Debug and Release runs;
+original mutation failures remain retained. The test-only `29e33a1a` successor
+also drains the pending operation after an injected body failure, independently
+verified in both configurations. [Peer results](c6/accounts-29e-review/audit.json)
+distinguish nine cleanup payloads from the historical 47-file publication. This
+source remains on its proposal branch pending the owner's exact adoption ACK;
+the hosted actor/session/registered-client authority bridge remains open.
+
+The corrected native manifest/per-file reader `b7b4b4ee` passes 21 bounded local
+transport cases, the original 14 provenance probes and a hash-omission negative
+control. [Independent evidence](evidence/c5-native-r2-b7b4/index.json) retains the
+original failures. Receiving adoption requires the actual native pipeline,
+authoring and guarded-store source closure; copying its manifest records would
+omit publication authority. No real R2 or full Sites acceptance is claimed.
+
+The latest [Workers AI owner ACK](workers-ai-current-owner-ack.json) permits only
+the exact metadata rebase onto the current provider body. It requires preserving
+the current project references and newer endpoint tests. Inference, trusted
+pricing, funding and paid activation remain unresolved. Exact
+[source handoff requests](current-source-owner-integration-requests.json) and
+[evidence custody](current-bounded-evidence-custody.json) separate these proposals
+from global adoption and acceptance.
 
 The [current Files guard review](semantic/c4-files-current-e0c-guard-review.md)
 consumes actual `e0c0310e` source and preserves its guarded mutation checks. The
@@ -524,9 +551,9 @@ and [independent account audit](c6/cloudflare-account-read-20261004-audit.json)
 preserve the scope and evidence limits.
 
 Three Cloudflare tools are callable (`search`, `execute`, `docs`); `execute` is the
-account API tool. The available browser connector still returns MCP SSE HTTP 404
-on the post-restart list-tabs request, so the dashboard tab cannot be read or
-controlled here. Earlier HTTP 404/429 and zero-tool observations remain historical;
+account API tool. The latest browser retry returns MCP SSE HTTP 429 on list-tabs,
+so the dashboard tab cannot be read or controlled here. Earlier HTTP 404/429 and
+zero-tool observations remain historical;
 no login-state or error-cause inference is made. Connector authentication does
 not establish CLI credentials, provider journeys, paid application entitlement,
 allocation or available quota. The subsequent explicitly approved isolated

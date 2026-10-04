@@ -3,13 +3,14 @@
   "accounts": {
     "owner": "Team A canonical Accounts authority; C3 receiving trusted-service integration",
     "branch": "team-c/sol-happy-c3-accounts-cancellation",
-    "sourceHead": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+    "sourceHead": "29e33a1a019f51c83ef16bb8810ad381526fb8c4",
     "parentDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
     "rootProposalBase": "0bf0490d82f5a378c415ce9d1fd5a17a92c7a250",
     "closure": "31 exact standalone Accounts core/spec paths; no Remote/Web/issuer activation or package/shared/Avalonia closure",
     "changes": [
       "Previously owner-cleared control-character key rejection and 16 operation/character persistence cases.",
-      "Six cancellation checks in existing FundAsync/ReserveAsync; four gated authority/pool-wait controls preserve bytes and restart."
+      "Six cancellation checks in existing FundAsync/ReserveAsync; four gated authority/pool-wait controls preserve bytes and restart.",
+      "Test-only pending-operation drainage after body failure, independently checked in Debug and Release; production remains unchanged from 9991da24."
     ],
     "pins": [
       {
@@ -25,11 +26,20 @@
         "bytes": 15783,
         "sha256": "5930c9b1c23d668d820f62006fb64a2bfcae64b1665bb64ecd2053c1a44d0c4b",
         "gitBlob": "7aefca2c9adaa0b3242e5079e6c3eb034208e0ee"
+      },
+      {
+        "head": "29e33a1a",
+        "path": "9to1 Workspace/Accounts/Tests/OrgPoolsProgram.cs",
+        "bytes": 28787,
+        "sha256": "0953c81b77bb5e60ac6a92e654c92ca563d120ca723941462ced01b5f2ddface",
+        "gitBlob": "29b00cab38bc0233965ef66243233df10dc75b3f"
       }
     ],
-    "review": "C2 identity/authority subset and C6 remaining source/whole Debug+Release+negative probes; C6 a96caff8 six-check cancellation ACK only. Test-helper exceptional drain successor still being reviewed; no broad cleanup claim.",
-    "evidence": "evidence/c3-accounts-narrow-integration/artifact-index.json +c6/accounts-c96-review/audit.json +c6/accounts-9991-review/audit.json",
-    "request": "ACK narrow exact source adoption or supply bounded rebase onto current selected owner body, preserving all existing issuer/account/client/session/organisation/quote/funding guards. No stale whole-source replacement. Provide remote actor/current authority/registered-client mapping separately before hosted activation."
+    "review": "C2 bounded identity/authority source ACK; C6 whole Accounts/OrgPools Debug+Release and cancellation negative probes; 9991 six-check cancellation ACK plus 29e33 test-only exceptional body-drain ACK. Four cancellation controls and exact injected-error preservation pass. No broad cleanup or current remote-actor bridge acceptance.",
+    "evidence": "evidence/c3-accounts-narrow-integration/artifact-index.json +c6/accounts-c96-review/audit.json +c6/accounts-9991-review/audit.json +evidence/c3-accounts-cancellation-cleanup/artifact-index.json +c6/accounts-29e-review/audit.json",
+    "request": "ACK narrow exact source adoption or supply bounded rebase onto current selected owner body, preserving all existing issuer/account/client/session/organisation/quote/funding guards. No stale whole-source replacement. Provide remote actor/current authority/registered-client mapping separately before hosted activation.",
+    "productionHead": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+    "publicationQualification": "Original47 narrow-integration payloads and new9 cleanup payloads are separate; peer491e5432 corrects prior874c9944 scope metadata without changing raw test evidence."
   },
   "nativeSites": {
     "owner": "Team A selected native authoring/build source; C1/C4 receiving hosted composition",
@@ -58,5 +68,16 @@
     "review": "C5 exacte0c-type source ACK;21 cases pass, original14 blank-provenance probes pass, hash omission2fail/19pass. Original failures retained. Receiving root lacks manifest types: no receiving compile/activation ACK.",
     "remaining": "Canonical original Files/session/project source binding, consistent snapshot export, real secret scanner, immutable namespace/provider composition and full theme/editor/dynamic parity."
   },
-  "qualification": "Reviewable source requests over the established coordination branch. No new model/ledger, production activation, commercial policy, provider acceptance or whole release completion. Root is sole adopter."
+  "qualification": "Reviewable source requests over the established coordination branch. No new model/ledger, production activation, commercial policy, provider acceptance or whole release completion. Root is sole adopter.",
+  "workersAiMetadata": {
+    "owner": "Team A maintained provider and current test-project closure",
+    "ownerAckEvidence": "workers-ai-current-owner-ack.json",
+    "state": "CONDITIONAL_OWNER_ACK_EXACT_PROVIDER_REBASE_IN_PROGRESS_TEST_PROJECT_CUSTODY_OPEN",
+    "proposalHead": "09067b7ca5c02afa17c30ccb6d440c9d98f10644",
+    "basisCustody": "C5 reports exact delivered provider30593B fd162747 basis at57ebc7e2; two-span inverse must recover all unchanged generation/tool/stream/usage/cancellation bytes.",
+    "expectedRebasedProviderBytes": 35576,
+    "expectedRebasedProviderSHA256": "b3fec98daa588c0d2d8e2afa8f3ac3e4ecf996c725e2af77c4cea6d10e0e111b",
+    "request": "Deliver exact current1665B Haven.Infrastructure.Tests.csproj SHA c04a3520a284deb0d8220de3e03a5f9b002acba7b7c55a53966e1c77df7686d1 (Git commit/blob+whole bytes) and original DI redirect test owning source/dependency closure. Existing received1572B or proposal1205B project is not that body. Sole90B EmbeddedResource insertion must produce1755B SHA e80f49d60244e7af9e95c44bae312dc9787d0d2bc816b6aebaf13ac86cfcf799. Supply updated current body pins if owner selection changes.",
+    "validationQualification": "Historical24 tests omit eight current endpoint cases; C5 may execute exact delivered seven locality cases separately, real DI redirect and whole current project/native remain required. Existing Canvas511 pre-discovery failure retained. No inference or funding/paid activation."
+  }
 }
