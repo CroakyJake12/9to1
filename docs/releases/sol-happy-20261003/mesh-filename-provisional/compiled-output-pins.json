@@ -1,0 +1,26 @@
+{
+  "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
+  "outputs": [
+    {
+      "path": "artifacts/bin/Haven.Infrastructure.Tests/debug/Haven.Infrastructure.Tests.dll",
+      "bytes": 1259008,
+      "sha256": "1b2e26a4a968463bed08b453592c6260d0bdf421823757841b06162827a393ba"
+    },
+    {
+      "path": "artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll",
+      "bytes": 1146368,
+      "sha256": "2fba036a1c6bbf5850782f9c00a2ed1ef8d160b341c2df835fc5759117659b7f"
+    },
+    {
+      "path": "artifacts/bin/Haven.Infrastructure/release/Haven.Infrastructure.dll",
+      "bytes": 3134464,
+      "sha256": "de32371b1be0ed821b8f4024d1d81027c9d9eaa0632b158f9b442a9f1cf2c98c"
+    },
+    {
+      "path": "artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.pdb",
+      "bytes": 203580,
+      "sha256": "1a5ba79d7ce33fd8d307d7cec3f941438d424c61ed16a5030ffa705c45d5562f"
+    }
+  ],
+  "qualification": "Task-local observed compiled artifact hashes, not whole PDB/global executable acceptance."
+}
