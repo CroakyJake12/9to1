@@ -363,11 +363,14 @@ jobs:
                 /io/semantic-roundtrip.odt
               test -s /io/semantic-roundtrip.odt
 
+              mkdir -p /io/ipc-input
+              cp -- /io/source.odt /io/ipc-input/source.odt
+              cmp -- /io/source.odt /io/ipc-input/source.odt
               ENGINE_BINARY=/probe/haven_write_engine_poc \
               CLIENT_BINARY=/probe/haven_write_engine_client \
               IPC_WORK_DIR=/tmp/haven-write-engine-ipc-poc \
                 bash /probe/run-ipc-probe.sh \
-                  /io/source.odt \
+                  /io/ipc-input/source.odt \
                   /io/ipc-roundtrip.odt \
                   /io
               test -s /io/ipc-roundtrip.odt
