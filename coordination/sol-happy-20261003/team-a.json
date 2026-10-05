@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-04T14:44:13.045212+00:00",
+  "updatedUTC": "2026-10-05T08:29:06Z",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -198,7 +198,7 @@
     {
       "from": "A4/W2",
       "to": "A1/W1",
-      "scope": "Exactly26 Den Runtime/AgentAdapters selected joint04 target rows8\u201322 and44\u201354; all selected bytes and38 owning prerequisites preserved. A4 retains Files03/ModelGovernance rename and Mail17 original custody; A3 schema/presentation/Studio excluded.",
+      "scope": "Exactly26 Den Runtime/AgentAdapters selected joint04 target rows8–22 and44–54; all selected bytes and38 owning prerequisites preserved. A4 retains Files03/ModelGovernance rename and Mail17 original custody; A3 schema/presentation/Studio excluded.",
       "receipt": {
         "path": "/workspace/astra-source/worker2-a1-frozen-den-exact-target-claim-handoff01.json",
         "bytes": 919,
@@ -662,7 +662,7 @@
     "A4": "Canonical Files identities/placement transfer storage/quota/owning sources; joint SDK packaging stays soleowner; Terraimplementation gated.",
     "A5": "Trusted installer/native package/OS/mobile/platform matrix and actual installed Core producer/bootstrap.",
     "A6": "Independent full inherited+LE spec-to-test challenge, runtime/native/platform/negative/privacy/crossapp evidence.",
-    "constraints": "LE03\u201305 explicitly supersede only fixed navigation/layout test. Existing supported platforms remain, Droidpostrelease/Trainingexcluded. Serverpaid+strictallocation>10GB andquota not invented; cloudretention/commercial approvals remain dependent-only blockers. Zero new behaviour verified by reading."
+    "constraints": "LE03–05 explicitly supersede only fixed navigation/layout test. Existing supported platforms remain, Droidpostrelease/Trainingexcluded. Serverpaid+strictallocation>10GB andquota not invented; cloudretention/commercial approvals remain dependent-only blockers. Zero new behaviour verified by reading."
   },
   "SandboxAvailability": {
     "discovery": "Common and Desktop Sandbox metadata present; no available skill on cloud/executor catalogues",
@@ -1366,7 +1366,7 @@
     },
     "qualification": "EntirepreviouscurrentExecution979 remainsinimmutablefullrecord; latest progress belongs canonicalcurrentExecution989."
   },
-  "canonicalExecutionField": "currentExecution1041",
+  "canonicalExecutionField": "currentExecution20261005DependencyBreak",
   "currentExecution989": {
     "historicalFullRecordPreserved": {
       "commit": "9b37814cc31716c8b7e6b59a82327eed8da695ed",
@@ -1459,7 +1459,7 @@
       "isRequirementCount": false,
       "currentBytes": 1383785,
       "currentSha256": "b378001b1b2e503771f8bef94c4f1cc4d3b91bc60c71f8583460065c4ccff9c9",
-      "wholeComparison": "Entire previous881 native text plus exact singleton OUT-OF-SCOPE tan90 title Choo Choo\u2192Dulche Decorum. Entire forward and reverse verified; other1.38MB byte-exact. TeamA active Pass1-3 scope unchanged; TrainingLabs out of scope."
+      "wholeComparison": "Entire previous881 native text plus exact singleton OUT-OF-SCOPE tan90 title Choo Choo→Dulche Decorum. Entire forward and reverse verified; other1.38MB byte-exact. TeamA active Pass1-3 scope unchanged; TrainingLabs out of scope."
     },
     "sandbox": {
       "skillsCloudAndExecutor": "No available skills",
@@ -1655,7 +1655,7 @@
           "driverSha256": "6314b0988039fa71839bd5532018906b1c86c924792d836f2d7655ee9cba2fe9",
           "controls": 23,
           "controlsInvoked": false,
-          "scope": "Sole866\u21921088 independent collector body span, whole08 inverse plus metadata/byref official proof; one selected actual v3 Debug. Original activation and independent Home offender still UNKNOWN."
+          "scope": "Sole866→1088 independent collector body span, whole08 inverse plus metadata/byref official proof; one selected actual v3 Debug. Original activation and independent Home offender still UNKNOWN."
         }
       }
     },
@@ -2664,5 +2664,53 @@
       "FilesOwningCarrier": "RAM6INDEPENDENT_PROJECT_CONFIGURATION_LANES_ACTUAL_EVALUATEDCOMPILE_PEPDB_AND_NATIVEUNRUN"
     },
     "restrictions": "No production/WP/DNS/cloud deployment/new paid service; no existing WordPress users or linked data export/backup/import/transfer. Local/free/SaveFirstLocal/offdevice opt-in/model-access rules and all original native/installed/donor/fullspec gates retained. No whole-product completion or percentage claim."
+  },
+  "currentExecution20261005DependencyBreak": {
+    "observedUTC": "2026-10-05T08:29:06Z",
+    "scope": "Continue all inherited requirements. Implement and execute the user-requested dependency-break milestone with existing owners; no broad worker rollout or restart.",
+    "targets": {
+      "missed": "2026-10-05 07:00 Europe/London",
+      "remaining": "2026-10-05 19:00 Europe/London",
+      "acceptanceWaiver": false
+    },
+    "integration": {
+      "owner": "Team C",
+      "publicHead": "285e97e3a62e75636879c098174d3c6141c94f8b",
+      "acceptedHead": null
+    },
+    "milestone": "Matched installed Home and representative native app in separate processes: protected-action approval, decline/refusal, approve/action, save/reopen identity, revoke/refusal, dependency/crash/reconnect/cancel/audit controls.",
+    "ownership": [
+      {
+        "owner": "A4; bounded A5 handoff confirmed",
+        "component": "Home Windows authenticated approval-domain transport and canonical permission gate",
+        "next": "Implement and test purpose-bound application request/status and approval-manager operations.",
+        "receiver": "C and receiving root",
+        "closure": "Separate-process authenticated decline/once/revoke with canonical permissions."
+      },
+      {
+        "owner": "A1 consumer; receiving root Windows presenter",
+        "component": "Home NativeUI warning-before-audit ordering and native presentation",
+        "next": "Compile supplied source and original negative controls; implement actual checked presentation.",
+        "receiver": "C and receiving root",
+        "closure": "Exact warning presentation before canonical audit with independent original-task retirement."
+      },
+      {
+        "owner": "A3; A5 caller/peer",
+        "component": "CUI runtime original-action lifetime and host disposal",
+        "next": "Complete corrective source, reconcile one selected loader and run closest/full original controls.",
+        "receiver": "C and receiving root",
+        "closure": "Bounded retained faults and actual actions/hooks joined before teardown."
+      },
+      {
+        "owner": "A2 utility; C5 package writer",
+        "component": "Canvas Windows native dependency stage and original GUI workflow",
+        "next": "Deliver reviewed utility to existing C5 successor sealing and execute unchanged driver.",
+        "receiver": "C5 and receiving root",
+        "closure": "Native load, original stroke/save/reopen, preserved prior failure evidence."
+      }
+    ],
+    "status": "Implementation and receiving tests in progress. Full installed/signing/clean-machine and all-group acceptance remain open; no overall completion percentage inferred.",
+    "delivery": "Exact source and execution handoffs use existing authorized private coordination; Team C retains sole global integration.",
+    "constraints": "No production, billing, account import, trust identity, release or shutdown change."
   }
 }
