@@ -6867,7 +6867,7 @@
     "strictDeviceOwnerSource": "0fc696a68b41698cab41091173818af06a318f02",
     "strictDeviceOwnerPeerSHA256": "fd9f99172d28c71b9104d34bb7ea6fb92f02f662a73c2685aef197c16effdc68",
     "callbackCompletionSource": "0cdb83cea5450e42be5badf78e2939254cb05408",
-    "callbackPeerSHA256": "d6560182b52e6ffba916046db941520310b6b530557502e7d04268cb62da5f70d",
+    "callbackPeerSHA256": "d6565b00cecc4ab29f639a0640c39ac7d9bb6f252efe086136edcb80a7337edb",
     "paths": [
       "9to1 Workspace/Home/Tests/HomeNativeWindowsCompositionTests.cs",
       "9to1 Workspace/Home/Tests/HomePackageOriginalDeviceOwnerTests.cs"
