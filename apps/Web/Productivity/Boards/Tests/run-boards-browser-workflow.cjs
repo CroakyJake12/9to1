@@ -118,7 +118,7 @@ async function rows() {
   }));
 }
 function firstBlock(doc) { return doc.sections[0].pages[0].blocks[0]; }
-function text(doc) { return firstBlock(doc).runs.map(run => run.text).join(''); }
+function text(doc) { const block = firstBlock(doc); return block.runs.length ? block.runs.map(run => run.text).join('') : block.plainText; }
 function checkRecord(record) {
   assert.equal(record.sha256, sha(record.documentJson), 'Exact canonical JSON integrity');
   const doc = JSON.parse(record.documentJson);
@@ -133,14 +133,14 @@ function checkFormatting(doc) {
   assert.deepEqual(runs.map(run => run.text), ['Alpha ', 'beta', ' gamma']);
   assert.deepEqual(runs.map(run => run.bold), [false, true, false], 'Only actual selected beta is bold');
 }
-async function savedRevision(version) {
+async function savedRevision(version, requireClean = true) {
   const end = Date.now() + 30000;
   while (Date.now() < end) {
     if (firstError) throw firstError;
     const stored = await rows();
     if (stored.documents.length === 1 && stored.documents[0].version === String(version)) {
       await wait(s => s.elements.some(peer => peer.role === 'button' && peer.name === 'Save' && peer.enabled), 'Original native save action settled');
-      if (!await dirty()) return stored;
+      if (!requireClean || !await dirty()) return stored;
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
@@ -186,13 +186,19 @@ async function close(label) {
     await launch();
     assert.deepEqual(await rows(), { documents: [], history: [] }, 'Fresh profile has no fabricated documents');
     await click('New notebook');
-    const initial = await savedRevision(1);
+    const initial = await savedRevision(1, false);
+    assert.equal(await dirty(), true, 'Canonical editor initialization remains unsaved after the acknowledged create revision');
     assert.equal(initial.history.length, 1);
     const initialDoc = checkRecord(initial.documents[0]); documentId = initialDoc.id;
     assert.equal(initialDoc.metadata['haven.product'], 'boards', 'Actual canonical notebook product marker');
     assert.equal(text(initialDoc), initialDoc.title);
     assert.equal(initialDoc.sections[0].pages[0].blocks.length, 2);
     const unchangedIntroduction = initialDoc.sections[0].pages[0].blocks[1];
+    await point(editor(await ax()), true);
+    await page.keyboard.press('Control+Home');
+    await page.keyboard.press('Shift+End');
+    // Normalize the canonical bold Heading using actual native formatting.
+    await click('Bold');
     await point(editor(await ax()), true);
     await page.keyboard.press('Control+Home');
     await page.keyboard.press('Shift+End');
