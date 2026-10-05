@@ -1,11 +1,11 @@
 {
   "schema": "TEAM_B_CURRENT_SANITIZED_REQUEST",
-  "source": "7815b3dd64848bf9021de3e8c3262923a65bfb0a",
+  "source": "5695619c2cf97af4b8f73e1e019ddb575335e0fd",
   "status": "ACCEPTANCE_INCOMPLETE",
-  "validation": "Current7815 native64PASS with original/D93 controls retained; affected browser rerun active. Prior2db original14PASS, responsive1PASS1FAIL1NOT_RUN at Save locally; caa stale native hash preflightFAIL/browserSKIPPED preserved.",
-  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37252427800",
-  "next": "One existing responsive workflow dispatched after native success; exact original cases/deadlines unchanged. Guarded AX restoration and bounded Save observations reviewed; unchanged13 mock AX regression failed and its literal assertion is being recovered.",
-  "diagnostics": "Complete source5ee native49 paint controls independently reviewed; source2db first-case PNGs read and viewed. No keyboard-failure-time, full responsive or physical-browser acceptance inferred.",
+  "validation": "Last completed browser run: original14 PASS; responsive1 PASS,1 FAIL,1 NOT_RUN. The reviewed viewport preparation change is now undergoing the unchanged affected acceptance workflow.",
+  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37255699999",
+  "next": "Run unchanged acceptance against this source. The viewport preparation preserves original case bodies, pan assertions, thresholds and deadlines. Corrected accessibility regression tests are under independent review.",
+  "diagnostics": "Detailed evidence and dependency requests retained in private coordination. No physical-browser or installed acceptance claimed.",
   "receivingRequest": "Publish the actual filesystem indeterminate-commit exception type or maintained transport code, source/ref and owning constructor call-site. B can then bind that exact type through existing Func<Exception,bool>. Authorised LoadAsync must settle or refuse unresolved publication before allowing retry. Existing browser IndexedDB mapping is already present.",
   "deadline": "22:30 Europe/London 4 October missed; no verification waiver."
 }
