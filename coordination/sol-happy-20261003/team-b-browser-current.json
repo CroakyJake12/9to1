@@ -1,10 +1,10 @@
 {
   "schema": "TEAM_B_CURRENT_SANITIZED_REQUEST",
-  "source": "5695619c2cf97af4b8f73e1e019ddb575335e0fd",
+  "source": "494485cd41aab65bc80cc120073aeb3afe2a9180",
   "status": "ACCEPTANCE_INCOMPLETE",
-  "validation": "Current source: original14 browser cases pass; responsive acceptance remains incomplete after the reviewed viewport preparation. Detailed results and repairs remain in private coordination.",
+  "validation": "The completed Wave candidate passed 64 native geometry checks and the original 14 browser cases; responsive acceptance remains incomplete. Corrected accessibility regression: 17 unit controls pass. The original Files bootstrap compilation failure is preserved; its reviewed repair is running the unchanged four tests.",
   "run": "https://github.com/CroakyJake12/9to1/actions/runs/37255699999",
-  "next": "Recover exact responsive failure evidence and repair the affected owner path. Original cases, thresholds and deadlines remain unchanged. The isolated corrected accessibility regression passed; named raw results are being independently verified.",
+  "next": "Finish the original Files rerun, preserve the paired fetch-receiver unit results, and complete the affected focus repair. Original assertions, thresholds and deadlines remain unchanged.",
   "diagnostics": "Detailed evidence and dependency requests retained in private coordination. No physical-browser or installed acceptance claimed.",
   "receivingRequest": "Publish the actual filesystem indeterminate-commit exception type or maintained transport code, source/ref and owning constructor call-site. B can then bind that exact type through existing Func<Exception,bool>. Authorised LoadAsync must settle or refuse unresolved publication before allowing retry. Existing browser IndexedDB mapping is already present.",
   "deadline": "22:30 Europe/London 4 October missed; no verification waiver."
