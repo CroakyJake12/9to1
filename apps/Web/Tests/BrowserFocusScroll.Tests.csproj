@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <BrowserFocusBridgeSource Condition="'$(BrowserFocusBridgeSource)' == ''">../BrowserAccessibilityBridge.cs</BrowserFocusBridgeSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BrowserFocusScrollRegression.cs" />
+    <Compile Include="$(BrowserFocusBridgeSource)" Link="Production/BrowserAccessibilityBridge.cs" />
+    <Compile Include="../BrowserAccessibilityJsonContext.cs" Link="Production/BrowserAccessibilityJsonContext.cs" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+  </ItemGroup>
+</Project>
