@@ -288,6 +288,29 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         await RequireActorAsync(owner, token).ConfigureAwait(false);
     }
 
+    internal IAuthenticatedResourceActorSource OriginalTaskActors => _actors;
+
+    /// <summary>Denial-only verification for the private explicit cloud-permission handler.
+    /// It supplies no lease, cloud/context permit or effect and never accepts persisted scope text.</summary>
+    internal async Task ValidateOriginalCloudPermissionAsync(TaskExecutionSnapshot snapshot,
+        TaskExecutionOwnerBinding exactOwner, TaskRunRouteCandidate exactCandidate, CancellationToken token)
+    {
+        var owner = RequireOwner(snapshot);
+        if (owner.Binding != exactOwner || !exactCandidate.UsesCloud ||
+            snapshot.State is TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled or TaskExecutionLifecycle.Failed)
+            throw new UnauthorizedAccessException("Current original task/run/owner is unavailable for permission resolution.");
+        Selection selected;
+        lock (_sync)
+            selected = owner.Selections.GetValueOrDefault(CandidateKey(exactCandidate))
+                ?? throw new UnauthorizedAccessException("The original selected model was not captured by this Task issuer.");
+        await RevalidateSelectionAsync(owner, selected, token).ConfigureAwait(false);
+        token.ThrowIfCancellationRequested();
+        lock (_sync)
+            if (!ReferenceEquals(_owners.GetValueOrDefault(snapshot.TaskId), owner) ||
+                !ReferenceEquals(owner.Selections.GetValueOrDefault(CandidateKey(exactCandidate)), selected))
+                throw new UnauthorizedAccessException("Original task/selection retired during permission validation.");
+    }
+
     private Owner RequireOwner(TaskExecutionSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -303,7 +326,8 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
     {
         token.ThrowIfCancellationRequested();
         var expected = new AuthenticatedResourceActor(binding.ActorId, binding.ProfileId, binding.AccountId, binding.OrganisationId, binding.AuthenticationRevision);
-        if (await _actors.GetCurrentAsync(token).ConfigureAwait(false) != expected)
+        var originalActor = _actors.GetCurrentAsync(token).AsTask(); // SAME ValueTask consumed once.
+        if (await ObserveOriginalPermissionReadAsync(originalActor).ConfigureAwait(false) != expected)
             throw new UnauthorizedAccessException("Original product actor/revision is no longer current.");
     }
     private async Task<(ProviderModelDescriptor Model, ProviderConfiguration Configuration)> ReadSelectedAsync(
@@ -311,19 +335,21 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         IReadOnlyCollection<RestrictedModelCapability> restrictions, CancellationToken token)
     {
         var provider = _providers.Find(expected.ProviderId) ?? throw new InvalidOperationException("Actual provider is unavailable.");
-        var configuration = await _configurations.GetAsync(expected.ProviderId, token).ConfigureAwait(false)
+        var originalConfiguration = _configurations.GetAsync(expected.ProviderId, token);
+        var configuration = await ObserveOriginalPermissionReadAsync(originalConfiguration).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Actual provider configuration is unavailable.");
         if (!configuration.IsEnabled || configuration.Id != provider.Id || configuration.IsLocal != provider.IsLocal ||
             expected.IsLocal != provider.IsLocal || RuntimeSafetyState.IsSafeMode && !provider.IsLocal ||
             _privacy.Current.LocalOnlyMode && !provider.IsLocal)
             throw new UnauthorizedAccessException("Provider locality/configuration/privacy admission denied.");
-        var models = await _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: expected.IsLocal,
-            AllowRemote: !expected.IsLocal, AllowedProviderIds: new[] { expected.ProviderId }.ToFrozenSet(StringComparer.Ordinal)), token).ConfigureAwait(false);
+        var originalCatalogue = _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: expected.IsLocal,
+            AllowRemote: !expected.IsLocal, AllowedProviderIds: new[] { expected.ProviderId }.ToFrozenSet(StringComparer.Ordinal)), token);
+        var models = await ObserveOriginalPermissionReadAsync(originalCatalogue).ConfigureAwait(false);
         var matches = models.Where(model => model.ProviderId == expected.ProviderId && model.Name == expected.Name).Take(2).ToArray();
         if (matches.Length != 1 || matches[0].IsLocal != expected.IsLocal || requirements.Any(capability => !matches[0].Supports(capability)))
             throw new UnauthorizedAccessException("Selected model/capabilities are not current in the actual provider catalogue.");
         foreach (var capability in restrictions)
-            if (!(await _modelPermissions.EvaluateAsync(matches[0], capability, acrossMesh: false, cancellationToken: token).ConfigureAwait(false)).Allowed)
+            if (!(await ObserveOriginalPermissionReadAsync(_modelPermissions.EvaluateAsync(matches[0], capability, acrossMesh: false, cancellationToken: token)).ConfigureAwait(false)).Allowed)
                 throw new UnauthorizedAccessException("Current central model permission policy denies a required typed capability.");
         token.ThrowIfCancellationRequested();
         return (matches[0], configuration);
@@ -336,15 +362,34 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         if (ModelFingerprint(actual.Model) != selection.ModelFingerprint || ConfigurationFingerprint(actual.Configuration) != selection.ConfigurationFingerprint)
             throw new UnauthorizedAccessException("Actual provider/model/configuration changed after route capture.");
         if (selection.ConfiguredObservation is { } configured)
-            await _routes!.DemandOriginalCurrentAsync(selection.OriginalSnapshot, configured, token).ConfigureAwait(false);
+            await ObserveOriginalPermissionReadAsync(_routes!.DemandOriginalCurrentAsync(selection.OriginalSnapshot, configured, token).AsTask()).ConfigureAwait(false);
         var first = owner.First ?? throw new UnauthorizedAccessException("Original selected route missing.");
         if (first.Model.IsLocal && !selection.Model.IsLocal)
         {
-            var originalConfiguration = await _configurations.GetAsync(first.Model.ProviderId, token).ConfigureAwait(false);
+            var originalConfigurationTask = _configurations.GetAsync(first.Model.ProviderId, token);
+            var originalConfiguration = await ObserveOriginalPermissionReadAsync(originalConfigurationTask).ConfigureAwait(false);
             if (originalConfiguration is null || !originalConfiguration.IsEnabled || !originalConfiguration.AllowCloudFallback ||
                 _privacy.Current.LocalOnlyMode) throw new UnauthorizedAccessException("Original local selection does not allow cloud fallback.");
         }
         await RequireActorAsync(owner.Binding, token).ConfigureAwait(false);
+    }
+
+    // Capture the actual returned child task once. Faulted OCE remains a fault payload;
+    // genuinely canceled tasks retain their ordinary cancellation semantics. No Flatten and
+    // no claim to reconstruct causes an upstream producer discarded before returning its task.
+    private static async Task<T> ObserveOriginalPermissionReadAsync<T>(Task<T> original)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        try { return await original.ConfigureAwait(false); }
+        catch (Exception) when (original.IsFaulted)
+        { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original.Exception!).Throw(); throw; }
+    }
+    private static async Task ObserveOriginalPermissionReadAsync(Task original)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        try { await original.ConfigureAwait(false); }
+        catch (Exception) when (original.IsFaulted)
+        { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original.Exception!).Throw(); throw; }
     }
 
     private sealed class Lease(TaskRunPermissionAuthority issuer, Owner owner, Selection selection, Guid attemptId,

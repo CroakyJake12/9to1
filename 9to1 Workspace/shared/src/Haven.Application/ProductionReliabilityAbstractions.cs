@@ -160,6 +160,24 @@ public interface IStartupRecoveryCoordinator
 }
 
 /// <summary>
+/// Prepares the original startup owner's final store writer while diagnostics are alive.
+/// Hosts must retain this SAME issued writer through actual provider/original retirement.
+/// </summary>
+public interface IStartupRecoveryFinalCleanWriterSource
+{
+    Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Records clean only after the supplied genuine host-owned drain settles successfully.
+/// This port is not an actor, permission, presentation or generic completed-task authority.
+/// </summary>
+public interface IStartupRecoveryFinalCleanWriter
+{
+    Task CompleteAfterOriginalDrainAsync(Task actualRequiredOriginalDrain, CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// Defines the recovery safety probe contract so callers depend on a capability rather than one implementation.
 /// </summary>
 public interface IRecoverySafetyProbe

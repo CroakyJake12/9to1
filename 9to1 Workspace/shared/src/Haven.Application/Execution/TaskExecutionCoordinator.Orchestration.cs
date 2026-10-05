@@ -42,6 +42,39 @@ internal sealed class TaskRunInvocationCustody
 
     internal TaskRunInvocationCustody(TaskExecutionCoordinator issuer) { Issuer = issuer; OriginalSelf = this; }
     internal IReadOnlyList<Exception> Causes { get { lock (_gate) return _causes.ToArray(); } }
+    internal void RetainOriginalMove(Task original)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        lock (_gate) OriginalMoves.Add(original);
+    }
+    internal TaskRunOriginalRecoveryCapture CaptureRecoveryOriginals()
+    {
+        lock (_gate)
+        {
+            var originals = new List<TaskRunOriginalSource>();
+            void Capture(string stage, Task? actual)
+            {
+                if (actual is null) return;
+                var status = actual.Status;
+                originals.Add(new(stage, actual, status));
+            }
+            Capture("task.begin", OriginalBegin);
+            for (var index = 0; index < OriginalMoves.Count; index++) Capture("body.move:" + index, OriginalMoves[index]);
+            Capture("body.dispose", OriginalDispose);
+            Capture("tracker.dispose", OriginalTrackerDispose);
+            Capture("runtime.settlement", OriginalSettlement);
+            Capture("task.completion", OriginalCompletion);
+            Capture("task.owning-completion", OriginalOwningCompletion);
+            var causes = _causes.ToList();
+            // A raw source may have become Faulted before its owning catch runs. Its
+            // captured status and actual Task.Exception supply this same observation.
+            foreach (var source in originals)
+                if (source.ObservedStatus == TaskStatus.Faulted && source.Actual.Exception is { } fault)
+                    foreach (var direct in fault.InnerExceptions)
+                        if (!causes.Any(existing => ReferenceEquals(existing, direct))) causes.Add(direct);
+            return new TaskRunOriginalRecoveryCapture(originals.ToArray(), causes.ToArray());
+        }
+    }
     internal void Retain(Exception cause, Task? original = null)
     {
         lock (_gate)

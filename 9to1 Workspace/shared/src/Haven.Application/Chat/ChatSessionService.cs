@@ -1199,7 +1199,7 @@ public sealed class ChatSessionService(
                 try
                 {
                     originalMove = original.MoveNextAsync().AsTask();
-                    originalCustody.OriginalMoves.Add(originalMove);
+                    originalCustody.RetainOriginalMove(originalMove);
                     hasItem = await originalMove.ConfigureAwait(false);
                     if (!hasItem) { originalCustody.ReachedEnd = true; break; }
                     item = original.Current;

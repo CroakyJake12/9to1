@@ -43,14 +43,14 @@ public sealed class CleanResetStartupRecoveryCoordinator(
     public Task MarkCleanShutdownAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var statePath = Path.Combine(paths.DataDirectory, "startup-recovery.json");
-        var backupPath = statePath + ".bak";
+        return ResetOriginalAsync(cancellationToken);
+    }
+
+    private async Task ResetOriginalAsync(CancellationToken cancellationToken)
+    {
         try
         {
-            if (File.Exists(statePath)) File.Delete(statePath);
-            if (File.Exists(backupPath)) File.Delete(backupPath);
-            RuntimeSafetyState.DisableSafeMode();
-            return Task.CompletedTask;
+            await inner.ClearLegacyCleanShutdownAsync(Path.Combine(paths.DataDirectory, "startup-recovery.json"), cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

@@ -704,6 +704,162 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task Recovery_inspection_preserves_original_run_and_only_discloses_detached_redacted_status_without_effects()
+    {
+        var h = Harness.Create(temporary: true);
+        var exact = new IOException("password=inspection-secret");
+        h.Capture.Refusal = exact;
+        Assert.Same(exact, await Record.ExceptionAsync(() => h.RunAsync("inspect original")));
+        var saved = h.Service.CurrentCanonicalTask!;
+        var inspection = await h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+        Assert.Equal(saved.TaskId, inspection.Snapshot.TaskId);
+        Assert.Equal(saved.ExecutionId, inspection.Snapshot.ExecutionId);
+        Assert.Equal(saved.PersistenceRevision, inspection.Snapshot.PersistenceRevision);
+        Assert.Equal(saved.RecoveryObservation!.ObservationId, inspection.OriginalObservationId);
+        Assert.Equal(TaskRunOriginalRecoveryAvailability.LiveOriginalRetained, inspection.Availability);
+        Assert.Contains(inspection.OriginalWork, work => work.Stage.StartsWith("body.move:", StringComparison.Ordinal)
+            && work.Status == TaskStatus.Faulted);
+        Assert.Contains(inspection.OriginalWork, work => work.Stage == "body.dispose" && work.Status == TaskStatus.RanToCompletion);
+        var publicObservation = JsonSerializer.Serialize(inspection);
+        Assert.DoesNotContain("inspection-secret", publicObservation, StringComparison.Ordinal);
+        Assert.NotEmpty(inspection.Causes);
+        Assert.Equal(0, h.Authority.AttemptChecks);
+        Assert.Equal(0, h.Provider.Frames);
+        Assert.Equal(0, h.Workspace.Effects);
+        Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, default));
+        await h.Runtime.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Recovery_inspection_after_owner_restart_reports_original_unavailable_and_never_reconstructs_safe_replay()
+    {
+        var h = Harness.Create(temporary: true);
+        h.Capture.Refusal = new IOException("actual unresolved original");
+        await Assert.ThrowsAsync<IOException>(() => h.RunAsync("retained task"));
+        var saved = h.Service.CurrentCanonicalTask!;
+        var restarted = new TaskExecutionCoordinator(h.TaskRepository, new Sink(), admissionAuthority: h.Authority,
+            runtimeSettlement: h.Runtime);
+        var inspection = await restarted.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+        Assert.Equal(TaskRunOriginalRecoveryAvailability.OriginalUnavailable, inspection.Availability);
+        Assert.Null(inspection.OriginalObservationId);
+        Assert.Empty(inspection.OriginalWork);
+        Assert.Empty(inspection.Causes);
+        Assert.Equal(saved.RecoveryObservation!.ObservationId, inspection.Snapshot.RecoveryObservation!.ObservationId);
+        Assert.Equal(saved.RecoveryObservation.Causes.ToArray(), inspection.Snapshot.RecoveryObservation.Causes.ToArray());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => restarted.StartAttemptAsync(saved.TaskId, saved.ExecutionId,
+            new TaskRunRouteCandidate("synthetic-route", 1, "synthetic", h.Model.Name, null, false, ["Text"]), default));
+        Assert.Equal(0, h.Authority.AttemptChecks);
+        Assert.Equal(0, h.Provider.Frames);
+        Assert.Equal(0, restarted.LiveOriginalInvocationCount);
+        Assert.Equal(1, h.Coordinator.LiveOriginalInvocationCount);
+        await h.Runtime.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Recovery_inspection_requires_current_actual_command_actor_before_original_diagnostic_disclosure()
+    {
+        var h = Harness.Create(temporary: true);
+        h.Capture.Refusal = new IOException("actual retained private cause");
+        await Assert.ThrowsAsync<IOException>(() => h.RunAsync("retained task"));
+        var saved = h.Service.CurrentCanonicalTask!;
+        h.Authority.AllowCurrentActor = false;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default));
+        Assert.Equal(0, h.Authority.AttemptChecks);
+        Assert.Equal(0, h.Provider.Frames);
+        Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, default));
+        await h.Runtime.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Recovery_inspection_refuses_owner_replacement_during_actual_awaited_command_validation()
+    {
+        var h = Harness.Create(temporary: true);
+        h.Capture.Refusal = new IOException("actual retained source");
+        await Assert.ThrowsAsync<IOException>(() => h.RunAsync("retained task"));
+        var saved = h.Service.CurrentCanonicalTask!;
+        var replaced = saved with
+        {
+            OwnerBinding = saved.OwnerBinding! with { ProfileId = "another-profile" },
+            PersistenceRevision = saved.PersistenceRevision + 1
+        };
+        h.Authority.BeforeCommandValidation = () => h.TaskRepository.UpsertAsync(replaced, default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default));
+        Assert.Equal(replaced, await h.Coordinator.GetAsync(saved.TaskId, default));
+        Assert.Equal(0, h.Authority.AttemptChecks);
+        Assert.Equal(0, h.Provider.Frames);
+        await h.Runtime.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Recovery_inspection_refuses_actor_revoked_during_the_final_repository_read()
+    {
+        var h = Harness.Create(temporary: true);
+        h.Capture.Refusal = new IOException("actual private retained cause");
+        await Assert.ThrowsAsync<IOException>(() => h.RunAsync("retained task"));
+        var saved = h.Service.CurrentCanonicalTask!;
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        h.TaskRepository.ReadCount = 0;
+        h.TaskRepository.BeforeRead = async count => { if (count == 3) { entered.SetResult(); await release.Task; } };
+        var actualInspection = h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+        try
+        {
+            await entered.Task;
+            h.Authority.AllowCurrentActor = false;
+            Assert.False(actualInspection.IsCompleted);
+            release.SetResult();
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => actualInspection);
+            Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, default));
+            Assert.Equal(0, h.Provider.Frames);
+            Assert.Equal(0, h.Workspace.Effects);
+        }
+        finally { release.TrySetResult(); await Record.ExceptionAsync(() => actualInspection); }
+        await h.Runtime.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Recovery_inspection_uses_one_final_actual_body_fault_and_redacted_cause_observation()
+    {
+        var h = Harness.Create(temporary: true);
+        var failure = new IOException("password=late-private-cause");
+        var rawCapture = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var captureEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var suspensionEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowSuspension = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        h.Capture.OriginalFailureTask = rawCapture.Task;
+        h.Capture.BeforeCapture = () => captureEntered.TrySetResult();
+        h.TaskRepository.BeforeSuspension = async () => { suspensionEntered.SetResult(); await allowSuspension.Task; };
+        var actualRun = h.RunAsync("held actual context read");
+        await captureEntered.Task;
+        var saved = h.Service.CurrentCanonicalTask!;
+        h.Authority.CommandChecks = 0;
+        h.Authority.OnCommandValidation = async count =>
+        {
+            if (count != 3) return;
+            rawCapture.SetException(failure);
+            await suspensionEntered.Task;
+        };
+        try
+        {
+            var inspection = await h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+            Assert.Contains(inspection.OriginalWork, work => work.Stage.StartsWith("body.move:", StringComparison.Ordinal)
+                && work.Status == TaskStatus.Faulted);
+            Assert.NotEmpty(inspection.Causes);
+            Assert.DoesNotContain("late-private-cause", JsonSerializer.Serialize(inspection), StringComparison.Ordinal);
+            var actualCauses = (IReadOnlyList<Exception>)typeof(TaskRunOriginalRecoveryInspection)
+                .GetField("ActualCauses", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(inspection)!;
+            Assert.Contains(actualCauses, cause => OriginalCauses(cause).Any(item => ReferenceEquals(item, failure)));
+            Assert.False(actualRun.IsCompleted);
+            Assert.Equal(0, h.Provider.Frames);
+            Assert.Equal(0, h.Workspace.Effects);
+        }
+        finally { rawCapture.TrySetException(failure); allowSuspension.TrySetResult(); await Record.ExceptionAsync(() => actualRun); }
+        await h.Runtime.CloseAndDrainAsync();
+    }
+
     private sealed class Capture : ITaskRunProviderContextCapture
     {
         public sealed record ChatItem(TaskExecutionSnapshot Current, OllamaChatRequest Request, TaskRunContextInventory Inventory);
@@ -762,6 +918,8 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         private readonly Dictionary<Guid, TaskExecutionSnapshot> _rows = [];
         public int RowCount => _rows.Count;
         public Func<Task>? BeforeSuspension;
+        public int ReadCount;
+        public Func<int, Task>? BeforeRead;
         public async Task UpsertAsync(TaskExecutionSnapshot next, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
@@ -771,7 +929,8 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
                 throw new TaskExecutionRevisionConflictException(next.TaskId, next.PersistenceRevision - 1, next.PersistenceRevision);
             _rows[next.TaskId] = next;
         }
-        public Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token) => Task.FromResult(_rows.GetValueOrDefault(id));
+        public async Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token)
+        { var count = ++ReadCount; if (BeforeRead is { } before) await before(count); return _rows.GetValueOrDefault(id); }
         public Task<TaskExecutionSnapshot?> GetByContextAsync(Guid id, CancellationToken token) => Task.FromResult(_rows.Values.FirstOrDefault(row => row.ContextId == id));
         public Task<IReadOnlyList<TaskExecutionSnapshot>> GetResumableAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<TaskExecutionSnapshot>>(_rows.Values.ToArray());
     }
@@ -792,14 +951,22 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         public int AttemptChecks;
         public int StartChecks;
         public Func<Task>? OnLeaseClose;
+        public Func<Task>? BeforeCommandValidation;
+        public int CommandChecks;
+        public Func<int, Task>? OnCommandValidation;
         public Guid? AcceptedAction; public Guid? AcceptedAttempt;
         public Task<TaskExecutionOwnerBinding> AuthorizeStartAsync(TaskExecutionSnapshot current, CancellationToken token)
         { StartChecks++; return Task.FromResult(new TaskExecutionOwnerBinding(current.TaskId, current.ContextId, current.ExecutionId,
             "controlled-actor", "controlled-profile", null, null, "controlled-auth", "controlled-start")); }
         public Task<ITaskRunAdmissionLease> AuthorizeAttemptAsync(TaskExecutionSnapshot current, Guid id, TaskRunRouteCandidate candidate, Guid? old, CancellationToken token)
         { AttemptChecks++; if (!AllowCurrentActor) throw new UnauthorizedAccessException("Actual controlled actor revoked"); Lease = new Lease(current.OwnerBinding!, id, candidate) { OriginalCloseBody = OnLeaseClose }; return Task.FromResult<ITaskRunAdmissionLease>(Lease); }
-        public Task ValidateTaskCommandAsync(TaskExecutionSnapshot current, string command, CancellationToken token)
-        { if (!AllowCurrentActor || current.OwnerBinding?.ActorId != "controlled-actor") throw new UnauthorizedAccessException("Actual controlled actor revoked"); return Task.CompletedTask; }
+        public async Task ValidateTaskCommandAsync(TaskExecutionSnapshot current, string command, CancellationToken token)
+        {
+            var count = ++CommandChecks;
+            if (OnCommandValidation is { } observed) await observed(count);
+            if (BeforeCommandValidation is { } before) { BeforeCommandValidation = null; await before(); }
+            if (!AllowCurrentActor || current.OwnerBinding?.ActorId != "controlled-actor") throw new UnauthorizedAccessException("Actual controlled actor revoked");
+        }
         public Task ValidateAcceptedActionAsync(TaskExecutionSnapshot current, Guid attempt, Guid action, string receipt, CancellationToken token)
         { if (attempt != AcceptedAttempt || action != AcceptedAction || receipt != "controlled-exact-owner-receipt") throw new UnauthorizedAccessException(); return Task.CompletedTask; }
     }
