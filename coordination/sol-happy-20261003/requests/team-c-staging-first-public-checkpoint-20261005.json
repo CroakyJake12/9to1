@@ -61,8 +61,10 @@
     },
     "writer": {
       "diagnosisSource": "3ebe2b230b7b54a1bfdbfff49bed658862d0f584",
-      "state": "CORRECTED_PUBLIC_DIAGNOSIS_PREINVOKE_SOURCE_REVIEW",
-      "actualNewRuntimeResult": "NOT_RUN",
+      "state": "ACTUAL_TWO_ARM_PATH_STATE_DIAGNOSIS_COMPLETE",
+      "runId": 37287303590,
+      "jobId": 111689137339,
+      "actualNewRuntimeResult": "Reused-path original IPC fails; fresh byte-identical IPC input passes original persisted marker/Bold/save/close checks. Minimum maintained fixture repair is being prepared; not full Write staging or donor acceptance.",
       "historicalFailure": "Preserved"
     },
     "installedHomeApprovalIPC": {
