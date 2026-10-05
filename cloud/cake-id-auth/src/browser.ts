@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/client";
 import { oauthProviderClient } from "@better-auth/oauth-provider/client";
+import { installStagingAppsAction } from "./staging-apps-browser";
 
 const auth = createAuthClient({
   baseURL: `${location.origin}/api/auth`,
@@ -29,6 +30,8 @@ function guardedSubmit<T extends HTMLFormElement>(id: string, handler: (form: T)
 }
 
 const value = (form: HTMLFormElement, field: string) => new FormData(form).get(field)?.toString().trim() ?? "";
+
+installStagingAppsAction();
 
 guardedSubmit("sign-in-form", async (form) => {
   const { data, error } = await auth.signIn.email({ email: value(form, "email"), password: value(form, "password") });

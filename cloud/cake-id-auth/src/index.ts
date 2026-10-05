@@ -5,6 +5,7 @@ import type { Env } from "./env";
 import { checkLoginLimit, checkRateLimit, readEmailIdentifier, readLoginIdentifier } from "./limiter";
 import { consentPage, forgotPasswordPage, json, resetPasswordPage, signInPage, signUpPage } from "./pages";
 import { handleResourceApi } from "./resource-api";
+import { readStagingAppsState, stagingAppsAccountPage } from "./staging-apps";
 import AUTH_UI from "../public/auth-ui.txt";
 
 function emailConsentContext(url: URL): { clientId: string; scopes: string[] } | null {
@@ -100,11 +101,16 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
     if (!session) return Response.redirect(`${new URL(env.AUTH_BASE_URL).origin}/sign-in${url.search}`, 302);
     return consentPage(query.clientId, query.scopes);
   }
-  if (request.method === "GET" && url.pathname === "/account") {
+  if (request.method === "GET" && ["/account", "/account/staging-apps"].includes(url.pathname)) {
     const session = await auth.api.getSession({ headers: request.headers });
-    if (!session) return Response.redirect(`${url.origin}/sign-in`, 302);
-    const displayName = session.user.name.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-    return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><title>CAKE ID account</title><body><main><h1>CAKE ID</h1><p>Signed in as ${displayName}</p><p><a href="/api/account/profile">Profile API</a> · <a href="/api/account/sessions">Sessions API</a></p><form method="post" action="/api/auth/sign-out"><button type="submit">Sign out</button></form></main></body></html>`, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "default-src 'self'; base-uri 'none'; frame-ancestors 'none'" } });
+    if (!session) return url.pathname === "/account"
+      ? Response.redirect(`${url.origin}/sign-in`, 302) : json({ error: "unauthorized" }, 401);
+    try {
+      const state = await readStagingAppsState(env, session.user.id);
+      if (url.pathname === "/account/staging-apps")
+        return json(state, state.kind === "not-admin" ? 403 : 200);
+      return stagingAppsAccountPage(session.user.name, state);
+    } catch { return json({ error: "service_unavailable" }, 503); }
   }
 
   if (url.pathname.startsWith("/api/account/")) {

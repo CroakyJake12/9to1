@@ -58,12 +58,13 @@ internal sealed class BrowserHomeContext : ICuiBindingContext, ICuiActionDispatc
         return value is not null || _surface.TryGetValue(path, out value);
     }
 
-    public bool? IsActionAvailable(string command) => ShellActions.ContainsKey(command);
+    public bool? IsActionAvailable(string command) => command == "NavigateSettings" || ShellActions.ContainsKey(command);
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (ShellActions.TryGetValue(command, out var route)) _navigate(new(HomeRouteIds.For(route)));
+        if (command == "NavigateSettings") _navigate(new(HomeFeatureRouteIds.Settings));
+        else if (ShellActions.TryGetValue(command, out var route)) _navigate(new(HomeRouteIds.For(route)));
         else Program.ShowStatus("HomeServiceUnavailable", "This action requires an available account service.");
         return ValueTask.CompletedTask;
     }
