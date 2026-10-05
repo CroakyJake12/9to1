@@ -16,7 +16,7 @@ COMMON = "apps/Web/Tests/ci/run-ordinary-native.py"
 COMMON_SHA = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 PROJECT = "apps/Web/Files/Tests/OriginalNativeOwner4/FilesOriginal.NativeOwner.Tests.csproj"
 LEDGER = "apps/Web/Files/Tests/ci/files-original-native-four-source-pins.json"
-LEDGER_SHA = "507694c2a446e308934fdd6c235504de650007237eeab3605330ce7a58612915"
+LEDGER_SHA = "a7d55f26b17930c0ea5615fe7ad035875e410b768b127d74f24ca00037bfa2f4"
 CASE_PAIRS = [
     {
         "className": "Haven.Desktop.Tests.FilesNativeBrowserSurfaceTests",
@@ -92,17 +92,21 @@ def owner_scopes(root, commands, phase):
 def resource_sample(output, diagnostics, phase):
     # Command-boundary logical samples, not a continuous/systemwide quota.
     total = diagnostic_bytes = 0
+    categories = {}
     for path in output.rglob("*"):
         if path.is_symlink():
             raise RuntimeError("Unexpected symlink in task-owned output")
         if path.is_file():
             size = path.stat().st_size
             total += size
+            category = path.relative_to(output).parts[0]
+            categories[category] = categories.get(category, 0) + size
             if path.is_relative_to(diagnostics):
                 diagnostic_bytes += size
     free = os.statvfs(output).f_bavail * os.statvfs(output).f_frsize
     sample = {"phase": phase, "logicalOwnedBytes": total,
               "diagnosticBytes": diagnostic_bytes, "freeBytes": free,
+              "logicalCategoryBytes": dict(sorted(categories.items())),
               "ownedSampleCapBytes": 3 * 1024**3,
               "diagnosticSampleCapBytes": 32 * 1024**2,
               "freeFloorBytes": 256 * 1024**2,
@@ -126,6 +130,66 @@ def runtime_pins(directory):
             rows.append({"path": str(path.relative_to(directory)),
                          "bytes": path.stat().st_size, "sha256": sha(path)})
     return rows
+
+
+def retire_restore_http_cache(output, diagnostics, artifacts, env, commands, result):
+    # Only the HTTP cache created in this fresh owned task; packages/restore assets are retained.
+    cache = output / "http"
+    if (Path(env["NUGET_HTTP_CACHE_PATH"]) != cache or cache.is_symlink()
+            or cache.resolve() != output.resolve() / "http" or not cache.is_dir()):
+        raise RuntimeError("Require exact newly-owned restore HTTP cache")
+    last = commands.records[-1]
+    if (last["name"] != "restore" or last["exit"] != 0 or last["error"] is not None
+            or not last["normalEOF"] or not last["familyClosed"] or not last["finalECHILD"]
+            or last["signals"] or any(not birth["gone"] for birth in last["births"])):
+        raise RuntimeError("Restore family must close normally before owned HTTP cache retirement")
+
+    def inventory(directory, missing_ok=False):
+        if directory.is_symlink() or directory.resolve() != output.resolve() / directory.relative_to(output):
+            raise RuntimeError("Owned cache preservation inventory escaped task")
+        if not directory.exists():
+            if missing_ok:
+                return []
+            raise RuntimeError("Actual packages/restore assets absent before cache retirement")
+        if not directory.is_dir():
+            raise RuntimeError("Actual owned inventory must be a directory")
+        rows = []
+        for path in sorted(directory.rglob("*")):
+            if path.is_symlink() or not path.resolve().is_relative_to(directory):
+                raise RuntimeError("Owned cache preservation inventory escaped directory")
+            if path.is_file():
+                rows.append({"path": str(path.relative_to(directory)),
+                             "bytes": path.stat().st_size, "sha256": sha(path)})
+        return rows
+
+    def summary(rows):
+        raw = json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
+        return {"fileCount": len(rows), "logicalBytes": sum(row["bytes"] for row in rows),
+                "fullBodyInventorySha256": hashlib.sha256(raw).hexdigest()}
+
+    packages, restore_assets = output / "nuget", artifacts / "obj"
+    package_before, asset_before, cache_before = inventory(packages), inventory(restore_assets), inventory(cache)
+    retirement = {"phase": "BEFORE_LIST", "scope": "Exact fresh task HTTP cache only; no packages, restore assets, shared/preexisting/user paths",
+                  "httpBefore": summary(cache_before), "packagesBefore": summary(package_before),
+                  "restoreAssetsBefore": summary(asset_before), "observedReductionBytes": None}
+    result["httpCacheRetirement"] = retirement
+    listed = commands.run("http-cache-location",
+                          ["dotnet", "nuget", "locals", "http-cache", "--list"], 30)
+    if listed.strip() != "http-cache: " + str(cache):
+        raise RuntimeError("Actual NuGet HTTP cache location differs from exact fresh task")
+    retirement["phase"] = "LOCATION_VERIFIED"
+    commands.run("http-cache-retire", ["dotnet", "nuget", "locals", "http-cache", "--clear"], 60)
+    package_after, asset_after, cache_after = inventory(packages), inventory(restore_assets), inventory(cache, True)
+    retirement.update(phase="AFTER_CLEAR", httpAfter=summary(cache_after),
+                      packagesAfter=summary(package_after), restoreAssetsAfter=summary(asset_after),
+                      observedReductionBytes=sum(row["bytes"] for row in cache_before) - sum(row["bytes"] for row in cache_after))
+    if package_before != package_after or asset_before != asset_after or cache_after:
+        raise RuntimeError("HTTP cache retirement must preserve exact packages/restore assets and empty only HTTP cache")
+    retirement["phase"] = "VERIFIED"
+    payload = json.dumps(retirement, indent=2) + "\n"
+    if len(payload.encode()) > 65536:
+        raise RuntimeError("Finite cache retirement receipt exceeded 64KiB")
+    (diagnostics / "http-cache-retirement.json").write_text(payload)
 
 
 def read_trx(path):
@@ -204,6 +268,7 @@ def main():
     commands = None
     before = None
     resource_samples = []
+    result["resourceSamples"] = resource_samples
     env = os.environ.copy()
     for variable, directory in {
         "DOTNET_CLI_HOME": "cli", "NUGET_PACKAGES": "nuget",
@@ -252,6 +317,8 @@ def main():
                      "-r", "linux-x64", "--configfile", str(root / "NuGet.Config"),
                      "--disable-build-servers", "-p:Configuration=Release", "-m:1", "-nodeReuse:false"] + props, 600)
         resource_samples.append(resource_sample(output, diagnostics, "after-restore"))
+        retire_restore_http_cache(output, diagnostics, artifacts, env, commands, result)
+        resource_samples.append(resource_sample(output, diagnostics, "after-http-cache-retirement"))
         result["compiler"] = "STARTED"
         commands.run("build", ["dotnet", "build", PROJECT, "--no-restore", "-c", "Release",
                      "--artifacts-path", str(artifacts), "-r", "linux-x64", "--disable-build-servers",

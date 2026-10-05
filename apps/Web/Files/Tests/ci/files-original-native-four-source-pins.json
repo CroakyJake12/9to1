@@ -347,15 +347,27 @@
     },
     {
       "path": "apps/Web/Files/Tests/OriginalNativeOwner4/FilesOriginal.NativeOwner.Tests.csproj",
-      "bytes": 2213,
-      "sha256": "c3479d6f47d2944689005eec9600b9108cf3a1347c3e63ee40a4142529e3ad5f",
-      "gitSha": "d0ae3a5f06aeb595a82efc76605635155591bcad"
+      "bytes": 2306,
+      "sha256": "9a26b5382e8e18bd5452288b6004d7f7b3029a440d2f8a1d8a9fb8e5268653fd",
+      "gitSha": "273e6a74169389820daa4b7ffde05ccb3345ea95"
     },
     {
       "path": "apps/Web/Files/Tests/OriginalNativeOwner4/HeadlessSelection.cs",
       "bytes": 138,
       "sha256": "1a93dc78d0deb589034f193553e07ccc138f1868540ac4f6986eeee21cbe42a7",
       "gitSha": "38d41d5394f7a4f49fd9a956a736cd319f256229"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "bytes": 1803,
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064",
+      "gitSha": "eb66f07cfd711fe7cc00632be4bd26d69a9c354f"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "bytes": 6312,
+      "sha256": "abe07abaf811a77bc3b5dea0df277b373a43d0985a392d02b9a1db4ab8157aa9",
+      "gitSha": "60a07f89fbe75d944105b4e158625b90530b5aee"
     }
   ],
   "ownerSubtrees": [
@@ -830,6 +842,7 @@
     "The original serial assembly policy and Haven.Desktop.Tests friend identity are retained. Existing NativePixelHost is test infrastructure only.",
     "Controlled readiness forwards actual owner reads. Trusted native folder mappings and six-byte MZ package content are fixtures, not browser pathname/installer authority.",
     "Git subtree object identity plus tracked/untracked source cleanliness conserve full owner bodies, selected leaf/config/project bodies also receive SHA256.",
-    "Runtime DLL/task metadata is retained; binary bodies, stores, packages and caches are not uploaded."
+    "Runtime DLL/task metadata is retained; binary bodies, stores, packages and caches are not uploaded.",
+    "Two additional original Desktop project pins prove the original concrete DI dependency/version only; neither Desktop project is referenced/compiled by this isolated native four fixture. Its 44-project owner graph, original four methods and eight owner subtrees remain unchanged."
   ]
 }
