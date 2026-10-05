@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "add2e2181b69d2e48ce0caab1fda83db0cd73829",
+  "parent": "1a0a824ad06905467c280730a85429f37feabce1",
+  "ownerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "ownerSuccessor": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "actualPrBase": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+  "review": "ACK two complete available canonical owner bodies byte/blob/hash equal exact EEC/A63/actual PRbase. Entire66-path native inventory actual Git entries and all blob bodies/modes/hashes verified; gitlinks verified as commit entries only, not fetched/available native bodies. Only2 receiving source replacements; all outside paths including protected C unchanged. Engine source guard unmodified, exactly3 actual canonical model/raster/viewport bodies; viewport already equal. Actual Avalonia Base/Skia/TagLib declarations retained, no fake types or parser/renderer substitute.",
+  "selectedPins": [
+    {
+      "path": "9to1 Workspace/Picture/PictureDocument.cs",
+      "oldBytes": 4894,
+      "oldSHA256": "6af166641370e6276ff9caa79d409f7069cb268ddeb032bd5234d70a51bbd79e",
+      "selectedBytes": 8282,
+      "selectedSHA256": "4ebc98a8b0da06c1b798e82b2a9f6cb06c028b854c4a4a5b9e0151d2a7aeaf1e",
+      "selectedGitObject": "100644 blob 3873671c420f48a3b252fdb153772a413d41ab57\t9to1 Workspace/Picture/PictureDocument.cs",
+      "exactEecA63PrBaseBodyEquality": true
+    },
+    {
+      "path": "9to1 Workspace/Picture/PictureCropService.cs",
+      "oldBytes": 5693,
+      "oldSHA256": "4ca3402d3be7bae2a437ce1eb7c2673538aea71c4450a9e791a4fcaea8e1b326",
+      "selectedBytes": 9397,
+      "selectedSHA256": "efb2f1e0bf47c10fed6a27088e82ccd9949f4ae49aa706ddf7ef872d7bfe8a6b",
+      "selectedGitObject": "100644 blob e768365bba2c882db2c2cbb712ef34e889b125ad\t9to1 Workspace/Picture/PictureCropService.cs",
+      "exactEecA63PrBaseBodyEquality": true
+    }
+  ],
+  "inventoryGitlinksVerifiedAsMetadataOnly": [
+    {
+      "selector": "prBase",
+      "path": "9to1 Workspace/Picture/Source/glycin",
+      "object": "84bed7782d1ae4486068a9ffbde691290c119909"
+    },
+    {
+      "selector": "prHead",
+      "path": "9to1 Workspace/Picture/Source/glycin",
+      "object": "84bed7782d1ae4486068a9ffbde691290c119909"
+    },
+    {
+      "selector": "eec",
+      "path": "9to1 Workspace/Picture/Source/glycin",
+      "object": "84bed7782d1ae4486068a9ffbde691290c119909"
+    },
+    {
+      "selector": "a63",
+      "path": "9to1 Workspace/Picture/Source/glycin",
+      "object": "84bed7782d1ae4486068a9ffbde691290c119909"
+    },
+    {
+      "selector": "prBase",
+      "path": "9to1 Workspace/Picture/Source/loupe",
+      "object": "228003cb8755098bcb9859b3c8f2ded618633d47"
+    },
+    {
+      "selector": "prHead",
+      "path": "9to1 Workspace/Picture/Source/loupe",
+      "object": "228003cb8755098bcb9859b3c8f2ded618633d47"
+    },
+    {
+      "selector": "eec",
+      "path": "9to1 Workspace/Picture/Source/loupe",
+      "object": "228003cb8755098bcb9859b3c8f2ded618633d47"
+    },
+    {
+      "selector": "a63",
+      "path": "9to1 Workspace/Picture/Source/loupe",
+      "object": "228003cb8755098bcb9859b3c8f2ded618633d47"
+    }
+  ],
+  "selectionSHA256": "af50234aede95fce0f1004382fa2acc417855271b85ed32e02888b3dec32c31f",
+  "ownerInventorySHA256": "5ba9ecbbeaa27e81fd1e2e1a02fbc13e2659f794e7a202bc2cbcbe766ae01368",
+  "engineProjectSHA256": "9d4bf6fc0d7c2698f171d3b8e45b7f1aed15d943eab6b637befc86b54cd8e4d3",
+  "qualification": "Provisional source-linked BrowserEngine dependency closure only; whole57-different-path native Picture project NOT_COMPOSED. Normal15 runtime pending. Original canonical GPS Preserve defect and Windows libglycin donor-platform gate remain separate; no native rewrite/owner adoption/browser IDB/permission/full Picture acceptance."
+}

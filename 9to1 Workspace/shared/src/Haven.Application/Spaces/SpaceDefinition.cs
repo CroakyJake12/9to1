@@ -22,7 +22,7 @@ public enum SpaceContextReferenceKind
     File = 0, Folder = 1, BoardPage = 2, WriteArtifact = 3, PresentArtifact = 4,
     CanvasArtifact = 5, DataArtifact = 6, MailThread = 7, PlannerItem = 8,
     MapRoute = 9, StackProject = 10, SiteProject = 11, Conversation = 12, Upload = 13,
-    ConnectedEntity = 14
+    ConnectedEntity = 14, PictureArtifact = 15, GamesProject = 16
 }
 public enum SpaceContextPermission { Unknown = 0, Denied = 1, Read = 2, ReadWrite = 3 }
 public enum SpaceContextIndexState { Unknown = 0, NotRequired = 1, Pending = 2, Ready = 3, Stale = 4, Failed = 5 }
@@ -67,7 +67,8 @@ public sealed record SpaceContextReference(
     SpaceContextPermission Permission,
     SpaceContextIndexState IndexState,
     bool IncludedAutomatically,
-    DateTimeOffset AddedAt);
+    DateTimeOffset AddedAt,
+    Guid? HostedFileId = null);
 
 public sealed record SpaceShareGrant(
     string PrincipalId,
@@ -143,4 +144,4 @@ public sealed class SpaceRevisionConflictException(Guid spaceId, long expectedRe
     public long ActualRevision { get; } = actualRevision;
 }
 
-internal sealed record SpaceRegistryState(int Version, IReadOnlyList<SpaceDefinition> Spaces);
+internal sealed record SpaceRegistryState(int Version, IReadOnlyList<SpaceDefinition> Spaces, IReadOnlyList<SpaceDeletionOperation>? Deletions = null);

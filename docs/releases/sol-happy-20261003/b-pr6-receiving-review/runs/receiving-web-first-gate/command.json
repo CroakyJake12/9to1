@@ -1,0 +1,25 @@
+{
+  "sourceCommit": "add2e2181b69d2e48ce0caab1fda83db0cd73829",
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "restore",
+    "apps/Web/NineToOne.Web.csproj",
+    "--artifacts-path",
+    "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/receiving-web-first-gate/artifacts",
+    "--configfile",
+    "/workspace/team-c-c5-b-picture-eec-closure-provisional/NuGet.Config",
+    "--disable-parallel",
+    "--disable-build-servers",
+    "-p:Configuration=Release",
+    "-p:NuGetAudit=false",
+    "-p:UseSharedCompilation=false",
+    "-m:1",
+    "-nodeReuse:false"
+  ],
+  "scope": "Actual receiving ordinary Web first restore gate; no SDK/workload/tool installation, no static-asset substitute, no publish or browser execution",
+  "started": 1791124658.1370134,
+  "exit": 0,
+  "seconds": 9.960561037063599,
+  "sourceAfter": "add2e2181b69d2e48ce0caab1fda83db0cd73829",
+  "dirtyAfter": []
+}

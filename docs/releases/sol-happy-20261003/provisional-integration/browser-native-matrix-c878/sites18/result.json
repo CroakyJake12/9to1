@@ -1,0 +1,32 @@
+{
+  "suite": "sites18",
+  "project": "apps/Web/Sites/Tests/SitesBrowser.Tests.csproj",
+  "expected": 18,
+  "status": "PASS",
+  "sourceCommit": "c8783e049fd03efd7f1798e47d6bc7806fb30844",
+  "scope": "Native application regression only; browser/provider/deployment/full parity NOT_RUN",
+  "preservedHistory": "Original03 RESOURCE_HOLD and17 RESOURCE_HOLD are not replaced by CI",
+  "nativeStarted": true,
+  "sitesChildren": {
+    "seed": {
+      "exit": 0,
+      "assertions": 17,
+      "logSha256": "887606f3464544960ef147f625c2806fa0ee44983d46442a2f9c7a912152b641",
+      "exitSha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    "verify": {
+      "exit": 0,
+      "assertions": 6,
+      "logSha256": "059a635a0ce57ee8241a1afa7257327374d03f7089e1da634d5b7d6c2785faef",
+      "exitSha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    "persistedOracle": {
+      "bytes": 3821,
+      "sha256": "0a40bb6b684fb362860514878230e2eb149b13cce1a34b488098441dbb10187d"
+    },
+    "scope": "Actual source-created child receipts and original native seed17/verify6 assertions; no browser/provider/deployment proof"
+  },
+  "executed": 18,
+  "passed": 18,
+  "failed": 0
+}

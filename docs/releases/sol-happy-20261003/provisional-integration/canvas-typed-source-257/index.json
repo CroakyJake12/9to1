@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "status": "FROZEN_TYPED_STANDARD_CLIENT_SOURCE_C6_ACK_RUNTIME_NOT_RUN",
+  "sourceCommit": "257596c3dee1dff1d99410de373eb30b8c5dc4ed",
+  "payloadCount": 14,
+  "payloadBytes": 149117,
+  "files": [
+    {
+      "path": "independent-peer/canvas-typed-provider-own-65-controls-result.json",
+      "bytes": 12460,
+      "sha256": "8ea759fb7a92043453d3b767535120b257583b13919b8cc65d0edbcf6f3ae851"
+    },
+    {
+      "path": "independent-peer/canvas-typed-provider-own-65-controls.log",
+      "bytes": 145,
+      "sha256": "8adf779781cbc17082927f6d090150a21f660f68a842d99f6926fdf11d388d5a"
+    },
+    {
+      "path": "independent-peer/canvas-typed-standard-provider-preinvoke-independent-review.json",
+      "bytes": 2574,
+      "sha256": "681fe3ea6d6758e1d4a5f9b9373156e4016e373fa698cf9c1d0929cd9484b424"
+    },
+    {
+      "path": "source/exact-2575/.github/scripts/canvas-packaged-ui-controls.ps1",
+      "bytes": 60437,
+      "sha256": "1afecef7bc92638d89b287770f4385f9315873c3e0d6a4b65bf92f0f9e8da643"
+    },
+    {
+      "path": "source/exact-2575/.github/validation/canvas-packaged-ui-controls.json",
+      "bytes": 5785,
+      "sha256": "99948ba81d267af2d0b75989c72f3f22fdd702d20214827f064af805c1becef9"
+    },
+    {
+      "path": "source/exact-2575/.github/workflows/team-c-canvas-packaged-ui-controls.yml",
+      "bytes": 4097,
+      "sha256": "02eaf0695d7c93dac518e51ca79ca38662d05f401f95ab0b93e970054c1c0f64"
+    },
+    {
+      "path": "source/exact-2575/eng/release-validation/canvas-packaged-ui/README.md",
+      "bytes": 10605,
+      "sha256": "294f8e2642b9f3f9cc63aa035a4ae280c2c3d237169db9a469e7cd59f8caa8b3"
+    },
+    {
+      "path": "source-controls/actual-refusal-controls-receipt.json",
+      "bytes": 12460,
+      "sha256": "8ea759fb7a92043453d3b767535120b257583b13919b8cc65d0edbcf6f3ae851"
+    },
+    {
+      "path": "source-controls/actual-refusal-controls.log",
+      "bytes": 145,
+      "sha256": "8adf779781cbc17082927f6d090150a21f660f68a842d99f6926fdf11d388d5a"
+    },
+    {
+      "path": "source-controls/actual-workflow-parser-receipt.json",
+      "bytes": 323,
+      "sha256": "7a158d7d00e0be46c166fee8271660bacc3e101910097530c16307a3c651cf02"
+    },
+    {
+      "path": "source-controls/actual-workflow-run-block-0.ps1",
+      "bytes": 39,
+      "sha256": "d5c1b4607053182b8a13b312966644d0440f281fad1d41dbe4bc706fcccac6c6"
+    },
+    {
+      "path": "source-controls/actual-workflow-run-block-1.ps1",
+      "bytes": 2463,
+      "sha256": "7d609b1b42c9c7c5884f42a609a4d4ee06ac1fb01b85ecfcb82a845a4ac19026"
+    },
+    {
+      "path": "source-controls/frozen-source-receipt.json",
+      "bytes": 11339,
+      "sha256": "6ffad261ae130555bf5aa4e27e4eee1c1824a2b728f3760bd20dd6b337f96747"
+    },
+    {
+      "path": "source-controls/probe-actual-refusal-controls.ps1",
+      "bytes": 26245,
+      "sha256": "783e0f5ccc818dc494dea48a75745cc3eca1ff9da66841a326519feef9ca9a12"
+    }
+  ],
+  "qualification": "Actual65source controls/PS7syntax/controlledsignatureCSharpbridge only; no genuineWindowsUIAprovider/API/app invocation. Real runtime bridge compiles against validated GACclient and calls samepublicAPI once/NoInlining. Causal throw site currentlyUNOBSERVED; failureonlymax16frame/8exception known-method/null-type booleans, no rawstack/privatepaths. Contentsread3minsetup-only/no package/app/profile/input/state. Original98627PASS/NullRef/genuine40table/f5negative/allolderindices unchanged. No private profile/provider/model/fixture/package/cache/secret/signedURL data.",
+  "independentReviewSha256": "681fe3ea6d6758e1d4a5f9b9373156e4016e373fa698cf9c1d0929cd9484b424"
+}

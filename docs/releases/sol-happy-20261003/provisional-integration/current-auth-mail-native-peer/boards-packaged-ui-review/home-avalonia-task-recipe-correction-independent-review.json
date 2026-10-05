@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_SOURCE_ONLY_NARROW_OWNED_TASK_RECIPE_CORRECTION",
+  "sourceCommit": "0d1d64a5ed59e54a915ba3672fd734c0cff0ff40",
+  "parentCommit": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "changedOnly": ".github/scripts/home-windows-original-shutdown.ps1",
+  "outsideModeBlobConserved": 16506,
+  "scriptBytes": 31380,
+  "scriptSHA256": "3e64b907315163e83c1525f5912859fc9cae08a3c6cf6061708c323bd6be6969",
+  "review": "Actual original Avalonia.Build.Tasks is single-target netstandard2.0. Its unchanged resource targets use the existing public AvaloniaBuildTasksLocation override. Evaluating actual Release TargetPath with the same owned artifacts settings and passing it to ordinary dependency builds resolves the demonstrated artifact relocation mismatch without copying or replacing a Task DLL. The dependency graph builds the task; the script requires its actual file and hash after owning build. Distinct CuiBuildTasksLocation remains unchanged.",
+  "conservation": "Catalog,workflow,all79 source pins,Home owner bodies,original six assertions,input/close/drain/privacy/whole-package readiness criteria unchanged.",
+  "ownPowerShellASTErrors": 0,
+  "runtime": "NOT_RUN_ON_CORRECTED_RECIPE",
+  "knownNextBlocker": "Separate owner reproduction compiles current Home graph, then encounters original test source CS0619/xUnit2014 Assert.Throws overload. That owner exclusively prepares a narrow Action statement-body correction; this recipe ACK neither fixes that source nor proves original six controls or native Windows execution.",
+  "scope": "Provisional isolated producer; no global Home adoption,installed identity/signing/clean-PC/native persistence consequence/default-close acceptance."
+}

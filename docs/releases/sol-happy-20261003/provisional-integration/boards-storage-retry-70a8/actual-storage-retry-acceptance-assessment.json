@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "status": "BOUNDED_ACTUAL_STORAGE_RETRY_83_CONTROLS_PASS_UNACCEPTED",
+  "runId": 37217380035,
+  "jobId": 111480542340,
+  "workflowCommit": "70a8a556487d801c005020cbd732fb32ec83685c",
+  "packageCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "checksPassed": 83,
+  "checksFailed": 0,
+  "observedStatusSequence": [
+    "Saved 16:36:55",
+    "Save failed",
+    "Saved 16:36:58"
+  ],
+  "actualFixture": {
+    "fileSystem": "NTFS",
+    "originalAttributes": "Archive",
+    "originalAttributeBits": 32,
+    "baselineSha256": "2935e3832bb611e6d632f1e154ff5821804f75678385ffb1b943200f88b80ed4",
+    "documentId": "482935f1-c1f9-42ae-9996-646719f7c380",
+    "paragraphId": "block-e7a1cb1a0960"
+  },
+  "actualDocument": {
+    "documentId": "482935f1-c1f9-42ae-9996-646719f7c380",
+    "schemaVersion": 3,
+    "paragraphId": "block-e7a1cb1a0960",
+    "finalSha256": "32200c1a117ca9ed939ba7f064a0b1d92d032384763e9cc12091bfac6a5c8310"
+  },
+  "durableChecks": "Real own NTFS primary ReadOnly asserted; exact baseline saved bytes preserved with pending native text/IDs and visible Save failed; originalArchive32 attributes restored before focused native retry; retrySaved and durable expectedtext/newhash/sameIDs; genuinepackageclose/reopen retained edit/IDs/preclosehash; finally exactattrs restored again. Autosave may contribute.",
+  "qualification": "SDK-present hostedWindows/packageGUI/OSstorage only; no Home installedtuple/accountACL/cleanPC/fullapp/owneradoption acceptance. No exclusive shortcut causality.",
+  "nativeExit": "Two gracefulclose/exit0/emptydecodedstderr/fourboundeddrains/noForcedCleanup/threewholecaptured1024x705window screenshots viewed.",
+  "custody": "ActualWindows runner verified exactfd5package/hash/full282file extraction; local+C6 compact99KBoriginalartifact only.",
+  "originalFailures": [
+    "88initialSavedlookup timeout beforefault",
+    "f46same timeout+actualpanelsabsent/UIAsnapshot+Savedvisible screenshot",
+    "uninvoked95diagnosticoutput error replacement expectedfailure corrected beforeinvocation"
+  ],
+  "old67And85Indices": "EXACT_UNCHANGED"
+}

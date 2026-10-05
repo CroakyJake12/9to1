@@ -1,0 +1,58 @@
+{
+  "runId": 37216711750,
+  "jobId": 111478583568,
+  "sourceCommit": "f46cfcd8da1ddee62987645092475a80a1da5738",
+  "status": "ORIGINAL_DIAGNOSTIC_FAILURE_RETAINED",
+  "resultSha256": "ae0a1e8baf3a469fce6434eb87ede4d6a5335cccbd5d80094b11ffda96d62d39",
+  "failedCriterion": {
+    "type": "System.Management.Automation.RuntimeException",
+    "message": "Timed out observing: Visible native save text: Saved"
+  },
+  "checksPassed": 43,
+  "checksTotal": 43,
+  "actualReadOnlyMutation": false,
+  "actualInitialPendingEdit": false,
+  "diagnostic": {
+    "expectedPrefix": "Saved",
+    "exactMatch": false,
+    "processId": 2356,
+    "windowRectangle": [
+      0,
+      23,
+      1024,
+      705
+    ],
+    "workingArea": [
+      0,
+      0,
+      1024,
+      728
+    ],
+    "maxTextPeersPerRegion": 32,
+    "maxNameCharacters": 256,
+    "regions": [
+      {
+        "automationId": "TopBarRight",
+        "found": false,
+        "texts": []
+      },
+      {
+        "automationId": "FooterBar",
+        "found": false,
+        "texts": []
+      }
+    ]
+  },
+  "exactScreenshot": {
+    "file": "storage-status-diagnostic-window.png",
+    "bytes": 36595,
+    "sha256": "a107972961223ddc347493d5a144f0ec9fa5280416c761621f24643a2d16ffce",
+    "visibleWidth": 1024,
+    "visibleHeight": 705
+  },
+  "screenshotObserved": "Saved16:26:01 appears at topbar andfooter whollywithinactualcapturedwindow; no donated/renderer substitute.",
+  "boundedRootCause": "Locator required TopBarRight/FooterBar layout panels as nativeUIA grouping ports; exactactualownedWindow peer tree cannotfindeitherpanel whileactualSaved text visiblyrendered. No app save failure established.",
+  "nextCorrection": "Query actual ownedwindow descendant Text peers directly withunchangedName/process/visibility/fullWorkArea/waitcriteria; no fabricatedgroupIDs. The actualText UIA provider remainsruntimegate.",
+  "originalTimeoutPreserved": true,
+  "cleanup": "No forcedcleanup; both ownstdout/stderr streamdrains completed; no storage attrrestoration needed becausefaultnotreached."
+}

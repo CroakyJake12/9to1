@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Separatecorrected f46 diagnostic-only frozen source; uninvoked95aa sourcefinding actualfailure/control retained;88bbc actualWindows negative preserved separately",
+  "frozenCommit": "f46cfcd8da1ddee62987645092475a80a1da5738",
+  "fileCount": 9,
+  "totalBytes": 56452,
+  "files": [
+    {
+      "path": "frozen-corrected-diagnostic-source-conservation.json",
+      "bytes": 2096,
+      "sha256": "ca458c2437566a770f2eb5431b7ffcaef48cee461a546a1ba7728fdfd9aa6bff"
+    },
+    {
+      "path": "actual-refusal-rethrow-receipt.json",
+      "bytes": 915,
+      "sha256": "8ffed0c182178bd1f0fcf50b9117963a2342a564a01cd2eff0e4404d5e9fefd7"
+    },
+    {
+      "path": "actual-refusal-rethrow.log",
+      "bytes": 116,
+      "sha256": "bfe075ec81eafecbcae433b7afbf7ca8eb151235192522efed598608d4f00db1"
+    },
+    {
+      "path": "probe-actual-refusal-rethrow.ps1",
+      "bytes": 3138,
+      "sha256": "f42e0780710a1e2dd7f0f7bf89a648e49ca6b257090bb765c5d3fab31184f8dc"
+    },
+    {
+      "path": "probe-original-95aa-output-refusal.ps1",
+      "bytes": 3216,
+      "sha256": "635828c2373bb6ca4e41d389d8bb526adeaf12bbd7dbf784cd82fbf999f621a0"
+    },
+    {
+      "path": "original-95aa-output-refusal.log",
+      "bytes": 382,
+      "sha256": "c14bc04e94a8284352148e9be1dc33a57f866f27000c9232a321f78b54cf6414"
+    },
+    {
+      "path": "original-95aa-output-refusal-receipt.json",
+      "bytes": 607,
+      "sha256": "e0de18bcf7c18cb339c9a2bd04a4bccad3d6c79b9fbe31f920e49388f22e9a7c"
+    },
+    {
+      "path": "frozen-source/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 40082,
+      "sha256": "99bf9a0868d2f3b10fb61c580a903b61f51d1991822fff20d584ce568595eac1"
+    },
+    {
+      "path": "frozen-source/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 5900,
+      "sha256": "b7a344a4545775cb0080c96805216fcb3e4dc252295a4a64ea7f38d9a1190462"
+    }
+  ],
+  "actualWindows": "NOT_RUN",
+  "excluded": "Caches/private state/model/package/credential/signedURL"
+}

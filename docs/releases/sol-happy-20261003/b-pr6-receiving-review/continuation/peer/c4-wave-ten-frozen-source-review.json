@@ -1,0 +1,127 @@
+{
+  "state": "ACK_COMPLETE10_CANONICAL_SOURCE_CLOSURE_RUNTIME_PENDING",
+  "proposal": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "receivingBase": "28e48b64acb96763dda2bd67e9759922442a31e6",
+  "wholeBodySource": "eecadfc=A63=aef=22d=f7; exact5 independentlyverified refs",
+  "exactPaths": [
+    {
+      "path": "9to1 Workspace/Wave/Program.cs",
+      "mode": "100644",
+      "blob": "6f7c0b5d9275637a5f4a4de7be76ae3273eeeb9f",
+      "bytes": 38203,
+      "sha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectService.cs",
+      "mode": "100644",
+      "blob": "dd305a4b110f4ee8e83617baf1ba8af26b984850",
+      "bytes": 11629,
+      "sha256": "f4c01a3e576e07f5e26aa88030ded48f9f9a1fb8d8c950c40a6bda197768d13c",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectWorkflowTest.cs",
+      "mode": "100644",
+      "blob": "aa0d7ef294d4ea3a0576ad19cb45614d6d5b797e",
+      "bytes": 5695,
+      "sha256": "2a2fd74a60ac69e728dbd3f34e18b2258ff403fd919cb4e0ddcaa3924aae9fb8",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMarkersRegionsWorkflowTest.cs",
+      "mode": "100644",
+      "blob": "8c4569987a037260dbcf3b3b6fadee5038b3720f",
+      "bytes": 11450,
+      "sha256": "cb497db3bd2fc7741e92c5391e19916ed1809278d8a55d7e9d18f17b68afd559",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
+      "mode": "100644",
+      "blob": "b124d849d14a568c9e60552bd0de2e95d098034f",
+      "bytes": 787,
+      "sha256": "a8ba16905a071620495ba18023923c31f3eb3a64b7bb8bad9908655fa1fbc2d1",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WavePcmFormatsWorkflowTest.cs",
+      "mode": "100644",
+      "blob": "4e7fe8164fbe093872d92acb87cf4db051d08ffe",
+      "bytes": 8197,
+      "sha256": "d17caa301099f48390fd0d0c42d62b6fdedd9fcd4c5307081b6e9c026baf125e",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProject.cs",
+      "mode": "100644",
+      "blob": "b15043b6058983db177fee8ea7d746828cf03bbd",
+      "bytes": 18706,
+      "sha256": "8ce0273faff2f8b47c4cf15a57838d2defeed6be115e6a3f32700132f6a44ff2",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectCommands.cs",
+      "mode": "100644",
+      "blob": "2a1be75111d988e217f7739b4d8edb065a0c2932",
+      "bytes": 6129,
+      "sha256": "96013882a15c7efa1ece9937b009ad62598bc274053c2d7aaa99d3305da1b8f2",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectEdits.cs",
+      "mode": "100644",
+      "blob": "9c566d9dae8ef0042466f63307eb7b61d77a5029",
+      "bytes": 8427,
+      "sha256": "ededd91053649b22ab7ed074381813ac72e9e453fbea9b7e14e119fa7201a4bf",
+      "exactWholeCanonical": true
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveTimelineAnnotations.cs",
+      "mode": "100644",
+      "blob": "a69cbf47f8a3c592434997a8f428f618b96ca3c2",
+      "bytes": 6681,
+      "sha256": "e824f1add1da06eec8d9be15e0091f0bc7b6ac32f038de3a0154fc2dadd7841a",
+      "exactWholeCanonical": true
+    }
+  ],
+  "totalSourceBytes": 115904,
+  "allOutside10PathsUnchanged": true,
+  "protectedProjectAndGuardInputs": [
+    {
+      "path": "apps/Web/Wave/Engine/NineToOne.Wave.BrowserEngine.csproj",
+      "unchangedBase": true,
+      "blob": "ccf5a0c74de8fca55333b2d8f762af8e99b20e0d"
+    },
+    {
+      "path": "apps/Web/Wave/Engine/generate-owner-decoder.py",
+      "unchangedBase": true,
+      "blob": "c8b6d9a1e862b6e5ae5b2d259c7aaa77d3e0cd65"
+    },
+    {
+      "path": "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+      "unchangedBase": true,
+      "blob": "e3e78f5e14f91b78dda8d2855726cffc62600ada"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+      "unchangedBase": true,
+      "blob": "9809bd4d4c9f8f089974fb80c101b05b47445081"
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "unchangedBase": true,
+      "blob": "5f4fdfc067396c5882c854e9240acaefc88ce1d6"
+    }
+  ],
+  "sourceReview": "All10 complete bodies reviewed. Four native Program dispatch helpers plus one transitive FilesProjectService close actual own-namespace source dependencies. Public4 Haven.Core.Media inputs already byte-equal; native project original Core+Infrastructure refs retained. Browser build compiles original4 linked bodies plus exact guarded8,934-byte Program decoder prefix with #line only; no guard repin/splice/substitute model. Production Files service has constructor-injected source/decoder authority, retained original source identity/hash/revision and proper scoped leases/staged nonoverwrite export, no activation. Canonical marker/PCM/Files controls are opt-in existing tests with anonymous owned fixtures.",
+  "conservation": "All28 original complete Require call bodies retained exactly within42 canonical calls; original full Program frozen privately. Other original native/test/project inputs outside10 unchanged. C Notes/CAS/Accounts/R2/cloud/3b emoji inputs outside10 unchanged.",
+  "findings": [],
+  "executionQualification": "Source ACK only. Actual native ordinary project compile/selftests and fresh receiving Web publisher/browser remain pending C5/root. No provider/deploy/Files authority/donor/fullnative acceptance. Source/GES/GStreamer compiler-excluded gitlinks remain absent; no donor tree import. Strict333 browser5 alone was never eligible for global incomplete native adoption.",
+  "reviewArtifactsSHA256": {
+    "canonical-source-pins.json": "22a2b1ef0778cd197aaa8c6b486a3343312659b9fcb38a102087a6be1c65179d",
+    "canonical-identity-and-core-port-review.json": "f1a9f40823bc304ba3eddd970372c137996ca0daf13df3b19cec5a3b6f25e951",
+    "native-console-helper-closure-review.json": "b8fe33f7275e088e8141f7e5f112152f793c481739a0b1ffec0c4ea0a1c6f851",
+    "original-expectation-conservation.json": "0be9e6afe578da364d486638542066520ccf2b6b2a30c4b7e08cfa74f40959f2"
+  }
+}

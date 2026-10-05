@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "status": "OFFLINE_ACTUAL_PRODUCER_IDENTITY_CONTROLS_PASS",
+  "driverSHA256": "09ec0769ac4f3cc7ac265abe9b79668419a6c02398619fb29aae48eca9704283",
+  "catalogSHA256": "add6a29a9edd19e549a13a454f8f37fe689f87c665bc3dcb249f44dd6aaba1e5",
+  "astErrors": 0,
+  "actualFunctionSHA256": "8784e8e2027a3850f2359d962f31b853c073c9ba686bfa45ed3b9400c7de3343",
+  "controls": [
+    {
+      "name": "original twelve identity metadata accepted",
+      "expectedRefusal": false,
+      "actualRefusal": false,
+      "status": "PASS"
+    },
+    {
+      "name": "original fifty-four plus twelve identity metadata accepted",
+      "expectedRefusal": false,
+      "actualRefusal": false,
+      "status": "PASS"
+    },
+    {
+      "name": "missing original Windows case refused",
+      "expectedRefusal": true,
+      "actualRefusal": true,
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate original identity refused",
+      "expectedRefusal": true,
+      "actualRefusal": true,
+      "status": "PASS"
+    },
+    {
+      "name": "same count substituted Windows method refused",
+      "expectedRefusal": true,
+      "actualRefusal": true,
+      "status": "PASS"
+    },
+    {
+      "name": "same count substituted original Fact refused",
+      "expectedRefusal": true,
+      "actualRefusal": true,
+      "status": "PASS"
+    },
+    {
+      "name": "filtered twelve cannot claim whole owning suite",
+      "expectedRefusal": true,
+      "actualRefusal": true,
+      "status": "PASS"
+    },
+    {
+      "name": "extra case refused",
+      "expectedRefusal": true,
+      "actualRefusal": true,
+      "status": "PASS"
+    },
+    {
+      "name": "same method from alternate namespace refused",
+      "expectedRefusal": true,
+      "actualRefusal": true,
+      "status": "PASS"
+    }
+  ],
+  "qualification": "Actual AST-selected identity guard only with synthetic metadata. No module body, dotnet build, Windows kernel, Home transport, pipe, actor, provider or runtime test executed."
+}

@@ -1,0 +1,38 @@
+{
+  "jobs": [
+    {
+      "id": 111520536499,
+      "name": "signature-witness",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 37231042749,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Observe actual Windows PowerShell object and typed CLR signatures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Retain original bounded setup witness only",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        }
+      ]
+    }
+  ]
+}

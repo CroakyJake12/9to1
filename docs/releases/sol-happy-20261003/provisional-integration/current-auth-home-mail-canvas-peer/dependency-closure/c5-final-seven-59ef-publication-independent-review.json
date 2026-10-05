@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent non-author",
+  "scope": "Final seven verbatim peer/custody-only publication additions; no runtime/source rerun",
+  "candidate": "59ef0f58d0e64f115d5a0eaba65db53d6beb526f",
+  "previous": "a37ca5ebcce2de732d130c81b7b8173a63db9436",
+  "indexSha256": "97dfd915a8bbda79d44b2b95acad73c1d4ac5b14848ec4e5aaf009e5c738fbc5",
+  "totalPayloads": 633,
+  "totalBytes": 122884702,
+  "newPayloads": 7,
+  "newBytes": 16320,
+  "allPrevious626BodyAndEntryMetadataImmutable": true,
+  "newSevenActualGitSizeHashAndOriginalBytesExact": true,
+  "outsideEightEvidencePathsModeBlobConserved": true,
+  "fiveC6PeerCopies": "Verbatim exact original independent reviews; existing source/runtime qualifiers and historical negatives preserved",
+  "twoCustodyCopies": "Verbatim original own closed source-replica sparse metadata and SHA-preserving package relocation metadata. All six old paths currently symlink exact retained regular destinations/size; original archive CRC/member/wholeSHA independently verified in prior37146281 receipt, no binary copied into this Git change.",
+  "privacy": "Only public review/source/output metadata and explicit own retained package path mapping; no compiled ZIP/part bytes/private profile/fixture/key/token/signedURL/body added.",
+  "status": "PUBLICATION_ACK",
+  "runtimeOrFullAcceptance": "No new acceptance beyond prior scoped receipts"
+}

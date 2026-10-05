@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Threading;
+using Avalonia.Interactivity;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using CakeOS.Cui.Language;
@@ -16,9 +17,15 @@ namespace CakeOS.Cui.Runtime;
 public sealed class CuiControlLoader : IDisposable
 {
     private readonly CuiControlRegistry _controlRegistry;
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _disposed;
+    private readonly object _actionTasksGate = new();
+    private readonly HashSet<Task> _pendingActionTasks = [];
+    public event EventHandler<CuiActionFailure>? ActionFailed;
     private readonly Dictionary<string, string> _resourceScope;
     private readonly List<CuiDiagnostic> _runtimeDiagnostics = [];
     private readonly List<CuiLiveBinding> _liveBindings = [];
+    private readonly HashSet<Control> _applyingHostValues = new(ReferenceEqualityComparer.Instance);
     private readonly List<CuiLiveConditional> _liveConditionals = [];
     private readonly List<CuiRepeatState> _repeats = [];
     private readonly Dictionary<RepeatItemScope, PropertyChangedEventHandler> _scopeChangedHandlers = new(ReferenceEqualityComparer.Instance);
@@ -26,12 +33,14 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiActionInvocation> _actionInvocations = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Button, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
     private ICuiBindingContext? _bindingContext;
     private ICuiActionDispatcher? _actionDispatcher;
     private IReadOnlyDictionary<string, CuiActionDefinition> _documentActions =
         new Dictionary<string, CuiActionDefinition>(StringComparer.Ordinal);
     private CuiThemeScopeStack _themeStack = new(CuiSurfacePaletteCatalog.ActiveTheme);
     private string _currentSurface = "Home";
+    private CuiAppearance? _appearance;
     private int _currentLayer;
     private string? _currentRepeatIdentity;
     private PropertyChangedEventHandler? _bindingChangedHandler;
@@ -54,8 +63,31 @@ public sealed class CuiControlLoader : IDisposable
     /// <summary>Set an action dispatcher for action= and on:click= attributes.</summary>
     public void SetActionDispatcher(ICuiActionDispatcher dispatcher) => _actionDispatcher = dispatcher;
 
+    /// <summary>Snapshot completion of the actual button dispatch pipelines already accepted by this loader.
+    /// Call after raising the click. This does not dispatch an action, attest success, or include future clicks.
+    /// Captured tasks remain awaitable after disposal, including dispatcher cancellation and cleanup.</summary>
+    public Task WhenActionsIdleAsync()
+    {
+        lock (_actionTasksGate) return Task.WhenAll(_pendingActionTasks.ToArray());
+    }
+
+    private void ObserveButtonDispatch(Button button)
+    {
+        var task = DispatchButtonAsync(button);
+        lock (_actionTasksGate) _pendingActionTasks.Add(task);
+        _ = task.ContinueWith(static (completed, state) =>
+        {
+            var loader = (CuiControlLoader)state!;
+            lock (loader._actionTasksGate) loader._pendingActionTasks.Remove(completed);
+        }, this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+    }
+
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        _lifetime.Cancel();
+        ActionFailed = null;
         if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
             observable.PropertyChanged -= _bindingChangedHandler;
         _bindingChangedHandler = null;
@@ -63,13 +95,18 @@ public sealed class CuiControlLoader : IDisposable
         _liveConditionals.Clear();
         ClearRepeatSubscriptions();
         _repeats.Clear();
-        _wiredActions.Clear();
+        ClearActionHandlers();
         _actionInvocations.Clear();
         _currentRepeatIdentity = null;
     }
 
     /// <summary>Set the surface name for theme resolution (default: "Home").</summary>
     public void SetSurface(string surface) => _currentSurface = surface;
+    public void SetAppearance(CuiAppearance appearance)
+    {
+        if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));
+        _appearance = appearance;
+    }
 
     /// <summary>The currently active theme at the current point in the tree.</summary>
     public CuiTheme CurrentTheme => _themeStack.Current;
@@ -125,7 +162,7 @@ public sealed class CuiControlLoader : IDisposable
         _repeats.Clear();
         _authoredControls.Clear();
         _observedBindings.Clear();
-        _wiredActions.Clear();
+        ClearActionHandlers();
         _actionInvocations.Clear();
         _documentActions = document.Actions;
         _runtimeDiagnostics.Clear();
@@ -221,14 +258,44 @@ public sealed class CuiControlLoader : IDisposable
         WireBindingsRecursive(root);
     }
 
+    private async Task DispatchButtonAsync(Button button)
+    {
+        if (_disposed || !button.IsEnabled || !_wiredActions.Contains(button) ||
+            _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(button, out var invocation)) return;
+        try
+        {
+            if (dispatcher is ICuiLifetimeAwareActionDispatcher aware)
+            {
+                // This accepted native Button event has a view lifetime and no separate
+                // external caller token. The host alone decides whether work transfers.
+                await aware.DispatchWithLifetimeAsync(invocation.Command, invocation.Parameter,
+                    new CuiActionDispatchLifetime(_lifetime.Token, CancellationToken.None));
+            }
+            else await dispatcher.DispatchAsync(invocation.Command, invocation.Parameter, _lifetime.Token);
+        }
+        catch (OperationCanceledException)
+        { if (!_disposed) ReportActionFailure(button, new("CUIA_CANCELLED", "The action was cancelled.", true)); }
+        catch (Exception)
+        { if (!_disposed) ReportActionFailure(button, new("CUIA_FAILED", "The action could not complete. Check the current state before trying again.", false)); }
+    }
+    private void ReportActionFailure(Button button, CuiActionFailure failure)
+    {
+        var span = _authoredControls.TryGetValue(button, out var authored) ? authored.Span : default;
+        _runtimeDiagnostics.Add(new(failure.Code, failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error, failure.Message, span));
+        try { ActionFailed?.Invoke(this, failure); }
+        catch (Exception)
+        { _runtimeDiagnostics.Add(new("CUIA_OBSERVER_FAILED", CuiDiagnosticSeverity.Error, "The action status could not be displayed.", span)); }
+    }
+
     private void WireBindingsRecursive(Control control)
     {
         // Wire button clicks to actions
-        if (control is Button button && _actionDispatcher is not null
+        if (control is Button button && _actionDispatcher is not null && !_wiredActions.Contains(button)
             && TryGetActionInvocation(button, out var invocation))
         {
-            var dispatcher = _actionDispatcher;
-            button.Click += async (_, _) => await dispatcher.DispatchAsync(invocation.Command, invocation.Parameter);
+            EventHandler<RoutedEventArgs> handler = (_, _) => ObserveButtonDispatch(button);
+            button.Click += handler;
+            _actionHandlers[button] = handler;
             _wiredActions.Add(button);
         }
 
@@ -251,6 +318,13 @@ public sealed class CuiControlLoader : IDisposable
             foreach (var item in ic.Items)
                 if (item is Control icChild) WireBindingsRecursive(icChild);
         }
+    }
+
+    private void ClearActionHandlers()
+    {
+        foreach (var (button, handler) in _actionHandlers) button.Click -= handler;
+        _actionHandlers.Clear();
+        _wiredActions.Clear();
     }
 
     private Control LoadComponent(CuiComponent component)
@@ -297,7 +371,7 @@ public sealed class CuiControlLoader : IDisposable
                 // Apply theme resources to the resulting control
                 if (result is not null)
                 {
-                    CuiThemeScopeApplier.ApplyThemeToControl(result, resolvedTheme, _currentSurface);
+                    CuiThemeScopeApplier.ApplyThemeToControl(result, resolvedTheme, _currentSurface, appearanceOverride: _appearance);
                 }
 
                 return result ?? new Panel();
@@ -448,16 +522,40 @@ public sealed class CuiControlLoader : IDisposable
                 "Repeat elements require a parsed source, item name, and stable key.", component.Span));
 
         var layer = ResolveLayer(component, _currentLayer);
-        var host = new Panel { Name = component.Name, ZIndex = layer };
+        var panelValue = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Panel", StringComparison.OrdinalIgnoreCase)).Value;
+        var panelName = panelValue is null ? "StackPanel" : panelValue is CuiLiteralValue literal ? literal.Value :
+            throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel must be a structural literal.", component.Span));
+        Panel host = panelName.ToLowerInvariant() switch
+        {
+            "stackpanel" or "stack" => new StackPanel(),
+            "grid" => new Grid(),
+            _ => throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel supports StackPanel or Grid.", component.Span))
+        };
+        host.Name = component.Name; host.ZIndex = layer;
         CuiRuntimeIdentity.SetStableId(host, ComposeStableId(component.StableId));
         _authoredControls[host] = component;
-        var state = new CuiRepeatState(host, component, layer);
+        ApplyProperties(host, component);
+        var state = new CuiRepeatState(host, component, layer, _bindingContext, _currentRepeatIdentity);
         _repeats.Add(state);
         ReconcileRepeat(state);
         return host;
     }
 
+    private static string? RepeatItemPlacement(string property) => property.Replace("-", "", StringComparison.Ordinal).ToLowerInvariant() switch
+    {
+        "itemrow" => "Grid.Row", "itemcolumn" => "Grid.Column",
+        "itemrowspan" => "Grid.RowSpan", "itemcolumnspan" => "Grid.ColumnSpan", _ => null
+    };
+
     private void ReconcileRepeat(CuiRepeatState state)
+    {
+        var previousContext = _bindingContext; var previousIdentity = _currentRepeatIdentity; var previousLayer = _currentLayer;
+        _bindingContext = state.Context; _currentRepeatIdentity = state.IdentityPrefix; _currentLayer = state.Layer;
+        try { ReconcileRepeatCore(state); }
+        finally { _bindingContext = previousContext; _currentRepeatIdentity = previousIdentity; _currentLayer = previousLayer; }
+    }
+
+    private void ReconcileRepeatCore(CuiRepeatState state)
     {
         var definition = state.Component.Repeat!;
         var source = ResolveObject(definition.Source);
@@ -529,6 +627,14 @@ public sealed class CuiControlLoader : IDisposable
             _currentRepeatIdentity = identity;
             try
             {
+                foreach (var (propertyName, value) in state.Component.Properties)
+                {
+                    var placement = RepeatItemPlacement(propertyName);
+                    if (placement is null) continue;
+                    if (state.Host is not Grid) throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat item placement requires Panel Grid.", state.Component.Span));
+                    if (value is CuiBindingValue binding) ApplyLiveBinding(itemRoot, placement, binding, state.Component.Span);
+                    else if (ResolveValue(value) is { } resolved) ApplyLiteralProperty(itemRoot, placement, resolved, state.Component.Span);
+                }
                 foreach (var child in state.Component.Children)
                     itemRoot.Children.Add(LoadComponent(child));
             }
@@ -540,6 +646,7 @@ public sealed class CuiControlLoader : IDisposable
 
             var instance = new RepeatItemInstance(scope, itemRoot);
             SubscribeScope(scope);
+            WireBindingsRecursive(itemRoot);
             nextInstances.Add(key, instance);
             nextRoots.Add(itemRoot);
         }
@@ -549,14 +656,7 @@ public sealed class CuiControlLoader : IDisposable
             if (nextInstances.ContainsKey(key))
                 continue;
             UnsubscribeScope(removed.Scope);
-            var removedControls = EnumerateControls(removed.Root).ToHashSet(ReferenceEqualityComparer.Instance);
-            _liveBindings.RemoveAll(binding => removedControls.Contains(binding.Control));
-            foreach (var control in removedControls)
-            {
-                _authoredControls.Remove(control);
-                _observedBindings.Remove(control);
-                _actionInvocations.Remove(control);
-            }
+            DetachControlTree(removed.Root);
         }
 
         state.Items.Clear();
@@ -565,6 +665,27 @@ public sealed class CuiControlLoader : IDisposable
         state.Host.Children.Clear();
         foreach (var root in nextRoots)
             state.Host.Children.Add(root);
+    }
+
+    private void DetachControlTree(Control root)
+    {
+        var removed = EnumerateControls(root).ToHashSet<Control>(ReferenceEqualityComparer.Instance);
+        foreach (var repeat in _repeats.Where(repeat => removed.Contains(repeat.Host)).ToArray())
+        {
+            foreach (var item in repeat.Items.Values) UnsubscribeScope(item.Scope);
+            repeat.Dispose();
+            _repeats.Remove(repeat);
+        }
+        _liveBindings.RemoveAll(binding => removed.Contains(binding.Control));
+        _liveConditionals.RemoveAll(conditional => removed.Contains(conditional.Host));
+        foreach (var control in removed)
+        {
+            _authoredControls.Remove(control);
+            _observedBindings.Remove(control);
+            _actionInvocations.Remove(control);
+            _wiredActions.Remove(control);
+            if (control is Button button && _actionHandlers.Remove(button, out var handler)) button.Click -= handler;
+        }
     }
 
     private string CreateRepeatIdentityPrefix(CuiComponent component, string key)
@@ -608,6 +729,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         void Refresh()
         {
+            if (!_repeats.Contains(state)) return;
             try
             {
                 ReconcileRepeat(state);
@@ -633,10 +755,7 @@ public sealed class CuiControlLoader : IDisposable
                 && !binding.Binding.Path.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
                 && !leaf.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
                 continue;
-            var resolved = ResolveObservedBinding(
-                binding.Control, binding.PropertyName, binding.Binding, context);
-            if (resolved is not null)
-                ApplyLiteralProperty(binding.Control, binding.PropertyName, resolved, binding.Span);
+            ApplyObservedBinding(binding.Control, binding.PropertyName, binding.Binding, context, binding.Span);
         }
         RefreshLiveConditionals(propertyName, context);
     }
@@ -661,6 +780,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         foreach (var (propName, value) in component.Properties)
         {
+            if (component.Repeat is not null && (propName.Equals("Panel", StringComparison.OrdinalIgnoreCase) || RepeatItemPlacement(propName) is not null)) continue;
             // Type selects the native lowering of core polymorphic elements.
             if (propName.Equals("Type", StringComparison.OrdinalIgnoreCase)
                 && (component.Type.Equals("Container", StringComparison.OrdinalIgnoreCase)
@@ -717,12 +837,10 @@ public sealed class CuiControlLoader : IDisposable
 
         // Apply initial value
         var context = _bindingContext!;
-        var resolved = ResolveObservedBinding(control, propName, binding, context);
-        if (resolved is null) return;
-        ApplyLiteralProperty(control, propName, resolved, sourceSpan);
+        ApplyObservedBinding(control, propName, binding, context, sourceSpan);
 
         if (binding.Mode == CuiBindingMode.TwoWay)
-            WireInputWriteBack(control, binding, sourceSpan, context);
+            WireInputWriteBack(control, propName, binding, sourceSpan, context);
     }
 
     /// <summary>
@@ -733,9 +851,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         foreach (var record in _liveBindings)
         {
-            var resolved = ResolveObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context);
-            if (resolved is null) continue;
-            ApplyLiteralProperty(record.Control, record.PropertyName, resolved, record.Span);
+            ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
         }
         RefreshLiveConditionals(null);
         foreach (var repeat in _repeats.ToArray())
@@ -754,9 +870,7 @@ public sealed class CuiControlLoader : IDisposable
                     && !leaf.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                var resolved = ResolveObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context);
-                if (resolved is not null)
-                    ApplyLiteralProperty(record.Control, record.PropertyName, resolved, record.Span);
+                ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
             }
             RefreshLiveConditionals(propertyName);
             foreach (var repeat in _repeats.ToArray())
@@ -778,8 +892,9 @@ public sealed class CuiControlLoader : IDisposable
 
     private void RefreshLiveConditionals(string? propertyName, ICuiBindingContext? context = null)
     {
-        foreach (var conditional in _liveConditionals)
+        foreach (var conditional in _liveConditionals.ToArray())
         {
+            if (!_liveConditionals.Contains(conditional)) continue;
             var leaf = conditional.Path[(conditional.Path.LastIndexOf('.') + 1)..];
             if (!string.IsNullOrEmpty(propertyName)
                 && !conditional.Path.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
@@ -792,10 +907,11 @@ public sealed class CuiControlLoader : IDisposable
             _bindingContext = conditional.Context;
             try
             {
-                conditional.Host.Content = BuildConditionalBranch(
-                    conditional.Component,
-                    EvaluateCondition(conditional.Component.Condition!),
-                    conditional.Layer);
+                var branch = BuildConditionalBranch(conditional.Component,
+                    EvaluateCondition(conditional.Component.Condition!), conditional.Layer);
+                if (conditional.Host.Content is Control oldBranch) DetachControlTree(oldBranch);
+                conditional.Host.Content = branch;
+                WireBindingsRecursive(branch);
             }
             finally
             {
@@ -817,7 +933,7 @@ public sealed class CuiControlLoader : IDisposable
         };
     }
 
-    private void WireInputWriteBack(Control control, CuiBindingValue binding, CuiSourceSpan sourceSpan, ICuiBindingContext context)
+    private void WireInputWriteBack(Control control, string propertyName, CuiBindingValue binding, CuiSourceSpan sourceSpan, ICuiBindingContext context)
     {
         if (context is not ICuiWritableBindingContext writable)
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
@@ -827,6 +943,8 @@ public sealed class CuiControlLoader : IDisposable
 
         void Update(object? rawValue)
         {
+            if (_disposed || _applyingHostValues.Contains(control) || !_liveBindings.Any(record =>
+                ReferenceEquals(record.Control, control) && ReferenceEquals(record.Context, context) && record.Binding == binding)) return;
             if (!TryConvertInput(binding.Path, rawValue, binding.TargetType, context, out var converted))
             {
                 CuiInputValidationProperties.SetHasError(control, true);
@@ -845,7 +963,7 @@ public sealed class CuiControlLoader : IDisposable
         switch (control)
         {
             case TextBox textBox:
-                textBox.TextChanged += (_, _) => Update(textBox.Text);
+                textBox.TextChanging += (_, _) => Update(textBox.Text);
                 break;
             case CheckBox checkBox:
                 checkBox.IsCheckedChanged += (_, _) => Update(checkBox.IsChecked);
@@ -855,6 +973,9 @@ public sealed class CuiControlLoader : IDisposable
                 break;
             case NumericUpDown number:
                 number.ValueChanged += (_, args) => Update(args.NewValue);
+                break;
+            case Avalonia.Controls.Primitives.SelectingItemsControl selection when NormalizeProperty(propertyName) == "selectedindex":
+                selection.SelectionChanged += (_, _) => Update(selection.SelectedIndex);
                 break;
             default:
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
@@ -927,6 +1048,14 @@ public sealed class CuiControlLoader : IDisposable
         var normalizedPropertyName = propName.Replace("-", string.Empty, StringComparison.Ordinal);
             switch (normalizedPropertyName.ToLowerInvariant())
             {
+                case "spacing":
+                    if (control is StackPanel spaced && double.TryParse(resolved, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var spacing) && double.IsFinite(spacing) && spacing >= 0) spaced.Spacing = spacing;
+                    else throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR041", CuiDiagnosticSeverity.Error, "Spacing requires a nonnegative finite StackPanel value.", sourceSpan));
+                    break;
+                case "isenabled":
+                    if (bool.TryParse(resolved, out var enabled)) control.IsEnabled = enabled;
+                    else throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR041", CuiDiagnosticSeverity.Error, "IsEnabled must be true or false.", sourceSpan));
+                    break;
                 case "rotate":
                 case "scale":
                 case "scalex":
@@ -1090,6 +1219,16 @@ public sealed class CuiControlLoader : IDisposable
                                  System.Globalization.CultureInfo.InvariantCulture, out var numberValue))
                         inputNumber.Value = numberValue;
                     break;
+                case "selectedindex":
+                    if (control is Avalonia.Controls.Primitives.SelectingItemsControl selection &&
+                        int.TryParse(resolved, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var selectedIndex) && selectedIndex >= -1)
+                        selection.SelectedIndex = selectedIndex;
+                    else throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "SelectedIndex requires a native selector and an integer of at least -1.", sourceSpan));
+                    break;
+                case "itemssource":
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "ItemsSource requires an explicit collection binding.", sourceSpan));
                 case "checked":
                 case "ischecked":
                     if (control is CheckBox checkBox && bool.TryParse(resolved, out var isChecked))
@@ -1415,6 +1554,49 @@ public sealed class CuiControlLoader : IDisposable
         return binding.Fallback;
     }
 
+    private static string NormalizeProperty(string name) => name.Replace("-", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
+
+    private void ApplyObservedBinding(Control control, string property, CuiBindingValue binding,
+        ICuiBindingContext context, CuiSourceSpan span)
+    {
+        var alreadyApplying = !_applyingHostValues.Add(control);
+        try
+        {
+            if (NormalizeProperty(property) == "itemssource")
+            {
+                if (control is not ItemsControl items || binding.Mode == CuiBindingMode.TwoWay ||
+                    !context.TryGetValue(binding.Path, out var source) || source is string || source is not System.Collections.IEnumerable values)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "ItemsSource requires a one-way bounded collection binding on an ItemsControl.", span));
+                var snapshot = new List<object?>();
+                foreach (var value in values)
+                {
+                    if (snapshot.Count == 10000) throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "ItemsSource exceeds the supported 10000-item bound.", span));
+                    snapshot.Add(value);
+                }
+                items.ItemsSource = snapshot;
+                if (!_observedBindings.TryGetValue(control, out var observed))
+                    _observedBindings[control] = observed = new(StringComparer.OrdinalIgnoreCase);
+                observed[property] = new(property, binding, $"{snapshot.Count} items", source.GetType().Name, false, true, null);
+                // Reapply the host's selection after replacement; native reset notifications are not user edits.
+                foreach (var selected in _liveBindings.Where(record => ReferenceEquals(record.Control, control) &&
+                    NormalizeProperty(record.PropertyName) == "selectedindex").ToArray())
+                    ApplyObservedBinding(control, selected.PropertyName, selected.Binding, selected.Context, selected.Span);
+                return;
+            }
+            var resolved = ResolveObservedBinding(control, property, binding, context);
+            if (resolved is not null) ApplyLiteralProperty(control, property, resolved, span);
+        }
+        catch
+        {
+            if (NormalizeProperty(property) == "itemssource" && control is ItemsControl items)
+                items.ItemsSource = Array.Empty<object>();
+            throw;
+        }
+        finally { if (!alreadyApplying) _applyingHostValues.Remove(control); }
+    }
+
     private string? ResolveObservedBinding(
         Control control,
         string property,
@@ -1654,7 +1836,7 @@ public sealed class CuiControlLoader : IDisposable
         if (control is Panel || control is Border || control is ContentControl || control is Decorator)
         {
             var currentTheme = _themeStack.Current;
-            CuiThemeScopeApplier.ApplyThemeToControl(control, currentTheme, _currentSurface);
+            CuiThemeScopeApplier.ApplyThemeToControl(control, currentTheme, _currentSurface, appearanceOverride: _appearance);
         }
     }
 
@@ -1716,13 +1898,15 @@ public sealed class CuiControlLoader : IDisposable
         private System.Collections.Specialized.INotifyCollectionChanged? _observableSource;
         private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _handler;
 
-        public CuiRepeatState(Panel host, CuiComponent component, int layer)
+        public CuiRepeatState(Panel host, CuiComponent component, int layer, ICuiBindingContext? context, string? identityPrefix)
         {
             Host = host;
             Component = component;
-            Layer = layer;
+            Layer = layer; Context = context; IdentityPrefix = identityPrefix;
         }
 
+        public ICuiBindingContext? Context { get; }
+        public string? IdentityPrefix { get; }
         public Panel Host { get; }
         public CuiComponent Component { get; }
         public int Layer { get; }
@@ -1751,7 +1935,7 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
-    private sealed class RepeatItemScope : ICuiWritableBindingContext, INotifyPropertyChanged
+    private sealed class RepeatItemScope : ICuiWritableBindingContext, ICuiRepeatItemBindingContext, INotifyPropertyChanged
     {
         private readonly CuiControlLoader _owner;
         private readonly ICuiBindingContext? _parent;
@@ -1789,6 +1973,7 @@ public sealed class CuiControlLoader : IDisposable
             }
             if (path.StartsWith(ItemName + ".", StringComparison.Ordinal))
                 return _owner.TryResolveItemValue(_item, path[(ItemName.Length + 1)..], out value);
+            value = null;
             return _parent is not null && _parent.TryGetValue(path, out value);
         }
 
@@ -1800,6 +1985,15 @@ public sealed class CuiControlLoader : IDisposable
                 return _owner.TrySetItemValue(_item, path[(ItemName.Length + 1)..], value);
             return _parent is ICuiWritableBindingContext writable && writable.TrySetValue(path, value);
         }
+
+        public bool TryGetItemValue(object item, string path, out object? value)
+        {
+            value = null;
+            return _parent is ICuiRepeatItemBindingContext provider && provider.TryGetItemValue(item, path, out value);
+        }
+
+        public bool TrySetItemValue(object item, string path, object? value) =>
+            _parent is ICuiRepeatItemBindingContext provider && provider.TrySetItemValue(item, path, value);
 
         private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs args) =>
             PropertyChanged?.Invoke(this, args);

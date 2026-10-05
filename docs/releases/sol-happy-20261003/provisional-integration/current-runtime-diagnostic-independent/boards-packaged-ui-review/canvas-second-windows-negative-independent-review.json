@@ -1,0 +1,70 @@
+{
+  "scope": "Independent readback of the second actual original-package Canvas attempt; scoped negative, no functional replay.",
+  "status": "ACK_GENUINE_FAILURE_PRESERVED",
+  "sourceCommit": "63f999605f696e6be7dd44f50c487fbc9cf2e796",
+  "runId": 37221336623,
+  "jobId": 111492133363,
+  "artifactId": 11310024766,
+  "officialConclusion": "failure",
+  "archive": {
+    "bytes": 42853,
+    "sha256": "9398fbff6aaf81c5aeeaf3d0891f151121d741674b99915c7daa081f74f81101",
+    "fullCRCAndExactCopiedMembers": [
+      {
+        "name": "canvas-original-failure-window.png",
+        "bytes": 45351,
+        "sha256": "002a448672189ace40c6a6d8ba067ca59818ef3b5b6a703bdcf8263a79cbb133"
+      },
+      {
+        "name": "first-launch.stderr.log",
+        "bytes": 5,
+        "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+      },
+      {
+        "name": "first-launch.stdout.log",
+        "bytes": 5,
+        "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+      },
+      {
+        "name": "result.json",
+        "bytes": 25695,
+        "sha256": "fb6112c1b4ab042f9fadb8b378f70a6da617d7eb11b70be26595a088b0292bf5"
+      }
+    ]
+  },
+  "originalChecks": {
+    "passed": 58,
+    "allPassed": true
+  },
+  "pickerOwnership": "Exact current kernel foreground PID/handle/native title, UIA Window/PID/native handle/title, and owner-chain to original main HWND are actually observed. Original Root.Children topology fails to enumerate the title and is not used as an ownership shortcut.",
+  "failure": {
+    "name": "Actual focused OS folder-address Edit",
+    "seconds": 20
+  },
+  "focusedAddressMetadata": "NOT_OBSERVED; screenshot shows Documents selected in the native address region, which does not establish focused AutomationElement PID/role/handle/pattern.",
+  "screenshotIndependentlyViewed": {
+    "file": "canvas-original-failure-window.png",
+    "bytes": 45351,
+    "sha256": "002a448672189ace40c6a6d8ba067ca59818ef3b5b6a703bdcf8263a79cbb133",
+    "visibleWidth": 1024,
+    "visibleHeight": 705
+  },
+  "noFolderSelectionOrRequestOrCanvasState": true,
+  "cleanup": {
+    "forcedCleanup": true,
+    "closeRequested": false,
+    "exitCode": -1,
+    "streamDrains": 2,
+    "bothCompleted": true,
+    "stderrBodyBytes": 5,
+    "stderrOnlyBOMAndWhitespace": true,
+    "cancelFailureType": "System.Management.Automation.RuntimeException",
+    "originalPickerWitnessPreservedSeparatelyFromCleanup": true
+  },
+  "packageCustodyQualification": "Original inner package/extraction/418 hashes attributed to actual Windows producer; C6 independently read the small observation container and original source pins, not the 101 MB binary package.",
+  "nextGroundedStep": "Diagnostic-only bounded current focused UIA PID/role/nativeHandle/pattern booleans/visibility/rect and owned picker descendant role/count/cancel-label booleans, no raw paths/text/DOM. Preserve original address-edit criterion and timeout; no inferred UIA role, hidden model write or uncertain request resubmit.",
+  "acceptanceVerified": false,
+  "fullAppAcceptance": "NOT_RUN",
+  "installedHomeTuple": "NOT_RUN",
+  "cleanPcDelivery": "NOT_RUN"
+}

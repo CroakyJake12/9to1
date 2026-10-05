@@ -1,0 +1,5 @@
+Test run for /tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /tmp/team-c-c5-plugin-temp-provisional-output-20261004/test-results/Release/plugin-original-four.trx
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 1 s - Haven.Infrastructure.Tests.dll (net10.0)

@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "4544d1157afaeb3a50f2042ee6dcc0be78b2d945",
+  "parent": "27dd12f72cbf42d992a18765a933584b346d05d7",
+  "status": "UNACCEPTED_PROVISIONAL_SOURCE_ONLY",
+  "changedPaths": [
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Extensions/NativePluginProcessFactory.cs"
+  ],
+  "outsideChangedPathConserved": true,
+  "exactInverse": true,
+  "productionPins": {
+    "base": {
+      "commit": "27dd12f72cbf42d992a18765a933584b346d05d7",
+      "blob": "fef0b6fd17ddd8d4311e7d53ad95f2373217a0c3",
+      "bytes": 6593,
+      "sha256": "bfbd1a66a3e54fa252cd6305d8f07e8ffefff338580d752cfebc8346b69e520d"
+    },
+    "proposal": {
+      "commit": "4544d1157afaeb3a50f2042ee6dcc0be78b2d945",
+      "blob": "c9d124e1d96651d962d5bb49691489563b766feb",
+      "bytes": 6651,
+      "sha256": "e4c703ed3c5c1cb183be3429cde882aa37e4b1e0cf04c76bc1f8089060fbf5fb"
+    },
+    "historical428": {
+      "commit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
+      "blob": "fef0b6fd17ddd8d4311e7d53ad95f2373217a0c3",
+      "bytes": 6593,
+      "sha256": "bfbd1a66a3e54fa252cd6305d8f07e8ffefff338580d752cfebc8346b69e520d"
+    }
+  },
+  "originalFailure": {
+    "source": "27dd12f72cbf42d992a18765a933584b346d05d7",
+    "total": 434,
+    "executed": 434,
+    "passed": 433,
+    "failed": 1,
+    "skip": 0,
+    "test": "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown",
+    "line": 164,
+    "message": "Success invocation returned; File.Exists successMarker failed because child temp root differs from host."
+  },
+  "controlledMarkerWitness": {
+    "path": "/tmp/haven-worker28-plugin-5b3ffea37a9a44db8e8444e2b666ff77.marker",
+    "bytes": 12,
+    "sha256": "912ebb59a5e38de88ea774ce19d9d6909b18099e2fea2dfcf3084812988e0887",
+    "mtimeUTC": "2026-10-04T17:06:31.089069+00:00",
+    "taskExpectedDirectory": "/tmp/team-c-c5-full-infra-27dd-output-20261004/tmp",
+    "scope": "Actual success-capability marker observed in Unix default /tmp; only this controlled fixture marker was read, no unrelated files deleted."
+  },
+  "mechanism": "The existing cleared child environment carries TEMP/TMP but not Unix TMPDIR. .NET Unix Path.GetTempPath uses TMPDIR or /tmp; host task-private TMPDIR is lost. Proposal sets TMPDIR to the same already-selected host temporaryDirectory, without inheriting arbitrary environment.",
+  "testsUnchanged": true,
+  "scope": "Portable process-boundary temporary-directory correction only; original permissions/integrity/redaction/process lifetime assertions retained; no Windows/provider/full release acceptance."
+}

@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "7c63ebab369f690e8b1033e535209fce23f75eea",
+  "harnessSource": "actual frozenApplication project reference +12 boundary controls",
+  "scope": "one-line receiving compiler correction only; retention cursor correctness/fullnormal suite/EECreceiving composition excluded",
+  "inputs": {
+    "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs": {
+      "bytes": 37254,
+      "sha256": "d35799841c6b5b40cba234591b1191e1e6ccef0976639a114a7f457a6fd95051"
+    },
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CanvasChangePaginationTests.cs": {
+      "bytes": 4011,
+      "sha256": "1658795f8299d038ef67785e791c3de180b5b9011e79f6eaa83cb80e3431a2e2"
+    },
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/GlobalUsings.cs": {
+      "bytes": 778,
+      "sha256": "cb9f7ad27005a8f5b0a00bb6d21ee1842f743352a47d4b2b16537ecaf84072d5"
+    }
+  }
+}

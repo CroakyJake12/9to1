@@ -1,0 +1,97 @@
+{
+  "scope": "Independent public whole-source and ordinary owning-project recipe review only; sparse source proposal is not execution-ready. No runtime/build/provider/credential operation.",
+  "candidate": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+  "parent": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2",
+  "publicOwnerSource": "a431e3ca9d3002c74fc90f98377253120d0dfd48",
+  "status": "SOURCE_ACK_FOR_BOUNDED_PROVISIONAL_COMPOSITION_ONLY",
+  "wholeBodiesModeKindBlobExact": [
+    {
+      "path": "9to1 Workspace/Mail/Services/MailDomainService.cs",
+      "bytes": 51588,
+      "sha256": "0e0ae940c528d43b0a6d44d0859beef238a389dacc11c382ee5d25be52cd27e5",
+      "modeKindBlob": "100644 blob 14390a40ce148a7a982800606b38346fe0fc2a3b"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Storage/EncryptedJsonMailStateStore.cs",
+      "bytes": 15024,
+      "sha256": "1ccb320edfd012b6005a3c21a2594a069fcd5c3b680801edc4aa35a5b4f6649e",
+      "modeKindBlob": "100644 blob 7fb11e4aa9ebb24876ec0522a4fcec0e3e7f2272"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailDomainRegressionTests.cs",
+      "bytes": 16947,
+      "sha256": "5433ce7d35a3571a0748f0e85b9c44f62fe0b25f0e728895276fe7ff47cb1e10",
+      "modeKindBlob": "100644 blob f6c52f185e74dd2fb43acc67e3c2b998d87af359"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailFoundationTests.cs",
+      "bytes": 13408,
+      "sha256": "9bc21b52d83be2e1fe42eb726ef1ceeb854e553e463c403b0adfb3a9e6e9f8e4",
+      "modeKindBlob": "100644 blob 5e3848bd93ec412f2f4ae647cd63ae793b1a9add"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs",
+      "bytes": 28386,
+      "sha256": "0aa041edddd73959c54416b33bebc6276bb2ba704f1a45b3b153c164dae926a8",
+      "modeKindBlob": "100644 blob a5d0fb2ca89d47bd9deab1c71f216d4173a60e41"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
+      "bytes": 6403,
+      "sha256": "8edeb64a3458461f26fe2f3d011dd966d4da5359ba2c8adf28a49bc0df522cf2",
+      "modeKindBlob": "100644 blob f980b8fcf8c89debdcd7e87141122594e3ed62e6"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailStoreRegressionTests.cs",
+      "bytes": 13489,
+      "sha256": "fed82bf1695c7ac6eb84fbd16096a16fbd8ba6c12829f250cd0f7fdfa078730f",
+      "modeKindBlob": "100644 blob 564ceadae47dc166bfdf41cd0dfd81c6b1c98a8c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mail/MicrosoftMailProvider.cs",
+      "bytes": 24668,
+      "sha256": "0651c53140a846a899368c536e6fd27098195b4e75d87427c885953dae7eb612",
+      "modeKindBlob": "100644 blob 1d5e4871fd292050232eb83567ab8560ea7d9e85"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MicrosoftMailContinuationBoundaryTests.cs",
+      "bytes": 4554,
+      "sha256": "1cb6d27c00be35b7a458c5d6bfaa317735bb8515c1c3cbf3c6af9c0a19ca8029",
+      "modeKindBlob": "100644 blob 00c0500eab10758da83e220a9861e595b5d1b49d"
+    }
+  ],
+  "nativeMailWhole20ExactOwner": true,
+  "outsideEntriesModeKindBlobConserved": 16299,
+  "oldFoundationTenFactsEveryOldLineAssertedExpressionPreserved": true,
+  "oldFoundationStaticAssertCallsIncludingGeneric": 42,
+  "assertCallsiteQualification": "Static source calls, not measured executed assertions.",
+  "productionReview": [
+    "Domain queue/send uses current account-matched non-deleted resolved draft, exact idempotency operation/target/schedule/policy intent, authentication/conflict refusal before authorizer, expected global state revision before provider submission, and accepted provider acknowledgement persisted with uncancelled local journal completion.",
+    "Encrypted local store adds bounded cancellation-aware permanent lock sidecar, preserving one physical lock identity across independent clients, validates malformed envelope/plaintext/schema/collections, zeroes plaintext through quota failure, bounds serialized envelope and refuses cancellation immediately before atomic publication.",
+    "Graph continuation is validated before credentials or HTTP: HTTPS/current Graph me base/current port/no user info/fragment, preserving exact accepted query cursor. Original synthetic-token controlled HTTP cases do not invoke a real provider."
+  ],
+  "recipe": {
+    "path": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/frozen-mail-nine-ordinary-runtime-recipe.json",
+    "bytes": 20714,
+    "sha256": "06f9f924cd736fbd745269bc8611c8a6831a493a47d12a48fa4206a4344494c6",
+    "staticProjectsMail": 5,
+    "staticProjectsGraph": 7,
+    "mailCasesRequiredUnfiltered": 72,
+    "newDomainCases": 23,
+    "newStoreCases": 33,
+    "originalFoundationCases": 12,
+    "selectedGraphCases": 10,
+    "realTLSCasesMissingFixture": 3
+  },
+  "runtimePrerequisites": [
+    "Materialize genuine complete exact candidate graph and all ancestor/import/content sources; sparse nine-file checkout cannot run the owning projects.",
+    "Root must select capacity and fresh private outputs; use maintained Commands custody, source and actual runtime inventories before/after, ordinary discovery/TRX counters and retain first failures.",
+    "Full Mail72 must execute all original real TLS controls; absent authorized loopback TLS fixture is a genuine prerequisite failure, with no skip/filter/certificate weakening or full-PASS relabeling.",
+    "Keep keys/stores/fixture state/runtime bytes private; publish only controlled diagnostics/TRX/hash metadata."
+  ],
+  "limitations": [
+    "Original local Mail Fact1/seed3/verify3 pass is separate from this newer native Mail/Graph composition.",
+    "Prior 5ec full434 evidence remains historical to its exact production source; this shared provider change requires its new receiving controls before a current-source pass claim.",
+    "Native GUI/Windows/package/installed Home/provider/donor/full-app/owner-adoption acceptance remains pending."
+  ]
+}

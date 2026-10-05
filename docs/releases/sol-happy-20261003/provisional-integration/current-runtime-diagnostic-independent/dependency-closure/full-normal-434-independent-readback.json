@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent unfiltered maintained Infrastructure suite evidence reviewer",
+  "sourceCommit": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2",
+  "configuration": "Release",
+  "actualOrdinaryProjects": 7,
+  "actualTRX": {
+    "total": 434,
+    "executed": 434,
+    "passed": 434,
+    "failed": 0,
+    "skip": 0,
+    "sha256": "52df1fab64bb5682037f5a0278076c6e2c256542fdf288ee8a57ac9d8266e794"
+  },
+  "noFiltersExclusionsAssertionPolicyAnalyzerChanges": true,
+  "old428ActualCaseIdentities": "All conserved",
+  "addedActualCases": {
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: True)": 1,
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Later_caller_edits_do_not_change_returned_saved_revision_or_reopened_route": 1,
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Held_save_freezes_ordered_authored_intent_and_user_path_before_actual_storage_await": 1,
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Prepared_old_edit_cannot_overwrite_an_independent_actual_saved_revision": 1,
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Lying_step_or_path_count_stops_at_first_excess_value_before_actual_storage(path: False)": 1,
+    "Haven.Infrastructure.Tests.MapsJourneyAuthoringCaptureTests.Invalid_coordinates_return_structured_failure_without_serializing_or_replacing_saved_route": 1
+  },
+  "sourceInputs762ActualGitBeforeAfter": "PASS",
+  "runtimeFiles213BeforeAfterCurrentPhysicalSHA": "PASS",
+  "commandFamilies": 12,
+  "allNormalEOF_ECHILD_FamilyClosed_NoSignals": true,
+  "buildWarningsErrors": 0,
+  "verdict": "ACK scoped whole maintained normal Infrastructure434/434 on exact5ec",
+  "qualifications": [
+    "This is actual frozen provisional Linux source composition, not whole-release/Windows/provider/all-app parity acceptance.",
+    "Original27dd434433/1 failure and portableTMPDIR repair source/affected original4D+4R controls retained.",
+    "Actual source and runtime metadata are independently tied to exact5ec Git bodies/physicalcompiledfiles; no copiedbinary or test rerun by C6."
+  ]
+}

@@ -9,6 +9,9 @@
     <RootNamespace>CakeOS.Cui.Runtime</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj" />
+    <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj" />
+    <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj" />
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="../Themes/CakeOS.Cui.Themes.csproj" />
     <ProjectReference Include="../../CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />

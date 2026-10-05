@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent non-author",
+  "scope": "Final source-only trusted disposable-loopback full normal Mail72 pre-invocation; no fixture/build/TLS operation",
+  "source": "a0c8748196b90e2c43885e174b5835a7fe2c33e3",
+  "basis": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+  "exactNineAdditionsOnly": true,
+  "all16688OldModeBlobEntriesConserved": true,
+  "managedGraph": {
+    "sourcePins": 54,
+    "allActualGitAndPhysicalSizeSha": true,
+    "projects": 5,
+    "nativeGitlinkBuildDependencies": [],
+    "testNames": 72,
+    "uniqueNames": 72,
+    "originalTlsCases": 3,
+    "filterOrSkipWaiver": false,
+    "productionMail20ProjectPolicyTests": "UNCHANGED"
+  },
+  "approvedFixtureConservation": {
+    "originalTrustedLauncherSha256": "aa69116192607dd907383c0f6d4c5bd4251f46ba41eae1057dbf65b28a8526fd",
+    "originalTlsBody20650FullInverse": "PASS_PRIOR3ED_AND_FINAL_SINGLE_ADDED_EXPORTER_CALL_CHANGE_ONLY",
+    "threeOriginalSupervisorCallerCrlBodies": "WHOLE_BYTE_EXACT_APPROVED_D657_3A52",
+    "greenMailVersion": "2.1.14",
+    "jarSha256": "0381392f3a44e4d8ae78051778440f58820d01acaf5757c3f43649deda8c1d23",
+    "certificateValidation": "Ordinary OS trust/localhost hostname/original signed chain CRL; no callback bypass or production changes",
+    "originalServerListenerBirthIdentity": "PID/START_TICKS/OWNED_SOCKET_INODE_PRE_AND_POST",
+    "cleanup": "Original sampled pidfd families Java+caller+CRL must drain before exact unique introduced disposable CA removal; failure retains introduced state and blocks success"
+  },
+  "peerCorrections": {
+    "forbiddenJobLevelRunnerContext": "REMOVED; TEAM_C_MAIL_OUTPUT moved to probe step env",
+    "undefinedSecret": "ACTUAL_PASSWORD_AND_STOREPASSWORD_TUPLE_PASSED",
+    "bothActualSecretAndPrivateKeyMarkerRetentionRefusal": true,
+    "originalPublicCaServerAndSignedCrlPemDer": "EXACT_FOUR_BODIES_REQUIRED_FOR_FULLSCOPEDPASS",
+    "original3edNameErrorNegative": "RETAINED"
+  },
+  "independentVerification": {
+    "sixPythonAstParses": true,
+    "yamlSingleJobAndContexts": true,
+    "actualFinalCurrent54FiveProjectGuard": true,
+    "localHostTrustLaneRefusal": true,
+    "C2ActualAstWrapperAndCollector9RedGreenControls": "PASS_NO_DUPLICATE_C6_EXECUTION",
+    "C2ReceiptSha256": "e4fb39c1dddfd182c8dbe30b1086f3abe777723f3f824292a7ec8ec891cff1ff"
+  },
+  "bounds": {
+    "wholeCallerSeconds": 2400,
+    "jobMinutes": 50,
+    "publicDiagnosticMaximumBytes": 25165824,
+    "perCommandLogPostCompletionMaximumBytes": 8388608,
+    "diskPreflightGiB": 4,
+    "peakRssOrContinuousAggregateGrowth": "NOT_PROVEN"
+  },
+  "runtimeGate": "Root sole push/once actual disposable Ubuntu24.04 execution; independent original72/TRX/fullsource/runtime/listener/drain/trust-removal/public cert+CRL signature readback required afterward. Existing actual69PASS3missingfixtureFAIL and whole444PASS stay distinct.",
+  "status": "FINAL_SOURCE_CUSTODY_PRIVACY_PREINVOCATION_ACK",
+  "nativeGuiHomeWindowsProviderDeliveryFullReleaseAcceptance": false
+}

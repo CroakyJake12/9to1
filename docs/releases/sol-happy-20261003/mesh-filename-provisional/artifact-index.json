@@ -1,0 +1,102 @@
+{
+  "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
+  "files": [
+    {
+      "path": "C6/independent-review.json",
+      "bytes": 1428,
+      "sha256": "4b41cfbf7ae026f592243572d8789a034df6516e375fb847bc188d99d9a9cb25"
+    },
+    {
+      "path": "C6/results/affected-mesh.trx",
+      "bytes": 28223,
+      "sha256": "8c08fcfa78bf8911f47013e143629c28ad629f29aa2a3a19c62032289cee6fe2"
+    },
+    {
+      "path": "C6/run.log",
+      "bytes": 2992,
+      "sha256": "032c95b735d875b8a5f24bc4da0ad17db7bad67bc88d43091be1611193c9404e"
+    },
+    {
+      "path": "compiled-output-pins.json",
+      "bytes": 1049,
+      "sha256": "4bd79131fde4c84387cf562d8dcb4c1ab203e593804e726dde38bc1266d84a4d"
+    },
+    {
+      "path": "focused-Debug/command.json",
+      "bytes": 2110,
+      "sha256": "15e0502f850a74f809b6b2c84c22eb986afeebdcb740101bf435ed2206f0cec6"
+    },
+    {
+      "path": "focused-Debug/results/owning-mesh.trx",
+      "bytes": 76717,
+      "sha256": "7a90075b265a18c8b7c07d9b44b9079b3811018c5db2e356d3f1d4315d891bcd"
+    },
+    {
+      "path": "focused-Debug/run.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "focused-Debug/run.log",
+      "bytes": 2990,
+      "sha256": "2d6c337c9bc08a8cc0b4cbe75f3218b5d021d12feb137df9cf683c114e3a611d"
+    },
+    {
+      "path": "normal-Release/command.json",
+      "bytes": 2055,
+      "sha256": "99a0e2a1170842ec7c72ed1c0621db321f8a0f612912cebebb3fa3ac34062fcd"
+    },
+    {
+      "path": "normal-Release/results/normal-infrastructure.trx",
+      "bytes": 665607,
+      "sha256": "dc9442ec8bb6290d4b9a14f050dc208dd572855794f6f960fab42a39672241ff"
+    },
+    {
+      "path": "normal-Release/run.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "normal-Release/run.log",
+      "bytes": 8695,
+      "sha256": "d93784d6b9853a515f0c80d81c4568b60c35d65b163c95c026a552d15a338108"
+    },
+    {
+      "path": "owner-adoption-request.json",
+      "bytes": 2864,
+      "sha256": "44459deb48ed1cff3c1675fe18ac90e25951786fe7af40b7c3e68a8f24029795"
+    },
+    {
+      "path": "preservation-review.json",
+      "bytes": 1195,
+      "sha256": "26d199b91146b3ebf70d7efdd7e47c974a4a4aadaab34513ae5f43b0e4fd1707"
+    },
+    {
+      "path": "proposal.json",
+      "bytes": 1945,
+      "sha256": "8aea5c001af77547825d4ad8af134d3833eaf06d8d941fec3dd53acfd45553d4"
+    },
+    {
+      "path": "run-review.json",
+      "bytes": 25954,
+      "sha256": "0540c6ee565459b6ad60aba4e873e7804934ddb41d25085e762f4c0b1587a263"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 6654,
+      "sha256": "da58fdde1dc685be11d544fabacbccb03b7a42d1ca72f96964b4f49c16e8144a"
+    },
+    {
+      "path": "source.diff",
+      "bytes": 4813,
+      "sha256": "5c895ff6deffb705f9e50e7436eb147c4fb1134553ade3cc6921befa8d6d25c7"
+    },
+    {
+      "path": "workspace-cleanup.json",
+      "bytes": 928,
+      "sha256": "c272d0ab0d2cbcf8e785caf96e0f6696b97c45ddd63944f55d6e6f9393f9d05e"
+    }
+  ],
+  "rawRunLogsAndTRXUnchanged": true,
+  "noCredentialOrProviderData": true
+}

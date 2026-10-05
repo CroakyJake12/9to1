@@ -1,0 +1,101 @@
+{
+  "Properties": {
+    "TargetPath": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts/bin/HavenOS.Mail.Tests/release_linux-x64/HavenOS.Mail.Tests.dll",
+    "TargetDir": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts/bin/HavenOS.Mail.Tests/release_linux-x64/",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "IsTestProject": "true"
+  },
+  "Items": {
+    "Compile": [
+      {
+        "Identity": "MailDomainRegressionTests.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/MailDomainRegressionTests.cs",
+        "RootDir": "/",
+        "Filename": "MailDomainRegressionTests",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "MailFoundationTests.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/MailFoundationTests.cs",
+        "RootDir": "/",
+        "Filename": "MailFoundationTests",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "MailKitInboxReconciliationTests.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs",
+        "RootDir": "/",
+        "Filename": "MailKitInboxReconciliationTests",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "MailKitTransportTests.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
+        "RootDir": "/",
+        "Filename": "MailKitTransportTests",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "MailStoreRegressionTests.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/MailStoreRegressionTests.cs",
+        "RootDir": "/",
+        "Filename": "MailStoreRegressionTests",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/Mail/Tests/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      }
+    ],
+    "EmbeddedResource": [],
+    "Content": [],
+    "AdditionalFiles": []
+  }
+}

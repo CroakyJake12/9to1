@@ -1,0 +1,129 @@
+{
+  "sourceCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+  "sourcePins": {
+    "9to1 Workspace/Boards/app/BlockRenderer.cs": {
+      "bytes": 50495,
+      "sha256": "f33c0979ff4a47469bb0ad11684799c5469311d5ada826f043bb04fe0562731a"
+    },
+    "9to1 Workspace/Boards/app/BoardProjection.cs": {
+      "bytes": 50365,
+      "sha256": "4d74ddce861b602e3cd84209615a83a1f1c5f0077432cc4abbf01650404f3614"
+    },
+    "9to1 Workspace/Boards/app/Boards.cui": {
+      "bytes": 2863,
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84"
+    },
+    "9to1 Workspace/Boards/app/BoardsCreationMenu.cs": {
+      "bytes": 1365,
+      "sha256": "2c5822619c274450222d3b66a15ee5cd5728c839d8297ea72d57bdddaa236343"
+    },
+    "9to1 Workspace/Boards/app/BoardsIcons.cs": {
+      "bytes": 3108,
+      "sha256": "1fd6f0d869be41844dacc7a51346b253b827d76b1bccc997f2a497f793231aa3"
+    },
+    "9to1 Workspace/Boards/app/BoardsTheme.cs": {
+      "bytes": 5228,
+      "sha256": "896e5a6fe745d7e5285ec2a145ca5b695182f9b1ff386bdc7d3013a7825d35b0"
+    },
+    "9to1 Workspace/Boards/app/BoardsViewModel.cs": {
+      "bytes": 83265,
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f"
+    },
+    "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj": {
+      "bytes": 2290,
+      "sha256": "ff6d497c337d5ce440d95814b360505206a7d7138bb447b3a1cd5498f59c98fa"
+    },
+    "9to1 Workspace/Boards/app/ContextPanels.cs": {
+      "bytes": 11794,
+      "sha256": "30a3a7cfdf217120b558e2c09e3465a2be2d28e49b3c8e07213b8c06a5ca0dc8"
+    },
+    "9to1 Workspace/Boards/app/ContractSessionAdapter.cs": {
+      "bytes": 41060,
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145"
+    },
+    "9to1 Workspace/Boards/app/IRichBoardSession.cs": {
+      "bytes": 8445,
+      "sha256": "ee7ccbe568abcbf4f33295278c5cdb49b5fcca1c72a18015c2c342648ba05a3b"
+    },
+    "9to1 Workspace/Boards/app/InMemoryRichBoardSession.cs": {
+      "bytes": 9362,
+      "sha256": "770ed3bd1f10b74a6c263cfe3b2c3ec8c607edc2d712484a569dd5582517efb1"
+    },
+    "9to1 Workspace/Boards/app/NavBuilder.cs": {
+      "bytes": 10788,
+      "sha256": "29c92d3f8dee9f37435501f80bcb0aa65b591b933183c02d1ce49692102322bc"
+    },
+    "9to1 Workspace/Boards/app/Program.cs": {
+      "bytes": 44045,
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740"
+    },
+    "9to1 Workspace/Boards/app/ShellChrome.cs": {
+      "bytes": 2457,
+      "sha256": "f884ba8bd33277a3eacc1783c3ce1cc71d0abfe3fe7f577cb59fa6c6247e4f2a"
+    },
+    "9to1 Workspace/Boards/app/StyleEditor.cs": {
+      "bytes": 13973,
+      "sha256": "41490574b5d193a8ae18a08583f80829e6f3e9f4d800525a461e45b70d5fd37a"
+    },
+    "9to1 Workspace/Boards/app/ThemeApplier.cs": {
+      "bytes": 4308,
+      "sha256": "e06235cc030875380acc430f7372bafefeafb6088afab997c007d469a8d863c4"
+    },
+    "9to1 Workspace/Boards/app/ToolbarBuilder.cs": {
+      "bytes": 22295,
+      "sha256": "c300c676948cbf6d29d50eaf830159886f4159f4494fac022906b40f16b086ed"
+    },
+    "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs": {
+      "bytes": 2999,
+      "sha256": "de9d39cc81310a9a1823250ed2a15f2d2df5b8d86fced870d9fd296f88c5450b"
+    },
+    "9to1 Workspace/Boards/contract/CakeOS.Apps.Boards.Contract.csproj": {
+      "bytes": 304,
+      "sha256": "bbe18dcf683917821c98ac442cf9a666ae26dd194ebe96896e3c8e161c8ff719"
+    },
+    "9to1 Workspace/Boards/contract/ContentAddressedHavenBoardAttachmentStore.cs": {
+      "bytes": 10238,
+      "sha256": "3e1c6bea3d5b0948ffa65e7f9017e7109afed75ac99bc6e29bde1d9c9ea50a7b"
+    },
+    "9to1 Workspace/Boards/contract/HavenBoardCollaboration.cs": {
+      "bytes": 7521,
+      "sha256": "4eff19cc1cada3ab9dee03e9aaea97a5635490cfb2d72de055c42eb7c84ce91b"
+    },
+    "9to1 Workspace/Boards/contract/HavenBoardContract.cs": {
+      "bytes": 19645,
+      "sha256": "1bf191ab721251a6ab049f2da48b0ecfa1fab4df04d235e04fb87f9878471381"
+    },
+    "9to1 Workspace/Boards/contract/HavenBoardGenerativePlan.cs": {
+      "bytes": 5180,
+      "sha256": "46fd8982cd424ebb8a53edcac98eb699fb21149d5dff4b7aa56e8eb8c066f8bd"
+    },
+    "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs": {
+      "bytes": 33696,
+      "sha256": "aeec3484ac7a75156a14a305145851afebdffb66d4a20cf8e75ecc643381d674"
+    },
+    "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs": {
+      "bytes": 47348,
+      "sha256": "74b00f1560ece1aa7ff6887171ed4f3ab40e0be4e01b74ba528802a7f10e6e49"
+    },
+    "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs": {
+      "bytes": 28237,
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c"
+    },
+    "9to1 Workspace/Boards/contract/RichBoardSession.cs": {
+      "bytes": 19529,
+      "sha256": "e5406be4fd78dc7a7828f9b9646a8f8b0e9896a634753cb920d26b03c5a86134"
+    },
+    "eng/release-validation/boards-startup/BoardsStartupControls.csproj": {
+      "bytes": 835,
+      "sha256": "5c516cf8d8a197823bae8213ab3676b445b4a8096f614019969af8c446cf0dba"
+    },
+    "eng/release-validation/boards-startup/Program.cs": {
+      "bytes": 11140,
+      "sha256": "ade449b48deec78348591c1080452574e46fd23b453f450c9f5780ffccb13e03"
+    },
+    "eng/release-validation/boards-startup/README.md": {
+      "bytes": 2609,
+      "sha256": "9d60a9e406a43c8b3179e67e8544ab9e893272fb88b29c397ee4d3e1f50a0053"
+    }
+  }
+}

@@ -9,4 +9,5 @@
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="..\Haven.Core\Haven.Core.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" /></ItemGroup>
 </Project>

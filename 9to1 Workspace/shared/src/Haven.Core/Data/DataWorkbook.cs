@@ -50,17 +50,20 @@ public static class DataSqlSafety
 
 public sealed class DataWorkbook
 {
-    public const int CurrentSchemaVersion = 3;
+    public const int CurrentSchemaVersion = 6;
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = "Untitled workbook";
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public int Version { get; set; }
+    /// <summary>Immutable persistence revision identity; distinguishes recovered/recreated versions with the same sequence number.</summary>
+    public Guid RevisionId { get; set; }
     public List<DataSheet> Sheets { get; set; } = [];
     public List<DataQuery> Queries { get; set; } = [];
     public List<DataNamedRange> NamedRanges { get; set; } = [];
     public List<DataTableDefinition> Tables { get; set; } = [];
+    public List<DataRelationshipDefinition> Relationships { get; set; } = [];
     public List<DataValidationRule> Validations { get; set; } = [];
     public List<DataChartDefinition> Charts { get; set; } = [];
     public DataSchemaSnapshot Schema { get; set; } = new();
@@ -70,25 +73,34 @@ public sealed class DataWorkbook
     public static DataWorkbook Create(string? title = null)
     {
         var workbook = new DataWorkbook { Title = string.IsNullOrWhiteSpace(title) ? "Untitled workbook" : title.Trim() };
-        workbook.Sheets.Add(DataSheet.Create(0, "Sheet 1")); workbook.Queries.Add(DataQuery.Create("Query 1")); return workbook;
+        workbook.Sheets.Add(DataSheet.Create(0, "Sheet 1")); workbook.Queries.Add(DataQuery.Create("Query 1")); workbook.Normalize(); return workbook;
     }
 
     public void Normalize()
     {
-        SchemaVersion = CurrentSchemaVersion; Title = string.IsNullOrWhiteSpace(Title) ? "Untitled workbook" : Title.Trim(); Sheets ??= []; Queries ??= []; NamedRanges ??= []; Tables ??= []; Validations ??= []; Charts ??= []; Schema ??= new(); Recovery ??= new(); Metadata ??= new(StringComparer.Ordinal);
+        SchemaVersion = CurrentSchemaVersion; Title = string.IsNullOrWhiteSpace(Title) ? "Untitled workbook" : Title.Trim(); Sheets ??= []; Queries ??= []; NamedRanges ??= []; Tables ??= []; Relationships ??= []; Validations ??= []; Charts ??= []; Schema ??= new(); Recovery ??= new(); Metadata ??= new(StringComparer.Ordinal);
         if (Sheets.Count == 0) Sheets.Add(DataSheet.Create(0, "Sheet 1")); if (Queries.Count == 0) Queries.Add(DataQuery.Create("Query 1"));
-        for (var i = 0; i < Sheets.Count; i++) { Sheets[i] ??= DataSheet.Create(i, $"Sheet {i + 1}"); Sheets[i].Normalize(i); }
+        for (var i = 0; i < Sheets.Count; i++) { Sheets[i] ??= DataSheet.Create(i, $"Sheet {i + 1}"); Sheets[i].Workbook = this; Sheets[i].Normalize(i); }
         for (var i = 0; i < Queries.Count; i++) { Queries[i] ??= DataQuery.Create($"Query {i + 1}"); Queries[i].Normalize(i); }
         var rangeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); for (var i = NamedRanges.Count - 1; i >= 0; i--) { var range = NamedRanges[i]; if (range is null) { NamedRanges.RemoveAt(i); continue; } range.Normalize(); if (!rangeNames.Add(range.Name)) NamedRanges.RemoveAt(i); }
+        foreach (var group in Tables.Where(table => table is not null).GroupBy(table => string.IsNullOrWhiteSpace(table.Name) ? "Table1" : table.Name.Trim(), StringComparer.OrdinalIgnoreCase))
+            if (group.Count() > 1 && group.Any(table => table.RecordIdentityVersion != 0 || table.RelationalSchema is not null))
+                throw new InvalidDataException("Canonical table names must be unique; normalization cannot remove identities.");
         var tableNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); for (var i = Tables.Count - 1; i >= 0; i--) { var table = Tables[i]; if (table is null) { Tables.RemoveAt(i); continue; } table.Normalize(); if (!tableNames.Add(table.Name)) Tables.RemoveAt(i); }
         foreach (var validation in Validations.Where(value => value is not null)) validation.Normalize(); Validations = Validations.Where(value => value is not null).ToList();
         foreach (var chart in Charts.Where(value => value is not null)) chart.Normalize(); Charts = Charts.Where(value => value is not null).ToList();
         Schema.Normalize();
+        DataTableIdentity.ValidateWorkbook(this);
+        DataRelationalSchema.Validate(this);
     }
 }
 
 public sealed class DataSheet
 {
+    // Non-serialised aggregate association. All table cells remain in this sheet; range operations
+    // update identities on the owning workbook rather than creating another value store.
+    [System.Text.Json.Serialization.JsonIgnore]
+    internal DataWorkbook? Workbook { get; set; }
     private Dictionary<long, DataCell>? _cellIndex;
     private List<DataCell>? _indexedCells;
     private int _indexedCellCount = -1;

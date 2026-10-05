@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 1,
+  "state": "REVIEWED_SOURCE_BINDING_NOT_COMPILED_NOT_RUN",
+  "expectedCases": 4,
+  "ownerQualification": "Original owner controls/kernel/CUI/pixel host; local native boundary only. Historical OwnerMath22 and browser/host persistence/authorization remain separate.",
+  "sources": [
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "bytes": 2581,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+    },
+    {
+      "path": "9to1 Workspace/Forms/CUI/FormNativePreview.cs",
+      "bytes": 15196,
+      "sha256": "1ebe93993396a46c32516bd4ee88bad7d86e6a5243e22849748d17c6661eaf2f"
+    },
+    {
+      "path": "9to1 Workspace/Forms/CUI/FormNativePublicationValidator.cs",
+      "bytes": 2074,
+      "sha256": "a0f4e8f8dff191abc0429fc2c8fdf011268682efad2e3adaaf7aa6709a011505"
+    },
+    {
+      "path": "9to1 Workspace/Forms/CUI/FormNativeResponseSurface.cs",
+      "bytes": 14028,
+      "sha256": "d5cdbc0700854b094b7012dcf5df945f34c4cdb24d7243be7a21a50aba8dd195"
+    },
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "bytes": 1745,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Controls/HomeApprovalCuiSurface.cs",
+      "bytes": 16581,
+      "sha256": "0e07fd3c032e13406fbd03b8100ede8b28d54b298d629a940e44966f66e796e6"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerBindings.cs",
+      "bytes": 14938,
+      "sha256": "24865e7874373fa6ed706ef0625b9983512615a248b5b3883d8ecab0b9790e57"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerCuiSurface.cs",
+      "bytes": 3118,
+      "sha256": "9f214ca4f92b10037229ad74a89e05a20271efef0ad1cfb5c81ae3ccffadc0ca"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Controls/HomeNotesObjectRenderer.cs",
+      "bytes": 5171,
+      "sha256": "7c93637c9d324acb140c8283ce4277cb6e9d8baf2ea6bdea4ab8701cdd0b77b3"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Controls/HomeProductivityCuiSurface.cs",
+      "bytes": 6990,
+      "sha256": "0b36b3b740bbce6dd4f42968301204088ec802dd451f6646dde8419f836f9711"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "bytes": 1107,
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HomeEquationObjectRenderer.cs",
+      "bytes": 6518,
+      "sha256": "43e680ffe1fa60c5292c8da0411110ee701935a152ff6de20e7dce1d8c01e84b"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HomeLocalStoreSetupCuiSurface.cs",
+      "bytes": 6422,
+      "sha256": "c9c749ca972ee6ab4d24c62d7209bf63476feeda85576b78931fdf121d33d4b6"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HomeProfileCuiReadiness.cs",
+      "bytes": 3229,
+      "sha256": "27ce7b43117f5a5e2cae8bf738a1eb0326058e4f2f903df0d8bbd687ee61a982"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HomeResourceCuiReadiness.cs",
+      "bytes": 2709,
+      "sha256": "ab9c93f06075653e46657c7a3335578274c5700c24094841c6a2f01c1a5a965f"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HomeVectorObjectRenderer.cs",
+      "bytes": 4336,
+      "sha256": "068af91168cfaf160f5479628e6109589838f489cf4fa0814198bfcfd953049f"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/HomeApprovals.cui",
+      "bytes": 4199,
+      "sha256": "871c474eab03aef495347f24db4f21621072baf7155e114c278e193f98f18381"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/Models.cui",
+      "bytes": 4081,
+      "sha256": "ea306ce8760943eb31ae4e1e5d71f41f828c5764006d7ccb37951f85bdf75697"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-MIT.txt",
+      "bytes": 1087,
+      "sha256": "7c8f476bf7e35d9eaeb986eef4e77e9a71c31ca4f8b98a3b7378e26321ce23e3"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/CSharpMath-upstream-license-declarations.md",
+      "bytes": 4593,
+      "sha256": "7965122970372c7b294c2341a940c9ecba18515ffdafabdf5abb8f149d2d34f4"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Font-copyright-notices.txt",
+      "bytes": 996,
+      "sha256": "f378cfbd5178c319c12f30ac5c2aa070ab6b51655b00e212f4dd2c46c3075f7d"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/FreeType-FTL.txt",
+      "bytes": 6620,
+      "sha256": "e4b7fdb18fc04b1e0197c41e1ce072cf49b2f5f4a8f5ed26768440d1c957156f"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/GUST-FONT-LICENSE.txt",
+      "bytes": 1456,
+      "sha256": "2bd69affc3da00715116f713f57eab9707e96daf3562ad0215987b15b9c16f73"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/ICU60-LICENSE.txt",
+      "bytes": 19442,
+      "sha256": "24c771ce37201a3ab604852e47d10d21595d0493269dd6c8a5e567e998e18c00"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LPPL-1.3c.tex",
+      "bytes": 23386,
+      "sha256": "c3c7c49085d4c8d722ca98937b2378619b45dd0b5bd1456bcd61be95d8b954f1"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-MANIFEST.txt",
+      "bytes": 2186,
+      "sha256": "1daa729f7922c42ba5ce8da7dfe4ecdc9e5c878ad86217fd6f32c4671505b007"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/LatinModern-Math-README.txt",
+      "bytes": 4588,
+      "sha256": "e6fdd5fb44b656146fa988d191f58901c09a347d3f4fbaa3b45b24a6ad7ec30b"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/NOTICE.txt",
+      "bytes": 1657,
+      "sha256": "e71767fe62fdad5c3fcb0b9df2bfcf577279f2f2198c7bee80c6cdbb979531fd"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/SIL-Open-Font-License-1.1.md",
+      "bytes": 4566,
+      "sha256": "d4274903cbedb0566531e9856e5353991818e84ff17b747d7d41cbdd4e736ff5"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-Apache-2.0.txt",
+      "bytes": 11361,
+      "sha256": "a22a0c495566ce9b09b25aa3feab8d54a5b12c6a26eb3dcb5324ead9a586da66"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-MIT.txt",
+      "bytes": 1185,
+      "sha256": "c72384e3fe4818ff9ee516f9e5d2ba579c6299856fde53d9fa37384df4343d4a"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-attributions.md",
+      "bytes": 2323,
+      "sha256": "e2449e386e85f43cd5ad20869d23653315d656ac0ffb8630143308a83bd79522"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/Typography-source-headers.txt",
+      "bytes": 23603,
+      "sha256": "f90dee3e11f6b139874f09f792eba0c389107a6d40db9ef6876cdeadeda55faf"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/ThirdParty/CSharpMath/provenance.json",
+      "bytes": 3794,
+      "sha256": "7231dcead098b1bdc4e57c3e39ac4d8b11ec34d0251e9ac62dccc4f9e86d00eb"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeEquationObjects.cs",
+      "bytes": 8684,
+      "sha256": "33605774b9e004fc6202d1bf92fcd1e6262503f5243d148e9a1c0c484917d3d6"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+      "bytes": 1993,
+      "sha256": "4a90c66faedf955a1b4e4580eb721f975d07d71e32113c5041af87648fdbe5d8"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "bytes": 700,
+      "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/GraphEditorSession.cs",
+      "bytes": 2955,
+      "sha256": "839b3b98655bd6afcf3b41a7ad7ce5f1de664236594598dfb281c93bedd5d94d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathEditorSession.cs",
+      "bytes": 6875,
+      "sha256": "97ad1f1f9a7763c00c51cb8c9055df402ee7ed33572c8e04116bc919ead40d67"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mathematics/MathSyntaxContracts.cs",
+      "bytes": 985,
+      "sha256": "5d4b387a9e876a4b632cf8e995a1154da7fe4d118a01a5dc8ae13f9e16b5a10b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormProject.cs",
+      "bytes": 16248,
+      "sha256": "8fc5a2d3ceb5c36e948ce6daae7fb19e583364267509e884220848ed4973ad6e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "bytes": 375,
+      "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphDefinition.cs",
+      "bytes": 2442,
+      "sha256": "71e0fab90ab041a263f27f3334c243c3fdd2fb53541cb36e56d6749b241b00ec"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/GraphResponse.cs",
+      "bytes": 713,
+      "sha256": "10258c6f906b58a3521b77033392007c5ccf3cf60554ef7449650b83c40bf3ad"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathAnswer.cs",
+      "bytes": 2387,
+      "sha256": "5fedcbac8971a22f9dc9d0e51c17161bce4e1bc61d92505da99056ff2913de54"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathExpression.cs",
+      "bytes": 1569,
+      "sha256": "3dbe8d3bf40ca67e19279b5ca7366fd22b085e201d2aea6c3e5b46c6dd540b5c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mathematics/MathObjectCodec.cs",
+      "bytes": 14310,
+      "sha256": "5274a7d24a7b1509249337789deb6c7a0d6f811177413bb427233d887a332162"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/CSharpMathSyntaxAdapter.cs",
+      "bytes": 1943,
+      "sha256": "1924346384b8943949b06c416be834f5f580a6bb1aebe25f12482e7d3178fb28"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/ScottPlotGraphAdapter.cs",
+      "bytes": 4260,
+      "sha256": "a4ecc966757fe6d99fe0e2decd3cc96c5c75290d853efeb3eeddbaa23c78d7b1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedGraphEditorControl.cs",
+      "bytes": 8178,
+      "sha256": "e03752fd1639b4335394123918ecc2fa9ad000664c8988daa44c29276fe9e362"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Mathematics/SharedMathEditorControl.cs",
+      "bytes": 9274,
+      "sha256": "a72d3ef9091b5e3fc28fd6f1ca81aea658b13352eeca201fbd7b2cba6641b77f"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/LICENSE.txt",
+      "bytes": 1096,
+      "sha256": "d32218dd6fcc1e749bcbe2c193cb5703863724e58d1693aa9f278edefee69f7b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/NOTICES.txt",
+      "bytes": 20768,
+      "sha256": "35d4c7707199a9c30ae29879cda7d961ecbd9b5b9f22039701717f9040ee064b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/provenance.json",
+      "bytes": 8238,
+      "sha256": "19f47fa9cb07820be06a53f98bf3f1d7a3755e2d91cbeb0146113e585bd4cc2d"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs",
+      "bytes": 309,
+      "sha256": "476ebbfbe45b12c6e9becf8bc5a79ad2fe6d419638dc8d660a97b6df58429a87"
+    },
+    {
+      "path": "NuGet.Config",
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+    },
+    {
+      "path": "apps/Web/Mathematics/Tests/MathOwner.InputGeometry.Tests.csproj",
+      "bytes": 3044,
+      "sha256": "39d785fdd669ee013ad8ad82aa48e251f3d2693305e23eb4e17dd00d429eb71c"
+    },
+    {
+      "path": "apps/Web/Mathematics/Tests/MathOwnerInputGeometryTests.cs",
+      "bytes": 12985,
+      "sha256": "7da36b8c568654a539aea18d4fff3f1b0d9fed13bb61ac52d313617b91f386bb"
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "bytes": 4978,
+      "sha256": "0152d45e23a0ef467fe32ab1be1c9cfb0772b628ad69afec426746ac364e0803"
+    },
+    {
+      "path": "apps/Web/Productivity/Mathematics/OWNER-CONTRACT-REQUEST.json",
+      "bytes": 9920,
+      "sha256": "a95815367fd6f9a8e41dc5049770bfef57f17a3744bd128451bfcb9cb828cb0b"
+    },
+    {
+      "path": "apps/Web/Productivity/Mathematics/README.md",
+      "bytes": 1427,
+      "sha256": "7cca1108c6d0a5b0f3300eefd67a44bf49531695ef45fbec6e38c9dc29614748"
+    },
+    {
+      "path": "apps/Web/Productivity/Mathematics/Tests/NativePixelHost.cs",
+      "bytes": 832,
+      "sha256": "9073adea34ac3661f6d146d35e9771bbafa46dd041b89315ee3d23919df1d8c7"
+    },
+    {
+      "path": "apps/Web/Productivity/Mathematics/Tests/OwnerMath.Tests.csproj",
+      "bytes": 3369,
+      "sha256": "1b7ab2ae88d9b1cc1429f729e385ae64c174315f2b8c34856c60e63c78d68eaf"
+    },
+    {
+      "path": "apps/Web/Program.cs",
+      "bytes": 3074,
+      "sha256": "68d8bb7f09be106303b8df9001704b8363e20cd7f26b6aee4867ad2f36982efa"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    {
+      "path": "framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj",
+      "bytes": 1070,
+      "sha256": "f4ec1368c3f9563d3e6fcad54704dad08249e2f9e38786a4c33950d994549434"
+    },
+    {
+      "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+      "bytes": 495,
+      "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0"
+    },
+    {
+      "path": "framework/CUI/Directory.Packages.props",
+      "bytes": 429,
+      "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "global.json",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "entryDLL": {
+    "path": "bin/CanonicalEmojiCarrier/release_linux-x64/CanonicalEmojiCarrier.dll",
+    "sha256": "bfb18d14de5a6766c2f6f916a006115c8ab4b15d31d7c5973591c1f5f913f986"
+  },
+  "apphost": {
+    "path": "bin/CanonicalEmojiCarrier/release_linux-x64/CanonicalEmojiCarrier",
+    "sha256": "85f60bb109c33d70e51ef7b3a495a255f96a9871f8e331f935674a720d2ad4fb"
+  },
+  "ownerBuildTask": {
+    "sha256": "eeef9f2f2e9c8b7ad2ab4d0cf463a3510ddc75da3c172c429f64e5ebe0cf699e",
+    "bytes": 754176
+  },
+  "sourceBuiltProductionHaven": {
+    "path": "bin/CanonicalEmojiCarrier/release_linux-x64/Haven.dll",
+    "sha256": "57b137f87c4cb79532b240afd0d1e18c6cd03b74bdcc27a8f744cfccc0b90f62",
+    "bytes": 5838848
+  }
+}

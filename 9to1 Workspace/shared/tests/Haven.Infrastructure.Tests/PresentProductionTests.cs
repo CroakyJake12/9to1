@@ -220,6 +220,7 @@ public sealed class PresentProductionTests : IDisposable
         var document = PresentDocument.Create("Export deck");
         var first = document.Slides[0];
         first.Title = "Opening & evidence";
+        first.SpeakerNotes = "Explain the evidence before moving to the conclusion.";
         first.GetOrCreateBodyText().Text = "First line\nSecond line";
         first.Elements.Add(new PresentElement
         {
@@ -276,6 +277,7 @@ public sealed class PresentProductionTests : IDisposable
         var report = new PresentPptxExportService().PreviewExport(document, destination);
         Assert.Contains(report.Issues, issue => issue.FeatureType == "object-type" && issue.SourceTargetId == first.Elements[1].Id);
         Assert.Contains(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == first.Id);
+        Assert.DoesNotContain(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == second.Id);
         Assert.False(report.HasBlockingIssues);
     }
 
@@ -317,7 +319,7 @@ public sealed class PresentProductionTests : IDisposable
         using var archive = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: false);
         Assert.NotNull(archive.GetEntry("manifest.json"));
         Assert.NotNull(archive.GetEntry("presentation.json"));
-        Assert.Single(archive.Entries.Where(entry => entry.FullName.StartsWith("assets/", StringComparison.Ordinal)));
+        Assert.Single(archive.Entries, entry => entry.FullName.StartsWith("assets/", StringComparison.Ordinal));
 
         var imported = await new PresentPptxImportService(_paths).ImportAsync(destination, CancellationToken.None);
         Assert.NotEqual(document.Id, imported.Id);

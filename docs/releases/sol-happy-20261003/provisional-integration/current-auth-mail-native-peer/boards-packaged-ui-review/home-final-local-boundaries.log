@@ -1,0 +1,9 @@
+
+    $result.status = 'FAIL_OR_INCOMPLETE'; $result.failureType = $_.Exception.GetType().Name
+    Write-Error -Message ("Original Home validation failed at {0}: {1}; controlled phase and original logs retained." -f $result.stage, $result.failureType) -ErrorAction Continue
+
+Exception: /workspace/team-c-c6-durable-validation-20261004/boards-packaged-ui-review/probe-home-final-local-boundaries.ps1:9
+Line |
+   9 |  … lt.failureType){throw 'Actual outer catch leaked external exception'}
+     |                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Actual outer catch leaked external exception

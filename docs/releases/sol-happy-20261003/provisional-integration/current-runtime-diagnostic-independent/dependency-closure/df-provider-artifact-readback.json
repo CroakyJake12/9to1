@@ -1,0 +1,99 @@
+{
+  "artifacts": [
+    {
+      "id": 11309450284,
+      "name": "team-c-picture-browser-nine-df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "size_in_bytes": 28783550,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11309450284",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11309450284/zip",
+      "expired": false,
+      "created_at": "2026-10-04T16:49:17Z",
+      "expires_at": "2026-10-11T16:49:14Z",
+      "updated_at": "2026-10-04T16:49:17Z",
+      "digest": "sha256:b25f6492d04f3a6e40c5f72e75918c55fcfbe81b5f7969ee828338664984ca0c",
+      "workflow_run": {
+        "id": 37217686116,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-global-web-picture-20261004",
+        "head_sha": "df547b5c7492050dc2ad2bdd99e250358cf444fc"
+      }
+    },
+    {
+      "id": 11308889500,
+      "name": "team-c-picture-browser-publisher-df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "size_in_bytes": 1620619,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308889500",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308889500/zip",
+      "expired": false,
+      "created_at": "2026-10-04T16:49:18Z",
+      "expires_at": "2026-10-11T16:49:17Z",
+      "updated_at": "2026-10-04T16:49:18Z",
+      "digest": "sha256:e453f524af96cf9c5e15b0191d3308ada1fb2fb929a12747932bef699d206a17",
+      "workflow_run": {
+        "id": 37217686116,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-global-web-picture-20261004",
+        "head_sha": "df547b5c7492050dc2ad2bdd99e250358cf444fc"
+      }
+    },
+    {
+      "id": 11308274250,
+      "name": "team-c-public-web-publication-df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "size_in_bytes": 35964419,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308274250",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308274250/zip",
+      "expired": false,
+      "created_at": "2026-10-04T16:48:18Z",
+      "expires_at": "2026-10-11T16:48:15Z",
+      "updated_at": "2026-10-04T16:48:18Z",
+      "digest": "sha256:01ecea77e8d87ca0c381957656dc5a4f496b5510c2c24eaf84beaa3b8cdcfaff",
+      "workflow_run": {
+        "id": 37217686116,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-global-web-picture-20261004",
+        "head_sha": "df547b5c7492050dc2ad2bdd99e250358cf444fc"
+      }
+    },
+    {
+      "id": 11308169581,
+      "name": "team-c-public-web-part01-df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "size_in_bytes": 19977649,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308169581",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308169581/zip",
+      "expired": false,
+      "created_at": "2026-10-04T16:48:21Z",
+      "expires_at": "2026-10-11T16:48:19Z",
+      "updated_at": "2026-10-04T16:48:21Z",
+      "digest": "sha256:47ab5ccbb216431c640345d6f7365bd06b70a591bc1c1b44fd39867c96f9ff92",
+      "workflow_run": {
+        "id": 37217686116,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-global-web-picture-20261004",
+        "head_sha": "df547b5c7492050dc2ad2bdd99e250358cf444fc"
+      }
+    },
+    {
+      "id": 11308139722,
+      "name": "team-c-public-web-part02-df547b5c7492050dc2ad2bdd99e250358cf444fc",
+      "size_in_bytes": 16170895,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308139722",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11308139722/zip",
+      "expired": false,
+      "created_at": "2026-10-04T16:48:23Z",
+      "expires_at": "2026-10-11T16:48:21Z",
+      "updated_at": "2026-10-04T16:48:23Z",
+      "digest": "sha256:1312a2d50fbe4bf44ca20ab12d450bff7c9677b9119253af4368694c725202e2",
+      "workflow_run": {
+        "id": 37217686116,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-global-web-picture-20261004",
+        "head_sha": "df547b5c7492050dc2ad2bdd99e250358cf444fc"
+      }
+    }
+  ]
+}

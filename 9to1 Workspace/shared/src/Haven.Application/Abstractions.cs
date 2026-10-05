@@ -203,6 +203,10 @@ public interface ITrainingRepository
 /// </summary>
 public interface IOllamaClient
 {
+    /// <summary>The actual transport endpoint; unknown endpoints never establish device locality.</summary>
+    Uri? TransportEndpoint => null;
+    /// <summary>Trusted transport rejects redirects and bypasses proxies for local endpoints.</summary>
+    bool IsDeviceLocalTransportVerified => false;
     Task<bool> IsAvailableAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken);
     IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken cancellationToken);
@@ -309,6 +313,11 @@ public sealed record ComputerSelectionSnapshot(
 /// </summary>
 public interface IComputerToolService
 {
+    /// <summary>Trusted installed backend capability; request payloads cannot override this platform boundary.</summary>
+    bool IsSupported => OperatingSystem.IsWindows();
+    /// <summary>Resolve a canonical installed app to the actual process/window or launch target. Unknown targets fail closed.</summary>
+    ValueTask<bool> VerifyTargetAsync(string canonicalAppId, string toolName, System.Text.Json.JsonElement arguments,
+        CancellationToken cancellationToken) => ValueTask.FromResult(false);
     Task<ComputerSelectionSnapshot?> GetSelectionSnapshotAsync(CancellationToken cancellationToken) =>
         Task.FromResult<ComputerSelectionSnapshot?>(null);
     Task<string> SnapshotAsync(CancellationToken cancellationToken);

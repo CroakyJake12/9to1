@@ -1,0 +1,38 @@
+{
+  "smtps": {
+    "port": 35245,
+    "tlsVersion": "TLSv1.3",
+    "peerCertificateSHA256": "fc1493fcc3e51dd85b21c4da13a877d567180fc74f12509aa2b599846161c3fd",
+    "expectedOriginalCertificateMatched": true,
+    "originalJavaListeners": [
+      {
+        "table": "tcp6",
+        "local": "0000000000000000FFFF00000100007F:89AD",
+        "inode": "16796"
+      }
+    ],
+    "javaPID": 3558,
+    "javaStartTicks": "7391",
+    "normalOSCertificateValidation": true,
+    "originalSignedChainCrlValidation": true,
+    "publicCrlSha256": "a9b026b90ab9c062bc059b55ba3c74d04c2864416972bb8df50b82b12f15e789"
+  },
+  "imaps": {
+    "port": 38887,
+    "tlsVersion": "TLSv1.3",
+    "peerCertificateSHA256": "fc1493fcc3e51dd85b21c4da13a877d567180fc74f12509aa2b599846161c3fd",
+    "expectedOriginalCertificateMatched": true,
+    "originalJavaListeners": [
+      {
+        "table": "tcp6",
+        "local": "0000000000000000FFFF00000100007F:97E7",
+        "inode": "14648"
+      }
+    ],
+    "javaPID": 3558,
+    "javaStartTicks": "7391",
+    "normalOSCertificateValidation": true,
+    "originalSignedChainCrlValidation": true,
+    "publicCrlSha256": "a9b026b90ab9c062bc059b55ba3c74d04c2864416972bb8df50b82b12f15e789"
+  }
+}

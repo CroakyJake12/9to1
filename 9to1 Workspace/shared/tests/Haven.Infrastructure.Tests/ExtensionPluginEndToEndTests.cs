@@ -147,7 +147,7 @@ public sealed class ExtensionPluginEndToEndTests
         Assert.False(File.Exists(deniedMarker));
         var deniedEvents = await WaitForEventsAsync(executionRepository, deniedExecution, 2);
         Assert.Equal(new[] { ExecutionActionStatus.Running, ExecutionActionStatus.Failed }, deniedEvents.Select(item => item.Status).ToArray());
-        Assert.DoesNotContain(deniedEvents, item => item.Output?.Contains("must-not-run", StringComparison.Ordinal) == true);
+        Assert.False(JsonSerializer.Serialize(deniedEvents).Contains("must-not-run", StringComparison.Ordinal));
 
         const string rawSecret = "worker28-input-secret-123";
         var successMarker = NewMarker();
@@ -287,7 +287,13 @@ public sealed class ExtensionPluginEndToEndTests
 
         await manager.AddSourceAsync(source, CancellationToken.None);
         var candidate = Assert.Single(await manager.RefreshAsync(source.Id, CancellationToken.None));
-        var installed = await manager.InstallAsync(candidate, CancellationToken.None);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            manager.InstallAsync(candidate, CancellationToken.None));
+        Assert.Empty(await extensionRepository.GetInstalledAsync(CancellationToken.None));
+        var installed = await manager.InstallAsync(candidate, RequiredPermissions, CancellationToken.None);
+        Assert.Equal(RequiredPermissions, installed.GrantedPermissions);
+        await manager.SetGrantedPermissionsAsync(installed.Id, ExtensionPermission.None, CancellationToken.None);
+        installed = Assert.Single(await extensionRepository.GetInstalledAsync(CancellationToken.None));
         Assert.False(installed.IsEnabled);
         Assert.Equal(ExtensionPermission.None, installed.GrantedPermissions);
         await manager.SetGrantedPermissionsAsync(installed.Id, RequiredPermissions, CancellationToken.None);

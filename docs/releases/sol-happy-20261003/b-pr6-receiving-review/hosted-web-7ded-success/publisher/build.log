@@ -1,0 +1,107 @@
+
+
+
+
+
+/home/runner/work/9to1/9to1/apps/Web/Accounts/AccountSettingsFeature.cs(106,52): warning IL2026: Using member 'System.Text.Json.JsonSerializer.SerializeToElement<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Accounts/AccountBrowserBindings.cs(277,62): warning IL2026: Using member 'System.Text.Json.JsonSerializer.SerializeToElement<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Accounts/AccountBrowserBindings.cs(300,84): warning IL2026: Using member 'System.Text.Json.JsonSerializer.SerializeToElement<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/WriteBrowserSession.cs(517,51): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/WriteBrowserSession.cs(517,9): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/WriteBrowserSession.cs(529,20): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/WriteBrowserFeature.cs(90,17): warning IL2026: Using member 'System.Text.Json.JsonSerializer.SerializeToElement<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(13,54): warning IL2026: Using member 'System.Text.Json.JsonSerializer.SerializeToElement<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(42,28): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(44,24): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(94,67): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(94,25): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(130,20): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(143,168): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(143,220): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Write/Storage/IndexedDbNotesRepository.cs(147,126): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Wave/WaveBrowserSession.cs(79,24): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(JsonElement, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Wave/WaveBrowserSession.cs(138,22): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(JsonElement, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Wave/WaveBrowserSession.cs(99,22): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(JsonElement, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Picture/PictureBrowserSession.cs(116,22): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(JsonElement, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Picture/PictureBrowserSession.cs(123,22): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(JsonElement, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Picture/PictureBrowserFeature.cs(77,17): warning IL2026: Using member 'System.Text.Json.JsonSerializer.SerializeToElement<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Picture/PictureBrowserSession.cs(144,22): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Deserialize<TValue>(JsonElement, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Wave/WaveBrowserSession.cs(404,80): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Picture/PictureBrowserSession.cs(380,82): warning IL2026: Using member 'System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/home/runner/work/9to1/9to1/apps/Web/Wave/WaveBrowserFeature.cs(56,17): warning IL2026: Using member 'System.Text.Json.JsonSerializer.SerializeToElement<TValue>(TValue, JsonSerializerOptions)' which has 'RequiresUnreferencedCodeAttribute' can break functionality when trimming application code. JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo or JsonSerializerContext, or make sure all of the required types are preserved. [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/usr/share/dotnet/packs/Microsoft.NET.Runtime.WebAssembly.Sdk/10.0.12/Sdk/WasmApp.Common.targets(771,5): warning WASM0001: Could not get pinvoke, or callbacks for method 'Avalonia.Win32.Automation.Interop.UiaCoreProviderApi::<UiaRaiseAutomationPropertyChangedEvent>g____PInvoke|5_0' because 'System.NotSupportedException: Unsupported parameter type in method 'Avalonia.Win32.Automation.Interop.UiaCoreProviderApi.<UiaRaiseAutomationPropertyChangedEvent>g____PInvoke|5_0' [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/usr/share/dotnet/packs/Microsoft.NET.Runtime.WebAssembly.Sdk/10.0.12/Sdk/WasmApp.Common.targets(771,5): warning WASM0001:    at PInvokeCollector.<CollectPInvokes>g__CollectPInvokesForMethod|6_0(MethodInfo method, <>c__DisplayClass6_0&) [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+/usr/share/dotnet/packs/Microsoft.NET.Runtime.WebAssembly.Sdk/10.0.12/Sdk/WasmApp.Common.targets(771,5): warning WASM0001:    at PInvokeCollector.CollectPInvokes(List`1 pinvokes, List`1 callbacks, HashSet`1 signatures, Type type)' [/home/runner/work/9to1/9to1/apps/Web/NineToOne.Web.csproj]
+{
+  "Properties": {
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "browser-wasm",
+    "NETCoreSdkVersion": "10.0.401",
+    "MicrosoftNetCoreAppRuntimePackDir": "/usr/share/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12",
+    "MicrosoftNetCoreAppRuntimePackRidNativeDir": "/usr/share/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12/runtimes/browser-wasm/native/",
+    "_WasmRuntimePackVersion": "10.0.12"
+  },
+  "Items": {
+    "ResolvedRuntimePack": [
+      {
+        "Identity": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
+        "FrameworkName": "Microsoft.NETCore.App",
+        "NuGetPackageVersion": "10.0.12",
+        "PackageDirectory": "/usr/share/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12",
+        "RuntimeIdentifier": "browser-wasm",
+        "NuGetPackageId": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
+        "IsTrimmable": "",
+        "FullPath": "/home/runner/work/9to1/9to1/apps/Web/Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
+        "RootDir": "/",
+        "Filename": "Microsoft.NETCore.App.Runtime.Mono",
+        "Extension": ".browser-wasm",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/apps/Web/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.FrameworkReferenceResolution.targets",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.FrameworkReferenceResolution",
+        "DefiningProjectExtension": ".targets"
+      }
+    ],
+    "NativeFileReference": [
+      {
+        "Identity": "/home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+        "FullPath": "/home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+        "RootDir": "/",
+        "Filename": "libSkiaSharp",
+        "Extension": ".a",
+        "RelativeDir": "/home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/",
+        "Directory": "home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-02-07 16:15:38.0000000",
+        "CreatedTime": "2026-02-07 16:15:38.0000000",
+        "AccessedTime": "2026-10-04 15:53:26.9776862",
+        "DefiningProjectFullPath": "/home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/SkiaSharp.NativeAssets.WebAssembly.targets",
+        "DefiningProjectDirectory": "/home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/",
+        "DefiningProjectName": "SkiaSharp.NativeAssets.WebAssembly",
+        "DefiningProjectExtension": ".targets"
+      },
+      {
+        "Identity": "/home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+        "FullPath": "/home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+        "RootDir": "/",
+        "Filename": "libHarfBuzzSharp",
+        "Extension": ".a",
+        "RelativeDir": "/home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/",
+        "Directory": "home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-02-06 15:30:22.0000000",
+        "CreatedTime": "2026-02-06 15:30:22.0000000",
+        "AccessedTime": "2026-10-04 15:53:26.9766862",
+        "DefiningProjectFullPath": "/home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/HarfBuzzSharp.NativeAssets.WebAssembly.targets",
+        "DefiningProjectDirectory": "/home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/",
+        "DefiningProjectName": "HarfBuzzSharp.NativeAssets.WebAssembly",
+        "DefiningProjectExtension": ".targets"
+      }
+    ]
+  }
+}

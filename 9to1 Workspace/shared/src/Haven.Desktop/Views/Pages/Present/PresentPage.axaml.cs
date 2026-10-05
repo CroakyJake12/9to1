@@ -38,6 +38,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         _route.PreviousSlideRequested += OnPreviousSlideRequested; _route.NextSlideRequested += OnNextSlideRequested; _route.AddSlideRequested += OnAddSlideRequested; _route.DeleteSlideRequested += OnDeleteSlideRequested;
         _route.DeckTitleChanged += OnDeckTitleChanged; _route.SlideTitleChanged += OnSlideTitleChanged; _route.BodyChanged += OnBodyChanged; _route.NotesChanged += OnNotesChanged;
         InitializePhase2(importer);
+        InitializeWorkspace();
         _autosaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _autosaveTimer.Tick += OnAutosaveTick;
         Loaded += OnLoaded; DetachedFromVisualTree += OnDetachedFromVisualTree;
@@ -225,6 +226,8 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (Document is null) return; Document.Normalize(); _slideIndex = Math.Clamp(_slideIndex, 0, Document.Slides.Count - 1);
         if (_editor is null || !ReferenceEquals(_editor.Document, Document)) AttachEditor(Document);
         _route.SetDocument(Document, _deckIndex, _documents.Count, _slideIndex); RenderPhase2();
+        _route.SetWorkspaceDocument(Document, _slideIndex);
+        _route.SetWorkspaceSelection(Document, _slideIndex, _editor!.Selection.ElementIds);
     }
     private async Task RefreshDocumentsAsync(CancellationToken cancellationToken) => _documents = await _repository.ListAsync(cancellationToken);
     private int IndexOfDocument(Guid id) { for (var index = 0; index < _documents.Count; index++) if (_documents[index].Id == id) return index; return 0; }
@@ -249,6 +252,6 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (_disposed) return; _disposed = true; _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
         _route.PreviousDeckRequested -= OnPreviousDeckRequested; _route.NextDeckRequested -= OnNextDeckRequested; _route.NewDeckRequested -= OnNewDeckRequested; _route.SaveRequested -= OnSaveRequested; _route.ExportRequested -= OnExportRequested;
         _route.PreviousSlideRequested -= OnPreviousSlideRequested; _route.NextSlideRequested -= OnNextSlideRequested; _route.AddSlideRequested -= OnAddSlideRequested; _route.DeleteSlideRequested -= OnDeleteSlideRequested;
-        _route.DeckTitleChanged -= OnDeckTitleChanged; _route.SlideTitleChanged -= OnSlideTitleChanged; _route.BodyChanged -= OnBodyChanged; _route.NotesChanged -= OnNotesChanged; DisposePhase2(); _route.Dispose();
+        _route.DeckTitleChanged -= OnDeckTitleChanged; _route.SlideTitleChanged -= OnSlideTitleChanged; _route.BodyChanged -= OnBodyChanged; _route.NotesChanged -= OnNotesChanged; DisposeWorkspace(); DisposePhase2(); _route.Dispose();
     }
 }

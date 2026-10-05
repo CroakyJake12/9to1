@@ -1,0 +1,9 @@
+{
+  "frozenCommit": "7392028644ad0b26c9a1d8fa6b874404657fc105",
+  "sourceHashes": {
+    ".github/workflows/team-c-windows-artifact-inspection.yml": "1c0564b59df1f77f27c5d693924bda8d2287c216b69ccdaae25dab101c08df95",
+    ".github/scripts/inspect-original-windows-artifact.py": "462f5d4bfcbb5b74c5d0e45c6000a4ddee92a5eba80524c8408a23134f542a5f",
+    ".github/validation/windows-original-artifacts.json": "b11e2eec167fbc31e9fae5f99305ef9b063e77a627d07f06ef8439ceaf958049"
+  },
+  "review": "ACK immutable exactsource +all7workflow/catalogbinding; prior4offlinecontrols reusable sourceunchanged; no downloaded codeexecution/newWindowsclaims"
+}

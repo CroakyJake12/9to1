@@ -1,0 +1,47 @@
+{
+  "sourceCommit": "3333749b62b2393a667f9b7f30b81be220cc8f9b",
+  "base": "28e48b64acb96763dda2bd67e9759922442a31e6",
+  "ownerSource": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "wholeBodiesEqualSelectors": "EEC=A63=Bbase=f7",
+  "scope": "STRICT_ISOLATED_BROWSER_VALIDATION_ONLY; NOT_GLOBAL_ADOPTION: canonicalwholeProgram requires4nativeMainhelpers+transitiveWaveFilesProjectService; tenbodyminimumnativeclosurebeingreviewed. No decoderprefixsplice/hashrepin, alloutside5receiving/Cseams conserved.",
+  "selection": [
+    {
+      "path": "9to1 Workspace/Wave/WaveProject.cs",
+      "oldTreeEntry": "100644 blob d071d3065b750e4763fef305f7e6b67fff1a0906\t9to1 Workspace/Wave/WaveProject.cs",
+      "bytes": 18706,
+      "sha256": "8ce0273faff2f8b47c4cf15a57838d2defeed6be115e6a3f32700132f6a44ff2",
+      "newTreeEntry": "100644 blob b15043b6058983db177fee8ea7d746828cf03bbd\t9to1 Workspace/Wave/WaveProject.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectEdits.cs",
+      "oldTreeEntry": null,
+      "bytes": 8427,
+      "sha256": "ededd91053649b22ab7ed074381813ac72e9e453fbea9b7e14e119fa7201a4bf",
+      "newTreeEntry": "100644 blob 9c566d9dae8ef0042466f63307eb7b61d77a5029\t9to1 Workspace/Wave/WaveProjectEdits.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveTimelineAnnotations.cs",
+      "oldTreeEntry": null,
+      "bytes": 6681,
+      "sha256": "e824f1add1da06eec8d9be15e0091f0bc7b6ac32f038de3a0154fc2dadd7841a",
+      "newTreeEntry": "100644 blob a69cbf47f8a3c592434997a8f428f618b96ca3c2\t9to1 Workspace/Wave/WaveTimelineAnnotations.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
+      "oldTreeEntry": null,
+      "bytes": 787,
+      "sha256": "a8ba16905a071620495ba18023923c31f3eb3a64b7bb8bad9908655fa1fbc2d1",
+      "newTreeEntry": "100644 blob b124d849d14a568c9e60552bd0de2e95d098034f\t9to1 Workspace/Wave/WaveMediaAssetReferences.cs"
+    },
+    {
+      "path": "9to1 Workspace/Wave/Program.cs",
+      "oldTreeEntry": "100644 blob 39975d34bc7912deb2c13b3e420a0e2de2797570\t9to1 Workspace/Wave/Program.cs",
+      "bytes": 38203,
+      "sha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f",
+      "newTreeEntry": "100644 blob 6f7c0b5d9275637a5f4a4de7be76ae3273eeeb9f\t9to1 Workspace/Wave/Program.cs"
+    }
+  ],
+  "currentNativeProject": "HavenOS.Wave.csproj alreadywholebodyexactcanonical, originaluntouched Core+Infrastructure refs",
+  "firstActualGlobalFailure": "ce50 workflow37211850761 sourcecustody3missing beforeSDKworkload/build; no guardweakening",
+  "ownerAdoption": "UNACCEPTED; nativeA-ownedsource adoptionawaits exactcustodyACK/rootpeerreview"
+}

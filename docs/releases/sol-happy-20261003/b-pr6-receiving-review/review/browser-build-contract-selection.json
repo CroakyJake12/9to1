@@ -1,0 +1,34 @@
+{
+  "sourceCommit": "680f1301c3ae255a645822adb55be36ec11bb146",
+  "parent": "add2e2181b69d2e48ce0caab1fda83db0cd73829",
+  "worktree": "/workspace/team-c-c5-b-picture-eec-closure-provisional",
+  "paths": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+      "bytes": 1246,
+      "sha256": "a18d78225cf8bbf1e8cba24dd20c22b3f2bde38c797ad87a959dae60e86edbdb",
+      "gitTree": "100644 blob d8e74f437ff73468d35889e457b25dae8e04b027\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+      "wholeEecA63PrBasePrHeadBodiesIdentical": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+      "bytes": 3416,
+      "sha256": "a289961a247e92d4668afe5b0b14e8a4e4f398c14f82e110420443d0cdbc22ff",
+      "gitTree": "100644 blob 88097cd16c671dee5cef67f87ccd1d5873011bc6\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+      "wholeEecA63PrBasePrHeadBodiesIdentical": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+      "bytes": 1170,
+      "sha256": "2d428ddf7536447be38d4f47f44e7a53e1a0e2900eb6fd60602377d82251699c",
+      "gitTree": "100644 blob 55d33fd46c71d880d304aefe8244d9c1d805bf81\tframework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+      "wholeEecA63PrBasePrHeadBodiesIdentical": true
+    }
+  ],
+  "status": "PROVISIONAL_UNACCEPTED_CANONICAL_BROWSER_BUILD_CONTRACTS",
+  "outsideThreePathsIdenticalParent": true,
+  "CuiControlLoader": "UNMODIFIED; still exact root/EEC/A63 86351ccd, separate existingTextChanging approval binding review pending",
+  "firstFailurePreserved": "receiving-web-first-gate/build.log MSB4019 before native/browser compile",
+  "ownerAdoption": "NOT_ACKED; direct user provisional dependency authorization via root",
+  "gitIgnoredBuildDirectory": "Exact3 current canonical source files forced tracked, no artifact/cache paths"
+}

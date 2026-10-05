@@ -1,0 +1,133 @@
+{
+  "recordedUTC": "2026-10-04T15:34:42.941116+00:00",
+  "state": "ACK_BOUNDED_PROVISIONAL_SOURCE_AND_INDEPENDENT_NATIVE_RUNTIME",
+  "sourceCommit": "fe64ee093177fe359efabf69bd748e967f99caa6",
+  "sourceReview": {
+    "path": "/workspace/team-c-c6-durable-validation-20261004/cui-lifetime/independent-source-composition-review.json",
+    "sha256": "d7e8d912f7f9be60a30d443a49034e51446c9bf50a5b9fc2b04348fe1c8674bc"
+  },
+  "sourceCleanCurrent": true,
+  "C2DeclaredSourceInputsUnchanged": 16279,
+  "ownActualRuns": [
+    {
+      "path": "/workspace/team-c-c6-durable-validation-20261004/cui-lifetime/original-three-independent-run.log",
+      "sha256": "9102a4c29c75ee2d04f4711bd24c2aeadf70ad0294156ab99cdd3e90c0bad1a1",
+      "bytes": 492,
+      "actualProcessExitCode": 0,
+      "counts": {
+        "discovered": 3,
+        "executed": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      "configuration": "Release",
+      "execution": "Independent C6 actual SDK dotnet invocation of existing frozen source-built DLL once; no rebuild/copied runtime/stub."
+    },
+    {
+      "path": "/workspace/team-c-c6-durable-validation-20261004/cui-lifetime/preservation-five-independent-run.log",
+      "sha256": "f52ae9bfc9e36591139b4e90b52a5428760d1f9255536b474fe2660cf54b2d1d",
+      "bytes": 521,
+      "actualProcessExitCode": 0,
+      "counts": {
+        "discovered": 5,
+        "executed": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      },
+      "configuration": "Release",
+      "execution": "Independent C6 actual SDK dotnet invocation of existing frozen source-built DLL once; no rebuild/copied runtime/stub."
+    }
+  ],
+  "environment": {
+    "sdk": "/workspace/.tools/dotnet/dotnet",
+    "sdkVersion": "10.0.401",
+    "taskPrivateDotnetCliHomeAndXdgConfig": true,
+    "HOMEAndUSERPROFILEUnchanged": true,
+    "providerOrCredentialRequests": false
+  },
+  "runtimeCustody": {
+    "C6Original3BeforeAfter": {
+      "catalogPath": "/workspace/team-c-c6-durable-validation-20261004/cui-lifetime/compiled-release-runtime-inputs.json",
+      "sha256": "669c5d2cc4bedf1515d7c508adcffc6afc5aa383b4e4f587a018888ed9644652",
+      "files": 90,
+      "allCheckedFileBytesUnchanged": true,
+      "scope": "Original C6 catalog of top-level runtime files captured before original3 invocation and compared after both invocations; nested runtime assets bound separately to C2 full catalog."
+    },
+    "C2FullCatalog": {
+      "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/compiled-Release-runtime-inputs.json",
+      "sha256": "be9d279dca2e2910b6476eefea3ff821712cd6efc94fddc079fee9e43936c519",
+      "groups": [
+        {
+          "name": "original-three-Release",
+          "files": 129,
+          "allCurrentFilesExact": true
+        },
+        {
+          "name": "preservation-Release",
+          "files": 129,
+          "allCurrentFilesExact": true
+        },
+        {
+          "name": "owning-runtime-Release",
+          "files": 208,
+          "allCurrentFilesExact": true
+        }
+      ],
+      "scope": "All complete current files independently match frozen C2 catalog. C6 did not capture an independent before-preservation5 catalog; source/runtime provenance derives from source freeze and C2 catalog."
+    }
+  },
+  "maintainedOwningRuntimePeerReadback": [
+    {
+      "configuration": "Debug",
+      "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/Runtime-Debug/results/runtime.trx",
+      "sha256": "ad6e026c17168616dbc78eb230b0ed7757702dcf6e81529d402fb5fe77cc4647",
+      "counts": {
+        "total": 90,
+        "executed": 90,
+        "passed": 90,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "configuration": "Release",
+      "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/Runtime-Release/results/runtime.trx",
+      "sha256": "dfc79a73757dc835698a5587748de99b174dd3e10c1575253507e71fddad0e0d",
+      "counts": {
+        "total": 90,
+        "executed": 90,
+        "passed": 90,
+        "failed": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "otherC2ActualCountsBothConfigurations": {
+    "original3": "3/3 PASS",
+    "browserAccounts": "15/15 PASS",
+    "accountFactory": "6/6 PASS",
+    "correctedPreservation": "5/5 PASS"
+  },
+  "preservationFixtureCorrection": {
+    "diagnosis": "Initial generic fixture omitted declared action, actual loader rejected before dispatch; exact red Debug/Release4/1 retained. Only new test markup corrected to declared Actions/Action and Page/Button canonical pattern, diagnostic message added; production and all five assertions unchanged.",
+    "initialSourceSha256": "7410c613a11ba18283010c9aca7680669898f5cd02ffeac756043028994b1db7",
+    "finalSourceSha256": "25403a362827b91734bf29a786f58a11ec73a253d9faba748fc010724220488e"
+  },
+  "originalMeaningfulFailurePreserved": {
+    "source": "5dee1dac36f40828c74c50b269064bc23b24432b",
+    "counts": "3 executed /2PASS /1FAIL /0skip",
+    "cause": "Original selected broker sees own view cancellation and cannot continue after reset."
+  },
+  "completionReview": {
+    "path": "/workspace/team-c-resume-evidence/c2-cui-lifetime-provisional/completion-review.json",
+    "sha256": "ca8e602fc64fb65721186460461f44b4cd6201228d1a637fdd40224fb2968b36"
+  },
+  "qualification": [
+    "Optional existing delivered lifetime port and exact consumer only; source-only owner adoption remains pending.",
+    "Actual native CUI loader/Button and scripted real lifecycle boundaries; physical browser/WASM/JSImport/issuer/provider/profile/session/BFCache/token-expiry/terminal broker integration not established.",
+    "View retirement is removed only at existing validated handoff; explicit caller cancellation and generic dispatcher fallback preserved; trusted broker must honor its cancellation contract.",
+    "No global/full-account/29-app/installedHome/clean-PC acceptance inferred."
+  ]
+}

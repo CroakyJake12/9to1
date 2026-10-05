@@ -1,0 +1,133 @@
+{
+  "requestId": "team-b-maintained-fixture-custody-recovery-20261003",
+  "owner": "Team C C2 maintained browser fixture/custodian and root execution-service owner",
+  "currentRuntimeCommit": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+  "preparedReplacementCommit": "27aa37abb0462869d2b1cb1aa5ee1371b8b13415",
+  "preparedReplacementWorktree": "/workspace/team-b-c2-cors-fixture",
+  "actualStopEvidence": {
+    "capturedAt": "2026-10-03T22:49:31.629527+00:00",
+    "status": "STOP_UNPROVEN_STATE_RETAINED_REPLACEMENT_BLOCKED",
+    "controlAttempt": {
+      "session": 63118,
+      "input": "Ctrl-C through original tool session identifier",
+      "observedExit": 1,
+      "output": "^C",
+      "laterOwnPoll": "Unknown process id63118",
+      "rootAttempt": "Unknown process id; no PID signal"
+    },
+    "whitelistedLogStatuses": [
+      "ready"
+    ],
+    "logBytes": 471,
+    "oldDevVarsExists": true,
+    "oldPrivateManifestExists": true,
+    "8798connectEx": 0,
+    "readOnlyProcessEvidence": [
+      {
+        "pidReadOnly": 54244,
+        "comm": "codex",
+        "ppid": "1",
+        "pgrp": "54244",
+        "sid": "54244",
+        "birthTick": "1511945",
+        "state": "Z",
+        "matchedMaintainedFixtureArg": false,
+        "matchedExactOldWranglerPath": false,
+        "matchedExactOldPersistencePath": false
+      },
+      {
+        "pidReadOnly": 54245,
+        "comm": "bash",
+        "ppid": "1",
+        "pgrp": "54244",
+        "sid": "54244",
+        "birthTick": "1511946",
+        "state": "S",
+        "matchedMaintainedFixtureArg": true,
+        "matchedExactOldWranglerPath": false,
+        "matchedExactOldPersistencePath": false
+      },
+      {
+        "pidReadOnly": 54248,
+        "comm": "MainThread",
+        "ppid": "54245",
+        "pgrp": "54244",
+        "sid": "54244",
+        "birthTick": "1511946",
+        "state": "S",
+        "matchedMaintainedFixtureArg": true,
+        "matchedExactOldWranglerPath": false,
+        "matchedExactOldPersistencePath": false
+      },
+      {
+        "pidReadOnly": 54259,
+        "comm": "MainThread",
+        "ppid": "1",
+        "pgrp": "54259",
+        "sid": "54259",
+        "birthTick": "1511980",
+        "state": "S",
+        "matchedMaintainedFixtureArg": false,
+        "matchedExactOldWranglerPath": true,
+        "matchedExactOldPersistencePath": true
+      },
+      {
+        "pidReadOnly": 54266,
+        "comm": "MainThread",
+        "ppid": "54259",
+        "pgrp": "54259",
+        "sid": "54259",
+        "birthTick": "1511984",
+        "state": "S",
+        "matchedMaintainedFixtureArg": false,
+        "matchedExactOldWranglerPath": true,
+        "matchedExactOldPersistencePath": true
+      },
+      {
+        "pidReadOnly": 54292,
+        "comm": "workerd",
+        "ppid": "54266",
+        "pgrp": "54259",
+        "sid": "54259",
+        "birthTick": "1512077",
+        "state": "S",
+        "matchedMaintainedFixtureArg": false,
+        "matchedExactOldWranglerPath": false,
+        "matchedExactOldPersistencePath": false
+      },
+      {
+        "pidReadOnly": 54298,
+        "comm": "workerd",
+        "ppid": "54266",
+        "pgrp": "54259",
+        "sid": "54259",
+        "birthTick": "1512111",
+        "state": "S",
+        "matchedMaintainedFixtureArg": false,
+        "matchedExactOldWranglerPath": false,
+        "matchedExactOldPersistencePath": false
+      }
+    ],
+    "authorityReview": "Original Node appears alive; exactoldWrangler now PPID1; no matching live LinuxPythoncustodian visible. Processbirth/argvread works, cwd/ns/FDtargets EACCES underdefault and narrowlygrantedreadonly permissions. Original strict kernel handles/adoption/drain receipt cannot be reconstructed from live numericIDs.",
+    "restrictionsObserved": [
+      "No numericPID/PGIDsignals",
+      "No processFDwrites",
+      "No privatefiledeletion",
+      "No replacementlaunch",
+      "No schema/credentials/runtimewaiver"
+    ],
+    "next": "Root/servicecustodyowner must identify original validcontrolauthority or reviewedstablekernelrecovery; no acceptance/cleanup claimed"
+  },
+  "request": [
+    "Identify original retained stable control/reaping authority, or publish maintained reviewed custody recovery that preserves actual original failure, birth/identity and kernel handle semantics. Tool session Ctrl-C was prescribed; no strict reap receipt resulted.",
+    "Provide maintained fresh fixture control transport surviving caller/PTY loss and owned strict drain/reap proof; do not substitute port-free/PID polling for original-child kernel proof.",
+    "If original authority cannot immediately recover, consider a reviewed configurable alternate isolated loopback fixture port/issuer/resource and exact client contract to continue genuine browser PKCE/profile/session acceptance while original state/failure remains retained. No claim of old cleanup or full custody acceptance."
+  ],
+  "boundary": [
+    "No numeric PID/PGID signaling",
+    "No private state deletion",
+    "No fresh replacement listener on occupied8798",
+    "No fixture credentials/token/browser-validation bypass",
+    "No source authority/full release claim"
+  ]
+}

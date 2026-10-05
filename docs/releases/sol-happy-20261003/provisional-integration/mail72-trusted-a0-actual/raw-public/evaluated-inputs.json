@@ -1,0 +1,258 @@
+[
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Contracts/MailModels.cs",
+    "bytes": 8852,
+    "sha256": "aca350d14fcb825264300aa37d7029904a20ecec5106201eb9925823a7046282",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Contracts/MailResults.cs",
+    "bytes": 6557,
+    "sha256": "d8ad1a2186085db318c0aaa0e3f7356b97fd4e8ff62866706be187693219b662",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Providers/MailAttachmentContentSource.cs",
+    "bytes": 553,
+    "sha256": "4dc56f216b1c5c4c9580e674ef6a0ee6f5badb486e4615945a3e34929e79259f",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Providers/MailKitImapSmtpProvider.cs",
+    "bytes": 24270,
+    "sha256": "0d16249681e399f362a70eecb72e81d0f40a7e0a94fe1f999c5be9ddfe8e14e7",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Providers/MailProviderContracts.cs",
+    "bytes": 2650,
+    "sha256": "c85f5af76b193dea519dbb80dbdd844af0bb0769983e2ee09002792d16e9c9af",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Services/MailDomainService.cs",
+    "bytes": 51588,
+    "sha256": "0e0ae940c528d43b0a6d44d0859beef238a389dacc11c382ee5d25be52cd27e5",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Services/MailHtmlSanitizer.cs",
+    "bytes": 1735,
+    "sha256": "a32bf75ae381a7c121d4204f42eb9652ff12c7c5b1709a8c75c556950c1343ab",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Services/MailSearchEngine.cs",
+    "bytes": 3905,
+    "sha256": "e7df05b300d77402f7a1d2a6d770691c06b5e0c16f3c65cc75a4ba9e11b22c9d",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Storage/EncryptedJsonMailStateStore.cs",
+    "bytes": 15024,
+    "sha256": "1ccb320edfd012b6005a3c21a2594a069fcd5c3b680801edc4aa35a5b4f6649e",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Storage/MailStoreContracts.cs",
+    "bytes": 1718,
+    "sha256": "90f7b4fee715f0aba48040745f6a0f973fcd4e5b2d63e0c184f9cd4409835a15",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "kind": "Content",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/UI/MailWorkspace.cui",
+    "bytes": 12237,
+    "sha256": "3dadc4793f2b077241bff7a733ba5865bfcc62e30f2226da84bff26790921e81",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Tests/MailDomainRegressionTests.cs",
+    "bytes": 16947,
+    "sha256": "5433ce7d35a3571a0748f0e85b9c44f62fe0b25f0e728895276fe7ff47cb1e10",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Tests/MailFoundationTests.cs",
+    "bytes": 13408,
+    "sha256": "9bc21b52d83be2e1fe42eb726ef1ceeb854e553e463c403b0adfb3a9e6e9f8e4",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs",
+    "bytes": 28386,
+    "sha256": "0aa041edddd73959c54416b33bebc6276bb2ba704f1a45b3b153c164dae926a8",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
+    "bytes": 6403,
+    "sha256": "8edeb64a3458461f26fe2f3d011dd966d4da5359ba2c8adf28a49bc0df522cf2",
+    "generatedOwned": false
+  },
+  {
+    "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/9to1 Workspace/Mail/Tests/MailStoreRegressionTests.cs",
+    "bytes": 13489,
+    "sha256": "fed82bf1695c7ac6eb84fbd16096a16fbd8ba6c12829f250cd0f7fdfa078730f",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/ActionJsonSchemaValidator.cs",
+    "bytes": 10519,
+    "sha256": "d657c78b2000dd124efd7515754e5cc23670362d4b23c47a1ac426bd1ac57106",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/AppAiContracts.cs",
+    "bytes": 9862,
+    "sha256": "97628202c23aa42db86ed627a68810b102a575ebf8c3d385dfd72608ebdff776",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/AppAiCoordinator.cs",
+    "bytes": 23197,
+    "sha256": "6f7c9cf8370921757127a6d8eb0592d81b7ca2c212d34fd3e5fcd4d1d49276ff",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/AppAiCoordinatorFactory.cs",
+    "bytes": 1051,
+    "sha256": "cf66d030bfa86d1b2dc5637d0d687ea178cb85ebaddbc8fab1acb35f82696b27",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/FloatingAiBarScene.cs",
+    "bytes": 558,
+    "sha256": "e0e4df2331a05fbaff01cb5512da4d2470b226da25b420bb4131a32750130ab7",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/FloatingAiBarState.cs",
+    "bytes": 16163,
+    "sha256": "af11f32b788b5e4099988bbb608b5bd59b0fa1364fb1915c07c0c317b8cc6ac2",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/InvocationCompose.cs",
+    "bytes": 8047,
+    "sha256": "9cf08225d8b9425a57bef2cb3f848d8c2633e148d13671bb783ec146cf98474c",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "kind": "EmbeddedResource",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/AI/UI/FloatingAiBar.cui",
+    "bytes": 1974,
+    "sha256": "e33cf268e4ca886dfdfaa0336a66b8d7b18404003da2a3ce06f853918d90630f",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiDocument.cs",
+    "bytes": 8835,
+    "sha256": "c00cddb41f64148b9b2d97cb51b9807eb4ac23a41a8076e6274d68e09bde3d8e",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiRichParser.cs",
+    "bytes": 33607,
+    "sha256": "03c3d3f24854a6711ae9157e0eb1f4d4017c03923b304ab77c1c06fe06ebed7a",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiRuntimeContracts.cs",
+    "bytes": 2311,
+    "sha256": "91ab48bed44e0b933a7aa7166c7e0afdd9df5a7f61afd318ec65996aaf4fe805",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiSyntaxNormalizer.cs",
+    "bytes": 16156,
+    "sha256": "90a41679379cfa6963808d30467ffcc5812a43dfe372d5d33ce83021fd4fdc6f",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Core/CuiValues.cs",
+    "bytes": 1543,
+    "sha256": "edba6d2b57d0bacc3b209b13433dde00305f12b792e0f4ac3ab768b0653791e4",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Language/CuiDiagnostics.cs",
+    "bytes": 1281,
+    "sha256": "74b63012db821c8efdfaa62759c510db044e41f1a5e9788044a522bd258ccc05",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Language/CuiProjectItems.cs",
+    "bytes": 1042,
+    "sha256": "72bdd52033abca9412f28b9686701b50eed70774cb60cde73b0a808e25465a67",
+    "generatedOwned": false
+  },
+  {
+    "project": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+    "kind": "Compile",
+    "path": "/home/runner/work/9to1/9to1/framework/CUI/Language/CuiSource.cs",
+    "bytes": 620,
+    "sha256": "7ab733630e87da15789d38e266e88ab4fb8e48e12cd9f82d62b5848dacdb7b0f",
+    "generatedOwned": false
+  }
+]

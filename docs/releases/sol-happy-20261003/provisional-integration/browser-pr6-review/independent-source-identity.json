@@ -1,0 +1,742 @@
+{
+  "scope": "Independent immutable tree/body review only; no build/browser/provider/CI acceptance",
+  "proposal": "1a0a824ad06905467c280730a85429f37feabce1",
+  "parent": "43c5b0ebf7d26f46ee9a29ad009e9dd0e68b835a",
+  "Bsource": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "Bbase": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+  "root": "de52ec43b8020ef3752e65621bd228d0d31391f2",
+  "pathCount": 66,
+  "exactDiffInventory": true,
+  "everyReceivingBodyAndModeEqualsB": true,
+  "everyRootAffectedPathEqualsParent": true,
+  "everyParentBodyAndModeEqualsBBase": true,
+  "outside66ChangedPaths": [],
+  "rootLaterChangedPaths": [
+    "9to1 Workspace/Sites/Hosting/R2NativeSiteArtifactReader.cs",
+    "9to1 Workspace/Sites/Tests/R2NativeSiteArtifactReaderTests.cs",
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Preview/WebProjectPreviewProvider.cs",
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/UnifiedExecutionPersistenceTests.cs",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/backup-only.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/cancelled-fresh-default.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/cases.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/corrupt-default-refuses.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/corrupt-primary-good-backup.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/default-path-is-directory.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/existing-default.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/explicit-open-preserved.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/fresh-default.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/future-default-refuses.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/c6/source-inputs.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-backup-only.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-backup-only.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-cancelled-fresh-default.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-cancelled-fresh-default.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-controls.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-corrupt-default-refuses.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-corrupt-default-refuses.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-corrupt-primary-good-backup.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-corrupt-primary-good-backup.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-default-path-is-directory.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-default-path-is-directory.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-existing-default.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-existing-default.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-explicit-open-preserved.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-explicit-open-preserved.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-fresh-default.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-fresh-default.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-future-default-refuses.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/debug-future-default-refuses.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/fixed-debug-build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/fixed-release-build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/frozen-source-inventory.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/implementer-validation-receipt.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/index.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/normal-adapter-release-pinned-dependencies.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/normal-adapter-release.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/normal-adapter-release.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/normal-predependency-failure-receipt.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/original-fresh-default.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/original-fresh-default.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/original-fresh-default.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/original-windows-launch.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/pinned-ui-dependency-setup.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/receiving-windows-observation-receipt.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-backup-only.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-backup-only.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-cancelled-fresh-default.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-cancelled-fresh-default.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-controls.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-corrupt-default-refuses.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-corrupt-default-refuses.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-corrupt-primary-good-backup.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-corrupt-primary-good-backup.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-default-path-is-directory.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-default-path-is-directory.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-existing-default.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-existing-default.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-explicit-open-preserved.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-explicit-open-preserved.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-fresh-default.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-fresh-default.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-future-default-refuses.stderr.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/release-future-default-refuses.stdout.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/boards-startup/sdk-info.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/combined-normal-5110/C6-independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/combined-normal-5110/artifact-index.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/combined-normal-5110/command.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/combined-normal-5110/results/whole-normal.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/combined-normal-5110/review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/combined-normal-5110/run.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/current-receiving-independent-review-index.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/backup-only.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/cancelled-fresh-default.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/cases.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/corrupt-default-refuses.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/corrupt-primary-good-backup.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/default-path-is-directory.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/existing-default.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/explicit-open-preserved.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/fresh-default.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/future-default-refuses.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/boards-startup/source-inputs.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/continuation-public-artifact-index.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/dependency-closure/emoji-canonical-carrier-source-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/dependency-closure/emoji-canonical-runtime-independent-readback.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/dependency-closure/native-r2-receiving-source-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/dependency-closure/navigation5-3b0b-independent-readback.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/mesh-filename/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/mesh-filename/results/mesh-tests.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/mesh-filename/run.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/mesh-filename/source-inputs.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/affected-three-metadata-successor-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/affected-three-windows-source-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/present-independent-runtime/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/present-independent-runtime/results/present-critical.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/present-independent-runtime/run.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/present-theme-bootstrap-source-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/studio-independent-runtime/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/studio-independent-runtime/results/studio-critical.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/studio-independent-runtime/run.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/native-proposals/studio-ui-retirement-source-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/preview-environment/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/preview-environment/results/preview-tests.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/preview-environment/run.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/preview-environment/source-inputs.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/independent-continuation/test-preconditions-source-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/C6-publication-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/C6-runtime-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/artifact-identities.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/commands.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/dotnet-info.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/dotnet-version.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/git-clean-after.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/git-clean-before.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/git-head.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/normal-owner-tests.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/restore.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/result.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/target-properties.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/target-properties.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites-attempt02/test-results/normal-sites.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/commands.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/dotnet-info.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/dotnet-version.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/git-clean-after.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/git-clean-before.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/git-head.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/original-runner.py",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/restore.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/result.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/target-properties.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/normal-sites/target-properties.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/run_normal_sites.py",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/source-proposal.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/native-r2-receiving/summary.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/commands.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/dotnet-info.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/dotnet-version.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/git-clean-after.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/git-clean-before.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/git-head.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/native-submodule-pins.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/native.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/pe-pdb-counts.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/restore.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/result.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/target-properties.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b-attempt02/target-properties.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/commands.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/dotnet-info.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/dotnet-version.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/git-clean-after.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/git-clean-before.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/git-head.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/native-submodule-pins.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/restore.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/navigation5-3b0b/result.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/navigation5-3b0b/summary.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/c6/independent-review.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/c6/results/preview-tests.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/c6/run.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/c6/source-inputs.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/fixed-preview-functional-debug.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/focused-debug-command.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/focused-debug-results/fixed-preview-functional-debug.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/implementer-validation-receipt.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/index.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/original-command.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/original-preview-functional.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/original-results/original-preview-functional.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/source-conservation.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/source.diff",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-debug-command.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-debug-results/whole-infrastructure-debug.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-debug-summary.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-infrastructure-debug.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-infrastructure-release.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-release-command.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-release-results/whole-infrastructure-release.trx",
+    "docs/releases/sol-happy-20261003/provisional-integration/preview-environment/whole-release-summary.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/canonical-emoji-carrier/CanonicalEmojiCarrier.csproj",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/canonical-emoji-carrier/CanonicalEmojiControl.cs",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/canonical-emoji-carrier/source-manifest.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/artifact-identities.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/commands.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/dotnet-info.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/dotnet-version.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/git-clean-after.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/git-clean-before.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/git-head.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/native-submodule-pins.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/restore.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/result.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/target-properties.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/emoji-carrier-3b0b-run/target-properties.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/owner-measurement-layout-request.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/summary.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/artifact-identities.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/build.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/commands.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/dotnet-info.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/dotnet-version.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/git-clean-after.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/git-clean-before.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/git-head.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/native-submodule-pins.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/restore.log",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/result.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/target-properties.json",
+    "docs/releases/sol-happy-20261003/provisional-integration/write-controls-3b0b/write-scene-3b0b/target-properties.log"
+  ],
+  "overlappingRootLaterPaths": [],
+  "paths": [
+    {
+      "path": ".github/workflows/team-b-chat-native.yml",
+      "receivingTreeEntry": "100644 blob 371d239bb471f988244e8eeab8e44cc4d249bce5",
+      "BTreeEntry": "100644 blob 371d239bb471f988244e8eeab8e44cc4d249bce5",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": ".github/workflows/team-b-existing-write.yml",
+      "receivingTreeEntry": "100644 blob 92fc66f167618173b69c632a0d3b316e214ac54b",
+      "BTreeEntry": "100644 blob 92fc66f167618173b69c632a0d3b316e214ac54b",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": ".github/workflows/team-b-files-sites-lifecycle.yml",
+      "receivingTreeEntry": "100644 blob 80e1d485f25cdd8f4e625789a2a491cab48a7b74",
+      "BTreeEntry": "100644 blob 80e1d485f25cdd8f4e625789a2a491cab48a7b74",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": ".github/workflows/team-b-original-planner.yml",
+      "receivingTreeEntry": "100644 blob 658995a8c21a5b188b5635396a5a0dae476ed419",
+      "BTreeEntry": "100644 blob 658995a8c21a5b188b5635396a5a0dae476ed419",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": ".github/workflows/team-b-picture-browser.yml",
+      "receivingTreeEntry": "100644 blob 633a6036220abd222cc1198e7cec566f01660004",
+      "BTreeEntry": "100644 blob 633a6036220abd222cc1198e7cec566f01660004",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": ".github/workflows/team-b-picture-native.yml",
+      "receivingTreeEntry": "100644 blob 492ec8e665efc4b565a86d2c845a01944a20be10",
+      "BTreeEntry": "100644 blob 492ec8e665efc4b565a86d2c845a01944a20be10",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": ".github/workflows/team-b-web-publish.yml",
+      "receivingTreeEntry": "100644 blob 547032a5f563a68aab87c373267a0300d13cfb0f",
+      "BTreeEntry": "100644 blob 547032a5f563a68aab87c373267a0300d13cfb0f",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/AI/Chat/ChatSpaceBrowserReadAdapter.cs",
+      "receivingTreeEntry": "100644 blob 7569b708d4d03ff1b74703fd919714631fb507bc",
+      "BTreeEntry": "100644 blob 7569b708d4d03ff1b74703fd919714631fb507bc",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/AI/Tests/ChatRead.Tests.csproj",
+      "receivingTreeEntry": "100644 blob a7d4bdb86f9e6e89f36fb46af2a106b751c10844",
+      "BTreeEntry": "100644 blob a7d4bdb86f9e6e89f36fb46af2a106b751c10844",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/AI/Tests/ChatReadControls10.cs",
+      "receivingTreeEntry": "100644 blob 6e948df4ebbc3668c2a9712f0b6064f12c489fab",
+      "BTreeEntry": "100644 blob 6e948df4ebbc3668c2a9712f0b6064f12c489fab",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/AI/Tests/Fixtures/Original/ChatSpaceBrowserReadAdapter.cs",
+      "receivingTreeEntry": "100644 blob e13d29b667034d3a7f62293d5a89289eb2a4b03f",
+      "BTreeEntry": "100644 blob e13d29b667034d3a7f62293d5a89289eb2a4b03f",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/AI/Tests/README.md",
+      "receivingTreeEntry": "100644 blob 7f081771ae9726a60f209a08ebe4105b7e49736f",
+      "BTreeEntry": "100644 blob 7f081771ae9726a60f209a08ebe4105b7e49736f",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/AI/Tests/source-pins.json",
+      "receivingTreeEntry": "100644 blob cc0fbf490b6500ea041a9992b01255ed0977339e",
+      "BTreeEntry": "100644 blob cc0fbf490b6500ea041a9992b01255ed0977339e",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/BrowserFeatureComposition.cs",
+      "receivingTreeEntry": "100644 blob 6fe9839c128306b396c6d1602743960e9c4f0edc",
+      "BTreeEntry": "100644 blob 6fe9839c128306b396c6d1602743960e9c4f0edc",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/FilesBrowserController.cs",
+      "receivingTreeEntry": "100644 blob 54cffe58836ff9c6e4cd9a3d2fe0067c2da8a553",
+      "BTreeEntry": "100644 blob 54cffe58836ff9c6e4cd9a3d2fe0067c2da8a553",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/FilesBrowserRoute.cs",
+      "receivingTreeEntry": "100644 blob e7df42a633cda0d7c10a9f6f949b5a45d5589393",
+      "BTreeEntry": "100644 blob e7df42a633cda0d7c10a9f6f949b5a45d5589393",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/FilesSites.PrivateLifecycle.Tests.csproj",
+      "receivingTreeEntry": "100644 blob 9a8eef6ac1f614cf6632b9dc6339d0887ebfda90",
+      "BTreeEntry": "100644 blob 9a8eef6ac1f614cf6632b9dc6339d0887ebfda90",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/Program.cs",
+      "receivingTreeEntry": "100644 blob 01fb3f7843d2101bf72060d522aec62329f4d42a",
+      "BTreeEntry": "100644 blob 01fb3f7843d2101bf72060d522aec62329f4d42a",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original01.Tests.csproj",
+      "receivingTreeEntry": "100644 blob adc47a389938cbe799f4270d2e48696c682d81aa",
+      "BTreeEntry": "100644 blob adc47a389938cbe799f4270d2e48696c682d81aa",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original02.Tests.csproj",
+      "receivingTreeEntry": "100644 blob 964fbfd9c026c307ed13e5241eb49224e940126f",
+      "BTreeEntry": "100644 blob 964fbfd9c026c307ed13e5241eb49224e940126f",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original01/FilesBrowserRoute.cs",
+      "receivingTreeEntry": "100644 blob 80269f4f9ddf55144d715e704eed6ab11075e14b",
+      "BTreeEntry": "100644 blob 80269f4f9ddf55144d715e704eed6ab11075e14b",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original01/SitesBrowserRoute.cs",
+      "receivingTreeEntry": "100644 blob 61c642449bc28185c49b4e40eedac730c61ec65f",
+      "BTreeEntry": "100644 blob 61c642449bc28185c49b4e40eedac730c61ec65f",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original02/FilesBrowserRoute.cs",
+      "receivingTreeEntry": "100644 blob abcf9a03bed4dfe9a9c58a37069f7b79e8a957c6",
+      "BTreeEntry": "100644 blob abcf9a03bed4dfe9a9c58a37069f7b79e8a957c6",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original02/SitesBrowserRoute.cs",
+      "receivingTreeEntry": "100644 blob 8cf1bf89876a1bba4ef233aaded67c4591d474ea",
+      "BTreeEntry": "100644 blob 8cf1bf89876a1bba4ef233aaded67c4591d474ea",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/Program.cs",
+      "receivingTreeEntry": "100644 blob cd07ef5a6a4afb07fdab4da4e1dfd8a583dc1b45",
+      "BTreeEntry": "100644 blob cd07ef5a6a4afb07fdab4da4e1dfd8a583dc1b45",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/ci/CONTROL-PLAN07.json",
+      "receivingTreeEntry": "100644 blob 9aa3a81f373ade12cf67c722bd6fb243c3ab5f34",
+      "BTreeEntry": "100644 blob 9aa3a81f373ade12cf67c722bd6fb243c3ab5f34",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/ci/run-files-sites-lifecycle.py",
+      "receivingTreeEntry": "100644 blob e787c5bb354706166080de88c5f39e599a1f2c13",
+      "BTreeEntry": "100644 blob e787c5bb354706166080de88c5f39e599a1f2c13",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Files/Tests/ci/validate-lifecycle-negative-control.py",
+      "receivingTreeEntry": "100644 blob 22637d40644ee7d09f5cbaa773720a4fafeb4bf8",
+      "BTreeEntry": "100644 blob 22637d40644ee7d09f5cbaa773720a4fafeb4bf8",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Media/BrowserPictureMedia.cs",
+      "receivingTreeEntry": "100644 blob 737fc20c7290c8606183f54e5608cb417bfc1468",
+      "BTreeEntry": "100644 blob 737fc20c7290c8606183f54e5608cb417bfc1468",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Media/IPictureBrowserMedia.cs",
+      "receivingTreeEntry": "100644 blob dd15b0425941af30de6dd3d1ed9256f02180d5b0",
+      "BTreeEntry": "100644 blob dd15b0425941af30de6dd3d1ed9256f02180d5b0",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Media/picture-browser.js",
+      "receivingTreeEntry": "100644 blob 38c9363186db6edcd190b894025dd2c584dae302",
+      "BTreeEntry": "100644 blob 38c9363186db6edcd190b894025dd2c584dae302",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "receivingTreeEntry": "100644 blob 7740a66aa1e492bdb60009148df78c8c1ddae942",
+      "BTreeEntry": "100644 blob 7740a66aa1e492bdb60009148df78c8c1ddae942",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj",
+      "receivingTreeEntry": "100644 blob 0aae8e9078ba7762e2fa1b05264ab77290821bb6",
+      "BTreeEntry": "100644 blob 0aae8e9078ba7762e2fa1b05264ab77290821bb6",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Picture/Picture.cui",
+      "receivingTreeEntry": "100644 blob a1e871a76714fa24dda02e511f3b086a899e6001",
+      "BTreeEntry": "100644 blob a1e871a76714fa24dda02e511f3b086a899e6001",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserFeature.cs",
+      "receivingTreeEntry": "100644 blob c85d3d7c95f66d36ebaa95c7ad9b67c61207a2b3",
+      "BTreeEntry": "100644 blob c85d3d7c95f66d36ebaa95c7ad9b67c61207a2b3",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserSession.cs",
+      "receivingTreeEntry": "100644 blob fd53d1ee160e082d75355404e85097956f04921e",
+      "BTreeEntry": "100644 blob fd53d1ee160e082d75355404e85097956f04921e",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/Planner.OriginalSQLite.Tests.csproj",
+      "receivingTreeEntry": "100644 blob 4e0664dafbe8e0b15b599148672503124bf0f127",
+      "BTreeEntry": "100644 blob 4e0664dafbe8e0b15b599148672503124bf0f127",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/README.md",
+      "receivingTreeEntry": "100644 blob e640d8a2278f76e2dc777127e969dd86e94cabd7",
+      "BTreeEntry": "100644 blob e640d8a2278f76e2dc777127e969dd86e94cabd7",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/ci/original-test-acceptance.py",
+      "receivingTreeEntry": "100644 blob 8f15d93ff769aa87962b8bd8b18ef2ff0e2bc568",
+      "BTreeEntry": "100644 blob 8f15d93ff769aa87962b8bd8b18ef2ff0e2bc568",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/ci/run-original-planner.py",
+      "receivingTreeEntry": "100644 blob 7f5be5ce1f4c3684b7f32d9b00682c7e86564635",
+      "BTreeEntry": "100644 blob 7f5be5ce1f4c3684b7f32d9b00682c7e86564635",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Sites/SitesBrowserController.cs",
+      "receivingTreeEntry": "100644 blob ad81a5147a3cfdc6bdb90a86fa9413e709c37159",
+      "BTreeEntry": "100644 blob ad81a5147a3cfdc6bdb90a86fa9413e709c37159",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Sites/SitesBrowserRoute.cs",
+      "receivingTreeEntry": "100644 blob 19c392c1d1ed6ac0b291c71181c234ba55e40d7e",
+      "BTreeEntry": "100644 blob 19c392c1d1ed6ac0b291c71181c234ba55e40d7e",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Sites/Tests/Program.cs",
+      "receivingTreeEntry": "100644 blob f3772eb2d35e72c0fcea33e49de861f453ad16b9",
+      "BTreeEntry": "100644 blob f3772eb2d35e72c0fcea33e49de861f453ad16b9",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+      "receivingTreeEntry": "100644 blob 2f4ad24deea51207d398165077a711cc26ebf02a",
+      "BTreeEntry": "100644 blob 2f4ad24deea51207d398165077a711cc26ebf02a",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/BrowserWriteSpaceRegression.cs",
+      "receivingTreeEntry": "100644 blob 2b61a7b559d464d4bc742233ea12b7d10fdd0b51",
+      "BTreeEntry": "100644 blob 2b61a7b559d464d4bc742233ea12b7d10fdd0b51",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/Picture.cui",
+      "receivingTreeEntry": "100644 blob b7cda97fbb1f9dbc080d9101aac7d9abb641deaa",
+      "BTreeEntry": "100644 blob b7cda97fbb1f9dbc080d9101aac7d9abb641deaa",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserFeature.cs",
+      "receivingTreeEntry": "100644 blob 081c37818164c5d05d98732c848018a47d8cdb5b",
+      "BTreeEntry": "100644 blob 081c37818164c5d05d98732c848018a47d8cdb5b",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserSession.cs",
+      "receivingTreeEntry": "100644 blob 822019093170413c206b47757305ffe5784db1bd",
+      "BTreeEntry": "100644 blob 822019093170413c206b47757305ffe5784db1bd",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Picture8x6.png",
+      "receivingTreeEntry": "100644 blob 0dafbc0434c4fb3441b2be2895a597ca4181d0c7",
+      "BTreeEntry": "100644 blob 0dafbc0434c4fb3441b2be2895a597ca4181d0c7",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/Picture.cui",
+      "receivingTreeEntry": "100644 blob b7cda97fbb1f9dbc080d9101aac7d9abb641deaa",
+      "BTreeEntry": "100644 blob b7cda97fbb1f9dbc080d9101aac7d9abb641deaa",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserFeature.cs",
+      "receivingTreeEntry": "100644 blob 8e52ead578bb0c9585041e9c678672b32677dec9",
+      "BTreeEntry": "100644 blob 8e52ead578bb0c9585041e9c678672b32677dec9",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserSession.cs",
+      "receivingTreeEntry": "100644 blob e91c4071ebbf85f3a94ee16aba0d26fb8793fd12",
+      "BTreeEntry": "100644 blob e91c4071ebbf85f3a94ee16aba0d26fb8793fd12",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+      "receivingTreeEntry": "100644 blob d55a2ee81c4c470621c2155479d966d6c72de3da",
+      "BTreeEntry": "100644 blob d55a2ee81c4c470621c2155479d966d6c72de3da",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs",
+      "receivingTreeEntry": "100644 blob 60d14171de69d9a504b1947856f55b8a8947ac50",
+      "BTreeEntry": "100644 blob 60d14171de69d9a504b1947856f55b8a8947ac50",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureProductionOriginalRegression.cs",
+      "receivingTreeEntry": "100644 blob 51f9dc596f9e81f22840cb4f24dc8e50ee98b061",
+      "BTreeEntry": "100644 blob 51f9dc596f9e81f22840cb4f24dc8e50ee98b061",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureRawPngMetadata.cs",
+      "receivingTreeEntry": "100644 blob 6f81d0ff6f443f139985ee4371342216f2a0be9d",
+      "BTreeEntry": "100644 blob 6f81d0ff6f443f139985ee4371342216f2a0be9d",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/fixture-source-pins.json",
+      "receivingTreeEntry": "100644 blob f99410d048bfab5b26ab6cb37e3476e8e15bbe7a",
+      "BTreeEntry": "100644 blob f99410d048bfab5b26ab6cb37e3476e8e15bbe7a",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/png-oracle.cjs",
+      "receivingTreeEntry": "100644 blob 228471812c4ba9dca4a016edd6b5bb9348058f28",
+      "BTreeEntry": "100644 blob 228471812c4ba9dca4a016edd6b5bb9348058f28",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/run-picture-browser.cjs",
+      "receivingTreeEntry": "100644 blob 02dbaf6aca9e034d3346ae141f56e2470f2f1965",
+      "BTreeEntry": "100644 blob 02dbaf6aca9e034d3346ae141f56e2470f2f1965",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-chat-native.py",
+      "receivingTreeEntry": "100644 blob 549ed9154e23eab75785001b54d411de67560027",
+      "BTreeEntry": "100644 blob 549ed9154e23eab75785001b54d411de67560027",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-web-publish.py",
+      "receivingTreeEntry": "100644 blob f3564bbebb71c99bec1578274d251437743a3fb4",
+      "BTreeEntry": "100644 blob f3564bbebb71c99bec1578274d251437743a3fb4",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-picture-browser.py",
+      "receivingTreeEntry": "100644 blob 54ecb9f586c9c4154d558f0ff94506c1fafffd1c",
+      "BTreeEntry": "100644 blob 54ecb9f586c9c4154d558f0ff94506c1fafffd1c",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-picture-native.py",
+      "receivingTreeEntry": "100644 blob 38b4de954ad9a73749028b56d067884c1d1bcc86",
+      "BTreeEntry": "100644 blob 38b4de954ad9a73749028b56d067884c1d1bcc86",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Tests/picture-browser-failure.test.cjs",
+      "receivingTreeEntry": "100644 blob 85a6c812cb0bdcf4989268e337d543158de7303f",
+      "BTreeEntry": "100644 blob 85a6c812cb0bdcf4989268e337d543158de7303f",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/ci/run-existing-write.py",
+      "receivingTreeEntry": "100644 blob 61bcedc682c76132dea5ed0be0c9e0f4fba33465",
+      "BTreeEntry": "100644 blob 61bcedc682c76132dea5ed0be0c9e0f4fba33465",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    },
+    {
+      "path": "apps/Web/wwwroot/main.js",
+      "receivingTreeEntry": "100644 blob 01a757bcc1f287d7a9973a54d3a27bea15365610",
+      "BTreeEntry": "100644 blob 01a757bcc1f287d7a9973a54d3a27bea15365610",
+      "rootEqualsReceivingParent": true,
+      "parentEqualsBBase": true
+    }
+  ],
+  "protected": [
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "changedByProposal": false,
+      "rootTreeEntry": "100644 blob 5f4fdfc067396c5882c854e9240acaefc88ce1d6",
+      "receivingParentTreeEntry": "100644 blob 5f4fdfc067396c5882c854e9240acaefc88ce1d6",
+      "rootEqualsReceivingParent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+      "changedByProposal": false,
+      "rootTreeEntry": "100644 blob 59959c2fe4a8114d8be5fae29d36759a3c43efc1",
+      "receivingParentTreeEntry": "100644 blob 59959c2fe4a8114d8be5fae29d36759a3c43efc1",
+      "rootEqualsReceivingParent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Directory.Build.props",
+      "changedByProposal": false,
+      "rootTreeEntry": "100644 blob 56f3d4ce2cc317e46a3d6914c98609b076226d02",
+      "receivingParentTreeEntry": "100644 blob 56f3d4ce2cc317e46a3d6914c98609b076226d02",
+      "rootEqualsReceivingParent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/R2SiteArtifactReader.cs",
+      "changedByProposal": false,
+      "rootTreeEntry": "100644 blob 9558eab20bdb422d032895376edf339b63b34f65",
+      "receivingParentTreeEntry": "100644 blob 9558eab20bdb422d032895376edf339b63b34f65",
+      "rootEqualsReceivingParent": true
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+      "changedByProposal": false,
+      "rootTreeEntry": "100644 blob b11fd09fd6b9daed2fc54cd133a6dfbc92093340",
+      "receivingParentTreeEntry": "100644 blob b11fd09fd6b9daed2fc54cd133a6dfbc92093340",
+      "rootEqualsReceivingParent": true
+    }
+  ]
+}

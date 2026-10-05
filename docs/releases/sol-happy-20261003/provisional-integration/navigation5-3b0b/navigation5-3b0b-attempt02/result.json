@@ -1,0 +1,13 @@
+{
+  "suite": "navigation5",
+  "project": "apps/Web/Tests/BrowserNavigationCancellation.Tests.csproj",
+  "expected": 5,
+  "status": "PASS",
+  "sourceCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "scope": "Native application regression only; browser/provider/deployment/full parity NOT_RUN",
+  "preservedHistory": "Original03 RESOURCE_HOLD and17 RESOURCE_HOLD are not replaced by CI",
+  "nativeStarted": true,
+  "executed": 5,
+  "passed": 5,
+  "failed": 0
+}

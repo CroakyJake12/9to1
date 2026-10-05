@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "status": "FROZEN_PREINVOCATION_SOURCE_ACK_ACTUAL_NATIVE_NOT_RUN",
+  "sourceCommit": "9534c5a0fbff85a64a763e4564deca67f0aa04c9",
+  "sourceParent": "3cfb44b7cb176e2ebed8ede24befbcdb0c87df03",
+  "branch": "team-c/sol-happy-c3-canvas-address-focus-transition-20261004",
+  "fileCount": 15,
+  "totalBytes": 135210,
+  "files": [
+    {
+      "path": "peer/c6-independent-46-controls-receipt.json",
+      "bytes": 4792,
+      "sha256": "211d6e24cfafc6ec2f712c01c723ac61e329aa8f4b4443c0a9e0c6b38af7800d"
+    },
+    {
+      "path": "peer/c6-independent-46-controls.log",
+      "bytes": 46,
+      "sha256": "5eff486b5f9d8ef26f98c44d41e09126e204af4fb1a47e869c094dfad3273233"
+    },
+    {
+      "path": "peer/c6-independent-source-review.json",
+      "bytes": 2551,
+      "sha256": "e87c2cb6a36b65e9a88150c1b499d617c3002883a91ceb6c971877ff3acaca75"
+    },
+    {
+      "path": "source/exact-9534/.github/scripts/canvas-packaged-ui-controls.ps1",
+      "bytes": 73305,
+      "sha256": "750744981312c02a9396c5ebd155724c1f93d28c7b5577e9fbd175d8afec5681"
+    },
+    {
+      "path": "source/exact-9534/.github/validation/canvas-packaged-ui-controls.json",
+      "bytes": 5785,
+      "sha256": "99948ba81d267af2d0b75989c72f3f22fdd702d20214827f064af805c1becef9"
+    },
+    {
+      "path": "source/exact-9534/.github/workflows/team-c-canvas-packaged-ui-controls.yml",
+      "bytes": 3715,
+      "sha256": "ac3cf087a04d141da6e3cbf7be0b51cc5bd1858cafecbd6ac73d7f76d2b2cfed"
+    },
+    {
+      "path": "source/exact-9534/eng/release-validation/canvas-packaged-ui/README.md",
+      "bytes": 16694,
+      "sha256": "c1522af166ad8f803537860fdba0269fed4b0238a12e1eb3f52dc2314db9e875"
+    },
+    {
+      "path": "source-controls/actual-focus-transition-controls-receipt.json",
+      "bytes": 4792,
+      "sha256": "211d6e24cfafc6ec2f712c01c723ac61e329aa8f4b4443c0a9e0c6b38af7800d"
+    },
+    {
+      "path": "source-controls/actual-focus-transition-controls.log",
+      "bytes": 46,
+      "sha256": "5eff486b5f9d8ef26f98c44d41e09126e204af4fb1a47e869c094dfad3273233"
+    },
+    {
+      "path": "source-controls/actual-source-workflow-parser-receipt.json",
+      "bytes": 588,
+      "sha256": "572a9e480bd1016af29d3bdb26099b6d22c8dfa2fe744e0696d6fc9e2a471348"
+    },
+    {
+      "path": "source-controls/actual-workflow-run-block-0.ps1",
+      "bytes": 39,
+      "sha256": "d5c1b4607053182b8a13b312966644d0440f281fad1d41dbe4bc706fcccac6c6"
+    },
+    {
+      "path": "source-controls/actual-workflow-run-block-1.ps1",
+      "bytes": 1024,
+      "sha256": "65dd58bd2b98dbd98faf72295b504a475d39b7ce913637706c4b4976f8cb96f4"
+    },
+    {
+      "path": "source-controls/actual-workflow-run-block-2.ps1",
+      "bytes": 224,
+      "sha256": "75f44dd8436e87bae373e277a976d2384ccad7507813cd5bdd4a1e6e935a79b0"
+    },
+    {
+      "path": "source-controls/frozen-source-receipt.json",
+      "bytes": 9480,
+      "sha256": "d22316bc44439b107e161742f8785ab28bb161968dca4621db489042aa4ca457"
+    },
+    {
+      "path": "source-controls/probe-actual-focus-transition-controls.ps1",
+      "bytes": 12129,
+      "sha256": "5528326043a3692580df62c37f3aebfa5ed48792ce045df76f29def6b87a1b0e"
+    }
+  ],
+  "qualification": "Implementer and C6 independent 46 actual extracted new source controls PASS with Linux CLR signatures only; parser0 and original script inverse/39 whole functions/25 native pins/9478 outside entries conserved. Actual Windows new focus acquisition and every downstream native gate remain NOT_RUN. Source changes only current isolated harness; original immutable package, one CtrlL, one TypeText, same retained editor/exact Value, all native approvals/durable/close/reopen and failure criteria retained. No installed Home, account ACL, clean-PC, full-app or source-owner acceptance. Original 3cf actual distinct-peer negative and all prior packets remain separately immutable."
+}

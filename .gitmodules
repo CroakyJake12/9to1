@@ -70,3 +70,11 @@
 [submodule "9to1 OS/compatibility/winboat/Source/WinBoat"]
 	path = 9to1 OS/compatibility/winboat/Source/WinBoat
 	url = https://github.com/CroakyJake12/winboat.git
+
+[submodule "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"]
+	path = framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+	url = https://github.com/AvaloniaUI/Avalonia.DBus.git
+
+[submodule "framework/CUI/vendor/Avalonia/external/XamlX"]
+	path = framework/CUI/vendor/Avalonia/external/XamlX
+	url = https://github.com/kekekeks/XamlX.git

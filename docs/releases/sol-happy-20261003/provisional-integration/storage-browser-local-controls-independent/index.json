@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "recordedUTC": "2026-10-04T16:47:03.774807+00:00",
+  "scope": "Selected new C6 current hosted browser9/source/custody/publication, exact original-public-transport and fresh local-auth source/offline preflight, Mail and Maps scoped original controls/publication, Motion managed source, lifetime77 packet and genuine packaged Windows storage failure/retry/cold reopen reviews. No original payloads replayed.",
+  "previousFrozenIndexes": [
+    {
+      "path": "actual-results-public-artifact-index.json",
+      "sha256": "e9f8787a4a6d0096af7e1dddb6200f8082150c7314e7646a3612820b463104d1",
+      "fileCount": 16
+    },
+    {
+      "path": "continuation-public-artifact-index.json",
+      "sha256": "fd28f3c5361d375fdf869db8a36aa90f2dca7ff8162019669e05e1b25d435bf7",
+      "fileCount": 36
+    },
+    {
+      "path": "lifetime-rich-wave-public-artifact-index.json",
+      "sha256": "3fd851fe861297497c91d2e1747e1285fd3dff6bd1a0251f50f0716f10e50640",
+      "fileCount": 27
+    },
+    {
+      "path": "packaged-ui-composition-public-artifact-index.json",
+      "sha256": "0d76b2cfd8c9554bcf9d13e37ae2dccc589560478c3c9f0693dc9ab60d5f2ba5",
+      "fileCount": 6
+    },
+    {
+      "path": "public-artifact-index.json",
+      "sha256": "b912bb63746649c328c2b9de525ed3e037bb1247205a734448a30b8f7f08641c",
+      "fileCount": 16
+    },
+    {
+      "path": "supplemental-public-artifact-index.json",
+      "sha256": "19c09ebc7a345a0a78a6a42780eec8c0c388272c359b49086770bcdc84795bbb",
+      "fileCount": 25
+    }
+  ],
+  "previous126PayloadsReverified": "ALL_UNCHANGED",
+  "selectedFiles": [
+    {
+      "path": "boards-packaged-ui-review/rich-history-public-packet-independent-review.json",
+      "bytes": 1627,
+      "sha256": "624c9cf1b77a6f48accbc7c54dee7df84fe977cfdd7ea7613face5b08109a8e7"
+    },
+    {
+      "path": "dependency-closure/current-global-wave10-lifetime-conservation-review.json",
+      "bytes": 1028,
+      "sha256": "dfe8df0d884c9205f103496ff81c1c3b62aab8c2d6e31403171943db79294df3"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-retry-pre-invocation-independent-review.json",
+      "bytes": 3967,
+      "sha256": "6a10c8b0eb053b00f5b1c81bfd7e2dfa72ae4f06881bfbe07cbf5a80efa451ed"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-diagnostic-corrected-pre-invocation-independent-review.json",
+      "bytes": 2141,
+      "sha256": "35a299d1e0ce742f5a0daa00c9d705b52c2291f2f1c424d57dc3244759484e97"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-diagnostic-own-offline-refusal-result.json",
+      "bytes": 915,
+      "sha256": "8ffed0c182178bd1f0fcf50b9117963a2342a564a01cd2eff0e4404d5e9fefd7"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-locator-correction-independent-review.json",
+      "bytes": 2609,
+      "sha256": "93f0e1972d9b12aba7f9b15ec9060ee5adb23897355caf37c2d9802f41ca34bb"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-locator-own-offline-refusal-result.json",
+      "bytes": 915,
+      "sha256": "02f7f9267b64fe42fc072bb26722cc68f0651fa0fb53972daa558d367d19ccbd"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-retry-actual-windows-independent-review.json",
+      "bytes": 3464,
+      "sha256": "e60852e2fd5a55f88168a9ab063d793b03451d3652f8fd863c2a1e06ffef45f6"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-f46-provider-job-readback.json",
+      "bytes": 1949,
+      "sha256": "b317349c75c8cccf7662f463a9bcd10eb0e0c4ca3f4548489159da4cfc4695ad"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-f46-provider-artifact-readback.json",
+      "bytes": 915,
+      "sha256": "3b4582fd823197801915abfc5e1865fd3515813d30582bab3cb456d8da521563"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-70a8-provider-job-readback.json",
+      "bytes": 1949,
+      "sha256": "49a3ea8592894ab0a3e84ae292c2773dfd2f37fc7a55ce1ff1bfc480a040d48b"
+    },
+    {
+      "path": "boards-packaged-ui-review/storage-70a8-provider-artifact-readback.json",
+      "bytes": 915,
+      "sha256": "e38e58a1939d5f82a3b69e520c20b7f63d42833b945795b07887f24589e4eed0"
+    },
+    {
+      "path": "dependency-closure/public-web-retention-pre-invocation-independent-review.json",
+      "bytes": 1593,
+      "sha256": "e5428619ca1ea1f60e8969497b2ac35d5ce55500ed441971428184d4ed914ad8"
+    },
+    {
+      "path": "dependency-closure/public-web-transport-pre-invocation-independent-review.json",
+      "bytes": 2408,
+      "sha256": "9346072f70bd068ddf0827e2221a3058b78e3a43e2327c214ba9532e2934ecf9"
+    },
+    {
+      "path": "dependency-closure/public-transport-own-controls.log",
+      "bytes": 3252,
+      "sha256": "fc7738d0d5e45dbacf4df7dfa6cf42e9761fd85eb9cce3f6b62daf2f2607864b"
+    },
+    {
+      "path": "dependency-closure/maps-original-controls-pre-invocation-independent-review.json",
+      "bytes": 2295,
+      "sha256": "83b03b41825a336dd4bcee90d8c4366b8d760e19f0a5ce9aa00cb3404b524bcf"
+    },
+    {
+      "path": "dependency-closure/motion-original-workflow-pre-invocation-independent-review.json",
+      "bytes": 4246,
+      "sha256": "50afb46f2494583742a6a6a964b5865f372d8b6a9b196bdd6f78353053e94ab2"
+    },
+    {
+      "path": "dependency-closure/local-auth-source-preflight-independent-review.json",
+      "bytes": 4631,
+      "sha256": "ede9791e0c17f3b2fe759d8ebd1b9f3689ffc9edd1e50be86594150bf8d1d3e4"
+    },
+    {
+      "path": "dependency-closure/local-auth-own-preflight.log",
+      "bytes": 1397,
+      "sha256": "677bbb4448a78a9a0412bada061f263d2a9d166ba83ba30321ab50208f666f8d"
+    },
+    {
+      "path": "dependency-closure/local-auth-own-preparation.log",
+      "bytes": 105,
+      "sha256": "74c03fc16fde9a2dfeff03db0ec8f472a5a8dfed04e9e982a912b4b7f64faee3"
+    },
+    {
+      "path": "dependency-closure/hosted7ded-actual-and-publication-independent-review.json",
+      "bytes": 3806,
+      "sha256": "84f428f83adf9b7c6e43e1ac9fb7523f6a45946a7b41d0f199c3360aa847f1ac"
+    },
+    {
+      "path": "dependency-closure/7ded-provider-job-readback.json",
+      "bytes": 2541,
+      "sha256": "4fd3adc9c467db3508edd37ace15615e483d444bb3f93bc0a2954479f58499b2"
+    },
+    {
+      "path": "dependency-closure/7ded-provider-artifact-readback.json",
+      "bytes": 1794,
+      "sha256": "bc174000e1ac6ebb54c088489dbf750647ebf712d01e8045b097fa8c8a3ce256"
+    },
+    {
+      "path": "cui-lifetime/public-lifetime-packet-independent-review.json",
+      "bytes": 1631,
+      "sha256": "680656c9a10ca4d1e3221283d768cb2f465152fcef0c4fa5474cf61db5d94072"
+    },
+    {
+      "path": "dependency-closure/mail-actual-and-publication-independent-review.json",
+      "bytes": 2203,
+      "sha256": "52f930898312c44f96b04ac798cc46e96c8e53a1a52f101ffc8cd9e46d2a8063"
+    },
+    {
+      "path": "dependency-closure/maps-actual-and-publication-independent-review.json",
+      "bytes": 2550,
+      "sha256": "9266d69505266e2d6d755bf01d24cd626cd8e464640feebca5d53a084bc25d32"
+    }
+  ],
+  "selectedFileCount": 26,
+  "selectedBytes": 56846,
+  "privateOutputsExcluded": "No issuer/private fixture/credential/TLS key/DB/native draft/document/binary/package/cache/working-source copies. Official public provider metadata and redacted offline control receipts/logs only.",
+  "qualification": "83 actual packaged storage checks and9 scoped Picture browser groups do not imply full app/installedHome/noSDK/ACL/provider/.NETauthority/global acceptance. Original88/f46/ce50/Picture/Write/native negatives retained. Actual7ded sealed public ZIP not retained; futuretransport/localPKCE execution remains genuine prerequisite. Old six indexes and every referenced body conserved."
+}

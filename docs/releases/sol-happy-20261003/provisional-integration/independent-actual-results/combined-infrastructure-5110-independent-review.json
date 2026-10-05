@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5110f97bb6db6c3e465e1ddbf01a3ba900505743",
+  "sourceTree": "aba0520f52b53ded56932cb328c691067ee212e4",
+  "review": "ACK actual maintained unfiltered normal Release Infrastructure project428/428pass/0fail/0skip. Original415 test identities all retained,13 additions are reviewed real Mesh sender-name/wronghash controls; no exclusion or empty-suite acceptance. Exact6 combined source/test bodies match independently reviewed Mesh/preview/fixture freezes, no other product/source changes from127c.",
+  "actualCounters": {
+    "total": "428",
+    "executed": "428",
+    "passed": "428",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "original415IdentitiesPreserved": true,
+  "added13TestIdentities": [
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_HashMismatchNeverPublishesAFileWithSenderPathSeparators",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"  \", expectedLeaf: \"received-file\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"../../outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"../folder\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"..\\\\..\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"..\\\\folder/outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"/var/tmp/outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"C:\\\\Users\\\\sender\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"\\\\\\\\server\\\\share\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"folder/\", expectedLeaf: \"received-file\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"folder\\\\\", expectedLeaf: \"received-file\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"folder\\\\r\u00e9sum\u00e9 2026.txt\", expectedLeaf: \"r\u00e9sum\u00e9 2026.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"safe.txt\", expectedLeaf: \"safe.txt\")"
+  ],
+  "criticalPassedTestIdentities": [
+    "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run",
+    "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.A_deleted_task_is_not_recreated_by_stale_cancellation",
+    "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Caller_cancellation_before_write_leaves_the_durable_task_unchanged",
+    "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Competing_cancellations_commit_once_and_preserve_the_first_commit_after_restart",
+    "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: Failed)",
+    "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: InProgress)",
+    "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Renewed_claim_survives_stale_cancellation_and_restart",
+    "Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Unchanged_valid_JSON_whitespace_does_not_prevent_cancellation",
+    "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it",
+    "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel",
+    "Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.AppendAsync_RejectsOutOfOrderChunkAndAbortRemovesPartialFile",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_ConfinesSenderFileNameToMeshInboxAndVerifiesHash",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_HashMismatchDeletesPartialFile",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_HashMismatchNeverPublishesAFileWithSenderPathSeparators",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"  \", expectedLeaf: \"received-file\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"../../outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"../folder\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"..\\\\..\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"..\\\\folder/outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"/var/tmp/outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"C:\\\\Users\\\\sender\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"\\\\\\\\server\\\\share\\\\outside.txt\", expectedLeaf: \"outside.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"folder/\", expectedLeaf: \"received-file\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"folder\\\\\", expectedLeaf: \"received-file\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"folder\\\\r\u00e9sum\u00e9 2026.txt\", expectedLeaf: \"r\u00e9sum\u00e9 2026.txt\")",
+    "Haven.Infrastructure.Tests.MeshFileTransferStoreTests.CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(senderName: \"safe.txt\", expectedLeaf: \"safe.txt\")",
+    "Haven.Infrastructure.Tests.PresentProductionTests.Pptx_export_writes_real_parts_and_truthful_haven_fallbacks",
+    "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.External_task_claim_is_exclusive_and_idempotent_completion_is_persisted",
+    "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Migration_23_round_trips_graph_feedback_session_notifications_and_sources",
+    "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_detects_real_supported_web_entry_points_without_starting_them",
+    "Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Project_preview_provider_starts_serves_and_stops_a_real_loopback_site",
+    "Haven.Infrastructure.Tests.Worker02BackgroundLearningTests.Knowledge_schema_migrates_existing_records_without_losing_metadata"
+  ],
+  "combinedExactSourcePins": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mesh/MeshFileTransferStore.cs",
+      "sha256": "bed2d0733cddceaa627451f877de7e50874b25f90c9a54fb9831c54b1ef23e2c",
+      "reviewedSource": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshFileTransferStoreTests.cs",
+      "sha256": "3abb240d716e025afeb92b9e68231b82fa87ffad7e141321f7e092c6265b2dbb",
+      "reviewedSource": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Preview/WebProjectPreviewProvider.cs",
+      "sha256": "516f99ec060e73cd98716b2e7d50e9b3994dc51b0633adee7eaef445e77f822d",
+      "reviewedSource": "40cd428fb65b0fee96cb5a9755ca40d37d53b8e4"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/UnifiedExecutionPersistenceTests.cs",
+      "sha256": "6d32c180b0f08450e7f4d2cf10c7d7dc3ac45837ffad25011ad5f04f521fd6ff",
+      "reviewedSource": "40cd428fb65b0fee96cb5a9755ca40d37d53b8e4"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExtensionPluginEndToEndTests.cs",
+      "sha256": "e6de9ec2d7e05464d552d409c901379edc6d06f0158179678a19272bdb6f9d6e",
+      "reviewedSource": "71f8014e2cbe57ab45a2b7a1a062f30eed25f88f"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs",
+      "sha256": "12b38e1fcac6c9b5c44b7f7417aa55d43b8464393bdb8158d225c4dada924e17",
+      "reviewedSource": "71f8014e2cbe57ab45a2b7a1a062f30eed25f88f"
+    }
+  ],
+  "compiledSourceBuildHashes": {
+    "Haven.Core.dll": "c24e7a8088295fb1f42d0217394730b6ccf87650fcf0b1f9a4c3fc1531f55b79",
+    "Haven.Infrastructure.dll": "d1811142fa07f4150b84704597806494add1ca8491396223a1b9fce0912de7be",
+    "Haven.Infrastructure.Tests.dll": "a8db1b2f1da3f0017c043e958f0901aa1372f7631ce083cbcea40a36b5fb290e",
+    "Haven.Application.dll": "b229adb4acad4f0f15b12bfc8e5976bae2b57b1ac45594ca2361ca65cb0b5b6f"
+  },
+  "commandSha256": "e17ddf089d32f7042d8cc049de8873127a993ceb7a8e9a401e3c6bfb44d0dd0d",
+  "logSha256": "3bffc6dc6506064c0b9773e9edcccb597b46b14b2522eda4ccc91b4480606035",
+  "trxSha256": "2d7bb5893da40558622481007c82a3d6a666b869d3a88a65b044302d977e526b",
+  "payloadRerun": false,
+  "qualification": "Normal Linux SDK source-built Release428 functional gate only. Task-private writable XDG config/CLI locations and actual SDK PATH, caller HOME/USERPROFILE unchanged. Historical compiler/fixture/mesh/preview failures retained. No native Windows/full app/29-product/owner-adoption/global release acceptance inferred."
+}

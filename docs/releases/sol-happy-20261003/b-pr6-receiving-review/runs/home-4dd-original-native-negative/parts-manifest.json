@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+  "originalArchiveBytes": 81553586,
+  "originalArchiveSHA256": "0033a7c7161ac28a14b7c8c34d7d3c64c0b985b95cc480cfc0f45273134aae42",
+  "partBytesLimit": 19922944,
+  "orderedReassemblyVerified": true,
+  "parts": [
+    {
+      "part": 1,
+      "path": "part01/home-win-x64.zip.part",
+      "bytes": 19922944,
+      "sha256": "9c46fdf06c3f9c879fbcdc914070303a95aeba9c3436ded18408ab49657b8dd5"
+    },
+    {
+      "part": 2,
+      "path": "part02/home-win-x64.zip.part",
+      "bytes": 19922944,
+      "sha256": "7f607c107b8c888075a42cfb443881029572af2618e24796eda1dc9f943ce918"
+    },
+    {
+      "part": 3,
+      "path": "part03/home-win-x64.zip.part",
+      "bytes": 19922944,
+      "sha256": "a7f1f95faaeacf8ba938d51a36e6b9d5c5667947db82cea1df2f21c423c8c2e3"
+    },
+    {
+      "part": 4,
+      "path": "part04/home-win-x64.zip.part",
+      "bytes": 19922944,
+      "sha256": "74e9a2eed36853e39c8229dd0fd2364764f3eb97c9e4e1e2174e2f21136e66b3"
+    },
+    {
+      "part": 5,
+      "path": "part05/home-win-x64.zip.part",
+      "bytes": 1861810,
+      "sha256": "9ed39e6427f33a19ced9991b72c23b7c29411baa193b99da7d6ca24949a1ede8"
+    }
+  ],
+  "reassembly": "Concatenate in numeric order; require original whole size/SHA before ZIP use."
+}

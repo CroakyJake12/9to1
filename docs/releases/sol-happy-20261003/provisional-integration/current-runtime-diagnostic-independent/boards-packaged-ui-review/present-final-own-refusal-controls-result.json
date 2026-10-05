@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "sourceSha256": "f9e41c9aa8ed3c1b587198ecd8b48eef9d13aab183d2dd8bf6655bbde95a35b6",
+  "parserErrors": 0,
+  "controlsPassed": 7,
+  "controls": [
+    {
+      "case": "actual-outer-catch-private-exception-text-refused",
+      "passed": true,
+      "observedFailure": {
+        "type": "System.IO.InvalidDataException",
+        "stage": "synthetic-outer-catch",
+        "scriptLine": 23,
+        "rawExceptionText": "WITHHELD"
+      },
+      "privateSentinelAbsent": true
+    },
+    {
+      "case": "actual-outer-finally-clean",
+      "passed": true,
+      "exitCode": 0,
+      "status": "CONTROLLED_PASS",
+      "exactActualSourceBody": true
+    },
+    {
+      "case": "actual-outer-finally-forcedCleanup",
+      "passed": true,
+      "exitCode": 1,
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "exactActualSourceBody": true
+    },
+    {
+      "case": "actual-outer-finally-cleanupDrainFailure",
+      "passed": true,
+      "exitCode": 1,
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "exactActualSourceBody": true
+    },
+    {
+      "case": "actual-outer-finally-cleanupFailure",
+      "passed": true,
+      "exitCode": 1,
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "exactActualSourceBody": true
+    },
+    {
+      "case": "actual-outer-finally-evidenceWriteFailure",
+      "passed": true,
+      "exitCode": 1,
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "exactActualSourceBody": true
+    },
+    {
+      "case": "actual-finally-evidence-write-throws",
+      "passed": true,
+      "exitCode": 1,
+      "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+      "failureType": "System.IO.DirectoryNotFoundException",
+      "arbitraryTextRecorded": false
+    }
+  ],
+  "qualification": "Actual selected source outer catch/functions/outer finally executed with synthetic error/cleanup outcomes and owned Linux evidence paths only. No native process/UIA/Windows API/profile/model/provider operations or Windows acceptance."
+}

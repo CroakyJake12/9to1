@@ -1,0 +1,16 @@
+{
+  "state": "PASS_WHOLE_NATIVE_MOTION_CURRENT_PROGRAM_SCOPED",
+  "sourceCommit": "a975e539fa5e8bf045104e6931f5e5e15d3c8695",
+  "actualProjects": 5,
+  "sourceInputs": 653,
+  "scope": "Whole current native Motion managed graph and unchanged Program self-test only; no UI, real media decoding/donor/provider/Files registration/Windows/full Motion acceptance",
+  "assertions": null,
+  "assertionQualification": "Native Program and original Run return codes are not measured assertion totals.",
+  "selfTestReturnCode": 0,
+  "entryDLLSHA256": "7b37f0484ca17a6db41007fff79b465e3b5414fd97b28af37d355bc0a9f45e1e",
+  "apphostSHA256": "f8f897f3bba29a67d02670ba2efebbcea5c627397a3adca2e3a6312d2e710120",
+  "commandFamilies": 10,
+  "allCommandFamiliesNormalClosed": true,
+  "runtimeFiles": 95,
+  "acceptedScoped": true
+}

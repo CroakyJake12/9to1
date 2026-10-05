@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "selectedExpected": 7,
+  "discoveredExpected": 7,
+  "scope": "Original owner DOCX supported-subset and .9to1w package file/XML/integrity Facts; no LO/browser/repository/full-format acceptance",
+  "sourceCommit": "28e48b64acb96763dda2bd67e9759922442a31e6",
+  "executed": 7,
+  "preservedHistory": "Original Space-key FAIL and held renderer/owner factory requests remain unchanged. This format-only gate does not replace them.",
+  "discovered": 7,
+  "nativeStarted": true,
+  "passed": 7,
+  "failed": 0,
+  "skipped": 0,
+  "actualTrxCounters": {
+    "total": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "error": 0,
+    "timeout": 0,
+    "aborted": 0,
+    "inconclusive": 0,
+    "passedButRunAborted": 0,
+    "notRunnable": 0,
+    "notExecuted": 0,
+    "disconnected": 0,
+    "warning": 0,
+    "completed": 0,
+    "inProgress": 0,
+    "pending": 0
+  }
+}

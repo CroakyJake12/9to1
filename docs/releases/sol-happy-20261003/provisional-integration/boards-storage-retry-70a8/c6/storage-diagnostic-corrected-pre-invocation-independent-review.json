@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent pre-invocation reviewer",
+  "frozenCommit": "f46cfcd8da1ddee62987645092475a80a1da5738",
+  "originalNegativeCommit": "88bbc69d8c22cbf9095ddfc8282460dfc7841d07",
+  "supersededDiagnosticCommit": "95aa972e77cd75d5fdd058349a3339ae72fa983d",
+  "changedPaths": [
+    ".github/scripts/boards-packaged-ui-controls.ps1",
+    "eng/release-validation/boards-packaged-ui/README.md"
+  ],
+  "entireScriptOutsideObserveSaveLabel": "BYTE_EXACT_ORIGINAL88",
+  "wholeWorkflowCatalogueNative20PinsOld67And85AndAllOriginalStorageCriteria": "UNCHANGED",
+  "sourceSha256": "99bf9a0868d2f3b10fb61c580a903b61f51d1991822fff20d584ce568595eac1",
+  "observationalBounds": {
+    "ownedWindowAndPID": "Live exact-owned process check before diagnostics; each region and descendants filtered exactPID",
+    "regions": [
+      "TopBarRight",
+      "FooterBar"
+    ],
+    "textPeerMaximumPerRegion": 32,
+    "nameMaximumCharacters": 256,
+    "observations": "Actual role, enabled/offscreen, rectangles, window/workarea; existing foreground-bound screenshot attempted",
+    "faults": "No input, native/source, model/document or attribute writes; initial failure occurred before actual ReadOnly storage fault"
+  },
+  "independentOfflineControl": {
+    "actualFunctionExtractedFromFrozenSource": "PASS",
+    "parserErrors": 0,
+    "capabilityRefusalOriginalTimeoutPreserved": "PASS",
+    "diagnosticWriteFailureOriginalTimeoutPreserved": "PASS",
+    "resultSha256": "8ffed0c182178bd1f0fcf50b9117963a2342a564a01cd2eff0e4404d5e9fefd7",
+    "qualification": "Controlled actual function refusal boundary only; Windows UIA/provider/native execution NOT_RUN"
+  },
+  "findingResolution": "95aa diagnostic evidence-write failure could replace original timeout; f46 guards Write-Result and retains secondary diagnostic failure before original ErrorRecord rethrow",
+  "verdict": "ACK bounded diagnostic-only actual Windows continuation",
+  "qualification": "Original lookup/wait20s/status/success/input/drain/cleanup/ReadOnly/retry criteria remain exact; observed new Windows results required and no storage-recovery PASS inferred."
+}

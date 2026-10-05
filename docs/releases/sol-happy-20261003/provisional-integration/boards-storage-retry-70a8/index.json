@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Frozen actualBoards storage83 success with canonicalpackage/source custody, C6source/runtime peers and alloriginal88/f46/uninvoked95 negatives/corrections preserved; prior67/85 unchanged",
+  "sourceCommit": "70a8a556487d801c005020cbd732fb32ec83685c",
+  "actualRunId": 37217380035,
+  "actualJobId": 111480542340,
+  "actualArtifactId": 11308793594,
+  "fileCount": 76,
+  "totalBytes": 808973,
+  "files": [
+    {
+      "path": "original88-packet/pre-invocation/read-only-scope-assessment.json",
+      "bytes": 6938,
+      "sha256": "515264c8718fbad5c7faacac0767962a63eea14679776f0868058ea5560461f2"
+    },
+    {
+      "path": "original88-packet/pre-invocation/frozen-source-conservation.json",
+      "bytes": 5804,
+      "sha256": "2db1149f3ffd4e71d15984cf69a0e86131055cbcaf10389da2a044c583046be6"
+    },
+    {
+      "path": "original88-packet/pre-invocation/powershell-parser-receipt.json",
+      "bytes": 378,
+      "sha256": "5fcd98d58cc35ad61ec3f7624922568dff3c3a1bfed416bfaf862a430a56a607"
+    },
+    {
+      "path": "original88-packet/pre-invocation/powershell-parser.log",
+      "bytes": 38,
+      "sha256": "49a37f4d87da68c82665f8ff02beb616afd6181cc60aa3f9cede42401a8adbe0"
+    },
+    {
+      "path": "original88-packet/pre-invocation/parser-launch-path-refusal.log",
+      "bytes": 43,
+      "sha256": "8d844c95a2823dc5d80f391b9a84677795fa9ccf6524ef3080dfe436bd981b4a"
+    },
+    {
+      "path": "original88-packet/pre-invocation/local-conservation-controls.json",
+      "bytes": 862,
+      "sha256": "ddb0b1d444e15abd03d608617e2f6ca2c12c78728f6fe67964a9b8abd31dee92"
+    },
+    {
+      "path": "original88-packet/pre-invocation/linux-platform-refusal.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original88-packet/pre-invocation/linux-platform-refusal/result.json",
+      "bytes": 1770,
+      "sha256": "2e2adb3426f8ed9dcbfb1502de0e77aeb9e565c33f2bf8077388f01dd38d349d"
+    },
+    {
+      "path": "original88-packet/pre-invocation/probe-actual-finally-guards.ps1",
+      "bytes": 2259,
+      "sha256": "48bf40755398a2a843c86a5dd71592226f7b701554c25773a49baed7a4471152"
+    },
+    {
+      "path": "original88-packet/pre-invocation/actual-finally-guards-receipt.json",
+      "bytes": 1188,
+      "sha256": "ec5661ef61e2e3e29b7a423b126f4dc10bcdd44cca23192f3e7f9d2e1c42146a"
+    },
+    {
+      "path": "original88-packet/pre-invocation/actual-finally-guards.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original88-packet/pre-invocation/frozen-source/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 37123,
+      "sha256": "cf117539f495d9c13b4152cb75dbea5c81490cc9be50dd911f3a08244639772b"
+    },
+    {
+      "path": "original88-packet/pre-invocation/frozen-source/.github/validation/boards-packaged-ui-controls.json",
+      "bytes": 4800,
+      "sha256": "2cfa034436e902e6c84e379c6ac05a5f4102f3b6b09949914b5a4757749bcf8b"
+    },
+    {
+      "path": "original88-packet/pre-invocation/frozen-source/.github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "bytes": 3718,
+      "sha256": "cc6f51b745b604f99d84c9defaf62d0d4f405eacf70494ff94b31d5fd03e416a"
+    },
+    {
+      "path": "original88-packet/pre-invocation/frozen-source/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 5189,
+      "sha256": "1eaccefc59d8903bc147781f2626b6dcc6a9a2efd2c776a172258159abc811c3"
+    },
+    {
+      "path": "original88-packet/pre-invocation/index.json",
+      "bytes": 3070,
+      "sha256": "544b94b5f4a7b7f81e54dc0164769ce5955d73817106db9ef79f584891431d89"
+    },
+    {
+      "path": "original88-packet/c6/storage-retry-pre-invocation-independent-review.json",
+      "bytes": 3967,
+      "sha256": "6a10c8b0eb053b00f5b1c81bfd7e2dfa72ae4f06881bfbe07cbf5a80efa451ed"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/actual-failure-assessment.json",
+      "bytes": 1719,
+      "sha256": "9efe36766bd90206fe861be634021ae9ad5583a22e613f23172288a1cbb57700"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/boards-storage-retry-original-88bbc.zip",
+      "bytes": 3220,
+      "sha256": "2d9b85415e6b2f6ef08da0105ad57c2fd62079dd7eb425e269a523802df43a3f"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/first-launch.stdout.log",
+      "bytes": 430,
+      "sha256": "17beb753d4a232fe96723bec163034b5a4d8daea8fffaa7e481b9d5b8052a9b0"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/local-original-custody-receipt.json",
+      "bytes": 1011,
+      "sha256": "c518e4d562840db8b4f7e9d222538613d1a23bfae68d630d9fa0ea6e44279853"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/official-artifact-metadata.json",
+      "bytes": 914,
+      "sha256": "7ee591629057cef92633c42fba730eb03d920a1d99b0252f746bffc227142fa0"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/original-job.log",
+      "bytes": 59751,
+      "sha256": "485288be3225a0ad0f029785535496bb5deda9a349c327cd83eda8cfdfe74da7"
+    },
+    {
+      "path": "original88-packet/original-failure-88bbc/result.json",
+      "bytes": 16052,
+      "sha256": "fe0ffdbef3167b28329f271e1ea8e07bf74ee9d725628f725d46f1cd023c1cf0"
+    },
+    {
+      "path": "original88-packet/index.json",
+      "bytes": 5240,
+      "sha256": "8ed9668cc84c76e92094a6bd89abc6f64b5a41cc0e02371a94d414316f71327f"
+    },
+    {
+      "path": "uninvoked95-packet/frozen-diagnostic-source-conservation.json",
+      "bytes": 1738,
+      "sha256": "8f2f6d6e6e50f2677d217537712bbfebc2b4ca4fb328c63ea3f46d349a04600d"
+    },
+    {
+      "path": "uninvoked95-packet/actual-refusal-rethrow-receipt.json",
+      "bytes": 635,
+      "sha256": "f822ba5924019cd6c0d591d118797bb0c9cc835260f75fb8cf2644f967ed583e"
+    },
+    {
+      "path": "uninvoked95-packet/actual-refusal-rethrow.log",
+      "bytes": 100,
+      "sha256": "b136d467ed94b3c9e462f27cab43916bea96d0cba24af8cd80a656b77f07f9d8"
+    },
+    {
+      "path": "uninvoked95-packet/probe-actual-refusal-rethrow.ps1",
+      "bytes": 2150,
+      "sha256": "d8b7183977b2337d2df0967ac3aaf2d49b8a5aa3442d8f688ca1132112af44e3"
+    },
+    {
+      "path": "uninvoked95-packet/frozen-source/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 39925,
+      "sha256": "8155b68201c9b0e43a89d48fc8218165cc5dffc18e661bc380596a9a3218b48a"
+    },
+    {
+      "path": "uninvoked95-packet/frozen-source/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 5900,
+      "sha256": "b7a344a4545775cb0080c96805216fcb3e4dc252295a4a64ea7f38d9a1190462"
+    },
+    {
+      "path": "uninvoked95-packet/index.json",
+      "bytes": 1451,
+      "sha256": "4407cb820e60f9bb2dbe7a0e41f2a985057b245aff18f7d2e4bc64470d5b6060"
+    },
+    {
+      "path": "correctedf46-packet/frozen-corrected-diagnostic-source-conservation.json",
+      "bytes": 2096,
+      "sha256": "ca458c2437566a770f2eb5431b7ffcaef48cee461a546a1ba7728fdfd9aa6bff"
+    },
+    {
+      "path": "correctedf46-packet/actual-refusal-rethrow-receipt.json",
+      "bytes": 915,
+      "sha256": "8ffed0c182178bd1f0fcf50b9117963a2342a564a01cd2eff0e4404d5e9fefd7"
+    },
+    {
+      "path": "correctedf46-packet/actual-refusal-rethrow.log",
+      "bytes": 116,
+      "sha256": "bfe075ec81eafecbcae433b7afbf7ca8eb151235192522efed598608d4f00db1"
+    },
+    {
+      "path": "correctedf46-packet/probe-actual-refusal-rethrow.ps1",
+      "bytes": 3138,
+      "sha256": "f42e0780710a1e2dd7f0f7bf89a648e49ca6b257090bb765c5d3fab31184f8dc"
+    },
+    {
+      "path": "correctedf46-packet/probe-original-95aa-output-refusal.ps1",
+      "bytes": 3216,
+      "sha256": "635828c2373bb6ca4e41d389d8bb526adeaf12bbd7dbf784cd82fbf999f621a0"
+    },
+    {
+      "path": "correctedf46-packet/original-95aa-output-refusal.log",
+      "bytes": 382,
+      "sha256": "c14bc04e94a8284352148e9be1dc33a57f866f27000c9232a321f78b54cf6414"
+    },
+    {
+      "path": "correctedf46-packet/original-95aa-output-refusal-receipt.json",
+      "bytes": 607,
+      "sha256": "e0de18bcf7c18cb339c9a2bd04a4bccad3d6c79b9fbe31f920e49388f22e9a7c"
+    },
+    {
+      "path": "correctedf46-packet/frozen-source/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 40082,
+      "sha256": "99bf9a0868d2f3b10fb61c580a903b61f51d1991822fff20d584ce568595eac1"
+    },
+    {
+      "path": "correctedf46-packet/frozen-source/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 5900,
+      "sha256": "b7a344a4545775cb0080c96805216fcb3e4dc252295a4a64ea7f38d9a1190462"
+    },
+    {
+      "path": "correctedf46-packet/index.json",
+      "bytes": 2020,
+      "sha256": "ad4bfe11bc2203ca8cd57b102908529d6cad9cd893ececb1ec18ed58c625b098"
+    },
+    {
+      "path": "original-diagnostic-f46/actual-diagnostic-failure-assessment.json",
+      "bytes": 2042,
+      "sha256": "ffa5cd3e3f8178d842d82e596fae73710b7f0e22ef57af7985631a8b9f54c667"
+    },
+    {
+      "path": "original-diagnostic-f46/boards-storage-retry-original-f46.zip",
+      "bytes": 33891,
+      "sha256": "9fe733ccce39ae47a50a09db642e6a8ad162cf9288e461d70b57dfdb78a10e2c"
+    },
+    {
+      "path": "original-diagnostic-f46/first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "original-diagnostic-f46/first-launch.stdout.log",
+      "bytes": 430,
+      "sha256": "bc889d39ac2a9d368859c7ff08a84de56253046e4ff4907a979d129616603ec0"
+    },
+    {
+      "path": "original-diagnostic-f46/local-original-custody-receipt.json",
+      "bytes": 1189,
+      "sha256": "199bb167a1d9ebb482386e88594a4a7bcbea3b6710c3bca34c2bf667cc5d550c"
+    },
+    {
+      "path": "original-diagnostic-f46/official-artifact-metadata.json",
+      "bytes": 915,
+      "sha256": "3b4582fd823197801915abfc5e1865fd3515813d30582bab3cb456d8da521563"
+    },
+    {
+      "path": "original-diagnostic-f46/original-job.log",
+      "bytes": 59880,
+      "sha256": "a722c2c1dad3365c3cb3c0a6923e0ddc0da4828ea9edbb7c24bc747d455b55dc"
+    },
+    {
+      "path": "original-diagnostic-f46/result.json",
+      "bytes": 19230,
+      "sha256": "ae0a1e8baf3a469fce6434eb87ede4d6a5335cccbd5d80094b11ffda96d62d39"
+    },
+    {
+      "path": "original-diagnostic-f46/storage-status-diagnostic-window.png",
+      "bytes": 36595,
+      "sha256": "a107972961223ddc347493d5a144f0ec9fa5280416c761621f24643a2d16ffce"
+    },
+    {
+      "path": "windows-original-70a8/boards-storage-retry-original-70a8.zip",
+      "bytes": 99518,
+      "sha256": "212a4df2e2edca404ac9cea32937768146fdaa64ecee08f0fc0daf20d6fcd1fb"
+    },
+    {
+      "path": "windows-original-70a8/first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "windows-original-70a8/first-launch.stdout.log",
+      "bytes": 430,
+      "sha256": "49e9bf0347bf09566d53e06bb1ea9fd1b9917ca56da9f1ea4a9c2f4bd79c772c"
+    },
+    {
+      "path": "windows-original-70a8/local-original-custody-receipt.json",
+      "bytes": 2068,
+      "sha256": "14e85d0762656bf81834ff54fd3c823140b9e351e5bc5b8c1f7d53c43843087c"
+    },
+    {
+      "path": "windows-original-70a8/official-artifact-metadata.json",
+      "bytes": 915,
+      "sha256": "e38e58a1939d5f82a3b69e520c20b7f63d42833b945795b07887f24589e4eed0"
+    },
+    {
+      "path": "windows-original-70a8/original-job.log",
+      "bytes": 59877,
+      "sha256": "b1b59ae45f5d674ed1b43a4afa96e7a5739bd5a8f0b083c6129a9a13c58a9765"
+    },
+    {
+      "path": "windows-original-70a8/reopen.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "windows-original-70a8/reopen.stdout.log",
+      "bytes": 430,
+      "sha256": "49e9bf0347bf09566d53e06bb1ea9fd1b9917ca56da9f1ea4a9c2f4bd79c772c"
+    },
+    {
+      "path": "windows-original-70a8/result.json",
+      "bytes": 31012,
+      "sha256": "caee64ad459bf3b1ac30bd7c9a8ea3660b04945fc9b0d082ef970df3e50d918d"
+    },
+    {
+      "path": "windows-original-70a8/storage-failed-window.png",
+      "bytes": 39560,
+      "sha256": "f9cdcd52f9d118cfde1065daca23037ec2d68ce2569407706a260b7d58e1d3cb"
+    },
+    {
+      "path": "windows-original-70a8/storage-reopened-window.png",
+      "bytes": 36747,
+      "sha256": "76e2f1748d85a3673c681d8073b5a79d7bfd1bdce91029e398e023c6ca0eadfa"
+    },
+    {
+      "path": "windows-original-70a8/storage-retried-window.png",
+      "bytes": 37270,
+      "sha256": "368a6bfa4fe0d13e15f9e38608d010675cbfe337bfa9c5c554f55ff5fb1fa8d8"
+    },
+    {
+      "path": "locator-correction/actual-refusal-rethrow-receipt.json",
+      "bytes": 915,
+      "sha256": "02f7f9267b64fe42fc072bb26722cc68f0651fa0fb53972daa558d367d19ccbd"
+    },
+    {
+      "path": "locator-correction/actual-refusal-rethrow.log",
+      "bytes": 116,
+      "sha256": "bfe075ec81eafecbcae433b7afbf7ca8eb151235192522efed598608d4f00db1"
+    },
+    {
+      "path": "locator-correction/frozen-locator-source-conservation.json",
+      "bytes": 1453,
+      "sha256": "2caa227925727d108b1fa82843f3b17e63d6060dfae1e69f34b38668a107ebef"
+    },
+    {
+      "path": "locator-correction/probe-actual-refusal-rethrow.ps1",
+      "bytes": 3135,
+      "sha256": "c2575f8a1517719ad1b47a8c2b2191f919d1627ac2b1d75c035dffaf636cc730"
+    },
+    {
+      "path": "actual-storage-retry-acceptance-assessment.json",
+      "bytes": 2111,
+      "sha256": "a09a706704a1d7197caa4647e0351b75f4b36675f73b4c44e38601356536f031"
+    },
+    {
+      "path": "frozen-source70/.github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "bytes": 3718,
+      "sha256": "cc6f51b745b604f99d84c9defaf62d0d4f405eacf70494ff94b31d5fd03e416a"
+    },
+    {
+      "path": "frozen-source70/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 40127,
+      "sha256": "65d7026b532b3057dbfa30a41d7a636cafb3c71b2f2b498c6d65f822d05685ef"
+    },
+    {
+      "path": "frozen-source70/.github/validation/boards-packaged-ui-controls.json",
+      "bytes": 4800,
+      "sha256": "2cfa034436e902e6c84e379c6ac05a5f4102f3b6b09949914b5a4757749bcf8b"
+    },
+    {
+      "path": "frozen-source70/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 6510,
+      "sha256": "30e0b53478e684ea9f899ef2faadb9353d7efae47b834672905c56beba47e464"
+    },
+    {
+      "path": "c6/storage-diagnostic-corrected-pre-invocation-independent-review.json",
+      "bytes": 2141,
+      "sha256": "35a299d1e0ce742f5a0daa00c9d705b52c2291f2f1c424d57dc3244759484e97"
+    },
+    {
+      "path": "c6/storage-locator-correction-independent-review.json",
+      "bytes": 2609,
+      "sha256": "93f0e1972d9b12aba7f9b15ec9060ee5adb23897355caf37c2d9802f41ca34bb"
+    },
+    {
+      "path": "c6/storage-retry-actual-windows-independent-review.json",
+      "bytes": 3464,
+      "sha256": "e60852e2fd5a55f88168a9ab063d793b03451d3652f8fd863c2a1e06ffef45f6"
+    }
+  ],
+  "qualification": "SDK-present hostedWindows/packageGUI/OSstorage only; no Home installedtuple/accountACL/cleanPC/fullapp/owneradoption acceptance. No exclusive shortcut causality.",
+  "excluded": "Package binaries; runtime board/provider/profile/model files; caches; credentials; signedURLs; no altered originalresult/screenshot/ZIP bodies",
+  "priorFrozenIndices": {
+    "editSave67": "3443297bd208a7f8b7df49e888476574711ed2b0996bbc988e2c51b00cf347c5",
+    "richHistory85": "52869505acaaeefb809991d97b26259863805032c1b0dc74892a37b98a84d37c"
+  }
+}

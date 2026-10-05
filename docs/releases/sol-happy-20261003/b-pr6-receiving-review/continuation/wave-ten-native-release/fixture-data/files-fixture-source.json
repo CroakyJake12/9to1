@@ -1,0 +1,19 @@
+{
+  "scope": "Physical controlled WAV requiredbyunalteredexplicitnativeWaveFilesWorkflowTest. Standard Pythonwave writesknownliteralPCM16; no productdecoder/exporter usedtogenerateinput/expectations. NotGStreamerbackend/hardware/provideracceptance.",
+  "channels": 1,
+  "sampleRate": 8000,
+  "sampleWidthBytes": 2,
+  "samples": [
+    -32768,
+    -16384,
+    0,
+    16384,
+    32767,
+    16384,
+    0,
+    -16384
+  ],
+  "sha256": "76488f26678f5f9ad67d32d265e23ed5d396c471c85e647c0b1b02b32e755fda",
+  "bytes": 60,
+  "priorAttempt": "missingrequiredASTRA_GSTREAMER_FIXTURE env beforetestassertions; originalprereqexception/logretained"
+}

@@ -1,0 +1,72 @@
+{
+  "receivingParent": "a9dc1a80499b7ddfd925ac7f816633abfb523b0e",
+  "selectedSnapshot": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "selectedBase": "28e48b64acb96763dda2bd67e9759922442a31e6",
+  "status": "UNACCEPTED_REVIEWED_COMPLETE_TEN_WHOLE_SOURCE_COMPOSED",
+  "outsideSelectionConserved": true,
+  "files": [
+    {
+      "path": "9to1 Workspace/Wave/Program.cs",
+      "entry": "100644 blob 6f7c0b5d9275637a5f4a4de7be76ae3273eeeb9f",
+      "bytes": 38203,
+      "sha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectService.cs",
+      "entry": "100644 blob dd305a4b110f4ee8e83617baf1ba8af26b984850",
+      "bytes": 11629,
+      "sha256": "f4c01a3e576e07f5e26aa88030ded48f9f9a1fb8d8c950c40a6bda197768d13c"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveFilesProjectWorkflowTest.cs",
+      "entry": "100644 blob aa0d7ef294d4ea3a0576ad19cb45614d6d5b797e",
+      "bytes": 5695,
+      "sha256": "2a2fd74a60ac69e728dbd3f34e18b2258ff403fd919cb4e0ddcaa3924aae9fb8"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMarkersRegionsWorkflowTest.cs",
+      "entry": "100644 blob 8c4569987a037260dbcf3b3b6fadee5038b3720f",
+      "bytes": 11450,
+      "sha256": "cb497db3bd2fc7741e92c5391e19916ed1809278d8a55d7e9d18f17b68afd559"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
+      "entry": "100644 blob b124d849d14a568c9e60552bd0de2e95d098034f",
+      "bytes": 787,
+      "sha256": "a8ba16905a071620495ba18023923c31f3eb3a64b7bb8bad9908655fa1fbc2d1"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WavePcmFormatsWorkflowTest.cs",
+      "entry": "100644 blob 4e7fe8164fbe093872d92acb87cf4db051d08ffe",
+      "bytes": 8197,
+      "sha256": "d17caa301099f48390fd0d0c42d62b6fdedd9fcd4c5307081b6e9c026baf125e"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProject.cs",
+      "entry": "100644 blob b15043b6058983db177fee8ea7d746828cf03bbd",
+      "bytes": 18706,
+      "sha256": "8ce0273faff2f8b47c4cf15a57838d2defeed6be115e6a3f32700132f6a44ff2"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectCommands.cs",
+      "entry": "100644 blob 2a1be75111d988e217f7739b4d8edb065a0c2932",
+      "bytes": 6129,
+      "sha256": "96013882a15c7efa1ece9937b009ad62598bc274053c2d7aaa99d3305da1b8f2"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveProjectEdits.cs",
+      "entry": "100644 blob 9c566d9dae8ef0042466f63307eb7b61d77a5029",
+      "bytes": 8427,
+      "sha256": "ededd91053649b22ab7ed074381813ac72e9e453fbea9b7e14e119fa7201a4bf"
+    },
+    {
+      "path": "9to1 Workspace/Wave/WaveTimelineAnnotations.cs",
+      "entry": "100644 blob a69cbf47f8a3c592434997a8f428f618b96ca3c2",
+      "bytes": 6681,
+      "sha256": "e824f1add1da06eec8d9be15e0091f0bc7b6ac32f038de3a0154fc2dadd7841a"
+    }
+  ],
+  "sourceC6Ack": "81cdf869a44cf4fb5cfab7c5262ce3286ff4ad5a91a32f2962e9a805c5f1cd52",
+  "actualNativeC6Ack": "aaf0d05db7a967f7d73198b788434a26dfcdf1822707f75e2569803a8752e67a",
+  "qualification": "Actual native/engine Release and original controls pass on selected snapshot. Actual Web build and browser acceptance remain not run on receiving candidate. No deployment or acceptance promotion."
+}

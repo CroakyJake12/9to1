@@ -9,11 +9,12 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Haven.Core"><HintPath>..\..\9to1 Workspace\shared\src\Haven.Core\bin\Release\net10.0\Haven.Core.dll</HintPath></Reference>
-    <Reference Include="Haven.Application"><HintPath>..\..\9to1 Workspace\shared\src\Haven.Application\bin\Release\net10.0\Haven.Application.dll</HintPath></Reference>
+    <ProjectReference Include="../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contracts.cs" />
+    <Compile Include="ToolRegistry.cs" />
     <Compile Include="ModelRouteRegistry.cs" />
     <Compile Include="ModelRouteResolver.cs" />
     <Compile Include="Runtime.cs" />

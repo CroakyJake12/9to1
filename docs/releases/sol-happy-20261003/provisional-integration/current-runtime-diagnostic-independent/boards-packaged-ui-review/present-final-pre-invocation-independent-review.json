@@ -1,0 +1,58 @@
+{
+  "scope": "Independent pre-invocation review of unchanged original packaged Present on existing disposable Windows runner; no actual Windows/app/profile operation or repeat of 13 native controls.",
+  "status": "ACK_FOR_ROOT_OWNED_SINGLE_BOUNDED_WINDOWS_INVOCATION",
+  "candidate": "1e1e4ade8611aac03c2187b674c70e7cb0cd501c",
+  "original9435UninvokedPreserved": true,
+  "originalProducer": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "producerRunId": 37208129079,
+  "exactFourHarnessAdditions": [
+    {
+      "path": ".github/scripts/present-packaged-ui-controls.ps1",
+      "bytes": 34254,
+      "sha256": "f9e41c9aa8ed3c1b587198ecd8b48eef9d13aab183d2dd8bf6655bbde95a35b6"
+    },
+    {
+      "path": ".github/validation/present-packaged-ui-controls.json",
+      "bytes": 8390,
+      "sha256": "980e210bf48c8d2f1da2a088a7cf2cc97b458f05d5c06b4bb637379c3aa6e790"
+    },
+    {
+      "path": ".github/workflows/team-c-present-packaged-ui-controls.yml",
+      "bytes": 3683,
+      "sha256": "29695ad5d45b2d2031817c92922483a63d02ffb2f58087dc477bfa8e2a4d5e6f"
+    },
+    {
+      "path": "eng/release-validation/present-packaged-ui/README.md",
+      "bytes": 2746,
+      "sha256": "f2dd59683a2ad3875bc1874e3ecfb8d391705b8c9f1fa1f50882f6f9dd604cc6"
+    }
+  ],
+  "outsideModeKindBlobEntriesConserved": 9482,
+  "nativeSourcePinsExact": 21,
+  "originalPackage": {
+    "file": "present-win-x64-unaccepted.zip",
+    "bytes": 117349056,
+    "sha256": "086f2a4633753e9d8c7ba942fc00b0fcbd85a871e54f8b4b2644795873b233a5"
+  },
+  "originalPackageFiles": 466,
+  "nativeCriteria": "Real default profile created solely by app, native File/New distinct identity, exact UIA title/notes keyboard edits and added slide, actual Save and physical canonical readback, native picker cancellation without new document or byte changes, normal close/reopen, actual library search/Open and saved identity/slide/notes. No mirror/model writes, actor/bootstrap/authority injection or body substitution.",
+  "privacyCorrection": "Arbitrary Exception.Message withheld by actual outer catch; fixed type/stage/source line and controlled check/timeout witness retained. Independent actual catch synthetic private sentinel absent.",
+  "finalizationCorrection": "Actual extracted outer finally refuses forced cleanup, stream-drain/cleanup/evidence-write failures and thrown final evidence write; clean path remains zero.",
+  "independentControls": {
+    "actualCatchAndFinally": 7,
+    "allPassed": true,
+    "PowerShellAstErrors": 0,
+    "embeddedActualCSharpCompiled": true,
+    "nativeStreamUnicodeExact": true,
+    "nativeStreamOverlimitRefused": true
+  },
+  "sourceBounds": "Foreground and exact focused native PID/control guard precedes keyboard input; only owned app cleanup. 20-second observation/normal close bounds, five-second stream drains, 1MiB characters each stream; two owned images bounded1920x1080/9MiB and selected public output30MiB. Genuine unsupported native picker/library geometry refusal remains a failure.",
+  "providerCustody": "Read-only live official original run/artifact pin validation required by workflow, exact original inner ZIP SHA/size plus complete466 member hashes/reparse/path/aggregate guards before launch. Package bytes consumed only in authorized runner, not downloaded by this review.",
+  "workflow": "Existing private branch push, Windows2022 ten minutes, actions:read/contents:read, no deploy/provider/key/bootstrap/native edits; upload only result/log/PNG, not profile/model/install/package.",
+  "qualifications": [
+    "Autosave may contribute to observed persistence; File/Save is observed without exclusive shortcut causality.",
+    "Library card offscreen or native UIA picker capability can genuinely fail; no hidden invocation/fallback is supplied.",
+    "SDK-present,unsigned; installedHome/signing/cleanPC/donor/fullApp/fullaccessibility/authority/release acceptance remain NOT_RUN."
+  ],
+  "allOriginalRuntimeAcceptanceFlagsFalse": true
+}

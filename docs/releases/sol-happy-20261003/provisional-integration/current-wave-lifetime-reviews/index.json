@@ -1,0 +1,37 @@
+{
+  "status": "SELECTED_IMMUTABLE_PUBLIC_REVIEWS_UNACCEPTED_CANDIDATE",
+  "sourceHead": "f75ad4037b4da776b0242c636a68be588512192c",
+  "qualification": "Whole Wave source closure and native controls reviewed; actual Web retry pending. Exact lifetime original3+preservation5 independent Release PASS; full service, Windows, installed Home, clean-PC and delivery acceptance remain open. Completed identity source/configuration unchanged.",
+  "files": [
+    {
+      "path": "root-wave10-composition.json",
+      "bytes": 3214,
+      "sha256": "f79f5b3e8dc9f0ba68bce7b1e3fae233276f68057406bc6ad3a71ca747981ce5"
+    },
+    {
+      "path": "checkpoint-1644.json",
+      "bytes": 5762,
+      "sha256": "52a42fcf6ae9c46887932017cbbe696e4eff2a51ab238b784b6fec27d290a61d"
+    },
+    {
+      "path": "c6-lifetime-native-readback.json",
+      "bytes": 5919,
+      "sha256": "0c9cb805aeea2d852ba571896f58d54be7b98b8a4ce94d4fc5d896e01192a909"
+    },
+    {
+      "path": "c6-original-164-public-review.json",
+      "bytes": 7033,
+      "sha256": "5c9e1d4aaa0be2ef6c7ba3689685b5d76a78f3d39e2ff1ae8f62849230f0d42a"
+    },
+    {
+      "path": "c6-continuation-67-public-review.json",
+      "bytes": 2817,
+      "sha256": "afe03de79e0a9316f3943e42d6db4bf03395d3c24fc2559d637e88dd66ca5a7d"
+    },
+    {
+      "path": "c6-final-3-peer-review.json",
+      "bytes": 1537,
+      "sha256": "c358598bcdc4b6e53762e4d3fdd7b19fbbe2d26d7ec96ec2adfd34bde705f0a9"
+    }
+  ]
+}

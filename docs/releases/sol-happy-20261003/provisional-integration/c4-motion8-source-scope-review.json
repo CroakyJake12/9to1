@@ -1,0 +1,603 @@
+{
+  "classification": "C4_INDEPENDENT_CANONICAL_MOTION8_SOURCE_SCOPE_ACK_RUNTIME_NOT_RUN",
+  "proposalCommit": "a975e539fa5e8bf045104e6931f5e5e15d3c8695",
+  "proposalParent": "6ce4ce88b60e0f97e939c500affcee4322ab1544",
+  "reviewedCurrentRoot": "89d2f254a676866a46eba5b6850d94591e2bc813",
+  "retentionTransportRoot": "6d3e138bdbb569fc033841db912c1570c42ca3ee",
+  "originalB": "1a8cea03534e2b2767ec806f91dd2c454de94281",
+  "canonicalEEC": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "wholeEightSource": [
+    {
+      "path": ".github/workflows/team-b-motion-original-project.yml",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "579f200bc08de3827de3fd8335f6deec3d1a9905",
+        "bytes": 1147,
+        "sha256": "55273d26bdd31d9edcb055a8d8d922ffbb711a39d6aafa9c6f18a021d5e41524"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "579f200bc08de3827de3fd8335f6deec3d1a9905",
+        "bytes": 1147,
+        "sha256": "55273d26bdd31d9edcb055a8d8d922ffbb711a39d6aafa9c6f18a021d5e41524"
+      },
+      "parent": null,
+      "currentRoot": null
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProject.cs",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "95c9144e5956503250a74ae3c683471a942cb6aa",
+        "bytes": 14526,
+        "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "95c9144e5956503250a74ae3c683471a942cb6aa",
+        "bytes": 14526,
+        "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d"
+      },
+      "canonicalEEC": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "95c9144e5956503250a74ae3c683471a942cb6aa",
+        "bytes": 14526,
+        "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d"
+      },
+      "parent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "f8ccaa250572c64d80f06adc416e53af5692c5e7",
+        "bytes": 10934,
+        "sha256": "1f82c8ab13f616966f8065d2682d6feaad09110f5ecc4becea5ef171b4c0910d"
+      },
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "f8ccaa250572c64d80f06adc416e53af5692c5e7",
+        "bytes": 10934,
+        "sha256": "1f82c8ab13f616966f8065d2682d6feaad09110f5ecc4becea5ef171b4c0910d"
+      }
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "e5bda9e1f849206d3f9e70d6f2c854d696d9ae59",
+        "bytes": 5674,
+        "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "e5bda9e1f849206d3f9e70d6f2c854d696d9ae59",
+        "bytes": 5674,
+        "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6"
+      },
+      "canonicalEEC": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "e5bda9e1f849206d3f9e70d6f2c854d696d9ae59",
+        "bytes": 5674,
+        "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6"
+      },
+      "parent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "715cfac3d756cbf010d8edbcfcf462f12effc777",
+        "bytes": 4497,
+        "sha256": "70876a4dd5ae83b5a53d0f45bdc1d44d8c32ea8970deb6fb5394150fc322224b"
+      },
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "715cfac3d756cbf010d8edbcfcf462f12effc777",
+        "bytes": 4497,
+        "sha256": "70876a4dd5ae83b5a53d0f45bdc1d44d8c32ea8970deb6fb5394150fc322224b"
+      }
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "08ced0ab07a187b241463ac43cf6c640b15410ee",
+        "bytes": 12012,
+        "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "08ced0ab07a187b241463ac43cf6c640b15410ee",
+        "bytes": 12012,
+        "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+      },
+      "canonicalEEC": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "08ced0ab07a187b241463ac43cf6c640b15410ee",
+        "bytes": 12012,
+        "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+      },
+      "parent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "ba4c609e7c03a7a065c8f0abec3b17aa068083be",
+        "bytes": 5534,
+        "sha256": "1b5a0c14da0f798d7a6b2cdd3e2f5d905d5e29d03a7ea9f36f3d311bed3e244a"
+      },
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "ba4c609e7c03a7a065c8f0abec3b17aa068083be",
+        "bytes": 5534,
+        "sha256": "1b5a0c14da0f798d7a6b2cdd3e2f5d905d5e29d03a7ea9f36f3d311bed3e244a"
+      }
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a61facfb0e28d34d46be48cdefef31e419eea4cb",
+        "bytes": 935,
+        "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a61facfb0e28d34d46be48cdefef31e419eea4cb",
+        "bytes": 935,
+        "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21"
+      },
+      "parent": null,
+      "currentRoot": null
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "dc6f9ac93be8908282bdbe66ac1492cd4a418b11",
+        "bytes": 1635,
+        "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "dc6f9ac93be8908282bdbe66ac1492cd4a418b11",
+        "bytes": 1635,
+        "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38"
+      },
+      "parent": null,
+      "currentRoot": null
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/source-pins.json",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "0170fb8cd5bbe70415da20b9211a499623846688",
+        "bytes": 1463,
+        "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "0170fb8cd5bbe70415da20b9211a499623846688",
+        "bytes": 1463,
+        "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659"
+      },
+      "parent": null,
+      "currentRoot": null
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-motion-original-project.py",
+      "proposal": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "e15e6a9c1c5ef61dcf5940cc5ef461ca0f411209",
+        "bytes": 9130,
+        "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857"
+      },
+      "originalB": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "e15e6a9c1c5ef61dcf5940cc5ef461ca0f411209",
+        "bytes": 9130,
+        "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857"
+      },
+      "parent": null,
+      "currentRoot": null
+    }
+  ],
+  "outsideProposalConservation": {
+    "pathCount": 16047,
+    "allModeKindBlobEqual": true
+  },
+  "currentRootCompositionCompatibility": {
+    "allEightPreimagesMatchParent": true,
+    "rootAdditionsOutsideEight": true,
+    "noSharedWebCUIOrRetentionChanges": true
+  },
+  "earlierNativeWorkflowConservation": {
+    "inverseCanonicalAddedBlockByteEqualsEntireParentTest": true,
+    "parentCheckpoints": [
+      0,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ],
+    "canonicalCheckpoints": [
+      0,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53
+    ],
+    "qualification": "Return-code checkpoints are not measured assertions or separate discovered cases. Canonical owner added 43\u201353; prior 30\u201342 checks unchanged."
+  },
+  "managedSourceClosure": {
+    "fourExplicitCompileEntries": [
+      "OriginalWorkflowEntry.cs",
+      "$(RepositoryRoot)/9to1 Workspace/Motion/MotionProject.cs",
+      "$(RepositoryRoot)/9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "$(RepositoryRoot)/9to1 Workspace/Motion/MotionProjectWorkflowTest.cs"
+    ],
+    "defaultCompileDisabled": true,
+    "packageReferences": [],
+    "projectReferences": [],
+    "imports": [],
+    "trackedAncestorBuildImports": [],
+    "onlyBCLRuntime": true,
+    "exactLedgerSHA256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659",
+    "ledgerRows": [
+      {
+        "path": "9to1 Workspace/Motion/MotionProject.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "95c9144e5956503250a74ae3c683471a942cb6aa",
+        "bytes": 14526,
+        "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d"
+      },
+      {
+        "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "e5bda9e1f849206d3f9e70d6f2c854d696d9ae59",
+        "bytes": 5674,
+        "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6"
+      },
+      {
+        "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "08ced0ab07a187b241463ac43cf6c640b15410ee",
+        "bytes": 12012,
+        "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+      },
+      {
+        "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+      },
+      {
+        "path": "NuGet.Config",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "24489cbd21c319685f8e7d5caee66965cd4a9e57",
+        "bytes": 579,
+        "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+      },
+      {
+        "path": "global.json",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89",
+        "bytes": 111,
+        "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+      },
+      {
+        "path": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a61facfb0e28d34d46be48cdefef31e419eea4cb",
+        "bytes": 935,
+        "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21"
+      },
+      {
+        "path": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "dc6f9ac93be8908282bdbe66ac1492cd4a418b11",
+        "bytes": 1635,
+        "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38"
+      }
+    ]
+  },
+  "currentRootConsumerReadOnlyScan": {
+    "pattern": "MotionProjectStore|MotionAssetReference|MotionProjectCommands|MotionProjectWorkflowTest|HavenOS\\.Motion\\.csproj|HavenOS\\.Apps\\.Motion",
+    "files": [
+      "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+      "9to1 Workspace/Motion/MotionProject.cs",
+      "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "9to1 Workspace/Motion/Program.cs"
+    ],
+    "outsideMotionFiles": [],
+    "qualification": "Tracked C#/project/props/targets textual scan, not proof of installed Home/Web registration or runtime acceptance."
+  },
+  "protectedSource": [
+    {
+      "path": "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "9d4b1db37df315288c2e6a1649f8f27e515d04f5",
+        "bytes": 720,
+        "sha256": "f96c1e19cedaeee54fafb15ee4b9ebf55b6c781ea4e3c0cce312e4f0088eca2e"
+      },
+      "proposalParentConserved": true,
+      "proposalParent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "9d4b1db37df315288c2e6a1649f8f27e515d04f5",
+        "bytes": 720,
+        "sha256": "f96c1e19cedaeee54fafb15ee4b9ebf55b6c781ea4e3c0cce312e4f0088eca2e"
+      }
+    },
+    {
+      "path": "9to1 Workspace/Motion/Program.cs",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "b803e11976bfb2d69c85d63be63e43ac17460557",
+        "bytes": 7713,
+        "sha256": "4696f07effed6cb098fbad58caf5b44327fabac43569f8ee4d310b9f347d57d5"
+      },
+      "proposalParentConserved": true,
+      "proposalParent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "b803e11976bfb2d69c85d63be63e43ac17460557",
+        "bytes": 7713,
+        "sha256": "4696f07effed6cb098fbad58caf5b44327fabac43569f8ee4d310b9f347d57d5"
+      }
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Preferences/LocalMotionPreferencesService.cs",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "37c9aee3ae6a2a4410862d8ddfa3ac1f9124bb74",
+        "bytes": 6820,
+        "sha256": "80eb1fad1628e0ecd7e13fb2a9133bb51e1146d893e5eda4aeef4075294abb28"
+      },
+      "proposalParentConserved": true,
+      "proposalParent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "37c9aee3ae6a2a4410862d8ddfa3ac1f9124bb74",
+        "bytes": 6820,
+        "sha256": "80eb1fad1628e0ecd7e13fb2a9133bb51e1146d893e5eda4aeef4075294abb28"
+      }
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/MotionPreferencesService.cs",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a8c0a42a7c1373d85c836adcc74a0ef644865a61",
+        "bytes": 5111,
+        "sha256": "171e42c3b5f6c7c9462d52ad31950ea52c5b3962127b252cf4f51ecb7cc330ed"
+      },
+      "proposalParentConserved": true,
+      "proposalParent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "a8c0a42a7c1373d85c836adcc74a0ef644865a61",
+        "bytes": 5111,
+        "sha256": "171e42c3b5f6c7c9462d52ad31950ea52c5b3962127b252cf4f51ecb7cc330ed"
+      }
+    },
+    {
+      "path": ".github/workflows/team-c-ordinary-web-picture.yml",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "bd8f28f74824dd139e6b448581a7e0884721d18c",
+        "bytes": 5014,
+        "sha256": "c1a610e392872b570b27717e9858091a1f5c780d2428c8834523264d8f378df2"
+      },
+      "proposalParentConserved": true,
+      "proposalParent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "3fde414133d713bab67f59db8fc5a6bda902c741",
+        "bytes": 3179,
+        "sha256": "b88443f01c3842ad5652922deee32558323ee9707821e94077bb50064affd632"
+      }
+    },
+    {
+      "path": "apps/Web/Tests/ci/split-sealed-publication.py",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "f21013d5e85a41fc97fc93b469bff41761b88aa9",
+        "bytes": 11603,
+        "sha256": "fd605c5a45b32c7b0fc7eea27a6d4151477ea4cf1fdea536d5a13792f53a8b81"
+      },
+      "currentRootAdditionRetainedByDisjointComposition": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/test-split-sealed-publication.py",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "4bc08a57e2d3836df2b933a213e4165bfde42c7f",
+        "bytes": 10494,
+        "sha256": "c6b77cb49b74d0716c52fae3aff0967cbcf6f6ab85ab8035b86e2d458f284a2b"
+      },
+      "currentRootAdditionRetainedByDisjointComposition": true
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "currentRoot": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+      },
+      "proposalParentConserved": true,
+      "proposalParent": {
+        "mode": "100644",
+        "kind": "blob",
+        "blob": "8289a7b0ade290c3a34f2f81eacf67d760da6cb0",
+        "bytes": 19584,
+        "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+      }
+    }
+  ],
+  "wholeSourceFunctionalReview": [
+    "Existing exact EEC public model/store and optional SourceRevisionID preserve current two-argument construction; schema version stays 1. Full file/revision resolver is not supplied by this lane.",
+    "Move updates integral sequence-frame start; Slip preserves duration/start and changes source range; narrow non-ripple Trim preserves source mapping and rejects range extension. Each validates and advances revision once.",
+    "CAS Save keeps project identity/schema/sequential stored revision, exclusive lock, fresh same-directory temporary file, Flush(true), atomic replacement and own temporary cleanup. No crash-durability guarantee beyond existing owner implementation is inferred.",
+    "Overflow guards cover timeline/source extents and stable identities; canonical original whole Run checks actual real local create/insert/split/save/open/refusal and new timeline edits with stale/overflow/range refusal bytes conserved.",
+    "Native Program/project unchanged. Broad native Core/Infrastructure/CUI AI graph remains separate; no native renderer/media/GES/GStreamer/proxy/export/Home/Files actor bootstrap imported.",
+    "Helper checks actual exact head and clean tracked source, immutable eight-row ledger/Commands before build, normal SDK restore/build to fresh output, evaluated target and apphost, genuine original Run result and source/custody after. No imported DLLs or alternate oracle."
+  ],
+  "retainedOwningHelperBudgetQualification": {
+    "helperWholeBOriginal": {
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "e15e6a9c1c5ef61dcf5940cc5ef461ca0f411209",
+      "bytes": 9130,
+      "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857"
+    },
+    "CommandsWholeMaintainedSHA256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+    "driverSharedDeadlineSeconds": 1560,
+    "perCommandLogCapBytes": 8388608,
+    "literalCommands": [
+      {
+        "name": "git-clean-before",
+        "maximumSeconds": 15
+      },
+      {
+        "name": "tracked-source-tree",
+        "maximumSeconds": 15
+      },
+      {
+        "name": "dotnet-info",
+        "maximumSeconds": 30
+      },
+      {
+        "name": "restore",
+        "maximumSeconds": 600
+      },
+      {
+        "name": "build",
+        "maximumSeconds": 600
+      },
+      {
+        "name": "target-properties",
+        "maximumSeconds": 30
+      },
+      {
+        "name": "native",
+        "maximumSeconds": 120
+      },
+      {
+        "name": "git-head",
+        "maximumSeconds": 15
+      },
+      {
+        "name": "git-clean-after",
+        "maximumSeconds": 15
+      },
+      {
+        "name": "dotnet-version",
+        "maximumSeconds": 30
+      }
+    ],
+    "sumLiteralStageDeadlinesSeconds": 1470,
+    "normalCustodyRequired": [
+      "retained birth and pidfd",
+      "normal EOF",
+      "zero exit",
+      "all retained births gone",
+      "final ECHILD",
+      "no forced cleanup signals"
+    ],
+    "resultAndOwnedMetadataCapEachBytes": 8388608,
+    "nativeStructuredReportAcceptedCapBytes": 65536,
+    "freshOwnedCachesArtifactsAndTempOutsideCheckout": true,
+    "workflowUpload": "Only diagnostics; no native binaries, project fixture directories, caches or private user/provider material",
+    "aggregateDiskGrowthCapEnforced": false,
+    "peakRSSMeasuredByHelper": false,
+    "qualification": "Original helper bounds serial command time/logs and final process custody. It does not enforce an aggregate output/cache/artifact disk-growth cap or measure peak RSS. Runtime selection must retain measured owned-output budget qualification and preserve RESOURCE_HOLD/failure if applicable; do not claim nonexistent automatic 100MiB growth enforcement."
+  },
+  "workflowApplicability": {
+    "wholeOriginalB": true,
+    "pushBranches": [
+      "team-b/**"
+    ],
+    "dispatchPermittedAfterRootSelectionOnly": true,
+    "contentsPermission": "read",
+    "jobTimeoutMinutes": 30,
+    "teamCBranchDoesNotAutoTrigger": true,
+    "sameBuildPublicWebRetentionUnaffected": true
+  },
+  "actualRuntime": {
+    "managedOriginalWorkflow": "NOT_RUN_BY_C4",
+    "nativeWholeProject": "NOT_RUN_BY_C4",
+    "browser": "NOT_RUN_BY_C4"
+  },
+  "sourceFindings": [],
+  "preservedAcceptanceGates": [
+    "Complete native owner graph compile/runtime",
+    "Files identity/revision/source-duration contracts",
+    "Native/browser/media decode/render/export/provider/crash/ACL/actor/Home acceptance",
+    "29 installed authenticated Windows app delivery/acceptance"
+  ],
+  "noSourceEditsPushDispatchProviderWritesOrDuplicateRuntime": true
+}

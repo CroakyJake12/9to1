@@ -1,5 +1,7 @@
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
+using HomePermissionRisk = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk;
+using HomeTrustLevel = HavenOS.Home.PermissionsTrustNotifications.HomeTrustLevel;
 using Xunit;
 
 namespace HavenOS.Home.Tests;

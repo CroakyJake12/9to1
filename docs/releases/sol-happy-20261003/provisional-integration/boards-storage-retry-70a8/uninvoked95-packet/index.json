@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Separate95aa diagnostic-only storage source pre-invocation;88bbc originalfailure retained in separateimmutablepacket",
+  "frozenCommit": "95aa972e77cd75d5fdd058349a3339ae72fa983d",
+  "fileCount": 6,
+  "totalBytes": 50448,
+  "files": [
+    {
+      "path": "frozen-diagnostic-source-conservation.json",
+      "bytes": 1738,
+      "sha256": "8f2f6d6e6e50f2677d217537712bbfebc2b4ca4fb328c63ea3f46d349a04600d"
+    },
+    {
+      "path": "actual-refusal-rethrow-receipt.json",
+      "bytes": 635,
+      "sha256": "f822ba5924019cd6c0d591d118797bb0c9cc835260f75fb8cf2644f967ed583e"
+    },
+    {
+      "path": "actual-refusal-rethrow.log",
+      "bytes": 100,
+      "sha256": "b136d467ed94b3c9e462f27cab43916bea96d0cba24af8cd80a656b77f07f9d8"
+    },
+    {
+      "path": "probe-actual-refusal-rethrow.ps1",
+      "bytes": 2150,
+      "sha256": "d8b7183977b2337d2df0967ac3aaf2d49b8a5aa3442d8f688ca1132112af44e3"
+    },
+    {
+      "path": "frozen-source/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 39925,
+      "sha256": "8155b68201c9b0e43a89d48fc8218165cc5dffc18e661bc380596a9a3218b48a"
+    },
+    {
+      "path": "frozen-source/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 5900,
+      "sha256": "b7a344a4545775cb0080c96805216fcb3e4dc252295a4a64ea7f38d9a1190462"
+    }
+  ],
+  "actualWindows": "NOT_RUN",
+  "excluded": "Caches/private state/model/package/credential/signedURL"
+}

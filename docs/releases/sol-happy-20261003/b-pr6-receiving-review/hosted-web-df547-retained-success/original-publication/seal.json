@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "receiptSha256": "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d",
+  "zipSha256": "443ff20704e09f0cf74796976c25f49b70ef5ed68637ea3f5248bf54178cde10",
+  "zipBytes": 36039134,
+  "fileCount": 285,
+  "totalBytes": 59201582,
+  "runtimeVerified": false,
+  "deploymentVerified": false,
+  "fullParityVerified": false
+}

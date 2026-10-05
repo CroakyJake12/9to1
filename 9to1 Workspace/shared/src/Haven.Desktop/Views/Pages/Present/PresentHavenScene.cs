@@ -166,6 +166,7 @@ internal sealed partial class PresentHavenScene : IDisposable
         DeleteSlideButton.Invoked += (_, _) => DeleteSlideRequested?.Invoke(this, EventArgs.Empty);
         BuildPhase2Controls();
         BuildPresenterControls();
+        BuildWorkspaceControls();
     }
 
     public event EventHandler? PreviousDeckRequested; public event EventHandler? NextDeckRequested; public event EventHandler? NewDeckRequested;

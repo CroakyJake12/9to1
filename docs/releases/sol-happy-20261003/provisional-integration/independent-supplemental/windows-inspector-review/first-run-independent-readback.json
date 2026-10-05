@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "readAtUtc": "2026-10-04 13:19:00 UTC",
+  "originalRunId": 37203799923,
+  "workflowCommit": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "readOnlyProviderCalls": true,
+  "jobs": [
+    {
+      "jobId": 111440695150,
+      "name": "package (picture)",
+      "status": "completed",
+      "conclusion": "success",
+      "probeStep": {
+        "name": "Publish, extract and observe the actual Windows executable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      "retentionStep": {
+        "name": "Retain successful packages and all failed observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      }
+    },
+    {
+      "jobId": 111440695289,
+      "name": "package (home)",
+      "status": "completed",
+      "conclusion": "failure",
+      "probeStep": {
+        "name": "Publish, extract and observe the actual Windows executable",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 6
+      },
+      "retentionStep": {
+        "name": "Retain successful packages and all failed observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      }
+    },
+    {
+      "jobId": 111440695301,
+      "name": "package (shared-desktop)",
+      "status": "completed",
+      "conclusion": "success",
+      "probeStep": {
+        "name": "Publish, extract and observe the actual Windows executable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      "retentionStep": {
+        "name": "Retain successful packages and all failed observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      }
+    },
+    {
+      "jobId": 111440695332,
+      "name": "package (boards)",
+      "status": "completed",
+      "conclusion": "failure",
+      "probeStep": {
+        "name": "Publish, extract and observe the actual Windows executable",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 6
+      },
+      "retentionStep": {
+        "name": "Retain successful packages and all failed observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      }
+    },
+    {
+      "jobId": 111440695354,
+      "name": "package (canvas)",
+      "status": "completed",
+      "conclusion": "success",
+      "probeStep": {
+        "name": "Publish, extract and observe the actual Windows executable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      "retentionStep": {
+        "name": "Retain successful packages and all failed observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      }
+    },
+    {
+      "jobId": 111440695369,
+      "name": "package (present)",
+      "status": "completed",
+      "conclusion": "failure",
+      "probeStep": {
+        "name": "Publish, extract and observe the actual Windows executable",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 6
+      },
+      "retentionStep": {
+        "name": "Retain successful packages and all failed observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      }
+    },
+    {
+      "jobId": 111440695379,
+      "name": "package (studio)",
+      "status": "completed",
+      "conclusion": "failure",
+      "probeStep": {
+        "name": "Publish, extract and observe the actual Windows executable",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 6
+      },
+      "retentionStep": {
+        "name": "Retain successful packages and all failed observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 11304710012,
+      "name": "windows-unaccepted-canvas-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "size_in_bytes": 302578514,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304710012",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304710012/zip",
+      "expired": false,
+      "created_at": "2026-10-04T13:03:26Z",
+      "expires_at": "2026-10-11T13:02:59Z",
+      "updated_at": "2026-10-04T13:03:26Z",
+      "digest": "sha256:51af4aced29d8cf68e2f1e0b5cb0200194ce44d6772aae914da6d79b6878f9c0",
+      "workflow_run": {
+        "id": 37203799923,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+        "head_sha": "e2effba426353978b11fc1c0f2fc8e3e533318e4"
+      }
+    },
+    {
+      "id": 11304576532,
+      "name": "windows-unaccepted-shared-desktop-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "size_in_bytes": 414242505,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304576532",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304576532/zip",
+      "expired": false,
+      "created_at": "2026-10-04T13:13:58Z",
+      "expires_at": "2026-10-11T13:13:29Z",
+      "updated_at": "2026-10-04T13:13:58Z",
+      "digest": "sha256:c881c77499a6ab83a18a943e2a424dabf78172ba9f7355935e58f97b7cdc5c83",
+      "workflow_run": {
+        "id": 37203799923,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+        "head_sha": "e2effba426353978b11fc1c0f2fc8e3e533318e4"
+      }
+    },
+    {
+      "id": 11304475788,
+      "name": "windows-unaccepted-studio-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "size_in_bytes": 287693964,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304475788",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304475788/zip",
+      "expired": false,
+      "created_at": "2026-10-04T13:03:33Z",
+      "expires_at": "2026-10-11T13:03:14Z",
+      "updated_at": "2026-10-04T13:03:33Z",
+      "digest": "sha256:aa8401333ca65f10e899d56698f4be160fb2e3e8e2a3d7a6efd43ce0c4251bd6",
+      "workflow_run": {
+        "id": 37203799923,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+        "head_sha": "e2effba426353978b11fc1c0f2fc8e3e533318e4"
+      }
+    },
+    {
+      "id": 11304286833,
+      "name": "windows-unaccepted-picture-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "size_in_bytes": 300428673,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304286833",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11304286833/zip",
+      "expired": false,
+      "created_at": "2026-10-04T13:08:25Z",
+      "expires_at": "2026-10-11T13:08:02Z",
+      "updated_at": "2026-10-04T13:08:25Z",
+      "digest": "sha256:f7668510130cd1c19b69cc152c3cda375c15c411d714d6b3beb97c76d3290a4a",
+      "workflow_run": {
+        "id": 37203799923,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+        "head_sha": "e2effba426353978b11fc1c0f2fc8e3e533318e4"
+      }
+    },
+    {
+      "id": 11303772514,
+      "name": "windows-unaccepted-home-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "size_in_bytes": 4695,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11303772514",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11303772514/zip",
+      "expired": false,
+      "created_at": "2026-10-04T12:58:56Z",
+      "expires_at": "2026-10-11T12:58:56Z",
+      "updated_at": "2026-10-04T12:58:56Z",
+      "digest": "sha256:e376de55fd528fa44e2baab90597067b5a341937140a9fd665ff8d659e1cab35",
+      "workflow_run": {
+        "id": 37203799923,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+        "head_sha": "e2effba426353978b11fc1c0f2fc8e3e533318e4"
+      }
+    },
+    {
+      "id": 11303633502,
+      "name": "windows-unaccepted-present-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "size_in_bytes": 350310332,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11303633502",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11303633502/zip",
+      "expired": false,
+      "created_at": "2026-10-04T13:09:00Z",
+      "expires_at": "2026-10-11T13:08:35Z",
+      "updated_at": "2026-10-04T13:09:00Z",
+      "digest": "sha256:5f3df6c66a1f19ccfdabda2046ab86090b21cc6a35bf6656ed67c062de1a4028",
+      "workflow_run": {
+        "id": 37203799923,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+        "head_sha": "e2effba426353978b11fc1c0f2fc8e3e533318e4"
+      }
+    },
+    {
+      "id": 11303607880,
+      "name": "windows-unaccepted-boards-e2effba426353978b11fc1c0f2fc8e3e533318e4-1",
+      "size_in_bytes": 233801465,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11303607880",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11303607880/zip",
+      "expired": false,
+      "created_at": "2026-10-04T12:59:28Z",
+      "expires_at": "2026-10-11T12:59:10Z",
+      "updated_at": "2026-10-04T12:59:28Z",
+      "digest": "sha256:eb6506b14d0c6aeb9d8ea10510a5e79d00ae89f1619c69d741bef176523e4232",
+      "workflow_run": {
+        "id": 37203799923,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c1-windows-build-proposal-20261004",
+        "head_sha": "e2effba426353978b11fc1c0f2fc8e3e533318e4"
+      }
+    }
+  ],
+  "independentCatalogMetadataCheck": "PASS exact7 IDs/names/bytes/digest declarations/head/run/unexpired matched readonly provider API",
+  "qualification": "Three original Windows hosted-runner probes completed successfully; four failed. Job success is bounded package/extraction/process/window/close observation on SDK-equipped runner only, no full app/29-product/PCdelivery acceptance."
+}

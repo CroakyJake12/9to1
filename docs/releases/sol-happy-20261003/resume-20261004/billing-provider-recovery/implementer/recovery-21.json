@@ -1,0 +1,12 @@
+{
+  "sourceHead": "f3529fd228489d10a947985b6a7bfd1187c9d3d9",
+  "command": "node --test cloud/billing/test/provider-reconciliation.test.mjs",
+  "exit": 0,
+  "tests": 21,
+  "pass": 21,
+  "fail": 0,
+  "cancelled": 0,
+  "skip": 0,
+  "log": "recovery-21.log",
+  "qualification": "Actual production webhook/lease/reader code and real file-backed SQLite with injected fictional provider responses. No actual authenticated provider or canonical business effects."
+}

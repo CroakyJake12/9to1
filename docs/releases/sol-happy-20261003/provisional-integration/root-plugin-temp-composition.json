@@ -1,0 +1,23 @@
+{
+  "schema": "team-c-unaccepted-plugin-tmpdir-composition/v1",
+  "recordedUTC": "2026-10-04T17:17:57.793884+00:00",
+  "parent": "42a88df12835924166d6aa7a9924770eaddc6d8b",
+  "candidate": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2",
+  "proposal": "4544d1157afaeb3a50f2042ee6dcc0be78b2d945",
+  "changedPaths": [
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Extensions/NativePluginProcessFactory.cs"
+  ],
+  "exactWholeBodySha256": "e4c703ed3c5c1cb183be3429cde882aa37e4b1e0cf04c76bc1f8089060fbf5fb",
+  "outsideAllModeBlobsConserved": true,
+  "originalTestsChanged": false,
+  "independentSourceAckSha256": "e5c503d5e02c215d7786702a87746851a149d317a11446591b5044e16e740c03",
+  "originalNormal434": {
+    "source": "27dd12f72cbf42d992a18765a933584b346d05d7",
+    "pass": 433,
+    "fail": 1,
+    "skip": 0,
+    "preserved": true
+  },
+  "normalRepaired434": "NOT_RUN",
+  "scope": "One provisional production process-environment correction; no native/shared adoption, release promotion, Windows/package/fullapp acceptance"
+}

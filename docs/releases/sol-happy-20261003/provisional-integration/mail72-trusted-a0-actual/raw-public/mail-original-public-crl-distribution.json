@@ -1,0 +1,22 @@
+{
+  "crlURL": "http://127.0.0.1:42959/astra-crl-80a8abb17bb34679454ef8e1cc145a95.der",
+  "originalDerSha256": "a9b026b90ab9c062bc059b55ba3c74d04c2864416972bb8df50b82b12f15e789",
+  "originalPemSha256": "4c8d40d5467bb9a58a977932cd1cb509a19ae69692569bf951cc5f6099c5ae91",
+  "originalHelperSha256": "d63a7e15fad8a386b88bc45f753c1c0f3a3bebe8c3e5fadcd27d7f959d552211",
+  "pythonPath": "/usr/bin/python3.12",
+  "pythonSha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+  "originalCrlPID": 3557,
+  "originalCrlStartTicks": "7391",
+  "originalCrlListeners": [
+    {
+      "table": "tcp",
+      "local": "0100007F:A7CF",
+      "inode": "17518"
+    }
+  ],
+  "fullChainOpenSslCrlCheckPassed": true,
+  "qualification": "Synthetic local signed CRL. Production MailKit and .NET online revocation remain enabled; readiness GETs are not attributed to the owning .NET caller.",
+  "readinessGetRequests": 2,
+  "getRequestsAtCallerExit": 3,
+  "additionalGetRequestsDuringCaller": 1
+}

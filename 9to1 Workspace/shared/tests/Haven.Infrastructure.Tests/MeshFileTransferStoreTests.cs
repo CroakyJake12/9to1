@@ -63,6 +63,59 @@ public sealed class MeshFileTransferStoreTests : IDisposable
         Assert.Empty(Directory.Exists(inbox) ? Directory.GetFiles(inbox, "*.part") : []);
     }
 
+    [Theory]
+    [InlineData(@"..\..\outside.txt", "outside.txt")]
+    [InlineData("../../outside.txt", "outside.txt")]
+    [InlineData(@"..\folder/outside.txt", "outside.txt")]
+    [InlineData(@"../folder\outside.txt", "outside.txt")]
+    [InlineData(@"C:\Users\sender\outside.txt", "outside.txt")]
+    [InlineData(@"\\server\share\outside.txt", "outside.txt")]
+    [InlineData("/var/tmp/outside.txt", "outside.txt")]
+    [InlineData(@"folder\résumé 2026.txt", "résumé 2026.txt")]
+    [InlineData(@"folder\", "received-file")]
+    [InlineData("folder/", "received-file")]
+    [InlineData("  ", "received-file")]
+    [InlineData("safe.txt", "safe.txt")]
+    public async Task CompleteAsync_NormalizesSenderPathSeparatorsWithoutUsingSenderDirectories(string senderName, string expectedLeaf)
+    {
+        Directory.CreateDirectory(_root);
+        await using var store = new MeshFileTransferStore(new TempAppPaths(_root));
+        var source = Guid.NewGuid();
+        var transfer = Guid.NewGuid();
+        var payload = Encoding.UTF8.GetBytes("verified portable Mesh file");
+
+        await store.BeginAsync(source, transfer, senderName, payload.Length, CancellationToken.None);
+        await store.AppendAsync(source, transfer, 0, payload, CancellationToken.None);
+        var saved = await store.CompleteAsync(source, transfer, 1, Convert.ToHexString(SHA256.HashData(payload)), CancellationToken.None);
+
+        var inbox = Path.GetFullPath(Path.Combine(_root, "mesh-inbox"));
+        Assert.Equal(inbox, Path.GetDirectoryName(Path.GetFullPath(saved)));
+        Assert.EndsWith("-" + expectedLeaf, Path.GetFileName(saved), StringComparison.Ordinal);
+        Assert.DoesNotContain("/", Path.GetFileName(saved), StringComparison.Ordinal);
+        Assert.DoesNotContain("\\", Path.GetFileName(saved), StringComparison.Ordinal);
+        Assert.Equal(payload, await File.ReadAllBytesAsync(saved));
+        Assert.Equal(saved, Assert.Single(Directory.EnumerateFiles(inbox)));
+        Assert.Empty(Directory.EnumerateDirectories(inbox));
+        Assert.False(File.Exists(Path.Combine(_root, expectedLeaf)));
+    }
+
+    [Fact]
+    public async Task CompleteAsync_HashMismatchNeverPublishesAFileWithSenderPathSeparators()
+    {
+        Directory.CreateDirectory(_root);
+        await using var store = new MeshFileTransferStore(new TempAppPaths(_root));
+        var source = Guid.NewGuid();
+        var transfer = Guid.NewGuid();
+        var payload = Encoding.UTF8.GetBytes("unverified portable Mesh file");
+
+        await store.BeginAsync(source, transfer, @"..\nested/..\outside.txt", payload.Length, CancellationToken.None);
+        await store.AppendAsync(source, transfer, 0, payload, CancellationToken.None);
+        await Assert.ThrowsAsync<InvalidDataException>(() => store.CompleteAsync(source, transfer, 1, new string('0', 64), CancellationToken.None));
+
+        Assert.Empty(Directory.EnumerateFileSystemEntries(Path.Combine(_root, "mesh-inbox")));
+        Assert.False(File.Exists(Path.Combine(_root, "outside.txt")));
+    }
+
     public void Dispose()
     {
         try { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); } catch { }

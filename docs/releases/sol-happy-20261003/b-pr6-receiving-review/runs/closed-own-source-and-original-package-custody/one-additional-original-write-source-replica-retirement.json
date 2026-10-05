@@ -1,0 +1,13 @@
+{
+  "status": "ONE_ADDITIONAL_OWN_CLOSED_SOURCE_REPLICA_SPARSE_ONLY",
+  "worktree": "/workspace/team-c-c5-original-write-current28",
+  "head": "28e48b64acb96763dda2bd67e9759922442a31e6",
+  "branch": "team-c/sol-happy-c5-original-write-current28-20261004",
+  "allPhysicalWholeGitBodiesVerifiedBefore": true,
+  "trackedModeBlobEntriesBeforeAfterExact": 15704,
+  "allOriginalBlobBodiesRemainAvailable": 13412,
+  "physicalBytesBefore": 293421056,
+  "physicalBytesAfter": 364544,
+  "outputPrivateUntrackedIgnoredBodiesBefore": 0,
+  "sourceEvidenceAndExternalRuntimeFiles": "UNCHANGED; only reversible physical tracked source replica removed, retained exact Git branch/HEAD/object bodies and complete original physical source hash catalogue."
+}

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Haven.Application.Canvas;
 using System.Text.Json.Serialization;
 
 namespace Haven.Application;
@@ -17,7 +18,8 @@ public enum CanvasDocumentMode
 /// </summary>
 public sealed class CanvasArtifact
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
+    public static bool IsSupportedSchemaVersion(int version) => version is 1 or CurrentSchemaVersion;
 
     [JsonRequired]
     public Guid ArtifactId { get; set; } = Guid.NewGuid();
@@ -42,6 +44,9 @@ public sealed class CanvasArtifact
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? ExtensionData { get; set; }
+
+    [JsonIgnore]
+    public ProductivitySnapshotHistory? SemanticHistory { get; set; }
 
     [JsonIgnore]
     public Dictionary<string, JsonElement>? EnvelopeExtensionData { get; set; }
@@ -196,6 +201,9 @@ public sealed record CanvasInkStroke
     public string ToolDefinitionId { get; init; } = "pen";
     [JsonRequired]
     public List<CanvasStrokeSample> Samples { get; init; } = [];
+    /// <summary>Authoritative geometry when present; Samples remain original input provenance.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CanvasStrokePathGeometry? PathGeometry { get; init; }
     [JsonRequired]
     public CanvasBrushProperties ResolvedBrushProperties { get; init; } = new();
     [JsonRequired]

@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "recordedUTC": "2026-10-04T15:48:15.331646+00:00",
+  "scope": "Selected new independent C6 rich85 actual Windows/provider/source correction, exact optional CUI source/runtime3+5, whole owner Wave10/source and actual controls readback, C5 cumulative evidence publication, native15 and approved current Web CI/global native3 source reviews. Prior frozen indexes unchanged.",
+  "previousFrozenIndexes": [
+    {
+      "path": "public-artifact-index.json",
+      "sha256": "b912bb63746649c328c2b9de525ed3e037bb1247205a734448a30b8f7f08641c",
+      "allSelectedPayloadsUnchanged": true
+    },
+    {
+      "path": "supplemental-public-artifact-index.json",
+      "sha256": "19c09ebc7a345a0a78a6a42780eec8c0c388272c359b49086770bcdc84795bbb",
+      "allSelectedPayloadsUnchanged": true
+    },
+    {
+      "path": "continuation-public-artifact-index.json",
+      "sha256": "fd28f3c5361d375fdf869db8a36aa90f2dca7ff8162019669e05e1b25d435bf7",
+      "allSelectedPayloadsUnchanged": true
+    },
+    {
+      "path": "actual-results-public-artifact-index.json",
+      "sha256": "e9f8787a4a6d0096af7e1dddb6200f8082150c7314e7646a3612820b463104d1",
+      "allSelectedPayloadsUnchanged": true
+    },
+    {
+      "path": "packaged-ui-composition-public-artifact-index.json",
+      "sha256": "0d76b2cfd8c9554bcf9d13e37ae2dccc589560478c3c9f0693dc9ab60d5f2ba5",
+      "allSelectedPayloadsUnchanged": true
+    }
+  ],
+  "selectedFiles": [
+    {
+      "path": "completed-compiler-cache-cleanup.json",
+      "bytes": 4422,
+      "sha256": "bec0b06602f7d53ae9a46fb2b36d4e24c1bc037b4a580fd6e9d408c8419b559f"
+    },
+    {
+      "path": "boards-packaged-ui-review/rich-history-pre-invocation-source-review.json",
+      "bytes": 7455,
+      "sha256": "77151bc4b9c113d06a04cf0a38acb0ee95e1ad0e390cb3afbb4d9c8f93469e3e"
+    },
+    {
+      "path": "boards-packaged-ui-review/rich-history-scope-correction-source-review.json",
+      "bytes": 1486,
+      "sha256": "6521a3b04d9b3f7fc511027a8e08f7be8b5d54ac8b6ed1e227a83e01837eca6a"
+    },
+    {
+      "path": "boards-packaged-ui-review/rich-history-actual-windows-independent-readback.json",
+      "bytes": 8937,
+      "sha256": "a794d143c828c2d0102a78a6f0fa8c5d69ca86f1a8b287866062e8a765b52c74"
+    },
+    {
+      "path": "boards-packaged-ui-review/rich-history-provider-job-readback.json",
+      "bytes": 1954,
+      "sha256": "0b83a953208b97e42665f68dc416957f340f08810a561f336c247265d7f25cca"
+    },
+    {
+      "path": "boards-packaged-ui-review/rich-history-provider-artifact-readback.json",
+      "bytes": 913,
+      "sha256": "1a80b4e165191526e1a2bac4030f0d725834402280f0cf597d3753bc6523ab8e"
+    },
+    {
+      "path": "boards-packaged-ui-review/rich-history-original-failure-provider-job-readback.json",
+      "bytes": 1954,
+      "sha256": "38530e6c3f5d5c673710e84a9b7e80d1562bcf62986f4d025aa25441b5267ddf"
+    },
+    {
+      "path": "boards-packaged-ui-review/rich-history-original-failure-provider-artifact-readback.json",
+      "bytes": 912,
+      "sha256": "3e96024875832e6bb5099835a29e96e24521b40c3ed18536f290aff6e6126d6d"
+    },
+    {
+      "path": "dependency-closure/approved-writeback-picture-repair-source-review.json",
+      "bytes": 3424,
+      "sha256": "e418a9951ec1e4345f0b180451a2f13556811282e797460bbf81b7e3e0cf863d"
+    },
+    {
+      "path": "dependency-closure/picture-repaired-native15-independent-readback.json",
+      "bytes": 4779,
+      "sha256": "cea658534840ee459055d1f743b2f780148bb3f8e2853f6468af2daa46399b7f"
+    },
+    {
+      "path": "dependency-closure/global-web-picture-ci-pre-invocation-review.json",
+      "bytes": 5206,
+      "sha256": "2072c34bb6e61a5f19cc8240ae9e945f86177e0ef045686b236e4b5e78189fb5"
+    },
+    {
+      "path": "dependency-closure/current-global-web-picture-ci-applicability-review.json",
+      "bytes": 3571,
+      "sha256": "29770fd9d52789121455a2051159d84d05114035a59ed7c0a5d1fb5cf238c5f1"
+    },
+    {
+      "path": "native-proposals/global-direct-three-source-conservation-review.json",
+      "bytes": 4997,
+      "sha256": "1b39cd336a09d47006a53c0959ccd42044e32669cfa296066a7483894c600b14"
+    },
+    {
+      "path": "cui-lifetime/independent-source-composition-review.json",
+      "bytes": 3973,
+      "sha256": "d7e8d912f7f9be60a30d443a49034e51446c9bf50a5b9fc2b04348fe1c8674bc"
+    },
+    {
+      "path": "cui-lifetime/independent-native-runtime-readback.json",
+      "bytes": 5919,
+      "sha256": "0c9cb805aeea2d852ba571896f58d54be7b98b8a4ce94d4fc5d896e01192a909"
+    },
+    {
+      "path": "cui-lifetime/compiled-release-runtime-inputs.json",
+      "bytes": 21988,
+      "sha256": "669c5d2cc4bedf1515d7c508adcffc6afc5aa383b4e4f587a018888ed9644652"
+    },
+    {
+      "path": "cui-lifetime/original-three-independent-run.log",
+      "bytes": 492,
+      "sha256": "9102a4c29c75ee2d04f4711bd24c2aeadf70ad0294156ab99cdd3e90c0bad1a1"
+    },
+    {
+      "path": "cui-lifetime/preservation-five-independent-run.log",
+      "bytes": 521,
+      "sha256": "f52ae9bfc9e36591139b4e90b52a5428760d1f9255536b474fe2660cf54b2d1d"
+    },
+    {
+      "path": "dependency-closure/c5-public-bundle-independent-review.json",
+      "bytes": 7033,
+      "sha256": "5c9e1d4aaa0be2ef6c7ba3689685b5d76a78f3d39e2ff1ae8f62849230f0d42a"
+    },
+    {
+      "path": "dependency-closure/c5-public-bundle-integrity-preflight.json",
+      "bytes": 2607,
+      "sha256": "1944560400dc918dcd61e0b1e8e6bb352979a71970e33eee7d39acdd07e534cb"
+    },
+    {
+      "path": "dependency-closure/c5-public-continuation-independent-review.json",
+      "bytes": 2817,
+      "sha256": "afe03de79e0a9316f3943e42d6db4bf03395d3c24fc2559d637e88dd66ca5a7d"
+    },
+    {
+      "path": "dependency-closure/c5-public-final-peer-successor-review.json",
+      "bytes": 1537,
+      "sha256": "c358598bcdc4b6e53762e4d3fdd7b19fbbe2d26d7ec96ec2adfd34bde705f0a9"
+    },
+    {
+      "path": "dependency-closure/ce50-provider-job-readback.json",
+      "bytes": 2541,
+      "sha256": "c01a955249e1d164e619d7c6d92138dd829deda70a2d173a7c00735b46683bf0"
+    },
+    {
+      "path": "dependency-closure/ce50-provider-artifact-readback.json",
+      "bytes": 910,
+      "sha256": "666df9b24de58a5b765afe9162bce4bc1aa6807a57852a6f14d4c748d915743e"
+    },
+    {
+      "path": "dependency-closure/wave10-canonical-source-independent-review.json",
+      "bytes": 6143,
+      "sha256": "81cdf869a44cf4fb5cfab7c5262ce3286ff4ad5a91a32f2962e9a805c5f1cd52"
+    },
+    {
+      "path": "dependency-closure/wave10-actual-native-independent-readback.json",
+      "bytes": 10839,
+      "sha256": "aaf0d05db7a967f7d73198b788434a26dfcdf1822707f75e2569803a8752e67a"
+    },
+    {
+      "path": "dependency-closure/wave10-actual-native-independent-readback-v2.json",
+      "bytes": 11352,
+      "sha256": "5070151585d2f8325d04a4be93a8b5a7dd128dbdf58c2fb5d4a0ca698dd6e35f"
+    }
+  ],
+  "selectedFileCount": 27,
+  "selectedBytes": 128682,
+  "privateOutputsExcluded": true,
+  "qualification": [
+    "Original Boards9c failure and7bd85 actualsuccess are distinct; SDK-present fd5 package/input/history/save/reopen only, fullApp/installedHome/cleanPC/29 acceptance open.",
+    "CUI original3 and preservation5 actually independently executed; peer fullCUI90 bothconfigs read back. PhysicalWASM/issuer/browser/session/BFCache/terminalbroker/owneradoption remain open.",
+    "Wave10 is complete exact canonical source; native4 and CLI controlledfixture processes and normal engine build pass, no productionFiles authority/decoder/device/provider/browser acceptance.",
+    "Wave runtime-v2 supersedes only wording28/42 sourcecallsite counts in originalreadback; no runtime assertion invocation total measured.",
+    "C5aecbd/3c/5ce public payload hashes/custody/privacy verified; original failures and old fullPicture21/23/lifecycle expectedred retained.",
+    "Native15 repaired ownerPicture actualPASS15/15/138 retains2existingcompilerwarnings; realcurrentglobal browser9 and broader29 gates are separate.",
+    "Only exact frozen selected public metadata/logs included; no sources rebuilt/copiedD DLLs/private databases/fixturecredentials/cache/binary payloads."
+  ]
+}

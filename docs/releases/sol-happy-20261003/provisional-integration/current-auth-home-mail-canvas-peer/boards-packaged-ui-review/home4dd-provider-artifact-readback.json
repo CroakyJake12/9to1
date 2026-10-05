@@ -1,0 +1,137 @@
+{
+  "artifacts": [
+    {
+      "id": 11313472132,
+      "name": "team-c-home-original-part05-4dd3128bf9ec4d35523e5997d9ce6cedc392a003-1",
+      "size_in_bytes": 1914185,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313472132",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313472132/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:44:03Z",
+      "expires_at": "2026-10-11T19:44:02Z",
+      "updated_at": "2026-10-04T19:44:03Z",
+      "digest": "sha256:e427fa2c16b80ec9fb327de6428167af271c068b3c19cc68b0ea7034b2f11c83",
+      "workflow_run": {
+        "id": 37228835003,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+        "head_sha": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003"
+      }
+    },
+    {
+      "id": 11313417534,
+      "name": "team-c-home-original-part01-4dd3128bf9ec4d35523e5997d9ce6cedc392a003-1",
+      "size_in_bytes": 19975319,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313417534",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313417534/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:43:55Z",
+      "expires_at": "2026-10-11T19:43:53Z",
+      "updated_at": "2026-10-04T19:43:55Z",
+      "digest": "sha256:6660c50cc4827f07c6eec59542f08afb3be4dcb35ff1e3343a69c95cb09a4306",
+      "workflow_run": {
+        "id": 37228835003,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+        "head_sha": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003"
+      }
+    },
+    {
+      "id": 11313203154,
+      "name": "team-c-home-original-part04-4dd3128bf9ec4d35523e5997d9ce6cedc392a003-1",
+      "size_in_bytes": 19975319,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313203154",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313203154/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:44:02Z",
+      "expires_at": "2026-10-11T19:44:00Z",
+      "updated_at": "2026-10-04T19:44:02Z",
+      "digest": "sha256:eb3274df2e55049c0d05eb6d2a4c8a98be7e82b4d9fda80bb7e18de803740618",
+      "workflow_run": {
+        "id": 37228835003,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+        "head_sha": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003"
+      }
+    },
+    {
+      "id": 11313138361,
+      "name": "team-c-home-original-diagnostics-4dd3128bf9ec4d35523e5997d9ce6cedc392a003-1",
+      "size_in_bytes": 2564391,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313138361",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313138361/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:43:49Z",
+      "expires_at": "2026-10-11T19:43:48Z",
+      "updated_at": "2026-10-04T19:43:49Z",
+      "digest": "sha256:288bc00c523d73a52eab0ba52ca54deafb49f4056eaf58d0d3dd58b9a42d3966",
+      "workflow_run": {
+        "id": 37228835003,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+        "head_sha": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003"
+      }
+    },
+    {
+      "id": 11313063633,
+      "name": "team-c-home-original-part02-4dd3128bf9ec4d35523e5997d9ce6cedc392a003-1",
+      "size_in_bytes": 19975319,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313063633",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11313063633/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:43:57Z",
+      "expires_at": "2026-10-11T19:43:56Z",
+      "updated_at": "2026-10-04T19:43:57Z",
+      "digest": "sha256:bdb22bb1268a157676fad2910bcb928c49ca2b96e1b6eb910523eb97a861ddfe",
+      "workflow_run": {
+        "id": 37228835003,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+        "head_sha": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003"
+      }
+    },
+    {
+      "id": 11312789357,
+      "name": "team-c-home-original-part03-4dd3128bf9ec4d35523e5997d9ce6cedc392a003-1",
+      "size_in_bytes": 19975319,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11312789357",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11312789357/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:44:00Z",
+      "expires_at": "2026-10-11T19:43:58Z",
+      "updated_at": "2026-10-04T19:44:00Z",
+      "digest": "sha256:b3aadd7b39783dc18695b8684e0c8bb7227435028a9ae015f7480f6f55e17ce1",
+      "workflow_run": {
+        "id": 37228835003,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+        "head_sha": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003"
+      }
+    },
+    {
+      "id": 11312789339,
+      "name": "team-c-home-original-package-4dd3128bf9ec4d35523e5997d9ce6cedc392a003-1",
+      "size_in_bytes": 81272829,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11312789339",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11312789339/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:43:53Z",
+      "expires_at": "2026-10-11T19:43:49Z",
+      "updated_at": "2026-10-04T19:43:53Z",
+      "digest": "sha256:93633d862e1d97b93af3a27e556528a0794ab40a8054fa7235dbe47805b49e01",
+      "workflow_run": {
+        "id": 37228835003,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+        "head_sha": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003"
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+  CakeOS.Cui.Language -> /home/runner/work/_temp/team-c-mail72-37229860186-1/artifacts/bin/CakeOS.Cui.Language/release/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /home/runner/work/_temp/team-c-mail72-37229860186-1/artifacts/bin/CakeOS.Cui.Core/release/CakeOS.Cui.Core.dll
+  NineToOne.Cui.AI -> /home/runner/work/_temp/team-c-mail72-37229860186-1/artifacts/bin/NineToOne.Cui.AI/release/NineToOne.Cui.AI.dll
+  HavenOS.Mail -> /home/runner/work/_temp/team-c-mail72-37229860186-1/artifacts/bin/HavenOS.Mail/release/HavenOS.Mail.dll
+  HavenOS.Mail.Tests -> /home/runner/work/_temp/team-c-mail72-37229860186-1/artifacts/bin/HavenOS.Mail.Tests/release_linux-x64/HavenOS.Mail.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.25

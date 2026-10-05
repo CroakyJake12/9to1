@@ -1,0 +1,23 @@
+{
+  "artifacts": [
+    {
+      "id": 11312354741,
+      "name": "team-c-mail72-trusted-a0c8748196b90e2c43885e174b5835a7fe2c33e3-1",
+      "size_in_bytes": 68736,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11312354741",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11312354741/zip",
+      "expired": false,
+      "created_at": "2026-10-04T19:52:57Z",
+      "expires_at": "2026-10-11T19:52:56Z",
+      "updated_at": "2026-10-04T19:52:57Z",
+      "digest": "sha256:d8ba2ba5b62a432003903e93784ec11edb7873fa0610ec3807037f1409b3e6df",
+      "workflow_run": {
+        "id": 37229860186,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c4-mail72-trusted-greenmail-20261004",
+        "head_sha": "a0c8748196b90e2c43885e174b5835a7fe2c33e3"
+      }
+    }
+  ]
+}

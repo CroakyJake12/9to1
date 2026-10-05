@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BrowserWriteSpaceRegression.cs" />
+    <Compile Include="../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs;../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs;../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs" Link="Owner/%(Filename)%(Extension)" />
+    <ProjectReference Include="../Write/Scene/Haven.WriteBrowser.Scene.csproj" />
+  </ItemGroup>
+</Project>

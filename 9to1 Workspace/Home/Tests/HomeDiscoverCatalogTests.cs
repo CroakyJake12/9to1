@@ -128,7 +128,7 @@ public sealed class HomeDiscoverCatalogTests
     [Fact]
     public async Task Provider_actions_require_advertised_support_and_preserve_structured_result()
     {
-        var model = Model("provider", "model", "Model", actions: [HomeDiscoverAction.Pull]);
+        var model = Model("provider", "model", "Model", actions: new HashSet<HomeDiscoverAction> { HomeDiscoverAction.Pull });
         var source = Source("provider", model);
         source.ActionResult = new("operation-1", model.Identity, HomeDiscoverAction.Pull, true,
             "Succeeded", "Pull completed.", false, true, 3);
@@ -136,12 +136,14 @@ public sealed class HomeDiscoverCatalogTests
 
         var rejected = await catalog.ExecuteAsync(new HomeDiscoverActionRequest(model.Identity,
             HomeDiscoverAction.Connect, "operation-connect"));
-        var result = await catalog.ExecuteAsync(new HomeDiscoverActionRequest(model.Identity,
-            HomeDiscoverAction.Pull, "operation-pull"));
 
         Assert.False(rejected.Succeeded);
         Assert.Equal("Discover.ActionUnsupported", rejected.Code);
         Assert.Equal(0, source.ActionCalls);
+
+        var result = await catalog.ExecuteAsync(new HomeDiscoverActionRequest(model.Identity,
+            HomeDiscoverAction.Pull, "operation-pull"));
+
         Assert.True(result.Succeeded);
         Assert.Equal("operation-1", result.OperationId);
         Assert.Equal("provider", result.Identity.ProviderId);

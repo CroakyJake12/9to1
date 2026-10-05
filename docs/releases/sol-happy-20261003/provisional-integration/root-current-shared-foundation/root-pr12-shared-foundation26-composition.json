@@ -1,0 +1,141 @@
+{
+  "base": "14641ec51a1f697e733e78084a18dcb3d1518faf",
+  "publicPR12Source": "0c014b5a0f552911ebd834c3fac78e0f3966bdc0",
+  "reviewedProposal": "7361f41e1b08916903cdcef48bf2902b2fd4d75c",
+  "composed": "ada76235f6fa78018d3218aeaf75b7be1815cab6",
+  "wholeFiles": [
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "bytes": 1107,
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HomeNativeStartupCuiReadiness.cs",
+      "bytes": 1245,
+      "sha256": "fe66f193fcea1f65e7ce3e0535f7834981d86420d441419078cf81a643f7a320"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/HomeApprovals.cui",
+      "bytes": 4767,
+      "sha256": "98000a602764c3eda03386f49327c067f9b7c20f987260b68eeb21d1902ab266"
+    },
+    {
+      "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/Models.cui",
+      "bytes": 4081,
+      "sha256": "ea306ce8760943eb31ae4e1e5d71f41f828c5764006d7ccb37951f85bdf75697"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreApi.cs",
+      "bytes": 5122,
+      "sha256": "2181a8a1d5d36470c820d26769bcf357ec7b4b819b698b79946ceb2a3e52dfd5"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreServiceReadActionPolicies.cs",
+      "bytes": 885,
+      "sha256": "d1c834f038ef6772ac60842407303a8f2e2080564e7890fb1787af5fbff684c5"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.ReplyCurrentness.cs",
+      "bytes": 2490,
+      "sha256": "6f45711457d42cd5bfc494a583b87ac454fc9d5357d77ea819a2f54fccb361cc"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeCoreApiSessions.cs",
+      "bytes": 31800,
+      "sha256": "958813d46386c2bdebd7f2c9b332d85e437eba24c7efdebfc390bd62f08151c2"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeStartupSession.cs",
+      "bytes": 11532,
+      "sha256": "8e7b7dac1a46d5113a13becbb2586946a76b27c33b3c1eeaabebc5b236c67bc7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsAppConnection.cs",
+      "bytes": 9509,
+      "sha256": "52540186684f72e0aebfa075aa8f3116ed1c6af69c9d293c980518853fb50662"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsBootstrap.cs",
+      "bytes": 5570,
+      "sha256": "3c74737b89592a312dbd50227339c28f886e2046fad772b8e9957030190301c7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsCoreHost.cs",
+      "bytes": 9807,
+      "sha256": "6fe724175322dfad7a33d242f724b13ce05de9b614e8b52d3f22d0deb5489b6d"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsHostObservation.cs",
+      "bytes": 2294,
+      "sha256": "ee4607307c7736c3b27e6e7fd8aa698c285a012b52e237b5199b6deb5a00bb96"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsHostOwner.cs",
+      "bytes": 7514,
+      "sha256": "f8c7ff4574f68df8e30030f1122d3318f5e53d913ce1a64fd8fa213df9a12074"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWindowsStartupSession.cs",
+      "bytes": 10886,
+      "sha256": "9c9eb4e8ce471e57463858f463a99ce2a065fdd00a7ae4ae70550fe33b2153a7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreClient.cs",
+      "bytes": 9568,
+      "sha256": "5b4d0372103b78a3b80cbcce3929fbeadda5615c22003e7fd518c3aa5c4256aa"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreProtocol.cs",
+      "bytes": 5400,
+      "sha256": "ba41142c984d991354c365e63c5947c1ffd26f41645fcc5dfc88c0d7216989db"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixCoreTransport.cs",
+      "bytes": 11041,
+      "sha256": "67bf91e74749292cca24851e9372dfd2890b3f7054a3517130189a15e0e1229b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeUnixDiscoveryTransport.cs",
+      "bytes": 4110,
+      "sha256": "1a4a73c5eec8a7d32f14acd15589308aa7bcf322c051262afe899c9d23513892"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeWindowsCoreClient.cs",
+      "bytes": 13321,
+      "sha256": "f188596d759e7808e8b42df09e6f69feb6d49b12e9e9bd5b89c60ee9cdcb43f0"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeWindowsCoreConnection.cs",
+      "bytes": 10830,
+      "sha256": "859470cf668dfea1cc7d95f10fcc83cba7287973ea82a14cf6e04d1b878882ca"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
+      "bytes": 48284,
+      "sha256": "f8770b858d87ac9f02b46308ed387f9411d0cb928fe514a5879a5ae83d2636f7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeWindowsCoreTransportTests.cs",
+      "bytes": 30619,
+      "sha256": "174e1d89f85038377ec8b4f6b048ba4c89029c2e5c9755af4a84ef698b449f8a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/IHomeNativeInstalledPeerOriginalActorVerifier.cs",
+      "bytes": 682,
+      "sha256": "42ab66ef4846f3ca49a4a09d488ee1d49fb3e0d2fe6d299541c53fb5d487a2ca"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/HomeOriginalCoreServiceCollectionExtensions.cs",
+      "bytes": 1412,
+      "sha256": "af9f3865562f7c0f58d9745c6f60306ce7d8570e7bf28a882f637487f0563c79"
+    },
+    {
+      "path": "docs/proposals/home-windows-core-foundation-20261004.md",
+      "bytes": 3183,
+      "sha256": "b26818b0075bf2b2b82f1eaa78b1c437fa7b223036c655302ef7834f44643ec2"
+    }
+  ],
+  "outsideTrackedEntriesUnchanged": 16917,
+  "C4SourceReview": "d57d41a3477ac6052a25278c75151dc2fb5d1e5891a6c33415f35c365e2696d1",
+  "qualification": "Exact25 product/test/project plusREADME; original12 Windows cases/66wholeHome not yet run. Existing nativeHome Program/lifetime, CoreRuntime and C5GUI criteria unchanged. Current authority boundary remains configured/unavailable without genuine inputs; no synthetic installed/signing/fullacceptance."
+}

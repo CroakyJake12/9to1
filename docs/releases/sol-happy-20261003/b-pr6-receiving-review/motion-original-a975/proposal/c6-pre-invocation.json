@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent whole-source and managed-lane reviewer",
+  "candidateCommit": "a975e539fa5e8bf045104e6931f5e5e15d3c8695",
+  "baseCommit": "6ce4ce88b60e0f97e939c500affcee4322ab1544",
+  "ownerSources": [
+    "1a8cea03534e2b2767ec806f91dd2c454de94281",
+    "eecadfc7463c944bcc6f9788075c293ab14120f9"
+  ],
+  "changedFiles": [
+    {
+      "path": ".github/workflows/team-b-motion-original-project.yml",
+      "change": "A",
+      "bytes": 1147,
+      "sha256": "55273d26bdd31d9edcb055a8d8d922ffbb711a39d6aafa9c6f18a021d5e41524",
+      "wholeOwnerBodyMode": "EXACT"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProject.cs",
+      "change": "M",
+      "bytes": 14526,
+      "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d",
+      "wholeOwnerBodyMode": "EXACT"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "change": "M",
+      "bytes": 5674,
+      "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6",
+      "wholeOwnerBodyMode": "EXACT"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "change": "M",
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143",
+      "wholeOwnerBodyMode": "EXACT"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+      "change": "A",
+      "bytes": 935,
+      "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21",
+      "wholeOwnerBodyMode": "EXACT"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+      "change": "A",
+      "bytes": 1635,
+      "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38",
+      "wholeOwnerBodyMode": "EXACT"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/source-pins.json",
+      "change": "A",
+      "bytes": 1463,
+      "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659",
+      "wholeOwnerBodyMode": "EXACT"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-motion-original-project.py",
+      "change": "A",
+      "bytes": 9130,
+      "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857",
+      "wholeOwnerBodyMode": "EXACT"
+    }
+  ],
+  "outsideOldEntriesConserved": 16047,
+  "zeroDeletions": true,
+  "managedClosure": "Actual four Compile bodies only, no ProjectReference/package/vendor/native render dependencies; unchanged fixed8 ledger exact whole original bytes/all8 source pins valid",
+  "sourceReview": {
+    "canonicalProduction": "MotionProject/Commands complete EEC=B bodies; public canonical model adds optional opaque SourceRevisionID, Move/Slip/non-rippleTrim in original integer frame clock; checked range/revision/identity validation preserves existing Save/Load/CAS and source file identity",
+    "originalWorkflow": "Whole existing Run body exact delivered EEC+B; original checkpoints retained, owner additions exercise real CLI Move/Slip/Trim/cold reopen/non-changing failure bytes/fractional30000/1001/long bounds",
+    "entry": "Calls actual unchanged owning Run once with structured exact original return code; one discovered workflow, no invented assertion counts",
+    "driver": "Exact B maintained Commands/hash + fixedledger8 + expectedCommit/current sourceclean/normal SDK restore-build actual target/apphost headers/fresh bounded result/log + finalsource gates; no globalhash repin",
+    "nativeGraph": "Existing native Motion project and Program untouched; EEC render/media/native-render test/donor bodies excluded; all existing Home/media/preferences/root repair outside preserved",
+    "consumers": "Current direct consumers limited Motion owning bodies/Program per C1 complete scan; no Web/Home type consumer; full native graph remains unbuilt/unaccepted"
+  },
+  "verdict": "ACK bounded provisional exact owner8 managed workflow composition/execution after root C4 scope closure",
+  "runtimeStatus": "NOT_RUN at source review",
+  "qualification": "Original one managed local file/model/CLI workflow only; native full project/UI/Files resolution/source decoder/render/provider/donor/device/authority/full Motion/global acceptance remains open."
+}

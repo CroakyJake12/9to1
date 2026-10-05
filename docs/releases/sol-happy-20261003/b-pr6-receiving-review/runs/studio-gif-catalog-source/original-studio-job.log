@@ -1,0 +1,661 @@
+﻿2026-10-04T17:49:02.3892395Z Current runner version: '2.337.0'
+2026-10-04T17:49:02.3915333Z ##[group]Runner Image Provisioner
+2026-10-04T17:49:02.3916144Z Hosted Compute Agent
+2026-10-04T17:49:02.3916676Z Version: 20260901.588
+2026-10-04T17:49:02.3917239Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-04T17:49:02.3917973Z Build Date: 2026-09-01T19:56:44Z
+2026-10-04T17:49:02.3918603Z Worker ID: {477c836d-0d4e-4edf-ad5d-9bf134af125f}
+2026-10-04T17:49:02.3919303Z Azure Region: westcentralus
+2026-10-04T17:49:02.3919853Z ##[endgroup]
+2026-10-04T17:49:02.3921008Z ##[group]Operating System
+2026-10-04T17:49:02.3921606Z Microsoft Windows Server 2022
+2026-10-04T17:49:02.3922170Z 10.0.20348
+2026-10-04T17:49:02.3922637Z Datacenter
+2026-10-04T17:49:02.3923157Z ##[endgroup]
+2026-10-04T17:49:02.3923641Z ##[group]Runner Image
+2026-10-04T17:49:02.3924205Z Image: windows-2022
+2026-10-04T17:49:02.3924721Z Version: 20260927.320.1
+2026-10-04T17:49:02.3926760Z Included Software: https://github.com/actions/runner-images/blob/win22/20260927.320/images/windows/Windows2022-Readme.md
+2026-10-04T17:49:02.3928202Z Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20260927.320
+2026-10-04T17:49:02.3929085Z ##[endgroup]
+2026-10-04T17:49:02.3930115Z ##[group]GITHUB_TOKEN Permissions
+2026-10-04T17:49:02.3931995Z Contents: read
+2026-10-04T17:49:02.3932503Z Metadata: read
+2026-10-04T17:49:02.3932986Z ##[endgroup]
+2026-10-04T17:49:02.3934848Z Secret source: Actions
+2026-10-04T17:49:02.3935672Z Cache mode: write
+2026-10-04T17:49:02.3936329Z Prepare workflow directory
+2026-10-04T17:49:02.4325639Z Prepare all required actions
+2026-10-04T17:49:02.4377341Z Getting action download info
+2026-10-04T17:49:02.7561866Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-04T17:49:02.8722850Z Download action repository 'actions/setup-dotnet@v4' (SHA:67a3573c9a986a3f9c594539f4ab511d57bb3ce9)
+2026-10-04T17:49:03.4707596Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-04T17:49:03.8559870Z Complete job name: package (studio)
+2026-10-04T17:49:04.0202178Z ##[group]Run git config --global core.autocrlf false
+2026-10-04T17:49:04.0203852Z [36;1mgit config --global core.autocrlf false[0m
+2026-10-04T17:49:04.0300808Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-04T17:49:04.0302284Z env:
+2026-10-04T17:49:04.0302992Z   AVALONIA_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:04.0303970Z   DOTNET_NOLOGO: 1
+2026-10-04T17:49:04.0304761Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:04.0305713Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T17:49:04.0306529Z ##[endgroup]
+2026-10-04T17:49:04.9333090Z ##[group]Run actions/checkout@v4
+2026-10-04T17:49:04.9334147Z with:
+2026-10-04T17:49:04.9334817Z   fetch-depth: 0
+2026-10-04T17:49:04.9335556Z   persist-credentials: false
+2026-10-04T17:49:04.9336446Z   repository: CroakyJake12/9to1
+2026-10-04T17:49:04.9343263Z   token: ***
+2026-10-04T17:49:04.9343937Z   ssh-strict: true
+2026-10-04T17:49:04.9344674Z   ssh-user: git
+2026-10-04T17:49:04.9345338Z   clean: true
+2026-10-04T17:49:04.9346086Z   sparse-checkout-cone-mode: true
+2026-10-04T17:49:04.9346928Z   fetch-tags: false
+2026-10-04T17:49:04.9347617Z   show-progress: true
+2026-10-04T17:49:04.9348325Z   lfs: false
+2026-10-04T17:49:04.9348976Z   submodules: false
+2026-10-04T17:49:04.9349699Z   set-safe-directory: true
+2026-10-04T17:49:04.9350516Z   allow-unsafe-pr-checkout: false
+2026-10-04T17:49:04.9351310Z env:
+2026-10-04T17:49:04.9351966Z   AVALONIA_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:04.9352770Z   DOTNET_NOLOGO: 1
+2026-10-04T17:49:04.9353621Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:04.9354440Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T17:49:04.9355223Z ##[endgroup]
+2026-10-04T17:49:05.0830057Z Syncing repository: CroakyJake12/9to1
+2026-10-04T17:49:05.0832394Z ##[group]Getting Git version info
+2026-10-04T17:49:05.0833298Z Working directory is 'D:\a\9to1\9to1'
+2026-10-04T17:49:05.1732590Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T17:49:05.1948546Z git version 2.55.0.windows.5
+2026-10-04T17:49:05.1984634Z ##[endgroup]
+2026-10-04T17:49:05.1998035Z Copying 'C:\Users\runneradmin\.gitconfig' to 'D:\a\_temp\4370a74a-8ae7-45db-ad42-ca62c625702c\.gitconfig'
+2026-10-04T17:49:05.2017328Z Temporarily overriding HOME='D:\a\_temp\4370a74a-8ae7-45db-ad42-ca62c625702c' before making global git config changes
+2026-10-04T17:49:05.2019585Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T17:49:05.2027962Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\9to1\9to1
+2026-10-04T17:49:05.2253612Z Deleting the contents of 'D:\a\9to1\9to1'
+2026-10-04T17:49:05.2258902Z ##[group]Initializing the repository
+2026-10-04T17:49:05.2267233Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\9to1\9to1
+2026-10-04T17:49:05.3121303Z Initialized empty Git repository in D:/a/9to1/9to1/.git/
+2026-10-04T17:49:05.3162210Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/CroakyJake12/9to1
+2026-10-04T17:49:05.3776990Z ##[endgroup]
+2026-10-04T17:49:05.3778439Z ##[group]Disabling automatic garbage collection
+2026-10-04T17:49:05.3791972Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-04T17:49:05.4078673Z ##[endgroup]
+2026-10-04T17:49:05.4090826Z ##[group]Setting up auth
+2026-10-04T17:49:05.4092870Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T17:49:05.4342222Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T17:49:06.9059748Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T17:49:06.9287873Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T17:49:07.3541459Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T17:49:07.3773383Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T17:49:07.8235154Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-04T17:49:07.8471485Z ##[endgroup]
+2026-10-04T17:49:07.8472323Z ##[group]Fetching the repository
+2026-10-04T17:49:07.8482530Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-04T17:49:17.5133422Z From https://github.com/CroakyJake12/9to1
+2026-10-04T17:49:17.5134890Z  * [new branch]        app-goals/connect-windows-20261004-proposal -> origin/app-goals/connect-windows-20261004-proposal
+2026-10-04T17:49:17.5136136Z  * [new branch]        artifact/team-b-browser-83c24b2 -> origin/artifact/team-b-browser-83c24b2
+2026-10-04T17:49:17.5137323Z  * [new branch]        artifact/team-b-normal22d-original-transport-20261004 -> origin/artifact/team-b-normal22d-original-transport-20261004
+2026-10-04T17:49:17.5138933Z  * [new branch]        artifact/team-b-wave-native-0bdd-complete64-line-diagnostics-20261004 -> origin/artifact/team-b-wave-native-0bdd-complete64-line-diagnostics-20261004
+2026-10-04T17:49:17.5140936Z  * [new branch]        artifact/team-b-wave-native-dbb-original-and-first-repair-diagnostics-20261004 -> origin/artifact/team-b-wave-native-dbb-original-and-first-repair-diagnostics-20261004
+2026-10-04T17:49:17.5142704Z  * [new branch]        artifact/team-b-wave22d-independent-member-transport-20261004 -> origin/artifact/team-b-wave22d-independent-member-transport-20261004
+2026-10-04T17:49:17.5145135Z  * [new branch]        artifact/team-b-wave22d-member-transport-20261004 -> origin/artifact/team-b-wave22d-member-transport-20261004
+2026-10-04T17:49:17.5146303Z  * [new branch]        artifact/team-b-write-package-dbb-restore-budget-diagnostics-20261004 -> origin/artifact/team-b-write-package-dbb-restore-budget-diagnostics-20261004
+2026-10-04T17:49:17.5147526Z  * [new branch]        artifact/team-b-write-package5864-original-diagnostics-20261004 -> origin/artifact/team-b-write-package5864-original-diagnostics-20261004
+2026-10-04T17:49:17.5148872Z  * [new branch]        astra/launch-integration-20260930 -> origin/astra/launch-integration-20260930
+2026-10-04T17:49:17.5149766Z  * [new branch]        codex/cake-id-auth-backup-20261002 -> origin/codex/cake-id-auth-backup-20261002
+2026-10-04T17:49:17.5150608Z  * [new branch]        coord/sol-happy-20261003 -> origin/coord/sol-happy-20261003
+2026-10-04T17:49:17.5153074Z  * [new branch]        custody/team-b-wave-independent-part02-subtransport-20261004 -> origin/custody/team-b-wave-independent-part02-subtransport-20261004
+2026-10-04T17:49:17.5154455Z  * [new branch]        fix/mail-graph-continuation-20261004 -> origin/fix/mail-graph-continuation-20261004
+2026-10-04T17:49:17.5155303Z  * [new branch]        handoff/team-a-admin-sdk03-20261003 -> origin/handoff/team-a-admin-sdk03-20261003
+2026-10-04T17:49:17.5156063Z  * [new branch]        integration/team-c-unaccepted-20261004 -> origin/integration/team-c-unaccepted-20261004
+2026-10-04T17:49:17.5156654Z  * [new branch]        main                -> origin/main
+2026-10-04T17:49:17.5157225Z  * [new branch]        proposal/games-windows-20261004 -> origin/proposal/games-windows-20261004
+2026-10-04T17:49:17.5157864Z  * [new branch]        release/sol-happy-20261003 -> origin/release/sol-happy-20261003
+2026-10-04T17:49:17.5158475Z  * [new branch]        review/team-b-browser-aef50 -> origin/review/team-b-browser-aef50
+2026-10-04T17:49:17.5159234Z  * [new branch]        review/team-b-browser-baseline-8041 -> origin/review/team-b-browser-baseline-8041
+2026-10-04T17:49:17.5160010Z  * [new branch]        review/team-b-local-apps-20261004 -> origin/review/team-b-local-apps-20261004
+2026-10-04T17:49:17.5160729Z  * [new branch]        review/team-b-picture-fixed-7f-20261004 -> origin/review/team-b-picture-fixed-7f-20261004
+2026-10-04T17:49:17.5161531Z  * [new branch]        team-a/home-windows-original-shutdown-20261004 -> origin/team-a/home-windows-original-shutdown-20261004
+2026-10-04T17:49:17.5163177Z  * [new branch]        team-a/studio-windows-gif-provider-20261004 -> origin/team-a/studio-windows-gif-provider-20261004
+2026-10-04T17:49:17.5164124Z  * [new branch]        team-b/astra-browser-validation-20261003 -> origin/team-b/astra-browser-validation-20261003
+2026-10-04T17:49:17.5164917Z  * [new branch]        team-b/browser-receipt-fixes-20261004 -> origin/team-b/browser-receipt-fixes-20261004
+2026-10-04T17:49:17.5165736Z  * [new branch]        team-b/picture-fixed-7f-independent-20261004 -> origin/team-b/picture-fixed-7f-independent-20261004
+2026-10-04T17:49:17.5166507Z  * [new branch]        team-b/sol-happy-browser-20261003 -> origin/team-b/sol-happy-browser-20261003
+2026-10-04T17:49:17.5167114Z  * [new branch]        team-c/sol-happy-c1 -> origin/team-c/sol-happy-c1
+2026-10-04T17:49:17.5167797Z  * [new branch]        team-c/sol-happy-c1-home-window-probe-20261004 -> origin/team-c/sol-happy-c1-home-window-probe-20261004
+2026-10-04T17:49:17.5168804Z  * [new branch]        team-c/sol-happy-c1-windows-affected-three-20261004 -> origin/team-c/sol-happy-c1-windows-affected-three-20261004
+2026-10-04T17:49:17.5170864Z  * [new branch]        team-c/sol-happy-c1-windows-artifact-inspection-20261004 -> origin/team-c/sol-happy-c1-windows-artifact-inspection-20261004
+2026-10-04T17:49:17.5172373Z  * [new branch]        team-c/sol-happy-c1-windows-build-proposal-20261004 -> origin/team-c/sol-happy-c1-windows-build-proposal-20261004
+2026-10-04T17:49:17.5173774Z  * [new branch]        team-c/sol-happy-c2 -> origin/team-c/sol-happy-c2
+2026-10-04T17:49:17.5174782Z  * [new branch]        team-c/sol-happy-c2-browser-account-review -> origin/team-c/sol-happy-c2-browser-account-review
+2026-10-04T17:49:17.5176000Z  * [new branch]        team-c/sol-happy-c2-browser-fixture -> origin/team-c/sol-happy-c2-browser-fixture
+2026-10-04T17:49:17.5177053Z  * [new branch]        team-c/sol-happy-c2-fixture-recovery -> origin/team-c/sol-happy-c2-fixture-recovery
+2026-10-04T17:49:17.5178151Z  * [new branch]        team-c/sol-happy-c2-home-reconciled -> origin/team-c/sol-happy-c2-home-reconciled
+2026-10-04T17:49:17.5179288Z  * [new branch]        team-c/sol-happy-c2-https-validation -> origin/team-c/sol-happy-c2-https-validation
+2026-10-04T17:49:17.5180330Z  * [new branch]        team-c/sol-happy-c2-public-cors -> origin/team-c/sol-happy-c2-public-cors
+2026-10-04T17:49:17.5181160Z  * [new branch]        team-c/sol-happy-c3 -> origin/team-c/sol-happy-c3
+2026-10-04T17:49:17.5182208Z  * [new branch]        team-c/sol-happy-c3-accounts-cancellation -> origin/team-c/sol-happy-c3-accounts-cancellation
+2026-10-04T17:49:17.5183369Z  * [new branch]        team-c/sol-happy-c3-accounts-integration -> origin/team-c/sol-happy-c3-accounts-integration
+2026-10-04T17:49:17.5184553Z  * [new branch]        team-c/sol-happy-c3-admin-attempt3-evidence -> origin/team-c/sol-happy-c3-admin-attempt3-evidence
+2026-10-04T17:49:17.5185827Z  * [new branch]        team-c/sol-happy-c3-admin-compile-metadata-proposal -> origin/team-c/sol-happy-c3-admin-compile-metadata-proposal
+2026-10-04T17:49:17.5187060Z  * [new branch]        team-c/sol-happy-c3-admin-compile-validation -> origin/team-c/sol-happy-c3-admin-compile-validation
+2026-10-04T17:49:17.5188377Z  * [new branch]        team-c/sol-happy-c3-admin-context-validation -> origin/team-c/sol-happy-c3-admin-context-validation
+2026-10-04T17:49:17.5189666Z  * [new branch]        team-c/sol-happy-c3-admin-custody-errors-proposal -> origin/team-c/sol-happy-c3-admin-custody-errors-proposal
+2026-10-04T17:49:17.5191096Z  * [new branch]        team-c/sol-happy-c3-admin-custody-validation -> origin/team-c/sol-happy-c3-admin-custody-validation
+2026-10-04T17:49:17.5192425Z  * [new branch]        team-c/sol-happy-c3-admin-driver-proposal -> origin/team-c/sol-happy-c3-admin-driver-proposal
+2026-10-04T17:49:17.5193665Z  * [new branch]        team-c/sol-happy-c3-admin-driver-validation -> origin/team-c/sol-happy-c3-admin-driver-validation
+2026-10-04T17:49:17.5195042Z  * [new branch]        team-c/sol-happy-c3-admin-embedded-symbol-proposal -> origin/team-c/sol-happy-c3-admin-embedded-symbol-proposal
+2026-10-04T17:49:17.5196620Z  * [new branch]        team-c/sol-happy-c3-admin-evidence -> origin/team-c/sol-happy-c3-admin-evidence
+2026-10-04T17:49:17.5197956Z  * [new branch]        team-c/sol-happy-c3-admin-generated-context-proposal -> origin/team-c/sol-happy-c3-admin-generated-context-proposal
+2026-10-04T17:49:17.5199616Z  * [new branch]        team-c/sol-happy-c3-admin-generated-producer-proposal -> origin/team-c/sol-happy-c3-admin-generated-producer-proposal
+2026-10-04T17:49:17.5201210Z  * [new branch]        team-c/sol-happy-c3-admin-generated-validation -> origin/team-c/sol-happy-c3-admin-generated-validation
+2026-10-04T17:49:17.5202436Z  * [new branch]        team-c/sol-happy-c3-admin-key-proposal -> origin/team-c/sol-happy-c3-admin-key-proposal
+2026-10-04T17:49:17.5203627Z  * [new branch]        team-c/sol-happy-c3-admin-source-owner-proposal -> origin/team-c/sol-happy-c3-admin-source-owner-proposal
+2026-10-04T17:49:17.5205149Z  * [new branch]        team-c/sol-happy-c3-admin-source-owner-validation -> origin/team-c/sol-happy-c3-admin-source-owner-validation
+2026-10-04T17:49:17.5206423Z  * [new branch]        team-c/sol-happy-c3-admin-subreaper-proposal -> origin/team-c/sol-happy-c3-admin-subreaper-proposal
+2026-10-04T17:49:17.5207536Z  * [new branch]        team-c/sol-happy-c3-admin-subreaper-validation -> origin/team-c/sol-happy-c3-admin-subreaper-validation
+2026-10-04T17:49:17.5208655Z  * [new branch]        team-c/sol-happy-c3-admin-symbol-errors-proposal -> origin/team-c/sol-happy-c3-admin-symbol-errors-proposal
+2026-10-04T17:49:17.5209575Z  * [new branch]        team-c/sol-happy-c3-admin-symbol-errors-validation -> origin/team-c/sol-happy-c3-admin-symbol-errors-validation
+2026-10-04T17:49:17.5210458Z  * [new branch]        team-c/sol-happy-c3-billing-discovery -> origin/team-c/sol-happy-c3-billing-discovery
+2026-10-04T17:49:17.5211216Z  * [new branch]        team-c/sol-happy-c3-billing-hosted -> origin/team-c/sol-happy-c3-billing-hosted
+2026-10-04T17:49:17.5212014Z  * [new branch]        team-c/sol-happy-c3-boards-packaged-ui-20261004 -> origin/team-c/sol-happy-c3-boards-packaged-ui-20261004
+2026-10-04T17:49:17.5212899Z  * [new branch]        team-c/sol-happy-c3-boards-rich-history-20261004 -> origin/team-c/sol-happy-c3-boards-rich-history-20261004
+2026-10-04T17:49:17.5213772Z  * [new branch]        team-c/sol-happy-c3-boards-storage-retry-20261004 -> origin/team-c/sol-happy-c3-boards-storage-retry-20261004
+2026-10-04T17:49:17.5214681Z  * [new branch]        team-c/sol-happy-c3-canvas-packaged-ui-20261004 -> origin/team-c/sol-happy-c3-canvas-packaged-ui-20261004
+2026-10-04T17:49:17.5215677Z  * [new branch]        team-c/sol-happy-c3-canvas-picker-observation-20261004 -> origin/team-c/sol-happy-c3-canvas-picker-observation-20261004
+2026-10-04T17:49:17.5216524Z  * [new branch]        team-c/sol-happy-c3-oidc-proposal -> origin/team-c/sol-happy-c3-oidc-proposal
+2026-10-04T17:49:17.5217130Z  * [new branch]        team-c/sol-happy-c4 -> origin/team-c/sol-happy-c4
+2026-10-04T17:49:17.5217945Z  * [new branch]        team-c/sol-happy-c4-recovery -> origin/team-c/sol-happy-c4-recovery
+2026-10-04T17:49:17.5219696Z  * [new branch]        team-c/sol-happy-c5 -> origin/team-c/sol-happy-c5
+2026-10-04T17:49:17.5220705Z  * [new branch]        team-c/sol-happy-c5-durable-cancel-probe -> origin/team-c/sol-happy-c5-durable-cancel-probe
+2026-10-04T17:49:17.5221531Z  * [new branch]        team-c/sol-happy-c5-provider-reconciled -> origin/team-c/sol-happy-c5-provider-reconciled
+2026-10-04T17:49:17.5222394Z  * [new branch]        team-c/sol-happy-c5-workers-ai-metadata -> origin/team-c/sol-happy-c5-workers-ai-metadata
+2026-10-04T17:49:17.5223190Z  * [new branch]        team-c/sol-happy-c5-workers-ai-owner-rebase -> origin/team-c/sol-happy-c5-workers-ai-owner-rebase
+2026-10-04T17:49:17.5223927Z  * [new branch]        team-c/sol-happy-c6-handoff -> origin/team-c/sol-happy-c6-handoff
+2026-10-04T17:49:17.5224875Z  * [new branch]        team-c/sol-happy-global-web-picture-20261004 -> origin/team-c/sol-happy-global-web-picture-20261004
+2026-10-04T17:49:17.5225693Z  * [new branch]        validation/astra-accountapi-root13-cohort01 -> origin/validation/astra-accountapi-root13-cohort01
+2026-10-04T17:49:17.5226536Z  * [new branch]        validation/astra-accounts-library-cohort01 -> origin/validation/astra-accounts-library-cohort01
+2026-10-04T17:49:17.5227572Z  * [new branch]        validation/astra-agents-compiler09-isolated-original-20261004 -> origin/validation/astra-agents-compiler09-isolated-original-20261004
+2026-10-04T17:49:17.5228629Z  * [new branch]        validation/astra-agents-physical-documents-20261004 -> origin/validation/astra-agents-physical-documents-20261004
+2026-10-04T17:49:17.5229571Z  * [new branch]        validation/astra-android14-root18-managed-owning02 -> origin/validation/astra-android14-root18-managed-owning02
+2026-10-04T17:49:17.5230453Z  * [new branch]        validation/astra-android14-root19-managed-owning04 -> origin/validation/astra-android14-root19-managed-owning04
+2026-10-04T17:49:17.5231394Z  * [new branch]        validation/astra-android14-root19-managed-owning05 -> origin/validation/astra-android14-root19-managed-owning05
+2026-10-04T17:49:17.5232448Z  * [new branch]        validation/astra-android14-root20-picker-operation-owning13 -> origin/validation/astra-android14-root20-picker-operation-owning13
+2026-10-04T17:49:17.5234399Z  * [new branch]        validation/astra-android14-root20-widget-phase-owning10 -> origin/validation/astra-android14-root20-widget-phase-owning10
+2026-10-04T17:49:17.5235449Z  * [new branch]        validation/astra-android14-root20-widget-phase-owning11 -> origin/validation/astra-android14-root20-widget-phase-owning11
+2026-10-04T17:49:17.5236423Z  * [new branch]        validation/astra-android14-root21-original-speech-owning17 -> origin/validation/astra-android14-root21-original-speech-owning17
+2026-10-04T17:49:17.5237422Z  * [new branch]        validation/astra-android14-ui-tool-preconditions01 -> origin/validation/astra-android14-ui-tool-preconditions01
+2026-10-04T17:49:17.5238791Z  * [new branch]        validation/astra-android29-frozen91-20261001-1310 -> origin/validation/astra-android29-frozen91-20261001-1310
+2026-10-04T17:49:17.5240203Z  * [new branch]        validation/astra-apps17-root13-cohort01 -> origin/validation/astra-apps17-root13-cohort01
+2026-10-04T17:49:17.5241063Z  * [new branch]        validation/astra-auth-managed-20261001-2110 -> origin/validation/astra-auth-managed-20261001-2110
+2026-10-04T17:49:17.5242021Z  * [new branch]        validation/astra-auth29-original-artifact-transport-current25-01 -> origin/validation/astra-auth29-original-artifact-transport-current25-01
+2026-10-04T17:49:17.5243298Z  * [new branch]        validation/astra-automation-original-owning02 -> origin/validation/astra-automation-original-owning02
+2026-10-04T17:49:17.5244628Z  * [new branch]        validation/astra-automation-original-root18-union08 -> origin/validation/astra-automation-original-root18-union08
+2026-10-04T17:49:17.5245531Z  * [new branch]        validation/astra-automation28-root13-cohort01 -> origin/validation/astra-automation28-root13-cohort01
+2026-10-04T17:49:17.5246545Z  * [new branch]        validation/astra-cake-id-local-runtime08 -> origin/validation/astra-cake-id-local-runtime08
+2026-10-04T17:49:17.5247577Z  * [new branch]        validation/astra-cake-id-local-runtime09 -> origin/validation/astra-cake-id-local-runtime09
+2026-10-04T17:49:17.5248809Z  * [new branch]        validation/astra-cake-id-local-runtime11 -> origin/validation/astra-cake-id-local-runtime11
+2026-10-04T17:49:17.5249793Z  * [new branch]        validation/astra-cake-id-local-runtime12 -> origin/validation/astra-cake-id-local-runtime12
+2026-10-04T17:49:17.5250806Z  * [new branch]        validation/astra-cake-id-local-runtime13 -> origin/validation/astra-cake-id-local-runtime13
+2026-10-04T17:49:17.5251876Z  * [new branch]        validation/astra-cake-id-local-runtime14 -> origin/validation/astra-cake-id-local-runtime14
+2026-10-04T17:49:17.5253620Z  * [new branch]        validation/astra-cake-id-local-runtime15 -> origin/validation/astra-cake-id-local-runtime15
+2026-10-04T17:49:17.5254631Z  * [new branch]        validation/astra-cake-id-local-runtime17 -> origin/validation/astra-cake-id-local-runtime17
+2026-10-04T17:49:17.5255849Z  * [new branch]        validation/astra-cake-id-local-runtime19 -> origin/validation/astra-cake-id-local-runtime19
+2026-10-04T17:49:17.5257306Z  * [new branch]        validation/astra-cake-id-local-runtime21 -> origin/validation/astra-cake-id-local-runtime21
+2026-10-04T17:49:17.5258543Z  * [new branch]        validation/astra-cake-id-local-runtime25-independent-auth -> origin/validation/astra-cake-id-local-runtime25-independent-auth
+2026-10-04T17:49:17.5259963Z  * [new branch]        validation/astra-cake-id-local-runtime25-independent-auth-traffic26 -> origin/validation/astra-cake-id-local-runtime25-independent-auth-traffic26
+2026-10-04T17:49:17.5261324Z  * [new branch]        validation/astra-canvas65-cohort01 -> origin/validation/astra-canvas65-cohort01
+2026-10-04T17:49:17.5262195Z  * [new branch]        validation/astra-canvas65-current22-full49-03 -> origin/validation/astra-canvas65-current22-full49-03
+2026-10-04T17:49:17.5263335Z  * [new branch]        validation/astra-canvas65-root18-complete-union11 -> origin/validation/astra-canvas65-root18-complete-union11
+2026-10-04T17:49:17.5264528Z  * [new branch]        validation/astra-compatibility53-cohort01 -> origin/validation/astra-compatibility53-cohort01
+2026-10-04T17:49:17.5265579Z  * [new branch]        validation/astra-compatibility54-root15-owning01 -> origin/validation/astra-compatibility54-root15-owning01
+2026-10-04T17:49:17.5266703Z  * [new branch]        validation/astra-compatibility54-root16-combined02 -> origin/validation/astra-compatibility54-root16-combined02
+2026-10-04T17:49:17.5267649Z  * [new branch]        validation/astra-compiler05-original-custody-20261004 -> origin/validation/astra-compiler05-original-custody-20261004
+2026-10-04T17:49:17.5268810Z  * [new branch]        validation/astra-compiler07-original-custody-20261004 -> origin/validation/astra-compiler07-original-custody-20261004
+2026-10-04T17:49:17.5270082Z  * [new branch]        validation/astra-data-automation-root18-owning03 -> origin/validation/astra-data-automation-root18-owning03
+2026-10-04T17:49:17.5270989Z  * [new branch]        validation/astra-data-browse-owning01 -> origin/validation/astra-data-browse-owning01
+2026-10-04T17:49:17.5271864Z  * [new branch]        validation/astra-data-browse-owning04 -> origin/validation/astra-data-browse-owning04
+2026-10-04T17:49:17.5272903Z  * [new branch]        validation/astra-data-browse-root18-combined01 -> origin/validation/astra-data-browse-root18-combined01
+2026-10-04T17:49:17.5273924Z  * [new branch]        validation/astra-data21-managed-20261001-1720 -> origin/validation/astra-data21-managed-20261001-1720
+2026-10-04T17:49:17.5274986Z  * [new branch]        validation/astra-desktop-visible-26-root18-owning10 -> origin/validation/astra-desktop-visible-26-root18-owning10
+2026-10-04T17:49:17.5276031Z  * [new branch]        validation/astra-desktop-visible-desktop-mail-root19-owning15 -> origin/validation/astra-desktop-visible-desktop-mail-root19-owning15
+2026-10-04T17:49:17.5277419Z  * [new branch]        validation/astra-desktop-visible-files-root19-corrector14 -> origin/validation/astra-desktop-visible-files-root19-corrector14
+2026-10-04T17:49:17.5278605Z  * [new branch]        validation/astra-desktop-visible-files-root19-owning13 -> origin/validation/astra-desktop-visible-files-root19-owning13
+2026-10-04T17:49:17.5279922Z  * [new branch]        validation/astra-desktop-visible-forms-root18-owning02 -> origin/validation/astra-desktop-visible-forms-root18-owning02
+2026-10-04T17:49:17.5281091Z  * [new branch]        validation/astra-desktop-visible-forms-root19-owning07 -> origin/validation/astra-desktop-visible-forms-root19-owning07
+2026-10-04T17:49:17.5282378Z  * [new branch]        validation/astra-desktop-visible-joint05-root30-native01 -> origin/validation/astra-desktop-visible-joint05-root30-native01
+2026-10-04T17:49:17.5284289Z  * [new branch]        validation/astra-desktop-visible-mail-root19-corrective04 -> origin/validation/astra-desktop-visible-mail-root19-corrective04
+2026-10-04T17:49:17.5285311Z  * [new branch]        validation/astra-desktop-visible-mail-root19-owning03 -> origin/validation/astra-desktop-visible-mail-root19-owning03
+2026-10-04T17:49:17.5286683Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-home-native06 -> origin/validation/astra-desktop-visible-mail30-root22-home-native06
+2026-10-04T17:49:17.5287929Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-home-native08 -> origin/validation/astra-desktop-visible-mail30-root22-home-native08
+2026-10-04T17:49:17.5289158Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-home-native09 -> origin/validation/astra-desktop-visible-mail30-root22-home-native09
+2026-10-04T17:49:17.5290531Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-private04 -> origin/validation/astra-desktop-visible-mail30-root22-private04
+2026-10-04T17:49:17.5291658Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-sites-home01 -> origin/validation/astra-desktop-visible-mail30-root22-sites-home01
+2026-10-04T17:49:17.5292930Z  * [new branch]        validation/astra-desktop-visible-root15-owning01 -> origin/validation/astra-desktop-visible-root15-owning01
+2026-10-04T17:49:17.5294272Z  * [new branch]        validation/astra-desktop-visible-shelf37-e1644a16-07 -> origin/validation/astra-desktop-visible-shelf37-e1644a16-07
+2026-10-04T17:49:17.5295382Z  * [new branch]        validation/astra-desktop-visible-spaces2-root22-private02 -> origin/validation/astra-desktop-visible-spaces2-root22-private02
+2026-10-04T17:49:17.5296422Z  * [new branch]        validation/astra-desktop26-root18-owning09 -> origin/validation/astra-desktop26-root18-owning09
+2026-10-04T17:49:17.5297450Z  * [new branch]        validation/astra-files16-data22-forms25-managed-20261001-1830 -> origin/validation/astra-files16-data22-forms25-managed-20261001-1830
+2026-10-04T17:49:17.5298634Z  * [new branch]        validation/astra-forms-math01-24531d46 -> origin/validation/astra-forms-math01-24531d46
+2026-10-04T17:49:17.5299675Z  * [new branch]        validation/astra-games-artifact-recovery02 -> origin/validation/astra-games-artifact-recovery02
+2026-10-04T17:49:17.5300581Z  * [new branch]        validation/astra-games-normals-root15-owning01 -> origin/validation/astra-games-normals-root15-owning01
+2026-10-04T17:49:17.5301846Z  * [new branch]        validation/astra-games-normals-root18-restore-helper15 -> origin/validation/astra-games-normals-root18-restore-helper15
+2026-10-04T17:49:17.5303009Z  * [new branch]        validation/astra-games-normals-root18-union11 -> origin/validation/astra-games-normals-root18-union11
+2026-10-04T17:49:17.5304167Z  * [new branch]        validation/astra-games-root18-restore-helper14 -> origin/validation/astra-games-root18-restore-helper14
+2026-10-04T17:49:17.5305235Z  * [new branch]        validation/astra-go28-managed-20261001-1810 -> origin/validation/astra-go28-managed-20261001-1810
+2026-10-04T17:49:17.5306340Z  * [new branch]        validation/astra-go39-managed-20261001-cohort01 -> origin/validation/astra-go39-managed-20261001-cohort01
+2026-10-04T17:49:17.5307556Z  * [new branch]        validation/astra-home437-original-custody-20261004 -> origin/validation/astra-home437-original-custody-20261004
+2026-10-04T17:49:17.5308691Z  * [new branch]        validation/astra-home437-original-owning-20261004 -> origin/validation/astra-home437-original-owning-20261004
+2026-10-04T17:49:17.5309683Z  * [new branch]        validation/astra-linux-native-signed-current22-full-06 -> origin/validation/astra-linux-native-signed-current22-full-06
+2026-10-04T17:49:17.5310903Z  * [new branch]        validation/astra-linux-native-signed-current22-full-09 -> origin/validation/astra-linux-native-signed-current22-full-09
+2026-10-04T17:49:17.5312122Z  * [new branch]        validation/astra-linux-native-signed-current22-full-11 -> origin/validation/astra-linux-native-signed-current22-full-11
+2026-10-04T17:49:17.5313387Z  * [new branch]        validation/astra-linux-native-signed-current22-full-12 -> origin/validation/astra-linux-native-signed-current22-full-12
+2026-10-04T17:49:17.5314616Z  * [new branch]        validation/astra-linux-native-signed-current22-full-13 -> origin/validation/astra-linux-native-signed-current22-full-13
+2026-10-04T17:49:17.5315677Z  * [new branch]        validation/astra-linux-native-signed-current22-full-14 -> origin/validation/astra-linux-native-signed-current22-full-14
+2026-10-04T17:49:17.5316644Z  * [new branch]        validation/astra-linux-native-signed-current22-full-15 -> origin/validation/astra-linux-native-signed-current22-full-15
+2026-10-04T17:49:17.5317667Z  * [new branch]        validation/astra-linux-native-signed-current22-full-16 -> origin/validation/astra-linux-native-signed-current22-full-16
+2026-10-04T17:49:17.5318635Z  * [new branch]        validation/astra-linux-native-signed-current22-full-17 -> origin/validation/astra-linux-native-signed-current22-full-17
+2026-10-04T17:49:17.5319587Z  * [new branch]        validation/astra-linux-native-signed-current22-full-18 -> origin/validation/astra-linux-native-signed-current22-full-18
+2026-10-04T17:49:17.5320607Z  * [new branch]        validation/astra-linux-native-signed-current22-full-19 -> origin/validation/astra-linux-native-signed-current22-full-19
+2026-10-04T17:49:17.5321563Z  * [new branch]        validation/astra-linux-native-signed-current22-full-20 -> origin/validation/astra-linux-native-signed-current22-full-20
+2026-10-04T17:49:17.5322492Z  * [new branch]        validation/astra-linux-native-signed-current22-full-21 -> origin/validation/astra-linux-native-signed-current22-full-21
+2026-10-04T17:49:17.5323514Z  * [new branch]        validation/astra-linux-native-signed-current22-full-22 -> origin/validation/astra-linux-native-signed-current22-full-22
+2026-10-04T17:49:17.5324414Z  * [new branch]        validation/astra-maps-shelf-current20-owning21 -> origin/validation/astra-maps-shelf-current20-owning21
+2026-10-04T17:49:17.5325290Z  * [new branch]        validation/astra-maps-shelf-full-hang-diagnostic11 -> origin/validation/astra-maps-shelf-full-hang-diagnostic11
+2026-10-04T17:49:17.5326214Z  * [new branch]        validation/astra-maps-shelf-home-browse-corrector18 -> origin/validation/astra-maps-shelf-home-browse-corrector18
+2026-10-04T17:49:17.5327115Z  * [new branch]        validation/astra-maps-shelf-observable-corrector17 -> origin/validation/astra-maps-shelf-observable-corrector17
+2026-10-04T17:49:17.5327973Z  * [new branch]        validation/astra-maps-shelf-owning03 -> origin/validation/astra-maps-shelf-owning03
+2026-10-04T17:49:17.5328798Z  * [new branch]        validation/astra-maps-shelf-two-fixture-corrective15 -> origin/validation/astra-maps-shelf-two-fixture-corrective15
+2026-10-04T17:49:17.5329925Z  * [new branch]        validation/astra-maps-shelf-two-way-input-corrective16 -> origin/validation/astra-maps-shelf-two-way-input-corrective16
+2026-10-04T17:49:17.5331304Z  * [new branch]        validation/astra-maps13-artifact-recovery01 -> origin/validation/astra-maps13-artifact-recovery01
+2026-10-04T17:49:17.5332580Z  * [new branch]        validation/astra-media11-root15-owning01 -> origin/validation/astra-media11-root15-owning01
+2026-10-04T17:49:17.5333904Z  * [new branch]        validation/astra-media11-root17-combined02 -> origin/validation/astra-media11-root17-combined02
+2026-10-04T17:49:17.5335561Z  * [new branch]        validation/astra-models-vision-monologue-call-current20-owning04 -> origin/validation/astra-models-vision-monologue-call-current20-owning04
+2026-10-04T17:49:17.5337483Z  * [new branch]        validation/astra-models-vision-monologue-call-positive-plan-owning07 -> origin/validation/astra-models-vision-monologue-call-positive-plan-owning07
+2026-10-04T17:49:17.5339774Z  * [new branch]        validation/astra-models-vision-monologue-call-receipt-owning05 -> origin/validation/astra-models-vision-monologue-call-receipt-owning05
+2026-10-04T17:49:17.5341114Z  * [new branch]        validation/astra-models-vision-monologue-call-startup-owning06 -> origin/validation/astra-models-vision-monologue-call-startup-owning06
+2026-10-04T17:49:17.5342353Z  * [new branch]        validation/astra-models-vision-monologue-root18-owning02 -> origin/validation/astra-models-vision-monologue-root18-owning02
+2026-10-04T17:49:17.5343310Z  * [new branch]        validation/astra-models-vision-root17-owning01 -> origin/validation/astra-models-vision-root17-owning01
+2026-10-04T17:49:17.5344162Z  * [new branch]        validation/astra-models8-managed-20261001-cohort01 -> origin/validation/astra-models8-managed-20261001-cohort01
+2026-10-04T17:49:17.5345010Z  * [new branch]        validation/astra-monologue-root18-owning01 -> origin/validation/astra-monologue-root18-owning01
+2026-10-04T17:49:17.5345950Z  * [new branch]        validation/astra-monologue-windows-media-failure-diagnostic12 -> origin/validation/astra-monologue-windows-media-failure-diagnostic12
+2026-10-04T17:49:17.5346946Z  * [new branch]        validation/astra-monologue-windows-native-producer09 -> origin/validation/astra-monologue-windows-native-producer09
+2026-10-04T17:49:17.5347832Z  * [new branch]        validation/astra-monologue-windows-owning02 -> origin/validation/astra-monologue-windows-owning02
+2026-10-04T17:49:17.5349274Z  * [new branch]        validation/astra-monologue-windows-owning04 -> origin/validation/astra-monologue-windows-owning04
+2026-10-04T17:49:17.5350099Z  * [new branch]        validation/astra-monologue-windows-owning05 -> origin/validation/astra-monologue-windows-owning05
+2026-10-04T17:49:17.5350889Z  * [new branch]        validation/astra-monologue-windows-owning06 -> origin/validation/astra-monologue-windows-owning06
+2026-10-04T17:49:17.5351681Z  * [new branch]        validation/astra-monologue-windows-owning08 -> origin/validation/astra-monologue-windows-owning08
+2026-10-04T17:49:17.5352571Z  * [new branch]        validation/astra-monologue-windows-terminal-diagnostic11 -> origin/validation/astra-monologue-windows-terminal-diagnostic11
+2026-10-04T17:49:17.5353558Z  * [new branch]        validation/astra-picture-preconditions-readonly03 -> origin/validation/astra-picture-preconditions-readonly03
+2026-10-04T17:49:17.5354615Z  * [new branch]        validation/astra-picture-preconditions-readonly04 -> origin/validation/astra-picture-preconditions-readonly04
+2026-10-04T17:49:17.5355545Z  * [new branch]        validation/astra-picture19-cohort01 -> origin/validation/astra-picture19-cohort01
+2026-10-04T17:49:17.5356544Z  * [new branch]        validation/astra-picture19-root18-copy-admission11 -> origin/validation/astra-picture19-root18-copy-admission11
+2026-10-04T17:49:17.5357584Z  * [new branch]        validation/astra-picture19-root19-current-owning20 -> origin/validation/astra-picture19-root19-current-owning20
+2026-10-04T17:49:17.5358773Z  * [new branch]        validation/astra-prepared-graph01-a63d77fe -> origin/validation/astra-prepared-graph01-a63d77fe
+2026-10-04T17:49:17.5359836Z  * [new branch]        validation/astra-rational-math01-a63d77fe -> origin/validation/astra-rational-math01-a63d77fe
+2026-10-04T17:49:17.5360721Z  * [new branch]        validation/astra-rendered4-root13-cohort01 -> origin/validation/astra-rendered4-root13-cohort01
+2026-10-04T17:49:17.5361669Z  * [new branch]        validation/astra-root12-managed-20261001-1655 -> origin/validation/astra-root12-managed-20261001-1655
+2026-10-04T17:49:17.5362475Z  * [new branch]        validation/astra-root13-android-cohort01 -> origin/validation/astra-root13-android-cohort01
+2026-10-04T17:49:17.5363429Z  * [new branch]        validation/astra-root13-android-startup4-cohort01 -> origin/validation/astra-root13-android-startup4-cohort01
+2026-10-04T17:49:17.5364824Z  * [new branch]        validation/astra-root13-android-startup5-cohort01 -> origin/validation/astra-root13-android-startup5-cohort01
+2026-10-04T17:49:17.5365673Z  * [new branch]        validation/astra-root13-managed-20261001-2130 -> origin/validation/astra-root13-managed-20261001-2130
+2026-10-04T17:49:17.5366516Z  * [new branch]        validation/astra-root14-android-startup5-cohort01 -> origin/validation/astra-root14-android-startup5-cohort01
+2026-10-04T17:49:17.5367310Z  * [new branch]        validation/astra-root14-coherent-cohort01 -> origin/validation/astra-root14-coherent-cohort01
+2026-10-04T17:49:17.5368018Z  * [new branch]        validation/astra-shared-math01-2f7759a6 -> origin/validation/astra-shared-math01-2f7759a6
+2026-10-04T17:49:17.5368793Z  * [new branch]        validation/astra-shared-math01-3441a6b9 -> origin/validation/astra-shared-math01-3441a6b9
+2026-10-04T17:49:17.5369581Z  * [new branch]        validation/astra-sites-wpe-prerequisites01 -> origin/validation/astra-sites-wpe-prerequisites01
+2026-10-04T17:49:17.5370384Z  * [new branch]        validation/astra-stacks-root16-whole01 -> origin/validation/astra-stacks-root16-whole01
+2026-10-04T17:49:17.5371153Z  * [new branch]        validation/astra-stacks-root17-combined02 -> origin/validation/astra-stacks-root17-combined02
+2026-10-04T17:49:17.5371985Z  * [new branch]        validation/astra-stacks-root18-canonical-inspection03 -> origin/validation/astra-stacks-root18-canonical-inspection03
+2026-10-04T17:49:17.5374086Z  * [new branch]        validation/astra-stacks-root19-canonical-inspection04 -> origin/validation/astra-stacks-root19-canonical-inspection04
+2026-10-04T17:49:17.5375065Z  * [new branch]        validation/astra-web-signed-owning03 -> origin/validation/astra-web-signed-owning03
+2026-10-04T17:49:17.5375880Z  * [new branch]        validation/astra-web-signed-root15-coherent01 -> origin/validation/astra-web-signed-root15-coherent01
+2026-10-04T17:49:17.5376928Z  * [new branch]        validation/sol-happy-forms16-owning-original-custody-20261004 -> origin/validation/sol-happy-forms16-owning-original-custody-20261004
+2026-10-04T17:49:17.5377970Z  * [new branch]        validation/sol-happy-forms17-dual-original-custody-20261004 -> origin/validation/sol-happy-forms17-dual-original-custody-20261004
+2026-10-04T17:49:17.5378951Z  * [new branch]        validation/sol-happy-linux20-original-custody-20261004 -> origin/validation/sol-happy-linux20-original-custody-20261004
+2026-10-04T17:49:17.5379899Z  * [new branch]        validation/sol-happy-linux21-original-custody-20261004 -> origin/validation/sol-happy-linux21-original-custody-20261004
+2026-10-04T17:49:17.5380888Z  * [new branch]        validation/sol-happy-linux23-original-custody-20261004 -> origin/validation/sol-happy-linux23-original-custody-20261004
+2026-10-04T17:49:17.5381840Z  * [new branch]        validation/sol-happy-sdk07-original-custody-20261004 -> origin/validation/sol-happy-sdk07-original-custody-20261004
+2026-10-04T17:49:17.5382831Z  * [new branch]        validation/sol-happy-sdk08-original-custody-20261004 -> origin/validation/sol-happy-sdk08-original-custody-20261004
+2026-10-04T17:49:17.5383853Z  * [new branch]        validation/sol-happy-sdk08-owning-original-custody-20261004 -> origin/validation/sol-happy-sdk08-owning-original-custody-20261004
+2026-10-04T17:49:17.5384920Z  * [new branch]        validation/sol-happy-sdk08-regression-original-custody-20261004 -> origin/validation/sol-happy-sdk08-regression-original-custody-20261004
+2026-10-04T17:49:17.5386723Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/team-a/studio-windows-gif-provider-20261004
+2026-10-04T17:49:17.5646389Z   origin/team-a/studio-windows-gif-provider-20261004
+2026-10-04T17:49:17.5701597Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/team-a/studio-windows-gif-provider-20261004
+2026-10-04T17:49:17.6075817Z c22a80f41fdc584d890e84356256a03e8e3951af
+2026-10-04T17:49:17.6102939Z ##[endgroup]
+2026-10-04T17:49:17.6103716Z ##[group]Determining the checkout info
+2026-10-04T17:49:17.6104455Z ##[endgroup]
+2026-10-04T17:49:17.6114378Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-04T17:49:17.6424297Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-04T17:49:17.6645987Z ##[group]Checking out the ref
+2026-10-04T17:49:17.6655335Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B team-a/studio-windows-gif-provider-20261004 refs/remotes/origin/team-a/studio-windows-gif-provider-20261004
+2026-10-04T17:49:18.8408606Z Updating files:  64% (6137/9489)
+2026-10-04T17:49:18.8529536Z Updating files:  65% (6168/9489)
+2026-10-04T17:49:18.8648209Z Updating files:  66% (6263/9489)
+2026-10-04T17:49:18.8766692Z Updating files:  67% (6358/9489)
+2026-10-04T17:49:18.8863061Z Updating files:  68% (6453/9489)
+2026-10-04T17:49:18.8990983Z Updating files:  69% (6548/9489)
+2026-10-04T17:49:18.9103993Z Updating files:  70% (6643/9489)
+2026-10-04T17:49:18.9227979Z Updating files:  71% (6738/9489)
+2026-10-04T17:49:18.9341190Z Updating files:  72% (6833/9489)
+2026-10-04T17:49:18.9458022Z Updating files:  73% (6927/9489)
+2026-10-04T17:49:18.9570790Z Updating files:  74% (7022/9489)
+2026-10-04T17:49:18.9698568Z Updating files:  75% (7117/9489)
+2026-10-04T17:49:18.9820336Z Updating files:  76% (7212/9489)
+2026-10-04T17:49:18.9938915Z Updating files:  77% (7307/9489)
+2026-10-04T17:49:19.0051514Z Updating files:  78% (7402/9489)
+2026-10-04T17:49:19.0160820Z Updating files:  79% (7497/9489)
+2026-10-04T17:49:19.0286537Z Updating files:  80% (7592/9489)
+2026-10-04T17:49:19.0415397Z Updating files:  81% (7687/9489)
+2026-10-04T17:49:19.0538363Z Updating files:  82% (7781/9489)
+2026-10-04T17:49:19.0661310Z Updating files:  83% (7876/9489)
+2026-10-04T17:49:19.0780635Z Updating files:  84% (7971/9489)
+2026-10-04T17:49:19.0912930Z Updating files:  85% (8066/9489)
+2026-10-04T17:49:19.1056796Z Updating files:  86% (8161/9489)
+2026-10-04T17:49:19.1301469Z Updating files:  87% (8256/9489)
+2026-10-04T17:49:19.1423472Z Updating files:  88% (8351/9489)
+2026-10-04T17:49:19.1561002Z Updating files:  89% (8446/9489)
+2026-10-04T17:49:19.1672935Z Updating files:  90% (8541/9489)
+2026-10-04T17:49:19.1812499Z Updating files:  91% (8635/9489)
+2026-10-04T17:49:19.1931218Z Updating files:  92% (8730/9489)
+2026-10-04T17:49:19.2057612Z Updating files:  93% (8825/9489)
+2026-10-04T17:49:19.2185678Z Updating files:  94% (8920/9489)
+2026-10-04T17:49:19.2293964Z Updating files:  95% (9015/9489)
+2026-10-04T17:49:19.2427223Z Updating files:  96% (9110/9489)
+2026-10-04T17:49:19.2544831Z Updating files:  97% (9205/9489)
+2026-10-04T17:49:19.2699556Z Updating files:  98% (9300/9489)
+2026-10-04T17:49:19.2827030Z Updating files:  99% (9395/9489)
+2026-10-04T17:49:19.2827972Z Updating files: 100% (9489/9489)
+2026-10-04T17:49:19.2828331Z Updating files: 100% (9489/9489), done.
+2026-10-04T17:49:19.3971319Z Switched to a new branch 'team-a/studio-windows-gif-provider-20261004'
+2026-10-04T17:49:19.4041754Z branch 'team-a/studio-windows-gif-provider-20261004' set up to track 'origin/team-a/studio-windows-gif-provider-20261004'.
+2026-10-04T17:49:19.4140384Z ##[endgroup]
+2026-10-04T17:49:19.4475857Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-04T17:49:19.4684954Z c22a80f41fdc584d890e84356256a03e8e3951af
+2026-10-04T17:49:19.4720377Z ##[group]Removing auth
+2026-10-04T17:49:19.4729605Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T17:49:19.4958168Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T17:49:19.9336627Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T17:49:19.9525513Z http.https://github.com/.extraheader
+2026-10-04T17:49:19.9564964Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-04T17:49:19.9784802Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T17:49:20.4193105Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T17:49:20.4422989Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T17:49:20.8871406Z ##[endgroup]
+2026-10-04T17:49:20.9138399Z ##[group]Run bash "9to1 Workspace/shared/eng/prepare-cui-source.sh"
+2026-10-04T17:49:20.9139123Z [36;1mbash "9to1 Workspace/shared/eng/prepare-cui-source.sh"[0m
+2026-10-04T17:49:20.9149715Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-10-04T17:49:20.9150146Z env:
+2026-10-04T17:49:20.9150425Z   AVALONIA_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:20.9150715Z   DOTNET_NOLOGO: 1
+2026-10-04T17:49:20.9151025Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:20.9151314Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T17:49:20.9151576Z ##[endgroup]
+2026-10-04T17:49:21.6962154Z Submodule 'framework/CUI/vendor/Avalonia/external/XamlX' (https://github.com/kekekeks/XamlX.git) registered for path 'framework/CUI/vendor/Avalonia/external/XamlX'
+2026-10-04T17:49:21.7249843Z Cloning into 'D:/a/9to1/9to1/framework/CUI/vendor/Avalonia/external/XamlX'...
+2026-10-04T17:49:22.5213088Z Submodule path 'framework/CUI/vendor/Avalonia/external/XamlX': checked out '009d4815470cf4bf71d1adbb633a5d81dcb2bb52'
+2026-10-04T17:49:23.0426660Z Submodule 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus' (https://github.com/AvaloniaUI/Avalonia.DBus.git) registered for path 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus'
+2026-10-04T17:49:23.0708119Z Cloning into 'D:/a/9to1/9to1/framework/CUI/vendor/Avalonia/external/Avalonia.DBus'...
+2026-10-04T17:49:23.9273607Z Submodule path 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus': checked out '864a05282841bf04006890f04d11d60d1a046aa9'
+2026-10-04T17:49:24.4829184Z Submodule '9to1 Workspace/Terminal/Source/libvterm' (https://github.com/CroakyJake12/libvterm.git) registered for path '9to1 Workspace/Terminal/Source/libvterm'
+2026-10-04T17:49:24.5087467Z Cloning into 'D:/a/9to1/9to1/9to1 Workspace/Terminal/Source/libvterm'...
+2026-10-04T17:49:25.5541195Z Submodule path '9to1 Workspace/Terminal/Source/libvterm': checked out '934bc2fbf21800ac3458a499df8820ca5fb45fd3'
+2026-10-04T17:49:25.6542029Z ##[group]Run actions/setup-dotnet@v4
+2026-10-04T17:49:25.6542425Z with:
+2026-10-04T17:49:25.6542750Z   global-json-file: global.json
+2026-10-04T17:49:25.6543051Z   cache: false
+2026-10-04T17:49:25.6543302Z env:
+2026-10-04T17:49:25.6543624Z   AVALONIA_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:25.6543899Z   DOTNET_NOLOGO: 1
+2026-10-04T17:49:25.6544187Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:25.6544484Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T17:49:25.6544756Z ##[endgroup]
+2026-10-04T17:49:25.8315695Z (node:6648) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-04T17:49:25.8316930Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-04T17:49:25.9071376Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v4\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Runtime dotnet -Channel LTS
+2026-10-04T17:49:27.5215884Z dotnet-install: .NET Core Runtime with version '10.0.12' is already installed.
+2026-10-04T17:49:27.6450616Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v4\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Channel 10.0
+2026-10-04T17:49:28.7446050Z dotnet-install: .NET Core SDK with version '10.0.401' is already installed.
+2026-10-04T17:49:28.8272892Z ##[group]Run & .github/scripts/windows-package-probe.ps1 -Target $env:PROBE_TARGET -OutputDirectory $env:PROBE_OUTPUT
+2026-10-04T17:49:28.8273858Z [36;1m& .github/scripts/windows-package-probe.ps1 -Target $env:PROBE_TARGET -OutputDirectory $env:PROBE_OUTPUT[0m
+2026-10-04T17:49:28.8274471Z [36;1mexit $LASTEXITCODE[0m
+2026-10-04T17:49:28.8309327Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-04T17:49:28.8309719Z env:
+2026-10-04T17:49:28.8309990Z   AVALONIA_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:28.8310300Z   DOTNET_NOLOGO: 1
+2026-10-04T17:49:28.8310569Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:28.8310863Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T17:49:28.8311149Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-04T17:49:28.8311447Z   PROBE_TARGET: studio
+2026-10-04T17:49:28.8311793Z   PROBE_OUTPUT: D:\a\_temp/windows-probe-37221887666-1-studio
+2026-10-04T17:49:28.8312192Z ##[endgroup]
+2026-10-04T17:49:29.4623424Z [31;1mException: [0mD:\a\_temp\216b8255-5113-4955-abc5-ef9d89ce78d5.ps1:2[0m
+2026-10-04T17:49:29.4624241Z [31;1m[0m[36;1mLine |[0m
+2026-10-04T17:49:29.4625134Z [31;1m[0m[36;1m[36;1m   2 | [0m [36;1m& .github/scripts/windows-package-probe.ps1 -Target $env:PROBE_TARGET[0m …[0m
+2026-10-04T17:49:29.4626274Z [31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+2026-10-04T17:49:29.4627167Z [31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mUndeclared source change: 9to1 Workspace/Picture/Core/HavenOS.Images.Core.csproj[0m
+2026-10-04T17:49:29.4831887Z ##[group]Actual public synthetic Windows probe result (unaccepted)
+2026-10-04T17:49:29.4838528Z {
+2026-10-04T17:49:29.4839074Z   "schemaVersion": 1,
+2026-10-04T17:49:29.4839578Z   "target": "studio",
+2026-10-04T17:49:29.4840085Z   "sourceBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+2026-10-04T17:49:29.4840818Z   "nativeSourceProposals": [
+2026-10-04T17:49:29.4841189Z     {
+2026-10-04T17:49:29.4841505Z       "productGroup": "Boards",
+2026-10-04T17:49:29.4842043Z       "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+2026-10-04T17:49:29.4842617Z       "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+2026-10-04T17:49:29.4843186Z       "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+2026-10-04T17:49:29.4843783Z       "originalSha256": "0c42bb60ad89b6bab827ef39420bcc33766a63171efca34fb94d7b94ff874de7",
+2026-10-04T17:49:29.4844363Z       "originalGitBlob": "5d065c22ac7a71396d89405e6dfb8faa6472ccbc",
+2026-10-04T17:49:29.4844938Z       "provisionalSha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145",
+2026-10-04T17:49:29.4845509Z       "provisionalGitBlob": "5068f35d120c528c90671804f34b9f2a61075067",
+2026-10-04T17:49:29.4846294Z       "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+2026-10-04T17:49:29.4847198Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4847739Z     },
+2026-10-04T17:49:29.4848005Z     {
+2026-10-04T17:49:29.4848277Z       "productGroup": "Boards",
+2026-10-04T17:49:29.4848730Z       "path": "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+2026-10-04T17:49:29.4849291Z       "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+2026-10-04T17:49:29.4849855Z       "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+2026-10-04T17:49:29.4850329Z       "originalSha256": null,
+2026-10-04T17:49:29.4850639Z       "originalGitBlob": null,
+2026-10-04T17:49:29.4851125Z       "provisionalSha256": "5c516cf8d8a197823bae8213ab3676b445b4a8096f614019969af8c446cf0dba",
+2026-10-04T17:49:29.4851708Z       "provisionalGitBlob": "b9a77117d08bcb8bcac41fd46ce5d5c1c53adff7",
+2026-10-04T17:49:29.4854645Z       "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+2026-10-04T17:49:29.4855652Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4856217Z     },
+2026-10-04T17:49:29.4856532Z     {
+2026-10-04T17:49:29.4856782Z       "productGroup": "Boards",
+2026-10-04T17:49:29.4857152Z       "path": "eng/release-validation/boards-startup/Program.cs",
+2026-10-04T17:49:29.4857667Z       "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+2026-10-04T17:49:29.4858238Z       "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+2026-10-04T17:49:29.4858654Z       "originalSha256": null,
+2026-10-04T17:49:29.4858974Z       "originalGitBlob": null,
+2026-10-04T17:49:29.4859464Z       "provisionalSha256": "ade449b48deec78348591c1080452574e46fd23b453f450c9f5780ffccb13e03",
+2026-10-04T17:49:29.4860075Z       "provisionalGitBlob": "c0fd2b7e6173b8029d92e5379c26b03702410fdd",
+2026-10-04T17:49:29.4860791Z       "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+2026-10-04T17:49:29.4861705Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4862696Z     },
+2026-10-04T17:49:29.4862950Z     {
+2026-10-04T17:49:29.4863210Z       "productGroup": "Boards",
+2026-10-04T17:49:29.4863574Z       "path": "eng/release-validation/boards-startup/README.md",
+2026-10-04T17:49:29.4864062Z       "reviewedProposalCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+2026-10-04T17:49:29.4864574Z       "appliedProposalCommit": "fcf01cf812cea4940d77124f39c41e4dbce791f6",
+2026-10-04T17:49:29.4865023Z       "originalSha256": null,
+2026-10-04T17:49:29.4865370Z       "originalGitBlob": null,
+2026-10-04T17:49:29.4865818Z       "provisionalSha256": "9d60a9e406a43c8b3179e67e8544ab9e893272fb88b29c397ee4d3e1f50a0053",
+2026-10-04T17:49:29.4866345Z       "provisionalGitBlob": "3e165a7531d1fc23174ebfddc43e491d09c161d0",
+2026-10-04T17:49:29.4867103Z       "change": "Guard only absent default primary and backup through existing canonical creation; preserve existing/backup/open/error behavior.",
+2026-10-04T17:49:29.4867938Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4868483Z     },
+2026-10-04T17:49:29.4868709Z     {
+2026-10-04T17:49:29.4868947Z       "productGroup": "Present",
+2026-10-04T17:49:29.4869323Z       "path": "9to1 Workspace/Present/PresentApplication.cs",
+2026-10-04T17:49:29.4869804Z       "reviewedProposalCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+2026-10-04T17:49:29.4870339Z       "appliedProposalCommit": "b0eb0c9d75f8702911f022e515d295b9b4cc1deb",
+2026-10-04T17:49:29.4870891Z       "originalSha256": "97cdc60168d9dfbfe563f63988153edb3a92ce59715cf5c0de0ff9c4aa7786cc",
+2026-10-04T17:49:29.4871447Z       "originalGitBlob": "8b168e23b5afbd89f9c4e95fcb7f41145b5b5667",
+2026-10-04T17:49:29.4872000Z       "provisionalSha256": "3fbaa1362401b866a8120e2809c1570d64438570a2716561cc1224a6cbd56c09",
+2026-10-04T17:49:29.4872548Z       "provisionalGitBlob": "8c883b1d3c5628597bf55570a454fe505b4b80b5",
+2026-10-04T17:49:29.4874373Z       "change": "Include existing canonical native semantic theme; preserve theme/accent/font selection; test actual bundled glyph and real four-appearance/two-width render frames.",
+2026-10-04T17:49:29.4875340Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4875895Z     },
+2026-10-04T17:49:29.4876149Z     {
+2026-10-04T17:49:29.4876454Z       "productGroup": "Present",
+2026-10-04T17:49:29.4876846Z       "path": "9to1 Workspace/Present/Tests/PresentThemeBootstrapTests.cs",
+2026-10-04T17:49:29.4877344Z       "reviewedProposalCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+2026-10-04T17:49:29.4878494Z       "appliedProposalCommit": "b0eb0c9d75f8702911f022e515d295b9b4cc1deb",
+2026-10-04T17:49:29.4878895Z       "originalSha256": null,
+2026-10-04T17:49:29.4879192Z       "originalGitBlob": null,
+2026-10-04T17:49:29.4879660Z       "provisionalSha256": "800f809d3fcde9d36d8e88824794a0dc852fb6c8de015f44f50efc28318707a4",
+2026-10-04T17:49:29.4880256Z       "provisionalGitBlob": "cb1c4603fa8aadaa415ed6f4cc45d354e4464ec0",
+2026-10-04T17:49:29.4881055Z       "change": "Include existing canonical native semantic theme; preserve theme/accent/font selection; test actual bundled glyph and real four-appearance/two-width render frames.",
+2026-10-04T17:49:29.4881993Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4882499Z     },
+2026-10-04T17:49:29.4882705Z     {
+2026-10-04T17:49:29.4882968Z       "productGroup": "Present",
+2026-10-04T17:49:29.4883365Z       "path": "9to1 Workspace/Present/Tests/TestAppBuilder.cs",
+2026-10-04T17:49:29.4883815Z       "reviewedProposalCommit": "6ba9726e5756e38ced9dba20f5a373b7e0349f2f",
+2026-10-04T17:49:29.4884306Z       "appliedProposalCommit": "b0eb0c9d75f8702911f022e515d295b9b4cc1deb",
+2026-10-04T17:49:29.4884821Z       "originalSha256": "0ee1856a4e908fbb15ce043805efa18a194791250f8c3d00241ceecf012b676f",
+2026-10-04T17:49:29.4885473Z       "originalGitBlob": "eeb2e570445bc27bb92255a2f2d4650e80dd5f91",
+2026-10-04T17:49:29.4885979Z       "provisionalSha256": "c5f2b22249b501edddb03b40d4a89692e69af61f613453df292a02c1ede51080",
+2026-10-04T17:49:29.4886500Z       "provisionalGitBlob": "69afa9c2be8c0b16524fe8204fd51508da1810eb",
+2026-10-04T17:49:29.4887323Z       "change": "Include existing canonical native semantic theme; preserve theme/accent/font selection; test actual bundled glyph and real four-appearance/two-width render frames.",
+2026-10-04T17:49:29.4888216Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4888740Z     },
+2026-10-04T17:49:29.4888961Z     {
+2026-10-04T17:49:29.4889208Z       "productGroup": "AI Studio",
+2026-10-04T17:49:29.4889601Z       "path": "9to1 Workspace/Studio/HavenOS.Studio/StudioNativeWindow.cs",
+2026-10-04T17:49:29.4890104Z       "reviewedProposalCommit": "a0be9e297f457b7576568b7f1a11b1cefca46e9f",
+2026-10-04T17:49:29.4890587Z       "appliedProposalCommit": "05ed3ec094d9d7be069e837896b5ed0c81089a7e",
+2026-10-04T17:49:29.4891143Z       "originalSha256": "dd832f6a21680219e4af08c5217382592828ebdd9220a3b3671352af31ba541f",
+2026-10-04T17:49:29.4891651Z       "originalGitBlob": "4a9b4b5347dddf3ff880b830e7e8ca97f47bb4ef",
+2026-10-04T17:49:29.4892229Z       "provisionalSha256": "fc0bc6f5d49e75d46f8e3400deef41cef9ad195adeab82337dcfc0ec2a4398ba",
+2026-10-04T17:49:29.4892773Z       "provisionalGitBlob": "06ec540eb78bc4490b8cfc9acc86e849ebe9ebe6",
+2026-10-04T17:49:29.4893578Z       "change": "Marshal native editor detachment/host disposal and later model reset to existing UI thread; retain preview/provider/lifetime ordering; actual background Den-disposal control.",
+2026-10-04T17:49:29.4894521Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4895061Z     },
+2026-10-04T17:49:29.4895287Z     {
+2026-10-04T17:49:29.4895528Z       "productGroup": "AI Studio",
+2026-10-04T17:49:29.4895976Z       "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioNativeHostTests.cs",
+2026-10-04T17:49:29.4896805Z       "reviewedProposalCommit": "a0be9e297f457b7576568b7f1a11b1cefca46e9f",
+2026-10-04T17:49:29.4897301Z       "appliedProposalCommit": "05ed3ec094d9d7be069e837896b5ed0c81089a7e",
+2026-10-04T17:49:29.4897909Z       "originalSha256": "4121d6213bd0c4260698fcfba1b091c0f7b3524b0fda655d38b65dd08b132e9a",
+2026-10-04T17:49:29.4898460Z       "originalGitBlob": "eec6342f44bab7c6e2f884d14ff7e0e110543e3b",
+2026-10-04T17:49:29.4899238Z       "provisionalSha256": "fee818109f0d51153cdc0afbd5536ad93255208273c2c7a0a2ec05345341cea2",
+2026-10-04T17:49:29.4899831Z       "provisionalGitBlob": "2a8d977a9d24df4fc7213357556de39ee67c3401",
+2026-10-04T17:49:29.4900645Z       "change": "Marshal native editor detachment/host disposal and later model reset to existing UI thread; retain preview/provider/lifetime ordering; actual background Den-disposal control.",
+2026-10-04T17:49:29.4901596Z       "ownerAdoption": "NOT_ADOPTED; isolated provisional proposal; source/functional review required before root push"
+2026-10-04T17:49:29.4902096Z     }
+2026-10-04T17:49:29.4902315Z   ],
+2026-10-04T17:49:29.4902615Z   "generatedAtUtc": "2026-10-04T17:49:29.2132607+00:00",
+2026-10-04T17:49:29.4902998Z   "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+2026-10-04T17:49:29.4903329Z   "stage": "preflight",
+2026-10-04T17:49:29.4903595Z   "package": null,
+2026-10-04T17:49:29.4903849Z   "files": [],
+2026-10-04T17:49:29.4904110Z   "commands": [],
+2026-10-04T17:49:29.4904373Z   "nativeControls": null,
+2026-10-04T17:49:29.4904679Z   "extractionVerified": false,
+2026-10-04T17:49:29.4904991Z   "launch": null,
+2026-10-04T17:49:29.4905252Z   "acceptanceVerified": false,
+2026-10-04T17:49:29.4905621Z   "fullAppAcceptance": "NOT_RUN",
+2026-10-04T17:49:29.4905962Z   "homeBootstrapAndCompatibility": "NOT_RUN",
+2026-10-04T17:49:29.4906418Z   "pcDelivery": "NOT_RUN",
+2026-10-04T17:49:29.4907109Z   "qualification": "Existing graphical executable only; no approved installed package/AppID/version/Home service tuple, donor bundle, signing or full app acceptance supplied.",
+2026-10-04T17:49:29.4908153Z   "cleanProfileQualification": "Disposable hosted runner account; SDK exists on runner. This is not a no-SDK clean-install or full GUI acceptance test.",
+2026-10-04T17:49:29.4908797Z   "failure": {
+2026-10-04T17:49:29.4909128Z     "type": "System.Management.Automation.RuntimeException",
+2026-10-04T17:49:29.4909707Z     "message": "Undeclared source change: 9to1 Workspace/Picture/Core/HavenOS.Images.Core.csproj"
+2026-10-04T17:49:29.4910175Z   },
+2026-10-04T17:49:29.4910505Z   "windowsVersion": "Microsoft Windows NT 10.0.20348.0",
+2026-10-04T17:49:29.4910884Z   "architecture": "win-x64",
+2026-10-04T17:49:29.4911163Z   "runnerImage": "20260927.320.1",
+2026-10-04T17:49:29.4911525Z   "workflowCommit": "c22a80f41fdc584d890e84356256a03e8e3951af"
+2026-10-04T17:49:29.4911881Z }
+2026-10-04T17:49:29.4912424Z ##[endgroup]
+2026-10-04T17:49:29.5294686Z ##[error]Process completed with exit code 1.
+2026-10-04T17:49:29.5449758Z ##[group]Run actions/upload-artifact@v4
+2026-10-04T17:49:29.5450128Z with:
+2026-10-04T17:49:29.5450553Z   name: windows-observation-studio-c22a80f41fdc584d890e84356256a03e8e3951af-1
+2026-10-04T17:49:29.5451445Z   path: D:\a\_temp/windows-probe-37221887666-1-studio/*.json
+D:\a\_temp/windows-probe-37221887666-1-studio/*.log
+D:\a\_temp/windows-probe-37221887666-1-studio/*.trx
+
+2026-10-04T17:49:29.5452115Z   if-no-files-found: warn
+2026-10-04T17:49:29.5452420Z   retention-days: 7
+2026-10-04T17:49:29.5452685Z   compression-level: 6
+2026-10-04T17:49:29.5452993Z   overwrite: false
+2026-10-04T17:49:29.5453259Z   include-hidden-files: false
+2026-10-04T17:49:29.5453534Z env:
+2026-10-04T17:49:29.5453788Z   AVALONIA_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:29.5454078Z   DOTNET_NOLOGO: 1
+2026-10-04T17:49:29.5454364Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:29.5454656Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T17:49:29.5454945Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-04T17:49:29.5455365Z ##[endgroup]
+2026-10-04T17:49:29.7346045Z (node:1344) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-04T17:49:29.7346810Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-04T17:49:29.7417521Z With the provided path, there will be 1 file uploaded
+2026-10-04T17:49:29.7423459Z Artifact name is valid!
+2026-10-04T17:49:29.7426072Z Root directory input is valid!
+2026-10-04T17:49:30.0646561Z Beginning upload of artifact content to blob storage
+2026-10-04T17:49:30.0816401Z (node:1344) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-04T17:49:30.2844628Z Uploaded bytes 2664
+2026-10-04T17:49:30.3426402Z Finished uploading artifact content to blob storage!
+2026-10-04T17:49:30.3427644Z SHA256 digest of uploaded artifact zip is 79f586764876c6f8e391a8de73f9ec562bd07eed251a4c44f776a2a4e95294ed
+2026-10-04T17:49:30.3429652Z Finalizing artifact upload
+2026-10-04T17:49:30.5889566Z Artifact windows-observation-studio-c22a80f41fdc584d890e84356256a03e8e3951af-1.zip successfully finalized. Artifact ID 11310462076
+2026-10-04T17:49:30.5891550Z Artifact windows-observation-studio-c22a80f41fdc584d890e84356256a03e8e3951af-1 has been successfully uploaded! Final size is 2664 bytes. Artifact ID is 11310462076
+2026-10-04T17:49:30.5901307Z Artifact download URL: https://github.com/CroakyJake12/9to1/actions/runs/37221887666/artifacts/11310462076
+2026-10-04T17:49:30.6178725Z ##[group]Run actions/upload-artifact@v4
+2026-10-04T17:49:30.6179212Z with:
+2026-10-04T17:49:30.6179672Z   name: windows-unaccepted-studio-c22a80f41fdc584d890e84356256a03e8e3951af-1
+2026-10-04T17:49:30.6180384Z   path: D:\a\_temp/windows-probe-37221887666-1-studio/*.zip
+2026-10-04T17:49:30.6180776Z   include-hidden-files: true
+2026-10-04T17:49:30.6181145Z   if-no-files-found: warn
+2026-10-04T17:49:30.6181512Z   retention-days: 7
+2026-10-04T17:49:30.6181955Z   compression-level: 6
+2026-10-04T17:49:30.6182219Z   overwrite: false
+2026-10-04T17:49:30.6182471Z env:
+2026-10-04T17:49:30.6182754Z   AVALONIA_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:30.6183038Z   DOTNET_NOLOGO: 1
+2026-10-04T17:49:30.6183316Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-10-04T17:49:30.6183612Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T17:49:30.6183935Z   DOTNET_ROOT: C:\Program Files\dotnet
+2026-10-04T17:49:30.6184238Z ##[endgroup]
+2026-10-04T17:49:30.8045845Z (node:6536) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-04T17:49:30.8046605Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-04T17:49:30.8116546Z ##[warning]No files were found with the provided path: D:\a\_temp/windows-probe-37221887666-1-studio/*.zip. No artifacts will be uploaded.
+2026-10-04T17:49:30.8401031Z Post job cleanup.
+2026-10-04T17:49:31.0111470Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T17:49:31.0334753Z git version 2.55.0.windows.5
+2026-10-04T17:49:31.0393556Z Copying 'C:\Users\runneradmin\.gitconfig' to 'D:\a\_temp\86e91df9-009f-4c86-b568-59c023a2837b\.gitconfig'
+2026-10-04T17:49:31.0414751Z Temporarily overriding HOME='D:\a\_temp\86e91df9-009f-4c86-b568-59c023a2837b' before making global git config changes
+2026-10-04T17:49:31.0416134Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T17:49:31.0429996Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\9to1\9to1
+2026-10-04T17:49:31.0671148Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T17:49:31.0903193Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T17:49:31.5479345Z Entering '9to1 Workspace/Terminal/Source/libvterm'
+2026-10-04T17:49:31.6126868Z Entering 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus'
+2026-10-04T17:49:31.6755087Z Entering 'framework/CUI/vendor/Avalonia/external/XamlX'
+2026-10-04T17:49:31.7447339Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T17:49:31.7674450Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T17:49:32.2405319Z Entering '9to1 Workspace/Terminal/Source/libvterm'
+2026-10-04T17:49:32.3054830Z Entering 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus'
+2026-10-04T17:49:32.3686916Z Entering 'framework/CUI/vendor/Avalonia/external/XamlX'
+2026-10-04T17:49:32.4385731Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T17:49:32.4612481Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T17:49:32.9304754Z Entering '9to1 Workspace/Terminal/Source/libvterm'
+2026-10-04T17:49:32.9575076Z file:D:/a/9to1/9to1/.git/modules/9to1 Workspace/Terminal/Source/libvterm/config	remote.origin.url
+2026-10-04T17:49:32.9710614Z Entering 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus'
+2026-10-04T17:49:32.9980021Z file:D:/a/9to1/9to1/.git/modules/framework/CUI/vendor/Avalonia/external/Avalonia.DBus/config	remote.origin.url
+2026-10-04T17:49:33.0108387Z Entering 'framework/CUI/vendor/Avalonia/external/XamlX'
+2026-10-04T17:49:33.0371348Z file:D:/a/9to1/9to1/.git/modules/framework/CUI/vendor/Avalonia/external/XamlX/config	remote.origin.url
+2026-10-04T17:49:33.0576219Z [command]"C:\Program Files\Git\bin\git.exe" config --file "D:/a/9to1/9to1/.git/modules/9to1 Workspace/Terminal/Source/libvterm/config" --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T17:49:33.0803634Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:/a/9to1/9to1/.git/modules/framework/CUI/vendor/Avalonia/external/Avalonia.DBus/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T17:49:33.1029168Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:/a/9to1/9to1/.git/modules/framework/CUI/vendor/Avalonia/external/XamlX/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T17:49:33.1440916Z Cleaning up orphan processes
+2026-10-04T17:49:33.1874228Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-dotnet@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

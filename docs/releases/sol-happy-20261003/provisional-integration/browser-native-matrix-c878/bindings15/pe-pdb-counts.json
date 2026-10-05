@@ -1,0 +1,13 @@
+{
+  "peCount": 15,
+  "portablePdbCount": 9,
+  "pdbCount": 9,
+  "entryDLL": {
+    "path": "bin/BrowserAccounts.Tests/release_linux-x64/BrowserAccounts.Tests.dll",
+    "sha256": "2ccc320cbd125c060afd7d0eebee95cf80c7c298046fe4d2dc49a392e4e7f119"
+  },
+  "apphost": {
+    "path": "bin/BrowserAccounts.Tests/release_linux-x64/BrowserAccounts.Tests",
+    "sha256": "ec2b0a400b057585bcc93cae05230de7a55d9d713fb00386847d0aa54527d701"
+  }
+}

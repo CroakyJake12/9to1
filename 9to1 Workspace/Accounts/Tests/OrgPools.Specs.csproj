@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup><Compile Include="OrgPoolsProgram.cs"/><ProjectReference Include="../NineToOne.Accounts.csproj"/></ItemGroup>
+</Project>

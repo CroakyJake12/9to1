@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -11,6 +12,7 @@ using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.CUI.DevTools;
+using HavenOS.Home;
 using Xunit;
 
 namespace AvaloniaHome.Tests;
@@ -64,7 +66,7 @@ public sealed class HomeHostRenderTests
                 Assert.Equal("True", accessibility.States["Enabled"]);
                 var source = Assert.IsType<CuiAuthoredControlTrace>(inspection.GetSource(inspectedSettings.ElementId));
                 Assert.EndsWith("Home.cui", source.Source.FilePath, StringComparison.OrdinalIgnoreCase);
-                Assert.Equal(20, source.Source.Span.StartLine);
+                Assert.Equal(19, source.Source.Span.StartLine);
                 Assert.Equal("Button", source.ComponentType);
                 Assert.Equal("nav-settings", source.AuthoredId);
                 var action = Assert.Single(inspection.GetActions(inspectedSettings.ElementId));
@@ -101,8 +103,13 @@ public sealed class HomeHostRenderTests
 
                 var settings = Assert.Single(controls.OfType<Button>(), control => control.Name == "nav-settings");
                 settings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                Dispatcher.UIThread.RunJobs();
-                var operationStatus = Assert.Single(controls.OfType<TextBlock>(), control => control.Name == "operation-status");
+                var operationStatus = Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(), control => control.Name == "operation-status");
+                Assert.True(SpinWait.SpinUntil(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    operationStatus = Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(), control => control.Name == "operation-status");
+                    return operationStatus.Text?.Contains("not connected", StringComparison.OrdinalIgnoreCase) == true;
+                }, TimeSpan.FromSeconds(10)), "The original Home action did not project its completed status.");
                 Assert.Contains("not connected", operationStatus.Text, StringComparison.OrdinalIgnoreCase);
                 var updated = Assert.IsType<CuiLiveTreeInspector>(Assert.IsType<HomeApp>(Application.Current).CaptureDiagnostics(window));
                 var operationId = Assert.Single(updated.Tree.Search("operation-status")).ElementId;
@@ -110,7 +117,7 @@ public sealed class HomeHostRenderTests
 
                 // Exercise missing and faulted binding observations against the actual Home document.
                 var fallbackLoader = new CuiControlLoader();
-                fallbackLoader.SetBindingContext(new CuiViewModel());
+                fallbackLoader.SetBindingContext(CreateRouteOnlyBindingContext());
                 var (fallbackRoot, fallbackDiagnostics) = fallbackLoader.LoadFile(path);
                 Assert.Empty(fallbackDiagnostics);
                 var fallbackInspection = CuiLiveTreeInspector.Capture(Assert.IsType<StackPanel>(fallbackRoot), fallbackLoader);
@@ -163,10 +170,23 @@ public sealed class HomeHostRenderTests
         }
     }
 
+    private static CuiViewModel CreateRouteOnlyBindingContext()
+    {
+        var routes = HomeCuiSurface.LoadDefault();
+        var context = new CuiViewModel();
+        context.Set(nameof(HomeCuiSurface.IsDashboard), routes.IsDashboard);
+        context.Set(nameof(HomeCuiSurface.IsLibrary), routes.IsLibrary);
+        context.Set(nameof(HomeCuiSurface.IsEvents), routes.IsEvents);
+        return context;
+    }
+
     private sealed class FaultyHomeBindingContext : CakeOS.Cui.ICuiBindingContext
     {
+        private readonly CuiViewModel _routes = CreateRouteOnlyBindingContext();
+
         public bool TryGetValue(string path, out object? value)
         {
+            if (_routes.TryGetValue(path, out value)) return true;
             value = null;
             if (path == "CatalogSummary") throw new InvalidOperationException("Catalog unavailable");
             return false;

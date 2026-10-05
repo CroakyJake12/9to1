@@ -1,0 +1,67 @@
+{
+  "Properties": {
+    "TargetPath": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts/bin/CakeOS.Cui.Language/release_linux-x64/CakeOS.Cui.Language.dll",
+    "TargetDir": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/mail72/artifacts/bin/CakeOS.Cui.Language/release_linux-x64/",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "IsTestProject": ""
+  },
+  "Items": {
+    "Compile": [
+      {
+        "Identity": "CuiDiagnostics.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Language/CuiDiagnostics.cs",
+        "RootDir": "/",
+        "Filename": "CuiDiagnostics",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Language/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiProjectItems.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Language/CuiProjectItems.cs",
+        "RootDir": "/",
+        "Filename": "CuiProjectItems",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Language/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiSource.cs",
+        "FullPath": "/workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Language/CuiSource.cs",
+        "RootDir": "/",
+        "Filename": "CuiSource",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/Language/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      }
+    ],
+    "EmbeddedResource": [],
+    "Content": [],
+    "AdditionalFiles": []
+  }
+}

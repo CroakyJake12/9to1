@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "status": "FAILED_OR_BLOCKED_UNACCEPTED",
+  "stage": "preflight",
+  "checks": [
+    {
+      "name": "Actual Windows x64 PowerShell host",
+      "passed": false,
+      "observedAtUtc": "2026-10-04T14:41:47.8655968+00:00"
+    }
+  ],
+  "launches": [],
+  "screenshots": [],
+  "streamDrains": [],
+  "producerRunId": 37208129079,
+  "producerCommit": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "originalArtifacts": [
+    {
+      "id": 11305252552,
+      "name": "windows-unaccepted-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 78087570,
+      "digest": "sha256:97012e4592d4c0f5da14bedd1ac13b5a6b1988bd292b2e990bccd3cdec30d68f"
+    },
+    {
+      "id": 11305292433,
+      "name": "windows-observation-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1",
+      "bytes": 34079,
+      "digest": "sha256:7645fdba070177fd1319112030a11242eacfc5000b8cabb553b0e9f16938b234"
+    }
+  ],
+  "package": {
+    "file": "boards-win-x64-unaccepted.zip",
+    "bytes": 78324943,
+    "sha256": "135a0db51f410422ab275fea7854253aa4595aa9f78dc11e425bd467efab2f64"
+  },
+  "packageHashVerified": false,
+  "manifestHashVerified": false,
+  "extractedFilesVerified": false,
+  "forcedCleanup": false,
+  "acceptanceVerified": false,
+  "fullAppAcceptance": "NOT_RUN",
+  "installedHomeTuple": "NOT_RUN",
+  "cleanPcDelivery": "NOT_RUN",
+  "failure": {
+    "type": "System.Management.Automation.RuntimeException",
+    "message": "Actual Windows x64 PowerShell host"
+  },
+  "qualification": "Actual immutable packaged executable on a disposable SDK-present hosted Windows runner. Bounded native UI, keyboard and persistence controls only; no Home installed tuple, signing, donor matrix, Android, clean-PC or full-app acceptance."
+}

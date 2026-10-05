@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="65df15a7-a9c4-4b53-9e9f-0d69cb42ca66" name="@0209ad767592 2026-10-04 13:36:30" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T13:36:30.5224206+00:00" queuing="2026-10-04T13:36:30.5224206+00:00" start="2026-10-04T13:36:29.7406869+00:00" finish="2026-10-04T13:36:30.5265411+00:00" />
+  <TestSettings name="default" id="ed861fe2-c582-453b-b5b5-02983d9f6013">
+    <Deployment runDeploymentRoot="_0209ad767592_2026-10-04_13_36_30" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="1ac67181-983d-42f9-91fb-dc0d5d203d65" testId="98ddff1e-45df-5f86-4f77-4062889cec2e" testName="Haven.Infrastructure.Tests.Worker02BackgroundLearningTests.Knowledge_schema_migrates_existing_records_without_losing_metadata" computerName="0209ad767592" duration="00:00:00.1268192" startTime="2026-10-04T13:36:30.2853254+00:00" endTime="2026-10-04T13:36:30.4180203+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1ac67181-983d-42f9-91fb-dc0d5d203d65" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Haven.Infrastructure.Tests.Worker02BackgroundLearningTests.Knowledge_schema_migrates_existing_records_without_losing_metadata" storage="/workspace/team-c-c6-durable-validation-20261004/sqlite-legacy-fixture/artifacts/bin/haven.infrastructure.tests/release/haven.infrastructure.tests.dll" id="98ddff1e-45df-5f86-4f77-4062889cec2e">
+      <Execution id="1ac67181-983d-42f9-91fb-dc0d5d203d65" />
+      <TestMethod codeBase="/workspace/team-c-c6-durable-validation-20261004/sqlite-legacy-fixture/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.Worker02BackgroundLearningTests" name="Knowledge_schema_migrates_existing_records_without_losing_metadata" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="98ddff1e-45df-5f86-4f77-4062889cec2e" executionId="1ac67181-983d-42f9-91fb-dc0d5d203d65" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="1" executed="1" passed="1" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.09]   Discovering: Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.16]   Discovered:  Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.18]   Starting:    Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.34]   Finished:    Haven.Infrastructure.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

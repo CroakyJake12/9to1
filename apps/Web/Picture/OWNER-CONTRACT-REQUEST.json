@@ -1,0 +1,124 @@
+{
+  "requestId": "team-b-b3-picture-preserve-raw-xmp-gps-20261003",
+  "requestedOwner": "A2 canonical Picture owner",
+  "status": "ACTUAL_NATIVE_SOURCE_QUALIFIED_RED",
+  "problem": "PictureCropService ExportPng(...,Preserve) loses actual persisted original XMP GPS while retaining non-location metadata. Original source unchanged; no fake provider or alternative renderer.",
+  "canonical": {
+    "snapshotPath": "/workspace/team-b-evidence/sol-happy-20261003/continuation/source/live-2137.json",
+    "snapshotSha256": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+    "retrievedUTC": "2026-10-03 21:35:45 UTC",
+    "revisionId": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+    "paragraphCount": 8534,
+    "paragraphs": [
+      {
+        "text": "Picture's Info/Metadata view exposes available dimensions, format, file size, colour profile, capture date, camera/lens/exposure details, orientation, location and other supported EXIF/IPTC/XMP metadata. Unknown metadata should be preserved through non-destructive round trips where possible.",
+        "startIndex": 621015,
+        "endIndex": 621307,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false
+      },
+      {
+        "text": "Export/privacy controls MUST support preserving metadata, removing location metadata and removing all removable metadata where the target format supports it.",
+        "startIndex": 621308,
+        "endIndex": 621465,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false
+      },
+      {
+        "text": "Export options include size/resolution, format/compression/quality, transparency/background, colour profile, metadata/privacy and applicable animation/vector options.",
+        "startIndex": 622035,
+        "endIndex": 622201,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false
+      },
+      {
+        "text": "A failed edit/generation/export leaves the prior valid document revision intact. Unsupported export features are reported before destructive flattening/conversion.",
+        "startIndex": 628981,
+        "endIndex": 629144,
+        "tabId": "t.0",
+        "namedStyleType": "NORMAL_TEXT",
+        "isListItem": false
+      }
+    ]
+  },
+  "reproducer": {
+    "fixture": "OwnerEvidence/gps-preserve-run05/fixture",
+    "originalFixture05SHA256": "48c737af9d6b5ff833719fb81925ada4ff006a1acc2e410e7c9509a634dc45ad",
+    "qualifiedOriginalCoordinates": {
+      "latitude": "51.5",
+      "longitude": "-0.12",
+      "altitude": "24",
+      "tolerance": null
+    },
+    "originalSourceSha256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297",
+    "actualSourceGPS": {
+      "GPSLatitude": "51,30N",
+      "GPSLongitude": "0,7.2W",
+      "GPSAltitude": "24/1",
+      "GPSAltitudeRef": "0"
+    },
+    "actualPreserveGPS": {},
+    "run05": {
+      "passed": 3,
+      "failed": 1,
+      "notRun": 4,
+      "assertions": 12,
+      "exit": 1
+    },
+    "independentContinuation06": {
+      "passed": 7,
+      "failed": 1,
+      "notRun": 0,
+      "assertions": 25,
+      "exit": 1,
+      "metadataModes": {
+        "Preserve": "FAIL",
+        "RemoveLocation": "PASS",
+        "RemoveAll": "PASS"
+      }
+    },
+    "independentNativePixelChecks": {
+      "assertions": 67,
+      "status": "PASS",
+      "exit": 0
+    },
+    "controlledClose": {
+      "cases": 8,
+      "assertions": 43,
+      "status": "PASS",
+      "exit": 0,
+      "qualification": "Console session/canonical codec/native Bitmap controlled boundary; no browser or real IndexedDB/provider acceptance."
+    },
+    "actualFixtureBinaryQualification": "Transport includes actual compiled run06 fixture binary and portable owner engine/package; initial05 source/custody/receipts remain separate. Does not claim run06 fixture binary is original05."
+  },
+  "sourceCause": {
+    "ownerFile": "9to1 Workspace/Picture/PictureCropService.cs",
+    "ownerSha256": "efb2f1e0bf47c10fed6a27088e82ccd9949f4ae49aa706ddf7ef872d7bfe8a6b",
+    "line": 83,
+    "call": "renderedImage.CopyFrom(sourceImage)",
+    "actualTagLib": "TagLibSharp2.3.0/netstandard2.0",
+    "packageMatchedReleaseCommit": "b5ae84f2e84087bf160bb0471420200dd2b5d809",
+    "pdbMatch": "All15 selected Image/Png/Xmp documents match exact portable PDB SHA256 after LF\u2192CRLF conversion.",
+    "libraryCopyFrom": "Image/File.cs208 reflection-copies only typed ImageTag properties.",
+    "unsupportedTypedGps": "Xmp/XmpTag.cs1196/1209/1222 typed getters returnnull; setters empty. Actual numeric nodes persist and rawPNGCRC/namespace readback passes."
+  },
+  "requestedOutcome": "Owner repair existing canonical metadata transfer so Preserve retains supported original raw XMP metadata including GPS through native PNG export; keep strict privacy removal/source-integrity/pixel/refusal semantics. Provide unchanged public API or explicitly reviewed actual portable owner seam and source delivery. No B-owned algorithm fork or parallel model authorized.",
+  "limits": [
+    "Initial run01-04 GPS typed-getter/preflight failures preserved as fixture incompatibilities; not relabeled product regressions.",
+    "Run05/06 actual qualified rawGPSloss is the required owner case; no claim other metadata branches fail.",
+    "Native portable model subset plus actual renderer, not full Picture build, browser/local persistence/Files/crossclient/full donor acceptance.",
+    "Binary rebuild differences in before/after receipts retained; source owner bytehashes unchanged.",
+    "CompressedXMP, binaryEXIFGPS, other coordinate forms/formats and full privacy parity remain outstanding.",
+    "Close run01 runtime harness hang exit143 preserved with unknown incomplete counts; test-only console context repair run02 PASS qualified."
+  ],
+  "transport": {
+    "root": "apps/Web/Picture/OwnerEvidence/gps-preserve-run05",
+    "manifest": "transport-manifest.json",
+    "manifestSha256": "7700bc5b314ee124f1f5df08f9e34c06d674168a12ccfa519b79206491e82991",
+    "files": 111,
+    "bytes": 3442853
+  }
+}

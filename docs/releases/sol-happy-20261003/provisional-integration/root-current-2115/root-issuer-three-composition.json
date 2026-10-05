@@ -1,0 +1,25 @@
+{
+  "base": "9414576d1eca6ef363c0c4f0c155f1e972f7c3ce",
+  "proposal": "ff453ff9d294d5c4812c9308217cd04be0a88e4d",
+  "composed": "b7e362b4b3cdfb4dfef631f0f1a0bec3fa2116a2",
+  "wholeFiles": [
+    {
+      "path": "apps/Web/Tests/LocalAuth/issuer-ui-redirect.test.cjs",
+      "bytes": 5039,
+      "sha256": "0c3365fa6f3be52db35b6bf530bfc6d9fda4e767289ddfb37ad186db6a913d2e"
+    },
+    {
+      "path": "cloud/cake-id-auth/public/auth-ui.txt",
+      "bytes": 39083,
+      "sha256": "9e20353726f09806954e5e0159ffc49a6e224554683e96917f729b682e8cbe8d"
+    },
+    {
+      "path": "cloud/cake-id-auth/src/browser.ts",
+      "bytes": 4599,
+      "sha256": "afe535aa3f742319c2ebd805d97d1ffcc069199f9f446316be62824852f9048f"
+    }
+  ],
+  "outsideTrackedEntriesUnchanged": 16810,
+  "C6": "08b91f51c9ef068d5d8b9cba0d945b651700111c8a383d0cc653d496a04dae75",
+  "qualification": "Two redundant manual issuer redirects removed; default plugin validation and fallback unchanged. Additive eight controls only; original four failed full runs retained. No hosted deployment."
+}

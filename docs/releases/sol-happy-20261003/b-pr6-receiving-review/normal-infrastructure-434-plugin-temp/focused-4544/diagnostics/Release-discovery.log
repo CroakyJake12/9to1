@@ -1,0 +1,6 @@
+Test run for /tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/Haven.Infrastructure.Tests/release/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+The following Tests are available:
+    Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.GitHub_style_discovery_and_permission_review_are_atomic
+    Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Invalid_and_underdeclared_manifests_are_rejected_before_installation
+    Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown
+    Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run

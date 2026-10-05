@@ -1,0 +1,136 @@
+[
+  {
+    "name": "source-before",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 78654,
+        "birth": 1105537,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.027,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 78655,
+        "birth": 1105539,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.036,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "sites18-native-corrected",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/SitesBrowser.Tests/release_linux-x64/SitesBrowser.Tests",
+      "suite",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/sites-corrected/fixture-data/sites"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 78678,
+        "birth": 1105543,
+        "gone": true
+      },
+      {
+        "pid": 78693,
+        "birth": 1106878,
+        "gone": true
+      },
+      {
+        "pid": 78720,
+        "birth": 1107157,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 16.896,
+    "bytes": 1501,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 78733,
+        "birth": 1107233,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.034,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "source-after",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 78756,
+        "birth": 1107236,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.022,
+    "bytes": 41,
+    "familyClosed": true
+  }
+]

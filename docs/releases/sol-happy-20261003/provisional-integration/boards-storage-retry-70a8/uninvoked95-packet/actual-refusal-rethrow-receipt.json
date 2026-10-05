@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "actualSourceSha256": "8155b68201c9b0e43a89d48fc8218165cc5dffc18e661bc380596a9a3218b48a",
+  "actualFunction": "Observe-SaveLabel",
+  "parserErrors": 0,
+  "controlledLookupRefusalType": "System.Management.Automation.RuntimeException",
+  "controlledLookupRefusalMessage": "Timed out observing: Visible native save text: Saved",
+  "diagnosticCapabilityRefusal": "Status diagnostic requires the exact live app window.",
+  "qualification": "Actual frozen-function diagnostic refusal/rethrow boundary only. Controlled process and lookup refusal; no Windows, UIA, physical files, app/provider/model or live inputs."
+}

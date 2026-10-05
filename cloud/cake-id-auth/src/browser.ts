@@ -33,8 +33,8 @@ const value = (form: HTMLFormElement, field: string) => new FormData(form).get(f
 guardedSubmit("sign-in-form", async (form) => {
   const { data, error } = await auth.signIn.email({ email: value(form, "email"), password: value(form, "password") });
   if (error) return setStatus("Email or password was not accepted, or the account is not verified.");
-  if (data?.redirect && data.url) location.assign(data.url);
-  else location.assign("/account");
+  // The standard client already redirects after checking the URL scheme.
+  if (!(data?.redirect && data.url)) location.assign("/account");
 });
 
 guardedSubmit("sign-up-form", async (form) => {
@@ -66,7 +66,7 @@ guardedSubmit("reset-password-form", async (form) => {
 
 const consent = document.getElementById("consent");
 if (consent) {
-  const clientId = consent.dataset.clientId ?? "";
+  const clientId = JSON.parse(consent.dataset.clientId ?? '""') as string;
   const scopes = JSON.parse(consent.dataset.scopes ?? "[]") as string[];
   const scopeList = document.getElementById("scope-list");
   if (scopeList) {
@@ -90,8 +90,8 @@ if (consent) {
     try {
       const { data, error } = await auth.oauth2.consent({ accept });
       if (error) setStatus("The authorization request could not be completed.");
-      else if (data?.redirect && data.url) location.assign(data.url);
-      else location.assign("/account");
+      // The standard client owns the redirect; assigning again schedules it twice.
+      else if (!(data?.redirect && data.url)) location.assign("/account");
     } catch {
       setStatus("The authorization request could not be completed.");
     } finally {

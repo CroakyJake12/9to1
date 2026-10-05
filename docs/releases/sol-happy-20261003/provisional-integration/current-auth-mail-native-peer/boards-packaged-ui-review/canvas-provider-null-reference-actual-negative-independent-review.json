@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_ACTUAL_ORIGINAL_SETUP_ONLY_NEGATIVE",
+  "sourceCommit": "986b7244911a93402812b955ce2922be47d3c8d2",
+  "runId": 37224970058,
+  "jobId": 111502644458,
+  "artifactId": 11311871255,
+  "artifactBytes": 2098,
+  "artifactSHA256": "2979b4f10bd8477c7e7ea8d140a674e8176581aa1a14881a7eaf624b2ded97d8",
+  "fullZipCRCAndOriginalOneMemberBodyVerified": true,
+  "independentProviderRunAndArtifactReadback": true,
+  "checks": {
+    "passed": 27,
+    "failed": 0
+  },
+  "actualOutcome": "Public provider registration throws MethodInvocationException wrapping NullReferenceException HRESULT-2147467261. Genuine matching Microsoft GAC client/provider bodies remain exact original f5. Canonical public provider type/static expected table exists and reading it completes with nonnull forty entries. Registration did not complete.",
+  "scope": "No package download/extraction,app launch,input,profile,request,approval or model state. No native Edit/Button/workflow/full-app acceptance.",
+  "sourceCauseQualification": "Official ProxyManager default-proxy source unguardedly accesses StackFrame.Method.ReflectedType.Assembly. PowerShell dynamic methods can have a null reflected type. This supports an ordinary noninlined strongly typed caller to the same API, but the exact actual thrown location remains unobserved. Fresh-process setup is required; no retry inside failed original process.",
+  "originalFailurePreserved": true
+}

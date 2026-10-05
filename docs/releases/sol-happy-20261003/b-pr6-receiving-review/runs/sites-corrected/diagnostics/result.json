@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "1a0a824ad06905467c280730a85429f37feabce1",
+  "command": [
+    "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/SitesBrowser.Tests/release_linux-x64/SitesBrowser.Tests",
+    "suite",
+    "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/sites-corrected/fixture-data/sites"
+  ],
+  "unchangedPriorBuild": true,
+  "apphostSHA256": "f2b3ed984a8df51e8df093f2ef5c8cf6286dc6607a7f6a7dc7532b8343d47e67",
+  "priorAttempt": "normal-release retained invocation missing suite token; actual exit-6 before case discovery; not a product failure",
+  "status": "EXECUTED_EXIT_ZERO",
+  "summary": [
+    "RESULT mode=seed expected=1 executed=1 passed=1 failed=0 assertions=17",
+    "RESULT mode=verify expected=1 executed=1 passed=1 failed=0 assertions=6",
+    "RESULT expected=18 executed=18 passed=18 failed=0 assertions=279"
+  ],
+  "actualCommand": {
+    "name": "sites18-native-corrected",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/normal-release/artifacts/bin/SitesBrowser.Tests/release_linux-x64/SitesBrowser.Tests",
+      "suite",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/sites-corrected/fixture-data/sites"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 78678,
+        "birth": 1105543,
+        "gone": true
+      },
+      {
+        "pid": 78693,
+        "birth": 1106878,
+        "gone": true
+      },
+      {
+        "pid": 78720,
+        "birth": 1107157,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 16.896,
+    "bytes": 1501,
+    "familyClosed": true
+  },
+  "sourceAfter": "1a0a824ad06905467c280730a85429f37feabce1"
+}

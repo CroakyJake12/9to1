@@ -3,6 +3,7 @@ using Avalonia.Automation.Peers;
 using Avalonia.VisualTree;
 using Haven.UI;
 using Haven.UI.Components;
+using Haven.Desktop.Views.Pages.Present;
 
 namespace Haven.Desktop.HavenUI.Backend;
 
@@ -120,6 +121,7 @@ internal sealed class HavenSceneAutomationPeer : ControlAutomationPeer
         Input input => new HavenInputAutomationPeer(_owner, this, input),
         Slider slider => new HavenSliderAutomationPeer(_owner, this, slider),
         Select select => new HavenSelectAutomationPeer(_owner, this, select),
+        PresentThumbnailNavigator navigator => new PresentThumbnailNavigatorAutomationPeer(_owner, this, navigator),
         _ => new HavenElementAutomationPeer(_owner, this, element)
     };
 

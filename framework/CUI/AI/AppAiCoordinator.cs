@@ -8,8 +8,11 @@ public sealed class AppAiCoordinator(
     IAppAiApprovalRequester? approvalRequester = null,
     IAppAiDatabaseMutationGuard? databaseGuard = null,
     IAppAiActionGraph? actionGraph = null,
-    IAppAiModelPicker? modelPicker = null)
+    IAppAiModelPicker? modelPicker = null,
+    IInvocationResolver? invocationResolver = null)
 {
+    private AppAiModelSelection? _explicitModelSelection;
+
     public async ValueTask<AppAiContextSnapshot> CaptureContextAsync(CancellationToken cancellationToken = default)
     {
         var snapshot = await context.CaptureAsync(cancellationToken).ConfigureAwait(false);
@@ -23,7 +26,9 @@ public sealed class AppAiCoordinator(
             : modelPicker.GetModelsAsync(cancellationToken);
 
     public ValueTask<AppAiModelSelection?> GetModelSelectionAsync(CancellationToken cancellationToken = default) =>
-        modelPicker is null
+        _explicitModelSelection is { } selection
+            ? ValueTask.FromResult<AppAiModelSelection?>(selection)
+            : modelPicker is null
             ? ValueTask.FromResult<AppAiModelSelection?>(null)
             : modelPicker.GetSelectionAsync(cancellationToken);
 
@@ -34,7 +39,10 @@ public sealed class AppAiCoordinator(
         var options = await modelPicker.GetModelsAsync(cancellationToken).ConfigureAwait(false);
         if (!options.Any(option => option.IsAvailable && string.Equals(option.Id, modelId, StringComparison.Ordinal)))
             return false;
-        return await modelPicker.SelectAsync(modelId, cancellationToken).ConfigureAwait(false);
+        // A compact app selection is scoped to this bar. Only the Home route manager persists defaults.
+        cancellationToken.ThrowIfCancellationRequested();
+        _explicitModelSelection = new(modelId, "Medium");
+        return true;
     }
 
     public async ValueTask<AppAiActionResult> ExecuteAsync(
@@ -65,6 +73,11 @@ public sealed class AppAiCoordinator(
         if (!descriptor.IsMutation)
             return AppAiActionResult.Rejected("Read-only app actions are not dispatched through the mutation endpoint.", "action-not-mutable");
 
+        var ownerApproval = descriptor.ApprovalFlow == AppAiApprovalFlow.OwningResourceBroker;
+        if (!Enum.IsDefined(descriptor.ApprovalFlow) || ownerApproval &&
+            (actions is not IAppAiResourceBrokerActions || !descriptor.RequiresPermission || !descriptor.RequiresReview))
+            return AppAiActionResult.Rejected("Owning resource approval requires the explicit broker adapter and truthful review metadata.", "owner-approval-unavailable");
+
         var inputValidation = ValidateInput(descriptor, request.Arguments);
         if (inputValidation is not null)
             return AppAiActionResult.Rejected(inputValidation, "invalid-action-arguments");
@@ -93,7 +106,7 @@ public sealed class AppAiCoordinator(
         await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
             AppAiActionGraphStatus.Started, "AI requested a typed app action", cancellationToken).ConfigureAwait(false);
 
-        if (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval)
+        if (!ownerApproval && (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval))
         {
             if (approvalRequester is null)
                 return AppAiActionResult.Rejected("Home approval is unavailable; the action was not run.", "approval-unavailable", canRetry: true);
@@ -108,7 +121,8 @@ public sealed class AppAiCoordinator(
                 ForcePerActionApproval: forcePerActionApproval,
                 ChangePreview: databasePreparation?.Preview,
                 BackupId: databasePreparation?.BackupId,
-                request.CorrelationId), cancellationToken).ConfigureAwait(false);
+                request.CorrelationId,
+                request.Arguments), cancellationToken).ConfigureAwait(false);
 
             if (decision.Outcome != AppAiApprovalOutcome.Approved)
             {
@@ -130,60 +144,128 @@ public sealed class AppAiCoordinator(
                 return AppAiActionResult.Rejected("Home approval did not include a scoped approval token; the action was not run.", "approval-token-missing");
 
             verifiedApprovalToken = decision.ApprovalToken;
-            var approved = await approvals.VerifyAsync(
-                request.AppId,
-                request.ActionId,
-                verifiedApprovalToken,
-                cancellationToken).ConfigureAwait(false);
-            if (!approved)
-                return AppAiActionResult.Rejected("The approval is invalid or expired.", "approval-invalid");
-
             // Re-read after approval so a stale revision or changed capability cannot inherit consent.
             var current = await context.CaptureAsync(cancellationToken).ConfigureAwait(false);
             ValidateSnapshot(current);
             if (!SameTarget(snapshot, current) ||
                 !HasSameActionScope(descriptor))
                 return AppAiActionResult.Rejected("The app context or action scope changed during approval. Review the new state before retrying.", "stale-context", canRetry: true);
+            var approved = await approvals.VerifyRequestAsync(
+                request with { ApprovalToken = verifiedApprovalToken },
+                cancellationToken).ConfigureAwait(false);
+            if (!approved)
+            {
+                var rejected = await approvals.CompleteRejectedVerificationAsync(
+                    request with { ApprovalToken = verifiedApprovalToken }, CancellationToken.None).ConfigureAwait(false);
+                return AppAiActionResult.Rejected("The approval did not admit execution; the action was not dispatched.", "approval-invalid")
+                    with { CompletionAuditPending = !rejected.AuditRecorded, AuditRecovery = rejected.AuditRecorded ? null : rejected.Recovery };
+            }
         }
 
-        var result = await actions.ExecuteAsync(request with
+        if (ownerApproval)
         {
-            ApprovalToken = descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval
-                ? verifiedApprovalToken
-                : null
-        }, cancellationToken).ConfigureAwait(false);
+            var current = await context.CaptureAsync(cancellationToken).ConfigureAwait(false);
+            ValidateSnapshot(current);
+            if (!SameTarget(snapshot, current) || !HasSameActionScope(descriptor))
+                return AppAiActionResult.Rejected("The owning action context changed before preparation. Read the current context and retry.", "stale-context", true);
+        }
+        var executionRequest = request with
+        {
+            ApprovalToken = !ownerApproval && (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval)
+                ? verifiedApprovalToken : null
+        };
+        async ValueTask<AppAiActionResult> CompleteApprovalAsync(AppAiActionRequest action, AppAiActionResult outcome, CancellationToken ct)
+        {
+            if (ownerApproval) return outcome;
+            try
+            {
+                var observed = await approvals.CompleteWithRecoveryAsync(action, outcome, ct).ConfigureAwait(false);
+                return outcome with { CompletionAuditPending = !observed.AuditRecorded,
+                    AuditRecovery = observed.AuditRecorded ? null : observed.Recovery };
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+            {
+                // Legacy verifier transports may not support recovery. Preserve the observed owner result without inventing a handle.
+                return outcome with { CompletionAuditPending = true, AuditRecovery = null };
+            }
+        }
+        async ValueTask<AppAiActionResult> PublishObservedAsync(AppAiActionResult observed, AppAiActionGraphStatus status, string message)
+        {
+            try
+            {
+                await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
+                    status, message, CancellationToken.None).ConfigureAwait(false);
+                return observed;
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+            {
+                // Secondary graph transport cannot turn an already observed owner result into a new action attempt.
+                return observed with { ActionGraphPending = true };
+            }
+        }
+        AppAiActionResult result;
+        try
+        {
+            result = ownerApproval
+                ? await ((IAppAiResourceBrokerActions)actions).ExecuteWithOwnedApprovalAsync(executionRequest, cancellationToken).ConfigureAwait(false)
+                : await actions.ExecuteAsync(executionRequest, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // A thrown transport does not prove the owner made no change. Retain a conservative terminal observation.
+            return await CompleteApprovalAsync(executionRequest, AppAiActionResult.Rejected(
+                "The action outcome could not be confirmed. Inspect the owner result before any new action.",
+                "action-outcome-unconfirmed"), CancellationToken.None).ConfigureAwait(false);
+        }
         if (!result.Succeeded)
         {
-            await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
-                AppAiActionGraphStatus.Failed, "App action failed", cancellationToken).ConfigureAwait(false);
-            return result;
+            result = await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
+            return await PublishObservedAsync(result,
+                ownerApproval && result.ErrorCode == "approval-pending" ? AppAiActionGraphStatus.WaitingForApproval : AppAiActionGraphStatus.Failed,
+                ownerApproval && result.ErrorCode == "approval-pending" ? "Waiting for the owning Home resource review" : "App action failed").ConfigureAwait(false);
         }
 
         if (dataMutation && snapshot.IsLiveDatabase)
         {
-            var verified = databasePreparation?.BackupId is { Length: > 0 } backupId &&
-                databaseGuard is not null && await databaseGuard.VerifyAsync(
-                    snapshot, descriptor, request.Arguments, result, backupId, cancellationToken).ConfigureAwait(false);
+            bool verified;
+            try
+            {
+                verified = databasePreparation?.BackupId is { Length: > 0 } backupId &&
+                    databaseGuard is not null && await databaseGuard.VerifyAsync(
+                        snapshot, descriptor, request.Arguments, result, backupId, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+            { verified = false; }
             if (!verified)
-                return AppAiActionResult.Rejected(
+            {
+                var unverified = AppAiActionResult.Rejected(
                     "The database action ran, but its result could not be verified. The recovery backup is retained.",
                     "database-result-unverified");
+                unverified = await CompleteApprovalAsync(executionRequest, unverified, CancellationToken.None).ConfigureAwait(false);
+                return unverified;
+            }
         }
 
-        await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
-            AppAiActionGraphStatus.Completed, "App action completed", cancellationToken).ConfigureAwait(false);
-        return result;
+        result = await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
+
+        return await PublishObservedAsync(result, AppAiActionGraphStatus.Completed, "App action completed").ConfigureAwait(false);
     }
 
     public async IAsyncEnumerable<AppAiResponseChunk> StreamAsync(
         string prompt,
         string correlationId,
         AppAiAccessMode accessMode = AppAiAccessMode.ReadOnly,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default,
+        IReadOnlyList<InvocationToken>? invocations = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(correlationId);
 
+        if (invocations is { Count: > 0 })
+        {
+            if (invocationResolver is null) throw new InvalidOperationException("Current invocation permissions cannot be verified.");
+            invocations = await invocationResolver.ResolveAsync(invocations, cancellationToken).ConfigureAwait(false);
+        }
         var snapshot = await CaptureContextAsync(cancellationToken).ConfigureAwait(false);
         var modelSelection = await GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
         if (modelSelection is not null)
@@ -200,12 +282,12 @@ public sealed class AppAiCoordinator(
         var selectedActionCalls = 0;
         var selectedModel = modelSelection;
         await PublishGraphEventAsync(snapshot, "contextual-ai.request", correlationId,
-            AppAiActionGraphStatus.Started, "Contextual AI request started", cancellationToken).ConfigureAwait(false);
+            AppAiActionGraphStatus.Started, "Contextual AI request started", cancellationToken, invocations).ConfigureAwait(false);
         var completed = false;
         try
         {
             await foreach (var chunk in dulche.StreamAsync(
-                new AppAiPrompt(prompt.Trim(), snapshot, correlationId, accessMode, availableActions, selectedModel),
+                new AppAiPrompt(prompt, snapshot, correlationId, accessMode, availableActions, selectedModel, invocations),
                 cancellationToken).ConfigureAwait(false))
             {
                 if (chunk.RequestedAction is { } requestedAction)
@@ -227,11 +309,12 @@ public sealed class AppAiCoordinator(
                         snapshot.Revision), cancellationToken).ConfigureAwait(false);
                     var visible = result.Succeeded
                         ? $"Action completed: {result.Summary}"
-                        : $"Action not run: {result.Summary}";
-                    yield return new AppAiResponseChunk(visible);
+                        : result.ErrorCode == "read-only-mode" ? $"Action not run: {result.Summary}"
+                        : $"Action outcome: {result.Summary}";
+                    yield return new AppAiResponseChunk(visible) { ActionObservation = result };
                     continue;
                 }
-                yield return chunk;
+                yield return chunk with { ActionObservation = null };
             }
             completed = true;
         }
@@ -259,7 +342,8 @@ public sealed class AppAiCoordinator(
         string correlationId,
         AppAiActionGraphStatus status,
         string summary,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<InvocationToken>? invocations = null)
     {
         if (actionGraph is null) return;
         await actionGraph.PublishAsync(new AppAiActionGraphEvent(
@@ -270,7 +354,7 @@ public sealed class AppAiCoordinator(
             correlationId,
             status,
             summary,
-            DateTimeOffset.UtcNow), cancellationToken).ConfigureAwait(false);
+            DateTimeOffset.UtcNow, invocations), cancellationToken).ConfigureAwait(false);
     }
 
     private static bool SameTarget(AppAiContextSnapshot before, AppAiContextSnapshot after) =>
@@ -289,6 +373,7 @@ public sealed class AppAiCoordinator(
             && string.Equals(candidate.Description, approved.Description, StringComparison.Ordinal)
             && candidate.Risk == approved.Risk
             && candidate.RequiresReview == approved.RequiresReview
+            && candidate.ApprovalFlow == approved.ApprovalFlow
             && string.Equals(candidate.InputSchemaJson, approved.InputSchemaJson, StringComparison.Ordinal)
             && candidate.RequiresPermission == approved.RequiresPermission
             && candidate.IsMutation == approved.IsMutation
@@ -307,25 +392,8 @@ public sealed class AppAiCoordinator(
         ArgumentNullException.ThrowIfNull(snapshot.SemanticState);
     }
 
-    private static string? ValidateInput(AppAiActionDescriptor descriptor, System.Text.Json.JsonElement arguments)
-    {
-        if (arguments.ValueKind != System.Text.Json.JsonValueKind.Object)
-            return "Action arguments must be a JSON object.";
-        if (string.IsNullOrWhiteSpace(descriptor.InputSchemaJson))
-            return "The app did not provide an input schema for this action.";
-
-        try
-        {
-            using var schema = System.Text.Json.JsonDocument.Parse(descriptor.InputSchemaJson);
-            if (schema.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object)
-                return "The app action input schema is invalid.";
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            return "The app action input schema is invalid.";
-        }
-        return null;
-    }
+    private static string? ValidateInput(AppAiActionDescriptor descriptor, System.Text.Json.JsonElement arguments) =>
+        ActionJsonSchemaValidator.Validate(descriptor.InputSchemaJson, arguments, out var problem) ? null : problem;
 
     private void ValidateActions(IReadOnlyList<AppAiActionDescriptor> availableActions)
     {
@@ -335,7 +403,7 @@ public sealed class AppAiCoordinator(
 
         foreach (var action in availableActions)
         {
-            if (ValidateInput(action, System.Text.Json.JsonSerializer.SerializeToElement(new { })) is not null)
+            if (!ActionJsonSchemaValidator.IsSupported(action.InputSchemaJson))
                 throw new InvalidOperationException($"The active app provided an invalid input schema for action '{action.Id}'.");
         }
     }

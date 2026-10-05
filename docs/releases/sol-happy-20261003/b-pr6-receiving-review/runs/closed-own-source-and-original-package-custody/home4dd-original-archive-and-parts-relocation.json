@@ -1,0 +1,57 @@
+{
+  "status": "CLOSED_ORIGINAL_HOME4DD_PACKAGE_BYTES_RELOCATED_UNCHANGED",
+  "source": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+  "run": 37228835003,
+  "rows": [
+    {
+      "oldReceiptPath": "/tmp/team-c-c5-home-current-windows-4dd-20261004/original-publication/home-win-x64.zip",
+      "newActualRetainedPath": "/workspace/team-c-c5-closed-home-4dd-publication-retained-20261004/original-publication/home-win-x64.zip",
+      "bytes": 81553586,
+      "sha256": "0033a7c7161ac28a14b7c8c34d7d3c64c0b985b95cc480cfc0f45273134aae42",
+      "oldPathNowSymlink": true,
+      "beforeAfterWholeShaAndByteEqual": true
+    },
+    {
+      "oldReceiptPath": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part01.zip",
+      "newActualRetainedPath": "/workspace/team-c-c5-closed-home-4dd-publication-retained-20261004/containers/home-4dd-original-part01.zip",
+      "bytes": 19975319,
+      "sha256": "6660c50cc4827f07c6eec59542f08afb3be4dcb35ff1e3343a69c95cb09a4306",
+      "oldPathNowSymlink": true,
+      "beforeAfterWholeShaAndByteEqual": true
+    },
+    {
+      "oldReceiptPath": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part02.zip",
+      "newActualRetainedPath": "/workspace/team-c-c5-closed-home-4dd-publication-retained-20261004/containers/home-4dd-original-part02.zip",
+      "bytes": 19975319,
+      "sha256": "bdb22bb1268a157676fad2910bcb928c49ca2b96e1b6eb910523eb97a861ddfe",
+      "oldPathNowSymlink": true,
+      "beforeAfterWholeShaAndByteEqual": true
+    },
+    {
+      "oldReceiptPath": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part03.zip",
+      "newActualRetainedPath": "/workspace/team-c-c5-closed-home-4dd-publication-retained-20261004/containers/home-4dd-original-part03.zip",
+      "bytes": 19975319,
+      "sha256": "b3aadd7b39783dc18695b8684e0c8bb7227435028a9ae015f7480f6f55e17ce1",
+      "oldPathNowSymlink": true,
+      "beforeAfterWholeShaAndByteEqual": true
+    },
+    {
+      "oldReceiptPath": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part04.zip",
+      "newActualRetainedPath": "/workspace/team-c-c5-closed-home-4dd-publication-retained-20261004/containers/home-4dd-original-part04.zip",
+      "bytes": 19975319,
+      "sha256": "eb3274df2e55049c0d05eb6d2a4c8a98be7e82b4d9fda80bb7e18de803740618",
+      "oldPathNowSymlink": true,
+      "beforeAfterWholeShaAndByteEqual": true
+    },
+    {
+      "oldReceiptPath": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part05.zip",
+      "newActualRetainedPath": "/workspace/team-c-c5-closed-home-4dd-publication-retained-20261004/containers/home-4dd-original-part05.zip",
+      "bytes": 1914185,
+      "sha256": "e427fa2c16b80ec9fb327de6428167af271c068b3c19cc68b0ea7034b2f11c83",
+      "oldPathNowSymlink": true,
+      "beforeAfterWholeShaAndByteEqual": true
+    }
+  ],
+  "totalRelocatedBytes": 163369047,
+  "originalReceiptsAndDiagnostics": "UNCHANGED; old receipt data paths retained only as explicit symlink pointers to whole byte-identical new task-owned storage. No compiled artifact committed to Git or substituted/rebuilt; all old negatives retained."
+}

@@ -2,6 +2,7 @@ using System.Text.Json;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using Xunit;
 
 namespace HavenOS.Home.Tests;
@@ -11,7 +12,7 @@ public sealed class HomeModelPickerRouteEditorTests
     [Fact]
     public void CUI_document_exposes_all_model_categories_and_accessible_route_actions()
     {
-        var path = Path.Combine(Environment.CurrentDirectory, "9to1 Workspace", "Home", "UI", "ModelPicker.cui");
+        var path = Path.Combine(AppContext.BaseDirectory, "UI", "ModelPicker.cui");
         var document = new CuiRichParser().ParseFile(path);
 
         Assert.Contains(document.RootProperties, property => property.Key == "id"
@@ -35,11 +36,20 @@ public sealed class HomeModelPickerRouteEditorTests
         Assert.False(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.SetCandidateEnabled,
             ProviderId: "provider", ModelId: "model", ArtifactRevision: "rev")));
         Assert.False(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.MoveCandidateUp,
-            ProviderId: "provider", ModelId: "model")));
+            ProviderId: "provider", ModelId: "model", ArtifactRevision: " ")));
         Assert.True(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.SetCandidateEnabled,
             ProviderId: "provider", ModelId: "model", ArtifactRevision: "rev", Enabled: false)));
         Assert.True(surface.TryDequeueAction(out var queued));
         Assert.Equal(HomeModelPickerAction.SetCandidateEnabled, queued.Action);
+        Assert.False(surface.TryDequeueAction(out _));
+
+        Assert.True(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.MoveCandidateUp,
+            ProviderId: "provider", ModelId: "model", ArtifactRevision: null)));
+        Assert.True(surface.TryDequeueAction(out var unversioned));
+        Assert.Equal(HomeModelPickerAction.MoveCandidateUp, unversioned.Action);
+        Assert.Equal("provider", unversioned.ProviderId);
+        Assert.Equal("model", unversioned.ModelId);
+        Assert.Null(unversioned.ArtifactRevision);
         Assert.False(surface.TryDequeueAction(out _));
     }
 
@@ -182,8 +192,18 @@ public sealed class HomeModelPickerRouteEditorTests
         var result = await editor.RefreshAsync("global", "chat");
 
         Assert.False(result.Succeeded);
-        Assert.Equal("HomeServiceUnavailable", editor.Current.StatusCode);
+        Assert.Equal("InvalidProviderResult", editor.Current.StatusCode);
         Assert.Null(editor.Current.SelectedRouteId);
+        Assert.Null(editor.Current.Snapshot);
+        Assert.Null(editor.Current.DraftRoute);
+        Assert.False(editor.Current.HasUnsavedChanges);
+        Assert.Empty(editor.Current.Candidates);
+
+        var attemptedEdit = editor.SetCandidateEnabled("provider", "same", "rev", false);
+        Assert.False(attemptedEdit.Succeeded);
+        Assert.Equal("RouteNotSelected", attemptedEdit.Code);
+        Assert.Null(editor.Current.DraftRoute);
+        Assert.False(editor.Current.HasUnsavedChanges);
     }
 
     [Fact]

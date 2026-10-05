@@ -1,0 +1,1 @@
+{"scenario":"backup-only","status":"PASS","assertions":7,"platform":"Unix","qualification":"Actual source-linked adapter/contract persistence; no graphical app/native Windows acceptance."}

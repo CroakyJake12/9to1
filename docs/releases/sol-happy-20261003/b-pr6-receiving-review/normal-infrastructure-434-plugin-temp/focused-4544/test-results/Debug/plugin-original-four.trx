@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="92a3fa5b-8af3-4e97-b26a-200b018ec321" name="@0209ad767592 2026-10-04 17:17:48" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T17:17:48.0591923+00:00" queuing="2026-10-04T17:17:48.0591923+00:00" start="2026-10-04T17:17:46.1746410+00:00" finish="2026-10-04T17:17:48.1031739+00:00" />
+  <TestSettings name="default" id="504b2b20-c2fa-4a88-a452-58338ece267f">
+    <Deployment runDeploymentRoot="_0209ad767592_2026-10-04_17_17_48" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="a984fb50-da0b-4507-b1a2-11312ccb59aa" testId="f1c8291f-03a8-8529-e419-cb0575aa9586" testName="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown" computerName="0209ad767592" duration="00:00:00.7939296" startTime="2026-10-04T17:17:47.0230105+00:00" endTime="2026-10-04T17:17:47.8197362+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a984fb50-da0b-4507-b1a2-11312ccb59aa" />
+    <UnitTestResult executionId="ab3a2461-5a90-436f-8d26-cc7d32ee669b" testId="0743234c-2ab0-e40e-63b6-e8562e2b0d79" testName="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.GitHub_style_discovery_and_permission_review_are_atomic" computerName="0209ad767592" duration="00:00:00.2109164" startTime="2026-10-04T17:17:46.7690410+00:00" endTime="2026-10-04T17:17:46.9876803+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ab3a2461-5a90-436f-8d26-cc7d32ee669b" />
+    <UnitTestResult executionId="cc31d289-c52d-4bc0-b63a-53293a771b89" testId="525956fc-aee8-3271-7e23-af832d84ca87" testName="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run" computerName="0209ad767592" duration="00:00:00.1990532" startTime="2026-10-04T17:17:47.8200591+00:00" endTime="2026-10-04T17:17:48.0166095+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cc31d289-c52d-4bc0-b63a-53293a771b89" />
+    <UnitTestResult executionId="3e02080f-a1ca-4d68-98c8-bbaa29f4460c" testId="ce5ffb77-4b2b-2035-0aa0-eaa3d3ceff83" testName="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Invalid_and_underdeclared_manifests_are_rejected_before_installation" computerName="0209ad767592" duration="00:00:00.0326972" startTime="2026-10-04T17:17:46.9994584+00:00" endTime="2026-10-04T17:17:47.0222707+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3e02080f-a1ca-4d68-98c8-bbaa29f4460c" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Invalid_and_underdeclared_manifests_are_rejected_before_installation" storage="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/haven.infrastructure.tests/debug/haven.infrastructure.tests.dll" id="ce5ffb77-4b2b-2035-0aa0-eaa3d3ceff83">
+      <Execution id="3e02080f-a1ca-4d68-98c8-bbaa29f4460c" />
+      <TestMethod codeBase="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/Haven.Infrastructure.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests" name="Invalid_and_underdeclared_manifests_are_rejected_before_installation" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.GitHub_style_discovery_and_permission_review_are_atomic" storage="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/haven.infrastructure.tests/debug/haven.infrastructure.tests.dll" id="0743234c-2ab0-e40e-63b6-e8562e2b0d79">
+      <Execution id="ab3a2461-5a90-436f-8d26-cc7d32ee669b" />
+      <TestMethod codeBase="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/Haven.Infrastructure.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests" name="GitHub_style_discovery_and_permission_review_are_atomic" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown" storage="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/haven.infrastructure.tests/debug/haven.infrastructure.tests.dll" id="f1c8291f-03a8-8529-e419-cb0575aa9586">
+      <Execution id="a984fb50-da0b-4507-b1a2-11312ccb59aa" />
+      <TestMethod codeBase="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/Haven.Infrastructure.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests" name="Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run" storage="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/haven.infrastructure.tests/debug/haven.infrastructure.tests.dll" id="525956fc-aee8-3271-7e23-af832d84ca87">
+      <Execution id="cc31d289-c52d-4bc0-b63a-53293a771b89" />
+      <TestMethod codeBase="/tmp/team-c-c5-plugin-temp-provisional-output-20261004/artifacts/bin/Haven.Infrastructure.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests" name="Tampered_installed_content_is_blocked_before_the_plugin_process_can_run" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="f1c8291f-03a8-8529-e419-cb0575aa9586" executionId="a984fb50-da0b-4507-b1a2-11312ccb59aa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0743234c-2ab0-e40e-63b6-e8562e2b0d79" executionId="ab3a2461-5a90-436f-8d26-cc7d32ee669b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="525956fc-aee8-3271-7e23-af832d84ca87" executionId="cc31d289-c52d-4bc0-b63a-53293a771b89" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ce5ffb77-4b2b-2035-0aa0-eaa3d3ceff83" executionId="3e02080f-a1ca-4d68-98c8-bbaa29f4460c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="4" executed="4" passed="4" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.09]   Discovering: Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.17]   Discovered:  Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.19]   Starting:    Haven.Infrastructure.Tests
+[xUnit.net 00:00:01.47]   Finished:    Haven.Infrastructure.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

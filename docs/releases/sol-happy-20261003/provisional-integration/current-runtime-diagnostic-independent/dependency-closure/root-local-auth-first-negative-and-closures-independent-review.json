@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent original local account first-failure and both terminal closures reviewer",
+  "sourceCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "resultSha256": "99d6f455dc01488fbaf59ddae224aad9b7470ca9d355a19c2163c1219f4d7721",
+  "browserCustodySha256": "97f28c1324b1e5514bed49fc3342d480014bd99e0ecb6e669c761fabb39a44fc",
+  "issuerOriginalToolReceiptSha256": "84b0e53799421fe0a1194446938eebcfe8bff9b565d95fd823641cb84932919a",
+  "counts": {
+    "discovered": 7,
+    "executed": 3,
+    "passed": 2,
+    "failed": 1,
+    "notRun": 4
+  },
+  "failure": {
+    "stage": "physical-native-local-PKCE-and-consent",
+    "substep": "actual-issuer-signin-form",
+    "type": "Error",
+    "elapsedMs": 411
+  },
+  "actualProtocolAndReadRequests": 0,
+  "currentPinAndAssetReadback": {
+    "publicSourceDependencyPins": 5370,
+    "originalManifestAssetBodies": 285,
+    "allPhysicalSizeSHAUnchanged": "PASS"
+  },
+  "browserClosure": {
+    "ownedIdentities": 11,
+    "state": "CLOSED",
+    "runnerExitCode": 1,
+    "signals": 0,
+    "forcedCleanup": false,
+    "allActualBirthsGoneAndKernelWaitidECHILD": "PASS",
+    "uniqueTopBrowserLauncher": true,
+    "custodyClean": true,
+    "outputTemporaryBytes": 1079965
+  },
+  "issuerClosure": {
+    "originalReturnedSessionAndStopSession": 88463,
+    "exactStop": "stop newline",
+    "originalToolFinalExitCode": 0,
+    "originalOutputDrainedStrictReapedOriginalsDisappeared": true,
+    "originalStopSignals": "Retained distinct issuer custodian signals; not zero-signal browser family",
+    "varsAndOnlyOwnRunAbsent": true
+  },
+  "verdict": "ACK original failed local execution and separate actual terminal closures; account integration remains failed/NOT_RUN",
+  "qualifications": [
+    "Anonymous native readiness and immutable normal browser close passed; physical PKCE form failed, subsequent four account/private/signout/terminal controls NOT_RUN.",
+    "protocolValid and sameSubject true are unexercised initial accumulator flags because all protocol/read counters are zero; they provide no issuer JOSE/subject proof.",
+    "No automatic rerun, raw external exception/body/DOM/private credential or TLS-key read by C6.",
+    "Issuer session is proven by root original returned tool-session receipt, strict maintained custodian response and final exit0; C6 independently parsed original receipt and verified own state absence, did not own/control issuer TTY.",
+    "Hosted/.NETRSA/auth-revision/currentSession/full-global/application acceptance not inferred."
+  ]
+}

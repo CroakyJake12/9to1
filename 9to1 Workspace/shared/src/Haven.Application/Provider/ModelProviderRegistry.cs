@@ -21,7 +21,8 @@ public sealed class ModelProviderRegistry(IEnumerable<IModelProvider> providers)
     /// </summary>
     private readonly IReadOnlyList<IModelProvider> _providers = providers
         .GroupBy(provider => provider.Id, StringComparer.OrdinalIgnoreCase)
-        .Select(group => group.Last())
+        .Select(group => group.All(provider => ReferenceEquals(provider, group.First())) ? group.First()
+            : throw new InvalidOperationException($"Provider identity '{group.Key}' has multiple competing registrations."))
         .OrderByDescending(provider => provider.IsLocal)
         .ThenBy(provider => provider.DisplayName, StringComparer.OrdinalIgnoreCase)
         .ToArray();
@@ -44,15 +45,9 @@ public sealed class ModelProviderRegistry(IEnumerable<IModelProvider> providers)
     /// </summary>
     public async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
     {
-        var models = new List<ProviderModelDescriptor>();
-        foreach (var provider in _providers)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            try { models.AddRange(await provider.GetModelsAsync(cancellationToken).ConfigureAwait(false)); }
-            catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException) { }
-        }
-        return models.GroupBy(model => model.Key, StringComparer.OrdinalIgnoreCase).Select(group => group.First())
-            .OrderByDescending(model => model.IsLocal)
+        // The unfiltered overload still enforces provider identity, observed locality and cancellation.
+        var models = await ((IModelProviderRegistry)this).GetModelsAsync(new ModelCataloguePolicy(), cancellationToken).ConfigureAwait(false);
+        return models.OrderByDescending(model => model.IsLocal)
             .ThenBy(model => model.ProviderId, StringComparer.OrdinalIgnoreCase)
             .ThenBy(model => model.Label, StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -70,7 +65,7 @@ public sealed class ModelRouter(IModelProviderRegistry providers) : IModelRouter
     public async Task<ModelRoutingDecision> RouteAsync(ModelRoutingRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var compatible = (await providers.GetModelsAsync(cancellationToken).ConfigureAwait(false))
+        var compatible = (await providers.GetModelsAsync(new ModelCataloguePolicy(AllowRemote: request.Policy.AllowCloud), cancellationToken).ConfigureAwait(false))
             .Where(model => request.RequiredCapabilities.All(model.Supports));
         if (!request.Policy.AllowCloud) compatible = compatible.Where(model => model.IsLocal);
         var candidates = compatible.ToArray();

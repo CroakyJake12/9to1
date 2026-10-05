@@ -1,0 +1,70 @@
+{
+  "status": "CURRENT_GLOBAL_CI_SOURCE_APPLICABILITY_ACK_PRE_INVOCATION",
+  "rootCandidate": "ce50dacc7189a91ad6c589904610a0cfcd0445e5",
+  "reviewedCIProposal": "03f64aa6feaff7203de251f9d919fe3220119e38",
+  "exactAllNineDependencyPinsMatch": [
+    {
+      "path": ".github/workflows/team-c-ordinary-web-picture.yml",
+      "bytes": 3179,
+      "sha256": "b88443f01c3842ad5652922deee32558323ee9707821e94077bb50064affd632",
+      "treeEntry": "100644 blob 3fde414133d713bab67f59db8fc5a6bda902c741\t.github/workflows/team-c-ordinary-web-picture.yml"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-web-publish.py",
+      "bytes": 17775,
+      "sha256": "ced8679e0c587a3e0077d84db084ec171af12fc40b63ffd1ff5fa7303241dabb",
+      "treeEntry": "100644 blob f3564bbebb71c99bec1578274d251437743a3fb4\tapps/Web/Tests/ci/run-ordinary-web-publish.py"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-picture-browser.py",
+      "bytes": 10119,
+      "sha256": "bbba1f206c4441fce0660192277e196b8903a32cbac29a8a65ddb1147618c0c3",
+      "treeEntry": "100644 blob 54ecb9f586c9c4154d558f0ff94506c1fafffd1c\tapps/Web/Tests/ci/run-picture-browser.py"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38",
+      "treeEntry": "100644 blob 8289a7b0ade290c3a34f2f81eacf67d760da6cb0\tapps/Web/Tests/ci/run-ordinary-native.py"
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/run-picture-browser.cjs",
+      "bytes": 34251,
+      "sha256": "9d9547e8df62b78dfb0646c50a1c8bde986fa79743c73f4269b65b3ad2f535f3",
+      "treeEntry": "100644 blob 02dbaf6aca9e034d3346ae141f56e2470f2f1965\tapps/Web/Tests/PictureBrowser/run-picture-browser.cjs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/png-oracle.cjs",
+      "bytes": 3573,
+      "sha256": "9c78229fc21b55e68c32a0f77fd9b8431866e5895a258906ac895d0059552909",
+      "treeEntry": "100644 blob 228471812c4ba9dca4a016edd6b5bb9348058f28\tapps/Web/Tests/PictureBrowser/png-oracle.cjs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs",
+      "bytes": 29093,
+      "sha256": "f8a58d8d464beb57fa6fa044cd8cc2bb3e47d06f1ae91d2a9760ad8e6dac3159",
+      "treeEntry": "100644 blob 60d14171de69d9a504b1947856f55b8a8947ac50\tapps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
+      "treeEntry": "100644 blob 0af4ee1802cc4ba10dafacacc4ed9c92bb9027a4\tframework/CUI/Runtime/CuiControlLoader.cs"
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserFeature.cs",
+      "bytes": 13171,
+      "sha256": "86cc1c751e0217daa204c05fa57a1b7f7865a9b412e23c217b67373ec1726eec",
+      "treeEntry": "100644 blob 63e4bc91078a0b3d680d414a8d67b2217b6d4763\tapps/Web/Picture/PictureBrowserFeature.cs"
+    }
+  ],
+  "rootTipOnlyNewWorkflow": true,
+  "qualifiedCurrentNative8": {
+    "sourceComposition": "Previously reviewed3301c8af whole8 bodies",
+    "outsideWebPublisherBrowser9PinCone": true
+  },
+  "executionContract": "Unchanged drivers bind dynamic github.sha to actual clean checkout and normal source/build/publication; future provider outcome belongs this actualce50 root graph, not an inferred EEC/fd5 outcome.",
+  "runtime": "NOT_RUN_BY_C6",
+  "acceptanceVerified": false,
+  "previousPreInvocationReviewSHA256": "2072c34bb6e61a5f19cc8240ae9e945f86177e0ef045686b236e4b5e78189fb5"
+}

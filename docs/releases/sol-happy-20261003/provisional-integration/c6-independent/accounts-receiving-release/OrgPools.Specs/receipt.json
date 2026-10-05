@@ -1,0 +1,62 @@
+{
+  "project": "OrgPools.Specs",
+  "sourceCommit": "f7b65b8c3854d7ca107b6d076b5334f0b1421329",
+  "configuration": "Release",
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/OrgPools.Specs/release/OrgPools.Specs.dll"
+  ],
+  "cwd": "/workspace/team-c-c6-durable-validation-20261004/accounts-receiving-release/OrgPools.Specs",
+  "startedUTC": "2026-10-04T12:50:50.393493+00:00",
+  "completedUTC": "2026-10-04T12:50:52.866542+00:00",
+  "seconds": 2.4730583330001537,
+  "exitCode": 0,
+  "compiledInputsVerifiedBeforeAndAfter": [
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/OrgPools.Specs/release/OrgPools.Specs.deps.json",
+      "bytes": 809,
+      "sha256": "ceda5577321a85a82123977505c5d2c7b0c874cb6e7887c6ef3b349d4e76bbe4"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/OrgPools.Specs/release/OrgPools.Specs.runtimeconfig.json",
+      "bytes": 330,
+      "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/OrgPools.Specs/release/NineToOne.Accounts.dll",
+      "bytes": 398848,
+      "sha256": "c63c43b80a5954fe78a0018b4ab411dc922000694537a845b41253121728c894"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/OrgPools.Specs/release/OrgPools.Specs.pdb",
+      "bytes": 17108,
+      "sha256": "c53fa1ebdda9be36e86f5fdff06c07e835ac0a0611f2bfbca6239c1a15a7e991"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/OrgPools.Specs/release/OrgPools.Specs.dll",
+      "bytes": 49664,
+      "sha256": "c49544444277827f103c4b98dc6b2f0d21be485ee70dd2726221368bb5638772"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/OrgPools.Specs/release/NineToOne.Accounts.pdb",
+      "bytes": 77016,
+      "sha256": "6e5690d721cf72adc5b0a5290051cd0a1c216e109ca3fefc0dc8525193e65fb3"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/NineToOne.Accounts/release/NineToOne.Accounts.dll",
+      "bytes": 398848,
+      "sha256": "c63c43b80a5954fe78a0018b4ab411dc922000694537a845b41253121728c894"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/NineToOne.Accounts/release/NineToOne.Accounts.deps.json",
+      "bytes": 426,
+      "sha256": "28119126e500c604d06a7ecbe4673ca8f5d10efd81da9e7b40c61966eb4455b7"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c2-accounts-provisional-20261004/OrgPools.Specs-Release/artifacts/bin/NineToOne.Accounts/release/NineToOne.Accounts.pdb",
+      "bytes": 77016,
+      "sha256": "6e5690d721cf72adc5b0a5290051cd0a1c216e109ca3fefc0dc8525193e65fb3"
+    }
+  ],
+  "qualification": "Independent execution of actual immutable C2 receiving Release DLLs. Source31 bodies verified exact reviewed29e33; compilation was C2, not independently rebuilt. Synthetic local contracts only; no hosted/native/Windows or final source adoption acceptance."
+}

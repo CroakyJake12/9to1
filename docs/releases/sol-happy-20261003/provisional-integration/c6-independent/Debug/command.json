@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "test",
+    "/workspace/team-c-c6-durable-validation-20261004/C6.DurableJob.Tests.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/workspace/team-c-c6-durable-validation-20261004/artifacts",
+    "-p:NuGetAudit=false",
+    "--filter",
+    "FullyQualifiedName~ExternalAgentDurableCancellationTests|FullyQualifiedName~ExternalAgentCancellationConcurrencyTests|FullyQualifiedName~UnifiedExecutionPersistenceTests.External_task_claim_is_exclusive_and_idempotent_completion_is_persisted|FullyQualifiedName~UnifiedExecutionPersistenceTests.Migration_23_round_trips_graph_feedback_session_notifications_and_sources",
+    "--logger",
+    "trx;LogFileName=tests.trx",
+    "--results-directory",
+    "/workspace/team-c-c6-durable-validation-20261004/Debug/results"
+  ],
+  "cwd": "/workspace/team-c-c6-durable-review",
+  "configuration": "Debug",
+  "platform": "Linux x64; actual production .NET/SQLite reference; not Windows GUI/package acceptance",
+  "sourceCommit": "a4be0cd0fd8af22ccde5fb609e5af70ee0ace271",
+  "startedUTC": "2026-10-04T12:44:20.404689+00:00",
+  "completedUTC": "2026-10-04T12:44:38.656309+00:00",
+  "elapsedSeconds": 18.25163134000013,
+  "exitCode": 0,
+  "expectedScopedCases": 12,
+  "excluded": "Two unrelated loopback ProjectPreview tests; full normal Infrastructure suite and Windows runtime not inferred"
+}

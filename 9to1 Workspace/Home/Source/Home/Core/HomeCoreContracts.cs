@@ -9,6 +9,7 @@ public readonly record struct HomeContractVersion : IComparable<HomeContractVers
     public int Minor { get; }
     public int Patch { get; }
 
+    [System.Text.Json.Serialization.JsonConstructor]
     public HomeContractVersion(int major, int minor, int patch)
     {
         if (major < 0 || minor < 0 || patch < 0)
@@ -171,6 +172,13 @@ public interface IHomeCoreStateStore
         HomeCoreStateRecord record,
         long expectedRecordRevision,
         CancellationToken cancellationToken = default);
+
+    Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+        Haven.Application.AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard,
+        CancellationToken cancellationToken = default) => Task.FromResult(HomeStateWriteResult.Failed(
+            new HomeCoreFailure(HomeCoreErrorCode.PermissionDenied, "This store does not support commit authority guards.",
+                record.RecordId, false)));
+
 }
 
 public interface IHomeCoreService

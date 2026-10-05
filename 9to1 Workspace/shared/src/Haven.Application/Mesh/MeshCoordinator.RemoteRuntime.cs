@@ -42,7 +42,7 @@ public sealed partial class MeshCoordinator
             {
                 var route = MeshRemoteModelProvider.EncodeRoute(peer.DeviceId, item.ProviderId, item.Name);
                 var descriptor = new ModelDescriptor(route, item.SizeBytes, $"{peer.DisplayName} / {item.Family}", item.ParameterSize, item.Quantization, item.Capabilities.ToHashSet(), item.ModifiedAt);
-                models.Add(new ProviderModelDescriptor(MeshRemoteModelProvider.MeshProviderId, true, descriptor, item.ContextWindow, $"{peer.DisplayName} · {item.DisplayName ?? item.Name}"));
+                models.Add(new ProviderModelDescriptor(MeshRemoteModelProvider.MeshProviderId, false, descriptor, item.ContextWindow, $"{peer.DisplayName} · {item.DisplayName ?? item.Name}"));
             }
         }
         return models;
