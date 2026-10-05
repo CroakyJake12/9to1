@@ -120,13 +120,16 @@ try {
         $name = $taskEntry[0]; $taskProject = $taskEntry[1]
         $result.stage = $name
         [void](Invoke-DotNet "$name-build-release" (@('build', $taskProject, '-c', 'Release', '--nologo') + $taskBuildFlags))
-        $propertiesText = Invoke-DotNet "$name-effective-properties" @('msbuild', $taskProject, '-p:Configuration=Release', '-p:UseArtifactsOutput=true', "-p:ArtifactsPath=$artifacts", '-p:UseSharedCompilation=false', '-m:1', '-nodeReuse:false', '-getProperty:TargetPath,TargetFramework,Configuration,RuntimeIdentifier,DebugType,DefineConstants,IsTestProject,UseSharedCompilation')
-        $properties = ($propertiesText | ConvertFrom-Json).Properties
+        $propertiesText = Invoke-DotNet "$name-effective-properties" @('msbuild', $taskProject, '-p:Configuration=Release', '-p:UseArtifactsOutput=true', "-p:ArtifactsPath=$artifacts", '-p:UseSharedCompilation=false', '-m:1', '-nodeReuse:false', '-getProperty:TargetPath,TargetFramework,Configuration,RuntimeIdentifier,DebugType,DefineConstants,IsTestProject,UseSharedCompilation,IncludeDevGenerators', '-getItem:ProjectReference')
+        $evaluation = $propertiesText | ConvertFrom-Json
+        $properties = $evaluation.Properties
+        $projectReferences = @($evaluation.Items.ProjectReference)
+        if ($name -ceq 'avalonia-source-task' -and ($properties.IncludeDevGenerators -cne 'true' -or @($projectReferences | Where-Object { $_.FullPath.Replace('\', '/').EndsWith('framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', [StringComparison]::OrdinalIgnoreCase) }).Count -ne 1)) { throw 'Retain the actual default DevGenerators source reference without disabling its import.' }
         $task = [IO.Path]::GetFullPath([string]$properties.TargetPath)
         if ($properties.TargetFramework -cne 'netstandard2.0' -or $properties.Configuration -cne 'Release' -or -not $task.StartsWith($artifacts + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $task -PathType Leaf)) { throw 'The actual evaluated source-built task must belong to this fresh ordinary artifact tree.' }
         if (((Get-Item -LiteralPath $task -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'A source-built task DLL must be a regular owned output.' }
         $digest = (Get-FileHash -LiteralPath $task -Algorithm SHA256).Hash.ToLowerInvariant()
-        $result.sourceBuiltTasks += [ordered]@{ name = $name; project = $taskProject; effectiveProperties = $properties; path = $task; bytes = (Get-Item -LiteralPath $task).Length; sha256 = $digest }
+        $result.sourceBuiltTasks += [ordered]@{ name = $name; project = $taskProject; effectiveProperties = $properties; evaluatedProjectReferences = $projectReferences; path = $task; bytes = (Get-Item -LiteralPath $task).Length; sha256 = $digest }
         if ($name -ceq 'cui-source-task') { $cuiTasks = $task; $result.buildTaskSHA256 = $digest }
         else { $avaloniaTasks = $task; $result.avaloniaBuildTaskSHA256 = $digest }
         Save-Result
