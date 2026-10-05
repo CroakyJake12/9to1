@@ -242,6 +242,14 @@ public sealed class TaskRunLongLivedCustodyTests
         public Exception? CopiedReceiptRefusal;
         public Task RegisterOriginalAttemptAsync(TaskRunAttemptAdmission a, CancellationToken t) => inner.RegisterOriginalAttemptAsync(a, t);
         public Task<T> StartOriginalFrameAsync<T>(TaskRunAttemptAdmission a, Func<CancellationToken, Task<T>> b, CancellationToken t) => inner.StartOriginalFrameAsync(a, b, t);
+        public Task<T> StartOriginalResourceFrameAsync<T, TResource>(TaskRunAttemptAdmission a,
+            Func<CancellationToken, Task<TResource>> acquire, Func<TResource, CancellationToken, Task> revalidate,
+            Func<CancellationToken, Task<T>> body, CancellationToken token) where TResource : class, IAsyncDisposable =>
+            inner.StartOriginalResourceFrameAsync<T, TResource>(a, acquire, revalidate, body, token);
+        public Task<T> StartOriginalResourceFrameAsync<T, TResource>(TaskRunAttemptAdmission a,
+            Func<CancellationToken, Task<TResource>> acquire, Func<TResource, CancellationToken, Task> revalidate,
+            Func<TResource, CancellationToken, Task<T>> body, CancellationToken token) where TResource : class, IAsyncDisposable =>
+            inner.StartOriginalResourceFrameAsync<T, TResource>(a, acquire, revalidate, body, token);
         public Task<T> StartOriginalToolFrameAsync<T>(TaskRunAttemptAdmission a, Func<CancellationToken, Task<T>> b, CancellationToken t) => inner.StartOriginalToolFrameAsync(a, b, t);
         public IAsyncEnumerable<T> StreamOriginalFrame<T>(TaskRunAttemptAdmission a, Func<CancellationToken, IAsyncEnumerable<T>> b, CancellationToken t) => inner.StreamOriginalFrame(a, b, t);
         public TaskRunOriginalFailureObservation CreateProviderFailureObservation(TaskRunAttemptAdmission a, Task f, Exception c) => inner.CreateProviderFailureObservation(a, f, c);

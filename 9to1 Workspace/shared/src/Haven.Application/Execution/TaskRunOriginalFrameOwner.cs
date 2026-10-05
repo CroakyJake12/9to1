@@ -39,6 +39,10 @@ public interface ITaskRunOriginalFrameOwner : ITaskRunProviderFailureSettlement,
         Func<CancellationToken, Task<TResource>> acquireOriginalResource,
         Func<TResource, CancellationToken, Task> revalidateOriginalResource,
         Func<CancellationToken, Task<T>> rawProviderBody, CancellationToken cancellationToken) where TResource : class, IAsyncDisposable;
+    Task<T> StartOriginalResourceFrameAsync<T, TResource>(TaskRunAttemptAdmission originalAdmission,
+        Func<CancellationToken, Task<TResource>> acquireOriginalResource,
+        Func<TResource, CancellationToken, Task> revalidateOriginalResource,
+        Func<TResource, CancellationToken, Task<T>> rawProviderBody, CancellationToken cancellationToken) where TResource : class, IAsyncDisposable;
     Task<T> StartOriginalToolFrameAsync<T>(TaskRunAttemptAdmission originalAdmission,
         Func<CancellationToken, Task<T>> originalToolBody, CancellationToken cancellationToken);
     IAsyncEnumerable<T> StreamOriginalFrame<T>(TaskRunAttemptAdmission originalAdmission,
@@ -132,7 +136,19 @@ public sealed class TaskRunOriginalFrameOwner : ITaskRunOriginalFrameOwner
         ArgumentNullException.ThrowIfNull(acquireOriginalResource);
         ArgumentNullException.ThrowIfNull(revalidateOriginalResource);
         ArgumentNullException.ThrowIfNull(rawProviderBody);
-        return StartWithFrame(originalAdmission, (_, token) => rawProviderBody(token), cancellationToken,
+        return StartOriginalResourceFrameAsync<T, TResource>(originalAdmission, acquireOriginalResource,
+            revalidateOriginalResource, (_, token) => rawProviderBody(token), cancellationToken);
+    }
+
+    public Task<T> StartOriginalResourceFrameAsync<T, TResource>(TaskRunAttemptAdmission originalAdmission,
+        Func<CancellationToken, Task<TResource>> acquireOriginalResource,
+        Func<TResource, CancellationToken, Task> revalidateOriginalResource,
+        Func<TResource, CancellationToken, Task<T>> rawProviderBody, CancellationToken cancellationToken) where TResource : class, IAsyncDisposable
+    {
+        ArgumentNullException.ThrowIfNull(acquireOriginalResource);
+        ArgumentNullException.ThrowIfNull(revalidateOriginalResource);
+        ArgumentNullException.ThrowIfNull(rawProviderBody);
+        return StartWithFrame(originalAdmission, (frame, token) => rawProviderBody((TResource)frame.OriginalResource!, token), cancellationToken,
             provider: true, token => acquireOriginalResource(token),
             original => ((Task<TResource>)original).Result,
             (resource, token) => revalidateOriginalResource((TResource)resource, token));

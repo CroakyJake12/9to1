@@ -42,6 +42,9 @@ public sealed class CheckpointService(
     {
         private readonly object _publication = new();
         private CheckpointInfo? _originalCheckpoint;
+        private bool _saveAdmitted;
+        private Task? _originalSave;
+        private Exception? _originalSaveFailure;
         // Retain the immutable record the actual successful producer saved. A repository
         // rewrite under the same ID cannot borrow this execution's original provenance.
         public Guid? CheckpointId
@@ -57,6 +60,32 @@ public sealed class CheckpointService(
         {
             lock (_publication) _originalCheckpoint = checkpoint;
         }
+        public void DemandNoUnacknowledgedSave()
+        {
+            lock (_publication)
+                if (_saveAdmitted && _originalCheckpoint is null) throw RefuseSecondSave();
+        }
+        public void AdmitOriginalSave()
+        {
+            lock (_publication)
+            {
+                if (_saveAdmitted) throw RefuseSecondSave();
+                _saveAdmitted = true;
+            }
+        }
+        public void RetainOriginalSave(Task original)
+        {
+            ArgumentNullException.ThrowIfNull(original);
+            lock (_publication) _originalSave = original;
+        }
+        public void RetainOriginalSaveFailure(Exception failure)
+        {
+            lock (_publication) _originalSaveFailure = failure;
+        }
+        private Exception RefuseSecondSave() => new InvalidOperationException(
+            "The same execution's original checkpoint save is pending or unacknowledged; a second save is refused. " +
+            "Recovery requires an actual owned authorised inspection, not row absence or automatic replay.",
+            _originalSaveFailure ?? _originalSave?.Exception);
     }
 
     private readonly object _gate = new();
@@ -79,12 +108,63 @@ public sealed class CheckpointService(
         }
         var created = original.GetOriginal(checkpointId);
         if (created is null) return null;
-        var record = await repository.GetAsync(checkpointId, cancellationToken).ConfigureAwait(false);
+        var record = await AwaitOriginalCheckpointTaskAsync(() => repository.GetAsync(checkpointId, cancellationToken)).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (record != created) return null;
         lock (_gate)
             return _scopesByExecution.TryGetValue(executionId, out var current) &&
                 ReferenceEquals(current, original) && ReferenceEquals(current.GetOriginal(checkpointId), created) ? record : null;
+    }
+
+    // These are the provider's SAME original Tasks, not a cancellable wait substitute.
+    // A save that physically persisted and then faulted remains unacknowledged: the
+    // successful record is published only after its actual Task completed successfully.
+    private static async Task<T> AwaitOriginalCheckpointTaskAsync<T>(Func<Task<T>> acquireOriginal)
+    {
+        Task<T>? original = null;
+        try
+        {
+            original = acquireOriginal();
+            return await original.ConfigureAwait(false);
+        }
+        catch (Exception observed)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(
+                OriginalCheckpointTaskCause(original, observed)).Throw();
+            throw;
+        }
+    }
+
+    private static async Task AwaitOriginalCheckpointTaskAsync(Func<Task> acquireOriginal)
+    {
+        Task? original = null;
+        try
+        {
+            original = acquireOriginal();
+            await original.ConfigureAwait(false);
+        }
+        catch (Exception observed)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(
+                OriginalCheckpointTaskCause(original, observed)).Throw();
+            throw;
+        }
+    }
+
+    private static Exception OriginalCheckpointTaskCause(Task? original, Exception observed)
+    {
+        if (original?.Exception is { InnerExceptions.Count: > 0 } fault)
+        {
+            if (fault.InnerExceptions.Count != 1) return fault;
+            var cause = fault.InnerExceptions[0];
+            // A faulted OCE must remain Faulted; an opaque empty aggregate is itself an
+            // original cause, so retain it as a member of a nonempty envelope.
+            return cause is OperationCanceledException or AggregateException { InnerExceptions.Count: 0 }
+                ? fault : cause;
+        }
+        if (original is null && observed is OperationCanceledException or AggregateException { InnerExceptions.Count: 0 })
+            return new AggregateException("An original checkpoint provider failed before returning its Task.", observed);
+        return observed; // An actual canceled original retains its real cancellation token/status.
     }
 
     /// <summary>Creates at most one checkpoint per agentic execution, honouring the user's policy.</summary>
@@ -107,14 +187,44 @@ public sealed class CheckpointService(
                 _scopesByExecution[executionId] = scope;
             }
         }
-        if (scope.CheckpointId.HasValue)
-            return await repository.GetAsync(scope.CheckpointId.Value, cancellationToken).ConfigureAwait(false);
+        if (scope.CheckpointId is Guid acknowledgedId)
+        {
+            var acknowledged = scope.GetOriginal(acknowledgedId);
+            var actualRecord = await AwaitOriginalCheckpointTaskAsync(() =>
+                repository.GetAsync(acknowledgedId, cancellationToken)).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (_gate)
+                if (acknowledged is not null && actualRecord == acknowledged &&
+                    _scopesByExecution.TryGetValue(executionId, out var current) && ReferenceEquals(current, scope) &&
+                    ReferenceEquals(current.GetOriginal(acknowledgedId), acknowledged)) return actualRecord;
+            throw new InvalidOperationException(
+                "The already-published checkpoint no longer matches this execution's original acknowledgement; " +
+                "a second save is refused. Recovery requires an actual owned authorised inspection.");
+        }
 
-        var startSequence = await repository.GetLatestVersionSequenceAsync(workspaceRoot, cancellationToken).ConfigureAwait(false);
+        scope.DemandNoUnacknowledgedSave();
+
+        var startSequence = await AwaitOriginalCheckpointTaskAsync(() => repository.GetLatestVersionSequenceAsync(workspaceRoot, cancellationToken)).ConfigureAwait(false);
         var checkpoint = new CheckpointInfo(
             Guid.NewGuid(), conversationId, containerId, workspaceRoot,
             "Before agentic changes", mode, startSequence, DateTimeOffset.UtcNow);
-        await repository.SaveAsync(checkpoint, cancellationToken).ConfigureAwait(false);
+        // Admission is only pending/attempted metadata. It is never a save acknowledgement.
+        // Concurrent calls can refuse, but cannot launch another physical Save for this scope.
+        scope.AdmitOriginalSave();
+        try
+        {
+            await AwaitOriginalCheckpointTaskAsync(() =>
+            {
+                var original = repository.SaveAsync(checkpoint, cancellationToken);
+                scope.RetainOriginalSave(original);
+                return original;
+            }).ConfigureAwait(false);
+        }
+        catch (Exception failure)
+        {
+            scope.RetainOriginalSaveFailure(failure);
+            throw;
+        }
         scope.PublishOriginal(checkpoint);
 
         executionEvents?.TryPublish(new ExecutionEvent(

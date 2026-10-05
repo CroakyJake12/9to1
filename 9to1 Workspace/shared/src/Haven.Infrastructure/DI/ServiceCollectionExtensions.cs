@@ -160,7 +160,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IKnowledgeMaintenanceService, KnowledgeMaintenanceService>();
         services.AddSingleton<BackgroundLearningScheduler>();
         services.AddSingleton<IBackgroundLearningScheduler>(provider => provider.GetRequiredService<BackgroundLearningScheduler>());
-        services.AddSingleton<IPermissionDecisionEngine, PermissionDecisionEngine>();
+        services.AddSingleton<PermissionDecisionEngine>();
+        services.AddSingleton<IPermissionDecisionEngine>(provider => provider.GetRequiredService<PermissionDecisionEngine>());
+        services.AddSingleton<IPermissionOriginalEffectFence>(provider => provider.GetRequiredService<PermissionDecisionEngine>());
         services.AddSingleton<ICallCoordinator>(provider => provider.GetRequiredService<ResponsiveCallCoordinator>());
         services.AddSingleton<ILegacyStateMigrator, LegacyStateMigrator>();
         services.AddSingleton<IWorkspaceToolService, WorkspaceToolService>();
@@ -203,13 +205,73 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ModelPermissionEvaluator>();
         services.AddSingleton<IDefaultProviderStore, VersionedDefaultProviderStore>();
         services.AddSingleton<CheckpointService>();
+        services.AddSingleton<ICheckpointExecutionObservationSource>(provider => provider.GetRequiredService<CheckpointService>());
         services.AddSingleton<ICheckpointRepository, SqliteCheckpointRepository>();
         services.AddSingleton<ICheckpointRestorer, WorkspaceCheckpointRestorer>();
         services.AddSingleton<IProjectInstructionSource, ProjectInstructionFileSource>();
         services.AddSingleton<IImagineGenerationService, OpenAiImagineGenerationService>();
         services.AddSingleton<ImagineGenerationCommand>();
         services.AddSingleton<RemediationCoordinator>();
-        services.AddSingleton<TaskExecutionCoordinator>();
+        // Task identity is scoped to the local execution host, separate from Home/resource grants.
+        services.AddSingleton<HostLocalTaskActorSource>();
+        services.AddSingleton<WorkspaceTaskRunReceiptAuthority>();
+        services.AddSingleton<ITaskRunActionReceiptAuthority>(provider => provider.GetRequiredService<WorkspaceTaskRunReceiptAuthority>());
+        services.AddSingleton<TaskRunCentralCloudUsePermissionSource>(provider => new TaskRunCentralCloudUsePermissionSource(
+            provider.GetRequiredService<HostLocalTaskActorSource>(),
+            provider.GetRequiredService<PermissionDecisionEngine>()));
+        services.AddSingleton<ITaskRunCloudUsePermissionSource>(provider => provider.GetRequiredService<TaskRunCentralCloudUsePermissionSource>());
+        services.AddSingleton<TaskRunConfiguredCloudAdmissionSource>(provider => new TaskRunConfiguredCloudAdmissionSource(
+            provider.GetRequiredService<HostLocalTaskActorSource>(),
+            provider.GetRequiredService<IProviderConfigurationStore>(),
+            provider.GetRequiredService<IProviderSecretStore>(),
+            provider.GetRequiredService<IPrivacyPreferenceStore>(),
+            provider.GetRequiredService<IConversationRepository>(),
+            (task, run, attempt, token) => provider.GetRequiredService<TaskExecutionCoordinator>()
+                .TryGetIssuedAttemptAsync(task, run, attempt, token),
+            knowledge: provider.GetService<IKnowledgeLibrary>(),
+            cloudUsePermission: provider.GetRequiredService<ITaskRunCloudUsePermissionSource>()));
+        services.AddSingleton<ITaskRunCloudAdmissionSource>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
+        services.AddSingleton<ITaskRunProviderContextCapture>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
+        services.AddSingleton<ITaskRunProviderContextAuthority>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
+        services.AddSingleton<TaskRunPermissionAuthority>(provider => new TaskRunPermissionAuthority(
+            provider.GetRequiredService<HostLocalTaskActorSource>(),
+            provider.GetRequiredService<IModelProviderRegistry>(),
+            provider.GetRequiredService<IProviderConfigurationStore>(),
+            provider.GetRequiredService<IPrivacyPreferenceStore>(),
+            provider.GetRequiredService<ModelPermissionEvaluator>(),
+            cloud: provider.GetRequiredService<ITaskRunCloudAdmissionSource>(),
+            receipts: provider.GetRequiredService<ITaskRunActionReceiptAuthority>(),
+            routes: provider.GetService<ITaskRunRouteObservationSource>()));
+        services.AddSingleton<ITaskRunAdmissionAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunCommandAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunSelectedRouteCapture>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<TaskRunOriginalFrameOwner>(provider => new TaskRunOriginalFrameOwner(
+            (task, run, attempt, token) => provider.GetRequiredService<TaskExecutionCoordinator>()
+                .TryGetIssuedAttemptAsync(task, run, attempt, token)));
+        services.AddSingleton<ITaskRunOriginalFrameOwner>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunRuntimeSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunProviderFailureSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalAttemptRetirement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<WorkspaceTaskRunEffectAuthority>();
+        services.AddSingleton<IWorkspaceToolFinalFenceAuthority>(provider => provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>());
+        services.AddSingleton<WorkspaceTaskRunToolActionOwner>(provider => new WorkspaceTaskRunToolActionOwner(
+            () => provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<ITaskRunOriginalFrameOwner>(),
+            provider.GetRequiredService<IWorkspaceToolService>(),
+            provider.GetRequiredService<CapabilityRegistryService>(),
+            provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>(),
+            OperatingSystem.IsAndroid() ? CapabilityPlatform.Android : CapabilityPlatform.Windows,
+            provider.GetRequiredService<WorkspaceTaskRunReceiptAuthority>()));
+        services.AddSingleton<ITaskRunToolActionOwner>(provider => provider.GetRequiredService<WorkspaceTaskRunToolActionOwner>());
+        services.AddSingleton<TaskExecutionCoordinator>(provider => new TaskExecutionCoordinator(
+            provider.GetRequiredService<ITaskExecutionRepository>(),
+            provider.GetRequiredService<IExecutionEventSink>(),
+            provider.GetService<TimeProvider>(),
+            provider.GetRequiredService<ITaskRunAdmissionAuthority>(),
+            provider.GetRequiredService<ITaskRunRuntimeSettlement>(),
+            provider.GetRequiredService<ICheckpointRepository>(),
+            provider.GetRequiredService<ITaskRunToolActionOwner>(),
+            provider.GetRequiredService<ICheckpointExecutionObservationSource>()));
         services.AddSingleton<IProjectPreviewProvider, WebProjectPreviewProvider>();
         services.AddSingleton<IModelProvider>(provider => new OllamaModelProvider(
             provider.GetRequiredService<ILocalOllamaClient>(),

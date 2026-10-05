@@ -281,6 +281,36 @@ public sealed class TaskRunOriginalFrameOwnerTests
         Assert.Equal(1, h.Lease.Disposes);
     }
 
+    [Fact]
+    public async Task Typed_resource_body_receives_same_actual_acquired_object_and_returns_original_raw_task_result()
+    {
+        var h = Harness.Create();
+        await h.Runtime.RegisterOriginalAttemptAsync(h.Admission, default);
+        var resource = new OriginalResource(Task.CompletedTask);
+        var acquire = Task.FromResult(resource);
+        var raw = Task.FromResult("actual raw result");
+        Task<string>? frame = null; var errors = new List<Exception>();
+        OriginalResource? delivered = null;
+        try
+        {
+            frame = h.Runtime.StartOriginalResourceFrameAsync(h.Admission, _ => acquire,
+                (same, _) => { Assert.Same(resource, same); return Task.CompletedTask; },
+                (same, _) => { delivered = same; Assert.Same(resource, same); return raw; }, default);
+            Assert.Equal("actual raw result", await frame);
+            Assert.Same(resource, delivered);
+            Assert.True(raw.IsCompletedSuccessfully);
+        }
+        catch (Exception error) { errors.Add(error); }
+        finally
+        {
+            if (frame is not null) await CollectNewOriginalAsync(frame, errors, []);
+            await CollectNewOriginalAsync(h.Runtime.CloseAndDrainAsync(), errors, []);
+        }
+        ThrowNewControlErrors(errors);
+        Assert.Equal(1, resource.DisposeCalls);
+        Assert.Equal(1, h.Lease.Disposes);
+    }
+
     private static async Task CollectNewOriginalAsync(Task actualOriginal, List<Exception> errors, IReadOnlyList<Exception> expected)
     {
         var failure = await Record.ExceptionAsync(() => actualOriginal);

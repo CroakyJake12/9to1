@@ -30,7 +30,8 @@ public sealed class ResilientProviderRoutingModelClient(
     TaskExecutionCoordinator? taskCoordinator = null,
     ITaskRunSelectedRouteCapture? routeCapture = null,
     ITaskRunOriginalFrameOwner? originalFrames = null,
-    ModelPermissionEvaluator? modelPermissions = null) : IProviderModelClient
+    ModelPermissionEvaluator? modelPermissions = null,
+    ITaskRunProviderContextAuthority? taskContextAuthority = null) : IProviderModelClient
 {
     // Preserve the original six-argument CLR entry for already compiled ordinary clients.
     // Its absence of canonical owners conveys no Task/Run, cloud context or tool authority.
@@ -39,7 +40,7 @@ public sealed class ResilientProviderRoutingModelClient(
         IProviderConfigurationStore configurations, IPrivacyPreferenceStore privacy,
         IModelFallbackOrderStore? fallbackOrder, IExecutionEventSink? executionEvents)
         : this(primary, providers, configurations, privacy, fallbackOrder, executionEvents,
-            taskCoordinator: null, routeCapture: null, originalFrames: null, modelPermissions: null)
+            taskCoordinator: null, routeCapture: null, originalFrames: null, modelPermissions: null, taskContextAuthority: null)
     {
     }
 
@@ -88,7 +89,8 @@ public sealed class ResilientProviderRoutingModelClient(
                 SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.Wait
             });
             Exception? observedProviderFailure = null;
-            var producer = RunOriginalFrameAsync(state, async token =>
+            var routedRequest = CreateRoutedRequest(request, selected, state.Context);
+            var producer = RunOriginalContextFrameAsync(state, request, routedRequest, async (invocationFence, token) =>
             {
                 IAsyncEnumerator<string>? original = null;
                 Exception? bodyFailure = null;
@@ -96,8 +98,8 @@ public sealed class ResilientProviderRoutingModelClient(
                 try
                 {
                     GuardSelectedProvider(selected);
-                    original = RawStream(selected, request with { Model = selected.Key, ExecutionContext = state.Context }, token)
-                        .GetAsyncEnumerator(token);
+                    original = StartRawInvocation(invocationFence, () => RawStream(selected, routedRequest, token)
+                        .GetAsyncEnumerator(token)); // Finite factory/start only; enumerate outside the central gate.
                     while (true)
                     {
                         // Consume each original ValueTask exactly once. Its direct Task siblings
@@ -214,12 +216,13 @@ public sealed class ResilientProviderRoutingModelClient(
             Exception? synchronousProviderFailure = null;
             Task<string>? originalProviderTask = null;
             Task<string>? originalFrame = null;
+            var routedRequest = CreateRoutedRequest(request, selected, state.Context);
             try
             {
-                originalFrame = RunOriginalFrameAsync(state, token =>
+                originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
                 {
                     GuardSelectedProvider(selected);
-                    try { return originalProviderTask = RawCompleteAsync(selected, request with { Model = selected.Key, ExecutionContext = state.Context }, token); }
+                    try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawCompleteAsync(selected, routedRequest, token)); }
                     catch (Exception failure) { synchronousProviderFailure = failure; throw; }
                 }, cancellationToken);
                 return await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
@@ -266,12 +269,13 @@ public sealed class ResilientProviderRoutingModelClient(
             Exception? synchronousProviderFailure = null;
             Task<OllamaToolResponse>? originalProviderTask = null;
             Task<OllamaToolResponse>? originalFrame = null;
+            var routedRequest = CreateRoutedRequest(request, selected, state.Context);
             try
             {
-                originalFrame = RunOriginalFrameAsync(state, token =>
+                originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
                 {
                     GuardSelectedProvider(selected);
-                    try { return originalProviderTask = RawToolsAsync(selected, request with { Model = selected.Key, ExecutionContext = state.Context }, token); }
+                    try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawToolsAsync(selected, routedRequest, token)); }
                     catch (Exception failure) { synchronousProviderFailure = failure; throw; }
                 }, cancellationToken);
                 var response = await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
@@ -380,6 +384,7 @@ public sealed class ResilientProviderRoutingModelClient(
     {
         public ProviderExecutionContext? Context { get; set; } = context;
         public TaskRunAttemptAdmission? Admission { get; set; }
+        public TaskExecutionSnapshot? CurrentSnapshot { get; set; }
         public bool InitialObservationValidated { get; set; }
         public TaskExecutionOwnerBinding? OriginalOwner { get; set; }
     }
@@ -485,6 +490,7 @@ public sealed class ResilientProviderRoutingModelClient(
         await admission.Lease.RevalidateAsync(token).ConfigureAwait(false);
         var running = await taskCoordinator.MarkAttemptRunningAsync(context.TaskId, context.ExecutionId, admission.AttemptId, token).ConfigureAwait(false);
         state.Admission = admission;
+        state.CurrentSnapshot = running;
         state.Context = context with
         {
             AttemptId = admission.AttemptId, PersistenceRevision = running.PersistenceRevision,
@@ -498,6 +504,78 @@ public sealed class ResilientProviderRoutingModelClient(
             ? (originalFrames ?? throw new InvalidOperationException("The original provider-frame owner is unavailable."))
                 .StartOriginalFrameAsync(admission, rawBody, token)
             : rawBody(token);
+
+    // An attempt lease authorizes a route; it never independently authorizes its actual content.
+    // Canonical remote frames require the privately captured SAME caller request, a detached wire
+    // payload, and the actual central invocation fence. Resource cleanup is owned outside the raw
+    // provider task by the finite-frame owner and can never be acknowledged as a quota body fault.
+    private Task<T> RunOriginalContextFrameAsync<T>(RoutingState state, OllamaChatRequest original,
+        OllamaChatRequest routed, Func<ITaskRunProviderInvocationFence?, CancellationToken, Task<T>> rawBody, CancellationToken token) =>
+        RunOriginalContextFrameAsync(state, (admission, snapshot, actualToken) =>
+            (taskContextAuthority ?? throw new InvalidOperationException("The actual per-request cloud context owner is unavailable."))
+                .AcquireOriginalFrameAsync(admission, snapshot, original, routed, actualToken).AsTask(), rawBody, token);
+
+    private Task<T> RunOriginalContextFrameAsync<T>(RoutingState state, OllamaToolRequest original,
+        OllamaToolRequest routed, Func<ITaskRunProviderInvocationFence?, CancellationToken, Task<T>> rawBody, CancellationToken token) =>
+        RunOriginalContextFrameAsync(state, (admission, snapshot, actualToken) =>
+            (taskContextAuthority ?? throw new InvalidOperationException("The actual per-request cloud context owner is unavailable."))
+                .AcquireOriginalFrameAsync(admission, snapshot, original, routed, actualToken).AsTask(), rawBody, token);
+
+    private Task<T> RunOriginalContextFrameAsync<T>(RoutingState state,
+        Func<TaskRunAttemptAdmission, TaskExecutionSnapshot, CancellationToken, Task<ITaskRunProviderContextFrame>> acquire,
+        Func<ITaskRunProviderInvocationFence?, CancellationToken, Task<T>> rawBody, CancellationToken token)
+    {
+        if (state.Admission is not { } admission || !admission.Lease.Candidate.UsesCloud)
+            return RunOriginalFrameAsync(state, actualToken => rawBody(null, actualToken), token);
+        var snapshot = state.CurrentSnapshot ?? throw new InvalidOperationException("The current original task snapshot is unavailable.");
+        var frames = originalFrames ?? throw new InvalidOperationException("The original resource-frame owner is unavailable.");
+        return frames.StartOriginalResourceFrameAsync<T, ITaskRunProviderContextFrame>(admission,
+            actualToken => acquire(admission, snapshot, actualToken),
+            // Missing invocation authority is resource admission failure, never a quota body cause.
+            (sameFrame, actualToken) => sameFrame is ITaskRunProviderInvocationFence
+                ? sameFrame.RevalidateAsync(actualToken).AsTask()
+                : Task.FromException(new UnauthorizedAccessException("The actual remote invocation permission fence is unavailable.")),
+            (sameFrame, actualToken) => rawBody((ITaskRunProviderInvocationFence)sameFrame, actualToken), token);
+    }
+
+    private static T StartRawInvocation<T>(ITaskRunProviderInvocationFence? actualFence, Func<T> originalRawStart) =>
+        actualFence is null ? originalRawStart() : actualFence.RunOriginalInvocation(originalRawStart);
+
+    private static OllamaChatRequest CreateRoutedRequest(OllamaChatRequest original, SelectedProvider selected,
+        ProviderExecutionContext? context)
+    {
+        var routed = original with { Model = selected.Descriptor?.Name ?? selected.Key, ExecutionContext = context };
+        if (context is null || selected.Descriptor?.IsLocal != false) return routed; // Preserve ordinary free/local request semantics.
+        return routed with
+        {
+            Messages = Array.AsReadOnly(original.Messages.Select(message => message with
+            { Images = message.Images is null ? null : Array.AsReadOnly(message.Images.ToArray()) }).ToArray())
+        };
+    }
+
+    private static OllamaToolRequest CreateRoutedRequest(OllamaToolRequest original, SelectedProvider selected,
+        ProviderExecutionContext? context)
+    {
+        var routed = original with { Model = selected.Descriptor?.Name ?? selected.Key, ExecutionContext = context };
+        if (context is null || selected.Descriptor?.IsLocal != false) return routed;
+        return routed with
+        {
+            Messages = Array.AsReadOnly(original.Messages.Select(message => message with
+            {
+                Images = message.Images is null ? null : Array.AsReadOnly(message.Images.ToArray()),
+                ToolCalls = message.ToolCalls is null ? null : Array.AsReadOnly(message.ToolCalls.Select(call => call with
+                { Arguments = new System.Collections.ObjectModel.ReadOnlyDictionary<string, System.Text.Json.JsonElement>(
+                    call.Arguments.ToDictionary(pair => pair.Key, pair => pair.Value.Clone(), StringComparer.Ordinal)) }).ToArray())
+            }).ToArray()),
+            Tools = Array.AsReadOnly(original.Tools.Select(tool => tool with
+            {
+                Properties = new System.Collections.ObjectModel.ReadOnlyDictionary<string, object>(
+                    tool.Properties.ToDictionary(pair => pair.Key, pair => (object)System.Text.Json.JsonSerializer.SerializeToElement(pair.Value), StringComparer.Ordinal)),
+                Required = Array.AsReadOnly(tool.Required.ToArray()),
+                InputSchema = tool.InputSchema is { } schema ? schema.Clone() : null
+            }).ToArray())
+        };
+    }
 
     private async Task<TaskExecutionSnapshot> RefreshObservedContextAsync(RoutingState state, CancellationToken token)
     {
@@ -542,9 +620,9 @@ public sealed class ResilientProviderRoutingModelClient(
             : null;
         if (originalFailure is not null && (originalObservation is not null && !ReferenceEquals(originalFailure, originalObservation)
             || !ReferenceEquals(originalFailure.OriginalCause, failure)))
-            throw new InvalidOperationException("The actual registered provider frame did not issue this exact cause observation.");
+            throw new InvalidOperationException("The actual registered provider frame did not issue this exact cause observation.", failure);
         if (allowRecovery && IsRecoverable(failure, token, admissionProviderId) && originalFailure is null)
-            throw new InvalidOperationException("The actual terminal provider frame has no eligible original failure observation.");
+            throw new InvalidOperationException("The actual terminal provider frame has no eligible original failure observation.", failure);
         var http = failure is HttpRequestException requestFailure ? (int?)requestFailure.StatusCode : null;
         var verifiedCreditsExhausted = http == 402 && IsRecoverable(failure, token, admissionProviderId);
         var safeFailure = new ExecutionFailure(!allowRecovery ? "PROVIDER_PARTIAL_OUTPUT_REQUIRES_REVIEW" : verifiedCreditsExhausted ? "PROVIDER_CREDITS_EXHAUSTED" : http == 429 ? "PROVIDER_RATE_LIMITED"
@@ -624,17 +702,17 @@ public sealed class ResilientProviderRoutingModelClient(
 
     private IAsyncEnumerable<string> RawStream(SelectedProvider selected, OllamaChatRequest request, CancellationToken token) =>
         selected.Descriptor is { } actual
-            ? providers.GetRequired(actual.ProviderId).StreamChatAsync(request with { Model = actual.Name }, token)
+            ? providers.GetRequired(actual.ProviderId).StreamChatAsync(request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
             : primary.StreamChatAsync(request, token);
 
     private Task<string> RawCompleteAsync(SelectedProvider selected, OllamaChatRequest request, CancellationToken token) =>
         selected.Descriptor is { } actual
-            ? providers.GetRequired(actual.ProviderId).CompleteAsync(request with { Model = actual.Name }, token)
+            ? providers.GetRequired(actual.ProviderId).CompleteAsync(request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
             : primary.CompleteAsync(request, token);
 
     private Task<OllamaToolResponse> RawToolsAsync(SelectedProvider selected, OllamaToolRequest request, CancellationToken token) =>
         selected.Descriptor is { } actual
-            ? providers.GetRequired(actual.ProviderId).ChatWithToolsAsync(request with { Model = actual.Name }, token)
+            ? providers.GetRequired(actual.ProviderId).ChatWithToolsAsync(request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
             : primary.ChatWithToolsAsync(request, token);
 
     /// <summary>Records actual admitted recovery in the same canonical Task/Run; standalone calls invent no run.</summary>

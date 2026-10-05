@@ -40,8 +40,39 @@ public sealed class ChatSessionService(
     IProjectInstructionSource? projectInstructionFiles = null,
     IMemoryQuerySource? memorySource = null,
     TaskExecutionCoordinator? taskCoordinator = null,
-    ITaskRunToolActionOwner? taskToolOwner = null)
+    ITaskRunToolActionOwner? taskToolOwner = null,
+    ITaskRunProviderContextCapture? taskProviderContextCapture = null)
 {
+    // Preserve the already compiled Source09 constructor while adding the context capture port.
+    public ChatSessionService(
+        IConversationRepository conversations,
+        IOllamaClient ollama,
+        CapabilityPreflightService preflight,
+        IConversationSafetyService safety,
+        WorkspaceToolRuntime workspaceTools,
+        ComputerToolRuntime computerTools,
+        BrowserToolRuntime? browserTools,
+        AutomationToolRuntime? automationTools,
+        ToolAvailabilityPlanner? toolAvailability,
+        ChatModelInventoryCache? modelInventory,
+        McpToolRuntime? mcpTools,
+        CalendarConnectionToolRuntime? calendarTools,
+        PluginToolRuntime? pluginTools,
+        IExecutionEventSink? executionEvents,
+        AutonomousRecoveryService? recovery,
+        RemediationCoordinator? remediations,
+        ModelPersonalityService? personalities,
+        ModelPermissionEvaluator? modelPermissions,
+        IDefaultProviderStore? defaultProviders,
+        CheckpointService? checkpoints,
+        IProjectInstructionSource? projectInstructionFiles,
+        IMemoryQuerySource? memorySource,
+        TaskExecutionCoordinator? taskCoordinator,
+        ITaskRunToolActionOwner? taskToolOwner)
+        : this(conversations, ollama, preflight, safety, workspaceTools, computerTools, browserTools, automationTools, toolAvailability, modelInventory, mcpTools, calendarTools, pluginTools, executionEvents, recovery, remediations, personalities, modelPermissions, defaultProviders, checkpoints, projectInstructionFiles, memorySource, taskCoordinator, taskToolOwner, taskProviderContextCapture: null)
+    {
+    }
+
     // Retain the exact pre-agentic CLR constructor for already compiled consumers.
     public ChatSessionService(
         IConversationRepository conversations,
@@ -168,8 +199,8 @@ public sealed class ChatSessionService(
         var canonicalIntent = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask;
         if (executionContext is not null && !canonicalIntent)
             throw new InvalidOperationException("A canonical continuation requires explicit agentic-task intent.");
-        if (canonicalIntent && (taskCoordinator is null || !taskCoordinator.HasAttemptAuthority || taskToolOwner is null))
-            throw new InvalidOperationException("The actual canonical task authority and typed tool owner are unavailable.");
+        if (canonicalIntent && (taskCoordinator is null || !taskCoordinator.HasAttemptAuthority || taskToolOwner is null || taskProviderContextCapture is null))
+            throw new InvalidOperationException("The actual canonical task authority, typed tool owner and request context owner are unavailable.");
         CurrentCanonicalTask = null;
         await safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken).ConfigureAwait(false);
         ModelDescriptor etaModel = model;
@@ -406,6 +437,7 @@ public sealed class ChatSessionService(
             memoryReferences = effectivePersonality.MemoryReferences;
         }
 
+        IReadOnlyList<KnowledgeRecord> selectedPersistentMemory = [];
         if (memorySource is not null)
         {
             var remembered = await memorySource.GetActiveLearnMeAsync(MemoryInjection.MaximumRecords, cancellationToken).ConfigureAwait(false);
@@ -418,6 +450,7 @@ public sealed class ChatSessionService(
                     personalityDirective = string.IsNullOrWhiteSpace(personalityDirective)
                         ? memoryDirective
                         : personalityDirective + "\n\n" + memoryDirective;
+                    selectedPersistentMemory = Array.AsReadOnly(selectedMemories.ToArray());
                 }
             }
         }
@@ -545,6 +578,42 @@ public sealed class ChatSessionService(
             modelPlan.HasRuntime(ToolRuntimeKind.Workspace) ? workspaceRoot : null,
             projectContext, effectiveProjectInstructions, registeredContext, computerPass is not null, personalityDirective,
             providerDefaultsDirective);
+        var contributingHistoryIds = contextMessages.Select(message => message.Id).ToHashSet();
+        var originalSelectedHistory = Array.AsReadOnly(history.Where(message => contributingHistoryIds.Contains(message.Id)).ToArray());
+
+        async ValueTask<TaskRunContextInventory> CaptureInventoryAsync(CancellationToken token)
+        {
+            // Persisted inputs are read after their actual Upsert; the incoming UpdatedAt may be old.
+            // The context owner holds original transient requests privately, without inventing a row.
+            var originalConversation = conversation.IsTemporary ? conversation
+                : await conversations.GetAsync(conversation.Id, token).ConfigureAwait(false)
+                    ?? throw new InvalidOperationException("The actual persisted task conversation is unavailable.");
+            if (originalConversation.Id != conversation.Id)
+                throw new InvalidOperationException("The context source returned another conversation.");
+            return new TaskRunContextInventory(originalConversation, originalSelectedHistory, selectedPersistentMemory,
+                [], projectContext, effectiveProjectInstructions, registeredContext, images, workspaceRoot);
+        }
+        async ValueTask CaptureOriginalChatAsync(OllamaChatRequest request, TaskRunContextInventory? inventory, CancellationToken token)
+        {
+            if (!canonicalIntent) return;
+            var context = request.ExecutionContext ?? throw new InvalidOperationException("The original canonical request has no task observation.");
+            var current = canonicalTask ?? throw new InvalidOperationException("The canonical task disappeared before context capture.");
+            if (current.TaskId != context.TaskId || current.ExecutionId != context.ExecutionId || current.PersistenceRevision != context.PersistenceRevision)
+                throw new InvalidOperationException("The original request does not bind the producer's actual task observation.");
+            await taskProviderContextCapture!.CaptureOriginalAsync(current, request,
+                inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).ConfigureAwait(false);
+        }
+        async ValueTask CaptureOriginalToolsAsync(OllamaToolRequest request, TaskRunContextInventory? inventory, CancellationToken token)
+        {
+            if (!canonicalIntent) return;
+            var context = request.ExecutionContext ?? throw new InvalidOperationException("The original canonical request has no task observation.");
+            var current = canonicalTask ?? throw new InvalidOperationException("The canonical task disappeared before context capture.");
+            if (current.TaskId != context.TaskId || current.ExecutionId != context.ExecutionId || current.PersistenceRevision != context.PersistenceRevision)
+                throw new InvalidOperationException("The original request does not bind the producer's actual task observation.");
+            await taskProviderContextCapture!.CaptureOriginalAsync(current, request,
+                inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).ConfigureAwait(false);
+        }
+
         var assistantId = Guid.NewGuid();
         var buffer = new StringBuilder();
         var toolActivities = new List<ToolActivity>();
@@ -878,9 +947,16 @@ public sealed class ChatSessionService(
                 try
                 {
                     await safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken).ConfigureAwait(false);
-                    response = await ollama.ChatWithToolsAsync(new OllamaToolRequest(
+                    var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
+                    var originalRequest = new OllamaToolRequest(
                         turnModel.Name, turns, toolDefinitions, effort, system, generationOptions)
-                    { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) }, cancellationToken).ConfigureAwait(false);
+                    { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
+                    await CaptureOriginalToolsAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+                    response = await ollama.ChatWithToolsAsync(originalRequest, cancellationToken).ConfigureAwait(false);
+                    if (canonicalIntent && response is null)
+                        throw new InvalidOperationException("The actual canonical provider returned no response observation.");
+                    if (canonicalIntent && response.ToolCalls.Count > 0 && response.EffectiveModel is null)
+                        throw new InvalidOperationException("The actual effective model is unknown; canonical tools were refused before dispatch.");
                     if (response.EffectiveModel is { } actualModel)
                     {
                         effectivePermissionModel = actualModel;
@@ -899,6 +975,8 @@ public sealed class ChatSessionService(
 
                 if (unsupportedToolSchema)
                 {
+                    if (canonicalIntent)
+                        throw new InvalidOperationException("The canonical model lacks an actual typed tool response; compatibility text cannot authorize dispatch.");
                     bridgeAttempted = true;
                     var bridged = LooksLikeToolRequest(prompt)
                         ? await TryBridgeToolCallAsync(ollama, turnModel, effort, prompt, toolDefinitions, generationOptions, cancellationToken,
@@ -930,7 +1008,7 @@ public sealed class ChatSessionService(
                     throw new InvalidOperationException("Ollama returned no tool response.");
                 if (response.ToolCalls.Count == 0)
                 {
-                    if (!bridgeAttempted && callsUsed == 0 && LooksLikeToolRequest(prompt))
+                    if (!canonicalIntent && !bridgeAttempted && callsUsed == 0 && LooksLikeToolRequest(prompt))
                     {
                         bridgeAttempted = true;
                         var bridged = await TryBridgeToolCallAsync(ollama, turnModel, effort, prompt, toolDefinitions, generationOptions, cancellationToken,
@@ -988,8 +1066,11 @@ public sealed class ChatSessionService(
             var firstChunk = true;
             var thinkingBuffer = new StringBuilder();
             await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream", cancellationToken).ConfigureAwait(false);
-            await foreach (var chunk in ollama.StreamChatAsync(new(turnModel.Name, requestMessages, effort, system, Options: generationOptions)
-            { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) }, cancellationToken).ConfigureAwait(false))
+            var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
+            var originalRequest = new OllamaChatRequest(turnModel.Name, requestMessages, effort, system, Options: generationOptions)
+            { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
+            await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+            await foreach (var chunk in ollama.StreamChatAsync(originalRequest, cancellationToken).ConfigureAwait(false))
             {
                 if (firstChunk)
                 {

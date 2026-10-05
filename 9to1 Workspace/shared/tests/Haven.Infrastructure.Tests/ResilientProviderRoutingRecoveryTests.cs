@@ -603,6 +603,235 @@ public sealed class ResilientProviderRoutingRecoveryTests
         Assert.NotEqual("PROVIDER_CREDITS_EXHAUSTED", after.Attempts[0].Failure?.Code);
     }
 
+    [Fact]
+    public async Task CanonicalRemoteWithoutOriginalContextSourceRefusesBeforeRawProviderOrFallback()
+    {
+        var first = new Provider("first");
+        var second = new Provider("local", isLocal: true);
+        var fixture = await CanonicalFixture.CreateAsync([first, second], allowSyntheticCloud: true, useSyntheticContext: false);
+        var before = await fixture.CurrentAsync();
+        var original = fixture.Client.CompleteAsync(Chat(first) with { ExecutionContext = fixture.Context(before) }, default);
+        var failure = await Record.ExceptionAsync(() => original);
+        var cleanup = await Record.ExceptionAsync(() => fixture.Frames.CloseAndDrainAsync());
+        var refusal = Assert.IsType<InvalidOperationException>(failure);
+        Assert.Contains("context owner is unavailable", refusal.Message, StringComparison.Ordinal);
+        Assert.Same(refusal, cleanup);
+        Assert.Equal(0, first.CompletionCalls);
+        Assert.Equal(0, second.CompletionCalls);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await fixture.CurrentAsync()));
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+    }
+
+    [Fact]
+    public async Task ActualContextCleanupBlocksQuotaRecoveryAndRetainsEveryOriginalCause()
+    {
+        var quota = Quota();
+        var cleanup = new IOException("Actual context cleanup failed after actual raw quota body");
+        var first = new Provider("first", completion: _ => Task.FromException<string>(quota));
+        var second = new Provider("local", isLocal: true);
+        var fixture = await CanonicalFixture.CreateAsync([first, second], allowSyntheticCloud: true);
+        var source = Assert.IsType<SyntheticContextAuthority>(fixture.ContextAuthority);
+        source.ActualDispose = Task.FromException(cleanup);
+        var before = await fixture.CurrentAsync();
+        var original = fixture.Client.CompleteAsync(Chat(first) with { ExecutionContext = fixture.Context(before) }, default);
+        var failure = await Record.ExceptionAsync(() => original);
+        var drain = await Record.ExceptionAsync(() => fixture.Frames.CloseAndDrainAsync());
+        Assert.NotNull(failure);
+        Assert.NotNull(drain);
+        Assert.True(ContainsOriginal(failure!, quota));
+        Assert.True(ContainsOriginal(failure!, cleanup));
+        Assert.True(ContainsOriginal(drain!, quota));
+        Assert.True(ContainsOriginal(drain!, cleanup));
+        Assert.Equal(1, source.InvocationStarts);
+        Assert.Equal(1, source.DisposeCalls);
+        Assert.Equal(1, first.CompletionCalls);
+        Assert.Equal(0, second.CompletionCalls);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await fixture.CurrentAsync()));
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+    }
+
+    [Fact]
+    public async Task CompoundActualContextAcquireFaultsNeverBecomeProviderQuotaAcknowledgments()
+    {
+        var firstCause = new UnauthorizedAccessException("Actual context owner refused disclosure");
+        var secondCause = new IOException("Actual context acquisition sibling");
+        var actualAcquire = new TaskCompletionSource<ITaskRunProviderContextFrame>(TaskCreationOptions.RunContinuationsAsynchronously);
+        actualAcquire.SetException([firstCause, secondCause]);
+        var first = new Provider("first");
+        var second = new Provider("local", isLocal: true);
+        var fixture = await CanonicalFixture.CreateAsync([first, second], allowSyntheticCloud: true);
+        var source = Assert.IsType<SyntheticContextAuthority>(fixture.ContextAuthority);
+        source.ActualAcquire = actualAcquire.Task;
+        var before = await fixture.CurrentAsync();
+        var original = fixture.Client.CompleteAsync(Chat(first) with { ExecutionContext = fixture.Context(before) }, default);
+        var failure = await Record.ExceptionAsync(() => original);
+        var drain = await Record.ExceptionAsync(() => fixture.Frames.CloseAndDrainAsync());
+        Assert.NotNull(failure);
+        Assert.NotNull(drain);
+        Assert.True(ContainsOriginal(failure!, firstCause));
+        Assert.True(ContainsOriginal(failure!, secondCause));
+        Assert.True(ContainsOriginal(drain!, firstCause));
+        Assert.True(ContainsOriginal(drain!, secondCause));
+        Assert.Equal(0, first.CompletionCalls);
+        Assert.Equal(0, second.CompletionCalls);
+        Assert.Equal(0, source.InvocationStarts);
+        Assert.Equal(0, source.DisposeCalls);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await fixture.CurrentAsync()));
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+    }
+
+    [Fact]
+    public async Task DetachedCanonicalWireConservesCapturedTranscriptAndNestedSchemaDuringCallerMutation()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<OllamaToolResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = new Provider("first", tools: _ => { entered.TrySetResult(); return release.Task; });
+        var fixture = await CanonicalFixture.CreateAsync([first], allowSyntheticCloud: true);
+        var source = Assert.IsType<SyntheticContextAuthority>(fixture.ContextAuthority);
+        var before = await fixture.CurrentAsync();
+        var originalMessages = new List<OllamaToolTurn> { new("user", "Actual captured prompt") };
+        var nested = new Dictionary<string, object> { ["type"] = "string" };
+        var properties = new Dictionary<string, object> { ["nested"] = nested };
+        var originalTools = new List<OllamaToolDefinition> { new("synthetic_safe_tool", "Controlled original schema", properties, ["nested"]) };
+        var request = new OllamaToolRequest(first.Descriptor.Key, originalMessages, originalTools, EffortLevel.Medium)
+        { ExecutionContext = fixture.Context(before) };
+        var original = fixture.Client.ChatWithToolsAsync(request, default);
+        Exception? controlFailure = null;
+        try
+        {
+            await Task.WhenAny(entered.Task, original);
+            if (!entered.Task.IsCompleted) await original;
+            var actual = Assert.IsType<OllamaToolRequest>(first.LastToolRequest);
+            Assert.NotSame(request, actual);
+            Assert.NotSame(originalMessages, actual.Messages);
+            Assert.NotSame(originalTools, actual.Tools);
+            originalMessages[0] = new("user", "Must never enter the already captured wire");
+            nested["type"] = "changed after actual raw start";
+            properties["new_unapproved"] = true;
+            originalTools.Clear();
+            Assert.Equal("Actual captured prompt", Assert.Single(actual.Messages).Content);
+            var actualDefinition = Assert.Single(actual.Tools);
+            Assert.Single(actualDefinition.Properties);
+            Assert.Equal("string", Assert.IsType<JsonElement>(actualDefinition.Properties["nested"]).GetProperty("type").GetString());
+            Assert.Equal("nested", Assert.Single(actualDefinition.Required));
+            Assert.Equal(first.Descriptor.Name, actual.Model);
+            Assert.Equal(before.TaskId, actual.ExecutionContext!.TaskId);
+            release.TrySetResult(new("Actual result", []));
+            var response = await original;
+            Assert.Equal("Actual result", response.Content);
+            Assert.Same(first.Descriptor, response.EffectiveModel);
+            Assert.Equal(1, source.InvocationStarts);
+        }
+        catch (Exception failure) { controlFailure = failure; }
+        finally { release.TrySetResult(new("Actual result", [])); }
+        await DrainControlOriginalsAsync(fixture, original, controlFailure);
+        Assert.Equal(1, source.DisposeCalls);
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+    }
+
+    [Fact]
+    public async Task SynchronousQuotaWithoutActualRawTaskRetainsCauseButCannotWaiveOriginalAdmissionFailure()
+    {
+        var quota = Quota();
+        var first = new Provider("first", isLocal: true, completion: _ => throw quota);
+        var second = new Provider("second", isLocal: true);
+        var fixture = await CanonicalFixture.CreateAsync([first, second]);
+        var before = await fixture.CurrentAsync();
+        var original = fixture.Client.CompleteAsync(Chat(first) with { ExecutionContext = fixture.Context(before) }, default);
+        var failure = await Record.ExceptionAsync(() => original);
+        var drain = await Record.ExceptionAsync(() => fixture.Frames.CloseAndDrainAsync());
+        var refusal = Assert.IsType<InvalidOperationException>(failure);
+        Assert.Same(quota, refusal.InnerException);
+        Assert.Same(quota, drain);
+        Assert.Equal(1, first.CompletionCalls);
+        Assert.Equal(0, second.CompletionCalls);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await fixture.CurrentAsync()));
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+    }
+
+    [Fact]
+    public async Task ActualAcquiredContextWithoutInvocationFenceClosesBeforeAnyRawProviderBody()
+    {
+        var first = new Provider("first");
+        var second = new Provider("local", isLocal: true);
+        var fixture = await CanonicalFixture.CreateAsync([first, second], allowSyntheticCloud: true);
+        var source = Assert.IsType<SyntheticContextAuthority>(fixture.ContextAuthority);
+        var resource = new UnfencedContextFrame();
+        source.ActualAcquire = Task.FromResult<ITaskRunProviderContextFrame>(resource);
+        var before = await fixture.CurrentAsync();
+        var original = fixture.Client.CompleteAsync(Chat(first) with { ExecutionContext = fixture.Context(before) }, default);
+        var failure = await Record.ExceptionAsync(() => original);
+        var drain = await Record.ExceptionAsync(() => fixture.Frames.CloseAndDrainAsync());
+        var refusal = Assert.IsType<UnauthorizedAccessException>(failure);
+        Assert.Contains("invocation permission fence", refusal.Message, StringComparison.Ordinal);
+        Assert.Same(refusal, drain);
+        Assert.Equal(1, resource.Disposals);
+        Assert.Equal(0, resource.Revalidations);
+        Assert.Equal(0, first.CompletionCalls);
+        Assert.Equal(0, second.CompletionCalls);
+        Assert.Equal(0, source.InvocationStarts);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await fixture.CurrentAsync()));
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+    }
+
+    [Fact]
+    public async Task CanonicalRemoteStreamFencesFiniteFactoryButNeverSynchronousEnumerationOrCleanup()
+    {
+        SyntheticContextAuthority? source = null;
+        var stream = new SynchronousFenceProbeStream(() => source!.InvocationActive);
+        var first = new Provider("first", stream: _ =>
+        {
+            Assert.True(source!.InvocationActive);
+            return stream;
+        });
+        var fixture = await CanonicalFixture.CreateAsync([first], allowSyntheticCloud: true,
+            initialRequiredCapabilities: [ToolCapability.Text, ToolCapability.Streaming]);
+        source = Assert.IsType<SyntheticContextAuthority>(fixture.ContextAuthority);
+        var before = await fixture.CurrentAsync();
+        async Task<string> ReadOriginalAsync()
+        {
+            var pieces = new List<string>();
+            await foreach (var piece in fixture.Client.StreamChatAsync(Chat(first) with { ExecutionContext = fixture.Context(before) }, default))
+                pieces.Add(piece);
+            return string.Concat(pieces);
+        }
+        var original = ReadOriginalAsync();
+        Exception? controlFailure = null;
+        try
+        {
+            Assert.Equal("Alpha beta", await original);
+            Assert.Equal(1, source.InvocationStarts);
+            Assert.False(source.InvocationActive);
+            Assert.Equal(3, stream.MoveCalls);
+            Assert.Equal(1, stream.Disposals);
+        }
+        catch (Exception failure) { controlFailure = failure; }
+        await DrainControlOriginalsAsync(fixture, original, controlFailure);
+        Assert.Equal(1, first.StreamCalls);
+        Assert.Equal(1, source.DisposeCalls);
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+    }
+
+    private sealed class UnfencedContextFrame : ITaskRunProviderContextFrame
+    {
+        public int Disposals { get; private set; }
+        public int Revalidations { get; private set; }
+        public ValueTask RevalidateAsync(CancellationToken token) { Revalidations++; return ValueTask.CompletedTask; }
+        public ValueTask DisposeAsync() { Disposals++; return ValueTask.CompletedTask; }
+    }
+    private sealed class SynchronousFenceProbeStream(Func<bool> invocationActive) : IAsyncEnumerable<string>, IAsyncEnumerator<string>
+    {
+        public int MoveCalls { get; private set; }
+        public int Disposals { get; private set; }
+        public string Current => MoveCalls == 1 ? "Alpha" : " beta";
+        public IAsyncEnumerator<string> GetAsyncEnumerator(CancellationToken token = default)
+        { Assert.True(invocationActive()); return this; }
+        public ValueTask<bool> MoveNextAsync()
+        { Assert.False(invocationActive()); MoveCalls++; return ValueTask.FromResult(MoveCalls <= 2); }
+        public ValueTask DisposeAsync()
+        { Assert.False(invocationActive()); Disposals++; return ValueTask.CompletedTask; }
+    }
+
     private static async Task DrainControlOriginalsAsync(CanonicalFixture fixture, Task originalRequest, Exception? controlFailure)
     {
         var failures = new List<Exception>();
@@ -646,7 +875,7 @@ public sealed class ResilientProviderRoutingRecoveryTests
 
     private static ResilientProviderRoutingModelClient Client(IReadOnlyList<Provider> actual, Sink? sink = null,
         TaskExecutionCoordinator? coordinator = null, ITaskRunSelectedRouteCapture? capture = null, ITaskRunOriginalFrameOwner? frames = null,
-        ModelPermissionEvaluator? permissions = null)
+        ModelPermissionEvaluator? permissions = null, ITaskRunProviderContextAuthority? contextAuthority = null)
     {
         var privacy = new Privacy();
         var registry = new ModelProviderRegistry(actual);
@@ -656,7 +885,7 @@ public sealed class ResilientProviderRoutingRecoveryTests
             new Dictionary<string, string> { ["fallback-chain"] = string.Join(',', actual.Where(item => item != provider).Select(item => item.Descriptor.Key)) },
             DateTimeOffset.UnixEpoch)).ToArray());
         return new(new ProviderRoutingModelClient(new EmptyLocal(), registry, privacy), registry, configs, privacy,
-            executionEvents: sink, taskCoordinator: coordinator, routeCapture: capture, originalFrames: frames, modelPermissions: permissions);
+            executionEvents: sink, taskCoordinator: coordinator, routeCapture: capture, originalFrames: frames, modelPermissions: permissions, taskContextAuthority: contextAuthority);
     }
 
     private sealed class Sink : IExecutionEventSink
@@ -733,9 +962,10 @@ public sealed class ResilientProviderRoutingRecoveryTests
     /// <summary>Fixture issuer only; real coordinator and original frame owner are exercised unchanged.</summary>
     private sealed record CanonicalFixture(TaskExecutionCoordinator Coordinator, MemoryRepository Repository,
         FixtureAuthority Authority, TaskRunOriginalFrameOwner Frames, Sink Events,
-        TaskExecutionSnapshot Task, TaskRunAttemptAdmission Admission, ResilientProviderRoutingModelClient Client)
+        TaskExecutionSnapshot Task, TaskRunAttemptAdmission Admission, IProviderModelClient Client, SyntheticContextAuthority? ContextAuthority)
     {
-        public static async Task<CanonicalFixture> CreateAsync(IReadOnlyList<Provider> providers, bool allowSyntheticCloud = false)
+        public static async Task<CanonicalFixture> CreateAsync(IReadOnlyList<Provider> providers, bool allowSyntheticCloud = false, bool useSyntheticContext = true,
+            IReadOnlyCollection<ToolCapability>? initialRequiredCapabilities = null)
         {
             var repository = new MemoryRepository();
             var events = new Sink();
@@ -747,7 +977,7 @@ public sealed class ResilientProviderRoutingRecoveryTests
             var task = await coordinator.BeginAuthorizedAsync(Guid.NewGuid(), Guid.NewGuid(),
                 "Synthetic original task/run recovery controls", TaskExecutionDurability.RecoverableCheckpoint, [], default);
             var candidate = await authority.CaptureSelectedRouteAsync(task, providers[0].Descriptor,
-                [ToolCapability.Text, ToolCapability.Tools], [], default);
+                initialRequiredCapabilities ?? [ToolCapability.Text, ToolCapability.Tools], [], default);
             var admission = await coordinator.StartAttemptAsync(task.TaskId, task.ExecutionId, candidate, default);
             await frames.RegisterOriginalAttemptAsync(admission, default);
             task = await coordinator.MarkAttemptRunningAsync(task.TaskId, task.ExecutionId, admission.AttemptId, default);
@@ -756,14 +986,86 @@ public sealed class ResilientProviderRoutingRecoveryTests
                 TaskActionInterruptionPolicy.AtomicCommit, null, [], default, admission.AttemptId);
             task = await coordinator.AcceptActionAsync(task.TaskId, task.ExecutionId, admission.AttemptId,
                 accepted, "synthetic-original-owner-receipt", default);
-            return new(coordinator, repository, authority, frames, events, task, admission,
-                ResilientProviderRoutingRecoveryTests.Client(providers, events, coordinator, authority, frames));
+            var contextAuthority = allowSyntheticCloud && useSyntheticContext ? new SyntheticContextAuthority(task) : null;
+            var rawRouter = ResilientProviderRoutingRecoveryTests.Client(providers, events, coordinator, authority, frames,
+                contextAuthority: contextAuthority);
+            IProviderModelClient client = contextAuthority is null ? rawRouter : new TrustedSyntheticContextProducer(rawRouter, contextAuthority);
+            return new(coordinator, repository, authority, frames, events, task, admission, client, contextAuthority);
         }
         public async Task<TaskExecutionSnapshot> CurrentAsync() => (await Repository.GetAsync(Task.TaskId, default))!;
         public ProviderExecutionContext Context(TaskExecutionSnapshot current) => new(current.TaskId, current.ContextId,
             current.ExecutionId, current.Attempts.Last().Id, current.PersistenceRevision)
         { RequestedCandidate = current.Attempts.First().Candidate, SelectedCandidate = current.Attempts.Last().Candidate };
     }
+    // This fixture issuer/producer is deliberately synthetic. It exercises the actual production
+    // router/frame/coordinator without certifying real actor, resource disclosure or paid-use policy.
+    // The real configured context source and central fence have separately owned controls.
+    private sealed class SyntheticContextAuthority(TaskExecutionSnapshot actualTask) : ITaskRunProviderContextAuthority
+    {
+        private readonly Dictionary<object, string> _captured = new(ReferenceEqualityComparer.Instance);
+        public Task<ITaskRunProviderContextFrame>? ActualAcquire { get; set; }
+        public Task? ActualDispose { get; set; }
+        public int InvocationStarts { get; private set; }
+        public bool InvocationActive { get; private set; }
+        public int DisposeCalls { get; private set; }
+        private static string Payload(OllamaChatRequest request) => JsonSerializer.Serialize(request with { Model = "", ExecutionContext = null });
+        private static string Payload(OllamaToolRequest request) => JsonSerializer.Serialize(request with { Model = "", ExecutionContext = null });
+        public void Capture(OllamaChatRequest original) => Capture(original, original.ExecutionContext, Payload(original));
+        public void Capture(OllamaToolRequest original) => Capture(original, original.ExecutionContext, Payload(original));
+        private void Capture(object original, ProviderExecutionContext? context, string payload)
+        {
+            if (context is null || context.TaskId != actualTask.TaskId || context.ContextId != actualTask.ContextId || context.ExecutionId != actualTask.ExecutionId)
+                throw new UnauthorizedAccessException("Synthetic producer cannot capture another task/run.");
+            _captured.Add(original, payload); // Private actual original object, never reconstructed from an ID.
+        }
+        public ValueTask<ITaskRunProviderContextFrame> AcquireOriginalFrameAsync(TaskRunAttemptAdmission same,
+            TaskExecutionSnapshot current, OllamaChatRequest original, OllamaChatRequest routed, CancellationToken token) =>
+            Acquire(same, current, original, routed.ExecutionContext, Payload(original), Payload(routed), token);
+        public ValueTask<ITaskRunProviderContextFrame> AcquireOriginalFrameAsync(TaskRunAttemptAdmission same,
+            TaskExecutionSnapshot current, OllamaToolRequest original, OllamaToolRequest routed, CancellationToken token) =>
+            Acquire(same, current, original, routed.ExecutionContext, Payload(original), Payload(routed), token);
+        private ValueTask<ITaskRunProviderContextFrame> Acquire(TaskRunAttemptAdmission same, TaskExecutionSnapshot current,
+            object original, ProviderExecutionContext? routed, string originalPayload, string routedPayload, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if (!_captured.TryGetValue(original, out var captured) || captured != originalPayload || captured != routedPayload ||
+                same.Snapshot.TaskId != actualTask.TaskId || same.Snapshot.ExecutionId != actualTask.ExecutionId ||
+                same.Lease.Owner != actualTask.OwnerBinding || current.TaskId != actualTask.TaskId || current.ExecutionId != actualTask.ExecutionId ||
+                routed is null || routed.AttemptId != same.AttemptId || routed.TaskId != current.TaskId ||
+                routed.ExecutionId != current.ExecutionId || routed.ContextId != current.ContextId || routed.PersistenceRevision != current.PersistenceRevision)
+                throw new UnauthorizedAccessException("No exact captured synthetic context matches the original current attempt.");
+            return ActualAcquire is null ? ValueTask.FromResult<ITaskRunProviderContextFrame>(new Scope(this)) : new(ActualAcquire);
+        }
+        private sealed class Scope(SyntheticContextAuthority source) : ITaskRunProviderContextFrame, ITaskRunProviderInvocationFence
+        {
+            private bool _closed;
+            public ValueTask RevalidateAsync(CancellationToken token)
+            { token.ThrowIfCancellationRequested(); ObjectDisposedException.ThrowIf(_closed, this); return ValueTask.CompletedTask; }
+            public T RunOriginalInvocation<T>(Func<T> originalRawStart)
+            {
+                ObjectDisposedException.ThrowIf(_closed, this); source.InvocationStarts++;
+                source.InvocationActive = true;
+                try { return originalRawStart(); }
+                finally { source.InvocationActive = false; }
+            }
+            public ValueTask DisposeAsync()
+            { ObjectDisposedException.ThrowIf(_closed, this); _closed = true; source.DisposeCalls++; return new(source.ActualDispose ?? Task.CompletedTask); }
+        }
+    }
+    private sealed class TrustedSyntheticContextProducer(IProviderModelClient raw, SyntheticContextAuthority contexts) : IProviderModelClient
+    {
+        public Task<bool> IsAvailableAsync(CancellationToken token) => raw.IsAvailableAsync(token);
+        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => raw.GetModelsAsync(token);
+        public Task PullModelAsync(string model, IProgress<double>? progress, CancellationToken token) => raw.PullModelAsync(model, progress, token);
+        public Task DeleteModelAsync(string model, CancellationToken token) => raw.DeleteModelAsync(model, token);
+        public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token)
+        { contexts.Capture(request); return raw.CompleteAsync(request, token); } // SAME returned Task, no async proxy.
+        public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token)
+        { contexts.Capture(request); return raw.ChatWithToolsAsync(request, token); }
+        public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken token)
+        { contexts.Capture(request); return raw.StreamChatAsync(request, token); }
+    }
+
     private sealed class FixtureAuthority(IReadOnlyList<Provider> actualProviders, bool allowSyntheticCloud) : ITaskRunCommandAuthority, ITaskRunSelectedRouteCapture
     {
         private readonly Dictionary<(Guid Task, string Model), ProviderModelDescriptor> _retained = [];
