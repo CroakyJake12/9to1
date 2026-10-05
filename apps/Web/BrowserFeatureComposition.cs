@@ -6,6 +6,8 @@ using NineToOne.Web.Picture;
 using NineToOne.Web.Services;
 using NineToOne.Web.Write;
 using NineToOne.Web.Write.Storage;
+using NineToOne.Web.Productivity.Present;
+using NineToOne.Web.Productivity.Present.Storage;
 using Haven.Application;
 using Haven.Infrastructure;
 
@@ -26,6 +28,10 @@ internal static class BrowserFeatureComposition
             new WriteNativeDocumentPackageStore(), Program.ReduceMotion,
             error => error is NotesCommitOutcomeUnknownException, new BrowserWritePackageBroker());
         if (!write.Succeeded) throw new InvalidOperationException(write.Message);
+        var present = PresentBrowserFeature.Register(registry,
+            new IndexedDbPresentRepository(new BrowserPresentTransport(), PresentRepository.ValidateForSave),
+            Program.ReduceMotion, error => error is PresentCommitOutcomeUnknownException);
+        if (!present.Succeeded) throw new InvalidOperationException(present.Message);
         RegisterPrivateAccountSettings(registry);
     }
 

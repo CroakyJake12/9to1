@@ -13,7 +13,7 @@ import zipfile
 COMMON_SHA256 = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 PUBLIC_LIMIT = 128 * 1024 * 1024
 SOURCE_ROOTS = ["apps/Web", "framework/CUI", "9to1 Workspace/Home", "9to1 Workspace/shared/src",
-                "9to1 Workspace/Wave", "9to1 Workspace/Write", "9to1 Workspace/Picture", "Directory.Build.props",
+                "9to1 Workspace/Wave", "9to1 Workspace/Write", "9to1 Workspace/Picture", "9to1 Workspace/Present", "Directory.Build.props",
                 "Directory.Build.targets", "global.json", "NuGet.Config"]
 SOURCE_EXT = {".cs", ".csproj", ".cui", ".axaml", ".props", ".targets", ".json", ".mjs", ".js",
               ".lock", ".ttf", ".otf", ".png", ".svg", ".woff", ".woff2", ".html", ".css",
@@ -155,6 +155,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--package-cache", type=Path, help="Reuse an existing owned NuGet package cache; all build outputs remain isolated")
     args = parser.parse_args()
     root, output = Path.cwd().resolve(), args.output.resolve()
     if output.exists() or output.is_relative_to(root):
@@ -175,10 +176,15 @@ def main():
         path = output / directory
         path.mkdir(exist_ok=True)
         env[variable] = str(path)
+    if args.package_cache is not None:
+        cache = args.package_cache.absolute()
+        if not cache.is_dir() or cache.is_symlink() or cache.resolve().is_relative_to(root):
+            raise RuntimeError("Existing regular package cache outside checkout required")
+        env["NUGET_PACKAGES"] = str(cache.resolve())
     env.update(DOTNET_GENERATE_ASPNET_CERTIFICATE="false", DOTNET_CLI_TELEMETRY_OPTOUT="1",
                DOTNET_NOLOGO="1", MSBUILDDISABLENODEREUSE="1", PYTHONDONTWRITEBYTECODE="1")
     commands = common.Commands(diagnostics, env, root)
-    result = {"status": "NOT_RUN", "sourceCommit": None,
+    result = {"status": "NOT_RUN", "sourceCommit": None, "packageCache": env["NUGET_PACKAGES"],
               "scope": "Normal source build/publish and public artifact custody; browser/runtime/provider/deployment/full parity NOT_RUN"}
     before, after = [], []
     try:

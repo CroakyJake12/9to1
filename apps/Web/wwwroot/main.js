@@ -5,6 +5,7 @@ import * as pictureBrowser from './picture-browser.js';
 import { createConfiguredAccounts, handleOAuthPopupCallback } from './configured-accounts.bundle.js';
 import { createNotesModule } from './notes-indexeddb.js';
 import * as writePackages from './write-packages.js';
+import { createPresentModule } from './present-indexeddb.js';
 import { createPrivateContextLifecycle } from './browser-private-context.js';
 
 const platform = createBrowserPlatform(window, document);
@@ -13,6 +14,7 @@ let unsubscribe;
 let accounts;
 let owner;
 let notes;
+let present;
 let released = false;
 let releaseTask;
 const verifiedOwnerChange = Symbol('verified owner change');
@@ -44,7 +46,10 @@ function releasePrivateAccountContext() {
         accountDrain = accounts.disposeAsync();
         if (typeof accountDrain?.then !== 'function') throw new TypeError('Actual account disposal must return its drain task.');
     } catch (error) { lifecycle.holdFailure(error); errors.push(error); }
-    Promise.allSettled([lifecycle.join(), accountDrain]).then(async settled => {
+    let presentDrain;
+    try { presentDrain = present?.dispose(); }
+    catch (error) { lifecycle.holdFailure(error); errors.push(error); }
+    Promise.allSettled([lifecycle.join(), accountDrain, presentDrain]).then(async settled => {
         for (const result of settled) if (result.status === 'rejected') errors.push(result.reason);
         // A real broker continuation may issue another native reset after the
         // first join settles. Join it once all broker work has truly settled.
@@ -82,6 +87,7 @@ try {
             onVerifiedIdentity: replaceVerifiedOwner,
             onFailure: () => platform.showStatus('AuthenticationRequired', 'Sign-in did not complete. Try signing in again.') });
         notes = createNotesModule();
+        present = createPresentModule();
         if (!isCompatible) throw new Error('BrowserCapabilityUnavailable');
         const { dotnet } = await import('./_framework/dotnet.js');
         const runtime = await dotnet.create();
@@ -90,6 +96,7 @@ try {
         runtime.setModuleImports('nineToOnePicture', pictureBrowser);
         runtime.setModuleImports('nineToOneAccounts', accounts);
         runtime.setModuleImports('nineToOneNotes', notes);
+        runtime.setModuleImports('nineToOnePresent', present);
         runtime.setModuleImports('nineToOneWritePackages', writePackages);
         const config = runtime.getConfig();
         const exports = await runtime.getAssemblyExports(config.mainAssemblyName);

@@ -228,7 +228,7 @@ public sealed class PresentRepository : IPresentRepository
         }
     }
 
-    private static void ValidateForSave(PresentDocument document)
+    public static void ValidateForSave(PresentDocument document)
     {
         if (document.Id == Guid.Empty)
             throw new InvalidDataException("A presentation must have a stable identifier.");
