@@ -1,0 +1,39 @@
+name: Team B corrected caa AX17 complete unit evidence
+
+on:
+  push:
+    branches: [custody/team-b-browser-ax-caa6712-corrected-raw-20261005]
+    paths:
+      - .github/workflows/team-b-browser-ax-corrected-raw.yml
+      - apps/Web/Tests/ci/export-existing-browser-ax-corrected-raw.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  corrected-unit-custody:
+    if: github.ref == 'refs/heads/custody/team-b-browser-ax-caa6712-corrected-raw-20261005' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify whole completed original and five exact raw unit evidence files
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Tests/ci/export-existing-browser-ax-corrected-raw.py
+          --output "$RUNNER_TEMP/team-b-ax-corrected-raw"
+      - name: Preserve corrected unit evidence or honest custody refusal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-ax-corrected-raw-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-ax-corrected-raw/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
