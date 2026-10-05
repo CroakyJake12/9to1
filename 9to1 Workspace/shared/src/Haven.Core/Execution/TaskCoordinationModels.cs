@@ -134,6 +134,7 @@ public sealed record TaskExecutionSnapshot(
     public TaskExecutionOwnerBinding? OwnerBinding { get; init; }
     public IReadOnlyList<TaskRunAttempt> Attempts { get; init; } = [];
     public Guid? CheckpointId { get; init; }
+    public TaskRunRecoveryObservation? RecoveryObservation { get; init; }
 }
 
 public sealed record FollowUpDecision(

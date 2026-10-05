@@ -10,10 +10,34 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
     public static readonly TimeSpan VisibilityDelay = TimeSpan.FromSeconds(2);
     public static readonly TimeSpan EtaDelay = TimeSpan.FromMinutes(1);
 
+    private sealed class OriginalContext(ChatExecutionTracker owner, OriginalContext? parent)
+    {
+        internal readonly ChatExecutionTracker Owner = owner;
+        internal readonly OriginalContext? Parent = parent;
+        internal volatile bool Active = true;
+        internal volatile bool WithdrawalCallbacksActive;
+    }
+    private static readonly AsyncLocal<OriginalContext?> ActiveOriginalContext = new();
+    [ThreadStatic] private static OriginalContext? ActiveSynchronousWithdrawal;
+    private OriginalContext? _timerContext;
+    private Task? _originalWithdrawal;
+    private bool IsInsideOwningOriginal()
+    {
+        bool ContainsLive(OriginalContext? context)
+        {
+            for (; context is not null; context = context.Parent)
+                if (ReferenceEquals(context.Owner, this) && (context.Active || context.WithdrawalCallbacksActive)) return true;
+            return false;
+        }
+        return ContainsLive(ActiveOriginalContext.Value) || ContainsLive(ActiveSynchronousWithdrawal);
+    }
+
     private readonly object _gate = new();
     private readonly List<ChatExecutionLogEntry> _log = [];
     private readonly CancellationTokenSource _lifetime = new();
     private readonly Func<ChatEtaRequest, CancellationToken, Task<string?>>? _etaProvider;
+    private readonly Task _originalTimers;
+    private Task? _originalClose;
     private readonly DateTimeOffset _startedAt = DateTimeOffset.UtcNow;
 
     private ChatExecutionStage _stage;
@@ -45,7 +69,7 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
         _etaProvider = etaProvider;
         _log.Add(new ChatExecutionLogEntry(_startedAt, initialStage, _status));
         MarkStageStart(initialStage);
-        _ = RunTimersAsync(_lifetime.Token);
+        _originalTimers = RunTimersAsync(_lifetime.Token);
     }
 
     public Guid OperationId { get; }
@@ -148,7 +172,7 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
             snapshot = CreateSnapshot(now);
         }
 
-        _lifetime.Cancel();
+        RequestStop();
         Changed?.Invoke(snapshot);
     }
 
@@ -183,6 +207,10 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
 
     private async Task RunTimersAsync(CancellationToken cancellationToken)
     {
+        var previousContext = ActiveOriginalContext.Value;
+        var originalContext = new OriginalContext(this, previousContext);
+        _timerContext = originalContext;
+        ActiveOriginalContext.Value = originalContext;
         try
         {
             await Task.Delay(VisibilityDelay, cancellationToken).ConfigureAwait(false);
@@ -196,6 +224,7 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
+        finally { originalContext.Active = false; ActiveOriginalContext.Value = previousContext; }
     }
 
     private void PublishVisible()
@@ -212,7 +241,7 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
 
         if (snapshot is not null)
         {
-            Changed?.Invoke(snapshot);
+            PublishChanged(snapshot);
         }
     }
 
@@ -271,7 +300,18 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
             snapshot = CreateSnapshot(DateTimeOffset.UtcNow);
         }
 
-        Changed?.Invoke(snapshot);
+        PublishChanged(snapshot);
+    }
+
+    private void PublishChanged(ChatExecutionSnapshot snapshot)
+    {
+        try { Changed?.Invoke(snapshot); }
+        catch (OperationCanceledException callbackFailure)
+        {
+            // A synchronous observer is not an actual canceled timer/owner task. Envelope
+            // its exact cause before the timer's async builder or token catch can relabel it.
+            throw new AggregateException("An original synchronous tracker observer failed.", callbackFailure);
+        }
     }
 
     private ChatExecutionSnapshot CreateSnapshot(DateTimeOffset now) =>
@@ -296,16 +336,89 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
         return trimmed.Length <= 800 ? trimmed : trimmed[..800] + "…";
     }
 
+    /// <summary>Requests only timer withdrawal. External DisposeAsync still joins the same original close.</summary>
+    public void RequestStop()
+    {
+        TaskCompletionSource publication;
+        lock (_gate)
+        {
+            if (_originalWithdrawal is not null) return;
+            publication = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _originalWithdrawal = WithdrawOriginalAsync(publication.Task);
+        }
+        // Cancellation callbacks execute outside the state gate, after actual task custody.
+        publication.SetResult();
+    }
+
+    private async Task WithdrawOriginalAsync(Task publication)
+    {
+        await publication.ConfigureAwait(false);
+        var previousContext = ActiveOriginalContext.Value;
+        var previousSynchronous = ActiveSynchronousWithdrawal;
+        var originalContext = new OriginalContext(this, previousContext);
+        ActiveOriginalContext.Value = originalContext;
+        ActiveSynchronousWithdrawal = originalContext;
+        var timerContext = _timerContext;
+        if (timerContext is not null) timerContext.WithdrawalCallbacksActive = true;
+        try { _lifetime.Cancel(); }
+        catch (OperationCanceledException actualCallback)
+        { throw new AggregateException("An original synchronous cancellation callback failed.", actualCallback); }
+        finally
+        {
+            if (timerContext is not null) timerContext.WithdrawalCallbacksActive = false;
+            originalContext.Active = false;
+            ActiveSynchronousWithdrawal = previousSynchronous;
+            ActiveOriginalContext.Value = previousContext;
+        }
+    }
+
     public ValueTask DisposeAsync()
     {
-        if (!_finished)
+        if (IsInsideOwningOriginal())
+            throw new InvalidOperationException("An original tracker callback cannot join its own timer/close; request stop and let an external owner join.");
+        lock (_gate)
         {
-            Cancel();
+            if (_originalClose is not null) return new ValueTask(_originalClose);
+            var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _originalClose = CloseOriginalAsync(published.Task);
+            published.SetResult();
+            return new ValueTask(_originalClose);
         }
+    }
 
-        _lifetime.Cancel();
-        _lifetime.Dispose();
-        return default;
+    private async Task CloseOriginalAsync(Task publication)
+    {
+        await publication.ConfigureAwait(false);
+        var previousContext = ActiveOriginalContext.Value;
+        var originalContext = new OriginalContext(this, previousContext);
+        ActiveOriginalContext.Value = originalContext;
+        try
+        {
+        var failures = new List<Exception>();
+        var faultedOrUnknownCancellation = false;
+        void Retain(Exception cause, Task? original = null)
+        {
+            IEnumerable<Exception> direct = original?.Exception is { } aggregate ? aggregate.InnerExceptions : new[] { cause };
+            foreach (var error in direct)
+            {
+                if (!failures.Any(existing => ReferenceEquals(existing, error))) failures.Add(error);
+                if (error is OperationCanceledException && (original is null || original.IsFaulted)) faultedOrUnknownCancellation = true;
+            }
+        }
+        try { if (!_finished) Cancel(); } catch (Exception error) { Retain(error); }
+        try { RequestStop(); } catch (Exception error) { Retain(error); }
+        Task? actualWithdrawal;
+        lock (_gate) actualWithdrawal = _originalWithdrawal;
+        if (actualWithdrawal is null) Retain(new InvalidOperationException("No actual tracker cancellation original was published."));
+        else try { await actualWithdrawal.ConfigureAwait(false); } catch (Exception error) { Retain(error, actualWithdrawal); }
+        try { await _originalTimers.ConfigureAwait(false); } catch (Exception error) { Retain(error, _originalTimers); }
+        try { _lifetime.Dispose(); } catch (Exception error) { Retain(error); }
+        if (failures.Count == 1 && failures[0] is OperationCanceledException && faultedOrUnknownCancellation)
+            throw new AggregateException("An original faulted timer or synchronous tracker callback is not canceled-task evidence.", failures[0]);
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Original tracker callbacks/timer cleanup failed.", failures);
+        }
+        finally { originalContext.Active = false; ActiveOriginalContext.Value = previousContext; }
     }
 }
 

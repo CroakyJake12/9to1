@@ -98,15 +98,27 @@ public sealed class ResilientProviderRoutingModelClient(
                 try
                 {
                     GuardSelectedProvider(selected);
-                    original = StartRawInvocation(invocationFence, () => RawStream(selected, routedRequest, token)
-                        .GetAsyncEnumerator(token)); // Finite factory/start only; enumerate outside the central gate.
+                    // Maintained provider streams are actual async iterators: their factory and
+                    // enumerator creation defer provider work until the first MoveNext invocation.
+                    // Gate that SAME finite original operation, never an async loop or its await.
+                    original = RawStream(selected, routedRequest, token).GetAsyncEnumerator(token);
+                    var firstMove = StartRawInvocation(invocationFence, original.MoveNextAsync);
+                    var move = firstMove.AsTask();
                     while (true)
                     {
                         // Consume each original ValueTask exactly once. Its direct Task siblings
                         // remain observable instead of retaining only await's first thrown cause.
-                        var move = original.MoveNextAsync().AsTask();
-                        if (!await AwaitExactTaskAsync(move).ConfigureAwait(false)) break;
+                        try
+                        {
+                            if (!await AwaitExactTaskAsync(move).ConfigureAwait(false)) break;
+                        }
+                        catch (Exception failure)
+                        {
+                            observedProviderFailure = ObserveExactRawFailure(move, null, failure);
+                            throw;
+                        }
                         await channel.Writer.WriteAsync(original.Current, token).ConfigureAwait(false);
+                        move = original.MoveNextAsync().AsTask();
                     }
                 }
                 catch (Exception failure) { bodyFailure = failure; }
@@ -128,7 +140,6 @@ public sealed class ResilientProviderRoutingModelClient(
                 if (cleanupFailure is not null) ExceptionDispatchInfo.Capture(cleanupFailure).Throw();
                 if (bodyFailure is not null)
                 {
-                    observedProviderFailure = bodyFailure;
                     ExceptionDispatchInfo.Capture(bodyFailure).Throw();
                 }
                 return true;
@@ -183,7 +194,11 @@ public sealed class ResilientProviderRoutingModelClient(
             if (frameFailure is null) yield break;
             var originalObservation = frameFailure is AggregateException ? null : ObserveOriginalFrame(state, producer);
             var actualCause = originalObservation?.OriginalCause ?? frameFailure;
-            var observedRaw = originalObservation is not null || ReferenceEquals(actualCause, observedProviderFailure);
+            // A final invocation-policy refusal before an actual MoveNext Task exists is an
+            // admission cause, never an eligible provider-body failure acknowledgment.
+            var observedRaw = observedProviderFailure is not null
+                && (ReferenceEquals(actualCause, observedProviderFailure)
+                    || originalObservation is not null && ReferenceEquals(originalObservation.OriginalCause, observedProviderFailure));
             if (observedRaw)
                 await RecordProviderFailureAsync(state, producer, actualCause, cancellationToken, allowRecovery: !emitted,
                     originalObservation: originalObservation).ConfigureAwait(false);

@@ -169,7 +169,39 @@ public sealed class ChatSessionService(
         SendAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images, cancellationToken, prompts, registeredContext, generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities, availableCapabilities, computerUseRequest,
             executionContext: null, taskExecutionIntent: TaskRunExecutionIntent.OrdinaryConversation);
 
-    public async IAsyncEnumerable<ChatStreamEvent> SendAsync(
+    public IAsyncEnumerable<ChatStreamEvent> SendAsync(
+        Conversation conversation,
+        string prompt,
+        ModelDescriptor model,
+        EffortLevel effort,
+        IReadOnlyCollection<ActiveCapability> capabilities,
+        string agentName,
+        string agentInstructions,
+        DuoMode duoMode,
+        string? workspaceRoot,
+        string? projectContext,
+        string? projectInstructions,
+        IReadOnlyList<string>? images,
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<ActivePrompt>? prompts = null,
+        string? registeredContext = null,
+        GenerationOptions? generationOptions = null,
+        PermissionMode filePermission = PermissionMode.FullAccess,
+        PermissionMode commandPermission = PermissionMode.FullAccess,
+        PermissionMode browserPermission = PermissionMode.FullAccess,
+        IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
+        ComputerUseRequest? computerUseRequest = null,
+        ProviderExecutionContext? executionContext = null,
+        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation)
+    {
+        var originalCustody = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask
+            ? taskCoordinator?.CreateOriginalInvocationCustody() : null;
+        var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images, cancellationToken, prompts, registeredContext, generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities, availableCapabilities, computerUseRequest, executionContext, taskExecutionIntent, originalCustody);
+        return originalCustody is null ? original : ObserveOriginalSendAsync(original, originalCustody, cancellationToken);
+    }
+
+    private async IAsyncEnumerable<ChatStreamEvent> SendOriginalAsync(
         Conversation conversation,
         string prompt,
         ModelDescriptor model,
@@ -193,7 +225,8 @@ public sealed class ChatSessionService(
         IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
         ComputerUseRequest? computerUseRequest = null,
         ProviderExecutionContext? executionContext = null,
-        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation)
+        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
+        TaskRunInvocationCustody? originalCustody = null)
     {
         if (!Enum.IsDefined(taskExecutionIntent)) throw new ArgumentOutOfRangeException(nameof(taskExecutionIntent));
         var canonicalIntent = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask;
@@ -228,28 +261,29 @@ public sealed class ChatSessionService(
                 token).ConfigureAwait(false);
         }
 
-        await using var execution = new ChatExecutionTracker(
+        var execution = new ChatExecutionTracker(
             ChatExecutionStage.Preparing,
             // Canonical tasks have no issuer-enrolled estimator yet. Keep their ETA unknown
             // instead of starting an unowned provider call outside the actual attempt.
             canonicalIntent ? null : EstimateEtaAsync,
             executionContext?.ExecutionId);
+        await using var ordinaryExecution = canonicalIntent ? null : execution;
+        if (originalCustody is not null) originalCustody.OriginalTracker = execution;
 
         TaskExecutionSnapshot? canonicalTask = null;
         if (canonicalIntent)
         {
             if (executionContext is not null)
             {
-                canonicalTask = await taskCoordinator!.GetAsync(executionContext.TaskId, cancellationToken).ConfigureAwait(false)
-                    ?? throw new InvalidOperationException("The original canonical task is unavailable.");
-                if (canonicalTask.ContextId != conversation.Id || canonicalTask.ContextId != executionContext.ContextId
-                    || canonicalTask.ExecutionId != executionContext.ExecutionId || canonicalTask.PersistenceRevision != executionContext.PersistenceRevision
-                    || executionContext.AttemptId is { } suppliedAttempt && canonicalTask.Attempts.LastOrDefault()?.Id != suppliedAttempt)
-                    throw new InvalidOperationException("The continuation does not bind the same current task, conversation and run.");
+                canonicalTask = await taskCoordinator!.BindOriginalContinuationAsync(
+                    originalCustody ?? throw new InvalidOperationException("The actual invocation custody is unavailable."),
+                    executionContext, conversation.Id, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                canonicalTask = await taskCoordinator!.BeginAuthorizedAsync(conversation.Id, execution.OperationId, SummarizePrompt(prompt),
+                canonicalTask = await taskCoordinator!.BeginOriginalInvocationAsync(
+                    originalCustody ?? throw new InvalidOperationException("The actual invocation custody is unavailable."),
+                    conversation.Id, execution.OperationId, SummarizePrompt(prompt),
                     TaskExecutionDurability.PersistedPlan, [], cancellationToken).ConfigureAwait(false);
             }
             CurrentCanonicalTask = canonicalTask;
@@ -300,6 +334,14 @@ public sealed class ChatSessionService(
 
         void PublishExecution(ChatExecutionSnapshot snapshot)
         {
+            if (canonicalIntent && snapshot.Stage == ChatExecutionStage.Completed && originalCustody is not null
+                && originalCustody.OriginalCompletion is not { IsCompletedSuccessfully: true })
+            {
+                originalCustody.DeferredCompletionPublication = () => PublishExecution(snapshot);
+                return;
+            }
+            try
+            {
             CurrentExecution = snapshot;
             ExecutionChanged?.Invoke(snapshot);
             if (executionEvents is null) return;
@@ -332,6 +374,12 @@ public sealed class ChatSessionService(
                     activeEntry = entry;
                     activeStartedAt = entry.Timestamp;
                 }
+            }
+            }
+            catch (OperationCanceledException observerFailure) when (canonicalIntent)
+            {
+                // This synchronous observer is not canceled provider/iterator evidence.
+                throw new AggregateException("An original canonical progress observer failed.", observerFailure);
             }
         }
 
@@ -482,7 +530,9 @@ public sealed class ChatSessionService(
         var effectiveProjectInstructions = string.Join("\n\n",
             new[] { projectInstructions, discoveredAgentInstructions }.Where(item => !string.IsNullOrWhiteSpace(item)));
 
-        using var computerPassCandidate = computerTools.CreatePass(computerUseRequest);
+        var computerPassCandidate = computerTools.CreatePass(computerUseRequest);
+        using var ordinaryComputerPass = canonicalIntent ? null : computerPassCandidate;
+        if (originalCustody is not null) originalCustody.OriginalResources.Add(computerPassCandidate);
         var selectedRegisteredCapabilities = FilterCapabilitiesForTurn(
                 availableCapabilities ?? capabilities,
                 requiredCapabilities)
@@ -600,8 +650,18 @@ public sealed class ChatSessionService(
             var current = canonicalTask ?? throw new InvalidOperationException("The canonical task disappeared before context capture.");
             if (current.TaskId != context.TaskId || current.ExecutionId != context.ExecutionId || current.PersistenceRevision != context.PersistenceRevision)
                 throw new InvalidOperationException("The original request does not bind the producer's actual task observation.");
-            await taskProviderContextCapture!.CaptureOriginalAsync(current, request,
-                inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).ConfigureAwait(false);
+            Task? originalCapture = null;
+            try
+            {
+                originalCapture = taskProviderContextCapture!.CaptureOriginalAsync(current, request,
+                    inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).AsTask();
+                await originalCapture.ConfigureAwait(false);
+            }
+            catch (Exception captureFailure)
+            {
+                originalCustody!.Retain(captureFailure, originalCapture);
+                throw;
+            }
         }
         async ValueTask CaptureOriginalToolsAsync(OllamaToolRequest request, TaskRunContextInventory? inventory, CancellationToken token)
         {
@@ -610,8 +670,18 @@ public sealed class ChatSessionService(
             var current = canonicalTask ?? throw new InvalidOperationException("The canonical task disappeared before context capture.");
             if (current.TaskId != context.TaskId || current.ExecutionId != context.ExecutionId || current.PersistenceRevision != context.PersistenceRevision)
                 throw new InvalidOperationException("The original request does not bind the producer's actual task observation.");
-            await taskProviderContextCapture!.CaptureOriginalAsync(current, request,
-                inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).ConfigureAwait(false);
+            Task? originalCapture = null;
+            try
+            {
+                originalCapture = taskProviderContextCapture!.CaptureOriginalAsync(current, request,
+                    inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).AsTask();
+                await originalCapture.ConfigureAwait(false);
+            }
+            catch (Exception captureFailure)
+            {
+                originalCustody!.Retain(captureFailure, originalCapture);
+                throw;
+            }
         }
 
         var assistantId = Guid.NewGuid();
@@ -1103,15 +1173,107 @@ public sealed class ChatSessionService(
         {
             var current = await taskCoordinator.GetAsync(canonicalTask.TaskId, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("The canonical task was lost before original execution completion.");
-            var currentAttempt = current.Attempts.LastOrDefault()
+            _ = current.Attempts.LastOrDefault()
                 ?? throw new InvalidOperationException("No actual provider attempt can be completed.");
-            canonicalTask = await taskCoordinator.CompleteAttemptAsync(current.TaskId, current.ExecutionId,
-                currentAttempt.Id, cancellationToken).ConfigureAwait(false);
-            CurrentCanonicalTask = canonicalTask;
+            // This is only the observed basis. The outer owner completes after the actual
+            // body, iterator Dispose, tracker timer and computer resource cleanup.
+            (originalCustody ?? throw new InvalidOperationException("No actual original completion custody exists.")).CompletionBasis = current;
         }
         execution.Complete();
         execution.Changed -= PublishExecution;
         yield return ChatStreamEvent.AssistantCompleted(assistant);
+    }
+
+    private async IAsyncEnumerable<ChatStreamEvent> ObserveOriginalSendAsync(
+        IAsyncEnumerable<ChatStreamEvent> originalBody, TaskRunInvocationCustody originalCustody,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var original = originalBody.GetAsyncEnumerator(cancellationToken);
+        try
+        {
+            while (true)
+            {
+                Task<bool>? originalMove = null;
+                bool hasItem;
+                ChatStreamEvent item;
+                try
+                {
+                    originalMove = original.MoveNextAsync().AsTask();
+                    originalCustody.OriginalMoves.Add(originalMove);
+                    hasItem = await originalMove.ConfigureAwait(false);
+                    if (!hasItem) { originalCustody.ReachedEnd = true; break; }
+                    item = original.Current;
+                }
+                catch (Exception bodyFailure)
+                {
+                    originalCustody.Retain(bodyFailure, originalMove);
+                    break;
+                }
+                if (item.Kind == ChatStreamEventKind.AssistantCompleted)
+                {
+                    if (originalCustody.DeferredCompletedMessage is not null)
+                        throw new InvalidOperationException("The actual original produced more than one final response.");
+                    originalCustody.DeferredCompletedMessage = item;
+                    continue;
+                }
+                yield return item;
+            }
+        }
+        finally
+        {
+            // Invoke and retain the SAME Dispose once, including synchronous call failures.
+            originalCustody.DisposeInvoked = true;
+            try
+            {
+                originalCustody.OriginalDispose = original.DisposeAsync().AsTask();
+                await originalCustody.OriginalDispose.ConfigureAwait(false);
+            }
+            catch (Exception cleanupFailure)
+            {
+                if (originalCustody.OriginalDispose is null) originalCustody.DisposeDirectFailure = cleanupFailure;
+                originalCustody.Retain(cleanupFailure, originalCustody.OriginalDispose);
+            }
+            if (originalCustody.OriginalTracker is { } tracker)
+            {
+                originalCustody.TrackerDisposeInvoked = true;
+                try
+                {
+                    originalCustody.OriginalTrackerDispose = tracker.DisposeAsync().AsTask();
+                    await originalCustody.OriginalTrackerDispose.ConfigureAwait(false);
+                }
+                catch (Exception trackerFailure)
+                {
+                    if (originalCustody.OriginalTrackerDispose is null) originalCustody.TrackerDisposeDirectFailure = trackerFailure;
+                    originalCustody.Retain(trackerFailure, originalCustody.OriginalTrackerDispose);
+                }
+            }
+            foreach (var resource in originalCustody.OriginalResources)
+                try { resource.Dispose(); } catch (Exception resourceFailure) { originalCustody.Retain(resourceFailure); }
+            originalCustody.ResourcesDisposed = true;
+            originalCustody.OwnedCleanupTerminal = true;
+            if (originalCustody.ReachedEnd && originalCustody.Causes.Count == 0 && originalCustody.DeferredCompletedMessage is not null)
+            {
+                try
+                {
+                    CurrentCanonicalTask = await taskCoordinator!.CompleteOriginalInvocationAsync(originalCustody).ConfigureAwait(false);
+                }
+                catch (Exception completionFailure) { originalCustody.Retain(completionFailure, originalCustody.OriginalCompletion); }
+            }
+            try
+            {
+                var observed = await taskCoordinator!.ObserveOriginalInvocationTerminalAsync(originalCustody).ConfigureAwait(false);
+                if (observed is not null) CurrentCanonicalTask = observed;
+            }
+            catch (Exception observationFailure) { taskCoordinator!.RetainOriginalInvocationObservationFailure(originalCustody, observationFailure); }
+            originalCustody.ThrowRetained();
+        }
+        if (originalCustody.OriginalCompletion is { IsCompletedSuccessfully: true }
+            && originalCustody.DeferredCompletedMessage is { } completed)
+        {
+            try { originalCustody.DeferredCompletionPublication?.Invoke(); }
+            catch (Exception observerFailure) { taskCoordinator!.ReportAcknowledgedCompletionObservationFailure(originalCustody, observerFailure); }
+            yield return completed;
+        }
     }
 
     private static string SummarizePrompt(string prompt)

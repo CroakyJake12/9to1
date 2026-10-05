@@ -16,9 +16,15 @@ public sealed partial class TaskExecutionCoordinator
     /// <summary>Configuration observation only; every command still requires the actual fresh authority check.</summary>
     public bool HasCommandAuthority => _admissionAuthority is ITaskRunCommandAuthority;
 
-    public async Task<TaskExecutionSnapshot> BeginAuthorizedAsync(
+    public Task<TaskExecutionSnapshot> BeginAuthorizedAsync(
         Guid contextId, Guid executionId, string promptSummary, TaskExecutionDurability durability,
-        IReadOnlyCollection<string>? requestedPermissionScopes, CancellationToken cancellationToken)
+        IReadOnlyCollection<string>? requestedPermissionScopes, CancellationToken cancellationToken) =>
+        BeginAuthorizedOriginalAsync(contextId, executionId, promptSummary, durability, requestedPermissionScopes,
+            cancellationToken, custody: null);
+
+    private async Task<TaskExecutionSnapshot> BeginAuthorizedOriginalAsync(
+        Guid contextId, Guid executionId, string promptSummary, TaskExecutionDurability durability,
+        IReadOnlyCollection<string>? requestedPermissionScopes, CancellationToken cancellationToken, TaskRunInvocationCustody? custody)
     {
         var authority = RequireAuthority();
         if (contextId == Guid.Empty || executionId == Guid.Empty)
@@ -27,9 +33,25 @@ public sealed partial class TaskExecutionCoordinator
         var proposed = new TaskExecutionSnapshot(Guid.NewGuid(), contextId, executionId,
             SensitiveTextRedactor.Redact(promptSummary, 240), TaskExecutionLifecycle.Running, durability,
             1, [], [], [], NormalizeScopes(requestedPermissionScopes), null, now, now);
+        if (custody is not null) custody.ProposedBinding = proposed;
         var owner = await authority.AuthorizeStartAsync(proposed, cancellationToken).ConfigureAwait(false);
         ValidateOwner(proposed, owner);
-        return await PersistAsync(proposed with { OwnerBinding = owner }, cancellationToken).ConfigureAwait(false);
+        proposed = proposed with { OwnerBinding = owner };
+        if (custody is not null)
+        {
+            custody.ProposedBinding = proposed;
+            if (!_originalInvocations.TryAdd(proposed.TaskId, custody))
+                throw new InvalidOperationException("Another original invocation owns this exact new task identity.");
+        }
+        var originalBegin = PersistAsync(proposed, cancellationToken);
+        if (custody is not null) custody.OriginalBegin = originalBegin;
+        var acknowledged = await originalBegin.ConfigureAwait(false);
+        if (custody is not null)
+        {
+            custody.BoundByActualBegin = true;
+            BindOriginalInvocation(custody, acknowledged, alreadyRegistered: true);
+        }
+        return acknowledged;
     }
 
     public Task<TaskRunAttemptAdmission> StartAttemptAsync(
@@ -51,6 +73,9 @@ public sealed partial class TaskExecutionCoordinator
         RequireRun(snapshot, expectedExecutionId);
         ValidateOwner(snapshot, snapshot.OwnerBinding);
         ValidateCandidate(candidate);
+        RequireNoUnresolvedOriginalInvocation(taskId);
+        if (snapshot.RecoveryObservation is not null)
+            throw new InvalidOperationException("Original orchestration needs owning-service inspection before any new attempt or replay.");
         if (snapshot.State is TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled)
             throw new InvalidOperationException("A terminal task cannot admit another provider attempt.");
         if (previousAttemptId is null)
@@ -88,6 +113,7 @@ public sealed partial class TaskExecutionCoordinator
         }
         // No fresh model, worker, or permission is selected by this state owner.
         var attemptId = Guid.NewGuid();
+        if (_originalInvocations.TryGetValue(taskId, out var originalInvocation)) originalInvocation.AttemptAdmissionInvoked = true;
         var lease = await authority.AuthorizeAttemptAsync(snapshot, attemptId, candidate, previousAttemptId, cancellationToken).ConfigureAwait(false);
         try
         {
@@ -152,11 +178,17 @@ public sealed partial class TaskExecutionCoordinator
     }
 
     /// <summary>Completes only the current admitted attempt after every original frame and cleanup has settled.</summary>
-    public async Task<TaskExecutionSnapshot> CompleteAttemptAsync(
-        Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken)
+    public Task<TaskExecutionSnapshot> CompleteAttemptAsync(
+        Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken) =>
+        CompleteAttemptOriginalAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken, invocation: null);
+
+    private async Task<TaskExecutionSnapshot> CompleteAttemptOriginalAsync(
+        Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken,
+        TaskRunInvocationCustody? invocation)
     {
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(snapshot, expectedExecutionId);
+        RequireNoUnresolvedOriginalInvocation(taskId, invocation);
         ValidateOwner(snapshot, snapshot.OwnerBinding);
         var attempt = RequireCurrentAttempt(snapshot, expectedAttemptId, activeRequired: false);
         if (attempt.State == TaskRunAttemptState.Completed && snapshot.State == TaskExecutionLifecycle.Completed)
@@ -273,6 +305,8 @@ public sealed partial class TaskExecutionCoordinator
 
     private static void RequireAcceptedPlan(TaskExecutionSnapshot snapshot)
     {
+        if (snapshot.RecoveryObservation is not null)
+            throw new InvalidOperationException("An unresolved original orchestration cannot be projected as completed.");
         if (snapshot.Plan.Any(node => node.State != TaskPlanNodeState.Superseded
             && (node.State != TaskPlanNodeState.Completed
                 || node.Acceptance is null && node.InterruptionPolicy != TaskActionInterruptionPolicy.ReadOnlyCancellable)))

@@ -9,6 +9,8 @@ public sealed record TaskExecutionProjection(
     Guid? CheckpointId, IReadOnlyList<TaskAcceptedActionProjection> AcceptedActions,
     IReadOnlyList<TaskPlanNode> UnfinishedActions)
 {
+    public TaskRunRecoveryObservation? RecoveryObservation { get; init; }
+
     public static TaskExecutionProjection From(TaskExecutionSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -19,7 +21,8 @@ public sealed record TaskExecutionProjection(
             snapshot.State, snapshot.Attempts.LastOrDefault()?.Id,
             accepted.Any(action => action.ActionId == snapshot.LastCheckpointActionId) ? snapshot.LastCheckpointActionId : null,
             snapshot.CheckpointId, Array.AsReadOnly(accepted), Array.AsReadOnly(snapshot.Plan
-                .Where(node => node.State is not (TaskPlanNodeState.Completed or TaskPlanNodeState.Superseded)).ToArray()));
+                .Where(node => node.State is not (TaskPlanNodeState.Completed or TaskPlanNodeState.Superseded)).ToArray()))
+        { RecoveryObservation = snapshot.RecoveryObservation };
     }
 }
 

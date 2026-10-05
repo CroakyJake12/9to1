@@ -775,13 +775,13 @@ public sealed class ResilientProviderRoutingRecoveryTests
     }
 
     [Fact]
-    public async Task CanonicalRemoteStreamFencesFiniteFactoryButNeverSynchronousEnumerationOrCleanup()
+    public async Task CanonicalRemoteStreamFencesFirstActualMoveButNeverAwaitLaterEnumerationOrCleanup()
     {
         SyntheticContextAuthority? source = null;
         var stream = new SynchronousFenceProbeStream(() => source!.InvocationActive);
         var first = new Provider("first", stream: _ =>
         {
-            Assert.True(source!.InvocationActive);
+            Assert.False(source!.InvocationActive);
             return stream;
         });
         var fixture = await CanonicalFixture.CreateAsync([first], allowSyntheticCloud: true,
@@ -812,6 +812,57 @@ public sealed class ResilientProviderRoutingRecoveryTests
         Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
     }
 
+    [Fact]
+    public async Task CanonicalRemoteDeferredIteratorRevokedBeforeFirstMoveNeverStartsProviderEffectOrFallback()
+    {
+        SyntheticContextAuthority? source = null;
+        var effects = 0;
+        var iteratorFinally = 0;
+        async IAsyncEnumerable<string> DeferredOriginal([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token = default)
+        {
+            effects++;
+            try
+            {
+                await Task.Yield();
+                token.ThrowIfCancellationRequested();
+                yield return "No revoked request may begin this original effect.";
+            }
+            finally { iteratorFinally++; }
+        }
+        var first = new Provider("first", stream: token =>
+        {
+            Assert.False(source!.InvocationActive);
+            source.InvocationRevoked = true; // Factory is deferred; policy changes BEFORE actual first MoveNext.
+            return DeferredOriginal(token);
+        });
+        var fallback = new Provider("local", isLocal: true);
+        var fixture = await CanonicalFixture.CreateAsync([first, fallback], allowSyntheticCloud: true,
+            initialRequiredCapabilities: [ToolCapability.Text, ToolCapability.Streaming]);
+        source = Assert.IsType<SyntheticContextAuthority>(fixture.ContextAuthority);
+        var before = await fixture.CurrentAsync();
+        async Task ReadOriginalAsync()
+        {
+            await foreach (var piece in fixture.Client.StreamChatAsync(Chat(first) with { ExecutionContext = fixture.Context(before) }, default))
+                Assert.Fail("Revoked original unexpectedly produced public output: " + piece);
+        }
+        var actual = ReadOriginalAsync();
+        var observed = await Record.ExceptionAsync(() => actual);
+        var close = await Record.ExceptionAsync(() => fixture.Frames.CloseAndDrainAsync());
+        Assert.Same(source.InvocationRefusal, observed);
+        Assert.True(ContainsOriginal(close!, source.InvocationRefusal));
+        Assert.True(actual.IsFaulted);
+        Assert.Equal(0, effects);
+        Assert.Equal(0, iteratorFinally); // An unstarted compiler iterator is not falsely claimed executed.
+        Assert.Equal(1, first.StreamCalls);
+        Assert.Equal(0, fallback.StreamCalls);
+        Assert.Equal(0, source.InvocationStarts);
+        Assert.False(source.InvocationActive);
+        Assert.Equal(1, source.DisposeCalls);
+        Assert.Equal(1, Assert.Single(fixture.Authority.Leases).Disposals);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await fixture.CurrentAsync()));
+        Assert.Single(before.Attempts);
+    }
+
     private sealed class UnfencedContextFrame : ITaskRunProviderContextFrame
     {
         public int Disposals { get; private set; }
@@ -825,9 +876,14 @@ public sealed class ResilientProviderRoutingRecoveryTests
         public int Disposals { get; private set; }
         public string Current => MoveCalls == 1 ? "Alpha" : " beta";
         public IAsyncEnumerator<string> GetAsyncEnumerator(CancellationToken token = default)
-        { Assert.True(invocationActive()); return this; }
+        { Assert.False(invocationActive()); return this; }
         public ValueTask<bool> MoveNextAsync()
-        { Assert.False(invocationActive()); MoveCalls++; return ValueTask.FromResult(MoveCalls <= 2); }
+        {
+            if (MoveCalls == 0) Assert.True(invocationActive());
+            else Assert.False(invocationActive());
+            MoveCalls++;
+            return ValueTask.FromResult(MoveCalls <= 2);
+        }
         public ValueTask DisposeAsync()
         { Assert.False(invocationActive()); Disposals++; return ValueTask.CompletedTask; }
     }
@@ -1007,6 +1063,8 @@ public sealed class ResilientProviderRoutingRecoveryTests
         public Task? ActualDispose { get; set; }
         public int InvocationStarts { get; private set; }
         public bool InvocationActive { get; private set; }
+        public bool InvocationRevoked { get; set; }
+        public Exception InvocationRefusal { get; } = new UnauthorizedAccessException("Actual synthetic paid-use revocation before raw operation admission.");
         public int DisposeCalls { get; private set; }
         private static string Payload(OllamaChatRequest request) => JsonSerializer.Serialize(request with { Model = "", ExecutionContext = null });
         private static string Payload(OllamaToolRequest request) => JsonSerializer.Serialize(request with { Model = "", ExecutionContext = null });
@@ -1043,7 +1101,9 @@ public sealed class ResilientProviderRoutingRecoveryTests
             { token.ThrowIfCancellationRequested(); ObjectDisposedException.ThrowIf(_closed, this); return ValueTask.CompletedTask; }
             public T RunOriginalInvocation<T>(Func<T> originalRawStart)
             {
-                ObjectDisposedException.ThrowIf(_closed, this); source.InvocationStarts++;
+                ObjectDisposedException.ThrowIf(_closed, this);
+                if (source.InvocationRevoked) throw source.InvocationRefusal;
+                source.InvocationStarts++;
                 source.InvocationActive = true;
                 try { return originalRawStart(); }
                 finally { source.InvocationActive = false; }
