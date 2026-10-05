@@ -7,7 +7,7 @@ import argparse, hashlib, importlib.util, json, os, re, shutil
 from pathlib import Path
 COMMON_SHA="a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 LEDGER="apps/Web/Tests/WaveResponsiveBrowser/source-pins.json"
-LEDGER_SHA="98920987d108124a0e896878b4ca52a7cc8940dd59d4afe0d09e0a6e98bba5ee"
+LEDGER_SHA="05e749a5ce018498d8b75fae4cbec572b2238025301845f00f71bfa429d8f979"
 CAP=192*1024*1024
 FLOOR=256*1024*1024
 NAMES=["real-populated-390-canvas-fit","real-390-keyboard-and-touch","genuine-chrome-200-percent-fit"]
