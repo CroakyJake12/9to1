@@ -70,6 +70,13 @@ public sealed class TaskExecutionCoordinator(
             TaskPlanNodeState.Running, interruptionPolicy, snapshot.PlanVersion,
             RequiredPermissionScopes: NormalizeScopes(requiredPermissionScopes));
         var index = nodes.FindIndex(item => item.ActionId == actionId);
+        if (index >= 0 && nodes[index].State == TaskPlanNodeState.Completed)
+        {
+            // An admitted retry must not redispatch work whose owning service already accepted it.
+            if (nodes[index].ParentActionId != parentActionId || nodes[index].InterruptionPolicy != interruptionPolicy)
+                throw new InvalidOperationException("An accepted action identity cannot be reused for different work.");
+            return snapshot;
+        }
         if (index >= 0) nodes[index] = node; else nodes.Add(node);
         if (cancellationSource is not null && interruptionPolicy == TaskActionInterruptionPolicy.ReadOnlyCancellable)
             _cancellableActions[(taskId, actionId)] = cancellationSource;
@@ -82,9 +89,22 @@ public sealed class TaskExecutionCoordinator(
     {
         _cancellableActions.TryRemove((taskId, actionId), out _);
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
-        var nodes = snapshot.Plan.Select(item => item.ActionId == actionId && item.State != TaskPlanNodeState.Superseded
+        var action = snapshot.Plan.FirstOrDefault(item => item.ActionId == actionId)
+            ?? throw new KeyNotFoundException("The action was not admitted to this task.");
+        if (action.State == TaskPlanNodeState.Superseded) return snapshot;
+        if (action.State == TaskPlanNodeState.Completed)
+        {
+            if (!succeeded) throw new InvalidOperationException("A completed owner action cannot be downgraded by a late failure.");
+            return snapshot;
+        }
+        var nodes = snapshot.Plan.Select(item => item.ActionId == actionId
             ? item with { State = succeeded ? TaskPlanNodeState.Completed : TaskPlanNodeState.Failed } : item).ToArray();
-        var updated = snapshot with { Plan = nodes, LastCheckpointActionId = actionId, UpdatedAt = _time.GetUtcNow() };
+        var updated = snapshot with
+        {
+            Plan = nodes,
+            LastCheckpointActionId = succeeded ? actionId : snapshot.LastCheckpointActionId,
+            UpdatedAt = _time.GetUtcNow()
+        };
         await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
         return updated;
     }
