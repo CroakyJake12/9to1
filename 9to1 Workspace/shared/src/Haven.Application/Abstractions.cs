@@ -236,7 +236,11 @@ public sealed record OllamaChatRequest(
     EffortLevel Effort,
     string? SystemPrompt = null,
     bool EnableTools = false,
-    GenerationOptions? Options = null);
+    GenerationOptions? Options = null)
+{
+    /// <summary>Original canonical Task/Run observation; this does not issue authority.</summary>
+    public ProviderExecutionContext? ExecutionContext { get; init; }
+}
 
 /// <summary>
 /// Represents ollama message and keeps its related state and behavior together.
@@ -280,12 +284,22 @@ public sealed record OllamaToolRequest(
     IReadOnlyList<OllamaToolDefinition> Tools,
     EffortLevel Effort,
     string? SystemPrompt = null,
-    GenerationOptions? Options = null);
+    GenerationOptions? Options = null)
+{
+    /// <summary>Original canonical Task/Run observation; this does not issue authority.</summary>
+    public ProviderExecutionContext? ExecutionContext { get; init; }
+}
 
 /// <summary>
 /// Represents ollama tool response and keeps its related state and behavior together.
 /// </summary>
-public sealed record OllamaToolResponse(string Content, IReadOnlyList<OllamaToolCall> ToolCalls);
+public sealed record OllamaToolResponse(string Content, IReadOnlyList<OllamaToolCall> ToolCalls)
+{
+    /// <summary>The actual selected catalogue model, for fresh downstream tool governance.</summary>
+    public ProviderModelDescriptor? EffectiveModel { get; init; }
+    /// <summary>The same canonical Task/Run after any acknowledged provider-attempt transition.</summary>
+    public ProviderExecutionContext? ExecutionContext { get; init; }
+}
 
 /// <summary>
 /// Defines the workspace tool service contract so callers depend on a capability rather than one implementation.

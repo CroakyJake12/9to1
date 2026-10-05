@@ -35,11 +35,19 @@ public interface IPermissionDecisionEngine
 /// Central risk-based Haven approval policy. A grant is scoped to one
 /// capability/action key and never becomes authority for unrelated actions.
 /// </summary>
-public sealed class PermissionDecisionEngine : IPermissionDecisionEngine
+/// <summary>The SAME policy writer gate surrounds a finite native effect. It is not an async lease.</summary>
+public interface IPermissionOriginalEffectFence
+{
+    T RunOriginalEffect<T>(string scope, CapabilityRiskClass risk, bool requiresPermission,
+        string reason, Func<T> originalNativeEffect);
+}
+
+public sealed class PermissionDecisionEngine : IPermissionDecisionEngine, IPermissionOriginalEffectFence
 {
     private readonly object _gate = new();
     private readonly HashSet<string> _grants = new(StringComparer.OrdinalIgnoreCase);
     private HavenPermissionPolicy _policy = HavenPermissionPolicy.AlwaysAsk;
+    private bool _originalEffectInProgress;
 
     public HavenPermissionPolicy Policy
     {
@@ -73,18 +81,43 @@ public sealed class PermissionDecisionEngine : IPermissionDecisionEngine
 
     public void SetPolicy(HavenPermissionPolicy policy)
     {
-        lock (_gate) _policy = policy;
+        lock (_gate) { DemandNoOriginalEffectReentry(); _policy = policy; }
     }
 
     public void Grant(string scope)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(scope);
-        lock (_gate) _grants.Add(scope);
+        lock (_gate) { DemandNoOriginalEffectReentry(); _grants.Add(scope); }
     }
 
     public void Revoke(string scope)
     {
         if (string.IsNullOrWhiteSpace(scope)) return;
-        lock (_gate) _grants.Remove(scope);
+        lock (_gate) { DemandNoOriginalEffectReentry(); _grants.Remove(scope); }
+    }
+
+    public T RunOriginalEffect<T>(string scope, CapabilityRiskClass risk, bool requiresPermission,
+        string reason, Func<T> originalNativeEffect)
+    {
+        ArgumentNullException.ThrowIfNull(originalNativeEffect);
+        ArgumentException.ThrowIfNullOrWhiteSpace(scope);
+        if (!Enum.IsDefined(risk)) throw new ArgumentOutOfRangeException(nameof(risk));
+        lock (_gate)
+        {
+            DemandNoOriginalEffectReentry();
+            // Reevaluate exact scope/risk under the existing Grant/Revoke/SetPolicy writer gate.
+            // Only native Move/Delete/Start is permitted inside; never await or call an observer.
+            if (Evaluate(scope, risk, requiresPermission, reason).Kind != PermissionDecisionKind.Allowed)
+                throw new UnauthorizedAccessException("Current central permission policy refuses the original effect.");
+            _originalEffectInProgress = true;
+            try { return originalNativeEffect(); }
+            finally { _originalEffectInProgress = false; }
+        }
+    }
+
+    private void DemandNoOriginalEffectReentry()
+    {
+        if (_originalEffectInProgress)
+            throw new InvalidOperationException("Permission mutation/effect reentry is forbidden inside an original native effect.");
     }
 }

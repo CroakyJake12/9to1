@@ -36,11 +36,27 @@ public interface ICheckpointRestorer
 public sealed class CheckpointService(
     ICheckpointRepository repository,
     ICheckpointRestorer restorer,
-    IExecutionEventSink? executionEvents = null)
+    IExecutionEventSink? executionEvents = null) : ICheckpointExecutionObservationSource
 {
     private sealed class ExecutionCheckpointScope
     {
-        public Guid? CheckpointId;
+        private readonly object _publication = new();
+        private CheckpointInfo? _originalCheckpoint;
+        // Retain the immutable record the actual successful producer saved. A repository
+        // rewrite under the same ID cannot borrow this execution's original provenance.
+        public Guid? CheckpointId
+        {
+            get { lock (_publication) return _originalCheckpoint?.Id; }
+        }
+        public CheckpointInfo? GetOriginal(Guid checkpointId)
+        {
+            lock (_publication)
+                return _originalCheckpoint?.Id == checkpointId ? _originalCheckpoint : null;
+        }
+        public void PublishOriginal(CheckpointInfo checkpoint)
+        {
+            lock (_publication) _originalCheckpoint = checkpoint;
+        }
     }
 
     private readonly object _gate = new();
@@ -48,6 +64,28 @@ public sealed class CheckpointService(
 
     /// <summary>The active user policy; Desktop keeps this aligned with Settings (engine-owned like permission policy).</summary>
     public CheckpointMode Mode { get; set; } = CheckpointMode.BeforeFileChanges;
+
+    /// <summary>Observes only a checkpoint actually published by this retained execution scope.
+    /// A repository ID, conversation or workspace alone establishes no execution provenance.</summary>
+    public async Task<CheckpointInfo?> GetOriginalCheckpointAsync(Guid executionId, Guid checkpointId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ExecutionCheckpointScope original;
+        lock (_gate)
+        {
+            if (!_scopesByExecution.TryGetValue(executionId, out original!) || original.CheckpointId != checkpointId)
+                return null;
+        }
+        var created = original.GetOriginal(checkpointId);
+        if (created is null) return null;
+        var record = await repository.GetAsync(checkpointId, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (record != created) return null;
+        lock (_gate)
+            return _scopesByExecution.TryGetValue(executionId, out var current) &&
+                ReferenceEquals(current, original) && ReferenceEquals(current.GetOriginal(checkpointId), created) ? record : null;
+    }
 
     /// <summary>Creates at most one checkpoint per agentic execution, honouring the user's policy.</summary>
     public async Task<CheckpointInfo?> EnsureBeforeMutationAsync(
@@ -77,7 +115,7 @@ public sealed class CheckpointService(
             Guid.NewGuid(), conversationId, containerId, workspaceRoot,
             "Before agentic changes", mode, startSequence, DateTimeOffset.UtcNow);
         await repository.SaveAsync(checkpoint, cancellationToken).ConfigureAwait(false);
-        scope.CheckpointId = checkpoint.Id;
+        scope.PublishOriginal(checkpoint);
 
         executionEvents?.TryPublish(new ExecutionEvent(
             Guid.NewGuid(), executionId, Guid.NewGuid(), null, ExecutionOrigin.Haven,

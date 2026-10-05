@@ -130,7 +130,8 @@ public sealed class AgentTaskRuntimeService(
                 filePermission: PermissionMode.Ask,
                 commandPermission: PermissionMode.Ask,
                 browserPermission: browserPermission,
-                availableCapabilities: activeCapabilities).ConfigureAwait(false))
+                availableCapabilities: activeCapabilities,
+                taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask).ConfigureAwait(false))
             {
                 switch (streamEvent.Kind)
                 {

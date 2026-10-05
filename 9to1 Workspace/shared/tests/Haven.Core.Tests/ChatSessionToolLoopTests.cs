@@ -10,6 +10,7 @@
 using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
+using NineToOne.Cui.AI;
 
 namespace Haven.Core.Tests;
 
@@ -67,7 +68,7 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         var connection = ChatMcpRepository.ReadyConnection();
         var connectionRepository = new ChatMcpRepository(connection);
         var mcpClient = new ChatMcpClient();
-        var mcpRuntime = new McpToolRuntime(connectionRepository, mcpClient);
+        var mcpRuntime = new McpToolRuntime(connectionRepository, mcpClient, new ExactMcpAdmission(connection.Id));
         var localToolName = McpToolRuntime.LocalToolName(connection.Id, "write_item");
         var remediationRepository = new ChatRemediationRepository();
         var eventSink = new ChatRecordingSink();
@@ -136,9 +137,10 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         var model = new ModelDescriptor("desktop-model", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.ComputerUse }, DateTimeOffset.UtcNow);
         var ollama = new FakeOllama(model);
         var computer = new TestComputerTools();
+        var request = EligibleComputerRequest();
         var service = new ChatSessionService(
             new FakeConversations(), ollama, new CapabilityPreflightService(), new PermitSafety(),
-            new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(computer));
+            new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(computer, new ComputerUseSessionController(), new ExactComputerAdmission(request)));
         var now = DateTimeOffset.UtcNow;
         var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Test", null, null, false, true, now, now);
 
@@ -146,7 +148,7 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         await foreach (var item in service.SendAsync(
                            conversation, "open notepad", model, EffortLevel.Medium,
                            [ActiveCapability.FromDefinition(CapabilityRegistryCatalog.BuiltIns.Single(item => item.Key == "computer-device-use"))], "Default", "",
-                           DuoMode.Solo, null, "", "", null, CancellationToken.None))
+                           DuoMode.Solo, null, "", "", null, CancellationToken.None, computerUseRequest: request))
             events.Add(item);
 
         Assert.Equal("notepad", computer.LaunchedName, ignoreCase: true);
@@ -161,9 +163,10 @@ public sealed class ChatSessionToolLoopTests : IDisposable
     public async Task UnsupportedNativeToolSchemaFallsBackToCompatibilityRouter()
     {
         var model = new ModelDescriptor("legacy-model", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.ComputerUse }, DateTimeOffset.UtcNow);
+        var request = EligibleComputerRequest();
         var service = new ChatSessionService(
             new FakeConversations(), new UnsupportedToolsOllama(model), new CapabilityPreflightService(), new PermitSafety(),
-            new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(new TestComputerTools()));
+            new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(new TestComputerTools(), new ComputerUseSessionController(), new ExactComputerAdmission(request)));
         var now = DateTimeOffset.UtcNow;
         var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Test", null, null, false, true, now, now);
 
@@ -171,11 +174,180 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         await foreach (var item in service.SendAsync(
                            conversation, "click the Save button", model, EffortLevel.Medium,
                            [ActiveCapability.FromDefinition(CapabilityRegistryCatalog.BuiltIns.Single(item => item.Key == "computer-device-use"))], "Default", "",
-                           DuoMode.Solo, null, "", "", null, CancellationToken.None))
+                           DuoMode.Solo, null, "", "", null, CancellationToken.None, computerUseRequest: request))
             events.Add(item);
 
         Assert.Contains(events, item => item.Kind == ChatStreamEventKind.ToolActivity && item.ToolActivity?.Title == "Inspecting the desktop" && item.ToolActivity.Succeeded);
         Assert.Contains(events, item => item.Kind == ChatStreamEventKind.AssistantCompleted && item.Message?.Content == "Done — the requested tool action completed.");
+    }
+
+    [Fact]
+    public async Task Injected_task_services_preserve_ordinary_computer_dispatch_without_canonical_admission()
+    {
+        var model = new ModelDescriptor("desktop-model", 1, "test", "test", "test",
+            new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.ComputerUse }, DateTimeOffset.UtcNow);
+        var computer = new TestComputerTools();
+        var request = EligibleComputerRequest();
+        var repository = new RefuseUnexpectedTaskRepository();
+        var owner = new RefuseUnexpectedTaskToolOwner();
+        var service = new ChatSessionService(new FakeConversations(), new FakeOllama(model), new CapabilityPreflightService(),
+            new PermitSafety(), new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(computer, new ComputerUseSessionController(), new ExactComputerAdmission(request)),
+            taskCoordinator: new TaskExecutionCoordinator(repository, new ChatRecordingSink()), taskToolOwner: owner);
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "ordinary", null, null, false, true, now, now);
+        var events = new List<ChatStreamEvent>();
+        await foreach (var item in service.SendAsync(conversation, "open notepad", model, EffortLevel.Medium,
+            [ActiveCapability.FromDefinition(CapabilityRegistryCatalog.BuiltIns.Single(value => value.Key == "computer-device-use"))],
+            "Default", "", DuoMode.Solo, null, null, null, null, default, computerUseRequest: request)) events.Add(item);
+        Assert.Equal("notepad", computer.LaunchedName, ignoreCase: true);
+        Assert.Contains(events, item => item.Kind == ChatStreamEventKind.AssistantCompleted);
+        Assert.Equal(0, repository.Calls);
+        Assert.Equal(0, owner.Calls);
+        Assert.Null(service.CurrentCanonicalTask);
+    }
+
+    // These fixtures stand in for exact synthetic host/backend authorities. They prove the
+    // shared gates and ordinary loop, never an installed Windows/Home authorization claim.
+    [Theory]
+    [InlineData("unsupported")]
+    [InlineData("missing-request")]
+    [InlineData("missing-authorizer")]
+    [InlineData("revoked-target")]
+    [InlineData("revoked-before-dispatch")]
+    [InlineData("wrong-action")]
+    public async Task Current_Computer_gates_refuse_before_any_synthetic_backend_effect(string missingGate)
+    {
+        var request = EligibleComputerRequest();
+        var computer = new TestComputerTools(supported: missingGate != "unsupported", revoked: missingGate == "revoked-target",
+            revokeAfterFirstCheck: missingGate == "revoked-before-dispatch");
+        using var sessions = new ComputerUseSessionController();
+        var runtime = new ComputerToolRuntime(computer, sessions,
+            missingGate == "missing-authorizer" ? null : new ExactComputerAdmission(request));
+        using var pass = runtime.CreatePass(missingGate == "missing-request" ? null : request);
+        var arguments = JsonSerializer.SerializeToElement(missingGate == "wrong-action" ? "calculator" : "notepad");
+        var result = await pass.ExecuteAsync(new OllamaToolCall("computer_launch_app",
+            new Dictionary<string, JsonElement> { ["name"] = arguments }), default);
+        Assert.False(result.Activity.Succeeded);
+        Assert.Null(computer.LaunchedName);
+        Assert.Equal(0, computer.SnapshotCalls);
+        Assert.False(sessions.State.IsActive);
+    }
+
+    [Theory]
+    [InlineData("missing-authorizer")]
+    [InlineData("foreign-connection")]
+    [InlineData("changed-arguments")]
+    public async Task Current_Mcp_exact_invocation_authority_refuses_even_after_generic_action_approval(string missingGate)
+    {
+        var connection = ChatMcpRepository.ReadyConnection();
+        var client = new ChatMcpClient();
+        var runtime = new McpToolRuntime(new ChatMcpRepository(connection), client,
+            missingGate == "missing-authorizer" ? null : new ExactMcpAdmission(missingGate == "foreign-connection" ? Guid.NewGuid() : connection.Id));
+        var active = new ActiveCapability(ExternalConnectionNaming.CapabilityKey(connection.Id), ExternalConnectionNaming.PluginName(connection.Name),
+            "connection", "Use connection", "connection.mcp", "haven.connections");
+        var definition = Assert.Single(await runtime.GetDefinitionsAsync([active], default));
+        var arguments = missingGate == "changed-arguments"
+            ? new Dictionary<string, JsonElement> { ["unexpected"] = JsonSerializer.SerializeToElement(true) }
+            : new Dictionary<string, JsonElement>();
+        var result = await runtime.ExecuteAsync(new OllamaToolCall(definition.Name, arguments), [active], PermissionMode.FullAccess, default);
+        Assert.False(result.Activity.Succeeded);
+        Assert.Equal("MCP_PERMISSION_REQUIRED", result.Failure?.Code);
+        Assert.Equal(0, client.InvocationCount);
+    }
+
+    [Fact]
+    public async Task Injected_task_services_preserve_ordinary_browser_dispatch_without_canonical_admission()
+    {
+        var model = new ModelDescriptor("browser-model", 1, "test", "test", "test",
+            new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Tools, ToolCapability.Browser }, DateTimeOffset.UtcNow);
+        var browser = new RecordingOrdinaryBrowser();
+        var repository = new RefuseUnexpectedTaskRepository();
+        var owner = new RefuseUnexpectedTaskToolOwner();
+        var service = new ChatSessionService(new FakeConversations(), new SingleToolOllama(model, "browser_read_page"),
+            new CapabilityPreflightService(), new PermitSafety(), new WorkspaceToolRuntime(new TestWorkspaceTools()),
+            new ComputerToolRuntime(new TestComputerTools()), browserTools: new BrowserToolRuntime(browser, browser),
+            taskCoordinator: new TaskExecutionCoordinator(repository, new ChatRecordingSink()), taskToolOwner: owner);
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "ordinary", null, null, false, true, now, now);
+        var events = new List<ChatStreamEvent>();
+        await foreach (var item in service.SendAsync(conversation, "Read the attached web page", model, EffortLevel.Medium,
+            [ActiveCapability.FromDefinition(CapabilityRegistryCatalog.BuiltIns.Single(value => value.Key == "web-search"))],
+            "Default", "", DuoMode.Solo, null, null, null, null, default,
+            explicitCapabilities: new[] { ToolCapability.Tools, ToolCapability.Browser })) events.Add(item);
+        Assert.Equal(1, browser.Reads);
+        Assert.Contains(events, item => item.Kind == ChatStreamEventKind.ToolActivity && item.ToolActivity?.Succeeded == true);
+        Assert.Equal(0, repository.Calls);
+        Assert.Equal(0, owner.Calls);
+        Assert.Null(service.CurrentCanonicalTask);
+    }
+
+    [Fact]
+    public async Task Unconfigured_explicit_canonical_intent_and_ordinary_continuation_refuse_before_tool_effects()
+    {
+        var model = new ModelDescriptor("model", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text }, DateTimeOffset.UtcNow);
+        var computer = new TestComputerTools(); var repository = new RefuseUnexpectedTaskRepository();
+        var service = new ChatSessionService(new FakeConversations(), new FakeOllama(model), new CapabilityPreflightService(),
+            new PermitSafety(), new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(computer),
+            taskCoordinator: new TaskExecutionCoordinator(repository, new ChatRecordingSink()), taskToolOwner: new RefuseUnexpectedTaskToolOwner());
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "test", null, null, false, true, now, now);
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var _ in service.SendAsync(conversation, "open notepad", model, EffortLevel.Medium, [], "Default", "",
+                DuoMode.Solo, null, null, null, null, default, taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask)) { }
+        });
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var _ in service.SendAsync(conversation, "resume", model, EffortLevel.Medium, [], "Default", "",
+                DuoMode.Solo, null, null, null, null, default,
+                executionContext: new ProviderExecutionContext(Guid.NewGuid(), conversation.Id, Guid.NewGuid(), null, 1, null))) { }
+        });
+        Assert.Null(computer.LaunchedName);
+        Assert.Equal(0, repository.Calls);
+    }
+
+    private sealed class RefuseUnexpectedTaskRepository : ITaskExecutionRepository
+    {
+        public int Calls;
+        public Task UpsertAsync(TaskExecutionSnapshot snapshot, CancellationToken token) { Calls++; throw new InvalidOperationException("Unexpected ordinary task admission"); }
+        public Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token) { Calls++; throw new InvalidOperationException("Unexpected ordinary task read"); }
+        public Task<TaskExecutionSnapshot?> GetByContextAsync(Guid id, CancellationToken token) { Calls++; throw new InvalidOperationException("Unexpected ordinary task lookup"); }
+        public Task<IReadOnlyList<TaskExecutionSnapshot>> GetResumableAsync(CancellationToken token) { Calls++; throw new InvalidOperationException("Unexpected ordinary task read"); }
+    }
+    private sealed class RefuseUnexpectedTaskToolOwner : ITaskRunToolActionOwner
+    {
+        public int Calls;
+        private Exception Refuse() { Calls++; return new InvalidOperationException("Unexpected ordinary task owner callback"); }
+        public bool SupportsCanonicalInvocation(ToolRuntimeKind runtime, string toolName) => false;
+        public Task<ITaskRunToolActionPreparation> PrepareOriginalAsync(TaskRunAttemptAdmission original, TaskExecutionSnapshot snapshot,
+            Guid action, OllamaToolCall call, ToolRuntimeKind runtime, PermissionMode permission, string? root, CancellationToken token) => throw Refuse();
+        public Task<TaskRunToolActionResult> ExecuteOriginalAsync(ITaskRunToolActionPreparation preparation, Func<CancellationToken, Task<WorkspaceToolResult>> body, CancellationToken token) => throw Refuse();
+        public ValueTask ValidateOriginalPreparationAsync(ITaskRunToolActionPreparation preparation, TaskExecutionSnapshot snapshot, CancellationToken token) => throw Refuse();
+        public ValueTask ValidateOriginalResultAsync(ITaskRunToolActionPreparation preparation, TaskRunToolActionResult result, CancellationToken token) => throw Refuse();
+        public ValueTask RetireAcknowledgedOriginalAsync(ITaskRunToolActionPreparation preparation, TaskExecutionSnapshot snapshot, CancellationToken token) => throw Refuse();
+    }
+    private sealed class RecordingOrdinaryBrowser : IBrowserToolService, IBrowserAutomationService
+    {
+        public int Reads;
+        public Task<BrowserPageSnapshot> CapturePageAsync(CancellationToken token)
+        { Reads++; return Task.FromResult(new BrowserPageSnapshot(null, "controlled", "actual controlled browser content", [], [], DateTimeOffset.UtcNow, false, false)); }
+        public Task<string> ClickReferenceAsync(string reference, CancellationToken token) => Task.FromResult("clicked");
+        public Task<string> FillReferenceAsync(string reference, string value, CancellationToken token) => Task.FromResult("filled");
+        public Task<BrowserPendingAction> RequestDownloadAsync(string address, string? name, CancellationToken token) => throw new NotSupportedException();
+        public Task<BrowserActionExecutionResult> ApproveAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
+        public Task<BrowserActionExecutionResult> RejectAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
+        public Task<IReadOnlyList<BrowserPendingAction>> GetPendingAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<BrowserPendingAction>>([]);
+        public Task<IReadOnlyList<BrowserAuditEntry>> GetAuditAsync(int limit, CancellationToken token) => Task.FromResult<IReadOnlyList<BrowserAuditEntry>>([]);
+        public Task<IReadOnlyList<BrowserDownloadRecord>> GetDownloadsAsync(int limit, CancellationToken token) => Task.FromResult<IReadOnlyList<BrowserDownloadRecord>>([]);
+        public Task<string> ReadVisibleTextAsync(CancellationToken token) { Reads++; return Task.FromResult("actual controlled browser content"); }
+        public Task<string> NavigateAsync(string address, CancellationToken token) => Task.FromResult(address);
+        public Task<string> BackAsync(CancellationToken token) => Task.FromResult("back");
+        public Task<string> ForwardAsync(CancellationToken token) => Task.FromResult("forward");
+        public Task<string> ReloadAsync(bool clear, CancellationToken token) => Task.FromResult("reload");
+        public Task<string> ClickAsync(string selector, CancellationToken token) => Task.FromResult("clicked");
+        public Task<string> ClickTextAsync(string text, CancellationToken token) => Task.FromResult("clicked");
+        public Task<string> FillAsync(string selector, string value, CancellationToken token) => Task.FromResult("filled");
+        public Task<string> ScrollAsync(double x, double y, CancellationToken token) => Task.FromResult("scrolled");
     }
 
     /// <summary>
@@ -284,6 +456,38 @@ public sealed class ChatSessionToolLoopTests : IDisposable
             if (_requests == 1)
                 return Task.FromResult(new OllamaToolResponse(string.Empty, [new OllamaToolCall(toolName, new Dictionary<string, JsonElement>())]));
             return Task.FromResult(new OllamaToolResponse("Waiting for the required approval.", []));
+        }
+    }
+
+    private const string SyntheticComputerTarget = "synthetic.test.application.notepad";
+    private static ComputerUseRequest EligibleComputerRequest() => new("synthetic-request", SyntheticComputerTarget,
+        [new InvocationToken("synthetic-computer-use-token", new InvocationResource(InvocationKind.System,
+            InvocationCompose.ComputerUseCapabilityId, "Computer Use"), 0, 0, "Computer Use", Guid.NewGuid().ToString("N")),
+         new InvocationToken("synthetic-app-token", new InvocationResource(InvocationKind.App, SyntheticComputerTarget, "Notepad",
+            Revision: "synthetic-backend-revision1", InteractionPath: AppInteractionPath.ComputerUseRequired,
+            Classification: AppClassification.OrdinaryApplication), 0, 0, "Notepad")]);
+
+    private sealed class ExactComputerAdmission(ComputerUseRequest originalRequest) : IComputerUseAdmission
+    {
+        public ValueTask<bool> AuthorizeAsync(ComputerUseRequest request, string toolName, JsonElement arguments, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            var exactTarget = ReferenceEquals(request, originalRequest) && request.HasExplicitEligibleTarget && request.TargetAppId == SyntheticComputerTarget;
+            var exactAction = toolName is "computer_snapshot" or "computer_list_windows"
+                ? arguments.ValueKind == JsonValueKind.Object && !arguments.EnumerateObject().Any()
+                : toolName == "computer_launch_app" && arguments.ValueKind == JsonValueKind.Object
+                    && arguments.EnumerateObject().Count() == 1 && arguments.TryGetProperty("name", out var name)
+                    && name.ValueKind == JsonValueKind.String && name.GetString() == "notepad";
+            return ValueTask.FromResult(exactTarget && exactAction);
+        }
+    }
+    private sealed class ExactMcpAdmission(Guid originalConnectionId) : IMcpInvocationAuthorizer
+    {
+        public ValueTask<bool> AuthorizeAsync(ExternalConnection connection, string toolName, JsonElement arguments, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(connection.Id == originalConnectionId && toolName == "write_item"
+                && arguments.ValueKind == JsonValueKind.Object && !arguments.EnumerateObject().Any());
         }
     }
 
@@ -426,16 +630,27 @@ public sealed class ChatSessionToolLoopTests : IDisposable
     /// <summary>
     /// Represents test computer tools and keeps its related state and behavior together.
     /// </summary>
-    private sealed class TestComputerTools : IComputerToolService
+    private sealed class TestComputerTools(bool supported = true, bool revoked = false, bool revokeAfterFirstCheck = false) : IComputerToolService
     {
         /// <summary>
         /// Gets or updates launched name, the bindable or domain state represented by this property.
         /// </summary>
         public string? LaunchedName { get; private set; }
+        public bool IsSupported => supported;
+        public int TargetChecks { get; private set; }
+        public int SnapshotCalls { get; private set; }
+        public ValueTask<bool> VerifyTargetAsync(string canonicalAppId, string toolName, JsonElement arguments, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            TargetChecks++;
+            return ValueTask.FromResult(supported && !revoked && !(revokeAfterFirstCheck && TargetChecks > 1)
+                && canonicalAppId == SyntheticComputerTarget && toolName is "computer_launch_app" or "computer_snapshot" or "computer_list_windows");
+        }
+
         /// <summary>
         /// Performs snapshot asynchronously so I/O does not block the caller's thread.
         /// </summary>
-        public Task<string> SnapshotAsync(CancellationToken cancellationToken) => Task.FromResult("snapshot");
+        public Task<string> SnapshotAsync(CancellationToken cancellationToken) { SnapshotCalls++; return Task.FromResult("snapshot"); }
         /// <summary>
         /// Performs list windows asynchronously so I/O does not block the caller's thread.
         /// </summary>

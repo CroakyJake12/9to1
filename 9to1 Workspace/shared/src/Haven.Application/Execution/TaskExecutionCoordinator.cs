@@ -7,11 +7,29 @@ namespace Haven.Application;
 /// Coordinates live steering and durable follow-up work for any Haven execution surface.
 /// Persisted state is authoritative; cancellation delegates are intentionally process-local.
 /// </summary>
-public sealed class TaskExecutionCoordinator(
+public sealed partial class TaskExecutionCoordinator(
     ITaskExecutionRepository repository,
     IExecutionEventSink events,
-    TimeProvider? timeProvider = null)
+    TimeProvider? timeProvider = null,
+    ITaskRunAdmissionAuthority? admissionAuthority = null,
+    ITaskRunRuntimeSettlement? runtimeSettlement = null,
+    ICheckpointRepository? checkpointRepository = null,
+    ITaskRunToolActionOwner? toolActionOwner = null,
+    ICheckpointExecutionObservationSource? checkpointObservationSource = null)
 {
+    // Preserve the original three-parameter CLR constructor without claiming attempt authority.
+    public TaskExecutionCoordinator(ITaskExecutionRepository repository, IExecutionEventSink events, TimeProvider? timeProvider)
+        : this(repository, events, timeProvider, admissionAuthority: null, runtimeSettlement: null,
+            checkpointRepository: null, toolActionOwner: null, checkpointObservationSource: null)
+    {
+    }
+
+    private readonly ITaskRunAdmissionAuthority? _admissionAuthority = admissionAuthority;
+    private readonly ITaskRunRuntimeSettlement? _runtimeSettlement = runtimeSettlement;
+    private readonly ICheckpointRepository? _checkpointRepository = checkpointRepository;
+    private readonly ITaskRunToolActionOwner? _toolActionOwner = toolActionOwner;
+    private readonly ICheckpointExecutionObservationSource? _checkpointObservationSource = checkpointObservationSource;
+
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
     private readonly ConcurrentDictionary<(Guid TaskId, Guid ActionId), CancellationTokenSource> _cancellableActions = new();
 
@@ -49,7 +67,7 @@ public sealed class TaskExecutionCoordinator(
             Guid.NewGuid(), contextId, executionId, SensitiveTextRedactor.Redact(promptSummary, 240),
             TaskExecutionLifecycle.Running, durability, 1, [], [], [], NormalizeScopes(approvedPermissionScopes),
             null, now, now);
-        await repository.UpsertAsync(snapshot, cancellationToken).ConfigureAwait(false);
+        snapshot = await PersistAsync(snapshot, cancellationToken).ConfigureAwait(false);
         return snapshot;
     }
 
@@ -59,29 +77,40 @@ public sealed class TaskExecutionCoordinator(
     public Task<TaskExecutionSnapshot?> GetByContextAsync(Guid contextId, CancellationToken cancellationToken) =>
         repository.GetByContextAsync(contextId, cancellationToken);
 
+    // Preserve the original ordinary/telemetry CLR entry; it conveys no canonical attempt authority.
+    public Task<TaskExecutionSnapshot> RegisterActionAsync(
+        Guid taskId, Guid actionId, Guid? parentActionId, string summary,
+        TaskActionInterruptionPolicy interruptionPolicy, CancellationTokenSource? cancellationSource,
+        IReadOnlyCollection<string>? requiredPermissionScopes, CancellationToken cancellationToken) =>
+        RegisterActionAsync(taskId, actionId, parentActionId, summary, interruptionPolicy, cancellationSource,
+            requiredPermissionScopes, cancellationToken, expectedAttemptId: null, originalToolIntent: null);
+
     public async Task<TaskExecutionSnapshot> RegisterActionAsync(
         Guid taskId, Guid actionId, Guid? parentActionId, string summary,
         TaskActionInterruptionPolicy interruptionPolicy, CancellationTokenSource? cancellationSource,
-        IReadOnlyCollection<string>? requiredPermissionScopes, CancellationToken cancellationToken)
+        IReadOnlyCollection<string>? requiredPermissionScopes, CancellationToken cancellationToken,
+        Guid? expectedAttemptId = null, TaskOriginalToolIntent? originalToolIntent = null)
     {
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        if (snapshot.OwnerBinding is not null) RequireCurrentAttempt(snapshot, expectedAttemptId);
         var nodes = snapshot.Plan.ToList();
         var node = new TaskPlanNode(actionId, parentActionId, SensitiveTextRedactor.Redact(summary, 256),
             TaskPlanNodeState.Running, interruptionPolicy, snapshot.PlanVersion,
-            RequiredPermissionScopes: NormalizeScopes(requiredPermissionScopes));
+            RequiredPermissionScopes: NormalizeScopes(requiredPermissionScopes)) { OriginalToolIntent = originalToolIntent };
         var index = nodes.FindIndex(item => item.ActionId == actionId);
         if (index >= 0 && nodes[index].State == TaskPlanNodeState.Completed)
         {
             // An admitted retry must not redispatch work whose owning service already accepted it.
-            if (nodes[index].ParentActionId != parentActionId || nodes[index].InterruptionPolicy != interruptionPolicy)
+            if (nodes[index].ParentActionId != parentActionId || nodes[index].InterruptionPolicy != interruptionPolicy
+                || nodes[index].OriginalToolIntent != originalToolIntent)
                 throw new InvalidOperationException("An accepted action identity cannot be reused for different work.");
             return snapshot;
         }
         if (index >= 0) nodes[index] = node; else nodes.Add(node);
+        var updated = snapshot with { Plan = nodes, State = TaskExecutionLifecycle.Running, UpdatedAt = _time.GetUtcNow() };
+        updated = await PersistAsync(updated, cancellationToken).ConfigureAwait(false);
         if (cancellationSource is not null && interruptionPolicy == TaskActionInterruptionPolicy.ReadOnlyCancellable)
             _cancellableActions[(taskId, actionId)] = cancellationSource;
-        var updated = snapshot with { Plan = nodes, State = TaskExecutionLifecycle.Running, UpdatedAt = _time.GetUtcNow() };
-        await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
         return updated;
     }
 
@@ -89,6 +118,8 @@ public sealed class TaskExecutionCoordinator(
     {
         _cancellableActions.TryRemove((taskId, actionId), out _);
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        if (snapshot.OwnerBinding is not null)
+            throw new InvalidOperationException("An authorized task requires current-attempt owner acceptance; use AcceptActionAsync.");
         var action = snapshot.Plan.FirstOrDefault(item => item.ActionId == actionId)
             ?? throw new KeyNotFoundException("The action was not admitted to this task.");
         if (action.State == TaskPlanNodeState.Superseded) return snapshot;
@@ -105,7 +136,7 @@ public sealed class TaskExecutionCoordinator(
             LastCheckpointActionId = succeeded ? actionId : snapshot.LastCheckpointActionId,
             UpdatedAt = _time.GetUtcNow()
         };
-        await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
+        updated = await PersistAsync(updated, cancellationToken).ConfigureAwait(false);
         return updated;
     }
 
@@ -114,6 +145,8 @@ public sealed class TaskExecutionCoordinator(
         IReadOnlyCollection<string>? requiredPermissionScopes, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(instruction)) throw new ArgumentException("A follow-up instruction is required.", nameof(instruction));
+        var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:follow-up", cancellationToken).ConfigureAwait(false);
         var mode = explicitMode ?? InferMode(instruction);
         var inference = explicitMode is null ? TaskFollowUpInference.Inferred : TaskFollowUpInference.Explicit;
         return mode == TaskFollowUpMode.Queue
@@ -125,6 +158,7 @@ public sealed class TaskExecutionCoordinator(
         Guid? dependencyTaskId, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(ownerTaskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:queue:edit", cancellationToken).ConfigureAwait(false);
         var queue = snapshot.Queue.ToList();
         var index = queue.FindIndex(item => item.TaskId == queuedTaskId);
         if (index < 0) throw new KeyNotFoundException("Queued task was not found.");
@@ -139,6 +173,7 @@ public sealed class TaskExecutionCoordinator(
     public async Task RemoveQueuedAsync(Guid ownerTaskId, Guid queuedTaskId, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(ownerTaskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:queue:remove", cancellationToken).ConfigureAwait(false);
         var queue = snapshot.Queue.ToList();
         var item = queue.FirstOrDefault(entry => entry.TaskId == queuedTaskId);
         if (item is null) return;
@@ -152,6 +187,7 @@ public sealed class TaskExecutionCoordinator(
     public async Task<IReadOnlyList<QueuedFollowUpTask>> ReorderQueueAsync(Guid ownerTaskId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(ownerTaskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:queue:reorder", cancellationToken).ConfigureAwait(false);
         if (orderedTaskIds.Count != snapshot.Queue.Count || orderedTaskIds.Distinct().Count() != snapshot.Queue.Count ||
             snapshot.Queue.Any(item => !orderedTaskIds.Contains(item.TaskId)))
             throw new ArgumentException("Reorder must contain every queued task exactly once.", nameof(orderedTaskIds));
@@ -165,6 +201,7 @@ public sealed class TaskExecutionCoordinator(
         IReadOnlyCollection<Guid>? affectedActionIds, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(ownerTaskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:queue:promote-to-steer", cancellationToken).ConfigureAwait(false);
         var queue = snapshot.Queue.ToList();
         var index = queue.FindIndex(item => item.TaskId == queuedTaskId);
         if (index < 0) throw new KeyNotFoundException("Queued task was not found.");
@@ -179,6 +216,8 @@ public sealed class TaskExecutionCoordinator(
     public async Task<QueueCheckpointResult> ReachCheckpointAsync(Guid ownerTaskId, Guid? completedActionId, bool ownerCompleted, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(ownerTaskId, cancellationToken).ConfigureAwait(false);
+        if (snapshot.OwnerBinding is not null && ownerCompleted)
+            throw new InvalidOperationException("An authority-bound task requires exact attempt settlement; use CompleteAttemptAsync.");
         if (completedActionId is { } completed) snapshot = await CompleteActionAsync(ownerTaskId, completed, true, cancellationToken).ConfigureAwait(false);
         if (ownerCompleted) snapshot = snapshot with { State = TaskExecutionLifecycle.Completed, UpdatedAt = _time.GetUtcNow() };
         var queue = snapshot.Queue.ToList();
@@ -188,13 +227,13 @@ public sealed class TaskExecutionCoordinator(
         {
             if (candidate.State != QueuedFollowUpState.Queued) continue;
             if (candidate.DependencyTaskId is { } dependency && !completedIds.Contains(dependency)) continue;
-            if (!ownerCompleted && snapshot.LastCheckpointActionId is null) continue;
+            if (!ownerCompleted && snapshot.State != TaskExecutionLifecycle.Completed && snapshot.LastCheckpointActionId is null) continue;
             ready = candidate with { State = QueuedFollowUpState.Ready, UpdatedAt = _time.GetUtcNow() };
             queue[queue.FindIndex(item => item.TaskId == candidate.TaskId)] = ready;
             break;
         }
         snapshot = snapshot with { Queue = queue, UpdatedAt = _time.GetUtcNow() };
-        await repository.UpsertAsync(snapshot, cancellationToken).ConfigureAwait(false);
+        snapshot = await PersistAsync(snapshot, cancellationToken).ConfigureAwait(false);
         if (ready is not null) PublishQueue(snapshot, ready, ExecutionActionStatus.Queued, "Queued follow-up ready");
         return new QueueCheckpointResult(snapshot, ready);
     }
@@ -203,12 +242,16 @@ public sealed class TaskExecutionCoordinator(
     {
         _cancellableActions.TryRemove((taskId, actionId), out _);
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var boundaryAction = snapshot.Plan.FirstOrDefault(item => item.ActionId == actionId)
+            ?? throw new KeyNotFoundException("The safe-boundary action was not admitted to this task.");
+        if (boundaryAction.State != TaskPlanNodeState.Completed)
+            throw new InvalidOperationException("A safe boundary requires the owning service's accepted action.");
         var pending = snapshot.Steers.Where(item => item.State == SteerInstructionState.WaitingSafeBoundary && item.AffectedActionIds.Contains(actionId))
             .OrderBy(item => item.Sequence).LastOrDefault();
         if (pending is null)
         {
             snapshot = snapshot with { LastCheckpointActionId = actionId, UpdatedAt = _time.GetUtcNow() };
-            await repository.UpsertAsync(snapshot, cancellationToken).ConfigureAwait(false);
+            snapshot = await PersistAsync(snapshot, cancellationToken).ConfigureAwait(false);
             return await ReachCheckpointAsync(taskId, null, false, cancellationToken).ConfigureAwait(false);
         }
 
@@ -218,7 +261,7 @@ public sealed class TaskExecutionCoordinator(
         var version = snapshot.PlanVersion + 1;
         var steers = snapshot.Steers.Select(item => item.Id == pending.Id ? item with { State = SteerInstructionState.Applied } : item).ToArray();
         snapshot = snapshot with { Steers = steers, PlanVersion = version, State = TaskExecutionLifecycle.Running, LastCheckpointActionId = actionId, UpdatedAt = _time.GetUtcNow() };
-        await repository.UpsertAsync(snapshot, cancellationToken).ConfigureAwait(false);
+        snapshot = await PersistAsync(snapshot, cancellationToken).ConfigureAwait(false);
         PublishSteer(snapshot, pending with { State = SteerInstructionState.Applied }, ExecutionActionStatus.Completed, "Steer applied at safe boundary", actionId);
         return await ReachCheckpointAsync(taskId, null, false, cancellationToken).ConfigureAwait(false);
     }
@@ -227,6 +270,7 @@ public sealed class TaskExecutionCoordinator(
         string? idempotencyKey, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(ownerTaskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:queue:state", cancellationToken).ConfigureAwait(false);
         var queue = snapshot.Queue.ToList();
         var index = queue.FindIndex(item => item.TaskId == queuedTaskId);
         if (index < 0) throw new KeyNotFoundException("Queued task was not found.");
@@ -238,7 +282,7 @@ public sealed class TaskExecutionCoordinator(
         }
         queue[index] = current with { State = state, IdempotencyKey = idempotencyKey ?? current.IdempotencyKey, UpdatedAt = _time.GetUtcNow() };
         snapshot = snapshot with { Queue = queue, UpdatedAt = _time.GetUtcNow() };
-        await repository.UpsertAsync(snapshot, cancellationToken).ConfigureAwait(false);
+        snapshot = await PersistAsync(snapshot, cancellationToken).ConfigureAwait(false);
         PublishQueue(snapshot, queue[index], MapQueueStatus(state), "Queued follow-up state changed");
         return snapshot;
     }
@@ -246,6 +290,7 @@ public sealed class TaskExecutionCoordinator(
     public async Task<TaskExecutionSnapshot> RestoreAsync(Guid taskId, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:restore", cancellationToken).ConfigureAwait(false);
         if (snapshot.Durability != TaskExecutionDurability.InMemoryContinuation ||
             snapshot.State is not (TaskExecutionLifecycle.Running or TaskExecutionLifecycle.WaitingSafeBoundary)) return snapshot;
         var restored = snapshot with
@@ -257,8 +302,8 @@ public sealed class TaskExecutionCoordinator(
                 ? item with { State = QueuedFollowUpState.Ready, UpdatedAt = _time.GetUtcNow() } : item).ToArray(),
             UpdatedAt = _time.GetUtcNow()
         };
-        await repository.UpsertAsync(restored, cancellationToken).ConfigureAwait(false);
-        events.TryPublish(new ExecutionEvent(Guid.NewGuid(), restored.ExecutionId, Guid.NewGuid(), restored.LastCheckpointActionId,
+        restored = await PersistAsync(restored, cancellationToken).ConfigureAwait(false);
+        ObserveEvent(restored, new ExecutionEvent(Guid.NewGuid(), restored.ExecutionId, Guid.NewGuid(), restored.LastCheckpointActionId,
             ExecutionOrigin.Haven, ExecutionActionType.Warning, ExecutionActionStatus.Suspended, "Execution continuation requires re-run", null,
             "Persisted plan and queue state were restored, but the prior in-memory continuation was not. The unfinished action is marked for re-execution.",
             "task-coordination", _time.GetUtcNow(), TaskId: restored.TaskId));
@@ -268,13 +313,14 @@ public sealed class TaskExecutionCoordinator(
     private async Task<FollowUpDecision> QueueAsync(Guid taskId, string instruction, TaskFollowUpInference inference, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:queue", cancellationToken).ConfigureAwait(false);
         var now = _time.GetUtcNow();
         var queue = snapshot.Queue.OrderBy(item => item.Position).ToList();
         var queued = new QueuedFollowUpTask(Guid.NewGuid(), taskId, snapshot.ExecutionId, SensitiveTextRedactor.Redact(instruction, 500),
             queue.Count == 0 ? 1 : queue.Max(item => item.CreationOrder) + 1, queue.Count, QueuedFollowUpState.Queued, null, now, now);
         queue.Add(queued);
         var updated = snapshot with { Queue = queue, UpdatedAt = now };
-        await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
+        updated = await PersistAsync(updated, cancellationToken).ConfigureAwait(false);
         PublishQueue(updated, queued, ExecutionActionStatus.Queued, "Follow-up queued");
         return new FollowUpDecision(TaskFollowUpMode.Queue, inference, updated, QueuedTask: queued);
     }
@@ -283,6 +329,7 @@ public sealed class TaskExecutionCoordinator(
         IReadOnlyCollection<Guid>? affectedActionIds, IReadOnlyCollection<string>? requiredPermissionScopes, CancellationToken cancellationToken)
     {
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        await ValidateTaskCommandAsync(snapshot, "task:steer", cancellationToken).ConfigureAwait(false);
         var scopes = NormalizeScopes(requiredPermissionScopes);
         var requiresApproval = scopes.Any(scope => !snapshot.ApprovedPermissionScopes.Contains(scope, StringComparer.OrdinalIgnoreCase));
         var affected = (affectedActionIds is { Count: > 0 } ? affectedActionIds : snapshot.Plan
@@ -291,13 +338,14 @@ public sealed class TaskExecutionCoordinator(
         var sequence = snapshot.Steers.Count == 0 ? 1 : snapshot.Steers.Max(item => item.Sequence) + 1;
         var steerId = Guid.NewGuid();
         var steers = snapshot.Steers.ToList();
+        var supersededSteers = new List<SteerInstruction>();
         for (var i = 0; i < steers.Count; i++)
         {
             var older = steers[i];
             if (older.State is SteerInstructionState.Pending or SteerInstructionState.WaitingSafeBoundary or SteerInstructionState.Applied && older.AffectedActionIds.Intersect(affected).Any())
             {
                 steers[i] = older with { State = SteerInstructionState.Superseded, SupersededById = steerId };
-                PublishSteer(snapshot, steers[i], ExecutionActionStatus.Superseded, "Earlier steer superseded");
+                supersededSteers.Add(steers[i]);
             }
         }
         if (requiresApproval)
@@ -306,7 +354,9 @@ public sealed class TaskExecutionCoordinator(
                 inference, SteerInstructionState.Blocked, affected, now, RequiredPermissionScopes: scopes);
             steers.Add(blocked);
             var blockedSnapshot = snapshot with { Steers = steers, State = TaskExecutionLifecycle.Blocked, UpdatedAt = now };
-            await repository.UpsertAsync(blockedSnapshot, cancellationToken).ConfigureAwait(false);
+            blockedSnapshot = await PersistAsync(blockedSnapshot, cancellationToken).ConfigureAwait(false);
+            foreach (var older in supersededSteers)
+                PublishSteer(blockedSnapshot, older, ExecutionActionStatus.Superseded, "Earlier steer superseded");
             PublishSteer(blockedSnapshot, blocked, ExecutionActionStatus.UserActionRequired, "Steer needs existing approval flow");
             return new FollowUpDecision(TaskFollowUpMode.Steer, inference, blockedSnapshot, blocked, RequiresApproval: true);
         }
@@ -342,7 +392,9 @@ public sealed class TaskExecutionCoordinator(
         steers.Add(steer);
         var updated = snapshot with { Steers = steers, Plan = nodes, PlanVersion = version,
             State = waiting ? TaskExecutionLifecycle.WaitingSafeBoundary : TaskExecutionLifecycle.Running, UpdatedAt = now };
-        await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
+        updated = await PersistAsync(updated, cancellationToken).ConfigureAwait(false);
+        foreach (var older in supersededSteers)
+            PublishSteer(updated, older, ExecutionActionStatus.Superseded, "Earlier steer superseded");
         PublishSteer(updated, steer, waiting ? ExecutionActionStatus.PendingSafeBoundary : ExecutionActionStatus.Completed,
             waiting ? "Steer waiting for safe boundary" : "Steer applied");
         return new FollowUpDecision(TaskFollowUpMode.Steer, inference, updated, steer, CancellationRequested: cancellationRequested, WaitingForSafeBoundary: waiting);
@@ -354,7 +406,7 @@ public sealed class TaskExecutionCoordinator(
     private async Task PersistQueueAsync(TaskExecutionSnapshot snapshot, List<QueuedFollowUpTask> queue, CancellationToken cancellationToken)
     {
         var updated = snapshot with { Queue = queue, UpdatedAt = _time.GetUtcNow() };
-        await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
+        updated = await PersistAsync(updated, cancellationToken).ConfigureAwait(false);
     }
 
     private void PublishSteer(TaskExecutionSnapshot snapshot, SteerInstruction steer, ExecutionActionStatus status, string name, Guid? oldAction = null, Guid? newAction = null)
@@ -367,7 +419,7 @@ public sealed class TaskExecutionCoordinator(
         if (steer.SupersededById is { } supersededBy) metadata["supersededBySteerId"] = supersededBy.ToString();
         if (oldAction is { } oldId) metadata["supersededActionId"] = oldId.ToString();
         if (newAction is { } newId) metadata["replacementActionId"] = newId.ToString();
-        events.TryPublish(new ExecutionEvent(Guid.NewGuid(), snapshot.ExecutionId, steer.Id, oldAction, ExecutionOrigin.Haven, ExecutionActionType.Steer, status, name,
+        ObserveEvent(snapshot, new ExecutionEvent(Guid.NewGuid(), snapshot.ExecutionId, steer.Id, oldAction, ExecutionOrigin.Haven, ExecutionActionType.Steer, status, name,
             "The active plan was updated only where the follow-up instruction affected pending work.", steer.Summary, "task-coordination", _time.GetUtcNow(),
             TaskId: snapshot.TaskId, SafeMetadata: metadata));
     }
@@ -379,8 +431,8 @@ public sealed class TaskExecutionCoordinator(
             ["queuedTaskId"] = queued.TaskId.ToString(), ["queuePosition"] = queued.Position.ToString(), ["creationOrder"] = queued.CreationOrder.ToString()
         };
         if (queued.DependencyTaskId is { } dependency) metadata["dependencyTaskId"] = dependency.ToString();
-        events.TryPublish(new ExecutionEvent(Guid.NewGuid(), snapshot.ExecutionId, queued.TaskId, null, ExecutionOrigin.Haven, ExecutionActionType.Queue, status, name,
-            null, queued.Summary, "task-coordination", _time.GetUtcNow(), TaskId: queued.TaskId, SafeMetadata: metadata));
+        ObserveEvent(snapshot, new ExecutionEvent(Guid.NewGuid(), snapshot.ExecutionId, queued.TaskId, null, ExecutionOrigin.Haven, ExecutionActionType.Queue, status, name,
+            null, queued.Summary, "task-coordination", _time.GetUtcNow(), TaskId: snapshot.TaskId, SafeMetadata: metadata));
     }
 
     private static ExecutionActionStatus MapQueueStatus(QueuedFollowUpState state) => state switch

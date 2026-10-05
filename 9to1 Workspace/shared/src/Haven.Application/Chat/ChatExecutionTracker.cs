@@ -22,11 +22,19 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
     private bool _finished;
     private TimeSpan? _eta;
 
+    // Preserve the original two-parameter CLR constructor and its own operation identity.
+    public ChatExecutionTracker(ChatExecutionStage initialStage, Func<ChatEtaRequest, CancellationToken, Task<string?>>? etaProvider)
+        : this(initialStage, etaProvider, operationId: null)
+    {
+    }
+
     public ChatExecutionTracker(
         ChatExecutionStage initialStage = ChatExecutionStage.Preparing,
-        Func<ChatEtaRequest, CancellationToken, Task<string?>>? etaProvider = null)
+        Func<ChatEtaRequest, CancellationToken, Task<string?>>? etaProvider = null,
+        Guid? operationId = null)
     {
-        OperationId = Guid.NewGuid();
+        if (operationId == Guid.Empty) throw new ArgumentException("A canonical operation identity cannot be empty.", nameof(operationId));
+        OperationId = operationId ?? Guid.NewGuid();
         Performance = new ChatPerformanceTrace(OperationId, _startedAt);
         Performance.TryMark(
             ChatPerformanceMilestone.SendClicked,

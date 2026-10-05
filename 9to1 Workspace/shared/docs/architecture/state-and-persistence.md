@@ -89,3 +89,57 @@ persistence.
   settings file.
 - New binary asset → process into a stable file under the data directory;
   never embed blobs in preferences.json.
+
+
+## Canonical Task/Run recovery
+
+`TaskExecutionCoordinator` owns one `TaskExecutionSnapshot` per canonical task.
+`ContextId` links the actual conversation or owning context; `ExecutionId` is
+that execution's original operation identity. A provider fallback changes the
+attempt, never either identity. The existing Agent run history remains a
+separate legacy invocation log, not another Task/Run authority.
+
+`ITaskExecutionRepository` persists this snapshot through the owning adapter.
+Each write proposes `PersistenceRevision + 1`; an acknowledged compare-and-swap
+is required before observations or accepted-state changes are published.
+SQLite's additive migration 28 binds the revision column to the JSON revision,
+and preserves context, execution and creation identities. A stale write raises
+`TaskExecutionRevisionConflictException`; callers must inspect current state
+instead of blindly overwriting or replaying completed work. Browser adapters
+must implement the same contract on the same model.
+
+Accepted actions retain the actual owning-service acceptance separately from
+a successful runtime return. Unknown, failed, superseded or replayed actions
+cannot move the last valid accepted-action checkpoint. Physical workspace
+checkpoints remain the existing `ICheckpointRepository` records; Task state
+stores their identifiers only after checking context ownership.
+
+The admission authority records actor/profile/authentication provenance but
+retains the actual attempt lease in process. Permission scopes, route
+observations and persisted receipt strings are not capabilities. A restart
+cannot reconstruct a live grant from these records. A fresh authorized attempt
+requires an actual old-runtime settlement witness and current authority.
+
+One attempt lease spans finite provider/tool frames. The runtime owner retains
+each original frame, including its enumerator and cleanup. Before fallback it
+seals further frame admission, joins every original, then disposes that same
+lease once. A terminal provider failure is eligible only through a live
+runtime-issued observation of that exact frame and exception, followed by the
+coordinator's acknowledged failure write. Cleanup faults and unacknowledged
+siblings remain unresolved; generic failure text or a cancellation response is
+not settlement.
+
+UI projections are derived from acknowledged snapshots. Observer faults are
+retained separately and cannot erase a durable write. The browser repository,
+actual provider/runtime composition, tool-owner acceptance and original
+cross-surface recovery controls must run before this framework is accepted as
+connected in both web and Windows products.
+
+
+Explicit task activation and long-lived original custody
+
+OrdinaryConversation remains SendAsync's default. Injecting canonical task services never changes ordinary free/local Chat or its existing Computer, Browser, Automation, MCP, Plugin, Calendar, Workspace and model-access rules. A canonical continuation requires explicit CanonicalAgenticTask intent and actual configured admission/tool owners. The saved Agent task caller declares that intent. Spaces/Tasks callers must select it explicitly. Canonical task requests advertise only tools declared by the real typed owner; unsupported runtimes refuse before effects. Current typed Workspace support is a bounded foundation, and expansion to the other genuine owners remains mandatory unfinished work.
+
+An exact healthy original attempt may release runtime custody only after its actual whole registration/frame/finally/issuer-lease settlement succeeds and the coordinator acknowledges the same terminal or successor CAS. TaskRunOriginalRetirementAcknowledgment has a nonpublic constructor and a self-identity check; copied or late acknowledgments and missing registry lookups refuse. Accepted provider-failure diagnostic originals remain retained under the runtime's explicit capacity policy. Unknown effect, failed/canceled original settlement, cleanup faults and CAS-lost writes never acquire a retirement acknowledgment.
+
+If terminal persistence loses CAS after real original drain, completion retains the actual live settlement Task and authentic issued admission. An explicit retry rechecks fresh command authority, same owner/run/attempt, accepted action plan, steering and checkpoint semantics. A changed completion basis refuses rather than projecting old output as current completion. This live custody is never reconstructed from durable text, IDs, a rebuilt lease, or absence in a fresh process registry. Historical crash recovery remains explicitly unresolved until a genuine owner provides original activation/exit and effect provenance.

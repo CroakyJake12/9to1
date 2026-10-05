@@ -22,264 +22,181 @@ public sealed class VerifiedNotesRepository(
     IAppPaths paths,
     IProductionDiagnostics diagnostics) : INotesRepository
 {
-    /// <summary>
-    /// Stores json options locally so this component can preserve the dependency, cache, or state between member calls.
-    /// </summary>
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
-    /// <summary>
-    /// Stores gate locally so this component can preserve the dependency, cache, or state between member calls.
-    /// </summary>
-    private readonly SemaphoreSlim _gate = new(1, 1);
-    /// <summary>
-    /// Stores root locally so this component can preserve the dependency, cache, or state between member calls.
-    /// </summary>
-    private readonly string _root = Path.Combine(paths.DataDirectory, "Notes", "Documents");
+    private readonly string _root = inner.VerifyOwningRoot(paths);
 
-    /// <summary>
-    /// Performs list asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken cancellationToken) =>
-        inner.ListAsync(cancellationToken);
+    public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken cancellationToken) => inner.ListAsync(cancellationToken);
 
-    /// <summary>
-    /// Performs load asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    public async Task<NotesDocument?> LoadAsync(Guid documentId, CancellationToken cancellationToken)
+    public Task<NotesDocument?> LoadAsync(Guid documentId, CancellationToken cancellationToken)
     {
-        var document = await inner.LoadAsync(documentId, cancellationToken).ConfigureAwait(false);
-        if (document is null) return null;
-        var current = Path.Combine(_root, documentId.ToString("D"), "current.haven-notes.json");
-        var manifest = ManifestPath(documentId);
-        if (!File.Exists(current) || !File.Exists(manifest)) return document;
-
-        try
+        if (documentId == Guid.Empty) throw new ArgumentException("Document ID cannot be empty.", nameof(documentId));
+        return inner.WithTransactionAsync(async transaction =>
         {
-            var expected = await ReadManifestAsync(manifest, cancellationToken).ConfigureAwait(false);
-            var actual = await ComputeSha256Async(current, cancellationToken).ConfigureAwait(false);
-            if (expected is not null
-                && expected.DocumentId == documentId
-                && expected.Version == document.Version
-                && expected.Sha256.Equals(actual, StringComparison.OrdinalIgnoreCase))
+            var document = await transaction.LoadAsync(documentId, cancellationToken).ConfigureAwait(false);
+            if (document is null) return null;
+            var observed = await transaction.InspectCurrentAsync(documentId, cancellationToken).ConfigureAwait(false);
+            if (observed.Absent || observed.Document!.Id != document.Id || observed.Version != document.Version)
+                throw new IOException("The returned Notes document does not match the transaction-observed current.");
+            // An unresolved publication journal must be validated and preserved;
+            // it must never be converted into a blind replacement or fresh save.
+            await ReconcileIntegrityAsync(documentId, observed, cancellationToken).ConfigureAwait(false);
+            if (document.Recovery.HasUnsavedRecovery && File.Exists(RecoveryPath(documentId)))
             {
-                document.Recovery.LastValidSha256 = actual;
+                // The raw core has already checked this durable recovery marker
+                // against these exact restored bytes. Keep explicit review pending.
+                document.Recovery.LastValidSha256 = observed.Sha256;
                 return document;
             }
-
-            await diagnostics.WriteAsync(
-                ReliabilitySeverity.Critical,
-                "notes",
-                "integrity-mismatch",
-                "A Haven Notes document did not match its durable integrity manifest and was not returned as current data.",
-                new Dictionary<string, string>
-                {
-                    ["documentId"] = documentId.ToString("D"),
-                    ["expected"] = expected?.Sha256 ?? "missing",
-                    ["actual"] = actual
-                },
-                cancellationToken: cancellationToken).ConfigureAwait(false);
-            var recovered = await inner.RecoverLatestAsync(documentId, cancellationToken).ConfigureAwait(false);
-            if (recovered is not null)
+            if (!File.Exists(ManifestPath(documentId))) return document;
+            try
             {
-                recovered.Recovery.HasUnsavedRecovery = true;
-                recovered.Recovery.RecoveryReason = "Recovered because the current document failed its integrity manifest check.";
-            }
-            return recovered;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
-        {
-            await diagnostics.WriteAsync(
-                ReliabilitySeverity.Warning,
-                "notes",
-                "integrity-check-failed",
-                "Haven Notes could not verify the document integrity sidecar and entered recovery.",
-                new Dictionary<string, string>
+                var expected = await ReadJsonAsync<NotesRepository.NotesIntegrityReceipt>(ManifestPath(documentId), cancellationToken).ConfigureAwait(false);
+                if (Matches(expected, observed))
                 {
-                    ["documentId"] = documentId.ToString("D"),
-                    ["exceptionType"] = ex.GetType().Name
-                },
-                cancellationToken: cancellationToken).ConfigureAwait(false);
-            return await inner.RecoverLatestAsync(documentId, cancellationToken).ConfigureAwait(false);
-        }
+                    document.Recovery.LastValidSha256 = observed.Sha256;
+                    return document;
+                }
+                await transaction.WriteDiagnosticAsync(diagnostics, ReliabilitySeverity.Critical, "notes", "integrity-mismatch",
+                    "A Haven Notes document did not match its durable integrity manifest and was not returned as current data.",
+                    new Dictionary<string, string> { ["documentId"] = documentId.ToString("D"),
+                        ["expected"] = expected?.Sha256 ?? "missing", ["actual"] = observed.Sha256 },
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+                // Quarantine only the exact invalid bytes inspected under this
+                // lease, then use the original bound recovery implementation.
+                var recovered = await transaction.RecoverAsync(documentId, cancellationToken, observed).ConfigureAwait(false);
+                if (recovered is not null)
+                {
+                    recovered.Recovery.HasUnsavedRecovery = true;
+                    recovered.Recovery.RecoveryReason = "Recovered because the current document failed its integrity manifest check.";
+                }
+                return recovered;
+            }
+            catch (Exception error) when (error is not NotesRepository.PendingRecoveryException &&
+                error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+            {
+                await transaction.WriteDiagnosticAsync(diagnostics, ReliabilitySeverity.Warning, "notes", "integrity-check-failed",
+                    "Haven Notes could not verify the document integrity sidecar and entered recovery.",
+                    new Dictionary<string, string> { ["documentId"] = documentId.ToString("D"), ["exceptionType"] = error.GetType().Name },
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+                return await transaction.RecoverAsync(documentId, cancellationToken).ConfigureAwait(false);
+            }
+        }, cancellationToken);
     }
 
-    /// <summary>
-    /// Performs save asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    public async Task<NotesSaveResult> SaveAsync(
-        NotesDocument document,
-        string reason,
-        CancellationToken cancellationToken)
+    public Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, CancellationToken cancellationToken)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        inner.ValidateSaveCandidate(document);
+        var id = document.Id;
+        var revision = document.Version;
+        return inner.WithTransactionAsync(async transaction =>
         {
-            var result = await inner.SaveAsync(document, reason, cancellationToken).ConfigureAwait(false);
-            var actual = await ComputeSha256Async(result.CurrentPath, cancellationToken).ConfigureAwait(false);
-            var manifest = new NotesIntegrityManifest(
-                1,
-                document.Id,
-                result.Version,
-                actual,
-                new FileInfo(result.CurrentPath).Length,
-                result.SavedAt);
-            await WriteManifestAtomicAsync(ManifestPath(document.Id), manifest, cancellationToken).ConfigureAwait(false);
-            document.Recovery.LastValidSha256 = actual;
-            return result with { Sha256 = actual };
-        }
-        finally
-        {
-            _gate.Release();
-        }
+            var result = await transaction.SaveAsync(document, reason, id, revision, cancellationToken, integrityRequired: true).ConfigureAwait(false);
+            try
+            {
+                var observed = await transaction.InspectCurrentAsync(id, cancellationToken).ConfigureAwait(false);
+                if (observed.Document?.Id != result.DocumentId || observed.Version != result.Version || observed.Sha256 != result.Sha256)
+                    throw new IOException("The committed Notes receipt does not match the transaction-observed current.");
+                await ReconcileIntegrityAsync(id, observed, cancellationToken).ConfigureAwait(false);
+                document.Recovery.LastValidSha256 = observed.Sha256;
+            }
+            catch (Exception error)
+            {
+                // The raw Save returned a durable receipt. A sidecar, cancellation
+                // or tail failure retains that receipt and its pending intent.
+                result = result with { PostCommitWarning = NotesRepository.JoinWarning(result.PostCommitWarning,
+                    "The document was committed, but integrity publication did not complete (" + error.GetType().Name + ").") };
+            }
+            return result;
+        }, cancellationToken);
     }
 
-    /// <summary>
-    /// Performs delete asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    public Task DeleteAsync(Guid documentId, CancellationToken cancellationToken) =>
-        inner.DeleteAsync(documentId, cancellationToken);
-
-    /// <summary>
-    /// Retrieves versions async for the current operation.
-    /// </summary>
-    public Task<IReadOnlyList<NotesVersionInfo>> GetVersionsAsync(
-        Guid documentId,
-        CancellationToken cancellationToken) =>
-        inner.GetVersionsAsync(documentId, cancellationToken);
-
-    /// <summary>
-    /// Performs load version asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    public Task<NotesDocument?> LoadVersionAsync(
-        Guid documentId,
-        string versionId,
-        CancellationToken cancellationToken) =>
-        inner.LoadVersionAsync(documentId, versionId, cancellationToken);
-
-    /// <summary>
-    /// Performs recover latest asynchronously so I/O does not block the caller's thread.
-    /// </summary>
+    public Task DeleteAsync(Guid documentId, CancellationToken cancellationToken) => inner.DeleteAsync(documentId, cancellationToken);
+    public Task<IReadOnlyList<NotesVersionInfo>> GetVersionsAsync(Guid documentId, CancellationToken cancellationToken) => inner.GetVersionsAsync(documentId, cancellationToken);
+    public Task<NotesDocument?> LoadVersionAsync(Guid documentId, string versionId, CancellationToken cancellationToken) => inner.LoadVersionAsync(documentId, versionId, cancellationToken);
     public Task<NotesDocument?> RecoverLatestAsync(Guid documentId, CancellationToken cancellationToken) =>
-        inner.RecoverLatestAsync(documentId, cancellationToken);
+        inner.WithTransactionAsync(transaction => transaction.RecoverAsync(documentId, cancellationToken), cancellationToken);
+    public Task<IReadOnlyList<NotesSearchHit>> SearchAsync(string query, CancellationToken cancellationToken) => inner.SearchAsync(query, cancellationToken);
 
-    /// <summary>
-    /// Performs search asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    public Task<IReadOnlyList<NotesSearchHit>> SearchAsync(
-        string query,
-        CancellationToken cancellationToken) =>
-        inner.SearchAsync(query, cancellationToken);
+    private string DirectoryPath(Guid id) => Path.Combine(_root, id.ToString("D"));
+    private string ManifestPath(Guid id) => Path.Combine(DirectoryPath(id), "current.integrity.json");
+    private string PublicationPath(Guid id) => Path.Combine(DirectoryPath(id), "current.publication.json");
+    private string PendingManifestPath(Guid id) => Path.Combine(DirectoryPath(id), "current.integrity.pending.json");
+    private string RecoveryPath(Guid id) => Path.Combine(DirectoryPath(id), "current.recovery.json");
 
-    /// <summary>
-    /// Performs the manifest path step owned by this component.
-    /// </summary>
-    private string ManifestPath(Guid documentId) =>
-        Path.Combine(_root, documentId.ToString("D"), "current.integrity.json");
+    private static bool Matches(NotesRepository.NotesIntegrityReceipt? manifest, NotesRepository.NotesCurrentSnapshot observed) =>
+        manifest is not null && !observed.Absent && manifest.Version == 1 && manifest.DocumentId == observed.Document!.Id &&
+        manifest.DocumentVersion == observed.Version && manifest.SizeBytes == observed.SizeBytes && manifest.CreatedAt != default &&
+        string.Equals(manifest.Sha256, observed.Sha256, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// Performs read manifest asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    private static async Task<NotesIntegrityManifest?> ReadManifestAsync(
-        string path,
-        CancellationToken cancellationToken)
+    private async Task ReconcileIntegrityAsync(Guid id, NotesRepository.NotesCurrentSnapshot observed, CancellationToken token)
     {
-        await using var stream = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            16 * 1024,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        return await JsonSerializer.DeserializeAsync<NotesIntegrityManifest>(
-            stream,
-            JsonOptions,
-            cancellationToken).ConfigureAwait(false);
+        var intent = await inner.ReadPublicationIntentAsync(id, token).ConfigureAwait(false);
+        var pendingPath = PendingManifestPath(id);
+        var hasPending = File.Exists(pendingPath) || Directory.Exists(pendingPath);
+        if (intent is null)
+        {
+            if (hasPending) throw new IOException("An orphaned Notes integrity intent was preserved and must be inspected before writing.");
+            return;
+        }
+        if (!intent.IntegrityRequired)
+        {
+            if (hasPending) throw new IOException("The Notes integrity intent does not belong to its publication journal.");
+            return;
+        }
+        NotesRepository.PendingNotesIntegrity? pending = null;
+        if (hasPending)
+        {
+            pending = await ReadJsonAsync<NotesRepository.PendingNotesIntegrity>(pendingPath, token).ConfigureAwait(false);
+            if (pending is null || pending.SchemaVersion != 1 || pending.OperationId != intent.OperationId ||
+                pending.Manifest is null || pending.Manifest.Version != 1 || pending.Manifest.DocumentId != id ||
+                pending.Manifest.DocumentVersion != intent.Intended.DocumentVersion || pending.Manifest.SizeBytes != intent.Intended.SizeBytes ||
+                pending.Manifest.Sha256 != intent.Intended.Sha256 || pending.Manifest.CreatedAt != intent.SavedAt)
+                throw new IOException("The pending Notes integrity intent is invalid or mismatched and was preserved.");
+        }
+        // Exact prior current means publication did not become visible. Keep the
+        // original intent unresolved, with no replay and no manifest promotion.
+        if (observed.Binding == intent.Prior) return;
+        if (!intent.Attempted || observed.Binding != intent.Intended)
+            throw new IOException("The pending Notes integrity intent does not match the observed intended current and was preserved.");
+        if (pending is not null)
+            await WriteManifestAtomicAsync(ManifestPath(id), pending.Manifest, token).ConfigureAwait(false);
+        else if (!File.Exists(ManifestPath(id)) || !Matches(await ReadJsonAsync<NotesRepository.NotesIntegrityReceipt>(ManifestPath(id), token).ConfigureAwait(false), observed))
+            throw new IOException("The matching pending Notes integrity manifest is missing and its journal was preserved.");
+        // A crash between these acknowledgments is recoverable from the exact
+        // current+manifest match. No document rename is repeated by future loads.
+        File.Delete(pendingPath);
+        File.Delete(PublicationPath(id));
     }
 
-    /// <summary>
-    /// Performs write manifest atomic asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    private static async Task WriteManifestAtomicAsync(
-        string path,
-        NotesIntegrityManifest manifest,
-        CancellationToken cancellationToken)
+    private static async Task<T?> ReadJsonAsync<T>(string path, CancellationToken token)
+    {
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 16 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, token).ConfigureAwait(false);
+    }
+
+    private static async Task WriteManifestAtomicAsync(string path, NotesRepository.NotesIntegrityReceipt manifest, CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var temporary = path + ".tmp-" + Guid.NewGuid().ToString("N");
         try
         {
-            await using (var stream = new FileStream(
-                             temporary,
-                             FileMode.CreateNew,
-                             FileAccess.Write,
-                             FileShare.None,
-                             16 * 1024,
-                             FileOptions.Asynchronous | FileOptions.WriteThrough))
+            await using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough))
             {
-                await JsonSerializer.SerializeAsync(
-                    stream,
-                    manifest,
-                    JsonOptions,
-                    cancellationToken).ConfigureAwait(false);
-                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await JsonSerializer.SerializeAsync(stream, manifest, JsonOptions, token).ConfigureAwait(false);
+                await stream.FlushAsync(token).ConfigureAwait(false);
                 stream.Flush(flushToDisk: true);
             }
+            token.ThrowIfCancellationRequested();
             if (File.Exists(path)) File.Replace(temporary, path, path + ".bak", true);
             else File.Move(temporary, path);
         }
         finally
         {
-            TryDelete(temporary);
+            try { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
         }
-    }
-
-    /// <summary>
-    /// Performs compute sha256 asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    private static async Task<string> ComputeSha256Async(
-        string path,
-        CancellationToken cancellationToken)
-    {
-        await using var stream = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            64 * 1024,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        return Convert.ToHexString(
-                await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false))
-            .ToLowerInvariant();
-    }
-
-    /// <summary>
-    /// Attempts to delete and reports the result without using failure for normal control flow.
-    /// </summary>
-    private static void TryDelete(string path)
-    {
-        try
-        {
-            if (File.Exists(path)) File.Delete(path);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-        }
-    }
-
-    /// <summary>
-    /// Represents notes integrity manifest and keeps its related state and behavior together.
-    /// </summary>
-    private sealed record NotesIntegrityManifest(
-        int Version,
-        Guid DocumentId,
-        long DocumentVersion,
-        string Sha256,
-        long SizeBytes,
-        DateTimeOffset CreatedAt)
-    {
-        /// <summary>
-        /// Gets or updates version number, the bindable or domain state represented by this property.
-        /// </summary>
-        public long VersionNumber => DocumentVersion;
     }
 }
 

@@ -8,6 +8,7 @@
  */
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using Haven.Core;
@@ -17,7 +18,13 @@ namespace Haven.Application;
 /// <summary>
 /// Represents workspace tool result and keeps its related state and behavior together.
 /// </summary>
-public sealed record WorkspaceToolResult(ToolActivity Activity, string Output, ToolFailureDescriptor? Failure = null);
+public sealed record WorkspaceToolResult(ToolActivity Activity, string Output, ToolFailureDescriptor? Failure = null)
+{
+    // Source-only owner evidence. The task owner validates SAME preparation/result/physical receipt;
+    // caller-written fields, Activity.Succeeded and output prose never become accepted mutation.
+    public bool OriginalEffectBodyCompleted { get; init; }
+    public Exception? OriginalRuntimeError { get; init; }
+}
 
 /// <summary>
 /// Represents workspace tool runtime and keeps its related state and behavior together.
@@ -39,6 +46,12 @@ public sealed class WorkspaceToolRuntime(
     /// Stores change sets locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly WorkspaceChangeSetService _changeSets = new(tools);
+    private sealed record OriginalResultBinding(IWorkspaceToolActionPreparation Preparation, string Root, string CallDigest);
+    private static readonly ConditionalWeakTable<WorkspaceToolResult, OriginalResultBinding> OriginalResults = new();
+    public static bool IsIssuedOriginalResult(IWorkspaceToolActionPreparation preparation, WorkspaceToolResult result) =>
+        OriginalResults.TryGetValue(result, out var recorded) && ReferenceEquals(recorded.Preparation, preparation) &&
+        recorded.Root == preparation.CanonicalWorkspaceRoot && recorded.CallDigest == WorkspaceToolOriginalDigest.Call(preparation.OriginalCall);
+
     /// <summary>
     /// Stores ignored directories locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -75,9 +88,38 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Runs execute async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
-    public async Task<WorkspaceToolResult> ExecuteAsync(string workspaceRoot, OllamaToolCall call, CancellationToken cancellationToken, Guid? conversationId = null, Guid? containerId = null)
+    public Task<WorkspaceToolResult> ExecuteAsync(string workspaceRoot, OllamaToolCall call, CancellationToken cancellationToken, Guid? conversationId = null, Guid? containerId = null)
+        => ExecuteCoreAsync(workspaceRoot, call, cancellationToken, conversationId, containerId, originalOwned: false);
+
+    public Task<WorkspaceToolResult> ExecuteOriginalAsync(string workspaceRoot, OllamaToolCall call,
+        ITaskRunToolActionPreparation originalPreparation, CancellationToken cancellationToken,
+        Guid? conversationId = null, Guid? containerId = null)
+    {
+        if (originalPreparation is not IWorkspaceToolActionPreparation original ||
+            !original.IsIssuedOriginalRuntime(tools, workspaceRoot, call))
+            throw new UnauthorizedAccessException("Actual original workspace preparation/service/call pairing required.");
+        // SAME executor body and change-set engine; only the native service is per-invocation fenced.
+        // The external action owner, not this runtime, owns physical invocation Complete/Close.
+        var owning = original.OriginalInvocation is { } physical
+            ? new WorkspaceToolRuntime(physical.Tools, history, commandActivity) : this;
+        return original.RunOriginalRuntimeAsync(tools, workspaceRoot, call,
+            ct => owning.RecordOriginalRuntimeAsync(original, workspaceRoot, call, ct, conversationId, containerId), cancellationToken);
+    }
+
+    private async Task<WorkspaceToolResult> RecordOriginalRuntimeAsync(IWorkspaceToolActionPreparation preparation,
+        string root, OllamaToolCall call, CancellationToken token, Guid? conversationId, Guid? containerId)
+    {
+        var result = await ExecuteCoreAsync(root, call, token, conversationId, containerId, originalOwned: true).ConfigureAwait(false);
+        OriginalResults.Add(result, new(preparation, root, WorkspaceToolOriginalDigest.Call(call)));
+        return result;
+    }
+
+    private async Task<WorkspaceToolResult> ExecuteCoreAsync(string workspaceRoot, OllamaToolCall call,
+        CancellationToken cancellationToken, Guid? conversationId, Guid? containerId, bool originalOwned)
     {
         var started = Stopwatch.GetTimestamp();
+        var originalEffectBodyCompleted = false;
+        Task? originalHistoryTask = null;
         try
         {
             IReadOnlyList<WorkspaceMutation> mutations = [];
@@ -105,7 +147,7 @@ public sealed class WorkspaceToolRuntime(
                     output = call.Name switch
                     {
                         "list_files" => await ListFilesAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), cancellationToken).ConfigureAwait(false),
-                        "read_file" => await ReadFileAsync(workspaceRoot, RequiredText(call, "path"), cancellationToken).ConfigureAwait(false),
+                        "read_file" => await ReadFileAsync(workspaceRoot, RequiredText(call, "path"), cancellationToken, originalOwned).ConfigureAwait(false),
                         "search_files" => await SearchFilesAsync(workspaceRoot, Text(call, "path", "."), RequiredText(call, "query"), Integer(call, "max_results", 100), cancellationToken).ConfigureAwait(false),
                         "run_command" => await RunCommandAsync(workspaceRoot, RequiredText(call, "command"), Integer(call, "timeout_seconds", 120), cancellationToken).ConfigureAwait(false),
                         "run_tests" => await RunTestsAsync(workspaceRoot, Text(call, "command"), Integer(call, "timeout_seconds", 600), cancellationToken).ConfigureAwait(false),
@@ -114,13 +156,15 @@ public sealed class WorkspaceToolRuntime(
                     break;
             }
 
+            originalEffectBodyCompleted = true; // Physical body settled before optional history/observers.
             if (history is not null)
             {
                 foreach (var mutation in mutations)
                 {
-                    await history.AddVersionAsync(new WorkspaceVersion(Guid.NewGuid(), conversationId, containerId, Path.GetFullPath(workspaceRoot),
+                    originalHistoryTask = history.AddVersionAsync(new WorkspaceVersion(Guid.NewGuid(), conversationId, containerId, Path.GetFullPath(workspaceRoot),
                         mutation.Path, WorkspaceVersionKind.Edit, mutation.Before, mutation.After, mutation.Output,
-                        mutation.LinesAdded, mutation.LinesRemoved, DateTimeOffset.UtcNow), cancellationToken).ConfigureAwait(false);
+                        mutation.LinesAdded, mutation.LinesRemoved, DateTimeOffset.UtcNow), cancellationToken);
+                    await originalHistoryTask.ConfigureAwait(false);
                 }
             }
 
@@ -129,15 +173,27 @@ public sealed class WorkspaceToolRuntime(
             var removed = mutations.Sum(item => item.LinesRemoved);
             return new WorkspaceToolResult(
                 new ToolActivity(Guid.NewGuid(), HumanLabel(call.Name), FirstLine(output), true, Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow, added, removed),
-                output);
+                output) { OriginalEffectBodyCompleted = originalOwned && originalEffectBodyCompleted };
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (ex is not OperationCanceledException || originalOwned && originalHistoryTask?.IsFaulted == true)
         {
             var output = $"Tool error: {ex.Message}";
             return new WorkspaceToolResult(
                 new ToolActivity(Guid.NewGuid(), HumanLabel(call.Name), ex.Message, false, Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow),
-                output);
+                output)
+            {
+                OriginalEffectBodyCompleted = originalOwned && originalEffectBodyCompleted,
+                // One actual Task.Exception capture preserves every direct original history cause.
+                // A sole cause keeps its exact object; nested groups remain exact, never Flattened.
+                OriginalRuntimeError = originalOwned ? OriginalHistoryCause(originalHistoryTask, ex) : null
+            };
         }
+    }
+
+    private static Exception OriginalHistoryCause(Task? actualHistory, Exception observed)
+    {
+        var original = actualHistory?.Exception;
+        return original is null ? observed : original.InnerExceptions.Count == 1 ? original.InnerExceptions[0] : original;
     }
 
     /// <summary>
@@ -198,12 +254,17 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Performs read file asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task<string> ReadFileAsync(string root, string path, CancellationToken cancellationToken)
+    private async Task<string> ReadFileAsync(string root, string path, CancellationToken cancellationToken, bool originalOwned)
     {
         var resolved = tools.ResolveWorkspacePath(root, path);
-        var info = new FileInfo(resolved);
-        if (!info.Exists) throw new FileNotFoundException("Workspace file was not found.", path);
-        if (info.Length > 4 * 1024 * 1024) throw new InvalidOperationException("File is larger than Haven's 4 MB text-read limit.");
+        if (!originalOwned)
+        {
+            var info = new FileInfo(resolved);
+            if (!info.Exists) throw new FileNotFoundException("Workspace file was not found.", path);
+            if (info.Length > 4 * 1024 * 1024) throw new InvalidOperationException("File is larger than Haven's 4 MB text-read limit.");
+        }
+        // The original physical source checks the SAME held read handle and existing 4 MB
+        // limit. Do not follow a mutable filename again outside that owning read port.
         var content = await tools.ReadTextAsync(root, path, cancellationToken).ConfigureAwait(false);
         if (content.IndexOf('\0') >= 0) throw new InvalidOperationException("File appears to be binary.");
         return Truncate(content, MaxFileCharacters);
